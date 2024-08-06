@@ -225,6 +225,14 @@ class ZeroconfMatcher(TypedDict, total=False):
     properties: dict[str, str]
 
 
+class LocationMatcher(TypedDict, total=False):
+    """Matcher for location."""
+
+    domain: str
+    name: str
+    latitude: float
+    longitude: float
+
 class Manifest(TypedDict, total=False):
     """Integration manifest.
 
@@ -254,6 +262,7 @@ class Manifest(TypedDict, total=False):
     dhcp: list[dict[str, bool | str]]
     usb: list[dict[str, str]]
     homekit: dict[str, list[str]]
+    locations: list[str]
     is_built_in: bool
     version: str
     codeowners: list[str]
@@ -534,6 +543,19 @@ async def async_get_bluetooth(hass: HomeAssistant) -> list[BluetoothMatcher]:
 
     return bluetooth
 
+async def async_get_locations(hass: HomeAssistant) -> list[LocationMatcher]:
+    """Return cached list of location types."""
+    locations: list[LocationMatcher] = []
+
+    integrations = await async_get_custom_components(hass)
+    for integration in integrations.values():
+        if not integration.location:
+            continue
+        for entry in integration.location:
+            locations.append(
+                cast(LocationMatcher, {"domain": integration.domain, **entry})
+            )
+    return locations
 
 async def async_get_dhcp(hass: HomeAssistant) -> list[DHCPMatcher]:
     """Return cached list of dhcp types."""
@@ -902,6 +924,11 @@ class Integration:
     @property
     def homekit(self) -> dict[str, list[str]] | None:
         """Return Integration homekit entries."""
+        return self.manifest.get("homekit")
+
+    @property
+    def location(self) -> list[str] | None:
+        """Return Integration location matchers."""
         return self.manifest.get("homekit")
 
     @property
