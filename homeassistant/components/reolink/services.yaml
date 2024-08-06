@@ -19,11 +19,12 @@ ptz_move:
 
 chime_play:
   target:
+    device:
+      integration: reolink
+      model: "Reolink Chime"
     entity:
       integration: reolink
       domain: select
-      supported_features:
-        - camera.CameraEntityFeature.STREAM
   fields:
     ringtone:
       required: true
