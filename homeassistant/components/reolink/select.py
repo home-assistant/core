@@ -19,12 +19,13 @@ from reolink_aio.api import (
 )
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
+from homeassistant.helpers import config_validation as cv
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback, async_get_current_platform
 
 from . import ReolinkData
 from .const import DOMAIN
@@ -36,6 +37,8 @@ from .entity import (
 
 _LOGGER = logging.getLogger(__name__)
 
+SUPPORT_CHIME_PLAY = 1024
+ATTR_RINGTONE = "ringtone"
 
 @dataclass(frozen=True, kw_only=True)
 class ReolinkSelectEntityDescription(
@@ -201,6 +204,14 @@ async def async_setup_entry(
         for chime in reolink_data.host.api.chime_list
     )
     async_add_entities(entities)
+    
+    platform = async_get_current_platform()
+    platform.async_register_entity_service(
+        "chime_play",
+        {vol.Required(ATTR_ringtone): vol.In([method.name for method in ChimeToneEnum][1:])},
+        "async_chime_play",
+        [SUPPORT_CHIME_PLAY],
+    )
 
 
 class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
@@ -268,6 +279,7 @@ class ReolinkChimeSelectEntity(ReolinkChimeCoordinatorEntity, SelectEntity):
         super().__init__(reolink_data, chime)
         self._log_error = True
         self._attr_options = entity_description.get_options
+        self._attr_supported_features = SUPPORT_CHIME_PLAY
 
     @property
     def current_option(self) -> str | None:
@@ -292,3 +304,13 @@ class ReolinkChimeSelectEntity(ReolinkChimeCoordinatorEntity, SelectEntity):
         except ReolinkError as err:
             raise HomeAssistantError(err) from err
         self.async_write_ha_state()
+
+    async def async_chime_play(self, **kwargs) -> None:
+        """Play a ringtone."""
+        ringtone = kwargs[ATTR_RINGTONE]
+        try:
+            await self._chime.play(ChimeToneEnum[ringtone].value)
+        except InvalidParameterError as err:
+            raise ServiceValidationError(err) from err
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err
