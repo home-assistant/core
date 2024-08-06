@@ -34,6 +34,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
 
@@ -75,8 +76,8 @@ from .validators import check_config
 _LOGGER = logging.getLogger(__name__)
 
 
-ConfEntry = namedtuple("ConfEntry", "call_type attr func_name")
-RunEntry = namedtuple("RunEntry", "attr func")
+ConfEntry = namedtuple("ConfEntry", "call_type attr func_name")  # noqa: PYI024
+RunEntry = namedtuple("RunEntry", "attr func")  # noqa: PYI024
 PB_CALL = [
     ConfEntry(
         CALL_TYPE_COIL,
@@ -234,6 +235,18 @@ async def async_modbus_setup(
 
     async def async_restart_hub(service: ServiceCall) -> None:
         """Restart Modbus hub."""
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_restart",
+            breaks_in_ha_version="2024.11.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_restart",
+        )
+        _LOGGER.warning(
+            "`modbus.restart` is deprecated and will be removed in version 2024.11"
+        )
         async_dispatcher_send(hass, SIGNAL_START_ENTITY)
         hub = hub_collect[service.data[ATTR_HUB]]
         await hub.async_restart()
@@ -324,7 +337,7 @@ class ModbusHub:
             try:
                 await self._client.connect()  # type: ignore[union-attr]
             except ModbusException as exception_error:
-                err = f"{self.name} connect failed, retry in pymodbus  ({str(exception_error)})"
+                err = f"{self.name} connect failed, retry in pymodbus  ({exception_error!s})"
                 self._log_error(err, error_state=False)
                 return
             message = f"modbus {self.name} communication open"
@@ -391,9 +404,7 @@ class ModbusHub:
         try:
             result: ModbusResponse = await entry.func(address, value, **kwargs)
         except ModbusException as exception_error:
-            error = (
-                f"Error: device: {slave} address: {address} -> {str(exception_error)}"
-            )
+            error = f"Error: device: {slave} address: {address} -> {exception_error!s}"
             self._log_error(error)
             return None
         if not result:
@@ -403,7 +414,7 @@ class ModbusHub:
             self._log_error(error)
             return None
         if not hasattr(result, entry.attr):
-            error = f"Error: device: {slave} address: {address} -> {str(result)}"
+            error = f"Error: device: {slave} address: {address} -> {result!s}"
             self._log_error(error)
             return None
         if result.isError():

@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import wraps
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar, cast
+from typing import Any, Concatenate, cast
 
 from renault_api.exceptions import RenaultException
 from renault_api.kamereon import models
@@ -22,13 +22,11 @@ from .const import DOMAIN
 from .coordinator import RenaultDataUpdateCoordinator
 
 LOGGER = logging.getLogger(__name__)
-_T = TypeVar("_T")
-_P = ParamSpec("_P")
 
 
-def with_error_wrapping(
-    func: Callable[Concatenate[RenaultVehicleProxy, _P], Awaitable[_T]],
-) -> Callable[Concatenate[RenaultVehicleProxy, _P], Coroutine[Any, Any, _T]]:
+def with_error_wrapping[**_P, _R](
+    func: Callable[Concatenate[RenaultVehicleProxy, _P], Awaitable[_R]],
+) -> Callable[Concatenate[RenaultVehicleProxy, _P], Coroutine[Any, Any, _R]]:
     """Catch Renault errors."""
 
     @wraps(func)
@@ -36,7 +34,7 @@ def with_error_wrapping(
         self: RenaultVehicleProxy,
         *args: _P.args,
         **kwargs: _P.kwargs,
-    ) -> _T:
+    ) -> _R:
         """Catch RenaultException errors and raise HomeAssistantError."""
         try:
             return await func(self, *args, **kwargs)

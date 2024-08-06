@@ -5,7 +5,7 @@ from unittest.mock import patch
 from pypck.connection import PchkAuthenticationError, PchkLicenseError
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.lcn.const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, DOMAIN
 from homeassistant.const import (
     CONF_DEVICES,
@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -47,7 +48,7 @@ async def test_step_import(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "pchk"
         assert result["data"] == IMPORT_DATA
 
@@ -69,7 +70,7 @@ async def test_step_import_existing_host(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         # Check if config entry was updated
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "existing_configuration_updated"
         assert mock_entry.source == config_entries.SOURCE_IMPORT
         assert mock_entry.data == IMPORT_DATA
@@ -95,5 +96,5 @@ async def test_step_import_error(hass: HomeAssistant, error, reason) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == reason

@@ -23,7 +23,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -45,7 +45,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == TEST_USERNAME
     assert result2["data"] == {
         CONF_USERNAME: TEST_USERNAME,
@@ -89,7 +89,7 @@ async def test_signup_flow_already_set_up(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        assert result2["type"] == FlowResultType.ABORT
+        assert result2["type"] is FlowResultType.ABORT
 
 
 @pytest.mark.parametrize(
@@ -122,7 +122,7 @@ async def test_huum_errors(
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error_base}
 
     with (
@@ -142,4 +142,4 @@ async def test_huum_errors(
                 CONF_PASSWORD: TEST_PASSWORD,
             },
         )
-        assert result2["type"] == FlowResultType.CREATE_ENTRY
+        assert result2["type"] is FlowResultType.CREATE_ENTRY

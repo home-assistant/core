@@ -8,6 +8,7 @@ from homeassistant import config_entries
 from homeassistant.components.firmata.const import CONF_SERIAL_PORT, DOMAIN
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 
 async def test_import_cannot_connect_pymata(hass: HomeAssistant) -> None:
@@ -23,7 +24,7 @@ async def test_import_cannot_connect_pymata(hass: HomeAssistant) -> None:
             data={CONF_SERIAL_PORT: "/dev/nonExistent"},
         )
 
-        assert result["type"] == "abort"
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
 
 
@@ -40,7 +41,7 @@ async def test_import_cannot_connect_serial(hass: HomeAssistant) -> None:
             data={CONF_SERIAL_PORT: "/dev/nonExistent"},
         )
 
-        assert result["type"] == "abort"
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
 
 
@@ -57,7 +58,7 @@ async def test_import_cannot_connect_serial_timeout(hass: HomeAssistant) -> None
             data={CONF_SERIAL_PORT: "/dev/nonExistent"},
         )
 
-        assert result["type"] == "abort"
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
 
 
@@ -79,7 +80,7 @@ async def test_import(hass: HomeAssistant) -> None:
             data={CONF_SERIAL_PORT: "/dev/nonExistent"},
         )
 
-        assert result["type"] == "create_entry"
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "serial-/dev/nonExistent"
         assert result["data"] == {
             CONF_NAME: "serial-/dev/nonExistent",

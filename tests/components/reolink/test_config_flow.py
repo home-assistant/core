@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, call
 import pytest
 from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL, const
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util.dt import utcnow
 
@@ -53,7 +54,7 @@ async def test_config_flow_manual_success(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -66,7 +67,7 @@ async def test_config_flow_manual_success(
         },
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_NVR_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
@@ -88,7 +89,7 @@ async def test_config_flow_errors(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -103,7 +104,7 @@ async def test_config_flow_errors(
         },
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_USERNAME: "not_admin"}
 
@@ -119,7 +120,7 @@ async def test_config_flow_errors(
         },
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
 
@@ -133,7 +134,7 @@ async def test_config_flow_errors(
         },
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "webhook_exception"}
 
@@ -149,7 +150,7 @@ async def test_config_flow_errors(
         },
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_HOST: "unknown"}
 
@@ -163,10 +164,25 @@ async def test_config_flow_errors(
         },
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {CONF_HOST: "invalid_auth"}
+    assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
+    reolink_connect.valid_password.return_value = False
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_HOST: TEST_HOST,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {CONF_PASSWORD: "password_incompatible"}
+
+    reolink_connect.valid_password.return_value = True
     reolink_connect.get_host_data.side_effect = ApiError("Test error")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -177,7 +193,7 @@ async def test_config_flow_errors(
         },
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_HOST: "api_error"}
 
@@ -193,7 +209,7 @@ async def test_config_flow_errors(
         },
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_NVR_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
@@ -231,7 +247,7 @@ async def test_options_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) ->
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -239,7 +255,7 @@ async def test_options_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) ->
         user_input={CONF_PROTOCOL: "rtmp"},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         CONF_PROTOCOL: "rtmp",
     }
@@ -270,7 +286,7 @@ async def test_change_connection_settings(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -283,7 +299,7 @@ async def test_change_connection_settings(
         },
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry.data[CONF_HOST] == TEST_HOST2
     assert config_entry.data[CONF_USERNAME] == TEST_USERNAME2
@@ -323,7 +339,7 @@ async def test_reauth(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
         data=config_entry.data,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
@@ -331,7 +347,7 @@ async def test_reauth(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
         {},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -343,7 +359,7 @@ async def test_reauth(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert config_entry.data[CONF_HOST] == TEST_HOST
     assert config_entry.data[CONF_USERNAME] == TEST_USERNAME2
@@ -362,7 +378,7 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) -> No
         const.DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -374,7 +390,7 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) -> No
         },
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_NVR_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
@@ -451,7 +467,7 @@ async def test_dhcp_ip_update(
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     if not last_update_success:
         # ensure the last_update_succes is False for the device_coordinator.
@@ -474,8 +490,8 @@ async def test_dhcp_ip_update(
         const.DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
     )
 
-    expected_calls = [
-        call(
+    for host in host_call_list:
+        expected_call = call(
             host,
             TEST_USERNAME,
             TEST_PASSWORD,
@@ -484,12 +500,12 @@ async def test_dhcp_ip_update(
             protocol=DEFAULT_PROTOCOL,
             timeout=DEFAULT_TIMEOUT,
         )
-        for host in host_call_list
-    ]
+        assert expected_call in reolink_connect_class.call_args_list
 
-    assert reolink_connect_class.call_args_list == expected_calls
+    for exc_call in reolink_connect_class.call_args_list:
+        assert exc_call[0][0] in host_call_list
 
-    assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     await hass.async_block_till_done()

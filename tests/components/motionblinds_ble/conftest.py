@@ -1,5 +1,6 @@
-"""Setup the MotionBlinds BLE tests."""
+"""Setup the Motionblinds Bluetooth tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -10,7 +11,9 @@ TEST_ADDRESS = "test_adress"
 
 
 @pytest.fixture(name="motionblinds_ble_connect", autouse=True)
-def motion_blinds_connect_fixture(enable_bluetooth):
+def motion_blinds_connect_fixture(
+    enable_bluetooth: None,
+) -> Generator[tuple[AsyncMock, Mock]]:
     """Mock motion blinds ble connection and entry setup."""
     device = Mock()
     device.name = TEST_NAME

@@ -28,11 +28,13 @@ from .const import CONF_FUEL_TYPES, CONF_STATIONS
 
 _LOGGER = logging.getLogger(__name__)
 
+type TankerkoenigConfigEntry = ConfigEntry[TankerkoenigDataUpdateCoordinator]
 
-class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
+
+class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInfo]]):
     """Get the latest data from the API."""
 
-    config_entry: ConfigEntry
+    config_entry: TankerkoenigConfigEntry
 
     def __init__(
         self,

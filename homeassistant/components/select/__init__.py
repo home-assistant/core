@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from functools import cached_property
 import logging
-from typing import TYPE_CHECKING, Any, final
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -12,10 +13,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.config_validation import (
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -32,18 +29,14 @@ from .const import (
     SERVICE_SELECT_PREVIOUS,
 )
 
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
-SCAN_INTERVAL = timedelta(seconds=30)
+_LOGGER = logging.getLogger(__name__)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=30)
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-
-_LOGGER = logging.getLogger(__name__)
 
 __all__ = [
     "ATTR_CYCLE",

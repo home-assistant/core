@@ -32,7 +32,7 @@ async def _fill_out_form_and_assert_entry_created(
         )
         await hass.async_block_till_done()
 
-        assert result_configure["type"] == FlowResultType.CREATE_ENTRY
+        assert result_configure["type"] is FlowResultType.CREATE_ENTRY
         assert result_configure["title"] == ENTRY_TITLE
         assert result_configure["data"] == {
             CONF_API_TOKEN: "test-token",
@@ -46,7 +46,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     result_init = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result_init["type"] == FlowResultType.FORM
+    assert result_init["type"] is FlowResultType.FORM
     assert not result_init["errors"]
 
     await _fill_out_form_and_assert_entry_created(
@@ -82,7 +82,7 @@ async def test_form_fails(
             },
         )
 
-        assert result_configure["type"] == FlowResultType.FORM
+        assert result_configure["type"] is FlowResultType.FORM
         assert result_configure["errors"] == {"base": message}
         await hass.async_block_till_done()
 

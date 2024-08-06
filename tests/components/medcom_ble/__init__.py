@@ -75,6 +75,7 @@ MEDCOM_SERVICE_INFO = BluetoothServiceInfoBleak(
     ),
     connectable=True,
     time=0,
+    tx_power=-127,
 )
 
 UNKNOWN_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -95,6 +96,7 @@ UNKNOWN_SERVICE_INFO = BluetoothServiceInfoBleak(
     ),
     connectable=True,
     time=0,
+    tx_power=-127,
 )
 
 MEDCOM_DEVICE_INFO = MedcomBleDevice(

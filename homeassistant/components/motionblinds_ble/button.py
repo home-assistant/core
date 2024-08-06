@@ -1,4 +1,4 @@
-"""Button entities for the Motionblinds BLE integration."""
+"""Button entities for the Motionblinds Bluetooth integration."""
 
 from __future__ import annotations
 

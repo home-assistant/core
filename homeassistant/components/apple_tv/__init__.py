@@ -60,6 +60,7 @@ AUTH_EXCEPTIONS = (
     exceptions.NoCredentialsError,
 )
 CONNECTION_TIMEOUT_EXCEPTIONS = (
+    OSError,
     asyncio.CancelledError,
     TimeoutError,
     exceptions.ConnectionLostError,
@@ -73,8 +74,10 @@ DEVICE_EXCEPTIONS = (
     exceptions.DeviceIdMissingError,
 )
 
+type AppleTvConfigEntry = ConfigEntry[AppleTVManager]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: AppleTvConfigEntry) -> bool:
     """Set up a config entry for Apple TV."""
     manager = AppleTVManager(hass, entry)
 
@@ -95,17 +98,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
             raise ConfigEntryNotReady(f"{address}: {ex}") from ex
 
-    hass.data.setdefault(DOMAIN, {})[entry.unique_id] = manager
+    entry.runtime_data = manager
 
     async def on_hass_stop(event: Event) -> None:
         """Stop push updates when hass stops."""
         await manager.disconnect()
 
     entry.async_on_unload(
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, on_hass_stop, run_immediately=True
-        )
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
     )
+    entry.async_on_unload(manager.disconnect)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await manager.init()
@@ -115,13 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an Apple TV config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        manager = hass.data[DOMAIN].pop(entry.unique_id)
-        await manager.disconnect()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class AppleTVEntity(Entity):
@@ -248,7 +244,7 @@ class AppleTVManager(DeviceListener):
             if self._task:
                 self._task.cancel()
                 self._task = None
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("An error occurred while disconnecting")
 
     def _start_connect_loop(self) -> None:
@@ -294,7 +290,7 @@ class AppleTVManager(DeviceListener):
             return
         except asyncio.CancelledError:
             pass
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Failed to connect")
             await self.disconnect()
 

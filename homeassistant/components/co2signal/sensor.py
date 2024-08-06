@@ -12,13 +12,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import CO2SignalConfigEntry
 from .const import ATTRIBUTION, DOMAIN
 from .coordinator import CO2SignalCoordinator
 
@@ -53,10 +53,12 @@ SENSORS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: CO2SignalConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the CO2signal sensor."""
-    coordinator: CO2SignalCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         [CO2Sensor(coordinator, description) for description in SENSORS], False
     )

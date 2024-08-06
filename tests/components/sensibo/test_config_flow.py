@@ -26,7 +26,7 @@ async def test_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["step_id"] == "user"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -51,7 +51,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["version"] == 2
     assert result2["data"] == {
         "api_key": "1234567890",
@@ -78,7 +78,7 @@ async def test_flow_fails(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
     with patch(
@@ -115,7 +115,7 @@ async def test_flow_fails(
             },
         )
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Sensibo"
     assert result3["data"] == {
         "api_key": "1234567891",
@@ -129,7 +129,7 @@ async def test_flow_get_no_devices(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
     with (
@@ -159,7 +159,7 @@ async def test_flow_get_no_username(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
     with (
@@ -202,7 +202,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         data=entry.data,
     )
     assert result["step_id"] == "reauth_confirm"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -225,7 +225,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert entry.data == {"api_key": "1234567891"}
 
@@ -275,7 +275,7 @@ async def test_reauth_flow_error(
         await hass.async_block_till_done()
 
     assert result2["step_id"] == "reauth_confirm"
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": p_error}
 
     with (
@@ -298,7 +298,7 @@ async def test_reauth_flow_error(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert entry.data == {"api_key": "1234567891"}
 
@@ -348,7 +348,7 @@ async def test_flow_reauth_no_username_or_device(
         data=entry.data,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     with (
@@ -370,5 +370,5 @@ async def test_flow_reauth_no_username_or_device(
         await hass.async_block_till_done()
 
     assert result2["step_id"] == "reauth_confirm"
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": p_error}

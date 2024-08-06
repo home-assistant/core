@@ -43,7 +43,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize."""
-        self._data = {
+        self._data: dict[str, Any] = {
             CONF_HOST: vol.UNDEFINED,
             CONF_SSL: False,
             CONF_VERIFY_SSL: True,
@@ -71,7 +71,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except pysma.exceptions.SmaReadException:
                 errors["base"] = "cannot_retrieve_device_info"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 

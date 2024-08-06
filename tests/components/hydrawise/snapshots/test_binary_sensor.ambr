@@ -1,0 +1,193 @@
+# serializer version: 1
+# name: test_all_binary_sensors[binary_sensor.home_controller_connectivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.home_controller_connectivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Connectivity',
+    'platform': 'hydrawise',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '52496_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.home_controller_connectivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by hydrawise.com',
+      'device_class': 'connectivity',
+      'friendly_name': 'Home Controller Connectivity',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.home_controller_connectivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.home_controller_rain_sensor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.home_controller_rain_sensor',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
+    'original_icon': None,
+    'original_name': 'Rain sensor',
+    'platform': 'hydrawise',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'rain_sensor',
+    'unique_id': '52496_rain_sensor',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.home_controller_rain_sensor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by hydrawise.com',
+      'device_class': 'moisture',
+      'friendly_name': 'Home Controller Rain sensor',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.home_controller_rain_sensor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.zone_one_watering-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.zone_one_watering',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Watering',
+    'platform': 'hydrawise',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'watering',
+    'unique_id': '5965394_is_watering',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.zone_one_watering-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by hydrawise.com',
+      'device_class': 'running',
+      'friendly_name': 'Zone One Watering',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.zone_one_watering',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.zone_two_watering-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.zone_two_watering',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Watering',
+    'platform': 'hydrawise',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'watering',
+    'unique_id': '5965395_is_watering',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_binary_sensors[binary_sensor.zone_two_watering-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by hydrawise.com',
+      'device_class': 'running',
+      'friendly_name': 'Zone Two Watering',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.zone_two_watering',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

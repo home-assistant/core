@@ -98,7 +98,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 _LOGGER.error("Failed to initialize mailbox platform %s", p_type)
                 return
 
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error setting up platform %s", p_type)
             return
 
@@ -110,14 +110,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         component.register_shutdown()
         await component.async_add_entities([mailbox_entity])
 
-    setup_tasks = [
-        asyncio.create_task(async_setup_platform(p_type, p_config))
-        for p_type, p_config in config_per_platform(config, DOMAIN)
-        if p_type is not None
-    ]
-
-    if setup_tasks:
-        await asyncio.wait(setup_tasks)
+    for p_type, p_config in config_per_platform(config, DOMAIN):
+        if p_type is not None:
+            hass.async_create_task(
+                async_setup_platform(p_type, p_config), eager_start=True
+            )
 
     async def async_platform_discovered(
         platform: str, info: DiscoveryInfoType | None

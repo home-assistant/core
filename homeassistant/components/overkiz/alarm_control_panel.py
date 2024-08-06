@@ -240,6 +240,7 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
     """Representation of an Overkiz Alarm Control Panel."""
 
     entity_description: OverkizAlarmDescription
+    _attr_code_arm_required = False
 
     def __init__(
         self,

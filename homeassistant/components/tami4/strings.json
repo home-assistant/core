@@ -7,8 +7,8 @@
       "uv_upcoming_replacement": {
         "name": "UV upcoming replacement"
       },
-      "uv_status": {
-        "name": "UV status"
+      "uv_installed": {
+        "name": "UV installed"
       },
       "filter_last_replacement": {
         "name": "Filter last replacement"
@@ -16,8 +16,8 @@
       "filter_upcoming_replacement": {
         "name": "Filter upcoming replacement"
       },
-      "filter_status": {
-        "name": "Filter status"
+      "filter_installed": {
+        "name": "Filter installed"
       },
       "filter_litters_passed": {
         "name": "Filter water passed"

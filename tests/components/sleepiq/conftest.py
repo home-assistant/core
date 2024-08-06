@@ -46,7 +46,7 @@ SLEEPIQ_CONFIG = {
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.sleepiq.async_setup_entry", return_value=True
@@ -97,7 +97,7 @@ def mock_bed() -> MagicMock:
 @pytest.fixture
 def mock_asyncsleepiq_single_foundation(
     mock_bed: MagicMock,
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Mock an AsyncSleepIQ object with a single foundation."""
     with patch("homeassistant.components.sleepiq.AsyncSleepIQ", autospec=True) as mock:
         client = mock.return_value
@@ -131,7 +131,7 @@ def mock_asyncsleepiq_single_foundation(
 
 
 @pytest.fixture
-def mock_asyncsleepiq(mock_bed: MagicMock) -> Generator[MagicMock, None, None]:
+def mock_asyncsleepiq(mock_bed: MagicMock) -> Generator[MagicMock]:
     """Mock an AsyncSleepIQ object with a split foundation."""
     with patch("homeassistant.components.sleepiq.AsyncSleepIQ", autospec=True) as mock:
         client = mock.return_value

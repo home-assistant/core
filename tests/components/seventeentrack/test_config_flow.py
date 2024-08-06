@@ -2,10 +2,10 @@
 
 from unittest.mock import AsyncMock
 
-from py17track.errors import SeventeenTrackError
+from pyseventeentrack.errors import SeventeenTrackError
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.seventeentrack import DOMAIN
 from homeassistant.components.seventeentrack.const import (
     CONF_SHOW_ARCHIVED,
@@ -38,7 +38,7 @@ async def test_create_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -47,7 +47,7 @@ async def test_create_entry(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "someemail@gmail.com"
     assert result2["data"] == {
         CONF_PASSWORD: "edc3eee7330e4fdda04489e3fbc283d0",
@@ -97,7 +97,7 @@ async def test_flow_fails(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "someemail@gmail.com"
     assert result["data"] == {
         CONF_PASSWORD: "edc3eee7330e4fdda04489e3fbc283d0",
@@ -113,7 +113,7 @@ async def test_import_flow(hass: HomeAssistant, mock_seventeentrack: AsyncMock) 
         data=VALID_CONFIG_OLD,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "someemail@gmail.com"
     assert result["data"][CONF_USERNAME] == "someemail@gmail.com"
     assert result["data"][CONF_PASSWORD] == "edc3eee7330e4fdda04489e3fbc283d0"
@@ -150,7 +150,7 @@ async def test_import_flow_cannot_connect_error(
         data=VALID_CONFIG_OLD,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == error
 
 
@@ -170,7 +170,7 @@ async def test_option_flow(hass: HomeAssistant, mock_seventeentrack: AsyncMock) 
     await hass.async_block_till_done()
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -178,7 +178,7 @@ async def test_option_flow(hass: HomeAssistant, mock_seventeentrack: AsyncMock) 
         user_input={CONF_SHOW_ARCHIVED: True, CONF_SHOW_DELIVERED: False},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_SHOW_ARCHIVED]
     assert not result["data"][CONF_SHOW_DELIVERED]
 
@@ -204,5 +204,5 @@ async def test_import_flow_already_configured(
     )
     await hass.async_block_till_done()
 
-    assert result_aborted["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result_aborted["type"] is FlowResultType.ABORT
     assert result_aborted["reason"] == "already_configured"

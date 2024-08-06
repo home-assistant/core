@@ -72,7 +72,7 @@ async def test_reload_notify(hass: HomeAssistant) -> None:
 @pytest.fixture
 def message():
     """Return MockSMTP object with test data."""
-    mailer = MockSMTP(
+    return MockSMTP(
         "localhost",
         25,
         5,
@@ -85,7 +85,6 @@ def message():
         0,
         True,
     )
-    return mailer
 
 
 HTML = """
@@ -174,7 +173,6 @@ def test_sending_insecure_files_fails(
         pytest.raises(ServiceValidationError) as exc,
     ):
         result, _ = message.send_message(message_data, data=data)
-        assert content_type in result
     assert exc.value.translation_key == "remote_path_not_allowed"
     assert exc.value.translation_domain == DOMAIN
     assert (

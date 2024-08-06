@@ -58,7 +58,7 @@
       "fields": {
         "config_entry": {
           "name": "Config Entry",
-          "description": "The config entry to use for this service."
+          "description": "The config entry to use for this action."
         },
         "incl_vat": {
           "name": "Including VAT",

@@ -7,7 +7,7 @@ from bimmer_connected.api.authentication import MyBMWAuthentication
 from bimmer_connected.models import MyBMWAPIError, MyBMWAuthError
 from httpx import RequestError
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.bmw_connected_drive.config_flow import DOMAIN
 from homeassistant.components.bmw_connected_drive.const import (
     CONF_READ_ONLY,
@@ -15,6 +15,7 @@ from homeassistant.components.bmw_connected_drive.const import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     FIXTURE_CONFIG_ENTRY,
@@ -41,7 +42,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -58,7 +59,7 @@ async def test_authentication_error(hass: HomeAssistant) -> None:
             data=FIXTURE_USER_INPUT,
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -76,7 +77,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
             data=FIXTURE_USER_INPUT,
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -91,10 +92,10 @@ async def test_api_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data=FIXTURE_USER_INPUT,
+            data=deepcopy(FIXTURE_USER_INPUT),
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -115,9 +116,9 @@ async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data=FIXTURE_USER_INPUT,
+            data=deepcopy(FIXTURE_USER_INPUT),
         )
-        assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["title"] == FIXTURE_COMPLETE_ENTRY[CONF_USERNAME]
         assert result2["data"] == FIXTURE_COMPLETE_ENTRY
 
@@ -136,14 +137,15 @@ async def test_options_flow_implementation(hass: HomeAssistant) -> None:
             return_value=True,
         ) as mock_setup_entry,
     ):
-        config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
+        config_entry_args = deepcopy(FIXTURE_CONFIG_ENTRY)
+        config_entry = MockConfigEntry(**config_entry_args)
         config_entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "account_options"
 
         result = await hass.config_entries.options.async_configure(
@@ -152,12 +154,12 @@ async def test_options_flow_implementation(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == {
             CONF_READ_ONLY: True,
         }
 
-        assert len(mock_setup_entry.mock_calls) == 1
+        assert len(mock_setup_entry.mock_calls) == 2
 
 
 async def test_reauth(hass: HomeAssistant) -> None:
@@ -195,7 +197,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {}
 
@@ -204,8 +206,8 @@ async def test_reauth(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result2["type"] is FlowResultType.ABORT
         assert result2["reason"] == "reauth_successful"
         assert config_entry.data == FIXTURE_COMPLETE_ENTRY
 
-        assert len(mock_setup_entry.mock_calls) == 1
+        assert len(mock_setup_entry.mock_calls) == 2

@@ -16,6 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
+    EventStateChangedData,
     HassJob,
     HomeAssistant,
     State,
@@ -23,7 +24,6 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     async_track_point_in_time,
     async_track_state_change_event,
     async_track_time_change,
@@ -119,7 +119,7 @@ async def async_attach_trigger(
                     hour,
                     minute,
                     second,
-                    tzinfo=dt_util.DEFAULT_TIME_ZONE,
+                    tzinfo=dt_util.get_default_time_zone(),
                 )
                 # Only set up listener if time is now or in the future.
                 if trigger_dt >= dt_util.now():

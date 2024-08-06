@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from pykoplenti import MeData, VersionData
 import pytest
 
-from homeassistant.components.kostal_plenticore.helper import Plenticore
+from homeassistant.components.kostal_plenticore.coordinator import Plenticore
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 
@@ -27,7 +27,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_plenticore() -> Generator[Plenticore, None, None]:
+def mock_plenticore() -> Generator[Plenticore]:
     """Set up a Plenticore mock with some default values."""
     with patch(
         "homeassistant.components.kostal_plenticore.Plenticore", autospec=True

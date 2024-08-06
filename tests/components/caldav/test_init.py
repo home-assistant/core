@@ -23,15 +23,15 @@ async def test_load_unload(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test loading and unloading of the config entry."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
     with patch("homeassistant.components.caldav.config_flow.caldav.DAVClient"):
         await hass.config_entries.async_setup(config_entry.entry_id)
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize(
@@ -57,7 +57,7 @@ async def test_client_failure(
 ) -> None:
     """Test CalDAV client failures in setup."""
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
     with patch(
         "homeassistant.components.caldav.config_flow.caldav.DAVClient"

@@ -18,7 +18,7 @@ async def test_form(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with (
@@ -47,7 +47,7 @@ async def test_form(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Fibonacci256-23D4"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -74,7 +74,7 @@ async def test_form_cannot_connect(
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
     assert "Unable to connect" in caplog.text
 
@@ -96,7 +96,7 @@ async def test_form_timeout(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "timeout"}
 
 
@@ -117,5 +117,5 @@ async def test_form_unknown(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}

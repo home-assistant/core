@@ -5,15 +5,14 @@ from __future__ import annotations
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HomeAssistantTuyaData
+from . import TuyaConfigEntry
 from .base import TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
 
 # All descriptions can be found here. Mostly the Enum data types in the
 # default instructions set of each category end up being a select.
@@ -320,10 +319,10 @@ SELECTS["pc"] = SELECTS["kg"]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: TuyaConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Tuya select dynamically through Tuya discovery."""
-    hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
+    hass_data = entry.runtime_data
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:

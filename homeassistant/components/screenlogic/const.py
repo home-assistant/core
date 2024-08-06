@@ -15,7 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.util import slugify
 
-ScreenLogicDataPath = tuple[str | int, ...]
+type ScreenLogicDataPath = tuple[str | int, ...]
 
 DOMAIN = "screenlogic"
 DEFAULT_SCAN_INTERVAL = 30

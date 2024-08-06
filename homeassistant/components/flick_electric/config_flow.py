@@ -65,7 +65,7 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

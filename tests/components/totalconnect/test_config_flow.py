@@ -4,7 +4,6 @@ from unittest.mock import patch
 
 from total_connect_client.exceptions import AuthenticationError
 
-from homeassistant import data_entry_flow
 from homeassistant.components.totalconnect.const import (
     AUTO_BYPASS,
     CONF_USERCODES,
@@ -13,6 +12,7 @@ from homeassistant.components.totalconnect.const import (
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from .common import (
     CONFIG_DATA,
@@ -39,7 +39,7 @@ async def test_user(hass: HomeAssistant) -> None:
         data=None,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -71,7 +71,7 @@ async def test_user_show_locations(hass: HomeAssistant) -> None:
         )
 
         # first it should show the locations form
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "locations"
         # client should have sent four requests for init
         assert mock_request.call_count == 4
@@ -81,7 +81,7 @@ async def test_user_show_locations(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input={CONF_USERCODES: "bad"},
         )
-        assert result2["type"] == data_entry_flow.FlowResultType.FORM
+        assert result2["type"] is FlowResultType.FORM
         assert result2["step_id"] == "locations"
         # client should have sent 5th request to validate usercode
         assert mock_request.call_count == 5
@@ -91,7 +91,7 @@ async def test_user_show_locations(hass: HomeAssistant) -> None:
             result2["flow_id"],
             user_input={CONF_USERCODES: "7890"},
         )
-        assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result3["type"] is FlowResultType.CREATE_ENTRY
         # client should have sent another request to validate usercode
         assert mock_request.call_count == 6
 
@@ -112,7 +112,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
             data=CONFIG_DATA,
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -128,7 +128,7 @@ async def test_login_failed(hass: HomeAssistant) -> None:
             data=CONFIG_DATA,
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
 
@@ -144,7 +144,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_REAUTH}, data=entry.data
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     with (
@@ -161,7 +161,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_PASSWORD: "password"}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
         assert result["errors"] == {"base": "invalid_auth"}
 
@@ -171,7 +171,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_PASSWORD: "password"}
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
         await hass.async_block_till_done()
 
@@ -205,7 +205,7 @@ async def test_no_locations(hass: HomeAssistant) -> None:
             context={"source": SOURCE_USER},
             data=CONFIG_DATA_NO_USERCODES,
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "no_locations"
         await hass.async_block_till_done()
 
@@ -236,14 +236,14 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input={AUTO_BYPASS: True}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert config_entry.options == {AUTO_BYPASS: True}
         await hass.async_block_till_done()
 

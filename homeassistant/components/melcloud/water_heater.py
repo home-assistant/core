@@ -73,8 +73,7 @@ class AtwWaterHeater(WaterHeaterEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the optional state attributes with device specific additions."""
-        data = {ATTR_STATUS: self._device.status}
-        return data
+        return {ATTR_STATUS: self._device.status}
 
     @property
     def temperature_unit(self) -> str:

@@ -2,7 +2,7 @@
 
 import pytest
 
-from tests.components.select.common import MockSelectEntity
+from .common import MockSelectEntity
 
 
 @pytest.fixture

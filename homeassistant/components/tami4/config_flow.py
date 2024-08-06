@@ -50,7 +50,7 @@ class Tami4ConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_phone"
             except exceptions.Tami4EdgeAPIException:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -78,12 +78,16 @@ class Tami4ConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except exceptions.Tami4EdgeAPIException:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                device_name = api.device_metadata.name
+                if device_name is None:
+                    device_name = "Tami4"
                 return self.async_create_entry(
-                    title=api.device.name, data={CONF_REFRESH_TOKEN: refresh_token}
+                    title=device_name,
+                    data={CONF_REFRESH_TOKEN: refresh_token},
                 )
 
         return self.async_show_form(

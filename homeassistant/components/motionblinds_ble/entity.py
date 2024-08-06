@@ -1,4 +1,4 @@
-"""Base entities for the Motionblinds BLE integration."""
+"""Base entities for the Motionblinds Bluetooth integration."""
 
 import logging
 
@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class MotionblindsBLEEntity(Entity):
-    """Base class for Motionblinds BLE entities."""
+    """Base class for Motionblinds Bluetooth entities."""
 
     _attr_has_entity_name = True
     _attr_should_poll = False

@@ -52,6 +52,8 @@ async def async_setup_entry(
 class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
     """Representation of a Freebox alarm."""
 
+    _attr_code_arm_required = False
+
     def __init__(
         self, hass: HomeAssistant, router: FreeboxRouter, node: dict[str, Any]
     ) -> None:

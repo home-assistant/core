@@ -24,8 +24,14 @@
     "step": {
       "init": {
         "data": {
-          "prompt": "Prompt template",
-          "max_history": "Max history messages"
+          "prompt": "Instructions",
+          "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
+          "max_history": "Max history messages",
+          "keep_alive": "Keep alive"
+        },
+        "data_description": {
+          "prompt": "Instruct how the LLM should respond. This can be a template.",
+          "keep_alive": "Duration in seconds for Ollama to keep model in memory. -1 = indefinite, 0 = never."
         }
       }
     }

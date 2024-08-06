@@ -26,3 +26,19 @@ electro_lama_device = USBDevice(
     manufacturer=None,
     description="USB2.0-Serial",
 )
+skyconnect_macos_correct = USBDevice(
+    device="/dev/cu.SLAB_USBtoUART",
+    vid="10C4",
+    pid="EA60",
+    serial_number="9ab1da1ea4b3ed11956f4eaca7669f5d",
+    manufacturer="Nabu Casa",
+    description="SkyConnect v1.0",
+)
+skyconnect_macos_incorrect = USBDevice(
+    device="/dev/cu.usbserial-2110",
+    vid="10C4",
+    pid="EA60",
+    serial_number="9ab1da1ea4b3ed11956f4eaca7669f5d",
+    manufacturer="Nabu Casa",
+    description="SkyConnect v1.0",
+)

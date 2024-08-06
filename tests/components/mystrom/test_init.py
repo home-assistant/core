@@ -113,7 +113,7 @@ async def test_init_of_unknown_bulb(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_init_of_unknown_device(
@@ -127,7 +127,7 @@ async def test_init_of_unknown_device(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_init_cannot_connect_because_of_device_info(
@@ -145,7 +145,7 @@ async def test_init_cannot_connect_because_of_device_info(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_init_cannot_connect_because_of_get_state(
@@ -168,4 +168,4 @@ async def test_init_cannot_connect_because_of_get_state(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY

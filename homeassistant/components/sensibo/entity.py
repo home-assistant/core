@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine
-from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate
 
 from pysensibo.model import MotionSensor, SensiboDevice
 
@@ -15,11 +15,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, LOGGER, SENSIBO_ERRORS, TIMEOUT
 from .coordinator import SensiboDataUpdateCoordinator
 
-_T = TypeVar("_T", bound="SensiboDeviceBaseEntity")
-_P = ParamSpec("_P")
 
-
-def async_handle_api_call(
+def async_handle_api_call[_T: SensiboDeviceBaseEntity, **_P](
     function: Callable[Concatenate[_T, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, Any]]:
     """Decorate api calls."""

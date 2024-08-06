@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import (
@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
@@ -71,11 +71,10 @@ class LuciDeviceScanner(DeviceScanner):
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        name = next(
+        return next(
             (result.hostname for result in self.last_results if result.mac == device),
             None,
         )
-        return name
 
     def get_extra_attributes(self, device):
         """Get extra attributes of a device.

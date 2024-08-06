@@ -210,7 +210,7 @@ async def setup_mikrotik_entry(hass: HomeAssistant, **kwargs: Any) -> None:
 
     with (
         patch("librouteros.connect"),
-        patch.object(mikrotik.hub.MikrotikData, "command", new=mock_command),
+        patch.object(mikrotik.coordinator.MikrotikData, "command", new=mock_command),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

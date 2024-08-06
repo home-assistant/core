@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
+from pathlib import Path
 import re
 import tempfile
 from unittest.mock import patch
@@ -46,7 +48,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_capture_events
@@ -281,6 +283,9 @@ async def matrix_bot(
     assert await async_setup_component(hass, MATRIX_DOMAIN, MOCK_CONFIG_DATA)
     assert await async_setup_component(hass, NOTIFY_DOMAIN, MOCK_CONFIG_DATA)
     await hass.async_block_till_done()
+
+    # Accessing hass.data in tests is not desirable, but all the tests here
+    # currently do this.
     assert isinstance(matrix_bot := hass.data[MATRIX_DOMAIN], MatrixBot)
 
     await hass.async_start()
@@ -289,21 +294,21 @@ async def matrix_bot(
 
 
 @pytest.fixture
-def matrix_events(hass: HomeAssistant):
+def matrix_events(hass: HomeAssistant) -> list[Event]:
     """Track event calls."""
     return async_capture_events(hass, MATRIX_DOMAIN)
 
 
 @pytest.fixture
-def command_events(hass: HomeAssistant):
+def command_events(hass: HomeAssistant) -> list[Event]:
     """Track event calls."""
     return async_capture_events(hass, EVENT_MATRIX_COMMAND)
 
 
 @pytest.fixture
-def image_path(tmp_path):
+def image_path(tmp_path: Path) -> Generator[tempfile._TemporaryFileWrapper]:
     """Provide the Path to a mock image."""
     image = Image.new("RGBA", size=(50, 50), color=(256, 0, 0))
-    image_file = tempfile.NamedTemporaryFile(dir=tmp_path)
-    image.save(image_file, "PNG")
-    return image_file
+    with tempfile.NamedTemporaryFile(dir=tmp_path) as image_file:
+        image.save(image_file, "PNG")
+        yield image_file

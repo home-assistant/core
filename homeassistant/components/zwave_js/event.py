@@ -25,7 +25,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Z-Wave Event entity from Config Entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
 
     @callback
     def async_add_event(info: ZwaveDiscoveryInfo) -> None:

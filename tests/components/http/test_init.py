@@ -1,6 +1,7 @@
 """The tests for the Home Assistant HTTP component."""
 
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
 from http import HTTPStatus
 from ipaddress import ip_network
@@ -10,9 +11,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.auth.providers.legacy_api_password import (
-    LegacyApiPasswordAuthProvider,
-)
+from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components import http
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.http import KEY_HASS
@@ -85,7 +84,9 @@ class TestView(http.HomeAssistantView):
 
 
 async def test_registering_view_while_running(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, unused_tcp_port_factory
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    unused_tcp_port_factory: Callable[[], int],
 ) -> None:
     """Test that we can register a view while the server is running."""
     await async_setup_component(
@@ -112,7 +113,7 @@ async def test_not_log_password(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
-    legacy_auth: LegacyApiPasswordAuthProvider,
+    local_auth: HassAuthProvider,
 ) -> None:
     """Test access with password doesn't get logged."""
     assert await async_setup_component(hass, "api", {"http": {}})
@@ -465,7 +466,9 @@ async def test_cors_defaults(hass: HomeAssistant) -> None:
 
 
 async def test_storing_config(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, unused_tcp_port_factory
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    unused_tcp_port_factory: Callable[[], int],
 ) -> None:
     """Test that we store last working config."""
     config = {
@@ -521,3 +524,24 @@ async def test_logging(
     response = await client.get("/api/states/logging.entity")
     assert response.status == HTTPStatus.OK
     assert "GET /api/states/logging.entity" not in caplog.text
+
+
+async def test_register_static_paths(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test registering a static path with old api."""
+    assert await async_setup_component(hass, "frontend", {})
+    path = str(Path(__file__).parent)
+    hass.http.register_static_path("/something", path)
+    client = await hass_client()
+    resp = await client.get("/something/__init__.py")
+    assert resp.status == HTTPStatus.OK
+
+    assert (
+        "Detected code that calls hass.http.register_static_path "
+        "which is deprecated because it does blocking I/O in the "
+        "event loop, instead call "
+        "`await hass.http.async_register_static_paths"
+    ) in caplog.text

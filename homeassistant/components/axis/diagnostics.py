@@ -5,11 +5,10 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC, CONF_PASSWORD, CONF_UNIQUE_ID, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .hub import AxisHub
+from . import AxisConfigEntry
 
 REDACT_CONFIG = {CONF_MAC, CONF_PASSWORD, CONF_UNIQUE_ID, CONF_USERNAME}
 REDACT_BASIC_DEVICE_INFO = {"SerialNumber", "SocSerialNumber"}
@@ -17,10 +16,10 @@ REDACT_VAPIX_PARAMS = {"root.Network", "System.SerialNumber"}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: AxisConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    hub = AxisHub.get_hub(hass, config_entry)
+    hub = config_entry.runtime_data
     diag: dict[str, Any] = hub.additional_diagnostics.copy()
 
     diag["config"] = async_redact_data(config_entry.as_dict(), REDACT_CONFIG)

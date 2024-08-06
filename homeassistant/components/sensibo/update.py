@@ -12,12 +12,11 @@ from homeassistant.components.update import (
     UpdateEntity,
     UpdateEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import SensiboConfigEntry
 from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity
 
@@ -44,11 +43,13 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceUpdateEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SensiboConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Sensibo Update platform."""
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         SensiboDeviceUpdate(coordinator, device_id, description)

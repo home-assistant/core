@@ -9,10 +9,14 @@ import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.util import async_ as hasync
 
+from tests.common import extract_stack_to_frame
+
 
 @patch("concurrent.futures.Future")
 @patch("threading.get_ident")
-def test_run_callback_threadsafe_from_inside_event_loop(mock_ident, _) -> None:
+def test_run_callback_threadsafe_from_inside_event_loop(
+    mock_ident: MagicMock, mock_future: MagicMock
+) -> None:
     """Testing calling run_callback_threadsafe from inside an event loop."""
     callback = MagicMock()
 
@@ -74,7 +78,8 @@ async def test_run_callback_threadsafe(hass: HomeAssistant) -> None:
         nonlocal it_ran
         it_ran = True
 
-    assert hasync.run_callback_threadsafe(hass.loop, callback)
+    with patch.dict(hass.loop.__dict__, {"_thread_ident": -1}):
+        assert hasync.run_callback_threadsafe(hass.loop, callback)
     assert it_ran is False
 
     # Verify that async_block_till_done will flush
@@ -93,6 +98,7 @@ async def test_callback_is_always_scheduled(hass: HomeAssistant) -> None:
     hasync.shutdown_run_callback_threadsafe(hass.loop)
 
     with (
+        patch.dict(hass.loop.__dict__, {"_thread_ident": -1}),
         patch.object(hass.loop, "call_soon_threadsafe") as mock_call_soon_threadsafe,
         pytest.raises(RuntimeError),
     ):
@@ -123,3 +129,73 @@ async def test_create_eager_task_312(hass: HomeAssistant) -> None:
     assert events == ["eager", "normal"]
     await task1
     await task2
+
+
+async def test_create_eager_task_from_thread(hass: HomeAssistant) -> None:
+    """Test we report trying to create an eager task from a thread."""
+
+    def create_task():
+        hasync.create_eager_task(asyncio.sleep(0))
+
+    with pytest.raises(
+        RuntimeError,
+        match=(
+            "Detected code that attempted to create an asyncio task from a thread. Please report this issue."
+        ),
+    ):
+        await hass.async_add_executor_job(create_task)
+
+
+async def test_create_eager_task_from_thread_in_integration(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we report trying to create an eager task from a thread."""
+
+    def create_task():
+        hasync.create_eager_task(asyncio.sleep(0))
+
+    frames = extract_stack_to_frame(
+        [
+            Mock(
+                filename="/home/paulus/homeassistant/core.py",
+                lineno="23",
+                line="do_something()",
+            ),
+            Mock(
+                filename="/home/paulus/homeassistant/components/hue/light.py",
+                lineno="23",
+                line="self.light.is_on",
+            ),
+            Mock(
+                filename="/home/paulus/aiohue/lights.py",
+                lineno="2",
+                line="something()",
+            ),
+        ]
+    )
+    with (
+        pytest.raises(RuntimeError, match="no running event loop"),
+        patch(
+            "homeassistant.helpers.frame.linecache.getline",
+            return_value="self.light.is_on",
+        ),
+        patch(
+            "homeassistant.util.loop._get_line_from_cache",
+            return_value="mock_line",
+        ),
+        patch(
+            "homeassistant.util.loop.get_current_frame",
+            return_value=frames,
+        ),
+        patch(
+            "homeassistant.helpers.frame.get_current_frame",
+            return_value=frames,
+        ),
+    ):
+        await hass.async_add_executor_job(create_task)
+
+    assert (
+        "Detected that integration 'hue' attempted to create an asyncio task "
+        "from a thread at homeassistant/components/hue/light.py, line 23: "
+        "self.light.is_on"
+    ) in caplog.text

@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.myuplink.const import (
     DOMAIN,
@@ -22,11 +24,11 @@ REDIRECT_URL = "https://example.com/auth/external/callback"
 CURRENT_SCOPE = "WRITESYSTEM READSYSTEM offline_access"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
     setup_credentials,
 ) -> None:
     """Check full flow."""
@@ -72,11 +74,11 @@ async def test_full_flow(
     assert len(mock_setup.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_flow_reauth(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials: None,
     mock_config_entry: MockConfigEntry,
     expires_at: float,
@@ -155,7 +157,7 @@ async def test_flow_reauth(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "reauth_successful"
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1

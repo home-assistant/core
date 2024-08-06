@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST
@@ -27,7 +27,7 @@ DEFAULT_HOST = "192.168.1.254"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=60)
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string}
 )
 
@@ -39,7 +39,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> BboxDeviceScanner | 
     return scanner if scanner.success_init else None
 
 
-Device = namedtuple("Device", ["mac", "name", "ip", "last_update"])
+Device = namedtuple("Device", ["mac", "name", "ip", "last_update"])  # noqa: PYI024
 
 
 class BboxDeviceScanner(DeviceScanner):

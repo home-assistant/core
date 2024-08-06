@@ -23,7 +23,7 @@ async def test_form(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Device Name"
     assert result["context"]["unique_id"] == "0000-0001"
     assert result["data"] == {
@@ -67,7 +67,7 @@ async def test_flow_fails(
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": message}
     assert len(mock_setup_entry.mock_calls) == 0
 
@@ -81,7 +81,7 @@ async def test_flow_fails(
         },
     )
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Device Name"
     assert result2["context"]["unique_id"] == "0000-0001"
     assert result2["data"] == {
@@ -105,5 +105,5 @@ async def test_form_device_already_exist(
         },
     )
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

@@ -20,7 +20,7 @@ from homeassistant.components.device_tracker import (
     SourceType,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.typing import GPSType
+from homeassistant.helpers.typing import ConfigType, GPSType
 from homeassistant.loader import bind_hass
 
 from tests.common import MockPlatform, mock_platform
@@ -30,14 +30,14 @@ from tests.common import MockPlatform, mock_platform
 @bind_hass
 def async_see(
     hass: HomeAssistant,
-    mac: str = None,
-    dev_id: str = None,
-    host_name: str = None,
-    location_name: str = None,
-    gps: GPSType = None,
+    mac: str | None = None,
+    dev_id: str | None = None,
+    host_name: str | None = None,
+    location_name: str | None = None,
+    gps: GPSType | None = None,
     gps_accuracy=None,
-    battery: int = None,
-    attributes: dict = None,
+    battery: int | None = None,
+    attributes: dict | None = None,
 ):
     """Call service to notify you see device."""
     data = {
@@ -143,7 +143,9 @@ def mock_legacy_device_tracker_setup(
 ) -> None:
     """Mock legacy device tracker platform setup."""
 
-    async def _async_get_scanner(hass, config) -> MockScanner:
+    async def _async_get_scanner(
+        hass: HomeAssistant, config: ConfigType
+    ) -> MockScanner:
         """Return the test scanner."""
         return legacy_device_scanner
 

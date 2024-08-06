@@ -50,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         departure=departure,
     )
 
-    cls: type[HERETransitDataUpdateCoordinator] | type[HERERoutingDataUpdateCoordinator]
+    cls: type[HERETransitDataUpdateCoordinator | HERERoutingDataUpdateCoordinator]
     if config_entry.data[CONF_MODE] in {TRAVEL_MODE_PUBLIC, "publicTransportTimeTable"}:
         cls = HERETransitDataUpdateCoordinator
     else:

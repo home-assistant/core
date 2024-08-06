@@ -1,6 +1,9 @@
 """Constants for the 17track.net component."""
 
 from datetime import timedelta
+import logging
+
+LOGGER = logging.getLogger(__package__)
 
 ATTR_DESTINATION_COUNTRY = "destination_country"
 ATTR_INFO_TEXT = "info_text"
@@ -37,3 +40,10 @@ NOTIFICATION_DELIVERED_MESSAGE = (
 )
 
 VALUE_DELIVERED = "Delivered"
+
+SERVICE_GET_PACKAGES = "get_packages"
+
+ATTR_PACKAGE_STATE = "package_state"
+ATTR_CONFIG_ENTRY_ID = "config_entry_id"
+
+DEPRECATED_KEY = "deprecated"

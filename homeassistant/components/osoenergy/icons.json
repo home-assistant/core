@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "power_save": {
+        "default": "mdi:power-sleep"
+      },
+      "extra_energy": {
+        "default": "mdi:white-balance-sunny"
+      },
+      "heating": {
+        "default": "mdi:water-boiler"
+      }
+    }
+  }
+}

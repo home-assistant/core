@@ -1,11 +1,12 @@
 """The tests for the device tracker component."""
 
+from collections.abc import Generator
 from datetime import datetime, timedelta
 import json
 import logging
 import os
 from types import ModuleType
-from unittest.mock import Mock, call, patch
+from unittest.mock import call, patch
 
 import pytest
 
@@ -25,6 +26,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -48,7 +50,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture(name="yaml_devices")
-def mock_yaml_devices(hass):
+def mock_yaml_devices(hass: HomeAssistant) -> Generator[str]:
     """Get a path for storing yaml devices."""
     yaml_devices = hass.config.path(legacy.YAML_DEVICES)
     if os.path.isfile(yaml_devices):
@@ -107,7 +109,7 @@ async def test_reading_broken_yaml_config(hass: HomeAssistant) -> None:
         assert res[0].dev_id == "my_device"
 
 
-async def test_reading_yaml_config(hass: HomeAssistant, yaml_devices) -> None:
+async def test_reading_yaml_config(hass: HomeAssistant, yaml_devices: str) -> None:
     """Test the rendering of the YAML configuration."""
     dev_id = "test"
     device = legacy.Device(
@@ -185,7 +187,7 @@ async def test_duplicate_mac_dev_id(mock_warning, hass: HomeAssistant) -> None:
     assert "Duplicate device IDs" in args[0], "Duplicate device IDs warning expected"
 
 
-async def test_setup_without_yaml_file(hass: HomeAssistant, yaml_devices) -> None:
+async def test_setup_without_yaml_file(hass: HomeAssistant, yaml_devices: str) -> None:
     """Test with no YAML file."""
     with assert_setup_component(1, device_tracker.DOMAIN):
         assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
@@ -396,10 +398,16 @@ async def test_see_service_guard_config_entry(
     mock_device_tracker_conf: list[legacy.Device],
 ) -> None:
     """Test the guard if the device is registered in the entity registry."""
-    mock_entry = Mock()
     dev_id = "test"
     entity_id = f"{const.DOMAIN}.{dev_id}"
-    mock_registry(hass, {entity_id: mock_entry})
+    mock_registry(
+        hass,
+        {
+            entity_id: RegistryEntry(
+                entity_id=entity_id, unique_id=1, platform=const.DOMAIN
+            )
+        },
+    )
     devices = mock_device_tracker_conf
     assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
     await hass.async_block_till_done()
@@ -480,7 +488,7 @@ async def test_invalid_dev_id(
     assert not devices
 
 
-async def test_see_state(hass: HomeAssistant, yaml_devices) -> None:
+async def test_see_state(hass: HomeAssistant, yaml_devices: str) -> None:
     """Test device tracker see records state correctly."""
     assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
     await hass.async_block_till_done()

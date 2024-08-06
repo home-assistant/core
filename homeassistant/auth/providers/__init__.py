@@ -17,13 +17,14 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.importlib import async_import_module
 from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
+from homeassistant.util.hass_dict import HassKey
 
 from ..auth_store import AuthStore
 from ..const import MFA_SESSION_EXPIRATION
 from ..models import AuthFlowResult, Credentials, RefreshToken, User, UserMeta
 
 _LOGGER = logging.getLogger(__name__)
-DATA_REQS = "auth_prov_reqs_processed"
+DATA_REQS: HassKey[set[str]] = HassKey("auth_prov_reqs_processed")
 
 AUTH_PROVIDERS: Registry[str, type[AuthProvider]] = Registry()
 

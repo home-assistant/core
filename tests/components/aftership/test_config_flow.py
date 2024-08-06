@@ -29,7 +29,7 @@ async def test_full_user_flow(hass: HomeAssistant, mock_setup_entry) -> None:
                 CONF_API_KEY: "mock-api-key",
             },
         )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "AfterShip"
         assert result["data"] == {
             CONF_API_KEY: "mock-api-key",
@@ -54,7 +54,7 @@ async def test_flow_cannot_connect(hass: HomeAssistant, mock_setup_entry) -> Non
                 CONF_API_KEY: "mock-api-key",
             },
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
 
     with patch(
@@ -68,7 +68,7 @@ async def test_flow_cannot_connect(hass: HomeAssistant, mock_setup_entry) -> Non
                 CONF_API_KEY: "mock-api-key",
             },
         )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "AfterShip"
         assert result["data"] == {
             CONF_API_KEY: "mock-api-key",

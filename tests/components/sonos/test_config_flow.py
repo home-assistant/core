@@ -11,6 +11,7 @@ from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sonos.const import DATA_SONOS_DISCOVERY_MANAGER, DOMAIN
 from homeassistant.const import CONF_HOSTS
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 
@@ -24,9 +25,9 @@ async def test_user_form(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
     # Initiate a discovery to allow config entry creation
@@ -40,7 +41,7 @@ async def test_user_form(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     with (
         patch(
@@ -58,7 +59,7 @@ async def test_user_form(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Sonos"
     assert result2["data"] == {}
     assert len(mock_setup.mock_calls) == 1
@@ -78,7 +79,7 @@ async def test_user_form_already_created(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -93,7 +94,7 @@ async def test_zeroconf_form(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf_payload,
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with (
@@ -112,7 +113,7 @@ async def test_zeroconf_form(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Sonos"
     assert result2["data"] == {}
 
@@ -157,7 +158,7 @@ async def test_ssdp_discovery(hass: HomeAssistant, soco) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Sonos"
     assert result["data"] == {}
 
@@ -191,7 +192,7 @@ async def test_zeroconf_sonos_v1(hass: HomeAssistant) -> None:
             },
         ),
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with (
@@ -210,7 +211,7 @@ async def test_zeroconf_sonos_v1(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Sonos"
     assert result2["data"] == {}
 
@@ -232,6 +233,6 @@ async def test_zeroconf_form_not_sonos(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf_payload,
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_sonos_device"
     assert len(mock_manager.mock_calls) == 0

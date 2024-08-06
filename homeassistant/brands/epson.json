@@ -1,5 +1,0 @@
-{
-  "domain": "epson",
-  "name": "Epson",
-  "integrations": ["epson", "epsonworkforce"]
-}

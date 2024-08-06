@@ -16,7 +16,13 @@ from homeassistant.components.lock import (
     STATE_UNLOCKED,
     STATE_UNLOCKING,
 )
-from homeassistant.const import ATTR_ENTITY_ID, EVENT_STATE_CHANGED, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    EVENT_STATE_CHANGED,
+    STATE_OPEN,
+    STATE_OPENING,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -88,6 +94,26 @@ async def test_unlocking(hass: HomeAssistant) -> None:
 
 
 @patch.object(demo_lock, "LOCK_UNLOCK_DELAY", 0)
+async def test_opening(hass: HomeAssistant) -> None:
+    """Test the opening of a lock."""
+    state = hass.states.get(OPENABLE_LOCK)
+    assert state.state == STATE_LOCKED
+    await hass.async_block_till_done()
+
+    state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
+    await hass.services.async_call(
+        LOCK_DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: OPENABLE_LOCK}, blocking=False
+    )
+    await hass.async_block_till_done()
+
+    assert state_changes[0].data["entity_id"] == OPENABLE_LOCK
+    assert state_changes[0].data["new_state"].state == STATE_OPENING
+
+    assert state_changes[1].data["entity_id"] == OPENABLE_LOCK
+    assert state_changes[1].data["new_state"].state == STATE_OPEN
+
+
+@patch.object(demo_lock, "LOCK_UNLOCK_DELAY", 0)
 async def test_jammed_when_locking(hass: HomeAssistant) -> None:
     """Test the locking of a lock jams."""
     state = hass.states.get(POORLY_INSTALLED)
@@ -114,12 +140,3 @@ async def test_opening_mocked(hass: HomeAssistant) -> None:
         LOCK_DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: OPENABLE_LOCK}, blocking=True
     )
     assert len(calls) == 1
-
-
-async def test_opening(hass: HomeAssistant) -> None:
-    """Test the opening of a lock."""
-    await hass.services.async_call(
-        LOCK_DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: OPENABLE_LOCK}, blocking=True
-    )
-    state = hass.states.get(OPENABLE_LOCK)
-    assert state.state == STATE_UNLOCKED

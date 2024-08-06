@@ -1,0 +1,193 @@
+# serializer version: 1
+# name: test_all_switches[switch.zone_one_automatic_watering-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.zone_one_automatic_watering',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Automatic watering',
+    'platform': 'hydrawise',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_watering',
+    'unique_id': '5965394_auto_watering',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_switches[switch.zone_one_automatic_watering-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by hydrawise.com',
+      'device_class': 'switch',
+      'friendly_name': 'Zone One Automatic watering',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.zone_one_automatic_watering',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_switches[switch.zone_one_manual_watering-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.zone_one_manual_watering',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Manual watering',
+    'platform': 'hydrawise',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'manual_watering',
+    'unique_id': '5965394_manual_watering',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_switches[switch.zone_one_manual_watering-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by hydrawise.com',
+      'device_class': 'switch',
+      'friendly_name': 'Zone One Manual watering',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.zone_one_manual_watering',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_switches[switch.zone_two_automatic_watering-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.zone_two_automatic_watering',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Automatic watering',
+    'platform': 'hydrawise',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_watering',
+    'unique_id': '5965395_auto_watering',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_switches[switch.zone_two_automatic_watering-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by hydrawise.com',
+      'device_class': 'switch',
+      'friendly_name': 'Zone Two Automatic watering',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.zone_two_automatic_watering',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_switches[switch.zone_two_manual_watering-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.zone_two_manual_watering',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Manual watering',
+    'platform': 'hydrawise',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'manual_watering',
+    'unique_id': '5965395_manual_watering',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_switches[switch.zone_two_manual_watering-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by hydrawise.com',
+      'device_class': 'switch',
+      'friendly_name': 'Zone Two Manual watering',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.zone_two_manual_watering',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

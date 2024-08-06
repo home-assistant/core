@@ -158,7 +158,7 @@ class AzureEventHub:
         """
         logging.getLogger("azure.eventhub").setLevel(logging.WARNING)
         self._listener_remover = self.hass.bus.async_listen(
-            MATCH_ALL, self.async_listen, run_immediately=True
+            MATCH_ALL, self.async_listen
         )
         self._schedule_next_send()
 

@@ -16,7 +16,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
     MediaPlayerEntity,
@@ -45,13 +45,17 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, State, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 KEY_ANNOUNCE = "announce"
@@ -67,7 +71,7 @@ KEY_VOLUME = "volume"
 
 DEFAULT_NAME = "Media Group"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITIES): cv.entities_domain(DOMAIN),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -361,6 +365,8 @@ class MediaPlayerGroup(MediaPlayerEntity):
             ATTR_MEDIA_CONTENT_ID: media_id,
             ATTR_MEDIA_CONTENT_TYPE: media_type,
         }
+        if kwargs:
+            data.update(kwargs)
         await self.hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_MEDIA,
