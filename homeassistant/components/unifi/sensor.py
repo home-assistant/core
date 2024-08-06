@@ -291,11 +291,7 @@ def async_device_temperatures_value_fn(
     """Retrieve the temperature of the device."""
     temperature = _device_temperature(temperature_name=temperature_name, device=device)
 
-    if TYPE_CHECKING:
-        # Checked by async_device_temperatures_supported_fn
-        assert temperature
-
-    return temperature.get("value", 0)
+    return temperature.get("value", 0) if temperature is not None else 0
 
 
 @callback
