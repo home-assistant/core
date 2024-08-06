@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
 from typing import Any
 
@@ -129,11 +130,15 @@ def _discovery(config_info):
     else:
         _LOGGER.debug("Config Zones")
         zones = None
-        for recv in rxv.find():
-            if recv.ctrl_url == config_info.ctrl_url:
-                _LOGGER.debug("Config Zones Matched %s", config_info.ctrl_url)
-                zones = recv.zone_controllers()
-                break
+
+        # Fix for upstream issues in rxv.find() with some hardware.
+        with contextlib.suppress(AttributeError):
+            for recv in rxv.find():
+                if recv.ctrl_url == config_info.ctrl_url:
+                    _LOGGER.debug("Config Zones Matched %s", config_info.ctrl_url)
+                    zones = recv.zone_controllers()
+                    break
+
         if not zones:
             _LOGGER.debug("Config Zones Fallback")
             zones = rxv.RXV(config_info.ctrl_url, config_info.name).zone_controllers()
