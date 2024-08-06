@@ -26,7 +26,7 @@ def manage_water_heater_fallback_issue(
                 hass=hass,
                 domain=DOMAIN,
                 issue_id=f"{WATER_HEATER_FALLBACK_REPAIR}_{water_heater_name}",
-                is_fixable=False,
+                is_fixable=True,
                 is_persistent=False,
                 severity=ir.IssueSeverity.WARNING,
                 translation_key=WATER_HEATER_FALLBACK_REPAIR,
