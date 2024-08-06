@@ -86,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
     vehicles: list[TeslaFleetVehicleData] = []
     energysites: list[TeslaFleetEnergyData] = []
     for product in products:
-        if "vin" in product and tesla.vehicle:
+        if "vin" in product and hasattr(tesla, "vehicle"):
             # Remove the protobuff 'cached_data' that we do not use to save memory
             product.pop("cached_data", None)
             vin = product["vin"]
@@ -111,7 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                     device=device,
                 )
             )
-        elif "energy_site_id" in product and tesla.energy:
+        elif "energy_site_id" in product and hasattr(tesla, "energy"):
             site_id = product["energy_site_id"]
             if not (
                 product["components"]["battery"]

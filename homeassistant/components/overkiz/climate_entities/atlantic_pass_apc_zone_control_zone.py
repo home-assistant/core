@@ -234,7 +234,8 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         """Set new target hvac mode."""
 
         if self.is_using_derogated_temperature_fallback:
-            return await super().async_set_hvac_mode(hvac_mode)
+            await super().async_set_hvac_mode(hvac_mode)
+            return
 
         # They are mainly managed by the Zone Control device
         # However, it make sense to map the OFF Mode to the Overkiz STOP Preset
@@ -287,7 +288,8 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         """Set new preset mode."""
 
         if self.is_using_derogated_temperature_fallback:
-            return await super().async_set_preset_mode(preset_mode)
+            await super().async_set_preset_mode(preset_mode)
+            return
 
         mode = PRESET_MODES_TO_OVERKIZ[preset_mode]
 
@@ -361,7 +363,8 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         """Set new temperature."""
 
         if self.is_using_derogated_temperature_fallback:
-            return await super().async_set_temperature(**kwargs)
+            await super().async_set_temperature(**kwargs)
+            return
 
         target_temperature = kwargs.get(ATTR_TEMPERATURE)
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)

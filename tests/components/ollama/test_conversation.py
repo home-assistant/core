@@ -1,5 +1,6 @@
 """Tests for the Ollama integration."""
 
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from ollama import Message, ResponseError
@@ -9,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import conversation, ollama
 from homeassistant.components.conversation import trace
-from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent, llm
@@ -116,12 +117,33 @@ async def test_template_variables(
     assert "The user id is 12345." in prompt
 
 
+@pytest.mark.parametrize(
+    ("tool_args", "expected_tool_args"),
+    [
+        ({"param1": "test_value"}, {"param1": "test_value"}),
+        ({"param1": 2}, {"param1": 2}),
+        (
+            {"param1": "test_value", "floor": ""},
+            {"param1": "test_value"},  # Omit empty arguments
+        ),
+        (
+            {"domain": '["light"]'},
+            {"domain": ["light"]},  # Repair invalid json arguments
+        ),
+        (
+            {"domain": "['light']"},
+            {"domain": "['light']"},  # Preserve invalid json that can't be parsed
+        ),
+    ],
+)
 @patch("homeassistant.components.ollama.conversation.llm.AssistAPI._async_get_tools")
 async def test_function_call(
     mock_get_tools,
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
     mock_init_component,
+    tool_args: dict[str, Any],
+    expected_tool_args: dict[str, Any],
 ) -> None:
     """Test function call from the assistant."""
     agent_id = mock_config_entry_with_assist.entry_id
@@ -154,7 +176,7 @@ async def test_function_call(
                     {
                         "function": {
                             "name": "test_tool",
-                            "arguments": {"param1": "test_value"},
+                            "arguments": tool_args,
                         }
                     }
                 ],
@@ -183,7 +205,7 @@ async def test_function_call(
         hass,
         llm.ToolInput(
             tool_name="test_tool",
-            tool_args={"param1": "test_value"},
+            tool_args=expected_tool_args,
         ),
         llm.LLMContext(
             platform="ollama",
@@ -532,3 +554,26 @@ async def test_conversation_agent(
         mock_config_entry.entry_id
     )
     assert agent.supported_languages == MATCH_ALL
+
+    state = hass.states.get("conversation.mock_title")
+    assert state
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+
+
+async def test_conversation_agent_with_assist(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test OllamaConversationEntity."""
+    agent = conversation.get_agent_manager(hass).async_get_agent(
+        mock_config_entry_with_assist.entry_id
+    )
+    assert agent.supported_languages == MATCH_ALL
+
+    state = hass.states.get("conversation.mock_title")
+    assert state
+    assert (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        == conversation.ConversationEntityFeature.CONTROL
+    )

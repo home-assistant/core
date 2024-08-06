@@ -1,9 +1,9 @@
 """Test KNX expose."""
 
 from datetime import timedelta
-import time
-from unittest.mock import patch
 
+from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.knx import CONF_KNX_EXPOSE, DOMAIN, KNX_ADDRESS
@@ -15,11 +15,10 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
 
 from .conftest import KNXTestKit
 
-from tests.common import async_fire_time_changed_exact
+from tests.common import async_fire_time_changed
 
 
 async def test_binary_expose(hass: HomeAssistant, knx: KNXTestKit) -> None:
@@ -207,7 +206,9 @@ async def test_expose_string(hass: HomeAssistant, knx: KNXTestKit) -> None:
     )
 
 
-async def test_expose_cooldown(hass: HomeAssistant, knx: KNXTestKit) -> None:
+async def test_expose_cooldown(
+    hass: HomeAssistant, knx: KNXTestKit, freezer: FrozenDateTimeFactory
+) -> None:
     """Test an expose with cooldown."""
     cooldown_time = 2
     entity_id = "fake.entity"
@@ -235,9 +236,8 @@ async def test_expose_cooldown(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await hass.async_block_till_done()
     await knx.assert_no_telegram()
     # Wait for cooldown to pass
-    async_fire_time_changed_exact(
-        hass, dt_util.utcnow() + timedelta(seconds=cooldown_time)
-    )
+    freezer.tick(timedelta(seconds=cooldown_time))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     await knx.assert_write("1/1/8", (3,))
 
@@ -327,25 +327,32 @@ async def test_expose_conversion_exception(
     )
 
 
-@patch("time.localtime")
+@freeze_time("2022-1-7 9:13:14")
+@pytest.mark.parametrize(
+    ("time_type", "raw"),
+    [
+        ("time", (0xA9, 0x0D, 0x0E)),  # localtime includes day of week
+        ("date", (0x07, 0x01, 0x16)),
+        ("datetime", (0x7A, 0x1, 0x7, 0xA9, 0xD, 0xE, 0x20, 0xC0)),
+    ],
+)
 async def test_expose_with_date(
-    localtime, hass: HomeAssistant, knx: KNXTestKit
+    hass: HomeAssistant, knx: KNXTestKit, time_type: str, raw: tuple[int, ...]
 ) -> None:
     """Test an expose with a date."""
-    localtime.return_value = time.struct_time([2022, 1, 7, 9, 13, 14, 6, 0, 0])
     await knx.setup_integration(
         {
             CONF_KNX_EXPOSE: {
-                CONF_TYPE: "datetime",
+                CONF_TYPE: time_type,
                 KNX_ADDRESS: "1/1/8",
             }
         }
     )
 
-    await knx.assert_write("1/1/8", (0x7A, 0x1, 0x7, 0xE9, 0xD, 0xE, 0x20, 0x80))
+    await knx.assert_write("1/1/8", raw)
 
     await knx.receive_read("1/1/8")
-    await knx.assert_response("1/1/8", (0x7A, 0x1, 0x7, 0xE9, 0xD, 0xE, 0x20, 0x80))
+    await knx.assert_response("1/1/8", raw)
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1

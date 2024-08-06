@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
 from typing import Any
 
@@ -129,11 +130,15 @@ def _discovery(config_info):
     else:
         _LOGGER.debug("Config Zones")
         zones = None
-        for recv in rxv.find():
-            if recv.ctrl_url == config_info.ctrl_url:
-                _LOGGER.debug("Config Zones Matched %s", config_info.ctrl_url)
-                zones = recv.zone_controllers()
-                break
+
+        # Fix for upstream issues in rxv.find() with some hardware.
+        with contextlib.suppress(AttributeError):
+            for recv in rxv.find():
+                if recv.ctrl_url == config_info.ctrl_url:
+                    _LOGGER.debug("Config Zones Matched %s", config_info.ctrl_url)
+                    zones = recv.zone_controllers()
+                    break
+
         if not zones:
             _LOGGER.debug("Config Zones Fallback")
             zones = rxv.RXV(config_info.ctrl_url, config_info.name).zone_controllers()
@@ -427,19 +432,21 @@ class YamahaDeviceZone(MediaPlayerEntity):
         self.zctrl.surround_program = sound_mode
 
     @property
-    def media_artist(self):
+    def media_artist(self) -> str | None:
         """Artist of current playing media."""
         if self._play_status is not None:
             return self._play_status.artist
+        return None
 
     @property
-    def media_album_name(self):
+    def media_album_name(self) -> str | None:
         """Album of current playing media."""
         if self._play_status is not None:
             return self._play_status.album
+        return None
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> MediaType | None:
         """Content type of current playing media."""
         # Loose assumption that if playback is supported, we are playing music
         if self._is_playback_supported:
@@ -447,7 +454,7 @@ class YamahaDeviceZone(MediaPlayerEntity):
         return None
 
     @property
-    def media_title(self):
+    def media_title(self) -> str | None:
         """Artist of current playing media."""
         if self._play_status is not None:
             song = self._play_status.song
@@ -459,3 +466,4 @@ class YamahaDeviceZone(MediaPlayerEntity):
                 return f"{station}: {song}"
 
             return song or station
+        return None
