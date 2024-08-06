@@ -110,15 +110,15 @@ async def test_chime_select(
         host=reolink_connect,
         dev_id=12345678,
         channel=0,
-        name="Test chime",
-        event_info={
-            "md": {"switch": 0, "musicId": 0},
-            "people": {"switch": 0, "musicId": 1},
-            "visitor": {"switch": 1, "musicId": 2},
-        },
     )
+    TEST_CHIME.name = "Test chime"
     TEST_CHIME.volume = 3
     TEST_CHIME.led_state = True
+    TEST_CHIME.event_info = {
+        "md": {"switch": 0, "musicId": 0},
+        "people": {"switch": 0, "musicId": 1},
+        "visitor": {"switch": 1, "musicId": 2},
+    }
 
     reolink_connect.chime_list = [TEST_CHIME]
 
