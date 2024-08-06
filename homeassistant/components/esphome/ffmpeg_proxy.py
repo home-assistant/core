@@ -138,7 +138,7 @@ class FFmpegProxyView(HomeAssistantView):
     schema = vol.Schema(
         {
             vol.Required("device_id"): cv.string,
-            vol.Required("url"): cv.url,
+            vol.Required("url"): cv.string,
             vol.Required("format"): cv.string,
             vol.Optional("rate"): cv.positive_int,
             vol.Optional("channels"): cv.positive_int,
