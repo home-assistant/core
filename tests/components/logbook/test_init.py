@@ -1,11 +1,9 @@
 """The tests for the logbook component."""
 
 import asyncio
-import collections
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPStatus
-import json
 from unittest.mock import Mock
 
 from freezegun import freeze_time
@@ -15,7 +13,7 @@ import voluptuous as vol
 from homeassistant.components import logbook, recorder
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
-from homeassistant.components.logbook.models import LazyEventPartialState
+from homeassistant.components.logbook.models import EventAsRow, LazyEventPartialState
 from homeassistant.components.logbook.processor import EventProcessor
 from homeassistant.components.logbook.queries.common import PSEUDO_EVENT_STATE_CHANGED
 from homeassistant.components.recorder import Recorder
@@ -44,7 +42,6 @@ import homeassistant.core as ha
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
-from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -324,50 +321,21 @@ def create_state_changed_event_from_old_new(
     entity_id, event_time_fired, old_state, new_state
 ):
     """Create a state changed event from a old and new state."""
-    attributes = {}
-    if new_state is not None:
-        attributes = new_state.get("attributes")
-    attributes_json = json.dumps(attributes, cls=JSONEncoder)
-    row = collections.namedtuple(
-        "Row",
-        [
-            "event_type",
-            "event_data",
-            "time_fired",
-            "time_fired_ts",
-            "context_id_bin",
-            "context_user_id_bin",
-            "context_parent_id_bin",
-            "state",
-            "entity_id",
-            "domain",
-            "attributes",
-            "state_id",
-            "old_state_id",
-            "shared_attrs",
-            "shared_data",
-            "context_only",
-        ],
+    row = EventAsRow(
+        row_id=1,
+        event_type=PSEUDO_EVENT_STATE_CHANGED,
+        event_data="{}",
+        time_fired_ts=dt_util.utc_to_timestamp(event_time_fired),
+        context_id_bin=None,
+        context_user_id_bin=None,
+        context_parent_id_bin=None,
+        state=new_state and new_state.get("state"),
+        entity_id=entity_id,
+        icon=None,
+        context_only=False,
+        data=None,
+        context=None,
     )
-
-    row.event_type = PSEUDO_EVENT_STATE_CHANGED
-    row.event_data = "{}"
-    row.shared_data = "{}"
-    row.attributes = attributes_json
-    row.shared_attrs = attributes_json
-    row.time_fired = event_time_fired
-    row.time_fired_ts = dt_util.utc_to_timestamp(event_time_fired)
-    row.state = new_state and new_state.get("state")
-    row.entity_id = entity_id
-    row.domain = entity_id and ha.split_entity_id(entity_id)[0]
-    row.context_only = False
-    row.context_id_bin = None
-    row.friendly_name = None
-    row.icon = None
-    row.context_user_id_bin = None
-    row.context_parent_id_bin = None
-    row.old_state_id = old_state and 1
-    row.state_id = new_state and 1
     return LazyEventPartialState(row, {})
 
 

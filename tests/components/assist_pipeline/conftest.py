@@ -11,6 +11,12 @@ import pytest
 
 from homeassistant.components import stt, tts, wake_word
 from homeassistant.components.assist_pipeline import DOMAIN, select as assist_select
+from homeassistant.components.assist_pipeline.const import (
+    BYTES_PER_CHUNK,
+    SAMPLE_CHANNELS,
+    SAMPLE_RATE,
+    SAMPLE_WIDTH,
+)
 from homeassistant.components.assist_pipeline.pipeline import (
     PipelineData,
     PipelineStorageCollection,
@@ -32,6 +38,8 @@ from tests.common import (
 )
 
 _TRANSCRIPT = "test transcript"
+
+BYTES_ONE_SECOND = SAMPLE_RATE * SAMPLE_WIDTH * SAMPLE_CHANNELS
 
 
 @pytest.fixture(autouse=True)
@@ -462,3 +470,8 @@ def pipeline_data(hass: HomeAssistant, init_components) -> PipelineData:
 def pipeline_storage(pipeline_data) -> PipelineStorageCollection:
     """Return pipeline storage collection."""
     return pipeline_data.pipeline_store
+
+
+def make_10ms_chunk(header: bytes) -> bytes:
+    """Return 10ms of zeros with the given header."""
+    return header + bytes(BYTES_PER_CHUNK - len(header))

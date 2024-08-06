@@ -1,7 +1,8 @@
 """Test the Home Assistant SkyConnect hardware platform."""
 
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
-from homeassistant.core import EVENT_HOMEASSISTANT_STARTED, HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
