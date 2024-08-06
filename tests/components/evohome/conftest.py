@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable
 from datetime import datetime, timedelta
-from typing import Any, Final, TypedDict
+from typing import Any, Final
 from unittest.mock import MagicMock, patch
 
 from aiohttp import ClientSession
@@ -25,15 +25,6 @@ DEFAULT_TEST_CONFIG: Final = {
     "username": "username",
     "password": "password",
 }
-
-
-class ResultSet(TypedDict):
-    """A type for the expected state of the evohome integration."""
-
-    tcs: dict[str, dict[str, Any]]  # always 1 value
-    zones: dict[str, dict[str, Any]]  # 1-many values
-    dhw: dict[str, Any]  # 0 or 1 values
-    services: list[str]
 
 
 def expected_results_fixture(install: str) -> JsonObjectType:

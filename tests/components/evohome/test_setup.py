@@ -3,21 +3,30 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, TypedDict
 
 import pytest
 
 from homeassistant.components.evohome import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from .conftest import ResultSet, expected_results_fixture, setup_evohome
+from .conftest import expected_results_fixture, setup_evohome
 from .const import TEST_INSTALLS
 
 _LOGGER = logging.getLogger(__name__)
 
 
+class ResultSet(TypedDict):
+    """A type for the expected state of the evohome integration."""
+
+    tcs: dict[str, dict[str, Any]]  # always 1 value
+    zones: dict[str, dict[str, Any]]  # 1-many values
+    dhw: dict[str, Any]  # 0 or 1 values
+    services: list[str]
+
+
 class ExpectedResults:
-    """A class to hold the expected state of the evohome integration."""
+    """A class to hold the expected state of an evohome integration instance."""
 
     def __init__(self, hass: HomeAssistant, expected: ResultSet) -> None:
         """Initialize the database of expected states/services."""
