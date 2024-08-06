@@ -61,7 +61,9 @@ def mock__get_devices_metadata(request: pytest.FixtureRequest) -> Generator[None
 
 
 @pytest.fixture
-def mock__get_devices_metadata_no_name(request: pytest.FixtureRequest) -> Generator[None]:
+def mock__get_devices_metadata_no_name(
+    request: pytest.FixtureRequest,
+) -> Generator[None]:
     """Fixture to mock _get_devices which makes a call to the API."""
 
     side_effect = getattr(request, "param", None)
