@@ -289,8 +289,10 @@ def async_device_temperatures_value_fn(
     temperature_name: str, hub: UnifiHub, device: Device
 ) -> float:
     """Retrieve the temperature of the device."""
-    temperature = _device_temperature(temperature_name, device.temperatures)
-    return temperature if temperature is not None else 0
+    if device.temperatures:
+        temperature = _device_temperature(temperature_name, device.temperatures)
+        return temperature if temperature is not None else 0
+    return 0
 
 
 @callback
