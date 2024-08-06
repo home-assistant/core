@@ -120,7 +120,12 @@ async def test_step_otp_valid(
     assert "refresh_token" in result["data"]
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_request_otp", "mock_submit_otp", "mock__get_devices_metadata_no_name")
+@pytest.mark.usefixtures(
+    "mock_setup_entry",
+    "mock_request_otp",
+    "mock_submit_otp",
+    "mock__get_devices_metadata_no_name",
+)
 async def test_step_otp_valid_device_no_name(hass: HomeAssistant) -> None:
     """Test user step with valid phone number."""
 

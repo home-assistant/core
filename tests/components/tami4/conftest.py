@@ -70,7 +70,7 @@ def mock__get_devices_metadata_no_name(
 
     device_metadata = DeviceMetadata(
         id=1,
-        name=None,  # type: ignore
+        name=None,
         connected=True,
         psn="psn",
         type="type",
