@@ -1,4 +1,4 @@
-"""Test diagnostics of Linear Garage Door."""
+"""Test diagnostics of Nice G.O.."""
 
 from unittest.mock import AsyncMock
 
@@ -18,7 +18,7 @@ async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
-    mock_linear: AsyncMock,
+    mock_nice_go: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test config entry diagnostics."""

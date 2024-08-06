@@ -1,14 +1,13 @@
-"""Config flow for Linear Garage Door integration."""
+"""Config flow for Nice G.O. integration."""
 
 from __future__ import annotations
 
-from collections.abc import Collection, Mapping, Sequence
+from collections.abc import Mapping
+from datetime import datetime
 import logging
 from typing import Any
-import uuid
 
-from linear_garage_door import Linear
-from linear_garage_door.errors import InvalidLoginError
+from nice_go import AuthFailedError, NiceGOApi
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
@@ -17,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import CONF_REFRESH_TOKEN, CONF_REFRESH_TOKEN_CREATION_TIME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,45 +29,38 @@ STEP_USER_DATA_SCHEMA = {
 async def validate_input(
     hass: HomeAssistant,
     data: dict[str, str],
-) -> dict[str, Sequence[Collection[str]]]:
+) -> dict[str, str | float | None]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
-    hub = Linear()
+    hub = NiceGOApi()
 
-    device_id = str(uuid.uuid4())
     try:
-        await hub.login(
-            data["email"],
-            data["password"],
-            device_id=device_id,
-            client_session=async_get_clientsession(hass),
+        refresh_token = await hub.authenticate(
+            data[CONF_EMAIL],
+            data[CONF_PASSWORD],
+            async_get_clientsession(hass),
         )
-
-        sites = await hub.get_sites()
-    except InvalidLoginError as err:
+    except AuthFailedError as err:
         raise InvalidAuth from err
-    finally:
-        await hub.close()
 
     return {
-        "email": data["email"],
-        "password": data["password"],
-        "sites": sites,
-        "device_id": device_id,
+        CONF_EMAIL: data[CONF_EMAIL],
+        CONF_PASSWORD: data[CONF_PASSWORD],
+        CONF_REFRESH_TOKEN: refresh_token,
+        CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
     }
 
 
-class LinearGarageDoorConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Linear Garage Door."""
+class NiceGOConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Nice G.O."""
 
     VERSION = 1
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self.data: dict[str, Sequence[Collection[str]]] = {}
         self._reauth_entry: ConfigEntry | None = None
 
     async def async_step_user(
@@ -80,6 +72,9 @@ class LinearGarageDoorConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=data_schema)
 
+        await self.async_set_unique_id(user_input[CONF_EMAIL])
+        self._abort_if_unique_id_configured()
+
         errors = {}
 
         try:
@@ -90,60 +85,22 @@ class LinearGarageDoorConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            self.data = info
-
             # Check if we are reauthenticating
             if self._reauth_entry is not None:
                 self.hass.config_entries.async_update_entry(
                     self._reauth_entry,
-                    data=self._reauth_entry.data
-                    | {"email": self.data["email"], "password": self.data["password"]},
+                    data=info,
                 )
                 await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
-            return await self.async_step_site()
+            return self.async_create_entry(
+                title=user_input[CONF_EMAIL],
+                data=info,
+            )
 
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
-        )
-
-    async def async_step_site(
-        self,
-        user_input: dict[str, Any] | None = None,
-    ) -> ConfigFlowResult:
-        """Handle the site step."""
-
-        if isinstance(self.data["sites"], list):
-            sites: list[dict[str, str]] = self.data["sites"]
-
-        if not user_input:
-            return self.async_show_form(
-                step_id="site",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required("site"): vol.In(
-                            {site["id"]: site["name"] for site in sites}
-                        )
-                    }
-                ),
-            )
-
-        site_id = user_input["site"]
-
-        site_name = next(site["name"] for site in sites if site["id"] == site_id)
-
-        await self.async_set_unique_id(site_id)
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=site_name,
-            data={
-                "site_id": site_id,
-                "email": self.data["email"],
-                "password": self.data["password"],
-                "device_id": self.data["device_id"],
-            },
         )
 
     async def async_step_reauth(

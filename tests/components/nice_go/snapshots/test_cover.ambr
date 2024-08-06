@@ -24,11 +24,11 @@
     'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
     'original_icon': None,
     'original_name': None,
-    'platform': 'linear_garage_door',
+    'platform': 'nice_go',
     'previous_unique_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': None,
-    'unique_id': 'test1-GDO',
+    'unique_id': '1-cover',
     'unit_of_measurement': None,
   })
 # ---
@@ -44,7 +44,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'open',
+    'state': 'closed',
   })
 # ---
 # name: test_covers[cover.test_garage_2-entry]
@@ -72,11 +72,11 @@
     'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
     'original_icon': None,
     'original_name': None,
-    'platform': 'linear_garage_door',
+    'platform': 'nice_go',
     'previous_unique_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': None,
-    'unique_id': 'test2-GDO',
+    'unique_id': '2-cover',
     'unit_of_measurement': None,
   })
 # ---
@@ -92,7 +92,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'closed',
+    'state': 'open',
   })
 # ---
 # name: test_covers[cover.test_garage_3-entry]

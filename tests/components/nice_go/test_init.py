@@ -1,8 +1,8 @@
-"""Test Linear Garage Door init."""
+"""Test Nice G.O. init."""
 
 from unittest.mock import AsyncMock
 
-from linear_garage_door import InvalidLoginError
+from nice_go import ApiError, AuthFailedError
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_unload_entry(
-    hass: HomeAssistant, mock_linear: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_nice_go: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test the unload entry."""
 
@@ -30,24 +30,22 @@ async def test_unload_entry(
     ("side_effect", "entry_state"),
     [
         (
-            InvalidLoginError(
-                "Login provided is invalid, please check the email and password"
-            ),
+            AuthFailedError(),
             ConfigEntryState.SETUP_ERROR,
         ),
-        (InvalidLoginError("Invalid login"), ConfigEntryState.SETUP_RETRY),
+        (ApiError(), ConfigEntryState.SETUP_RETRY),
     ],
 )
 async def test_setup_failure(
     hass: HomeAssistant,
-    mock_linear: AsyncMock,
+    mock_nice_go: AsyncMock,
     mock_config_entry: MockConfigEntry,
     side_effect: Exception,
     entry_state: ConfigEntryState,
 ) -> None:
     """Test reauth trigger setup."""
 
-    mock_linear.login.side_effect = side_effect
+    mock_nice_go.authenticate_refresh.side_effect = side_effect
 
     await setup_integration(hass, mock_config_entry, [])
     assert mock_config_entry.state == entry_state
