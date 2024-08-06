@@ -2622,7 +2622,7 @@ soco==0.30.4
 solaredge-local==0.2.3
 
 # homeassistant.components.solarlog
-solarlog_cli==0.1.6
+solarlog_cli==0.1.5
 
 # homeassistant.components.solax
 solax==3.1.1
