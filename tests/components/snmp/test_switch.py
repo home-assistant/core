@@ -143,3 +143,20 @@ async def test_snmp_string_switch_unknown_ipaddress(
         state = hass.states.get("switch.snmp")
         assert state.state == STATE_UNKNOWN
         assert "Invalid payload '\x7f\x00\x00\x01' received for entity" in caplog.text
+
+
+async def test_snmp_string_switch_unknown_none(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test snmp switch returning None from somewhere in the pyasn1/pysnmp stack."""
+
+    # OctetString can handle almost anything else
+    with patch(
+        "homeassistant.components.snmp.switch.getCmd",
+        return_value=(None, None, None, [[None]]),
+    ):
+        assert await async_setup_component(hass, SWITCH_DOMAIN, string_config)
+        await hass.async_block_till_done()
+        state = hass.states.get("switch.snmp")
+        assert state.state == STATE_UNKNOWN
+        assert "Invalid payload 'None' received for entity" in caplog.text
