@@ -5,8 +5,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import uuid
 
-from bring_api.exceptions import BringRequestException
-from bring_api.types import BringItem, BringItemOperation, BringNotificationType
+from bring_api import (
+    BringItem,
+    BringItemOperation,
+    BringNotificationType,
+    BringRequestException,
+)
 import voluptuous as vol
 
 from homeassistant.components.todo import (

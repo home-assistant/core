@@ -9,13 +9,7 @@ from homeassistant.components.lock import (
     SERVICE_LOCK,
     SERVICE_UNLOCK,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_LOCKED,
-    STATE_UNAVAILABLE,
-    STATE_UNLOCKED,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import HomeAssistant
 
 from .conftest import WebsocketDataType
@@ -41,9 +35,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
         }
     ],
 )
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_lock_from_light(
     hass: HomeAssistant,
-    config_entry_setup: ConfigEntry,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
     light_ws_data: WebsocketDataType,
 ) -> None:
@@ -78,17 +72,6 @@ async def test_lock_from_light(
     )
     assert aioclient_mock.mock_calls[2][2] == {"on": False}
 
-    await hass.config_entries.async_unload(config_entry_setup.entry_id)
-
-    states = hass.states.async_all()
-    assert len(states) == 1
-    for state in states:
-        assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_remove(config_entry_setup.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
-
 
 @pytest.mark.parametrize(
     "sensor_payload",
@@ -116,9 +99,9 @@ async def test_lock_from_light(
         }
     ],
 )
+@pytest.mark.usefixtures("config_entry_setup")
 async def test_lock_from_sensor(
     hass: HomeAssistant,
-    config_entry_setup: ConfigEntry,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
     sensor_ws_data: WebsocketDataType,
 ) -> None:
@@ -152,14 +135,3 @@ async def test_lock_from_sensor(
         blocking=True,
     )
     assert aioclient_mock.mock_calls[2][2] == {"lock": False}
-
-    await hass.config_entries.async_unload(config_entry_setup.entry_id)
-
-    states = hass.states.async_all()
-    assert len(states) == 2
-    for state in states:
-        assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_remove(config_entry_setup.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0

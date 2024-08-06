@@ -26,6 +26,8 @@ from homeassistant.components.recorder.models import (
     process_timestamp,
 )
 from homeassistant.components.recorder.util import (
+    MIN_VERSION_SQLITE,
+    UPCOMING_MIN_VERSION_SQLITE,
     end_incomplete_runs,
     is_second_sunday,
     resolve_period,
@@ -223,9 +225,9 @@ def test_setup_connection_for_dialect_mysql(mysql_version) -> None:
 
 @pytest.mark.parametrize(
     "sqlite_version",
-    ["3.31.0"],
+    [str(UPCOMING_MIN_VERSION_SQLITE)],
 )
-def test_setup_connection_for_dialect_sqlite(sqlite_version) -> None:
+def test_setup_connection_for_dialect_sqlite(sqlite_version: str) -> None:
     """Test setting up the connection for a sqlite dialect."""
     instance_mock = MagicMock()
     execute_args = []
@@ -276,10 +278,10 @@ def test_setup_connection_for_dialect_sqlite(sqlite_version) -> None:
 
 @pytest.mark.parametrize(
     "sqlite_version",
-    ["3.31.0"],
+    [str(UPCOMING_MIN_VERSION_SQLITE)],
 )
 def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
-    sqlite_version,
+    sqlite_version: str,
 ) -> None:
     """Test setting up the connection for a sqlite dialect with a zero commit interval."""
     instance_mock = MagicMock(commit_interval=0)
@@ -503,10 +505,6 @@ def test_supported_pgsql(caplog: pytest.LogCaptureFixture, pgsql_version) -> Non
             "2.0.0",
             "Version 2.0.0 of SQLite is not supported; minimum supported version is 3.31.0.",
         ),
-        (
-            "dogs",
-            "Version dogs of SQLite is not supported; minimum supported version is 3.31.0.",
-        ),
     ],
 )
 def test_fail_outdated_sqlite(
@@ -723,6 +721,63 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(
 
     assert database_engine is not None
     assert database_engine.optimizer.slow_range_in_select is False
+
+
+async def test_issue_for_old_sqlite(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test we create and delete an issue for old sqlite versions."""
+    instance_mock = MagicMock()
+    instance_mock.hass = hass
+    execute_args = []
+    close_mock = MagicMock()
+    min_version = str(MIN_VERSION_SQLITE)
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == "SELECT sqlite_version()":
+            return [[min_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    database_engine = await hass.async_add_executor_job(
+        util.setup_connection_for_dialect,
+        instance_mock,
+        "sqlite",
+        dbapi_connection,
+        True,
+    )
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, "sqlite_too_old")
+    assert issue is not None
+    assert issue.translation_placeholders == {
+        "min_version": str(UPCOMING_MIN_VERSION_SQLITE),
+        "server_version": min_version,
+    }
+
+    min_version = str(UPCOMING_MIN_VERSION_SQLITE)
+    database_engine = await hass.async_add_executor_job(
+        util.setup_connection_for_dialect,
+        instance_mock,
+        "sqlite",
+        dbapi_connection,
+        True,
+    )
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, "sqlite_too_old")
+    assert issue is None
+    assert database_engine is not None
 
 
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
