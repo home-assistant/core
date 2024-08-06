@@ -1,4 +1,4 @@
-"""Tests for the Linear Garage Door integration."""
+"""Tests for the Nice G.O. integration."""
 
 from unittest.mock import patch
 
@@ -15,7 +15,7 @@ async def setup_integration(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.linear_garage_door.PLATFORMS",
+        "homeassistant.components.nice_go.PLATFORMS",
         platforms,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)

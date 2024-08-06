@@ -7,7 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 from nice_go import ApiError, AuthFailedError, BarrierState
 import pytest
 
-from homeassistant.components.linear_garage_door.const import DOMAIN
+from homeassistant.components.nice_go.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady

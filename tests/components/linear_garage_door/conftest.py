@@ -1,19 +1,18 @@
-"""Common fixtures for the Nice G.O. tests."""
+"""Common fixtures for the Linear Garage Door tests."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from nice_go import Barrier, BarrierState, ConnectionState
 import pytest
 
-from homeassistant.components.linear_garage_door import (
-    CONF_REFRESH_TOKEN,
-    CONF_REFRESH_TOKEN_CREATION_TIME,
-    DOMAIN,
-)
+from homeassistant.components.linear_garage_door import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
-from tests.common import MockConfigEntry, load_json_array_fixture
+from tests.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 
 @pytest.fixture
@@ -27,40 +26,28 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_nice_go() -> Generator[AsyncMock]:
-    """Mock a Nice G.O. client."""
+def mock_linear() -> Generator[AsyncMock]:
+    """Mock a Linear Garage Door client."""
     with (
         patch(
-            "homeassistant.components.linear_garage_door.coordinator.NiceGOApi",
+            "homeassistant.components.linear_garage_door.coordinator.Linear",
             autospec=True,
         ) as mock_client,
         patch(
-            "homeassistant.components.linear_garage_door.config_flow.NiceGOApi",
-            new=mock_client,
-        ),
-        patch(
-            "homeassistant.components.linear_garage_door.NiceGOApi",
+            "homeassistant.components.linear_garage_door.config_flow.Linear",
             new=mock_client,
         ),
     ):
         client = mock_client.return_value
-        client.authenticate.return_value = "test-refresh-token"
-        client.authenticate_refresh.return_value = None
-        client.id_token = None
-        client.get_all_barriers.return_value = [
-            Barrier(
-                id=barrier["id"],
-                type=barrier["type"],
-                controlLevel=barrier["controlLevel"],
-                attr=barrier["attr"],
-                state=BarrierState(
-                    **barrier["state"],
-                    connectionState=ConnectionState(**barrier["connectionState"]),
-                ),
-                api=client,
-            )
-            for barrier in load_json_array_fixture("get_all_barriers.json", DOMAIN)
-        ]
+        client.login.return_value = True
+        client.get_devices.return_value = load_json_array_fixture(
+            "get_devices.json", DOMAIN
+        )
+        client.get_sites.return_value = load_json_array_fixture(
+            "get_sites.json", DOMAIN
+        )
+        device_states = load_json_object_fixture("get_device_state.json", DOMAIN)
+        client.get_device_state.side_effect = lambda device_id: device_states[device_id]
         yield client
 
 
@@ -70,12 +57,11 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         entry_id="acefdd4b3a4a0911067d1cf51414201e",
-        title="test-email",
+        title="test-site-name",
         data={
             CONF_EMAIL: "test-email",
             CONF_PASSWORD: "test-password",
-            CONF_REFRESH_TOKEN: "test-refresh-token",
-            CONF_REFRESH_TOKEN_CREATION_TIME: 1722184160.738171,
+            "site_id": "test-site-id",
+            "device_id": "test-uuid",
         },
-        version=2,
     )
