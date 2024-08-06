@@ -1093,7 +1093,7 @@ melnor-bluetooth==0.0.25
 meteofrance-api==1.3.0
 
 # homeassistant.components.mfi
-mficlient==0.3.0
+mficlient==0.5.0
 
 # homeassistant.components.xiaomi_miio
 micloud==0.5
