@@ -40,6 +40,7 @@ async def async_setup_actions(hass: HomeAssistant) -> bool:
                     device_ids.append(entity.device_id)
 
         for device_id in device_ids:
+            config_entry = None
             device = device_registry.async_get(device_id)
             if device is not None:
                 for entry_id in device.config_entries:
