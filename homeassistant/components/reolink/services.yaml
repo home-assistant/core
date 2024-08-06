@@ -24,7 +24,7 @@ chime_play:
         integration: reolink
         domain: select
         supported_features:
-          - reolink.select.SUPPORT_CHIME_PLAY
+          - camera.CameraEntityFeature.STREAM
   fields:
     ringtone:
       required: true

@@ -19,6 +19,7 @@ from reolink_aio.api import (
 )
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
+from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.helpers import config_validation as cv
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -37,7 +38,7 @@ from .entity import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_CHIME_PLAY = 1024
+SUPPORT_CHIME_PLAY = CameraEntityFeature.STREAM
 ATTR_RINGTONE = "ringtone"
 
 @dataclass(frozen=True, kw_only=True)
