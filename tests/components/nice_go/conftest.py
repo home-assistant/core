@@ -74,4 +74,5 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_REFRESH_TOKEN_CREATION_TIME: 1722184160.738171,
         },
         version=1,
+        unique_id="test-email",
     )

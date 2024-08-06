@@ -1,6 +1,5 @@
 """Cover entity for Nice G.O."""
 
-from datetime import timedelta
 from typing import Any
 
 from homeassistant.components.cover import (
@@ -15,7 +14,6 @@ from . import NiceGOConfigEntry
 from .entity import NiceGOEntity
 
 PARALLEL_UPDATES = 1
-SCAN_INTERVAL = timedelta(seconds=10)
 
 
 async def async_setup_entry(

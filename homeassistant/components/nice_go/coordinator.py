@@ -52,6 +52,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
     """DataUpdateCoordinator for Nice G.O."""
 
     config_entry: ConfigEntry
+    organization_id: str
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize DataUpdateCoordinator for Nice G.O."""
@@ -69,7 +70,6 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
         self.password = self.config_entry.data[CONF_PASSWORD]
         self.api = NiceGOApi()
         self.ws_connected = False
-        self.organization_id: str = ""
 
     async def _parse_barrier(self, barrier_state: BarrierState) -> NiceGODevice | None:
         """Parse barrier data."""

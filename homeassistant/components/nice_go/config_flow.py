@@ -11,7 +11,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_REFRESH_TOKEN, CONF_REFRESH_TOKEN_CREATION_TIME, DOMAIN
@@ -35,9 +34,7 @@ class NiceGOConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-
-        errors = {}
-
+        errors: dict[str, str] = {}
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_EMAIL])
             self._abort_if_unique_id_configured()
@@ -52,30 +49,20 @@ class NiceGOConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except AuthFailedError:
                 errors["base"] = "invalid_auth"
-            except Exception:
+            except Exception:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                info = {
-                    CONF_EMAIL: user_input[CONF_EMAIL],
-                    CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    CONF_REFRESH_TOKEN: refresh_token,
-                    CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
-                }
-
                 return self.async_create_entry(
                     title=user_input[CONF_EMAIL],
-                    data=info,
+                    data={
+                        CONF_EMAIL: user_input[CONF_EMAIL],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        CONF_REFRESH_TOKEN: refresh_token,
+                        CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
+                    },
                 )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
-
-
-class InvalidDeviceID(HomeAssistantError):
-    """Error to indicate there is invalid device ID."""

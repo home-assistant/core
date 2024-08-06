@@ -48,4 +48,4 @@ async def test_setup_failure(
     mock_nice_go.authenticate_refresh.side_effect = side_effect
 
     await setup_integration(hass, mock_config_entry, [])
-    assert mock_config_entry.state == entry_state
+    assert mock_config_entry.state is entry_state
