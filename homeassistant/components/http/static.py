@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
 
-from aiohttp.hdrs import CACHE_CONTROL
+from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.web import FileResponse, Request, StreamResponse
 from aiohttp.web_fileresponse import CONTENT_TYPES, FALLBACK_CONTENT_TYPE
 from aiohttp.web_urldispatcher import StaticResource
@@ -27,20 +27,22 @@ class CachingStaticResource(StaticResource):
         key = (rel_url, self._directory)
         response: StreamResponse
 
-        if cached_values := RESPONSE_CACHE.get(key):
-            file_path, content_type = cached_values
+        if key in RESPONSE_CACHE:
+            file_path, content_type = RESPONSE_CACHE[key]
             response = FileResponse(file_path, chunk_size=self._chunk_size)
+            response.headers[CONTENT_TYPE] = content_type
         else:
             response = await super()._handle(request)
             if not isinstance(response, FileResponse):
                 # Must be directory index; ignore caching
                 return response
             file_path = response._path  # noqa: SLF001
-            content_type = (
+            response.content_type = (
                 CONTENT_TYPES.guess_type(file_path)[0] or FALLBACK_CONTENT_TYPE
             )
+            # Cache actual header after setter construction.
+            content_type = response.headers[CONTENT_TYPE]
             RESPONSE_CACHE[key] = (file_path, content_type)
 
         response.headers[CACHE_CONTROL] = CACHE_HEADER
-        response.content_type = content_type
         return response
