@@ -27,11 +27,10 @@ TEST_CONFIG_ENTRY_WITHOUT_BRAND = {
     CONF_REFRESH_TOKEN_CREATION_TIME: 0,
 }
 
-TEST_BRAND_INPUT = {CONF_BRAND: "aquacell"}
-
 TEST_USER_INPUT = {
     CONF_EMAIL: "test@test.com",
     CONF_PASSWORD: "test-password",
+    CONF_BRAND: "aquacell",
 }
 
 DSN = "DSN"

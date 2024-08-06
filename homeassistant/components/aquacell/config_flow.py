@@ -25,6 +25,9 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_BRAND, default=Brand.AQUACELL): vol.In(
+            {key: brand.name for key, brand in SUPPORTED_BRANDS.items()}
+        ),
         vol.Required(CONF_EMAIL): str,
         vol.Required(CONF_PASSWORD): str,
     }
@@ -36,28 +39,7 @@ class AquaCellConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _brand: Brand = Brand.AQUACELL
-
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the initial step via config flow."""
-        if user_input:
-            self._brand = user_input[CONF_BRAND]
-            return await self.async_step_cloud()
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_BRAND, default=self._brand): vol.In(
-                        {key: brand.name for key, brand in SUPPORTED_BRANDS.items()}
-                    ),
-                }
-            ),
-        )
-
-    async def async_step_cloud(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the cloud logon step."""
@@ -69,7 +51,7 @@ class AquaCellConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             session = async_get_clientsession(self.hass)
-            api = AquacellApi(session, self._brand)
+            api = AquacellApi(session, user_input[CONF_BRAND])
             try:
                 refresh_token = await api.authenticate(
                     user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
@@ -86,14 +68,14 @@ class AquaCellConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_EMAIL],
                     data={
                         **user_input,
-                        CONF_BRAND: self._brand,
+                        CONF_BRAND: user_input[CONF_BRAND],
                         CONF_REFRESH_TOKEN: refresh_token,
                         CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
                     },
                 )
 
         return self.async_show_form(
-            step_id="cloud",
+            step_id="user",
             data_schema=DATA_SCHEMA,
             errors=errors,
         )
