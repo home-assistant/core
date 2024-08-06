@@ -1,6 +1,7 @@
 """Config flow for Sense integration."""
 
 from collections.abc import Mapping
+from functools import partial
 import logging
 from typing import Any
 
@@ -48,8 +49,15 @@ class SenseConfigFlow(ConfigFlow, domain=DOMAIN):
         timeout = self._auth_data[CONF_TIMEOUT]
         client_session = async_get_clientsession(self.hass)
 
-        self._gateway = ASyncSenseable(
-            api_timeout=timeout, wss_timeout=timeout, client_session=client_session
+        # Creating the AsyncSenseable object loads
+        # ssl certificates which does blocking IO
+        self._gateway = await self.hass.async_add_executor_job(
+            partial(
+                ASyncSenseable,
+                api_timeout=timeout,
+                wss_timeout=timeout,
+                client_session=client_session,
+            )
         )
         self._gateway.rate_limit = ACTIVE_UPDATE_RATE
         await self._gateway.authenticate(
