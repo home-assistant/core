@@ -8,6 +8,7 @@ from reolink_aio.api import Chime
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
 from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL
+from homeassistant.components.reolink.const import DOMAIN as REOLINK_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -111,14 +112,14 @@ async def test_chime_select(
         dev_id=12345678,
         channel=0,
         name="Test chime",
-        event_info={
-            "md": {"switch": 0, "musicId": 0},
-            "people": {"switch": 0, "musicId": 1},
-            "visitor": {"switch": 1, "musicId": 2},
-        },
     )
     TEST_CHIME.volume = 3
     TEST_CHIME.led_state = True
+    TEST_CHIME.event_info = {
+        "md": {"switch": 0, "musicId": 0},
+        "people": {"switch": 0, "musicId": 1},
+        "visitor": {"switch": 1, "musicId": 2},
+    }
 
     reolink_connect.chime_list = [TEST_CHIME]
 
@@ -131,6 +132,7 @@ async def test_chime_select(
     entity_id = f"{Platform.SELECT}.test_chime_visitor_ringtone"
     assert hass.states.is_state(entity_id, "pianokey")
 
+    # Test selecting chime ringtone option
     TEST_CHIME.set_tone = AsyncMock()
     await hass.services.async_call(
         SELECT_DOMAIN,
@@ -158,6 +160,35 @@ async def test_chime_select(
             blocking=True,
         )
 
+    # Test chime play service
+    TEST_CHIME.play = AsyncMock()
+    await hass.services.async_call(
+        REOLINK_DOMAIN,
+        "chime_play",
+        {ATTR_ENTITY_ID: entity_id, "ringtone": "attraction"},
+        blocking=True,
+    )
+    TEST_CHIME.play.assert_called_once()
+
+    TEST_CHIME.play = AsyncMock(side_effect=ReolinkError("Test error"))
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            REOLINK_DOMAIN,
+            "chime_play",
+            {ATTR_ENTITY_ID: entity_id, "ringtone": "attraction"},
+            blocking=True,
+        )
+
+    TEST_CHIME.play = AsyncMock(side_effect=InvalidParameterError("Test error"))
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            REOLINK_DOMAIN,
+            "chime_play",
+            {ATTR_ENTITY_ID: entity_id, "ringtone": "attraction"},
+            blocking=True,
+        )
+
+    # Test unavailable
     TEST_CHIME.event_info = {}
     async_fire_time_changed(
         hass, utcnow() + DEVICE_UPDATE_INTERVAL + timedelta(seconds=30)
