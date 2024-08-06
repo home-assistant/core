@@ -1,4 +1,4 @@
-"""Config flow for Huisbaasje integration."""
+"""Config flow for EnergyFlip integration."""
 
 import logging
 
@@ -18,8 +18,8 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class HuisbaasjeConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Huisbaasje."""
+class EnergyFlipConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for EnergyFlip."""
 
     VERSION = 1
 

@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.hassio import AddonError, AddonInfo, AddonState, HassIO
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
-from homeassistant.components.zha.core.const import DOMAIN as ZHA_DOMAIN
+from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import HomeAssistant, callback
@@ -164,7 +164,7 @@ def get_suggested(schema, key):
                 return None
             return k.description["suggested_value"]
     # Wanted key absent from schema
-    raise Exception
+    raise KeyError("Wanted key absent from schema")
 
 
 @patch(
@@ -584,7 +584,7 @@ async def test_option_flow_addon_installed_same_device_reconfigure_expected_user
     config_entry.add_to_hass(hass)
 
     mock_multiprotocol_platforms = {}
-    for domain in ["otbr", "zha"]:
+    for domain in ("otbr", "zha"):
         mock_multiprotocol_platform = MockMultiprotocolPlatform()
         mock_multiprotocol_platforms[domain] = mock_multiprotocol_platform
         mock_multiprotocol_platform.channel = configured_channel
@@ -619,7 +619,7 @@ async def test_option_flow_addon_installed_same_device_reconfigure_expected_user
     result = await hass.config_entries.options.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
-    for domain in ["otbr", "zha"]:
+    for domain in ("otbr", "zha"):
         assert mock_multiprotocol_platforms[domain].change_channel_calls == [(14, 300)]
     assert multipan_manager._channel == 14
 

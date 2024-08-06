@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from datetime import timedelta
 from http import HTTPStatus
 import os
@@ -22,13 +23,13 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
-async def setup_repairs(hass):
+async def setup_repairs(hass: HomeAssistant) -> None:
     """Set up the repairs integration."""
     assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
 
 
 @pytest.fixture(autouse=True)
-async def fixture_supervisor_environ():
+def fixture_supervisor_environ() -> Generator[None]:
     """Mock os environ for supervisor."""
     with patch.dict(os.environ, MOCK_ENVIRON):
         yield
@@ -40,7 +41,7 @@ def mock_resolution_info(
     unhealthy: list[str] | None = None,
     issues: list[dict[str, str]] | None = None,
     suggestion_result: str = "ok",
-):
+) -> None:
     """Mock resolution/info endpoint with unsupported/unhealthy reasons and/or issues."""
     aioclient_mock.get(
         "http://127.0.0.1/resolution/info",
@@ -80,7 +81,9 @@ def mock_resolution_info(
                 )
 
 
-def assert_repair_in_list(issues: list[dict[str, Any]], unhealthy: bool, reason: str):
+def assert_repair_in_list(
+    issues: list[dict[str, Any]], unhealthy: bool, reason: str
+) -> None:
     """Assert repair for unhealthy/unsupported in list."""
     repair_type = "unhealthy" if unhealthy else "unsupported"
     assert {
@@ -108,7 +111,7 @@ def assert_issue_repair_in_list(
     *,
     reference: str | None = None,
     placeholders: dict[str, str] | None = None,
-):
+) -> None:
     """Assert repair for unhealthy/unsupported in list."""
     if reference:
         placeholders = (placeholders or {}) | {"reference": reference}
@@ -128,11 +131,11 @@ def assert_issue_repair_in_list(
     } in issues
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_unhealthy_issues(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
-    all_setup_requests,
 ) -> None:
     """Test issues added for unhealthy systems."""
     mock_resolution_info(aioclient_mock, unhealthy=["docker", "setup"])
@@ -150,11 +153,11 @@ async def test_unhealthy_issues(
     assert_repair_in_list(msg["result"]["issues"], unhealthy=True, reason="setup")
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_unsupported_issues(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
-    all_setup_requests,
 ) -> None:
     """Test issues added for unsupported systems."""
     mock_resolution_info(aioclient_mock, unsupported=["content_trust", "os"])
@@ -174,11 +177,11 @@ async def test_unsupported_issues(
     assert_repair_in_list(msg["result"]["issues"], unhealthy=False, reason="os")
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_unhealthy_issues_add_remove(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
-    all_setup_requests,
 ) -> None:
     """Test unhealthy issues added and removed from dispatches."""
     mock_resolution_info(aioclient_mock)
@@ -231,11 +234,11 @@ async def test_unhealthy_issues_add_remove(
     assert msg["result"] == {"issues": []}
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_unsupported_issues_add_remove(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
-    all_setup_requests,
 ) -> None:
     """Test unsupported issues added and removed from dispatches."""
     mock_resolution_info(aioclient_mock)
@@ -288,11 +291,11 @@ async def test_unsupported_issues_add_remove(
     assert msg["result"] == {"issues": []}
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_reset_issues_supervisor_restart(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
-    all_setup_requests,
 ) -> None:
     """All issues reset on supervisor restart."""
     mock_resolution_info(
@@ -352,11 +355,11 @@ async def test_reset_issues_supervisor_restart(
     assert msg["result"] == {"issues": []}
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_reasons_added_and_removed(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
-    all_setup_requests,
 ) -> None:
     """Test an unsupported/unhealthy reasons being added and removed at same time."""
     mock_resolution_info(aioclient_mock, unsupported=["os"], unhealthy=["docker"])
@@ -402,11 +405,11 @@ async def test_reasons_added_and_removed(
     )
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_ignored_unsupported_skipped(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
-    all_setup_requests,
 ) -> None:
     """Unsupported reasons which have an identical unhealthy reason are ignored."""
     mock_resolution_info(
@@ -425,11 +428,11 @@ async def test_ignored_unsupported_skipped(
     assert_repair_in_list(msg["result"]["issues"], unhealthy=True, reason="privileged")
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_new_unsupported_unhealthy_reason(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
-    all_setup_requests,
 ) -> None:
     """New unsupported/unhealthy reasons result in a generic repair until next core update."""
     mock_resolution_info(
@@ -475,11 +478,11 @@ async def test_new_unsupported_unhealthy_reason(
     } in msg["result"]["issues"]
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_supervisor_issues(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
-    all_setup_requests,
 ) -> None:
     """Test repairs added for supervisor issue."""
     mock_resolution_info(
@@ -541,12 +544,12 @@ async def test_supervisor_issues(
     )
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_supervisor_issues_initial_failure(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
-    all_setup_requests,
 ) -> None:
     """Test issues manager retries after initial update failure."""
     responses = [
@@ -619,11 +622,11 @@ async def test_supervisor_issues_initial_failure(
         assert len(msg["result"]["issues"]) == 1
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_supervisor_issues_add_remove(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
-    all_setup_requests,
 ) -> None:
     """Test supervisor issues added and removed from dispatches."""
     mock_resolution_info(aioclient_mock)
@@ -730,11 +733,11 @@ async def test_supervisor_issues_add_remove(
     assert msg["result"] == {"issues": []}
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_supervisor_issues_suggestions_fail(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
-    all_setup_requests,
 ) -> None:
     """Test failing to get suggestions for issue skips it."""
     aioclient_mock.get(
@@ -776,11 +779,11 @@ async def test_supervisor_issues_suggestions_fail(
     assert len(msg["result"]["issues"]) == 0
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_supervisor_remove_missing_issue_without_error(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
-    all_setup_requests,
 ) -> None:
     """Test HA skips message to remove issue that it didn't know about (sync issue)."""
     mock_resolution_info(aioclient_mock)
@@ -810,11 +813,11 @@ async def test_supervisor_remove_missing_issue_without_error(
     await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_system_is_not_ready(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
-    all_setup_requests,
 ) -> None:
     """Ensure hassio starts despite error."""
     aioclient_mock.get(
@@ -832,11 +835,11 @@ async def test_system_is_not_ready(
 @pytest.mark.parametrize(
     "all_setup_requests", [{"include_addons": True}], indirect=True
 )
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_supervisor_issues_detached_addon_missing(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
-    all_setup_requests,
 ) -> None:
     """Test supervisor issue for detached addon due to missing repository."""
     mock_resolution_info(aioclient_mock)
@@ -878,6 +881,6 @@ async def test_supervisor_issues_detached_addon_missing(
         placeholders={
             "reference": "test",
             "addon": "test",
-            "addon_url": "https://github.com/home-assistant/addons/test",
+            "addon_url": "/hassio/addon/test",
         },
     )

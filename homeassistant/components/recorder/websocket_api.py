@@ -48,6 +48,7 @@ from .util import PERIOD_SCHEMA, get_instance, resolve_period
 
 UNIT_SCHEMA = vol.Schema(
     {
+        vol.Optional("conductivity"): vol.In(DataRateConverter.VALID_UNITS),
         vol.Optional("data_rate"): vol.In(DataRateConverter.VALID_UNITS),
         vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
         vol.Optional("duration"): vol.In(DurationConverter.VALID_UNITS),
@@ -78,7 +79,6 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_get_statistics_metadata)
     websocket_api.async_register_command(hass, ws_list_statistic_ids)
     websocket_api.async_register_command(hass, ws_import_statistics)
-    websocket_api.async_register_command(hass, ws_info)
     websocket_api.async_register_command(hass, ws_update_statistics_metadata)
     websocket_api.async_register_command(hass, ws_validate_statistics)
 
@@ -474,41 +474,3 @@ def ws_import_statistics(
     else:
         async_add_external_statistics(hass, metadata, stats)
     connection.send_result(msg["id"])
-
-
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "recorder/info",
-    }
-)
-@callback
-def ws_info(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Return status of the recorder."""
-    if instance := get_instance(hass):
-        backlog = instance.backlog
-        migration_in_progress = instance.migration_in_progress
-        migration_is_live = instance.migration_is_live
-        recording = instance.recording
-        # We avoid calling is_alive() as it can block waiting
-        # for the thread state lock which will block the event loop.
-        is_running = instance.is_running
-        max_backlog = instance.max_backlog
-    else:
-        backlog = None
-        migration_in_progress = False
-        migration_is_live = False
-        recording = False
-        is_running = False
-        max_backlog = None
-
-    recorder_info = {
-        "backlog": backlog,
-        "max_backlog": max_backlog,
-        "migration_in_progress": migration_in_progress,
-        "migration_is_live": migration_is_live,
-        "recording": recording,
-        "thread_running": is_running,
-    }
-    connection.send_result(msg["id"], recorder_info)

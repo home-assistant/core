@@ -30,11 +30,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-    make_entity_service_schema,
-)
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
     all_with_deprecated_constants,
@@ -45,21 +40,23 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
 
-from . import group as group_pre_import  # noqa: F401
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=30)
+
 ATTR_CHANGED_BY = "changed_by"
 CONF_DEFAULT_CODE = "default_code"
 
-SCAN_INTERVAL = timedelta(seconds=30)
-
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-LOCK_SERVICE_SCHEMA = make_entity_service_schema({vol.Optional(ATTR_CODE): cv.string})
+LOCK_SERVICE_SCHEMA = cv.make_entity_service_schema(
+    {vol.Optional(ATTR_CODE): cv.string}
+)
 
 
 class LockEntityFeature(IntFlag):

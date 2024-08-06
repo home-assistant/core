@@ -1,7 +1,7 @@
 """Fixtures for Kaleidescape integration."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import MagicMock, patch
 
 from kaleidescape import Dispatcher
 from kaleidescape.device import Automation, Movie, Power, System
@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="mock_device")
-def fixture_mock_device() -> Generator[None, AsyncMock, None]:
+def fixture_mock_device() -> Generator[MagicMock]:
     """Return a mocked Kaleidescape device."""
     with patch(
         "homeassistant.components.kaleidescape.KaleidescapeDevice", autospec=True
@@ -64,6 +64,7 @@ def fixture_mock_config_entry() -> MockConfigEntry:
 @pytest.fixture(name="mock_integration")
 async def fixture_mock_integration(
     hass: HomeAssistant,
+    mock_device: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> MockConfigEntry:
     """Return a mock ConfigEntry setup for Kaleidescape integration."""

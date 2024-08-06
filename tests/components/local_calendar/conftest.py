@@ -1,6 +1,6 @@
 """Fixtures for local calendar."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Generator
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any
@@ -9,7 +9,6 @@ import urllib
 
 from aiohttp import ClientWebSocketResponse
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.local_calendar import LocalCalendarStore
 from homeassistant.components.local_calendar.const import CONF_CALENDAR_NAME, DOMAIN
@@ -129,7 +128,7 @@ def event_fields(data: dict[str, str]) -> dict[str, str]:
     """Filter event API response to minimum fields."""
     return {
         k: data[k]
-        for k in ["summary", "start", "end", "recurrence_id", "location"]
+        for k in ("summary", "start", "end", "recurrence_id", "location")
         if data.get(k)
     }
 

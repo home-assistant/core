@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.whois.const import DOMAIN
 from homeassistant.const import CONF_DOMAIN

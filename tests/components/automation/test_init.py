@@ -4,7 +4,7 @@ import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
 
 import pytest
 
@@ -88,7 +88,7 @@ async def test_service_data_not_a_dict(
             {
                 automation.DOMAIN: {
                     "trigger": {"platform": "event", "event_type": "test_event"},
-                    "action": {"service": "test.automation", "data": 100},
+                    "action": {"action": "test.automation", "data": 100},
                 }
             },
         )
@@ -111,7 +111,7 @@ async def test_service_data_single_template(
                 automation.DOMAIN: {
                     "trigger": {"platform": "event", "event_type": "test_event"},
                     "action": {
-                        "service": "test.automation",
+                        "action": "test.automation",
                         "data": "{{ { 'foo': 'bar' } }}",
                     },
                 }
@@ -136,7 +136,7 @@ async def test_service_specify_data(
                 "alias": "hello",
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "action": {
-                    "service": "test.automation",
+                    "action": "test.automation",
                     "data_template": {
                         "some": (
                             "{{ trigger.platform }} - {{ trigger.event.event_type }}"
@@ -170,7 +170,7 @@ async def test_service_specify_entity_id(
         {
             automation.DOMAIN: {
                 "trigger": {"platform": "event", "event_type": "test_event"},
-                "action": {"service": "test.automation", "entity_id": "hello.world"},
+                "action": {"action": "test.automation", "entity_id": "hello.world"},
             }
         },
     )
@@ -178,7 +178,7 @@ async def test_service_specify_entity_id(
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert ["hello.world"] == calls[0].data.get(ATTR_ENTITY_ID)
+    assert calls[0].data.get(ATTR_ENTITY_ID) == ["hello.world"]
 
 
 async def test_service_specify_entity_id_list(
@@ -192,7 +192,7 @@ async def test_service_specify_entity_id_list(
             automation.DOMAIN: {
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "action": {
-                    "service": "test.automation",
+                    "action": "test.automation",
                     "entity_id": ["hello.world", "hello.world2"],
                 },
             }
@@ -202,7 +202,7 @@ async def test_service_specify_entity_id_list(
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert ["hello.world", "hello.world2"] == calls[0].data.get(ATTR_ENTITY_ID)
+    assert calls[0].data.get(ATTR_ENTITY_ID) == ["hello.world", "hello.world2"]
 
 
 async def test_two_triggers(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
@@ -216,7 +216,7 @@ async def test_two_triggers(hass: HomeAssistant, calls: list[ServiceCall]) -> No
                     {"platform": "event", "event_type": "test_event"},
                     {"platform": "state", "entity_id": "test.entity"},
                 ],
-                "action": {"service": "test.automation"},
+                "action": {"action": "test.automation"},
             }
         },
     )
@@ -245,7 +245,7 @@ async def test_trigger_service_ignoring_condition(
                     "entity_id": "non.existing",
                     "above": "1",
                 },
-                "action": {"service": "test.automation"},
+                "action": {"action": "test.automation"},
             }
         },
     )
@@ -301,7 +301,7 @@ async def test_two_conditions_with_and(
                         "below": 150,
                     },
                 ],
-                "action": {"service": "test.automation"},
+                "action": {"action": "test.automation"},
             }
         },
     )
@@ -333,7 +333,7 @@ async def test_shorthand_conditions_template(
             automation.DOMAIN: {
                 "trigger": [{"platform": "event", "event_type": "test_event"}],
                 "condition": "{{ is_state('test.entity', 'hello') }}",
-                "action": {"service": "test.automation"},
+                "action": {"action": "test.automation"},
             }
         },
     )
@@ -360,11 +360,11 @@ async def test_automation_list_setting(
             automation.DOMAIN: [
                 {
                     "trigger": {"platform": "event", "event_type": "test_event"},
-                    "action": {"service": "test.automation"},
+                    "action": {"action": "test.automation"},
                 },
                 {
                     "trigger": {"platform": "event", "event_type": "test_event_2"},
-                    "action": {"service": "test.automation"},
+                    "action": {"action": "test.automation"},
                 },
             ]
         },
@@ -390,8 +390,8 @@ async def test_automation_calling_two_actions(
             automation.DOMAIN: {
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "action": [
-                    {"service": "test.automation", "data": {"position": 0}},
-                    {"service": "test.automation", "data": {"position": 1}},
+                    {"action": "test.automation", "data": {"position": 0}},
+                    {"action": "test.automation", "data": {"position": 1}},
                 ],
             }
         },
@@ -420,7 +420,7 @@ async def test_shared_context(hass: HomeAssistant, calls: list[ServiceCall]) -> 
                 {
                     "alias": "bye",
                     "trigger": {"platform": "event", "event_type": "test_event2"},
-                    "action": {"service": "test.automation"},
+                    "action": {"action": "test.automation"},
                 },
             ]
         },
@@ -486,7 +486,7 @@ async def test_services(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
             automation.DOMAIN: {
                 "alias": "hello",
                 "trigger": {"platform": "event", "event_type": "test_event"},
-                "action": {"service": "test.automation"},
+                "action": {"action": "test.automation"},
             }
         },
     )
@@ -569,7 +569,7 @@ async def test_reload_config_service(
                 "alias": "hello",
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "action": {
-                    "service": "test.automation",
+                    "action": "test.automation",
                     "data_template": {"event": "{{ trigger.event.event_type }}"},
                 },
             }
@@ -597,7 +597,7 @@ async def test_reload_config_service(
                 "alias": "bye",
                 "trigger": {"platform": "event", "event_type": "test_event2"},
                 "action": {
-                    "service": "test.automation",
+                    "action": "test.automation",
                     "data_template": {"event": "{{ trigger.event.event_type }}"},
                 },
             }
@@ -650,7 +650,7 @@ async def test_reload_config_when_invalid_config(
                     "alias": "hello",
                     "trigger": {"platform": "event", "event_type": "test_event"},
                     "action": {
-                        "service": "test.automation",
+                        "action": "test.automation",
                         "data_template": {"event": "{{ trigger.event.event_type }}"},
                     },
                 }
@@ -690,7 +690,7 @@ async def test_reload_config_handles_load_fails(
                 "alias": "hello",
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "action": {
-                    "service": "test.automation",
+                    "action": "test.automation",
                     "data_template": {"event": "{{ trigger.event.event_type }}"},
                 },
             }
@@ -735,7 +735,7 @@ async def test_automation_stops(
             "action": [
                 {"event": "running"},
                 {"wait_template": "{{ is_state('test.entity', 'goodbye') }}"},
-                {"service": "test.automation"},
+                {"action": "test.automation"},
             ],
         }
     }
@@ -811,7 +811,7 @@ async def test_reload_unchanged_does_not_stop(
             "action": [
                 {"event": "running"},
                 {"wait_template": "{{ is_state('test.entity', 'goodbye') }}"},
-                {"service": "test.automation"},
+                {"action": "test.automation"},
             ],
         }
     }
@@ -858,7 +858,7 @@ async def test_reload_single_unchanged_does_not_stop(
             "action": [
                 {"event": "running"},
                 {"wait_template": "{{ is_state('test.entity', 'goodbye') }}"},
-                {"service": "test.automation"},
+                {"action": "test.automation"},
             ],
         }
     }
@@ -905,7 +905,7 @@ async def test_reload_single_add_automation(
             "id": "sun",
             "alias": "hello",
             "trigger": {"platform": "event", "event_type": "test_event"},
-            "action": [{"service": "test.automation"}],
+            "action": [{"action": "test.automation"}],
         }
     }
     assert await async_setup_component(hass, automation.DOMAIN, config1)
@@ -942,25 +942,25 @@ async def test_reload_single_parallel_calls(
                 "id": "sun",
                 "alias": "hello",
                 "trigger": {"platform": "event", "event_type": "test_event_sun"},
-                "action": [{"service": "test.automation"}],
+                "action": [{"action": "test.automation"}],
             },
             {
                 "id": "moon",
                 "alias": "goodbye",
                 "trigger": {"platform": "event", "event_type": "test_event_moon"},
-                "action": [{"service": "test.automation"}],
+                "action": [{"action": "test.automation"}],
             },
             {
                 "id": "mars",
                 "alias": "goodbye",
                 "trigger": {"platform": "event", "event_type": "test_event_mars"},
-                "action": [{"service": "test.automation"}],
+                "action": [{"action": "test.automation"}],
             },
             {
                 "id": "venus",
                 "alias": "goodbye",
                 "trigger": {"platform": "event", "event_type": "test_event_venus"},
-                "action": [{"service": "test.automation"}],
+                "action": [{"action": "test.automation"}],
             },
         ]
     }
@@ -1055,7 +1055,7 @@ async def test_reload_single_remove_automation(
             "id": "sun",
             "alias": "hello",
             "trigger": {"platform": "event", "event_type": "test_event"},
-            "action": [{"service": "test.automation"}],
+            "action": [{"action": "test.automation"}],
         }
     }
     config2 = {automation.DOMAIN: {}}
@@ -1093,12 +1093,12 @@ async def test_reload_moved_automation_without_alias(
             automation.DOMAIN: [
                 {
                     "trigger": {"platform": "event", "event_type": "test_event"},
-                    "action": [{"service": "test.automation"}],
+                    "action": [{"action": "test.automation"}],
                 },
                 {
                     "alias": "automation_with_alias",
                     "trigger": {"platform": "event", "event_type": "test_event2"},
-                    "action": [{"service": "test.automation"}],
+                    "action": [{"action": "test.automation"}],
                 },
             ]
         }
@@ -1149,17 +1149,17 @@ async def test_reload_identical_automations_without_id(
                 {
                     "alias": "dolly",
                     "trigger": {"platform": "event", "event_type": "test_event"},
-                    "action": [{"service": "test.automation"}],
+                    "action": [{"action": "test.automation"}],
                 },
                 {
                     "alias": "dolly",
                     "trigger": {"platform": "event", "event_type": "test_event"},
-                    "action": [{"service": "test.automation"}],
+                    "action": [{"action": "test.automation"}],
                 },
                 {
                     "alias": "dolly",
                     "trigger": {"platform": "event", "event_type": "test_event"},
-                    "action": [{"service": "test.automation"}],
+                    "action": [{"action": "test.automation"}],
                 },
             ]
         }
@@ -1246,12 +1246,12 @@ async def test_reload_identical_automations_without_id(
     [
         {
             "trigger": {"platform": "event", "event_type": "test_event"},
-            "action": [{"service": "test.automation"}],
+            "action": [{"action": "test.automation"}],
         },
         # An automation using templates
         {
             "trigger": {"platform": "event", "event_type": "test_event"},
-            "action": [{"service": "{{ 'test.automation' }}"}],
+            "action": [{"action": "{{ 'test.automation' }}"}],
         },
         # An automation using blueprint
         {
@@ -1278,13 +1278,13 @@ async def test_reload_identical_automations_without_id(
         {
             "id": "sun",
             "trigger": {"platform": "event", "event_type": "test_event"},
-            "action": [{"service": "test.automation"}],
+            "action": [{"action": "test.automation"}],
         },
         # An automation using templates
         {
             "id": "sun",
             "trigger": {"platform": "event", "event_type": "test_event"},
-            "action": [{"service": "{{ 'test.automation' }}"}],
+            "action": [{"action": "{{ 'test.automation' }}"}],
         },
         # An automation using blueprint
         {
@@ -1424,12 +1424,12 @@ async def test_automation_restore_state(hass: HomeAssistant) -> None:
             {
                 "alias": "hello",
                 "trigger": {"platform": "event", "event_type": "test_event_hello"},
-                "action": {"service": "test.automation"},
+                "action": {"action": "test.automation"},
             },
             {
                 "alias": "bye",
                 "trigger": {"platform": "event", "event_type": "test_event_bye"},
-                "action": {"service": "test.automation"},
+                "action": {"action": "test.automation"},
             },
         ]
     }
@@ -1474,7 +1474,7 @@ async def test_initial_value_off(hass: HomeAssistant) -> None:
                 "alias": "hello",
                 "initial_state": "off",
                 "trigger": {"platform": "event", "event_type": "test_event"},
-                "action": {"service": "test.automation", "entity_id": "hello.world"},
+                "action": {"action": "test.automation", "entity_id": "hello.world"},
             }
         },
     )
@@ -1499,7 +1499,7 @@ async def test_initial_value_on(hass: HomeAssistant) -> None:
                 "initial_state": "on",
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "action": {
-                    "service": "test.automation",
+                    "action": "test.automation",
                     "entity_id": ["hello.world", "hello.world2"],
                 },
             }
@@ -1528,7 +1528,7 @@ async def test_initial_value_off_but_restore_on(hass: HomeAssistant) -> None:
                 "alias": "hello",
                 "initial_state": "off",
                 "trigger": {"platform": "event", "event_type": "test_event"},
-                "action": {"service": "test.automation", "entity_id": "hello.world"},
+                "action": {"action": "test.automation", "entity_id": "hello.world"},
             }
         },
     )
@@ -1553,7 +1553,7 @@ async def test_initial_value_on_but_restore_off(hass: HomeAssistant) -> None:
                 "alias": "hello",
                 "initial_state": "on",
                 "trigger": {"platform": "event", "event_type": "test_event"},
-                "action": {"service": "test.automation", "entity_id": "hello.world"},
+                "action": {"action": "test.automation", "entity_id": "hello.world"},
             }
         },
     )
@@ -1576,7 +1576,7 @@ async def test_no_initial_value_and_restore_off(hass: HomeAssistant) -> None:
             automation.DOMAIN: {
                 "alias": "hello",
                 "trigger": {"platform": "event", "event_type": "test_event"},
-                "action": {"service": "test.automation", "entity_id": "hello.world"},
+                "action": {"action": "test.automation", "entity_id": "hello.world"},
             }
         },
     )
@@ -1600,7 +1600,7 @@ async def test_automation_is_on_if_no_initial_state_or_restore(
             automation.DOMAIN: {
                 "alias": "hello",
                 "trigger": {"platform": "event", "event_type": "test_event"},
-                "action": {"service": "test.automation", "entity_id": "hello.world"},
+                "action": {"action": "test.automation", "entity_id": "hello.world"},
             }
         },
     )
@@ -1623,7 +1623,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             automation.DOMAIN: {
                 "alias": "hello",
                 "trigger": {"platform": "event", "event_type": "test_event"},
-                "action": {"service": "test.automation", "entity_id": "hello.world"},
+                "action": {"action": "test.automation", "entity_id": "hello.world"},
             }
         },
     )
@@ -1641,16 +1641,17 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert len(calls) == 1
-    assert ["hello.world"] == calls[0].data.get(ATTR_ENTITY_ID)
+    assert calls[0].data.get(ATTR_ENTITY_ID) == ["hello.world"]
 
 
 @pytest.mark.parametrize(
-    ("broken_config", "problem", "details"),
+    ("broken_config", "problem", "details", "issue"),
     [
         (
             {},
             "could not be validated",
             "required key not provided @ data['action']",
+            "validation_failed_schema",
         ),
         (
             {
@@ -1659,6 +1660,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup triggers",
             "Integration 'automation' does not provide trigger support.",
+            "validation_failed_triggers",
         ),
         (
             {
@@ -1673,6 +1675,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup conditions",
             "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd.",
+            "validation_failed_conditions",
         ),
         (
             {
@@ -1686,15 +1689,19 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup actions",
             "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd.",
+            "validation_failed_actions",
         ),
     ],
 )
 async def test_automation_bad_config_validation(
     hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
-    broken_config,
-    problem,
-    details,
+    hass_admin_user: MockUser,
+    broken_config: dict[str, Any],
+    problem: str,
+    details: str,
+    issue: str,
 ) -> None:
     """Test bad automation configuration which can be detected during validation."""
     assert await async_setup_component(
@@ -1707,7 +1714,7 @@ async def test_automation_bad_config_validation(
                     "alias": "good_automation",
                     "trigger": {"platform": "event", "event_type": "test_event"},
                     "action": {
-                        "service": "test.automation",
+                        "action": "test.automation",
                         "entity_id": "hello.world",
                     },
                 },
@@ -1715,11 +1722,22 @@ async def test_automation_bad_config_validation(
         },
     )
 
-    # Check we get the expected error message
+    # Check we get the expected error message and issue
     assert (
         f"Automation with alias 'bad_automation' {problem} and has been disabled:"
         f" {details}"
     ) in caplog.text
+    issues = await get_repairs(hass, hass_ws_client)
+    assert len(issues) == 1
+    assert issues[0]["issue_id"] == f"automation.bad_automation_{issue}"
+    assert issues[0]["translation_key"] == issue
+    assert issues[0]["translation_placeholders"] == {
+        "edit": "/config/automation/edit/None",
+        "entity_id": "automation.bad_automation",
+        "error": ANY,
+        "name": "bad_automation",
+    }
+    assert issues[0]["translation_placeholders"]["error"].startswith(details)
 
     # Make sure both automations are setup
     assert set(hass.states.async_entity_ids("automation")) == {
@@ -1728,6 +1746,30 @@ async def test_automation_bad_config_validation(
     }
     # The automation failing validation should be unavailable
     assert hass.states.get("automation.bad_automation").state == STATE_UNAVAILABLE
+
+    # Reloading the automation with fixed config should clear the issue
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={
+            automation.DOMAIN: {
+                "alias": "bad_automation",
+                "trigger": {"platform": "event", "event_type": "test_event2"},
+                "action": {
+                    "action": "test.automation",
+                    "data_template": {"event": "{{ trigger.event.event_type }}"},
+                },
+            }
+        },
+    ):
+        await hass.services.async_call(
+            automation.DOMAIN,
+            SERVICE_RELOAD,
+            context=Context(user_id=hass_admin_user.id),
+            blocking=True,
+        )
+    issues = await get_repairs(hass, hass_ws_client)
+    assert len(issues) == 0
 
 
 async def test_automation_with_error_in_script(
@@ -1743,7 +1785,7 @@ async def test_automation_with_error_in_script(
             automation.DOMAIN: {
                 "alias": "hello",
                 "trigger": {"platform": "event", "event_type": "test_event"},
-                "action": {"service": "test.automation", "entity_id": "hello.world"},
+                "action": {"action": "test.automation", "entity_id": "hello.world"},
             }
         },
     )
@@ -1769,7 +1811,7 @@ async def test_automation_with_error_in_script_2(
             automation.DOMAIN: {
                 "alias": "hello",
                 "trigger": {"platform": "event", "event_type": "test_event"},
-                "action": {"service": None, "entity_id": "hello.world"},
+                "action": {"action": None, "entity_id": "hello.world"},
             }
         },
     )
@@ -1800,19 +1842,19 @@ async def test_automation_restore_last_triggered_with_initial_state(
                 "alias": "hello",
                 "initial_state": "off",
                 "trigger": {"platform": "event", "event_type": "test_event"},
-                "action": {"service": "test.automation"},
+                "action": {"action": "test.automation"},
             },
             {
                 "alias": "bye",
                 "initial_state": "off",
                 "trigger": {"platform": "event", "event_type": "test_event"},
-                "action": {"service": "test.automation"},
+                "action": {"action": "test.automation"},
             },
             {
                 "alias": "solong",
                 "initial_state": "on",
                 "trigger": {"platform": "event", "event_type": "test_event"},
-                "action": {"service": "test.automation"},
+                "action": {"action": "test.automation"},
             },
         ]
     }
@@ -1971,11 +2013,11 @@ async def test_extraction_functions(
                     },
                     "action": [
                         {
-                            "service": "test.script",
+                            "action": "test.script",
                             "data": {"entity_id": "light.in_both"},
                         },
                         {
-                            "service": "test.script",
+                            "action": "test.script",
                             "data": {"entity_id": "light.in_first"},
                         },
                         {
@@ -1985,15 +2027,15 @@ async def test_extraction_functions(
                             "type": "turn_on",
                         },
                         {
-                            "service": "test.test",
+                            "action": "test.test",
                             "target": {"area_id": "area-in-both"},
                         },
                         {
-                            "service": "test.test",
+                            "action": "test.test",
                             "target": {"floor_id": "floor-in-both"},
                         },
                         {
-                            "service": "test.test",
+                            "action": "test.test",
                             "target": {"label_id": "label-in-both"},
                         },
                     ],
@@ -2045,7 +2087,7 @@ async def test_extraction_functions(
                     },
                     "action": [
                         {
-                            "service": "test.script",
+                            "action": "test.script",
                             "data": {"entity_id": "light.in_both"},
                         },
                         {
@@ -2098,7 +2140,7 @@ async def test_extraction_functions(
                     },
                     "action": [
                         {
-                            "service": "test.script",
+                            "action": "test.script",
                             "data": {"entity_id": "light.in_both"},
                         },
                         {
@@ -2108,27 +2150,27 @@ async def test_extraction_functions(
                         },
                         {"scene": "scene.hello"},
                         {
-                            "service": "test.test",
+                            "action": "test.test",
                             "target": {"area_id": "area-in-both"},
                         },
                         {
-                            "service": "test.test",
+                            "action": "test.test",
                             "target": {"area_id": "area-in-last"},
                         },
                         {
-                            "service": "test.test",
+                            "action": "test.test",
                             "target": {"floor_id": "floor-in-both"},
                         },
                         {
-                            "service": "test.test",
+                            "action": "test.test",
                             "target": {"floor_id": "floor-in-last"},
                         },
                         {
-                            "service": "test.test",
+                            "action": "test.test",
                             "target": {"label_id": "label-in-both"},
                         },
                         {
-                            "service": "test.test",
+                            "action": "test.test",
                             "target": {"label_id": "label-in-last"},
                         },
                     ],
@@ -2247,7 +2289,7 @@ async def test_automation_variables(
                     },
                     "trigger": {"platform": "event", "event_type": "test_event"},
                     "action": {
-                        "service": "test.automation",
+                        "action": "test.automation",
                         "data": {
                             "value": "{{ test_var }}",
                             "event_type": "{{ event_type }}",
@@ -2266,7 +2308,7 @@ async def test_automation_variables(
                         "value_template": "{{ trigger.event.data.pass_condition }}",
                     },
                     "action": {
-                        "service": "test.automation",
+                        "action": "test.automation",
                     },
                 },
                 {
@@ -2275,7 +2317,7 @@ async def test_automation_variables(
                     },
                     "trigger": {"platform": "event", "event_type": "test_event_3"},
                     "action": {
-                        "service": "test.automation",
+                        "action": "test.automation",
                     },
                 },
             ]
@@ -2331,7 +2373,7 @@ async def test_automation_trigger_variables(
                     },
                     "trigger": {"platform": "event", "event_type": "test_event"},
                     "action": {
-                        "service": "test.automation",
+                        "action": "test.automation",
                         "data": {
                             "value": "{{ test_var }}",
                             "event_type": "{{ event_type }}",
@@ -2349,7 +2391,7 @@ async def test_automation_trigger_variables(
                     },
                     "trigger": {"platform": "event", "event_type": "test_event_2"},
                     "action": {
-                        "service": "test.automation",
+                        "action": "test.automation",
                         "data": {
                             "value": "{{ test_var }}",
                             "event_type": "{{ event_type }}",
@@ -2396,7 +2438,7 @@ async def test_automation_bad_trigger_variables(
                     },
                     "trigger": {"platform": "event", "event_type": "test_event"},
                     "action": {
-                        "service": "test.automation",
+                        "action": "test.automation",
                     },
                 },
             ]
@@ -2423,7 +2465,7 @@ async def test_automation_this_var_always(
                 {
                     "trigger": {"platform": "event", "event_type": "test_event"},
                     "action": {
-                        "service": "test.automation",
+                        "action": "test.automation",
                         "data": {
                             "this_template": "{{this.entity_id}}",
                         },
@@ -2500,13 +2542,14 @@ async def test_blueprint_automation(
             "Blueprint 'Call service based on event' generated invalid automation",
             (
                 "value should be a string for dictionary value @"
-                " data['action'][0]['service']"
+                " data['action'][0]['action']"
             ),
         ),
     ],
 )
 async def test_blueprint_automation_bad_config(
     hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
     blueprint_inputs,
     problem,
@@ -2528,9 +2571,24 @@ async def test_blueprint_automation_bad_config(
     assert problem in caplog.text
     assert details in caplog.text
 
+    issues = await get_repairs(hass, hass_ws_client)
+    assert len(issues) == 1
+    issue = "validation_failed_blueprint"
+    assert issues[0]["issue_id"] == f"automation.automation_0_{issue}"
+    assert issues[0]["translation_key"] == issue
+    assert issues[0]["translation_placeholders"] == {
+        "edit": "/config/automation/edit/None",
+        "entity_id": "automation.automation_0",
+        "error": ANY,
+        "name": "automation 0",
+    }
+    assert issues[0]["translation_placeholders"]["error"].startswith(details)
+
 
 async def test_blueprint_automation_fails_substitution(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test blueprint automation with bad inputs."""
     with patch(
@@ -2559,6 +2617,18 @@ async def test_blueprint_automation_fails_substitution(
         " 'a_number': 5}: No substitution found for input blah"
     ) in caplog.text
 
+    issues = await get_repairs(hass, hass_ws_client)
+    assert len(issues) == 1
+    issue = "validation_failed_blueprint"
+    assert issues[0]["issue_id"] == f"automation.automation_0_{issue}"
+    assert issues[0]["translation_key"] == issue
+    assert issues[0]["translation_placeholders"] == {
+        "edit": "/config/automation/edit/None",
+        "entity_id": "automation.automation_0",
+        "error": "No substitution found for input blah",
+        "name": "automation 0",
+    }
+
 
 async def test_trigger_service(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test the automation trigger service."""
@@ -2570,7 +2640,7 @@ async def test_trigger_service(hass: HomeAssistant, calls: list[ServiceCall]) ->
                 "alias": "hello",
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "action": {
-                    "service": "test.automation",
+                    "action": "test.automation",
                     "data_template": {"trigger": "{{ trigger }}"},
                 },
             }
@@ -2609,14 +2679,14 @@ async def test_trigger_condition_implicit_id(
                         {
                             "conditions": {"condition": "trigger", "id": [0, "2"]},
                             "sequence": {
-                                "service": "test.automation",
+                                "action": "test.automation",
                                 "data": {"param": "one"},
                             },
                         },
                         {
                             "conditions": {"condition": "trigger", "id": "1"},
                             "sequence": {
-                                "service": "test.automation",
+                                "action": "test.automation",
                                 "data": {"param": "two"},
                             },
                         },
@@ -2660,14 +2730,14 @@ async def test_trigger_condition_explicit_id(
                         {
                             "conditions": {"condition": "trigger", "id": "one"},
                             "sequence": {
-                                "service": "test.automation",
+                                "action": "test.automation",
                                 "data": {"param": "one"},
                             },
                         },
                         {
                             "conditions": {"condition": "trigger", "id": "two"},
                             "sequence": {
-                                "service": "test.automation",
+                                "action": "test.automation",
                                 "data": {"param": "two"},
                             },
                         },
@@ -2752,8 +2822,8 @@ async def test_recursive_automation_starting_script(
                                     f" {automation_runs} }}}}"
                                 )
                             },
-                            {"service": "script.script1"},
-                            {"service": "test.script_done"},
+                            {"action": "script.script1"},
+                            {"action": "test.script_done"},
                         ],
                     },
                 }
@@ -2770,8 +2840,9 @@ async def test_recursive_automation_starting_script(
                         {"platform": "event", "event_type": "trigger_automation"},
                     ],
                     "action": [
-                        {"service": "test.automation_started"},
-                        {"service": "script.script1"},
+                        {"action": "test.automation_started"},
+                        {"delay": 0.001},
+                        {"action": "script.script1"},
                     ],
                 }
             },
@@ -2817,7 +2888,10 @@ async def test_recursive_automation_starting_script(
         assert script_warning_msg in caplog.text
 
 
-@pytest.mark.parametrize("automation_mode", SCRIPT_MODE_CHOICES)
+@pytest.mark.parametrize(
+    "automation_mode",
+    [mode for mode in SCRIPT_MODE_CHOICES if mode != SCRIPT_MODE_RESTART],
+)
 @pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
 async def test_recursive_automation(
     hass: HomeAssistant, automation_mode, caplog: pytest.LogCaptureFixture
@@ -2849,7 +2923,7 @@ async def test_recursive_automation(
                     ],
                     "action": [
                         {"event": "trigger_automation"},
-                        {"service": "test.automation_done"},
+                        {"action": "test.automation_done"},
                     ],
                 }
             },
@@ -2878,6 +2952,68 @@ async def test_recursive_automation(
         assert "Disallowed recursion detected" not in caplog.text
 
 
+@pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
+async def test_recursive_automation_restart_mode(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test automation restarting itself.
+
+    The automation is an infinite loop since it keeps restarting itself
+
+    - Illegal recursion detection should not be triggered
+    - Home Assistant should not hang on shut down
+    """
+    stop_scripts_at_shutdown_called = asyncio.Event()
+    real_stop_scripts_at_shutdown = _async_stop_scripts_at_shutdown
+
+    async def stop_scripts_at_shutdown(*args):
+        await real_stop_scripts_at_shutdown(*args)
+        stop_scripts_at_shutdown_called.set()
+
+    with patch(
+        "homeassistant.helpers.script._async_stop_scripts_at_shutdown",
+        wraps=stop_scripts_at_shutdown,
+    ):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: {
+                    "mode": SCRIPT_MODE_RESTART,
+                    "trigger": [
+                        {"platform": "event", "event_type": "trigger_automation"},
+                    ],
+                    "action": [
+                        {"event": "trigger_automation"},
+                        {"action": "test.automation_done"},
+                    ],
+                }
+            },
+        )
+
+        service_called = asyncio.Event()
+
+        async def async_service_handler(service):
+            if service.service == "automation_done":
+                service_called.set()
+
+        hass.services.async_register("test", "automation_done", async_service_handler)
+
+        hass.bus.async_fire("trigger_automation")
+        await asyncio.sleep(0)
+
+        # Trigger 1st stage script shutdown
+        hass.set_state(CoreState.stopping)
+        hass.bus.async_fire("homeassistant_stop")
+        await asyncio.wait_for(stop_scripts_at_shutdown_called.wait(), 1)
+
+        # Trigger 2nd stage script shutdown
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=90))
+        await hass.async_block_till_done()
+
+        assert "Disallowed recursion detected" not in caplog.text
+
+
 async def test_websocket_config(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -2885,7 +3021,7 @@ async def test_websocket_config(
     config = {
         "alias": "hello",
         "trigger": {"platform": "event", "event_type": "test_event"},
-        "action": {"service": "test.automation", "data": 100},
+        "action": {"action": "test.automation", "data": 100},
     }
     assert await async_setup_component(
         hass, automation.DOMAIN, {automation.DOMAIN: config}
@@ -2940,9 +3076,7 @@ def test_deprecated_constants(
     )
 
 
-async def test_automation_turns_off_other_automation(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_automation_turns_off_other_automation(hass: HomeAssistant) -> None:
     """Test an automation that turns off another automation."""
     hass.set_state(CoreState.not_running)
     calls = async_mock_service(hass, "persistent_notification", "create")
@@ -2961,7 +3095,7 @@ async def test_automation_turns_off_other_automation(
                         "from": "on",
                     },
                     "action": {
-                        "service": "automation.turn_off",
+                        "action": "automation.turn_off",
                         "target": {
                             "entity_id": "automation.automation_1",
                         },
@@ -2984,7 +3118,7 @@ async def test_automation_turns_off_other_automation(
                         },
                     },
                     "action": {
-                        "service": "persistent_notification.create",
+                        "action": "persistent_notification.create",
                         "metadata": {},
                         "data": {
                             "message": "Test race",
@@ -3021,7 +3155,7 @@ async def test_automation_turns_off_other_automation(
 
 
 async def test_two_automations_call_restart_script_same_time(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
 ) -> None:
     """Test two automations that call a restart mode script at the same."""
     hass.states.async_set("binary_sensor.presence", "off")
@@ -3051,7 +3185,7 @@ async def test_two_automations_call_restart_script_same_time(
                 "fire_toggle": {
                     "sequence": [
                         {
-                            "service": "input_boolean.toggle",
+                            "action": "input_boolean.toggle",
                             "target": {"entity_id": "input_boolean.test_1"},
                         }
                     ]
@@ -3072,7 +3206,7 @@ async def test_two_automations_call_restart_script_same_time(
                         "to": "on",
                     },
                     "action": {
-                        "service": "script.fire_toggle",
+                        "action": "script.fire_toggle",
                     },
                     "id": "automation_0",
                     "mode": "single",
@@ -3084,7 +3218,7 @@ async def test_two_automations_call_restart_script_same_time(
                         "to": "on",
                     },
                     "action": {
-                        "service": "script.fire_toggle",
+                        "action": "script.fire_toggle",
                     },
                     "id": "automation_1",
                     "mode": "single",
@@ -3095,5 +3229,101 @@ async def test_two_automations_call_restart_script_same_time(
 
     hass.states.async_set("binary_sensor.presence", "on")
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert len(events) == 2
     cancel()
+
+
+async def test_two_automation_call_restart_script_right_after_each_other(
+    hass: HomeAssistant,
+) -> None:
+    """Test two automations call a restart script right after each other."""
+
+    events = async_capture_events(hass, "repeat_test_script_finished")
+
+    assert await async_setup_component(
+        hass,
+        input_boolean.DOMAIN,
+        {
+            input_boolean.DOMAIN: {
+                "test_1": None,
+                "test_2": None,
+            }
+        },
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "state",
+                        "entity_id": ["input_boolean.test_1", "input_boolean.test_1"],
+                        "from": "off",
+                        "to": "on",
+                    },
+                    "action": [
+                        {
+                            "repeat": {
+                                "count": 2,
+                                "sequence": [
+                                    {
+                                        "delay": {
+                                            "hours": 0,
+                                            "minutes": 0,
+                                            "seconds": 0,
+                                            "milliseconds": 100,
+                                        }
+                                    }
+                                ],
+                            }
+                        },
+                        {"event": "repeat_test_script_finished", "event_data": {}},
+                    ],
+                    "id": "automation_0",
+                    "mode": "restart",
+                },
+            ]
+        },
+    )
+    hass.states.async_set("input_boolean.test_1", "off")
+    hass.states.async_set("input_boolean.test_2", "off")
+    await hass.async_block_till_done()
+    hass.states.async_set("input_boolean.test_1", "on")
+    hass.states.async_set("input_boolean.test_2", "on")
+    await asyncio.sleep(0)
+    hass.states.async_set("input_boolean.test_1", "off")
+    hass.states.async_set("input_boolean.test_2", "off")
+    await asyncio.sleep(0)
+    hass.states.async_set("input_boolean.test_1", "on")
+    hass.states.async_set("input_boolean.test_2", "on")
+    await hass.async_block_till_done()
+    assert len(events) == 1
+
+
+async def test_action_service_backward_compatibility(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test we can still use the service call method."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "action": {
+                    "service": "test.automation",
+                    "entity_id": "hello.world",
+                    "data": {"event": "{{ trigger.event.event_type }}"},
+                },
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data.get(ATTR_ENTITY_ID) == ["hello.world"]
+    assert calls[0].data.get("event") == "test_event"

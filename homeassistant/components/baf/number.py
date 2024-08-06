@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BAFConfigEntry
 from .const import HALF_DAY_SECS, ONE_DAY_SECS, ONE_MIN_SECS, SPEED_RANGE
-from .entity import BAFEntity
+from .entity import BAFDescriptionEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -130,16 +130,10 @@ async def async_setup_entry(
     async_add_entities(BAFNumber(device, description) for description in descriptions)
 
 
-class BAFNumber(BAFEntity, NumberEntity):
+class BAFNumber(BAFDescriptionEntity, NumberEntity):
     """BAF number."""
 
     entity_description: BAFNumberDescription
-
-    def __init__(self, device: Device, description: BAFNumberDescription) -> None:
-        """Initialize the entity."""
-        self.entity_description = description
-        super().__init__(device)
-        self._attr_unique_id = f"{self._device.mac_address}-{description.key}"
 
     @callback
     def _async_update_attrs(self) -> None:

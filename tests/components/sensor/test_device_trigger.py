@@ -24,26 +24,20 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import load_json
 
+from .common import UNITS_OF_MEASUREMENT, MockSensor
+
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     async_get_device_automation_capabilities,
     async_get_device_automations,
-    async_mock_service,
     setup_test_component_platform,
 )
-from tests.components.sensor.common import UNITS_OF_MEASUREMENT, MockSensor
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
 def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
     """Stub copying the blueprints to the config folder."""
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 @pytest.mark.parametrize(
@@ -61,6 +55,7 @@ def test_matches_device_classes(device_class: SensorDeviceClass) -> None:
         SensorDeviceClass.BATTERY: "CONF_BATTERY_LEVEL",
         SensorDeviceClass.CO: "CONF_CO",
         SensorDeviceClass.CO2: "CONF_CO2",
+        SensorDeviceClass.CONDUCTIVITY: "CONF_CONDUCTIVITY",
         SensorDeviceClass.ENERGY_STORAGE: "CONF_ENERGY",
         SensorDeviceClass.VOLUME_STORAGE: "CONF_VOLUME",
     }.get(device_class, f"CONF_{device_class.value.upper()}")
@@ -69,6 +64,7 @@ def test_matches_device_classes(device_class: SensorDeviceClass) -> None:
     # Ensure it has correct value
     constant_value = {
         SensorDeviceClass.BATTERY: "battery_level",
+        SensorDeviceClass.CONDUCTIVITY: "conductivity",
         SensorDeviceClass.ENERGY_STORAGE: "energy",
         SensorDeviceClass.VOLUME_STORAGE: "volume",
     }.get(device_class, device_class.value)
@@ -172,7 +168,7 @@ async def test_get_triggers_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for trigger in ["value"]
+        for trigger in ("value",)
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
@@ -424,7 +420,6 @@ async def test_if_fires_not_on_above_below(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls: list[ServiceCall],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test for value triggers firing."""
@@ -464,7 +459,7 @@ async def test_if_fires_on_state_above(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for value triggers firing."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -510,17 +505,18 @@ async def test_if_fires_on_state_above(
         },
     )
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.states.async_set(entry.entity_id, 9)
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.states.async_set(entry.entity_id, 11)
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
     assert (
-        calls[0].data["some"] == f"bat_low device - {entry.entity_id} - 9 - 11 - None"
+        service_calls[0].data["some"]
+        == f"bat_low device - {entry.entity_id} - 9 - 11 - None"
     )
 
 
@@ -529,7 +525,7 @@ async def test_if_fires_on_state_below(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for value triggers firing."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -575,17 +571,18 @@ async def test_if_fires_on_state_below(
         },
     )
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.states.async_set(entry.entity_id, 11)
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.states.async_set(entry.entity_id, 9)
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
     assert (
-        calls[0].data["some"] == f"bat_low device - {entry.entity_id} - 11 - 9 - None"
+        service_calls[0].data["some"]
+        == f"bat_low device - {entry.entity_id} - 11 - 9 - None"
     )
 
 
@@ -594,7 +591,7 @@ async def test_if_fires_on_state_between(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for value triggers firing."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -641,28 +638,30 @@ async def test_if_fires_on_state_between(
         },
     )
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.states.async_set(entry.entity_id, 9)
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.states.async_set(entry.entity_id, 11)
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
     assert (
-        calls[0].data["some"] == f"bat_low device - {entry.entity_id} - 9 - 11 - None"
+        service_calls[0].data["some"]
+        == f"bat_low device - {entry.entity_id} - 9 - 11 - None"
     )
 
     hass.states.async_set(entry.entity_id, 21)
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
 
     hass.states.async_set(entry.entity_id, 19)
     await hass.async_block_till_done()
-    assert len(calls) == 2
+    assert len(service_calls) == 2
     assert (
-        calls[1].data["some"] == f"bat_low device - {entry.entity_id} - 21 - 19 - None"
+        service_calls[1].data["some"]
+        == f"bat_low device - {entry.entity_id} - 21 - 19 - None"
     )
 
 
@@ -671,7 +670,7 @@ async def test_if_fires_on_state_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for value triggers firing."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -717,17 +716,18 @@ async def test_if_fires_on_state_legacy(
         },
     )
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.states.async_set(entry.entity_id, 9)
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.states.async_set(entry.entity_id, 11)
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
     assert (
-        calls[0].data["some"] == f"bat_low device - {entry.entity_id} - 9 - 11 - None"
+        service_calls[0].data["some"]
+        == f"bat_low device - {entry.entity_id} - 9 - 11 - None"
     )
 
 
@@ -736,7 +736,7 @@ async def test_if_fires_on_state_change_with_for(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for triggers firing with delay."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -783,17 +783,17 @@ async def test_if_fires_on_state_change_with_for(
         },
     )
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.states.async_set(entry.entity_id, 10)
     hass.states.async_set(entry.entity_id, 11)
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
     await hass.async_block_till_done()
     assert (
-        calls[0].data["some"]
+        service_calls[0].data["some"]
         == f"turn_off device - {entry.entity_id} - 10 - 11 - 0:00:05"
     )

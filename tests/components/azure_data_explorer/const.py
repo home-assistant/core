@@ -8,7 +8,7 @@ from homeassistant.components.azure_data_explorer.const import (
     CONF_APP_REG_SECRET,
     CONF_AUTHORITY_ID,
     CONF_SEND_INTERVAL,
-    CONF_USE_FREE,
+    CONF_USE_QUEUED_CLIENT,
 )
 
 AZURE_DATA_EXPLORER_PATH = "homeassistant.components.azure_data_explorer"
@@ -29,7 +29,7 @@ BASE_CONFIG_URI = {
 }
 
 BASIC_OPTIONS = {
-    CONF_USE_FREE: False,
+    CONF_USE_QUEUED_CLIENT: False,
     CONF_SEND_INTERVAL: 5,
 }
 
@@ -39,10 +39,10 @@ BASE_CONFIG_FULL = BASE_CONFIG | BASIC_OPTIONS | BASE_CONFIG_URI
 
 BASE_CONFIG_IMPORT = {
     CONF_ADX_CLUSTER_INGEST_URI: "https://cluster.region.kusto.windows.net",
-    CONF_USE_FREE: False,
+    CONF_USE_QUEUED_CLIENT: False,
     CONF_SEND_INTERVAL: 5,
 }
 
-FREE_OPTIONS = {CONF_USE_FREE: True, CONF_SEND_INTERVAL: 5}
+FREE_OPTIONS = {CONF_USE_QUEUED_CLIENT: True, CONF_SEND_INTERVAL: 5}
 
 BASE_CONFIG_FREE = BASE_CONFIG | FREE_OPTIONS

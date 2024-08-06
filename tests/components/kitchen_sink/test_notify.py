@@ -1,17 +1,17 @@
 """The tests for the demo button component."""
 
+from collections.abc import AsyncGenerator
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from typing_extensions import AsyncGenerator
 
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.components.notify import (
+    ATTR_MESSAGE,
     DOMAIN as NOTIFY_DOMAIN,
     SERVICE_SEND_MESSAGE,
 )
-from homeassistant.components.notify.const import ATTR_MESSAGE
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component

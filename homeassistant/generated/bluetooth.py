@@ -140,6 +140,41 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "connectable": False,
         "domain": "govee_ble",
+        "local_name": "GV5121*",
+    },
+    {
+        "connectable": False,
+        "domain": "govee_ble",
+        "local_name": "GV5122*",
+    },
+    {
+        "connectable": False,
+        "domain": "govee_ble",
+        "local_name": "GV5123*",
+    },
+    {
+        "connectable": False,
+        "domain": "govee_ble",
+        "local_name": "GV5124*",
+    },
+    {
+        "connectable": False,
+        "domain": "govee_ble",
+        "local_name": "GV5125*",
+    },
+    {
+        "connectable": False,
+        "domain": "govee_ble",
+        "local_name": "GV5126*",
+    },
+    {
+        "connectable": False,
+        "domain": "govee_ble",
+        "local_name": "GVH5127*",
+    },
+    {
+        "connectable": False,
+        "domain": "govee_ble",
         "manufacturer_id": 1,
         "service_uuid": "0000ec88-0000-1000-8000-00805f9b34fb",
     },
@@ -222,6 +257,22 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "service_uuid": "00001801-0000-1000-8000-00805f9b34fb",
     },
     {
+        "connectable": False,
+        "domain": "govee_ble",
+        "manufacturer_id": 61320,
+    },
+    {
+        "connectable": False,
+        "domain": "govee_ble",
+        "manufacturer_data_start": [
+            236,
+            0,
+            0,
+            1,
+        ],
+        "manufacturer_id": 34819,
+    },
+    {
         "domain": "homekit_controller",
         "manufacturer_data_start": [
             6,
@@ -269,6 +320,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "connectable": False,
         "domain": "inkbird",
         "local_name": "tps",
+    },
+    {
+        "connectable": True,
+        "domain": "iron_os",
+        "service_uuid": "9eae1000-9d0d-48c5-aa55-33e27f9bc533",
     },
     {
         "connectable": False,
@@ -347,6 +403,10 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "domain": "led_ble",
         "local_name": "AP-*",
+    },
+    {
+        "domain": "led_ble",
+        "local_name": "MELK-*",
     },
     {
         "domain": "medcom_ble",
@@ -618,6 +678,15 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
             0,
         ],
         "manufacturer_id": 27,
+        "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "thermobeacon",
+        "manufacturer_data_start": [
+            0,
+        ],
+        "manufacturer_id": 48,
         "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
     },
     {

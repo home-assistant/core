@@ -1,9 +1,10 @@
 """The tests for the Google Pub/Sub component."""
 
+from collections.abc import Generator
 from dataclasses import dataclass
 from datetime import datetime
 import os
-from unittest import mock
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
@@ -40,30 +41,30 @@ async def test_nested() -> None:
 
 
 @pytest.fixture(autouse=True, name="mock_client")
-def mock_client_fixture():
+def mock_client_fixture() -> Generator[MagicMock]:
     """Mock the pubsub client."""
-    with mock.patch(f"{GOOGLE_PUBSUB_PATH}.PublisherClient") as client:
+    with patch(f"{GOOGLE_PUBSUB_PATH}.PublisherClient") as client:
         setattr(
             client,
             "from_service_account_json",
-            mock.MagicMock(return_value=mock.MagicMock()),
+            MagicMock(return_value=MagicMock()),
         )
         yield client
 
 
 @pytest.fixture(autouse=True, name="mock_is_file")
-def mock_is_file_fixture():
+def mock_is_file_fixture() -> Generator[MagicMock]:
     """Mock os.path.isfile."""
-    with mock.patch(f"{GOOGLE_PUBSUB_PATH}.os.path.isfile") as is_file:
+    with patch(f"{GOOGLE_PUBSUB_PATH}.os.path.isfile") as is_file:
         is_file.return_value = True
         yield is_file
 
 
 @pytest.fixture(autouse=True)
-def mock_json(hass, monkeypatch):
+def mock_json(monkeypatch: pytest.MonkeyPatch) -> None:
     """Mock the event bus listener and os component."""
     monkeypatch.setattr(
-        f"{GOOGLE_PUBSUB_PATH}.json.dumps", mock.Mock(return_value=mock.MagicMock())
+        f"{GOOGLE_PUBSUB_PATH}.json.dumps", Mock(return_value=MagicMock())
     )
 
 

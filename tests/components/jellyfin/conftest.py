@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 
 from jellyfin_apiclient_python import JellyfinClient
@@ -9,7 +10,6 @@ from jellyfin_apiclient_python.api import API
 from jellyfin_apiclient_python.configuration import Config
 from jellyfin_apiclient_python.connection_manager import ConnectionManager
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.jellyfin.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
@@ -46,7 +46,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_client_device_id() -> Generator[None, MagicMock, None]:
+def mock_client_device_id() -> Generator[MagicMock]:
     """Mock generating device id."""
     with patch(
         "homeassistant.components.jellyfin.config_flow._generate_client_device_id"
@@ -108,7 +108,7 @@ def mock_client(
 
 
 @pytest.fixture
-def mock_jellyfin(mock_client: MagicMock) -> Generator[None, MagicMock, None]:
+def mock_jellyfin(mock_client: MagicMock) -> Generator[MagicMock]:
     """Return a mocked Jellyfin."""
     with patch(
         "homeassistant.components.jellyfin.client_wrapper.Jellyfin", autospec=True

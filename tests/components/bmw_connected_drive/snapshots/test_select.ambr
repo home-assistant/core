@@ -6,8 +6,9 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'IMMEDIATE_CHARGING',
-        'DELAYED_CHARGING',
+        'immediate_charging',
+        'delayed_charging',
+        'no_action',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -40,11 +41,11 @@
 # name: test_entity_state_attrs[select.i3_rex_charging_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'friendly_name': 'i3 (+ REX) Charging Mode',
       'options': list([
-        'IMMEDIATE_CHARGING',
-        'DELAYED_CHARGING',
+        'immediate_charging',
+        'delayed_charging',
+        'no_action',
       ]),
     }),
     'context': <ANY>,
@@ -52,7 +53,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'DELAYED_CHARGING',
+    'state': 'delayed_charging',
   })
 # ---
 # name: test_entity_state_attrs[select.i4_edrive40_ac_charging_limit-entry]
@@ -107,7 +108,6 @@
 # name: test_entity_state_attrs[select.i4_edrive40_ac_charging_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'friendly_name': 'i4 eDrive40 AC Charging Limit',
       'options': list([
         '6',
@@ -141,8 +141,9 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'IMMEDIATE_CHARGING',
-        'DELAYED_CHARGING',
+        'immediate_charging',
+        'delayed_charging',
+        'no_action',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -175,11 +176,11 @@
 # name: test_entity_state_attrs[select.i4_edrive40_charging_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'friendly_name': 'i4 eDrive40 Charging Mode',
       'options': list([
-        'IMMEDIATE_CHARGING',
-        'DELAYED_CHARGING',
+        'immediate_charging',
+        'delayed_charging',
+        'no_action',
       ]),
     }),
     'context': <ANY>,
@@ -187,7 +188,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'IMMEDIATE_CHARGING',
+    'state': 'immediate_charging',
   })
 # ---
 # name: test_entity_state_attrs[select.ix_xdrive50_ac_charging_limit-entry]
@@ -242,7 +243,6 @@
 # name: test_entity_state_attrs[select.ix_xdrive50_ac_charging_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'friendly_name': 'iX xDrive50 AC Charging Limit',
       'options': list([
         '6',
@@ -276,8 +276,9 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'IMMEDIATE_CHARGING',
-        'DELAYED_CHARGING',
+        'immediate_charging',
+        'delayed_charging',
+        'no_action',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -310,11 +311,11 @@
 # name: test_entity_state_attrs[select.ix_xdrive50_charging_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'friendly_name': 'iX xDrive50 Charging Mode',
       'options': list([
-        'IMMEDIATE_CHARGING',
-        'DELAYED_CHARGING',
+        'immediate_charging',
+        'delayed_charging',
+        'no_action',
       ]),
     }),
     'context': <ANY>,
@@ -322,6 +323,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'IMMEDIATE_CHARGING',
+    'state': 'immediate_charging',
   })
 # ---

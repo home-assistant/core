@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from tailscale.models import Devices
-from typing_extensions import Generator
 
 from homeassistant.components.tailscale.const import CONF_TAILNET, DOMAIN
 from homeassistant.const import CONF_API_KEY
@@ -36,7 +36,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_tailscale_config_flow() -> Generator[None, MagicMock, None]:
+def mock_tailscale_config_flow() -> Generator[MagicMock]:
     """Return a mocked Tailscale client."""
     with patch(
         "homeassistant.components.tailscale.config_flow.Tailscale", autospec=True
@@ -49,7 +49,7 @@ def mock_tailscale_config_flow() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
-def mock_tailscale(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None]:
+def mock_tailscale(request: pytest.FixtureRequest) -> Generator[MagicMock]:
     """Return a mocked Tailscale client."""
     fixture: str = "tailscale/devices.json"
     if hasattr(request, "param") and request.param:

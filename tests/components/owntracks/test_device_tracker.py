@@ -1,8 +1,12 @@
 """The tests for the Owntracks device tracker."""
 
+import base64
 import json
+import pickle
 from unittest.mock import patch
 
+from nacl.encoding import Base64Encoder
+from nacl.secret import SecretBox
 import pytest
 
 from homeassistant.components import owntracks
@@ -281,12 +285,12 @@ BAD_MESSAGE = {"_type": "unsupported", "tst": 1}
 BAD_JSON_PREFIX = "--$this is bad json#--"
 BAD_JSON_SUFFIX = "** and it ends here ^^"
 
-# pylint: disable=len-as-condition
-
 
 @pytest.fixture
 def setup_comp(
-    hass, mock_device_tracker_conf: list[Device], mqtt_mock: MqttMockHAClient
+    hass: HomeAssistant,
+    mock_device_tracker_conf: list[Device],
+    mqtt_mock: MqttMockHAClient,
 ):
     """Initialize components."""
     hass.loop.run_until_complete(async_setup_component(hass, "device_tracker", {}))
@@ -1330,23 +1334,14 @@ def generate_ciphers(secret):
     # PyNaCl ciphertext generation will fail if the module
     # cannot be imported. However, the test for decryption
     # also relies on this library and won't be run without it.
-    import base64
-    import pickle
+    keylen = SecretBox.KEY_SIZE
+    key = secret.encode("utf-8")
+    key = key[:keylen]
+    key = key.ljust(keylen, b"\0")
 
-    try:
-        from nacl.encoding import Base64Encoder
-        from nacl.secret import SecretBox
+    msg = json.dumps(DEFAULT_LOCATION_MESSAGE).encode("utf-8")
 
-        keylen = SecretBox.KEY_SIZE
-        key = secret.encode("utf-8")
-        key = key[:keylen]
-        key = key.ljust(keylen, b"\0")
-
-        msg = json.dumps(DEFAULT_LOCATION_MESSAGE).encode("utf-8")
-
-        ctxt = SecretBox(key).encrypt(msg, encoder=Base64Encoder).decode("utf-8")
-    except (ImportError, OSError):
-        ctxt = ""
+    ctxt = SecretBox(key).encrypt(msg, encoder=Base64Encoder).decode("utf-8")
 
     mctxt = base64.b64encode(
         pickle.dumps(
@@ -1381,9 +1376,6 @@ def mock_cipher():
 
     def mock_decrypt(ciphertext, key):
         """Decrypt/unpickle."""
-        import base64
-        import pickle
-
         (mkey, plaintext) = pickle.loads(base64.b64decode(ciphertext))
         if key != mkey:
             raise ValueError
@@ -1504,12 +1496,6 @@ async def test_encrypted_payload_no_topic_key(hass: HomeAssistant, setup_comp) -
 
 async def test_encrypted_payload_libsodium(hass: HomeAssistant, setup_comp) -> None:
     """Test sending encrypted message payload."""
-    try:
-        import nacl  # noqa: F401
-    except (ImportError, OSError):
-        pytest.skip("PyNaCl/libsodium is not installed")
-        return
-
     await setup_owntracks(hass, {CONF_SECRET: TEST_SECRET_KEY})
 
     await send_message(hass, LOCATION_TOPIC, ENCRYPTED_LOCATION_MESSAGE)

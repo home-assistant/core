@@ -11,11 +11,11 @@ from homeassistant.components.shelly.const import (
     EVENT_SHELLY_CLICK,
     REST_SENSORS_UPDATE_INTERVAL,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 
 from . import MOCK_MAC
 
-from tests.common import async_capture_events, async_mock_service, mock_device_registry
+from tests.common import async_capture_events
 
 MOCK_SETTINGS = {
     "name": "Test name",
@@ -226,7 +226,12 @@ MOCK_STATUS_RPC = {
     "switch:0": {"output": True},
     "input:0": {"id": 0, "state": None},
     "input:1": {"id": 1, "percent": 89, "xpercent": 8.9},
-    "input:2": {"id": 2, "counts": {"total": 56174, "xtotal": 561.74}},
+    "input:2": {
+        "id": 2,
+        "counts": {"total": 56174, "xtotal": 561.74},
+        "freq": 208.00,
+        "xfreq": 6.11,
+    },
     "light:0": {"output": True, "brightness": 53.0},
     "light:1": {"output": True, "brightness": 53.0},
     "light:2": {"output": True, "brightness": 53.0},
@@ -254,6 +259,7 @@ MOCK_STATUS_RPC = {
         "current_C": 12.3,
         "output": True,
     },
+    "humidity:0": {"rh": 44.4},
     "sys": {
         "available_updates": {
             "beta": {"version": "some_beta_version"},
@@ -284,18 +290,6 @@ def mock_ws_server():
     """Mock out ws_server."""
     with patch("homeassistant.components.shelly.utils.get_ws_context"):
         yield
-
-
-@pytest.fixture
-def device_reg(hass: HomeAssistant):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 @pytest.fixture
@@ -359,6 +353,7 @@ def _mock_rpc_device(version: str | None = None):
         status=MOCK_STATUS_RPC,
         firmware_version="some fw string",
         initialized=True,
+        connected=True,
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device

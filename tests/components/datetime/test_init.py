@@ -10,8 +10,9 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, CONF_PLATFOR
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from .common import MockDateTimeEntity
+
 from tests.common import setup_test_component_platform
-from tests.components.datetime.common import MockDateTimeEntity
 
 DEFAULT_VALUE = datetime(2020, 1, 1, 12, 0, 0, tzinfo=UTC)
 

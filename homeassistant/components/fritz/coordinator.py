@@ -568,8 +568,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     self.fritz_hosts.get_mesh_topology
                 )
             ):
-                # pylint: disable-next=broad-exception-raised
-                raise Exception("Mesh supported but empty topology reported")
+                raise Exception("Mesh supported but empty topology reported")  # noqa: TRY002
         except FritzActionError:
             self.mesh_role = MeshRoles.SLAVE
             # Avoid duplicating device trackers
@@ -666,7 +665,9 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 entity_reg.async_remove(entity.entity_id)
 
         device_reg = dr.async_get(self.hass)
-        orphan_connections = {(CONNECTION_NETWORK_MAC, mac) for mac in orphan_macs}
+        orphan_connections = {
+            (CONNECTION_NETWORK_MAC, dr.format_mac(mac)) for mac in orphan_macs
+        }
         for device in dr.async_entries_for_config_entry(
             device_reg, config_entry.entry_id
         ):

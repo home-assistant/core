@@ -104,7 +104,7 @@ async def test_import_config(
         },
     ]
 
-    for url_path in ["api", "ftp", "router", "weather"]:
+    for url_path in ("api", "ftp", "router", "weather"):
         await client.send_json_auto_id(
             {"type": "lovelace/config", "url_path": url_path}
         )

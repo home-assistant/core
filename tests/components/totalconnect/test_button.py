@@ -48,7 +48,7 @@ async def test_bypass_button(hass: HomeAssistant, entity_id: str) -> None:
                 service_data={ATTR_ENTITY_ID: entity_id},
                 blocking=True,
             )
-            assert mock_request.call_count == 1
+        assert mock_request.call_count == 1
 
         # try to bypass, works this time
         await hass.services.async_call(

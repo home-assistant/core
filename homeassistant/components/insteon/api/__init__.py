@@ -3,6 +3,7 @@
 from insteon_frontend import get_build_id, locate_dir
 
 from homeassistant.components import panel_custom, websocket_api
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.core import HomeAssistant, callback
 
 from ..const import CONF_DEV_PATH, DOMAIN
@@ -91,7 +92,9 @@ async def async_register_insteon_frontend(hass: HomeAssistant):
         is_dev = dev_path is not None
         path = dev_path if dev_path else locate_dir()
         build_id = get_build_id(is_dev)
-        hass.http.register_static_path(URL_BASE, path, cache_headers=not is_dev)
+        await hass.http.async_register_static_paths(
+            [StaticPathConfig(URL_BASE, path, cache_headers=not is_dev)]
+        )
 
         await panel_custom.async_register_panel(
             hass=hass,

@@ -36,14 +36,12 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     ATTR_WEATHER_WIND_SPEED_UNIT,
     DOMAIN as WEATHER_DOMAIN,
-    LEGACY_SERVICE_GET_FORECAST,
     SERVICE_GET_FORECASTS,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY, SOURCE_USER
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_FRIENDLY_NAME, CONF_NAME
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import dt as dt_util
 
 from .const import API_V4_ENTRY_DATA
@@ -55,7 +53,7 @@ from tests.typing import WebSocketGenerator
 @callback
 def _enable_entity(hass: HomeAssistant, entity_name: str) -> None:
     """Enable disabled entity."""
-    ent_reg = async_get(hass)
+    ent_reg = er.async_get(hass)
     entry = ent_reg.async_get(entity_name)
     updated_entry = ent_reg.async_update_entity(entry.entity_id, disabled_by=None)
     assert updated_entry != entry
@@ -244,10 +242,7 @@ async def test_v4_weather_legacy_entities(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("service"),
-    [
-        SERVICE_GET_FORECASTS,
-        LEGACY_SERVICE_GET_FORECAST,
-    ],
+    [SERVICE_GET_FORECASTS],
 )
 @freeze_time(datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC))
 async def test_v4_forecast_service(
@@ -271,37 +266,6 @@ async def test_v4_forecast_service(
             return_response=True,
         )
         assert response == snapshot
-
-
-async def test_legacy_v4_bad_forecast(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    tomorrowio_config_entry_update,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test bad forecast data."""
-    freezer.move_to(datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC))
-
-    weather_state = await _setup(hass, API_V4_ENTRY_DATA)
-    entity_id = weather_state.entity_id
-    hourly_forecast = tomorrowio_config_entry_update.return_value["forecasts"]["hourly"]
-    hourly_forecast[0]["values"]["precipitationProbability"] = "blah"
-
-    # Trigger data refetch
-    freezer.tick(timedelta(minutes=32) + timedelta(seconds=1))
-    await hass.async_block_till_done()
-
-    response = await hass.services.async_call(
-        WEATHER_DOMAIN,
-        LEGACY_SERVICE_GET_FORECAST,
-        {
-            "entity_id": entity_id,
-            "type": "hourly",
-        },
-        blocking=True,
-        return_response=True,
-    )
-    assert response["forecast"][0]["precipitation_probability"] is None
 
 
 async def test_v4_bad_forecast(

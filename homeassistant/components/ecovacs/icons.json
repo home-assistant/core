@@ -43,6 +43,9 @@
       "clean_count": {
         "default": "mdi:counter"
       },
+      "cut_direction": {
+        "default": "mdi:angle-acute"
+      },
       "volume": {
         "default": "mdi:volume-high",
         "state": {
@@ -140,5 +143,8 @@
         "default": "mdi:laser-pointer"
       }
     }
+  },
+  "services": {
+    "raw_get_positions": "mdi:map-marker-radius-outline"
   }
 }

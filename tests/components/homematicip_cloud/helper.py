@@ -77,14 +77,14 @@ class HomeFactory:
         hass: HomeAssistant,
         mock_connection,
         hmip_config_entry: config_entries.ConfigEntry,
-    ):
+    ) -> None:
         """Initialize the Factory."""
         self.hass = hass
         self.mock_connection = mock_connection
         self.hmip_config_entry = hmip_config_entry
 
     async def async_get_mock_hap(
-        self, test_devices=[], test_groups=[]
+        self, test_devices=None, test_groups=None
     ) -> HomematicipHAP:
         """Create a mocked homematic access point."""
         home_name = self.hmip_config_entry.data["name"]
@@ -130,7 +130,9 @@ class HomeTemplate(Home):
     _typeGroupMap = TYPE_GROUP_MAP
     _typeSecurityEventMap = TYPE_SECURITY_EVENT_MAP
 
-    def __init__(self, connection=None, home_name="", test_devices=[], test_groups=[]):
+    def __init__(
+        self, connection=None, home_name="", test_devices=None, test_groups=None
+    ):
         """Init template with connection."""
         super().__init__(connection=connection)
         self.name = home_name

@@ -12,7 +12,6 @@
     }
   },
   "services": {
-    "blink_update": "mdi:update",
     "record": "mdi:video-box",
     "trigger_camera": "mdi:image-refresh",
     "save_video": "mdi:file-video",

@@ -5,7 +5,7 @@ from __future__ import annotations
 import abc
 import asyncio
 from collections import defaultdict
-from collections.abc import Callable, Container, Iterable, Mapping
+from collections.abc import Callable, Container, Hashable, Iterable, Mapping
 from contextlib import suppress
 import copy
 from dataclasses import dataclass
@@ -13,7 +13,7 @@ from enum import StrEnum
 from functools import partial
 import logging
 from types import MappingProxyType
-from typing import Any, Generic, Required, TypedDict
+from typing import Any, Generic, Required, TypedDict, cast
 
 from typing_extensions import TypeVar
 import voluptuous as vol
@@ -46,7 +46,7 @@ class FlowResultType(StrEnum):
     MENU = "menu"
 
 
-# RESULT_TYPE_* is deprecated, to be removed in 2022.9
+# RESULT_TYPE_* is deprecated, to be removed in 2025.1
 _DEPRECATED_RESULT_TYPE_FORM = DeprecatedConstantEnum(FlowResultType.FORM, "2025.1")
 _DEPRECATED_RESULT_TYPE_CREATE_ENTRY = DeprecatedConstantEnum(
     FlowResultType.CREATE_ENTRY, "2025.1"
@@ -112,15 +112,13 @@ class UnknownStep(FlowError):
     """Unknown step specified."""
 
 
-# ignore misc is required as vol.Invalid is not typed
-# mypy error: Class cannot subclass "Invalid" (has type "Any")
-class InvalidData(vol.Invalid):  # type: ignore[misc]
+class InvalidData(vol.Invalid):
     """Invalid data provided."""
 
     def __init__(
         self,
         message: str,
-        path: list[str | vol.Marker] | None,
+        path: list[Hashable] | None,
         error_message: str | None,
         schema_errors: dict[str, Any],
         **kwargs: Any,
@@ -384,8 +382,9 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
         if (
             data_schema := cur_step.get("data_schema")
         ) is not None and user_input is not None:
+            data_schema = cast(vol.Schema, data_schema)
             try:
-                user_input = data_schema(user_input)  # type: ignore[operator]
+                user_input = data_schema(user_input)
             except vol.Invalid as ex:
                 raised_errors = [ex]
                 if isinstance(ex, vol.MultipleInvalid):
@@ -533,7 +532,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
             report(
                 (
                     "does not use FlowResultType enum for data entry flow result type. "
-                    "This is deprecated and will stop working in Home Assistant 2022.9"
+                    "This is deprecated and will stop working in Home Assistant 2025.1"
                 ),
                 error_if_core=False,
             )
@@ -694,7 +693,7 @@ class FlowHandler(Generic[_FlowResultT, _HandlerT]):
             ):
                 # Copy the marker to not modify the flow schema
                 new_key = copy.copy(key)
-                new_key.description = {"suggested_value": suggested_values[key]}
+                new_key.description = {"suggested_value": suggested_values[key.schema]}
             schema[new_key] = val
         return vol.Schema(schema)
 
@@ -904,6 +903,33 @@ class FlowHandler(Generic[_FlowResultT, _HandlerT]):
     ) -> None:
         """Set in progress task."""
         self.__progress_task = progress_task
+
+
+class SectionConfig(TypedDict, total=False):
+    """Class to represent a section config."""
+
+    collapsed: bool
+
+
+class section:
+    """Data entry flow section."""
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Optional("collapsed", default=False): bool,
+        },
+    )
+
+    def __init__(
+        self, schema: vol.Schema, options: SectionConfig | None = None
+    ) -> None:
+        """Initialize."""
+        self.schema = schema
+        self.options: SectionConfig = self.CONFIG_SCHEMA(options or {})
+
+    def __call__(self, value: Any) -> Any:
+        """Validate input."""
+        return self.schema(value)
 
 
 # These can be removed if no deprecated constant are in this module anymore

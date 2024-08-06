@@ -27,7 +27,6 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
@@ -36,12 +35,15 @@ from .coordinator import GlancesDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 _LOGGER = logging.getLogger(__name__)
 
+type GlancesConfigEntry = ConfigEntry[GlancesDataUpdateCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: GlancesConfigEntry
+) -> bool:
     """Set up Glances from config entry."""
     try:
         api = await get_api(hass, dict(config_entry.data))
@@ -54,20 +56,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     coordinator = GlancesDataUpdateCoordinator(hass, config_entry, api)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
+    config_entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GlancesConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-        if not hass.data[DOMAIN]:
-            del hass.data[DOMAIN]
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def get_api(hass: HomeAssistant, entry_data: dict[str, Any]) -> Glances:

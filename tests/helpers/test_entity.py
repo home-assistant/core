@@ -22,15 +22,16 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityCategory,
 )
 from homeassistant.core import (
     Context,
     HassJobType,
     HomeAssistant,
-    HomeAssistantError,
     ReleaseChannel,
     callback,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
@@ -107,6 +108,7 @@ async def test_async_update_support(hass: HomeAssistant) -> None:
         """Async update."""
         async_update.append(1)
 
+    # pylint: disable-next=attribute-defined-outside-init
     ent.async_update = async_update_func
 
     await ent.async_update_ha_state(True)
@@ -236,12 +238,12 @@ async def test_async_async_request_call_without_lock(hass: HomeAssistant) -> Non
     class AsyncEntity(entity.Entity):
         """Test entity."""
 
-        def __init__(self, entity_id):
+        def __init__(self, entity_id: str) -> None:
             """Initialize Async test entity."""
             self.entity_id = entity_id
             self.hass = hass
 
-        async def testhelper(self, count):
+        async def testhelper(self, count: int) -> None:
             """Helper function."""
             updates.append(count)
 
@@ -273,7 +275,7 @@ async def test_async_async_request_call_with_lock(hass: HomeAssistant) -> None:
     class AsyncEntity(entity.Entity):
         """Test entity."""
 
-        def __init__(self, entity_id, lock):
+        def __init__(self, entity_id: str, lock: asyncio.Semaphore) -> None:
             """Initialize Async test entity."""
             self.entity_id = entity_id
             self.hass = hass
@@ -323,13 +325,13 @@ async def test_async_parallel_updates_with_zero(hass: HomeAssistant) -> None:
     class AsyncEntity(entity.Entity):
         """Test entity."""
 
-        def __init__(self, entity_id, count):
+        def __init__(self, entity_id: str, count: int) -> None:
             """Initialize Async test entity."""
             self.entity_id = entity_id
             self.hass = hass
             self._count = count
 
-        async def async_update(self):
+        async def async_update(self) -> None:
             """Test update."""
             updates.append(self._count)
             await test_lock.wait()
@@ -362,7 +364,7 @@ async def test_async_parallel_updates_with_zero_on_sync_update(
     class AsyncEntity(entity.Entity):
         """Test entity."""
 
-        def __init__(self, entity_id, count):
+        def __init__(self, entity_id: str, count: int) -> None:
             """Initialize Async test entity."""
             self.entity_id = entity_id
             self.hass = hass
@@ -403,14 +405,14 @@ async def test_async_parallel_updates_with_one(hass: HomeAssistant) -> None:
     class AsyncEntity(entity.Entity):
         """Test entity."""
 
-        def __init__(self, entity_id, count):
+        def __init__(self, entity_id: str, count: int) -> None:
             """Initialize Async test entity."""
             self.entity_id = entity_id
             self.hass = hass
             self._count = count
             self.parallel_updates = test_semaphore
 
-        async def async_update(self):
+        async def async_update(self) -> None:
             """Test update."""
             updates.append(self._count)
             await test_lock.acquire()
@@ -479,14 +481,14 @@ async def test_async_parallel_updates_with_two(hass: HomeAssistant) -> None:
     class AsyncEntity(entity.Entity):
         """Test entity."""
 
-        def __init__(self, entity_id, count):
+        def __init__(self, entity_id: str, count: int) -> None:
             """Initialize Async test entity."""
             self.entity_id = entity_id
             self.hass = hass
             self._count = count
             self.parallel_updates = test_semaphore
 
-        async def async_update(self):
+        async def async_update(self) -> None:
             """Test update."""
             updates.append(self._count)
             await test_lock.acquire()
@@ -549,13 +551,13 @@ async def test_async_parallel_updates_with_one_using_executor(
     class SyncEntity(entity.Entity):
         """Test entity."""
 
-        def __init__(self, entity_id):
+        def __init__(self, entity_id: str) -> None:
             """Initialize sync test entity."""
             self.entity_id = entity_id
             self.hass = hass
             self.parallel_updates = test_semaphore
 
-        def update(self):
+        def update(self) -> None:
             """Test update."""
             locked.append(self.parallel_updates.locked())
 
@@ -628,7 +630,7 @@ async def test_async_remove_twice(hass: HomeAssistant) -> None:
         def __init__(self) -> None:
             self.remove_calls = []
 
-        async def async_will_remove_from_hass(self):
+        async def async_will_remove_from_hass(self) -> None:
             self.remove_calls.append(None)
 
     platform = MockEntityPlatform(hass, domain="test")
@@ -921,13 +923,13 @@ async def test_entity_category_property(hass: HomeAssistant) -> None:
         key="abc", entity_category="ignore_me"
     )
     mock_entity1.entity_id = "hello.world"
-    mock_entity1._attr_entity_category = entity.EntityCategory.CONFIG
+    mock_entity1._attr_entity_category = EntityCategory.CONFIG
     assert mock_entity1.entity_category == "config"
 
     mock_entity2 = entity.Entity()
     mock_entity2.hass = hass
     mock_entity2.entity_description = entity.EntityDescription(
-        key="abc", entity_category=entity.EntityCategory.CONFIG
+        key="abc", entity_category=EntityCategory.CONFIG
     )
     mock_entity2.entity_id = "hello.world"
     assert mock_entity2.entity_category == "config"
@@ -936,8 +938,8 @@ async def test_entity_category_property(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("value", "expected"),
     [
-        ("config", entity.EntityCategory.CONFIG),
-        ("diagnostic", entity.EntityCategory.DIAGNOSTIC),
+        ("config", EntityCategory.CONFIG),
+        ("diagnostic", EntityCategory.DIAGNOSTIC),
     ],
 )
 def test_entity_category_schema(value, expected) -> None:
@@ -945,7 +947,7 @@ def test_entity_category_schema(value, expected) -> None:
     schema = vol.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
     result = schema(value)
     assert result == expected
-    assert isinstance(result, entity.EntityCategory)
+    assert isinstance(result, EntityCategory)
 
 
 @pytest.mark.parametrize("value", [None, "non_existing"])
@@ -1600,7 +1602,7 @@ async def test_translation_key(hass: HomeAssistant) -> None:
     assert mock_entity2.translation_key == "from_entity_description"
 
 
-async def test_repr(hass) -> None:
+async def test_repr(hass: HomeAssistant) -> None:
     """Test Entity.__repr__."""
 
     class MyEntity(MockEntity):
@@ -1872,7 +1874,7 @@ async def test_change_entity_id(
     assert len(ent.remove_calls) == 2
 
 
-def test_entity_description_as_dataclass(snapshot: SnapshotAssertion):
+def test_entity_description_as_dataclass(snapshot: SnapshotAssertion) -> None:
     """Test EntityDescription behaves like a dataclass."""
 
     obj = entity.EntityDescription("blah", device_class="test")
@@ -1887,7 +1889,7 @@ def test_entity_description_as_dataclass(snapshot: SnapshotAssertion):
     assert repr(obj) == snapshot
 
 
-def test_extending_entity_description(snapshot: SnapshotAssertion):
+def test_extending_entity_description(snapshot: SnapshotAssertion) -> None:
     """Test extending entity descriptions."""
 
     @dataclasses.dataclass(frozen=True)
@@ -2375,7 +2377,7 @@ async def test_cached_entity_property_class_attribute(hass: HomeAssistant) -> No
         This class overrides the attribute property.
         """
 
-        def __init__(self):
+        def __init__(self) -> None:
             self._attr_attribution = values[0]
 
         @cached_property

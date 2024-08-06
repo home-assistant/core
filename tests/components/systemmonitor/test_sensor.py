@@ -17,7 +17,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 
 from .conftest import MockProcess
 
@@ -140,58 +139,6 @@ async def test_sensor_icon(
     get_cpu_icon.cache_clear()
     with patch("sys.maxsize", 2**64):
         assert get_cpu_icon() == "mdi:cpu-64-bit"
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensor_yaml(
-    hass: HomeAssistant,
-    mock_psutil: Mock,
-    mock_os: Mock,
-) -> None:
-    """Test the sensor imported from YAML."""
-    config = {
-        "sensor": {
-            "platform": "systemmonitor",
-            "resources": [
-                {"type": "disk_use_percent"},
-                {"type": "disk_use_percent", "arg": "/media/share"},
-                {"type": "memory_free", "arg": "/"},
-                {"type": "network_out", "arg": "eth0"},
-                {"type": "process", "arg": "python3"},
-            ],
-        }
-    }
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-    memory_sensor = hass.states.get("sensor.system_monitor_memory_free")
-    assert memory_sensor is not None
-    assert memory_sensor.state == "40.0"
-
-    process_sensor = hass.states.get("binary_sensor.system_monitor_process_python3")
-    assert process_sensor is not None
-    assert process_sensor.state == STATE_ON
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensor_yaml_fails_missing_argument(
-    caplog: pytest.LogCaptureFixture,
-    hass: HomeAssistant,
-    mock_psutil: Mock,
-    mock_os: Mock,
-) -> None:
-    """Test the sensor imported from YAML fails on missing mandatory argument."""
-    config = {
-        "sensor": {
-            "platform": "systemmonitor",
-            "resources": [
-                {"type": "network_in"},
-            ],
-        }
-    }
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-
-    assert "Mandatory 'arg' is missing for sensor type 'network_in'" in caplog.text
 
 
 async def test_sensor_updating(

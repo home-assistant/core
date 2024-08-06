@@ -43,6 +43,7 @@
     'attributes': ReadOnlyDict({
       'current_temperature': 21.4,
       'friendly_name': 'Thermostat 1',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
       ]),

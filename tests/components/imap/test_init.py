@@ -11,7 +11,7 @@ import pytest
 from homeassistant.components.imap import DOMAIN
 from homeassistant.components.imap.const import CONF_CHARSET
 from homeassistant.components.imap.errors import InvalidAuth, InvalidFolder
-from homeassistant.components.sensor.const import SensorStateClass
+from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError

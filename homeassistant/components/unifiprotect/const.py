@@ -1,13 +1,13 @@
 """Constant definitions for UniFi Protect Integration."""
 
-from pyunifiprotect.data import ModelType, Version
+from uiprotect.data import ModelType, Version
 
 from homeassistant.const import Platform
 
 DOMAIN = "unifiprotect"
-# some UniFi OS consoles have an unknown rate limit on auth
-# if rate limit is triggered a 401 is returned
-AUTH_RETRIES = 11  # ~12 hours of retries with the last waiting ~6 hours
+# If rate limit for 4.x or later a 429 is returned
+# so we can use a lower value
+AUTH_RETRIES = 2
 
 ATTR_EVENT_SCORE = "event_score"
 ATTR_EVENT_ID = "event_id"
@@ -35,7 +35,6 @@ CONFIG_OPTIONS = [
 DEFAULT_PORT = 443
 DEFAULT_ATTRIBUTION = "Powered by UniFi Protect Server"
 DEFAULT_BRAND = "Ubiquiti"
-DEFAULT_SCAN_INTERVAL = 20
 DEFAULT_VERIFY_SSL = False
 DEFAULT_MAX_MEDIA = 1000
 
@@ -62,6 +61,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CAMERA,
+    Platform.EVENT,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.MEDIA_PLAYER,

@@ -58,8 +58,12 @@ def _mock_authenticator(auth_state):
     return authenticator
 
 
-@patch("homeassistant.components.august.gateway.ApiAsync")
-@patch("homeassistant.components.august.gateway.AuthenticatorAsync.async_authenticate")
+def _timetoken():
+    return str(time.time_ns())[:-2]
+
+
+@patch("yalexs.manager.gateway.ApiAsync")
+@patch("yalexs.manager.gateway.AuthenticatorAsync.async_authenticate")
 async def _mock_setup_august(
     hass, api_instance, pubnub_mock, authenticate_mock, api_mock, brand
 ):
@@ -77,8 +81,11 @@ async def _mock_setup_august(
     )
     entry.add_to_hass(hass)
     with (
-        patch("homeassistant.components.august.async_create_pubnub"),
-        patch("homeassistant.components.august.AugustPubNub", return_value=pubnub_mock),
+        patch(
+            "yalexs.manager.data.async_create_pubnub",
+            return_value=AsyncMock(),
+        ),
+        patch("yalexs.manager.data.AugustPubNub", return_value=pubnub_mock),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -210,7 +217,7 @@ async def _create_august_api_with_devices(
 async def _mock_setup_august_with_api_side_effects(
     hass, api_call_side_effects, pubnub, brand=Brand.AUGUST
 ):
-    api_instance = MagicMock(name="Api")
+    api_instance = MagicMock(name="Api", brand=brand)
 
     if api_call_side_effects["get_lock_detail"]:
         type(api_instance).async_get_lock_detail = AsyncMock(

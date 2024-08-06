@@ -1,11 +1,11 @@
 {
   "domain": "airgradient",
-  "name": "Airgradient",
+  "name": "AirGradient",
   "codeowners": ["@airgradienthq", "@joostlek"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airgradient",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "requirements": ["airgradient==0.4.3"],
+  "requirements": ["airgradient==0.7.1"],
   "zeroconf": ["_airgradient._tcp.local."]
 }

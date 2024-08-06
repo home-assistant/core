@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from lmcloud.const import LaMarzoccoModel
+from lmcloud.const import MachineModel, PrebrewMode, SteamLevel
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -18,7 +18,7 @@ from homeassistant.helpers import entity_registry as er
 pytestmark = pytest.mark.usefixtures("init_integration")
 
 
-@pytest.mark.parametrize("device_fixture", [LaMarzoccoModel.LINEA_MICRA])
+@pytest.mark.parametrize("device_fixture", [MachineModel.LINEA_MICRA])
 async def test_steam_boiler_level(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -44,18 +44,17 @@ async def test_steam_boiler_level(
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: f"select.{serial_number}_steam_level",
-            ATTR_OPTION: "1",
+            ATTR_OPTION: "2",
         },
         blocking=True,
     )
 
-    assert len(mock_lamarzocco.set_steam_level.mock_calls) == 1
-    mock_lamarzocco.set_steam_level.assert_called_once_with(1, None)
+    mock_lamarzocco.set_steam_level.assert_called_once_with(level=SteamLevel.LEVEL_2)
 
 
 @pytest.mark.parametrize(
     "device_fixture",
-    [LaMarzoccoModel.GS3_AV, LaMarzoccoModel.GS3_MP, LaMarzoccoModel.LINEA_MINI],
+    [MachineModel.GS3_AV, MachineModel.GS3_MP, MachineModel.LINEA_MINI],
 )
 async def test_steam_boiler_level_none(
     hass: HomeAssistant,
@@ -70,7 +69,7 @@ async def test_steam_boiler_level_none(
 
 @pytest.mark.parametrize(
     "device_fixture",
-    [LaMarzoccoModel.LINEA_MICRA, LaMarzoccoModel.GS3_AV, LaMarzoccoModel.LINEA_MINI],
+    [MachineModel.LINEA_MICRA, MachineModel.GS3_AV, MachineModel.LINEA_MINI],
 )
 async def test_pre_brew_infusion_select(
     hass: HomeAssistant,
@@ -97,20 +96,17 @@ async def test_pre_brew_infusion_select(
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: f"select.{serial_number}_prebrew_infusion_mode",
-            ATTR_OPTION: "preinfusion",
+            ATTR_OPTION: "prebrew",
         },
         blocking=True,
     )
 
-    assert len(mock_lamarzocco.select_pre_brew_infusion_mode.mock_calls) == 1
-    mock_lamarzocco.select_pre_brew_infusion_mode.assert_called_once_with(
-        mode="Preinfusion"
-    )
+    mock_lamarzocco.set_prebrew_mode.assert_called_once_with(mode=PrebrewMode.PREBREW)
 
 
 @pytest.mark.parametrize(
     "device_fixture",
-    [LaMarzoccoModel.GS3_MP],
+    [MachineModel.GS3_MP],
 )
 async def test_pre_brew_infusion_select_none(
     hass: HomeAssistant,

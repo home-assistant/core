@@ -34,6 +34,7 @@ from homeassistant.components.assist_pipeline.error import (
     WakeWordDetectionAborted,
     WakeWordDetectionError,
 )
+from homeassistant.components.assist_pipeline.vad import VadSensitivity
 from homeassistant.components.intent.timers import TimerEventType, TimerInfo
 from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.core import Context, HomeAssistant, callback
@@ -243,6 +244,11 @@ class VoiceAssistantPipeline:
                     auto_gain_dbfs=audio_settings.auto_gain,
                     volume_multiplier=audio_settings.volume_multiplier,
                     is_vad_enabled=bool(flags & VoiceAssistantCommandFlag.USE_VAD),
+                    silence_seconds=VadSensitivity.to_seconds(
+                        pipeline_select.get_vad_sensitivity(
+                            self.hass, DOMAIN, self.device_info.mac_address
+                        )
+                    ),
                 ),
             )
 
@@ -467,7 +473,7 @@ def handle_timer_event(
         native_event_type,
         timer_info.id,
         timer_info.name,
-        timer_info.seconds,
+        timer_info.created_seconds,
         timer_info.seconds_left,
         timer_info.is_active,
     )

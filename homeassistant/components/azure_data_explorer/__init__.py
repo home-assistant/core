@@ -18,7 +18,7 @@ from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import utcnow
 
@@ -62,13 +62,12 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
 
     Adds an empty filter to hass data.
     Tries to get a filter from yaml, if present set to hass data.
-    If config is empty after getting the filter, return, otherwise emit
-    deprecated warning and pass the rest to the config flow.
     """
 
-    hass.data.setdefault(DOMAIN, {DATA_FILTER: {}})
+    hass.data.setdefault(DOMAIN, {DATA_FILTER: FILTER_SCHEMA({})})
     if DOMAIN in yaml_config:
-        hass.data[DOMAIN][DATA_FILTER] = yaml_config[DOMAIN][CONF_FILTER]
+        hass.data[DOMAIN][DATA_FILTER] = yaml_config[DOMAIN].pop(CONF_FILTER)
+
     return True
 
 
@@ -204,9 +203,7 @@ class AzureDataExplorer:
             return None, dropped
         if (utcnow() - time_fired).seconds > DEFAULT_MAX_DELAY + self._send_interval:
             return None, dropped + 1
-        if "\n" in state.state:
-            return None, dropped + 1
 
-        json_event = str(json.dumps(obj=state, cls=JSONEncoder).encode("utf-8"))
+        json_event = json.dumps(obj=state, cls=ExtendedJSONEncoder)
 
         return (json_event, dropped)

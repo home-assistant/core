@@ -61,6 +61,20 @@
       "total_consumption": {
         "name": "Total consumption"
       }
+    },
+    "select": {
+      "day_of_week": {
+        "name": "Day of week",
+        "state": {
+          "monday": "[%key:common::time::monday%]",
+          "tuesday": "[%key:common::time::tuesday%]",
+          "wednesday": "[%key:common::time::wednesday%]",
+          "thursday": "[%key:common::time::thursday%]",
+          "friday": "[%key:common::time::friday%]",
+          "saturday": "[%key:common::time::saturday%]",
+          "sunday": "[%key:common::time::sunday%]"
+        }
+      }
     }
   }
 }

@@ -26,7 +26,7 @@ class IncomfortBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Incomfort binary sensor entity."""
 
     value_key: str
-    extra_state_attributes_fn: Callable[[dict[str, Any]], dict[str, Any]]
+    extra_state_attributes_fn: Callable[[dict[str, Any]], dict[str, Any]] | None = None
 
 
 SENSOR_TYPES: tuple[IncomfortBinarySensorEntityDescription, ...] = (
@@ -35,7 +35,27 @@ SENSOR_TYPES: tuple[IncomfortBinarySensorEntityDescription, ...] = (
         translation_key="fault",
         device_class=BinarySensorDeviceClass.PROBLEM,
         value_key="is_failed",
-        extra_state_attributes_fn=lambda status: {"fault_code": status["fault_code"]},
+        extra_state_attributes_fn=lambda status: {
+            "fault_code": status["fault_code"] or "none",
+        },
+    ),
+    IncomfortBinarySensorEntityDescription(
+        key="is_pumping",
+        translation_key="is_pumping",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        value_key="is_pumping",
+    ),
+    IncomfortBinarySensorEntityDescription(
+        key="is_burning",
+        translation_key="is_burning",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        value_key="is_burning",
+    ),
+    IncomfortBinarySensorEntityDescription(
+        key="is_tapping",
+        translation_key="is_tapping",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        value_key="is_tapping",
     ),
 )
 
@@ -77,6 +97,8 @@ class IncomfortBinarySensor(IncomfortBoilerEntity, BinarySensorEntity):
         return self._heater.status[self.entity_description.value_key]
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the device state attributes."""
-        return self.entity_description.extra_state_attributes_fn(self._heater.status)
+        if (attributes_fn := self.entity_description.extra_state_attributes_fn) is None:
+            return None
+        return attributes_fn(self._heater.status)

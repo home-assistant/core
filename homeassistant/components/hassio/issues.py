@@ -267,15 +267,14 @@ class SupervisorIssues:
                 placeholders = {PLACEHOLDER_KEY_REFERENCE: issue.reference}
 
                 if issue.key == ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING:
+                    placeholders[PLACEHOLDER_KEY_ADDON_URL] = (
+                        f"/hassio/addon/{issue.reference}"
+                    )
                     addons = get_addons_info(self._hass)
                     if addons and issue.reference in addons:
                         placeholders[PLACEHOLDER_KEY_ADDON] = addons[issue.reference][
                             "name"
                         ]
-                        if "url" in addons[issue.reference]:
-                            placeholders[PLACEHOLDER_KEY_ADDON_URL] = addons[
-                                issue.reference
-                            ]["url"]
                     else:
                         placeholders[PLACEHOLDER_KEY_ADDON] = issue.reference
 

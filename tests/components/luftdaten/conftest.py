@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.luftdaten.const import CONF_SENSOR_ID, DOMAIN
 from homeassistant.const import CONF_SHOW_ON_MAP
@@ -35,7 +35,7 @@ def mock_setup_entry() -> Generator[None]:
 
 
 @pytest.fixture
-def mock_luftdaten() -> Generator[None, MagicMock, None]:
+def mock_luftdaten() -> Generator[MagicMock]:
     """Return a mocked Luftdaten client."""
     with (
         patch(

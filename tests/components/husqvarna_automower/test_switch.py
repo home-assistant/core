@@ -1,15 +1,19 @@
 """Tests for switch platform."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from aioautomower.exceptions import ApiException
-from aioautomower.model import MowerStates, RestrictedReasons
+from aioautomower.model import MowerModes
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.husqvarna_automower.const import DOMAIN
+from homeassistant.components.husqvarna_automower.const import (
+    DOMAIN,
+    EXECUTION_TIME_DELAY,
+)
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -41,12 +45,11 @@ async def test_switch_states(
     )
     await setup_integration(hass, mock_config_entry)
 
-    for state, restricted_reson, expected_state in [
-        (MowerStates.RESTRICTED, RestrictedReasons.NOT_APPLICABLE, "off"),
-        (MowerStates.IN_OPERATION, RestrictedReasons.NONE, "on"),
-    ]:
-        values[TEST_MOWER_ID].mower.state = state
-        values[TEST_MOWER_ID].planner.restricted_reason = restricted_reson
+    for mode, expected_state in (
+        (MowerModes.HOME, "off"),
+        (MowerModes.MAIN_AREA, "on"),
+    ):
+        values[TEST_MOWER_ID].mower.mode = mode
         mock_automower_client.get_status.return_value = values
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
@@ -84,7 +87,7 @@ async def test_switch_commands(
     mocked_method.side_effect = ApiException("Test error")
     with pytest.raises(
         HomeAssistantError,
-        match="Command couldn't be sent to the command queue: Test error",
+        match="Failed to send command: Test error",
     ):
         await hass.services.async_call(
             domain="switch",
@@ -110,6 +113,7 @@ async def test_stay_out_zone_switch_commands(
     excepted_state: str,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test switch commands."""
     entity_id = "switch.test_mower_1_avoid_danger_zone"
@@ -125,8 +129,11 @@ async def test_stay_out_zone_switch_commands(
         domain="switch",
         service=service,
         service_data={"entity_id": entity_id},
-        blocking=True,
+        blocking=False,
     )
+    freezer.tick(timedelta(seconds=EXECUTION_TIME_DELAY))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     mocked_method.assert_called_once_with(TEST_MOWER_ID, TEST_ZONE_ID, boolean)
     state = hass.states.get(entity_id)
     assert state is not None
@@ -135,7 +142,7 @@ async def test_stay_out_zone_switch_commands(
     mocked_method.side_effect = ApiException("Test error")
     with pytest.raises(
         HomeAssistantError,
-        match="Command couldn't be sent to the command queue: Test error",
+        match="Failed to send command: Test error",
     ):
         await hass.services.async_call(
             domain="switch",

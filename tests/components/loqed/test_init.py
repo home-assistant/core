@@ -144,7 +144,7 @@ async def test_setup_cloudhook_from_entry_in_bridge(
 
 
 async def test_unload_entry(
-    hass, integration: MockConfigEntry, lock: loqed.Lock
+    hass: HomeAssistant, integration: MockConfigEntry, lock: loqed.Lock
 ) -> None:
     """Test successful unload of entry."""
 
@@ -157,7 +157,7 @@ async def test_unload_entry(
 
 
 async def test_unload_entry_fails(
-    hass, integration: MockConfigEntry, lock: loqed.Lock
+    hass: HomeAssistant, integration: MockConfigEntry, lock: loqed.Lock
 ) -> None:
     """Test unsuccessful unload of entry."""
     lock.deleteWebhook = AsyncMock(side_effect=Exception)

@@ -291,7 +291,7 @@ async def test_config_virtual_binary_sensor(hass: HomeAssistant, mock_modbus) ->
     """Run config test for binary sensor."""
     assert SENSOR_DOMAIN in hass.config.components
 
-    for addon in ["", " 1", " 2", " 3"]:
+    for addon in ("", " 1", " 2", " 3"):
         entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}{addon}".replace(" ", "_")
         assert hass.states.get(entity_id) is not None
 

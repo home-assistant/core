@@ -40,6 +40,7 @@ from .generated.ssdp import SSDP
 from .generated.usb import USB
 from .generated.zeroconf import HOMEKIT, ZEROCONF
 from .helpers.json import json_bytes, json_fragment
+from .helpers.typing import UNDEFINED
 from .util.hass_dict import HassKey
 from .util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
@@ -101,6 +102,23 @@ BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
     "mydolphin_plus": BlockedIntegration(
         AwesomeVersion("1.0.13"), "crashes Home Assistant"
     ),
+    # Added in 2024.7.2 because of
+    # https://github.com/gcobb321/icloud3/issues/349
+    # Note: Current version 3.0.5.2, the fixed version is a guesstimate,
+    # as no solution is available at time of writing.
+    "icloud3": BlockedIntegration(
+        AwesomeVersion("3.0.5.3"), "prevents recorder from working"
+    ),
+    # Added in 2024.7.2 because of
+    # https://github.com/custom-components/places/issues/289
+    "places": BlockedIntegration(
+        AwesomeVersion("2.7.1"), "prevents recorder from working"
+    ),
+    # Added in 2024.7.2 because of
+    # https://github.com/enkama/hass-variables/issues/120
+    "variable": BlockedIntegration(
+        AwesomeVersion("3.4.4"), "prevents recorder from working"
+    ),
 }
 
 DATA_COMPONENTS: HassKey[dict[str, ModuleType | ComponentProtocol]] = HassKey(
@@ -128,9 +146,6 @@ IMPORT_EVENT_LOOP_WARNING = (
     "cause stability problems, be sure to disable it if you "
     "experience issues with Home Assistant"
 )
-
-_UNDEF = object()  # Internal; not helpers.typing.UNDEFINED due to circular dependency
-
 
 MOVED_ZEROCONF_PROPS = ("macaddress", "model", "manufacturer")
 
@@ -930,7 +945,7 @@ class Integration:
         except IntegrationNotFound as err:
             _LOGGER.error(
                 (
-                    "Unable to resolve dependencies for %s:  we are unable to resolve"
+                    "Unable to resolve dependencies for %s: unable to resolve"
                     " (sub)dependency %s"
                 ),
                 self.domain,
@@ -939,7 +954,7 @@ class Integration:
         except CircularDependency as err:
             _LOGGER.error(
                 (
-                    "Unable to resolve dependencies for %s:  it contains a circular"
+                    "Unable to resolve dependencies for %s: it contains a circular"
                     " dependency: %s -> %s"
                 ),
                 self.domain,
@@ -1322,7 +1337,7 @@ def async_get_loaded_integration(hass: HomeAssistant, domain: str) -> Integratio
     Raises IntegrationNotLoaded if the integration is not loaded.
     """
     cache = hass.data[DATA_INTEGRATIONS]
-    int_or_fut = cache.get(domain, _UNDEF)
+    int_or_fut = cache.get(domain, UNDEFINED)
     # Integration is never subclassed, so we can check for type
     if type(int_or_fut) is Integration:
         return int_or_fut
@@ -1332,7 +1347,7 @@ def async_get_loaded_integration(hass: HomeAssistant, domain: str) -> Integratio
 async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration:
     """Get integration."""
     cache = hass.data[DATA_INTEGRATIONS]
-    if type(int_or_fut := cache.get(domain, _UNDEF)) is Integration:
+    if type(int_or_fut := cache.get(domain, UNDEFINED)) is Integration:
         return int_or_fut
     integrations_or_excs = await async_get_integrations(hass, [domain])
     int_or_exc = integrations_or_excs[domain]
@@ -1350,11 +1365,11 @@ async def async_get_integrations(
     needed: dict[str, asyncio.Future[None]] = {}
     in_progress: dict[str, asyncio.Future[None]] = {}
     for domain in domains:
-        int_or_fut = cache.get(domain, _UNDEF)
+        int_or_fut = cache.get(domain, UNDEFINED)
         # Integration is never subclassed, so we can check for type
         if type(int_or_fut) is Integration:
             results[domain] = int_or_fut
-        elif int_or_fut is not _UNDEF:
+        elif int_or_fut is not UNDEFINED:
             in_progress[domain] = cast(asyncio.Future[None], int_or_fut)
         elif "." in domain:
             results[domain] = ValueError(f"Invalid domain {domain}")
@@ -1364,10 +1379,10 @@ async def async_get_integrations(
     if in_progress:
         await asyncio.wait(in_progress.values())
         for domain in in_progress:
-            # When we have waited and it's _UNDEF, it doesn't exist
+            # When we have waited and it's UNDEFINED, it doesn't exist
             # We don't cache that it doesn't exist, or else people can't fix it
             # and then restart, because their config will never be valid.
-            if (int_or_fut := cache.get(domain, _UNDEF)) is _UNDEF:
+            if (int_or_fut := cache.get(domain, UNDEFINED)) is UNDEFINED:
                 results[domain] = IntegrationNotFound(domain)
             else:
                 results[domain] = cast(Integration, int_or_fut)

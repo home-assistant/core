@@ -38,7 +38,6 @@ async def test_setup_entry_device_update(
     mock_ring_devices,
     freezer: FrozenDateTimeFactory,
     mock_added_config_entry: MockConfigEntry,
-    caplog,
 ) -> None:
     """Test devices are updating after setup entry."""
 

@@ -432,7 +432,6 @@ async def test_set_text_overlay_bad_entity_identifier(hass: HomeAssistant) -> No
     client.reset_mock()
     with pytest.raises(vol.error.MultipleInvalid):
         await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, data)
-        await hass.async_block_till_done()
 
 
 async def test_set_text_overlay_bad_empty(hass: HomeAssistant) -> None:
@@ -441,7 +440,6 @@ async def test_set_text_overlay_bad_empty(hass: HomeAssistant) -> None:
     await setup_mock_motioneye_config_entry(hass, client=client)
     with pytest.raises(vol.error.MultipleInvalid):
         await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, {})
-        await hass.async_block_till_done()
 
 
 async def test_set_text_overlay_bad_no_left_or_right(hass: HomeAssistant) -> None:
@@ -452,7 +450,6 @@ async def test_set_text_overlay_bad_no_left_or_right(hass: HomeAssistant) -> Non
     data = {ATTR_ENTITY_ID: TEST_CAMERA_ENTITY_ID}
     with pytest.raises(vol.error.MultipleInvalid):
         await hass.services.async_call(DOMAIN, SERVICE_SET_TEXT_OVERLAY, data)
-        await hass.async_block_till_done()
 
 
 async def test_set_text_overlay_good(hass: HomeAssistant) -> None:

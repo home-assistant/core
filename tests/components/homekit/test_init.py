@@ -70,10 +70,10 @@ async def test_humanify_homekit_changed_event(hass: HomeAssistant, hk_driver) ->
     assert event2["entity_id"] == "cover.window"
 
 
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_bridge_with_triggers(
     hass: HomeAssistant,
     hk_driver,
-    mock_async_zeroconf: None,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:

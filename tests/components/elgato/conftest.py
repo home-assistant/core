@@ -1,10 +1,10 @@
 """Fixtures for Elgato integration tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from elgato import BatteryInfo, ElgatoNoBatteryError, Info, Settings, State
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.elgato.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
@@ -51,7 +51,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_onboarding() -> Generator[None, MagicMock, None]:
+def mock_onboarding() -> Generator[MagicMock]:
     """Mock that Home Assistant is currently onboarding."""
     with patch(
         "homeassistant.components.onboarding.async_is_onboarded",
@@ -61,9 +61,7 @@ def mock_onboarding() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
-def mock_elgato(
-    device_fixtures: str, state_variant: str
-) -> Generator[None, MagicMock, None]:
+def mock_elgato(device_fixtures: str, state_variant: str) -> Generator[MagicMock]:
     """Return a mocked Elgato client."""
     with (
         patch(

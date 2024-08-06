@@ -9,7 +9,7 @@ from . import patchers
 
 
 @pytest.fixture(autouse=True)
-def adb_device_tcp_fixture() -> Generator[None, patchers.AdbDeviceTcpAsyncFake, None]:
+def adb_device_tcp_fixture() -> Generator[None]:
     """Patch ADB Device TCP."""
     with patch(
         "androidtv.adb_manager.adb_manager_async.AdbDeviceTcpAsync",
@@ -19,7 +19,7 @@ def adb_device_tcp_fixture() -> Generator[None, patchers.AdbDeviceTcpAsyncFake, 
 
 
 @pytest.fixture(autouse=True)
-def load_adbkey_fixture() -> Generator[None, str, None]:
+def load_adbkey_fixture() -> Generator[None]:
     """Patch load_adbkey."""
     with patch(
         "homeassistant.components.androidtv.ADBPythonSync.load_adbkey",
@@ -29,7 +29,7 @@ def load_adbkey_fixture() -> Generator[None, str, None]:
 
 
 @pytest.fixture(autouse=True)
-def keygen_fixture() -> Generator[None, Mock, None]:
+def keygen_fixture() -> Generator[None]:
     """Patch keygen."""
     with patch(
         "homeassistant.components.androidtv.keygen",

@@ -1,18 +1,44 @@
 """The tests for the notify.group platform."""
 
-from collections.abc import Mapping
+from collections.abc import Generator, Mapping
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, call, patch
 
+import pytest
+
 from homeassistant import config as hass_config
 from homeassistant.components import notify
-from homeassistant.components.group import SERVICE_RELOAD
+from homeassistant.components.group import DOMAIN, SERVICE_RELOAD
+from homeassistant.components.notify import (
+    ATTR_MESSAGE,
+    ATTR_TITLE,
+    DOMAIN as NOTIFY_DOMAIN,
+    SERVICE_SEND_MESSAGE,
+    NotifyEntity,
+)
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockPlatform, get_fixture_path, mock_platform
+from tests.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockModule,
+    MockPlatform,
+    get_fixture_path,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+    setup_test_component_platform,
+)
 
 
 class MockNotifyPlatform(MockPlatform):
@@ -217,3 +243,144 @@ async def test_reload_notify(hass: HomeAssistant, tmp_path: Path) -> None:
     assert hass.services.has_service(notify.DOMAIN, "test_service2")
     assert not hass.services.has_service(notify.DOMAIN, "group_notify")
     assert hass.services.has_service(notify.DOMAIN, "new_group_notify")
+
+
+class MockFlow(ConfigFlow):
+    """Test flow."""
+
+
+@pytest.fixture
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
+    """Mock config flow."""
+    mock_platform(hass, "test.config_flow")
+
+    with mock_config_flow("test", MockFlow):
+        yield
+
+
+class MockNotifyEntity(MockEntity, NotifyEntity):
+    """Mock Email notifier entity to use in tests."""
+
+    def __init__(self, **values: Any) -> None:
+        """Initialize the mock entity."""
+        super().__init__(**values)
+        self.send_message_mock_calls = MagicMock()
+
+    async def async_send_message(self, message: str, title: str | None = None) -> None:
+        """Send a notification message."""
+        self.send_message_mock_calls(message, title=title)
+
+
+async def help_async_setup_entry_init(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> bool:
+    """Set up test config entry."""
+    await hass.config_entries.async_forward_entry_setups(
+        config_entry, [Platform.NOTIFY]
+    )
+    return True
+
+
+async def help_async_unload_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> bool:
+    """Unload test config entry."""
+    return await hass.config_entries.async_unload_platforms(
+        config_entry, [Platform.NOTIFY]
+    )
+
+
+@pytest.fixture
+async def mock_notifiers(
+    hass: HomeAssistant, config_flow_fixture: None
+) -> list[NotifyEntity]:
+    """Set up the notify entities."""
+    entity = MockNotifyEntity(name="test", entity_id="notify.test")
+    entity2 = MockNotifyEntity(name="test2", entity_id="notify.test2")
+    entities = [entity, entity2]
+    test_entry = MockConfigEntry(domain="test")
+    test_entry.add_to_hass(hass)
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(hass, NOTIFY_DOMAIN, entities, from_config_entry=True)
+    assert await hass.config_entries.async_setup(test_entry.entry_id)
+    await hass.async_block_till_done()
+    return entities
+
+
+async def test_notify_entity_group(
+    hass: HomeAssistant, mock_notifiers: list[NotifyEntity]
+) -> None:
+    """Test sending a message to a notify group."""
+    entity, entity2 = mock_notifiers
+    assert entity.send_message_mock_calls.call_count == 0
+    assert entity2.send_message_mock_calls.call_count == 0
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={
+            "group_type": "notify",
+            "name": "Test Group",
+            "entities": ["notify.test", "notify.test2"],
+            "hide_members": True,
+        },
+        title="Test Group",
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {
+            ATTR_MESSAGE: "Hello",
+            ATTR_TITLE: "Test notification",
+            ATTR_ENTITY_ID: "notify.test_group",
+        },
+        blocking=True,
+    )
+
+    assert entity.send_message_mock_calls.call_count == 1
+    assert entity.send_message_mock_calls.call_args == call(
+        "Hello", title="Test notification"
+    )
+    assert entity2.send_message_mock_calls.call_count == 1
+    assert entity2.send_message_mock_calls.call_args == call(
+        "Hello", title="Test notification"
+    )
+
+
+async def test_state_reporting(hass: HomeAssistant) -> None:
+    """Test sending a message to a notify group."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={
+            "group_type": "notify",
+            "name": "Test Group",
+            "entities": ["notify.test", "notify.test2"],
+            "hide_members": True,
+        },
+        title="Test Group",
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("notify.test_group").state == STATE_UNAVAILABLE
+
+    hass.states.async_set("notify.test", STATE_UNAVAILABLE)
+    hass.states.async_set("notify.test2", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert hass.states.get("notify.test_group").state == STATE_UNAVAILABLE
+
+    hass.states.async_set("notify.test", "2021-01-01T23:59:59.123+00:00")
+    hass.states.async_set("notify.test2", "2021-01-01T23:59:59.123+00:00")
+    await hass.async_block_till_done()
+    assert hass.states.get("notify.test_group").state == STATE_UNKNOWN
