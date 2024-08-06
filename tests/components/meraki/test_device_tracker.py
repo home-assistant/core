@@ -1,11 +1,13 @@
 """The tests the for Meraki device tracker."""
 
+from asyncio import AbstractEventLoop
 from http import HTTPStatus
 import json
 
+from aiohttp.test_utils import TestClient
 import pytest
 
-import homeassistant.components.device_tracker as device_tracker
+from homeassistant.components import device_tracker
 from homeassistant.components.device_tracker import legacy
 from homeassistant.components.meraki.device_tracker import (
     CONF_SECRET,
@@ -16,9 +18,15 @@ from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.typing import ClientSessionGenerator
+
 
 @pytest.fixture
-def meraki_client(event_loop, hass, hass_client):
+def meraki_client(
+    event_loop: AbstractEventLoop,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> TestClient:
     """Meraki mock client."""
     loop = event_loop
 

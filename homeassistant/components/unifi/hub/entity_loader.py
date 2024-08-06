@@ -3,12 +3,14 @@
 Central point to load entities for the different platforms.
 Make sure expected clients are available for platforms.
 """
+
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Coroutine, Sequence
 from datetime import timedelta
 from functools import partial
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from aiounifi.interfaces.api_handlers import ItemEvent
 
@@ -17,7 +19,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import async_entries_for_config_entry
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from ..const import LOGGER, UNIFI_WIRELESS_CLIENTS
 from ..entity import UnifiEntity, UnifiEntityDescription
@@ -26,6 +28,7 @@ if TYPE_CHECKING:
     from .hub import UnifiHub
 
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
+POLL_INTERVAL = timedelta(seconds=10)
 
 
 class UnifiEntityLoader:
@@ -43,9 +46,23 @@ class UnifiEntityLoader:
             hub.api.port_forwarding.update,
             hub.api.sites.update,
             hub.api.system_information.update,
+            hub.api.traffic_rules.update,
             hub.api.wlans.update,
         )
+        self.polling_api_updaters = (hub.api.traffic_rules.update,)
         self.wireless_clients = hub.hass.data[UNIFI_WIRELESS_CLIENTS]
+
+        self._dataUpdateCoordinator = DataUpdateCoordinator(
+            hub.hass,
+            LOGGER,
+            name="Unifi entity poller",
+            update_method=self._update_pollable_api_data,
+            update_interval=POLL_INTERVAL,
+        )
+
+        self._update_listener = self._dataUpdateCoordinator.async_add_listener(
+            update_callback=lambda: None
+        )
 
         self.platforms: list[
             tuple[
@@ -61,22 +78,31 @@ class UnifiEntityLoader:
 
     async def initialize(self) -> None:
         """Initialize API data and extra client support."""
-        await self.refresh_api_data()
-        self.restore_inactive_clients()
+        await self._refresh_api_data()
+        self._restore_inactive_clients()
         self.wireless_clients.update_clients(set(self.hub.api.clients.values()))
 
-    async def refresh_api_data(self) -> None:
-        """Refresh API data from network application."""
+    async def _refresh_data(
+        self, updaters: Sequence[Callable[[], Coroutine[Any, Any, None]]]
+    ) -> None:
         results = await asyncio.gather(
-            *[update() for update in self.api_updaters],
+            *[update() for update in updaters],
             return_exceptions=True,
         )
         for result in results:
             if result is not None:
                 LOGGER.warning("Exception on update %s", result)
 
+    async def _update_pollable_api_data(self) -> None:
+        """Refresh API data for pollable updaters."""
+        await self._refresh_data(self.polling_api_updaters)
+
+    async def _refresh_api_data(self) -> None:
+        """Refresh API data from network application."""
+        await self._refresh_data(self.api_updaters)
+
     @callback
-    def restore_inactive_clients(self) -> None:
+    def _restore_inactive_clients(self) -> None:
         """Restore inactive clients.
 
         Provide inactive clients to device tracker and switch platform.
@@ -85,7 +111,7 @@ class UnifiEntityLoader:
         entity_registry = er.async_get(self.hub.hass)
         macs: list[str] = [
             entry.unique_id.split("-", 1)[1]
-            for entry in async_entries_for_config_entry(
+            for entry in er.async_entries_for_config_entry(
                 entity_registry, config.entry.entry_id
             )
             if entry.domain == Platform.DEVICE_TRACKER and "-" in entry.unique_id
@@ -110,7 +136,7 @@ class UnifiEntityLoader:
 
     @callback
     def load_entities(self) -> None:
-        """Populate UniFi platforms with entities."""
+        """Load entities into the registered UniFi platforms."""
         for (
             async_add_entities,
             entity_class,
@@ -125,7 +151,7 @@ class UnifiEntityLoader:
     def _should_add_entity(
         self, description: UnifiEntityDescription, obj_id: str
     ) -> bool:
-        """Check if entity should be added."""
+        """Validate if entity is allowed and supported before creating it."""
         return bool(
             (description.key, obj_id) not in self.known_objects
             and description.allowed_fn(self.hub, obj_id)
@@ -139,11 +165,11 @@ class UnifiEntityLoader:
         descriptions: tuple[UnifiEntityDescription, ...],
         async_add_entities: AddEntitiesCallback,
     ) -> None:
-        """Subscribe to UniFi API handlers and create entities."""
+        """Load entities and subscribe for future entities."""
 
         @callback
-        def _add_unifi_entities() -> None:
-            """Add UniFi entity."""
+        def add_unifi_entities() -> None:
+            """Add currently known UniFi entities."""
             async_add_entities(
                 unifi_platform_entity(obj_id, self.hub, description)
                 for description in descriptions
@@ -151,10 +177,20 @@ class UnifiEntityLoader:
                 if self._should_add_entity(description, obj_id)
             )
 
-        _add_unifi_entities()
+        add_unifi_entities()
+
+        self.hub.config.entry.async_on_unload(
+            async_dispatcher_connect(
+                self.hub.hass,
+                self.hub.signal_options_update,
+                add_unifi_entities,
+            )
+        )
+
+        # Subscribe for future entities
 
         @callback
-        def _create_unifi_entity(
+        def create_unifi_entity(
             description: UnifiEntityDescription, event: ItemEvent, obj_id: str
         ) -> None:
             """Create new UniFi entity on event."""
@@ -165,13 +201,5 @@ class UnifiEntityLoader:
 
         for description in descriptions:
             description.api_handler_fn(self.hub.api).subscribe(
-                partial(_create_unifi_entity, description), ItemEvent.ADDED
+                partial(create_unifi_entity, description), ItemEvent.ADDED
             )
-
-        self.hub.config.entry.async_on_unload(
-            async_dispatcher_connect(
-                self.hub.hass,
-                self.hub.signal_options_update,
-                _add_unifi_entities,
-            )
-        )

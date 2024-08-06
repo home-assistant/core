@@ -52,7 +52,7 @@
     "unjoin": "mdi:ungroup",
     "volume_down": "mdi:volume-minus",
     "volume_mute": "mdi:volume-mute",
-    "volume_set": "mdi:volume",
+    "volume_set": "mdi:volume-medium",
     "volume_up": "mdi:volume-plus"
   }
 }

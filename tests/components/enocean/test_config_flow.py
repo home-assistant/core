@@ -2,11 +2,12 @@
 
 from unittest.mock import Mock, patch
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.enocean.config_flow import EnOceanFlowHandler
 from homeassistant.components.enocean.const import DOMAIN
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -26,7 +27,7 @@ async def test_user_flow_cannot_create_multiple_instances(hass: HomeAssistant) -
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -39,7 +40,7 @@ async def test_user_flow_with_detected_dongle(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "detect"
     devices = result["data_schema"].schema.get("device").container
     assert FAKE_DONGLE_PATH in devices
@@ -53,7 +54,7 @@ async def test_user_flow_with_no_detected_dongle(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
 
 
@@ -66,7 +67,7 @@ async def test_detection_flow_with_valid_path(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": "detect"}, data={CONF_DEVICE: USER_PROVIDED_PATH}
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_DEVICE] == USER_PROVIDED_PATH
 
 
@@ -75,8 +76,9 @@ async def test_detection_flow_with_custom_path(hass: HomeAssistant) -> None:
     USER_PROVIDED_PATH = EnOceanFlowHandler.MANUAL_PATH_VALUE
     FAKE_DONGLE_PATH = "/fake/dongle"
 
-    with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)), patch(
-        DONGLE_DETECT_METHOD, Mock(return_value=[FAKE_DONGLE_PATH])
+    with (
+        patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)),
+        patch(DONGLE_DETECT_METHOD, Mock(return_value=[FAKE_DONGLE_PATH])),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -84,7 +86,7 @@ async def test_detection_flow_with_custom_path(hass: HomeAssistant) -> None:
             data={CONF_DEVICE: USER_PROVIDED_PATH},
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
 
 
@@ -93,8 +95,9 @@ async def test_detection_flow_with_invalid_path(hass: HomeAssistant) -> None:
     USER_PROVIDED_PATH = "/invalid/path"
     FAKE_DONGLE_PATH = "/fake/dongle"
 
-    with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=False)), patch(
-        DONGLE_DETECT_METHOD, Mock(return_value=[FAKE_DONGLE_PATH])
+    with (
+        patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=False)),
+        patch(DONGLE_DETECT_METHOD, Mock(return_value=[FAKE_DONGLE_PATH])),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -102,7 +105,7 @@ async def test_detection_flow_with_invalid_path(hass: HomeAssistant) -> None:
             data={CONF_DEVICE: USER_PROVIDED_PATH},
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "detect"
     assert CONF_DEVICE in result["errors"]
 
@@ -116,7 +119,7 @@ async def test_manual_flow_with_valid_path(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": "manual"}, data={CONF_DEVICE: USER_PROVIDED_PATH}
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_DEVICE] == USER_PROVIDED_PATH
 
 
@@ -132,7 +135,7 @@ async def test_manual_flow_with_invalid_path(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": "manual"}, data={CONF_DEVICE: USER_PROVIDED_PATH}
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
     assert CONF_DEVICE in result["errors"]
 
@@ -148,7 +151,7 @@ async def test_import_flow_with_valid_path(hass: HomeAssistant) -> None:
             data=DATA_TO_IMPORT,
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_DEVICE] == DATA_TO_IMPORT[CONF_DEVICE]
 
 
@@ -166,5 +169,5 @@ async def test_import_flow_with_invalid_path(hass: HomeAssistant) -> None:
             data=DATA_TO_IMPORT,
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_dongle_path"

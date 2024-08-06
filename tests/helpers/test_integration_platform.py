@@ -7,12 +7,13 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant import loader
+from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
-from homeassistant.setup import ATTR_COMPONENT, EVENT_COMPONENT_LOADED
+from homeassistant.setup import ATTR_COMPONENT
 
 from tests.common import mock_platform
 
@@ -163,9 +164,10 @@ async def test_process_integration_platforms_import_fails_after_registered(
     assert processed[0][1] == loaded_platform
 
     event_integration = await loader.async_get_integration(hass, "event")
-    with patch.object(
-        event_integration, "async_get_platforms", side_effect=ImportError
-    ), patch.object(event_integration, "get_platform_cached", return_value=None):
+    with (
+        patch.object(event_integration, "async_get_platforms", side_effect=ImportError),
+        patch.object(event_integration, "get_platform_cached", return_value=None),
+    ):
         hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: "event"})
         await hass.async_block_till_done()
 

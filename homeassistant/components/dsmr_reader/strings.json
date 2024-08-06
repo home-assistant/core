@@ -259,5 +259,11 @@
         "name": "Quarter-hour peak end time"
       }
     }
+  },
+  "issues": {
+    "cannot_subscribe_mqtt_topic": {
+      "title": "Cannot subscribe to MQTT topic {topic_title}",
+      "description": "The DSMR Reader integration cannot subscribe to the MQTT topic: `{topic}`. Please check the configuration of the MQTT broker and the topic.\nDSMR Reader needs to be running, before starting this integration."
+    }
   }
 }

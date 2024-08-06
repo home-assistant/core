@@ -18,6 +18,7 @@ from homeassistant.components.onvif.models import (
     WebHookManagerState,
 )
 from homeassistant.const import HTTP_DIGEST_AUTHENTICATION
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -158,7 +159,7 @@ def setup_mock_device(mock_device, capabilities=None):
 
 
 async def setup_onvif_integration(
-    hass,
+    hass: HomeAssistant,
     config=None,
     options=None,
     unique_id=MAC,
@@ -187,13 +188,15 @@ async def setup_onvif_integration(
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.onvif.config_flow.get_device"
-    ) as mock_onvif_camera, patch(
-        "homeassistant.components.onvif.config_flow.wsdiscovery"
-    ) as mock_discovery, patch(
-        "homeassistant.components.onvif.ONVIFDevice"
-    ) as mock_device:
+    with (
+        patch(
+            "homeassistant.components.onvif.config_flow.get_device"
+        ) as mock_onvif_camera,
+        patch(
+            "homeassistant.components.onvif.config_flow.wsdiscovery"
+        ) as mock_discovery,
+        patch("homeassistant.components.onvif.ONVIFDevice") as mock_device,
+    ):
         setup_mock_onvif_camera(mock_onvif_camera, two_profiles=True)
         # no discovery
         mock_discovery.return_value = []

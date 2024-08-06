@@ -23,7 +23,7 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.nettigo_air_monitor_sds011_pm2_5")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "11.0"
+    assert state.state == "11.03"
 
 
 async def test_config_not_ready(hass: HomeAssistant) -> None:
@@ -54,9 +54,12 @@ async def test_config_not_ready_while_checking_credentials(hass: HomeAssistant) 
     )
     entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
-        side_effect=ApiError("API Error"),
+    with (
+        patch("homeassistant.components.nam.NettigoAirMonitor.initialize"),
+        patch(
+            "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
+            side_effect=ApiError("API Error"),
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state is ConfigEntryState.SETUP_RETRY

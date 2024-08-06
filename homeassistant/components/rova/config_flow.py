@@ -6,19 +6,19 @@ from requests.exceptions import ConnectTimeout, HTTPError
 from rova.rova import Rova
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import CONF_HOUSE_NUMBER, CONF_HOUSE_NUMBER_SUFFIX, CONF_ZIP_CODE, DOMAIN
 
 
-class RovaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class RovaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle Rova config flow."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Step when user initializes a integration."""
         errors: dict[str, str] = {}
 
@@ -60,9 +60,7 @@ class RovaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(
-        self, user_input: dict[str, Any]
-    ) -> config_entries.ConfigFlowResult:
+    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Import the yaml config."""
         zip_code = user_input[CONF_ZIP_CODE]
         number = user_input[CONF_HOUSE_NUMBER]

@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, call, patch
 
 import pytest
 
-import homeassistant.util.package as package
+from homeassistant.util import package
 
 RESOURCE_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "resources")

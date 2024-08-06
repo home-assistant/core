@@ -18,19 +18,28 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import loader as yaml_loader
 
-from tests.common import async_mock_service, mock_restore_cache
+from tests.common import (
+    async_mock_service,
+    mock_restore_cache,
+    setup_test_component_platform,
+)
+from tests.components.light.common import MockLight
 
 
 @pytest.fixture(autouse=True)
-def entities(hass):
+def entities(
+    hass: HomeAssistant,
+    mock_light_entities: list[MockLight],
+) -> list[MockLight]:
     """Initialize the test light."""
-    platform = getattr(hass.components, "test.light")
-    platform.init()
-    return platform.ENTITIES[0:2]
+    entities = mock_light_entities[0:2]
+    setup_test_component_platform(hass, light.DOMAIN, entities)
+    return entities
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_config_yaml_alias_anchor(
-    hass: HomeAssistant, entities, enable_custom_integrations: None
+    hass: HomeAssistant, entities: list[MockLight]
 ) -> None:
     """Test the usage of YAML aliases and anchors.
 
@@ -76,9 +85,8 @@ async def test_config_yaml_alias_anchor(
     assert light_2.last_call("turn_on")[1].get("brightness") == 100
 
 
-async def test_config_yaml_bool(
-    hass: HomeAssistant, entities, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_config_yaml_bool(hass: HomeAssistant, entities: list[MockLight]) -> None:
     """Test parsing of booleans in yaml config."""
     light_1, light_2 = await setup_lights(hass, entities)
 
@@ -105,9 +113,8 @@ async def test_config_yaml_bool(
     assert light_2.last_call("turn_on")[1].get("brightness") == 100
 
 
-async def test_activate_scene(
-    hass: HomeAssistant, entities, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_activate_scene(hass: HomeAssistant, entities: list[MockLight]) -> None:
     """Test active scene."""
     light_1, light_2 = await setup_lights(hass, entities)
 
@@ -159,9 +166,8 @@ async def test_activate_scene(
     assert calls[0].data.get("transition") == 42
 
 
-async def test_restore_state(
-    hass: HomeAssistant, entities, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_restore_state(hass: HomeAssistant, entities: list[MockLight]) -> None:
     """Test we restore state integration."""
     mock_restore_cache(hass, (State("scene.test", "2021-01-01T23:59:59+00:00"),))
 
@@ -187,8 +193,9 @@ async def test_restore_state(
     assert hass.states.get("scene.test").state == "2021-01-01T23:59:59+00:00"
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_restore_state_does_not_restore_unavailable(
-    hass: HomeAssistant, entities, enable_custom_integrations: None
+    hass: HomeAssistant, entities: list[MockLight]
 ) -> None:
     """Test we restore state integration but ignore unavailable."""
     mock_restore_cache(hass, (State("scene.test", STATE_UNAVAILABLE),))

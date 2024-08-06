@@ -330,16 +330,17 @@ async def test_light_set_brightness_belief_api_error(hass: HomeAssistant) -> Non
         bond_device_id="test-device-id",
     )
 
-    with pytest.raises(
-        HomeAssistantError
-    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+    with (
+        pytest.raises(HomeAssistantError),
+        patch_bond_action_returns_clientresponseerror(),
+        patch_bond_device_state(),
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
             {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_fp_light_set_brightness_belief_full(hass: HomeAssistant) -> None:
@@ -374,16 +375,17 @@ async def test_fp_light_set_brightness_belief_api_error(hass: HomeAssistant) -> 
         bond_device_id="test-device-id",
     )
 
-    with pytest.raises(
-        HomeAssistantError
-    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+    with (
+        pytest.raises(HomeAssistantError),
+        patch_bond_action_returns_clientresponseerror(),
+        patch_bond_device_state(),
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
             {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_light_set_brightness_belief_brightness_not_supported(
@@ -404,7 +406,6 @@ async def test_light_set_brightness_belief_brightness_not_supported(
             {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_light_set_brightness_belief_zero(hass: HomeAssistant) -> None:
@@ -485,16 +486,17 @@ async def test_light_set_power_belief_api_error(hass: HomeAssistant) -> None:
         bond_device_id="test-device-id",
     )
 
-    with pytest.raises(
-        HomeAssistantError
-    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+    with (
+        pytest.raises(HomeAssistantError),
+        patch_bond_action_returns_clientresponseerror(),
+        patch_bond_device_state(),
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
             {ATTR_ENTITY_ID: "light.name_1", ATTR_POWER_STATE: False},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_fp_light_set_power_belief(hass: HomeAssistant) -> None:
@@ -529,16 +531,17 @@ async def test_fp_light_set_power_belief_api_error(hass: HomeAssistant) -> None:
         bond_device_id="test-device-id",
     )
 
-    with pytest.raises(
-        HomeAssistantError
-    ), patch_bond_action_returns_clientresponseerror(), patch_bond_device_state():
+    with (
+        pytest.raises(HomeAssistantError),
+        patch_bond_action_returns_clientresponseerror(),
+        patch_bond_device_state(),
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
             {ATTR_ENTITY_ID: "light.name_1", ATTR_POWER_STATE: False},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_fp_light_set_brightness_belief_brightness_not_supported(
@@ -559,7 +562,6 @@ async def test_fp_light_set_brightness_belief_brightness_not_supported(
             {ATTR_ENTITY_ID: "light.name_1", ATTR_BRIGHTNESS: 255},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_light_start_increasing_brightness(hass: HomeAssistant) -> None:
@@ -600,7 +602,6 @@ async def test_light_start_increasing_brightness_missing_service(
             {ATTR_ENTITY_ID: "light.name_1"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_light_start_decreasing_brightness(hass: HomeAssistant) -> None:
@@ -644,7 +645,6 @@ async def test_light_start_decreasing_brightness_missing_service(
             {ATTR_ENTITY_ID: "light.name_1"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_light_stop(hass: HomeAssistant) -> None:
@@ -686,7 +686,6 @@ async def test_light_stop_missing_service(
             {ATTR_ENTITY_ID: "light.name_1"},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_turn_on_light(hass: HomeAssistant) -> None:

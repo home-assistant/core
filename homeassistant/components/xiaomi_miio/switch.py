@@ -115,6 +115,7 @@ from .const import (
 )
 from .device import XiaomiCoordinatedMiioEntity, XiaomiMiioEntity
 from .gateway import XiaomiGatewayDevice
+from .typing import ServiceMethodDetails
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -176,16 +177,16 @@ SERVICE_SCHEMA_POWER_PRICE = SERVICE_SCHEMA.extend(
 )
 
 SERVICE_TO_METHOD = {
-    SERVICE_SET_WIFI_LED_ON: {"method": "async_set_wifi_led_on"},
-    SERVICE_SET_WIFI_LED_OFF: {"method": "async_set_wifi_led_off"},
-    SERVICE_SET_POWER_MODE: {
-        "method": "async_set_power_mode",
-        "schema": SERVICE_SCHEMA_POWER_MODE,
-    },
-    SERVICE_SET_POWER_PRICE: {
-        "method": "async_set_power_price",
-        "schema": SERVICE_SCHEMA_POWER_PRICE,
-    },
+    SERVICE_SET_WIFI_LED_ON: ServiceMethodDetails(method="async_set_wifi_led_on"),
+    SERVICE_SET_WIFI_LED_OFF: ServiceMethodDetails(method="async_set_wifi_led_off"),
+    SERVICE_SET_POWER_MODE: ServiceMethodDetails(
+        method="async_set_power_mode",
+        schema=SERVICE_SCHEMA_POWER_MODE,
+    ),
+    SERVICE_SET_POWER_PRICE: ServiceMethodDetails(
+        method="async_set_power_price",
+        schema=SERVICE_SCHEMA_POWER_PRICE,
+    ),
 }
 
 MODEL_TO_FEATURES_MAP = {
@@ -488,9 +489,9 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
 
             update_tasks = []
             for device in devices:
-                if not hasattr(device, method["method"]):
+                if not hasattr(device, method.method):
                     continue
-                await getattr(device, method["method"])(**params)
+                await getattr(device, method.method)(**params)
                 update_tasks.append(
                     asyncio.create_task(device.async_update_ha_state(True))
                 )
@@ -499,7 +500,7 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
                 await asyncio.wait(update_tasks)
 
         for plug_service, method in SERVICE_TO_METHOD.items():
-            schema = method.get("schema", SERVICE_SCHEMA)
+            schema = method.schema or SERVICE_SCHEMA
             hass.services.async_register(
                 DOMAIN, plug_service, async_service_handler, schema=schema
             )
@@ -805,20 +806,20 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
             result = await self.hass.async_add_executor_job(
                 partial(func, *args, **kwargs)
             )
-
-            _LOGGER.debug("Response received from plug: %s", result)
-
-            # The Chuangmi Plug V3 returns 0 on success on usb_on/usb_off.
-            if func in ["usb_on", "usb_off"] and result == 0:
-                return True
-
-            return result == SUCCESS
         except DeviceException as exc:
             if self._available:
                 _LOGGER.error(mask_error, exc)
                 self._available = False
 
             return False
+
+        _LOGGER.debug("Response received from plug: %s", result)
+
+        # The Chuangmi Plug V3 returns 0 on success on usb_on/usb_off.
+        if func in ["usb_on", "usb_off"] and result == 0:
+            return True
+
+        return result == SUCCESS
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the plug on."""

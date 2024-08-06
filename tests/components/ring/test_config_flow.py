@@ -17,14 +17,14 @@ from tests.common import MockConfigEntry
 async def test_form(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_ring_auth: Mock,
+    mock_ring_client: Mock,
 ) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -33,7 +33,7 @@ async def test_form(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "hello@home-assistant.io"
     assert result2["data"] == {
         "username": "hello@home-assistant.io",
@@ -63,7 +63,7 @@ async def test_form_error(
         {"username": "hello@home-assistant.io", "password": "test-password"},
     )
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": errors_msg}
 
 
@@ -76,7 +76,7 @@ async def test_form_2fa(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     mock_ring_auth.fetch_token.side_effect = ring_doorbell.Requires2FAError
@@ -92,7 +92,7 @@ async def test_form_2fa(
         "foo@bar.com", "fake-password", None
     )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "2fa"
     mock_ring_auth.fetch_token.reset_mock(side_effect=True)
     mock_ring_auth.fetch_token.return_value = "new-foobar"
@@ -104,7 +104,7 @@ async def test_form_2fa(
     mock_ring_auth.fetch_token.assert_called_once_with(
         "foo@bar.com", "fake-password", "123456"
     )
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "foo@bar.com"
     assert result3["data"] == {
         "username": "foo@bar.com",
@@ -139,7 +139,7 @@ async def test_reauth(
     mock_ring_auth.fetch_token.assert_called_once_with(
         "foo@bar.com", "other_fake_password", None
     )
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "2fa"
     mock_ring_auth.fetch_token.reset_mock(side_effect=True)
     mock_ring_auth.fetch_token.return_value = "new-foobar"
@@ -151,7 +151,7 @@ async def test_reauth(
     mock_ring_auth.fetch_token.assert_called_once_with(
         "foo@bar.com", "other_fake_password", "123456"
     )
-    assert result3["type"] == FlowResultType.ABORT
+    assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
     assert mock_added_config_entry.data == {
         "username": "foo@bar.com",
@@ -197,7 +197,7 @@ async def test_reauth_error(
     mock_ring_auth.fetch_token.assert_called_once_with(
         "foo@bar.com", "error_fake_password", None
     )
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": errors_msg}
 
     # Now test reauth can go on to succeed
@@ -213,7 +213,7 @@ async def test_reauth_error(
     mock_ring_auth.fetch_token.assert_called_once_with(
         "foo@bar.com", "other_fake_password", None
     )
-    assert result3["type"] == FlowResultType.ABORT
+    assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
     assert mock_added_config_entry.data == {
         "username": "foo@bar.com",

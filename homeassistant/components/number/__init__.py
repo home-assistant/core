@@ -6,6 +6,7 @@ from collections.abc import Callable
 from contextlib import suppress
 import dataclasses
 from datetime import timedelta
+from functools import cached_property
 import logging
 from math import ceil, floor
 from typing import TYPE_CHECKING, Any, Self, final
@@ -14,12 +15,14 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MODE, CONF_UNIT_OF_MEASUREMENT, UnitOfTemperature
-from homeassistant.core import HomeAssistant, ServiceCall, async_get_hass, callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.config_validation import (
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    async_get_hass_or_none,
+    callback,
 )
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
@@ -30,6 +33,7 @@ from .const import (  # noqa: F401
     ATTR_MAX,
     ATTR_MIN,
     ATTR_STEP,
+    ATTR_STEP_VALIDATION,
     ATTR_VALUE,
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
@@ -43,18 +47,15 @@ from .const import (  # noqa: F401
 )
 from .websocket_api import async_setup as async_setup_ws_api
 
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 _LOGGER = logging.getLogger(__name__)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=30)
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-SCAN_INTERVAL = timedelta(seconds=30)
 
 __all__ = [
     "ATTR_MAX",
@@ -99,10 +100,17 @@ async def async_set_value(entity: NumberEntity, service_call: ServiceCall) -> No
     """Service call wrapper to set a new value."""
     value = service_call.data["value"]
     if value < entity.min_value or value > entity.max_value:
-        raise ValueError(
-            f"Value {value} for {entity.entity_id} is outside valid range"
-            f" {entity.min_value} - {entity.max_value}"
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="out_of_range",
+            translation_placeholders={
+                "value": value,
+                "entity_id": entity.entity_id,
+                "min_value": str(entity.min_value),
+                "max_value": str(entity.max_value),
+            },
         )
+
     try:
         native_value = entity.convert_to_native_value(value)
         # Clamp to the native range
@@ -174,7 +182,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Number entity."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {ATTR_MIN, ATTR_MAX, ATTR_STEP, ATTR_MODE}
+        {ATTR_MIN, ATTR_MAX, ATTR_STEP, ATTR_STEP_VALIDATION, ATTR_MODE}
     )
 
     entity_description: NumberEntityDescription
@@ -209,10 +217,9 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 "value",
             )
         ):
-            hass: HomeAssistant | None = None
-            with suppress(HomeAssistantError):
-                hass = async_get_hass()
-            report_issue = async_suggest_report_issue(hass, module=cls.__module__)
+            report_issue = async_suggest_report_issue(
+                async_get_hass_or_none(), module=cls.__module__
+            )
             _LOGGER.warning(
                 (
                     "%s::%s is overriding deprecated methods on an instance of "

@@ -80,7 +80,9 @@ async def test_async_setup_entry_loads_platforms(
 ) -> None:
     """Test load connects to heos, retrieves players, and loads platforms."""
     config_entry.add_to_hass(hass)
-    with patch.object(hass.config_entries, "async_forward_entry_setup") as forward_mock:
+    with patch.object(
+        hass.config_entries, "async_forward_entry_setups"
+    ) as forward_mock:
         assert await async_setup_entry(hass, config_entry)
         # Assert platforms loaded
         await hass.async_block_till_done()
@@ -107,7 +109,9 @@ async def test_async_setup_entry_not_signed_in_loads_platforms(
     config_entry.add_to_hass(hass)
     controller.is_signed_in = False
     controller.signed_in_username = None
-    with patch.object(hass.config_entries, "async_forward_entry_setup") as forward_mock:
+    with patch.object(
+        hass.config_entries, "async_forward_entry_setups"
+    ) as forward_mock:
         assert await async_setup_entry(hass, config_entry)
         # Assert platforms loaded
         await hass.async_block_till_done()
@@ -136,7 +140,6 @@ async def test_async_setup_entry_connect_failure(
     controller.connect.side_effect = HeosError()
     with pytest.raises(ConfigEntryNotReady):
         await async_setup_entry(hass, config_entry)
-        await hass.async_block_till_done()
     assert controller.connect.call_count == 1
     assert controller.disconnect.call_count == 1
     controller.connect.reset_mock()
@@ -151,7 +154,6 @@ async def test_async_setup_entry_player_failure(
     controller.get_players.side_effect = HeosError()
     with pytest.raises(ConfigEntryNotReady):
         await async_setup_entry(hass, config_entry)
-        await hass.async_block_till_done()
     assert controller.connect.call_count == 1
     assert controller.disconnect.call_count == 1
     controller.connect.reset_mock()

@@ -20,6 +20,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
+from tests.typing import WebSocketGenerator
+
 _NO_LOOPBACK_IPADDR = "192.168.1.5"
 _LOOPBACK_IPADDR = "127.0.0.1"
 
@@ -34,6 +36,7 @@ def _mock_cond_socket(sockname):
     class CondMockSock(MagicMock):
         def connect(self, addr):
             """Mock connect that stores addr."""
+            # pylint: disable-next=attribute-defined-outside-init
             self._addr = addr[0]
 
         def getsockname(self):
@@ -75,12 +78,15 @@ async def test_async_detect_interfaces_setting_non_loopback_route(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test without default interface config and the route returns a non-loopback address."""
-    with patch(
-        "homeassistant.components.network.util.socket.socket",
-        return_value=_mock_socket([_NO_LOOPBACK_IPADDR]),
-    ), patch(
-        "homeassistant.components.network.util.ifaddr.get_adapters",
-        return_value=_generate_mock_adapters(),
+    with (
+        patch(
+            "homeassistant.components.network.util.socket.socket",
+            return_value=_mock_socket([_NO_LOOPBACK_IPADDR]),
+        ),
+        patch(
+            "homeassistant.components.network.util.ifaddr.get_adapters",
+            return_value=_generate_mock_adapters(),
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -139,12 +145,15 @@ async def test_async_detect_interfaces_setting_loopback_route(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test without default interface config and the route returns a loopback address."""
-    with patch(
-        "homeassistant.components.network.util.socket.socket",
-        return_value=_mock_socket([_LOOPBACK_IPADDR]),
-    ), patch(
-        "homeassistant.components.network.util.ifaddr.get_adapters",
-        return_value=_generate_mock_adapters(),
+    with (
+        patch(
+            "homeassistant.components.network.util.socket.socket",
+            return_value=_mock_socket([_LOOPBACK_IPADDR]),
+        ),
+        patch(
+            "homeassistant.components.network.util.ifaddr.get_adapters",
+            return_value=_generate_mock_adapters(),
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -202,12 +211,15 @@ async def test_async_detect_interfaces_setting_empty_route(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test without default interface config and the route returns nothing."""
-    with patch(
-        "homeassistant.components.network.util.socket.socket",
-        return_value=_mock_socket([]),
-    ), patch(
-        "homeassistant.components.network.util.ifaddr.get_adapters",
-        return_value=_generate_mock_adapters(),
+    with (
+        patch(
+            "homeassistant.components.network.util.socket.socket",
+            return_value=_mock_socket([]),
+        ),
+        patch(
+            "homeassistant.components.network.util.ifaddr.get_adapters",
+            return_value=_generate_mock_adapters(),
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -265,12 +277,15 @@ async def test_async_detect_interfaces_setting_exception(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test without default interface config and the route throws an exception."""
-    with patch(
-        "homeassistant.components.network.util.socket.socket",
-        return_value=_mock_socket_exception(AttributeError),
-    ), patch(
-        "homeassistant.components.network.util.ifaddr.get_adapters",
-        return_value=_generate_mock_adapters(),
+    with (
+        patch(
+            "homeassistant.components.network.util.socket.socket",
+            return_value=_mock_socket_exception(AttributeError),
+        ),
+        patch(
+            "homeassistant.components.network.util.ifaddr.get_adapters",
+            return_value=_generate_mock_adapters(),
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -333,12 +348,15 @@ async def test_interfaces_configured_from_storage(
         "key": STORAGE_KEY,
         "data": {ATTR_CONFIGURED_ADAPTERS: ["eth0", "eth1", "vtun0"]},
     }
-    with patch(
-        "homeassistant.components.network.util.socket.socket",
-        return_value=_mock_socket([_NO_LOOPBACK_IPADDR]),
-    ), patch(
-        "homeassistant.components.network.util.ifaddr.get_adapters",
-        return_value=_generate_mock_adapters(),
+    with (
+        patch(
+            "homeassistant.components.network.util.socket.socket",
+            return_value=_mock_socket([_NO_LOOPBACK_IPADDR]),
+        ),
+        patch(
+            "homeassistant.components.network.util.ifaddr.get_adapters",
+            return_value=_generate_mock_adapters(),
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -394,7 +412,9 @@ async def test_interfaces_configured_from_storage(
 
 
 async def test_interfaces_configured_from_storage_websocket_update(
-    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test settings from storage can be updated via websocket api."""
     hass_storage[STORAGE_KEY] = {
@@ -402,12 +422,15 @@ async def test_interfaces_configured_from_storage_websocket_update(
         "key": STORAGE_KEY,
         "data": {ATTR_CONFIGURED_ADAPTERS: ["eth0", "eth1", "vtun0"]},
     }
-    with patch(
-        "homeassistant.components.network.util.socket.socket",
-        return_value=_mock_socket([_NO_LOOPBACK_IPADDR]),
-    ), patch(
-        "homeassistant.components.network.util.ifaddr.get_adapters",
-        return_value=_generate_mock_adapters(),
+    with (
+        patch(
+            "homeassistant.components.network.util.socket.socket",
+            return_value=_mock_socket([_NO_LOOPBACK_IPADDR]),
+        ),
+        patch(
+            "homeassistant.components.network.util.ifaddr.get_adapters",
+            return_value=_generate_mock_adapters(),
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -533,12 +556,15 @@ async def test_async_get_source_ip_matching_interface(
         "data": {ATTR_CONFIGURED_ADAPTERS: ["eth1"]},
     }
 
-    with patch(
-        "homeassistant.components.network.util.ifaddr.get_adapters",
-        return_value=_generate_mock_adapters(),
-    ), patch(
-        "homeassistant.components.network.util.socket.socket",
-        return_value=_mock_socket(["192.168.1.5"]),
+    with (
+        patch(
+            "homeassistant.components.network.util.ifaddr.get_adapters",
+            return_value=_generate_mock_adapters(),
+        ),
+        patch(
+            "homeassistant.components.network.util.socket.socket",
+            return_value=_mock_socket(["192.168.1.5"]),
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -556,12 +582,15 @@ async def test_async_get_source_ip_interface_not_match(
         "data": {ATTR_CONFIGURED_ADAPTERS: ["vtun0"]},
     }
 
-    with patch(
-        "homeassistant.components.network.util.ifaddr.get_adapters",
-        return_value=_generate_mock_adapters(),
-    ), patch(
-        "homeassistant.components.network.util.socket.socket",
-        return_value=_mock_socket(["192.168.1.5"]),
+    with (
+        patch(
+            "homeassistant.components.network.util.ifaddr.get_adapters",
+            return_value=_generate_mock_adapters(),
+        ),
+        patch(
+            "homeassistant.components.network.util.socket.socket",
+            return_value=_mock_socket(["192.168.1.5"]),
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -579,12 +608,15 @@ async def test_async_get_source_ip_cannot_determine_target(
         "data": {ATTR_CONFIGURED_ADAPTERS: ["eth1"]},
     }
 
-    with patch(
-        "homeassistant.components.network.util.ifaddr.get_adapters",
-        return_value=_generate_mock_adapters(),
-    ), patch(
-        "homeassistant.components.network.util.socket.socket",
-        return_value=_mock_socket([None]),
+    with (
+        patch(
+            "homeassistant.components.network.util.ifaddr.get_adapters",
+            return_value=_generate_mock_adapters(),
+        ),
+        patch(
+            "homeassistant.components.network.util.socket.socket",
+            return_value=_mock_socket([None]),
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -602,12 +634,15 @@ async def test_async_get_ipv4_broadcast_addresses_default(
         "data": {ATTR_CONFIGURED_ADAPTERS: ["eth1"]},
     }
 
-    with patch(
-        "homeassistant.components.network.util.socket.socket",
-        return_value=_mock_socket(["192.168.1.5"]),
-    ), patch(
-        "homeassistant.components.network.util.ifaddr.get_adapters",
-        return_value=_generate_mock_adapters(),
+    with (
+        patch(
+            "homeassistant.components.network.util.socket.socket",
+            return_value=_mock_socket(["192.168.1.5"]),
+        ),
+        patch(
+            "homeassistant.components.network.util.ifaddr.get_adapters",
+            return_value=_generate_mock_adapters(),
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -627,12 +662,15 @@ async def test_async_get_ipv4_broadcast_addresses_multiple(
         "data": {ATTR_CONFIGURED_ADAPTERS: ["eth1", "vtun0"]},
     }
 
-    with patch(
-        "homeassistant.components.network.util.socket.socket",
-        return_value=_mock_socket([_LOOPBACK_IPADDR]),
-    ), patch(
-        "homeassistant.components.network.util.ifaddr.get_adapters",
-        return_value=_generate_mock_adapters(),
+    with (
+        patch(
+            "homeassistant.components.network.util.socket.socket",
+            return_value=_mock_socket([_LOOPBACK_IPADDR]),
+        ),
+        patch(
+            "homeassistant.components.network.util.ifaddr.get_adapters",
+            return_value=_generate_mock_adapters(),
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -654,12 +692,15 @@ async def test_async_get_source_ip_no_enabled_addresses(
         "data": {ATTR_CONFIGURED_ADAPTERS: ["eth1"]},
     }
 
-    with patch(
-        "homeassistant.components.network.util.ifaddr.get_adapters",
-        return_value=[],
-    ), patch(
-        "homeassistant.components.network.util.socket.socket",
-        return_value=_mock_socket(["192.168.1.5"]),
+    with (
+        patch(
+            "homeassistant.components.network.util.ifaddr.get_adapters",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.network.util.socket.socket",
+            return_value=_mock_socket(["192.168.1.5"]),
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -679,12 +720,15 @@ async def test_async_get_source_ip_cannot_be_determined_and_no_enabled_addresses
         "data": {ATTR_CONFIGURED_ADAPTERS: ["eth1"]},
     }
 
-    with patch(
-        "homeassistant.components.network.util.ifaddr.get_adapters",
-        return_value=[],
-    ), patch(
-        "homeassistant.components.network.util.socket.socket",
-        return_value=_mock_socket([None]),
+    with (
+        patch(
+            "homeassistant.components.network.util.ifaddr.get_adapters",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.network.util.socket.socket",
+            return_value=_mock_socket([None]),
+        ),
     ):
         assert not await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -702,12 +746,15 @@ async def test_async_get_source_ip_no_ip_loopback(
         "data": {ATTR_CONFIGURED_ADAPTERS: ["eth1"]},
     }
 
-    with patch(
-        "homeassistant.components.network.util.ifaddr.get_adapters",
-        return_value=[],
-    ), patch(
-        "homeassistant.components.network.util.socket.socket",
-        return_value=_mock_cond_socket(_LOOPBACK_IPADDR),
+    with (
+        patch(
+            "homeassistant.components.network.util.ifaddr.get_adapters",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.network.util.socket.socket",
+            return_value=_mock_cond_socket(_LOOPBACK_IPADDR),
+        ),
     ):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -778,12 +825,15 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
 async def test_async_get_announce_addresses(hass: HomeAssistant) -> None:
     """Test addresses for mDNS/etc announcement."""
     first_ip = "172.16.1.5"
-    with patch(
-        "homeassistant.components.network.async_get_source_ip",
-        return_value=first_ip,
-    ), patch(
-        "homeassistant.components.network.async_get_adapters",
-        return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
+    with (
+        patch(
+            "homeassistant.components.network.async_get_source_ip",
+            return_value=first_ip,
+        ),
+        patch(
+            "homeassistant.components.network.async_get_adapters",
+            return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
+        ),
     ):
         actual = await network.async_get_announce_addresses(hass)
     assert actual[0] == first_ip and actual == [
@@ -795,12 +845,15 @@ async def test_async_get_announce_addresses(hass: HomeAssistant) -> None:
     ]
 
     first_ip = "192.168.1.5"
-    with patch(
-        "homeassistant.components.network.async_get_source_ip",
-        return_value=first_ip,
-    ), patch(
-        "homeassistant.components.network.async_get_adapters",
-        return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
+    with (
+        patch(
+            "homeassistant.components.network.async_get_source_ip",
+            return_value=first_ip,
+        ),
+        patch(
+            "homeassistant.components.network.async_get_adapters",
+            return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
+        ),
     ):
         actual = await network.async_get_announce_addresses(hass)
 
@@ -815,12 +868,15 @@ async def test_async_get_announce_addresses(hass: HomeAssistant) -> None:
 
 async def test_async_get_announce_addresses_no_source_ip(hass: HomeAssistant) -> None:
     """Test addresses for mDNS/etc announcement without source ip."""
-    with patch(
-        "homeassistant.components.network.async_get_source_ip",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.network.async_get_adapters",
-        return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
+    with (
+        patch(
+            "homeassistant.components.network.async_get_source_ip",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.network.async_get_adapters",
+            return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
+        ),
     ):
         actual = await network.async_get_announce_addresses(hass)
     assert actual == [

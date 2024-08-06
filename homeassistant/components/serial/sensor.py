@@ -7,10 +7,13 @@ import json
 import logging
 
 from serial import SerialException
-import serial_asyncio
+import serial_asyncio_fast as serial_asyncio
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_NAME, CONF_VALUE_TEMPLATE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -37,7 +40,7 @@ DEFAULT_XONXOFF = False
 DEFAULT_RTSCTS = False
 DEFAULT_DSRDTR = False
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SERIAL_PORT): cv.string,
         vol.Optional(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): cv.positive_int,
@@ -187,12 +190,10 @@ class SerialSensor(SensorEntity):
                     **kwargs,
                 )
 
-            except SerialException as exc:
+            except SerialException:
                 if not logged_error:
                     _LOGGER.exception(
-                        "Unable to connect to the serial device %s: %s. Will retry",
-                        device,
-                        exc,
+                        "Unable to connect to the serial device %s. Will retry", device
                     )
                     logged_error = True
                 await self._handle_error()
@@ -201,9 +202,9 @@ class SerialSensor(SensorEntity):
                 while True:
                     try:
                         line = await reader.readline()
-                    except SerialException as exc:
+                    except SerialException:
                         _LOGGER.exception(
-                            "Error while reading serial device %s: %s", device, exc
+                            "Error while reading serial device %s", device
                         )
                         await self._handle_error()
                         break

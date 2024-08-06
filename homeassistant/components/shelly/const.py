@@ -27,20 +27,29 @@ from aioshelly.const import (
     MODEL_WALL_DISPLAY,
 )
 
+from homeassistant.components.number import NumberMode
+
 DOMAIN: Final = "shelly"
 
 LOGGER: Logger = getLogger(__package__)
 
-DATA_CONFIG_ENTRY: Final = "config_entry"
 CONF_COAP_PORT: Final = "coap_port"
 FIRMWARE_PATTERN: Final = re.compile(r"^(\d{8})")
 
-# max light transition time in milliseconds
-MAX_TRANSITION_TIME: Final = 5000
+# max BLOCK light transition time in milliseconds (min=0)
+BLOCK_MAX_TRANSITION_TIME_MS: Final = 5000
+
+# min RPC light transition time in seconds (max=10800, limited by light entity to 6553)
+RPC_MIN_TRANSITION_TIME_SEC = 0.5
 
 RGBW_MODELS: Final = (
     MODEL_BULB,
     MODEL_RGBW2,
+)
+
+MOTION_MODELS: Final = (
+    MODEL_MOTION,
+    MODEL_MOTION_2,
 )
 
 MODELS_SUPPORTING_LIGHT_TRANSITION: Final = (
@@ -76,11 +85,9 @@ REST_SENSORS_UPDATE_INTERVAL: Final = 60
 # Refresh interval for RPC polling sensors
 RPC_SENSORS_POLLING_INTERVAL: Final = 60
 
-# Multiplier used to calculate the "update_interval" for sleeping devices.
-SLEEP_PERIOD_MULTIPLIER: Final = 1.2
 CONF_SLEEP_PERIOD: Final = "sleep_period"
 
-# Multiplier used to calculate the "update_interval" for non-sleeping devices.
+# Multiplier used to calculate the "update_interval" for shelly devices.
 UPDATE_PERIOD_MULTIPLIER: Final = 2.2
 
 # Reconnect interval for GEN2 devices
@@ -231,3 +238,19 @@ DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
 )
 
 CONF_GEN = "gen"
+
+SHELLY_PLUS_RGBW_CHANNELS = 4
+
+VIRTUAL_COMPONENTS_MAP = {
+    "binary_sensor": {"types": ["boolean"], "modes": ["label"]},
+    "number": {"types": ["number"], "modes": ["field", "slider"]},
+    "select": {"types": ["enum"], "modes": ["dropdown"]},
+    "sensor": {"types": ["enum", "number", "text"], "modes": ["label"]},
+    "switch": {"types": ["boolean"], "modes": ["toggle"]},
+    "text": {"types": ["text"], "modes": ["field"]},
+}
+
+VIRTUAL_NUMBER_MODE_MAP = {
+    "field": NumberMode.BOX,
+    "slider": NumberMode.SLIDER,
+}

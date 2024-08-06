@@ -1,18 +1,25 @@
 """Configuration for Sonos tests."""
 
+import asyncio
+from collections.abc import Callable, Generator
 from copy import copy
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from soco import SoCo
+from soco.alarms import Alarms
+from soco.data_structures import DidlFavorite, SearchResult
+from soco.events_base import Event as SonosEvent
 
 from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.const import CONF_HOSTS
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_fixture, load_json_value_fixture
 
 
 class SonosMockEventListener:
@@ -30,6 +37,31 @@ class SonosMockSubscribe:
         """Initialize the mock subscriber."""
         self.event_listener = SonosMockEventListener(ip_address)
         self.service = Mock()
+        self.callback_future: asyncio.Future[Callable[[SonosEvent], None]] = None
+        self._callback: Callable[[SonosEvent], None] | None = None
+
+    @property
+    def callback(self) -> Callable[[SonosEvent], None] | None:
+        """Return the callback."""
+        return self._callback
+
+    @callback.setter
+    def callback(self, callback: Callable[[SonosEvent], None]) -> None:
+        """Set the callback."""
+        self._callback = callback
+        future = self._get_callback_future()
+        if not future.done():
+            future.set_result(callback)
+
+    def _get_callback_future(self) -> asyncio.Future[Callable[[SonosEvent], None]]:
+        """Get the callback future."""
+        if not self.callback_future:
+            self.callback_future = asyncio.get_running_loop().create_future()
+        return self.callback_future
+
+    async def wait_for_callback_to_be_set(self) -> Callable[[SonosEvent], None]:
+        """Wait for the callback to be set."""
+        return await self._get_callback_future()
 
     async def unsubscribe(self) -> None:
         """Unsubscribe mock."""
@@ -93,9 +125,12 @@ def async_setup_sonos(hass, config_entry, fire_zgs_event):
 
     async def _wrapper():
         config_entry.add_to_hass(hass)
+        sonos_alarms = Alarms()
+        sonos_alarms.last_alarm_list_version = "RINCON_test:0"
         assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         await fire_zgs_event()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     return _wrapper
 
@@ -170,6 +205,8 @@ class SoCoMockFactory:
         my_speaker_info["zone_name"] = name
         my_speaker_info["uid"] = mock_soco.uid
         mock_soco.get_speaker_info = Mock(return_value=my_speaker_info)
+        mock_soco.add_to_queue = Mock(return_value=10)
+        mock_soco.add_uri_to_queue = Mock(return_value=10)
 
         mock_soco.avTransport = SonosMockService("AVTransport", ip_address)
         mock_soco.renderingControl = SonosMockService("RenderingControl", ip_address)
@@ -201,6 +238,17 @@ def patch_gethostbyname(host: str) -> str:
     return host
 
 
+@pytest.fixture(name="soco_sharelink")
+def soco_sharelink():
+    """Fixture to mock soco.plugins.sharelink.ShareLinkPlugin."""
+    with patch("homeassistant.components.sonos.speaker.ShareLinkPlugin") as mock_share:
+        mock_instance = MagicMock()
+        mock_instance.is_share_link.return_value = True
+        mock_instance.add_share_link_to_queue.return_value = 10
+        mock_share.return_value = mock_instance
+        yield mock_instance
+
+
 @pytest.fixture(name="soco_factory")
 def soco_factory(
     music_library, speaker_info, current_track_info_empty, battery_info, alarm_clock
@@ -209,9 +257,11 @@ def soco_factory(
     factory = SoCoMockFactory(
         music_library, speaker_info, current_track_info_empty, battery_info, alarm_clock
     )
-    with patch("homeassistant.components.sonos.SoCo", new=factory.get_mock), patch(
-        "socket.gethostbyname", side_effect=patch_gethostbyname
-    ), patch("homeassistant.components.sonos.ZGS_SUBSCRIPTION_TIMEOUT", 0):
+    with (
+        patch("homeassistant.components.sonos.SoCo", new=factory.get_mock),
+        patch("socket.gethostbyname", side_effect=patch_gethostbyname),
+        patch("homeassistant.components.sonos.ZGS_SUBSCRIPTION_TIMEOUT", 0),
+    ):
         yield factory
 
 
@@ -222,16 +272,18 @@ def soco_fixture(soco_factory):
 
 
 @pytest.fixture(autouse=True)
-async def silent_ssdp_scanner(hass):
+def silent_ssdp_scanner() -> Generator[None]:
     """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
-    with patch(
-        "homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"
-    ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
-        "homeassistant.components.ssdp.Scanner.async_scan"
-    ), patch(
-        "homeassistant.components.ssdp.Server._async_start_upnp_servers",
-    ), patch(
-        "homeassistant.components.ssdp.Server._async_stop_upnp_servers",
+    with (
+        patch("homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"),
+        patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"),
+        patch("homeassistant.components.ssdp.Scanner.async_scan"),
+        patch(
+            "homeassistant.components.ssdp.Server._async_start_upnp_servers",
+        ),
+        patch(
+            "homeassistant.components.ssdp.Server._async_stop_upnp_servers",
+        ),
     ):
         yield
 
@@ -266,11 +318,162 @@ def config_fixture():
     return {DOMAIN: {MP_DOMAIN: {CONF_HOSTS: ["192.168.42.2"]}}}
 
 
+@pytest.fixture(name="sonos_favorites")
+def sonos_favorites_fixture() -> SearchResult:
+    """Create sonos favorites fixture."""
+    favorites = load_json_value_fixture("sonos_favorites.json", "sonos")
+    favorite_list = [DidlFavorite.from_dict(fav) for fav in favorites]
+    return SearchResult(favorite_list, "favorites", 3, 3, 1)
+
+
+class MockMusicServiceItem:
+    """Mocks a Soco MusicServiceItem."""
+
+    def __init__(
+        self,
+        title: str,
+        item_id: str,
+        parent_id: str,
+        item_class: str,
+        album_art_uri: None | str = None,
+    ) -> None:
+        """Initialize the mock item."""
+        self.title = title
+        self.item_id = item_id
+        self.item_class = item_class
+        self.parent_id = parent_id
+        self.album_art_uri: None | str = album_art_uri
+
+
+def list_from_json_fixture(file_name: str) -> list[MockMusicServiceItem]:
+    """Create a list of music service items from a json fixture file."""
+    item_list = load_json_value_fixture(file_name, "sonos")
+    return [
+        MockMusicServiceItem(
+            item.get("title"),
+            item.get("item_id"),
+            item.get("parent_id"),
+            item.get("item_class"),
+            item.get("album_art_uri"),
+        )
+        for item in item_list
+    ]
+
+
+def mock_browse_by_idstring(
+    search_type: str, idstring: str, start=0, max_items=100, full_album_art_uri=False
+) -> list[MockMusicServiceItem]:
+    """Mock the call to browse_by_id_string."""
+    if search_type == "album_artists" and idstring == "A:ALBUMARTIST/Beatles":
+        return [
+            MockMusicServiceItem(
+                "All",
+                idstring + "/",
+                idstring,
+                "object.container.playlistContainer.sameArtist",
+            ),
+            MockMusicServiceItem(
+                "A Hard Day's Night",
+                "A:ALBUMARTIST/Beatles/A%20Hard%20Day's%20Night",
+                idstring,
+                "object.container.album.musicAlbum",
+            ),
+            MockMusicServiceItem(
+                "Abbey Road",
+                "A:ALBUMARTIST/Beatles/Abbey%20Road",
+                idstring,
+                "object.container.album.musicAlbum",
+            ),
+        ]
+    # browse_by_id_string works with URL encoded or decoded strings
+    if search_type == "genres" and idstring in (
+        "A:GENRE/Classic%20Rock",
+        "A:GENRE/Classic Rock",
+    ):
+        return [
+            MockMusicServiceItem(
+                "All",
+                "A:GENRE/Classic%20Rock/",
+                "A:GENRE/Classic%20Rock",
+                "object.container.albumlist",
+            ),
+            MockMusicServiceItem(
+                "Bruce Springsteen",
+                "A:GENRE/Classic%20Rock/Bruce%20Springsteen",
+                "A:GENRE/Classic%20Rock",
+                "object.container.person.musicArtist",
+            ),
+            MockMusicServiceItem(
+                "Cream",
+                "A:GENRE/Classic%20Rock/Cream",
+                "A:GENRE/Classic%20Rock",
+                "object.container.person.musicArtist",
+            ),
+        ]
+    if search_type == "composers" and idstring in (
+        "A:COMPOSER/Carlos%20Santana",
+        "A:COMPOSER/Carlos Santana",
+    ):
+        return [
+            MockMusicServiceItem(
+                "All",
+                "A:COMPOSER/Carlos%20Santana/",
+                "A:COMPOSER/Carlos%20Santana",
+                "object.container.playlistContainer.sameArtist",
+            ),
+            MockMusicServiceItem(
+                "Between Good And Evil",
+                "A:COMPOSER/Carlos%20Santana/Between%20Good%20And%20Evil",
+                "A:COMPOSER/Carlos%20Santana",
+                "object.container.album.musicAlbum",
+            ),
+            MockMusicServiceItem(
+                "Sacred Fire",
+                "A:COMPOSER/Carlos%20Santana/Sacred%20Fire",
+                "A:COMPOSER/Carlos%20Santana",
+                "object.container.album.musicAlbum",
+            ),
+        ]
+    if search_type == "tracks":
+        return list_from_json_fixture("music_library_tracks.json")
+    if search_type == "albums" and idstring == "A:ALBUM":
+        return list_from_json_fixture("music_library_albums.json")
+    return []
+
+
+def mock_get_music_library_information(
+    search_type: str, search_term: str, full_album_art_uri: bool = True
+) -> list[MockMusicServiceItem]:
+    """Mock the call to get music library information."""
+    if search_type == "albums" and search_term == "Abbey Road":
+        return [
+            MockMusicServiceItem(
+                "Abbey Road",
+                "A:ALBUM/Abbey%20Road",
+                "A:ALBUM",
+                "object.container.album.musicAlbum",
+            )
+        ]
+    return []
+
+
+@pytest.fixture(name="music_library_browse_categories")
+def music_library_browse_categories() -> list[MockMusicServiceItem]:
+    """Create fixture for top-level music library categories."""
+    return list_from_json_fixture("music_library_categories.json")
+
+
 @pytest.fixture(name="music_library")
-def music_library_fixture():
+def music_library_fixture(
+    sonos_favorites: SearchResult,
+    music_library_browse_categories: list[MockMusicServiceItem],
+) -> Mock:
     """Create music_library fixture."""
     music_library = MagicMock()
-    music_library.get_sonos_favorites.return_value.update_id = 1
+    music_library.get_sonos_favorites.return_value = sonos_favorites
+    music_library.browse_by_idstring = Mock(side_effect=mock_browse_by_idstring)
+    music_library.get_music_library_information = mock_get_music_library_information
+    music_library.browse = Mock(return_value=music_library_browse_categories)
     return music_library
 
 
@@ -278,6 +481,7 @@ def music_library_fixture():
 def alarm_clock_fixture():
     """Create alarmClock fixture."""
     alarm_clock = SonosMockService("AlarmClock")
+    # pylint: disable-next=attribute-defined-outside-init
     alarm_clock.ListAlarms = Mock()
     alarm_clock.ListAlarms.return_value = {
         "CurrentAlarmListVersion": "RINCON_test:14",
@@ -295,6 +499,7 @@ def alarm_clock_fixture():
 def alarm_clock_fixture_extended():
     """Create alarmClock fixture."""
     alarm_clock = SonosMockService("AlarmClock")
+    # pylint: disable-next=attribute-defined-outside-init
     alarm_clock.ListAlarms = Mock()
     alarm_clock.ListAlarms.return_value = {
         "CurrentAlarmListVersion": "RINCON_test:15",
@@ -438,28 +643,45 @@ def tv_event_fixture(soco):
     return SonosMockEvent(soco, soco.avTransport, variables)
 
 
-@pytest.fixture(autouse=True)
-def mock_get_source_ip(mock_get_source_ip):
-    """Mock network util's async_get_source_ip in all sonos tests."""
-    return mock_get_source_ip
-
-
-@pytest.fixture(name="zgs_discovery", scope="session")
+@pytest.fixture(name="zgs_discovery", scope="package")
 def zgs_discovery_fixture():
     """Load ZoneGroupState discovery payload and return it."""
     return load_fixture("sonos/zgs_discovery.xml")
 
 
 @pytest.fixture(name="fire_zgs_event")
-def zgs_event_fixture(hass, soco, zgs_discovery):
+def zgs_event_fixture(hass: HomeAssistant, soco: SoCo, zgs_discovery: str):
     """Create alarm_event fixture."""
     variables = {"ZoneGroupState": zgs_discovery}
 
     async def _wrapper():
         event = SonosMockEvent(soco, soco.zoneGroupTopology, variables)
-        subscription = soco.zoneGroupTopology.subscribe.return_value
-        sub_callback = subscription.callback
+        subscription: SonosMockSubscribe = soco.zoneGroupTopology.subscribe.return_value
+        sub_callback = await subscription.wait_for_callback_to_be_set()
         sub_callback(event)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     return _wrapper
+
+
+@pytest.fixture(name="sonos_setup_two_speakers")
+async def sonos_setup_two_speakers(
+    hass: HomeAssistant, soco_factory: SoCoMockFactory
+) -> list[MockSoCo]:
+    """Set up home assistant with two Sonos Speakers."""
+    soco_lr = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
+    soco_br = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "media_player": {
+                    "interface_addr": "127.0.0.1",
+                    "hosts": ["10.10.10.1", "10.10.10.2"],
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    return [soco_lr, soco_br]

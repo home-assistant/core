@@ -106,7 +106,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_PASSWORD: config_entry.data[CONF_PASSWORD],
                     },
                 )
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 self._abort_if_unique_id_configured()
             else:
                 self._abort_if_unique_id_configured(
@@ -188,7 +188,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors[CONF_BASE] = "response_error"
             except UnsupportedDeviceError:
                 errors[CONF_BASE] = "unsupported"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 errors[CONF_BASE] = "unknown"
             else:
                 await self.async_set_unique_id(

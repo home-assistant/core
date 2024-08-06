@@ -28,9 +28,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
+from . import _generate_mock_feed_entry
+from .conftest import URL
+
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.geo_json_events import _generate_mock_feed_entry
-from tests.components.geo_json_events.conftest import URL
 
 CONFIG_LEGACY = {
     GEO_LOCATION_DOMAIN: [
@@ -66,9 +67,10 @@ async def test_entity_lifecycle(
     mock_entry_4 = _generate_mock_feed_entry("4567", "Title 4", 12.5, (-31.3, 150.3))
 
     utcnow = dt_util.utcnow()
-    with freeze_time(utcnow), patch(
-        "aio_geojson_client.feed.GeoJsonFeed.update"
-    ) as mock_feed_update:
+    with (
+        freeze_time(utcnow),
+        patch("aio_geojson_client.feed.GeoJsonFeed.update") as mock_feed_update,
+    ):
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_2, mock_entry_3]
 
         # Load config entry.

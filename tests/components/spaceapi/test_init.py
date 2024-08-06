@@ -3,12 +3,15 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components.spaceapi import DOMAIN, SPACEAPI_VERSION, URL_API_SPACEAPI
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from tests.typing import ClientSessionGenerator
 
 CONFIG = {
     DOMAIN: {
@@ -80,7 +83,7 @@ SENSOR_OUTPUT = {
 
 
 @pytest.fixture
-def mock_client(hass, hass_client):
+def mock_client(hass: HomeAssistant, hass_client: ClientSessionGenerator) -> TestClient:
     """Start the Home Assistant HTTP component."""
     with patch("homeassistant.components.spaceapi", return_value=True):
         hass.loop.run_until_complete(async_setup_component(hass, "spaceapi", CONFIG))

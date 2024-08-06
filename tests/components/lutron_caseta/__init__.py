@@ -9,6 +9,7 @@ from homeassistant.components.lutron_caseta.const import (
     CONF_KEYFILE,
 )
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -83,7 +84,7 @@ _LEAP_DEVICE_TYPES = {
 }
 
 
-async def async_setup_integration(hass, mock_bridge) -> MockConfigEntry:
+async def async_setup_integration(hass: HomeAssistant, mock_bridge) -> MockConfigEntry:
     """Set up a mock bridge."""
     mock_entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_MOCK_DATA)
     mock_entry.add_to_hass(hass)

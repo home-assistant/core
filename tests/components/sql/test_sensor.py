@@ -153,9 +153,12 @@ async def test_query_mssql_no_result(
         "column": "value",
         "name": "count_tables",
     }
-    with patch("homeassistant.components.sql.sensor.sqlalchemy"), patch(
-        "homeassistant.components.sql.sensor.sqlalchemy.text",
-        return_value=sql_text("SELECT TOP 1 5 as value where 1=2"),
+    with (
+        patch("homeassistant.components.sql.sensor.sqlalchemy"),
+        patch(
+            "homeassistant.components.sql.sensor.sqlalchemy.text",
+            return_value=sql_text("SELECT TOP 1 5 as value where 1=2"),
+        ),
     ):
         await init_integration(hass, config)
 
@@ -421,7 +424,10 @@ async def test_binary_data_from_yaml_setup(
 
 
 async def test_issue_when_using_old_query(
-    recorder_mock: Recorder, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we create an issue for an old query that will do a full table scan."""
 
@@ -430,7 +436,6 @@ async def test_issue_when_using_old_query(
     assert "Query contains entity_id but does not reference states_meta" in caplog.text
 
     assert not hass.states.async_all()
-    issue_registry = ir.async_get(hass)
 
     config = YAML_CONFIG_FULL_TABLE_SCAN["sql"]
 
@@ -454,6 +459,7 @@ async def test_issue_when_using_old_query_without_unique_id(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     yaml_config: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we create an issue for an old query that will do a full table scan."""
 
@@ -462,7 +468,6 @@ async def test_issue_when_using_old_query_without_unique_id(
     assert "Query contains entity_id but does not reference states_meta" in caplog.text
 
     assert not hass.states.async_all()
-    issue_registry = ir.async_get(hass)
 
     config = yaml_config["sql"]
     query = config[CONF_QUERY]

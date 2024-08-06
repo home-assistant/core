@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import Mock
 
+import pytest
 from requests.exceptions import HTTPError
 
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
@@ -29,6 +30,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
@@ -130,6 +132,7 @@ async def test_turn_on(hass: HomeAssistant, fritz: Mock) -> None:
 async def test_turn_off(hass: HomeAssistant, fritz: Mock) -> None:
     """Test turn device off."""
     device = FritzDeviceSwitchMock()
+
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
@@ -137,7 +140,34 @@ async def test_turn_off(hass: HomeAssistant, fritz: Mock) -> None:
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
+
     assert device.set_switch_state_off.call_count == 1
+
+
+async def test_toggle_while_locked(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test toggling while device is locked."""
+    device = FritzDeviceSwitchMock()
+    device.lock = True
+
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Can't toggle switch while manual switching is disabled for the device",
+    ):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Can't toggle switch while manual switching is disabled for the device",
+    ):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
 
 
 async def test_update(hass: HomeAssistant, fritz: Mock) -> None:
@@ -151,7 +181,7 @@ async def test_update(hass: HomeAssistant, fritz: Mock) -> None:
 
     next_update = dt_util.utcnow() + timedelta(seconds=200)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert fritz().update_devices.call_count == 2
     assert fritz().login.call_count == 1
@@ -169,7 +199,7 @@ async def test_update_error(hass: HomeAssistant, fritz: Mock) -> None:
 
     next_update = dt_util.utcnow() + timedelta(seconds=200)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert fritz().update_devices.call_count == 4
     assert fritz().login.call_count == 4
@@ -207,7 +237,7 @@ async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
 
     next_update = dt_util.utcnow() + timedelta(seconds=200)
     async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(f"{DOMAIN}.new_switch")
     assert state

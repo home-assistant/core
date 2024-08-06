@@ -1,4 +1,18 @@
 {
+  "entity": {
+    "fan": {
+      "generic_fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "nature": "mdi:leaf",
+              "normal": "mdi:weather-windy"
+            }
+          }
+        }
+      }
+    }
+  },
   "services": {
     "fan_reset_filter": "mdi:refresh",
     "fan_set_extra_features": "mdi:cog",
@@ -17,7 +31,7 @@
     "switch_set_wifi_led_off": "mdi:wifi-off",
     "switch_set_power_price": "mdi:currency-usd",
     "switch_set_power_mode": "mdi:power",
-    "vacuum_remote_control_start": "mdi:start",
+    "vacuum_remote_control_start": "mdi:play",
     "vacuum_remote_control_stop": "mdi:stop",
     "vacuum_remote_control_move": "mdi:remote",
     "vacuum_remote_control_move_step": "mdi:remote",

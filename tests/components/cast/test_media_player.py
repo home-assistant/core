@@ -137,8 +137,8 @@ async def async_setup_cast_internal_discovery(hass, config=None):
         return_value=browser,
     ) as cast_browser:
         add_entities = await async_setup_cast(hass, config)
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert browser.start_discovery.call_count == 1
 
@@ -191,22 +191,26 @@ async def async_setup_media_player_cast(hass: HomeAssistant, info: ChromecastInf
     chromecast = get_fake_chromecast(info)
     zconf = get_fake_zconf(host=info.cast_info.host, port=info.cast_info.port)
 
-    with patch(
-        "homeassistant.components.cast.discovery.pychromecast.get_chromecast_from_cast_info",
-        return_value=chromecast,
-    ) as get_chromecast, patch(
-        "homeassistant.components.cast.discovery.pychromecast.discovery.CastBrowser",
-        return_value=browser,
-    ) as cast_browser, patch(
-        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
-        return_value=zconf,
+    with (
+        patch(
+            "homeassistant.components.cast.discovery.pychromecast.get_chromecast_from_cast_info",
+            return_value=chromecast,
+        ) as get_chromecast,
+        patch(
+            "homeassistant.components.cast.discovery.pychromecast.discovery.CastBrowser",
+            return_value=browser,
+        ) as cast_browser,
+        patch(
+            "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+            return_value=zconf,
+        ),
     ):
         data = {"ignore_cec": [], "known_hosts": [], "uuid": [str(info.uuid)]}
         entry = MockConfigEntry(data=data, domain="cast")
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         discovery_callback = cast_browser.call_args[0][0].add_cast
 
@@ -267,9 +271,11 @@ async def test_start_discovery_called_once(
 ) -> None:
     """Test pychromecast.start_discovery called exactly once."""
     await async_setup_cast(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert castbrowser_mock.return_value.start_discovery.call_count == 1
 
     await async_setup_cast(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert castbrowser_mock.return_value.start_discovery.call_count == 1
 
 
@@ -449,11 +455,13 @@ async def test_stop_discovery_called_on_stop(
     """Test pychromecast.stop_discovery called on shutdown."""
     # start_discovery should be called with empty config
     await async_setup_cast(hass, {})
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert castbrowser_mock.return_value.start_discovery.call_count == 1
 
     # stop discovery should be called on shutdown
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert castbrowser_mock.return_value.stop_discovery.call_count == 1
 
 
@@ -580,13 +588,16 @@ async def test_discover_dynamic_group(
         tasks.append(real_create_task(coroutine))
 
     # Discover cast service
-    with patch(
-        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
-        return_value=zconf_1,
-    ), patch.object(
-        hass,
-        "async_create_background_task",
-        wraps=create_task,
+    with (
+        patch(
+            "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+            return_value=zconf_1,
+        ),
+        patch.object(
+            hass,
+            "async_create_background_task",
+            wraps=create_task,
+        ),
     ):
         discover_cast(
             pychromecast.discovery.MDNSServiceInfo("service"),
@@ -606,13 +617,16 @@ async def test_discover_dynamic_group(
     )
 
     # Discover other dynamic group cast service
-    with patch(
-        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
-        return_value=zconf_2,
-    ), patch.object(
-        hass,
-        "async_create_background_task",
-        wraps=create_task,
+    with (
+        patch(
+            "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+            return_value=zconf_2,
+        ),
+        patch.object(
+            hass,
+            "async_create_background_task",
+            wraps=create_task,
+        ),
     ):
         discover_cast(
             pychromecast.discovery.MDNSServiceInfo("service"),
@@ -632,13 +646,16 @@ async def test_discover_dynamic_group(
     )
 
     # Get update for cast service
-    with patch(
-        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
-        return_value=zconf_1,
-    ), patch.object(
-        hass,
-        "async_create_background_task",
-        wraps=create_task,
+    with (
+        patch(
+            "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
+            return_value=zconf_1,
+        ),
+        patch.object(
+            hass,
+            "async_create_background_task",
+            wraps=create_task,
+        ),
     ):
         discover_cast(
             pychromecast.discovery.MDNSServiceInfo("service"),
@@ -796,15 +813,7 @@ async def test_device_registry(
     chromecast.disconnect.assert_not_called()
 
     client = await hass_ws_client(hass)
-    await client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": cast_entry.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await client.receive_json()
+    response = await client.remove_device(device_entry.id, cast_entry.entry_id)
     assert response["success"]
 
     await hass.async_block_till_done()

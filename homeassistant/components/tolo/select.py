@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from tololib import AromaTherapySlot, LampMode, ToloClient, ToloSettings
+from tololib import ToloClient, ToloSettings
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ToloSaunaCoordinatorEntity, ToloSaunaUpdateCoordinator
-from .const import DOMAIN
+from .const import DOMAIN, AromaTherapySlot, LampMode
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -32,7 +32,9 @@ SELECTS = (
         translation_key="lamp_mode",
         options=[lamp_mode.name.lower() for lamp_mode in LampMode],
         getter=lambda settings: settings.lamp_mode.name.lower(),
-        setter=lambda client, option: client.set_lamp_mode(LampMode[option.upper()]),
+        setter=lambda client, option: client.set_lamp_mode(
+            LampMode[option.upper()].value
+        ),
     ),
     ToloSelectEntityDescription(
         key="aroma_therapy_slot",
@@ -42,7 +44,7 @@ SELECTS = (
         ],
         getter=lambda settings: settings.aroma_therapy_slot.name.lower(),
         setter=lambda client, option: client.set_aroma_therapy_slot(
-            AromaTherapySlot[option.upper()]
+            AromaTherapySlot[option.upper()].value
         ),
     ),
 )

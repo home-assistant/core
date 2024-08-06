@@ -6,9 +6,10 @@ import copy
 from typing import TYPE_CHECKING, Any
 
 from attr import asdict
+from pyenphase.envoy import Envoy
+from pyenphase.exceptions import EnvoyError
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -21,8 +22,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util.json import json_loads
 
-from .const import DOMAIN
-from .coordinator import EnphaseUpdateCoordinator
+from .const import OPTION_DIAGNOSTICS_INCLUDE_FIXTURES
+from .coordinator import EnphaseConfigEntry
 
 CONF_TITLE = "title"
 CLEAN_TEXT = "<<envoyserial>>"
@@ -38,11 +39,51 @@ TO_REDACT = {
 }
 
 
+async def _get_fixture_collection(envoy: Envoy, serial: str) -> dict[str, Any]:
+    """Collect Envoy endpoints to use for test fixture set."""
+    fixture_data: dict[str, Any] = {}
+    end_points = [
+        "/info",
+        "/api/v1/production",
+        "/api/v1/production/inverters",
+        "/production.json",
+        "/production.json?details=1",
+        "/production",
+        "/ivp/ensemble/power",
+        "/ivp/ensemble/inventory",
+        "/ivp/ensemble/dry_contacts",
+        "/ivp/ensemble/status",
+        "/ivp/ensemble/secctrl",
+        "/ivp/ss/dry_contact_settings",
+        "/admin/lib/tariff",
+        "/ivp/ss/gen_config",
+        "/ivp/ss/gen_schedule",
+        "/ivp/sc/pvlimit",
+        "/ivp/ss/pel_settings",
+        "/ivp/ensemble/generator",
+        "/ivp/meters",
+        "/ivp/meters/readings",
+    ]
+
+    for end_point in end_points:
+        response = await envoy.request(end_point)
+        fixture_data[end_point] = response.text.replace("\n", "").replace(
+            serial, CLEAN_TEXT
+        )
+        fixture_data[f"{end_point}_log"] = json_dumps(
+            {
+                "headers": dict(response.headers.items()),
+                "code": response.status_code,
+            }
+        )
+    return fixture_data
+
+
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: EnphaseConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: EnphaseUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     if TYPE_CHECKING:
         assert coordinator.envoy.data
@@ -89,8 +130,10 @@ async def async_get_config_entry_diagnostics(
         "system_production_phases": envoy_data.system_production_phases,
         "ctmeter_production": envoy_data.ctmeter_production,
         "ctmeter_consumption": envoy_data.ctmeter_consumption,
+        "ctmeter_storage": envoy_data.ctmeter_storage,
         "ctmeter_production_phases": envoy_data.ctmeter_production_phases,
         "ctmeter_consumption_phases": envoy_data.ctmeter_consumption_phases,
+        "ctmeter_storage_phases": envoy_data.ctmeter_storage_phases,
         "dry_contact_status": envoy_data.dry_contact_status,
         "dry_contact_settings": envoy_data.dry_contact_settings,
         "inverters": envoy_data.inverters,
@@ -108,7 +151,15 @@ async def async_get_config_entry_diagnostics(
         "ct_count": envoy.ct_meter_count,
         "ct_consumption_meter": envoy.consumption_meter_type,
         "ct_production_meter": envoy.production_meter_type,
+        "ct_storage_meter": envoy.storage_meter_type,
     }
+
+    fixture_data: dict[str, Any] = {}
+    if entry.options.get(OPTION_DIAGNOSTICS_INCLUDE_FIXTURES, False):
+        try:
+            fixture_data = await _get_fixture_collection(envoy=envoy, serial=old_serial)
+        except EnvoyError as err:
+            fixture_data["Error"] = repr(err)
 
     diagnostic_data: dict[str, Any] = {
         "config_entry": async_redact_data(entry.as_dict(), TO_REDACT),
@@ -116,6 +167,7 @@ async def async_get_config_entry_diagnostics(
         "raw_data": json_loads(coordinator_data_cleaned),
         "envoy_model_data": envoy_model,
         "envoy_entities_by_device": json_loads(device_entities_cleaned),
+        "fixtures": fixture_data,
     }
 
     return diagnostic_data

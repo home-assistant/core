@@ -57,9 +57,12 @@ async def test_process_play_media_url(hass: HomeAssistant, mock_sign_path) -> No
         async_process_play_media_url(hass, "http://192.168.123.123:8123/path")
         == "http://192.168.123.123:8123/path?authSig=bla"
     )
-    with pytest.raises(HomeAssistantError), patch(
-        "homeassistant.components.media_player.browse_media.get_url",
-        side_effect=NoURLAvailableError,
+    with (
+        pytest.raises(HomeAssistantError),
+        patch(
+            "homeassistant.components.media_player.browse_media.get_url",
+            side_effect=NoURLAvailableError,
+        ),
     ):
         async_process_play_media_url(hass, "/path")
 

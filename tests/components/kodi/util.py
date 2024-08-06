@@ -57,8 +57,7 @@ def get_kodi_connection(
     """Get Kodi connection."""
     if ws_port is None:
         return MockConnection()
-    else:
-        return MockWSConnection()
+    return MockWSConnection()
 
 
 class MockConnection:

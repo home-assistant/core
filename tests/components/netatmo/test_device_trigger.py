@@ -3,7 +3,7 @@
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.netatmo import DOMAIN as NETATMO_DOMAIN
 from homeassistant.components.netatmo.const import (
@@ -14,7 +14,7 @@ from homeassistant.components.netatmo.const import (
 )
 from homeassistant.components.netatmo.device_trigger import SUBTYPES
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -22,14 +22,7 @@ from tests.common import (
     MockConfigEntry,
     async_capture_events,
     async_get_device_automations,
-    async_mock_service,
 )
-
-
-@pytest.fixture
-def calls(hass):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 @pytest.mark.parametrize(
@@ -113,7 +106,7 @@ async def test_get_triggers(
 )
 async def test_if_fires_on_event(
     hass: HomeAssistant,
-    calls,
+    service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     platform,
@@ -175,8 +168,8 @@ async def test_if_fires_on_event(
     )
     await hass.async_block_till_done()
     assert len(events) == 1
-    assert len(calls) == 1
-    assert calls[0].data["some"] == f"{event_type} - device - {device.id}"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == f"{event_type} - device - {device.id}"
 
 
 @pytest.mark.parametrize(
@@ -196,7 +189,7 @@ async def test_if_fires_on_event(
 )
 async def test_if_fires_on_event_legacy(
     hass: HomeAssistant,
-    calls,
+    service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     platform,
@@ -258,26 +251,24 @@ async def test_if_fires_on_event_legacy(
     )
     await hass.async_block_till_done()
     assert len(events) == 1
-    assert len(calls) == 1
-    assert calls[0].data["some"] == f"{event_type} - device - {device.id}"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == f"{event_type} - device - {device.id}"
 
 
 @pytest.mark.parametrize(
     ("platform", "camera_type", "event_type", "sub_type"),
     [
         ("climate", "Smart Valve", trigger, subtype)
-        for trigger in SUBTYPES
-        for subtype in SUBTYPES[trigger]
+        for trigger, subtype in SUBTYPES.items()
     ]
     + [
         ("climate", "Smart Thermostat", trigger, subtype)
-        for trigger in SUBTYPES
-        for subtype in SUBTYPES[trigger]
+        for trigger, subtype in SUBTYPES.items()
     ],
 )
 async def test_if_fires_on_event_with_subtype(
     hass: HomeAssistant,
-    calls,
+    service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     platform,
@@ -345,8 +336,11 @@ async def test_if_fires_on_event_with_subtype(
     )
     await hass.async_block_till_done()
     assert len(events) == 1
-    assert len(calls) == 1
-    assert calls[0].data["some"] == f"{event_type} - {sub_type} - device - {device.id}"
+    assert len(service_calls) == 1
+    assert (
+        service_calls[0].data["some"]
+        == f"{event_type} - {sub_type} - device - {device.id}"
+    )
 
 
 @pytest.mark.parametrize(

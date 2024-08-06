@@ -30,28 +30,37 @@ async def _mock_backup_generation(manager: BackupManager):
             Path(".storage"),
         ]
 
-    with patch(
-        "homeassistant.components.backup.manager.SecureTarFile"
-    ) as mocked_tarfile, patch("pathlib.Path.iterdir", _mock_iterdir), patch(
-        "pathlib.Path.stat", MagicMock(st_size=123)
-    ), patch("pathlib.Path.is_file", lambda x: x.name != ".storage"), patch(
-        "pathlib.Path.is_dir",
-        lambda x: x.name == ".storage",
-    ), patch(
-        "pathlib.Path.exists",
-        lambda x: x != manager.backup_dir,
-    ), patch(
-        "pathlib.Path.is_symlink",
-        lambda _: False,
-    ), patch(
-        "pathlib.Path.mkdir",
-        MagicMock(),
-    ), patch(
-        "homeassistant.components.backup.manager.json_bytes",
-        return_value=b"{}",  # Empty JSON
-    ) as mocked_json_bytes, patch(
-        "homeassistant.components.backup.manager.HAVERSION",
-        "2025.1.0",
+    with (
+        patch(
+            "homeassistant.components.backup.manager.SecureTarFile"
+        ) as mocked_tarfile,
+        patch("pathlib.Path.iterdir", _mock_iterdir),
+        patch("pathlib.Path.stat", MagicMock(st_size=123)),
+        patch("pathlib.Path.is_file", lambda x: x.name != ".storage"),
+        patch(
+            "pathlib.Path.is_dir",
+            lambda x: x.name == ".storage",
+        ),
+        patch(
+            "pathlib.Path.exists",
+            lambda x: x != manager.backup_dir,
+        ),
+        patch(
+            "pathlib.Path.is_symlink",
+            lambda _: False,
+        ),
+        patch(
+            "pathlib.Path.mkdir",
+            MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.backup.manager.json_bytes",
+            return_value=b"{}",  # Empty JSON
+        ) as mocked_json_bytes,
+        patch(
+            "homeassistant.components.backup.manager.HAVERSION",
+            "2025.1.0",
+        ),
     ):
         await manager.generate_backup()
 
@@ -82,18 +91,21 @@ async def test_constructor(hass: HomeAssistant) -> None:
 async def test_load_backups(hass: HomeAssistant) -> None:
     """Test loading backups."""
     manager = BackupManager(hass)
-    with patch("pathlib.Path.glob", return_value=[TEST_BACKUP.path]), patch(
-        "tarfile.open", return_value=MagicMock()
-    ), patch(
-        "homeassistant.components.backup.manager.json_loads_object",
-        return_value={
-            "slug": TEST_BACKUP.slug,
-            "name": TEST_BACKUP.name,
-            "date": TEST_BACKUP.date,
-        },
-    ), patch(
-        "pathlib.Path.stat",
-        return_value=MagicMock(st_size=TEST_BACKUP.size),
+    with (
+        patch("pathlib.Path.glob", return_value=[TEST_BACKUP.path]),
+        patch("tarfile.open", return_value=MagicMock()),
+        patch(
+            "homeassistant.components.backup.manager.json_loads_object",
+            return_value={
+                "slug": TEST_BACKUP.slug,
+                "name": TEST_BACKUP.name,
+                "date": TEST_BACKUP.date,
+            },
+        ),
+        patch(
+            "pathlib.Path.stat",
+            return_value=MagicMock(st_size=TEST_BACKUP.size),
+        ),
     ):
         await manager.load_backups()
     backups = await manager.get_backups()
@@ -106,12 +118,13 @@ async def test_load_backups_with_exception(
 ) -> None:
     """Test loading backups with exception."""
     manager = BackupManager(hass)
-    with patch("pathlib.Path.glob", return_value=[TEST_BACKUP.path]), patch(
-        "tarfile.open", side_effect=OSError("Test ecxeption")
+    with (
+        patch("pathlib.Path.glob", return_value=[TEST_BACKUP.path]),
+        patch("tarfile.open", side_effect=OSError("Test exception")),
     ):
         await manager.load_backups()
     backups = await manager.get_backups()
-    assert f"Unable to read backup {TEST_BACKUP.path}: Test ecxeption" in caplog.text
+    assert f"Unable to read backup {TEST_BACKUP.path}: Test exception" in caplog.text
     assert backups == {}
 
 

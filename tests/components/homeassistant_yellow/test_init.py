@@ -33,14 +33,18 @@ async def test_setup_entry(
         title="Home Assistant Yellow",
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.homeassistant_yellow.get_os_info",
-        return_value={"board": "yellow"},
-    ) as mock_get_os_info, patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=onboarded
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": "yellow"},
+        ) as mock_get_os_info,
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded",
+            return_value=onboarded,
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(mock_get_os_info.mock_calls) == 1
 
@@ -76,14 +80,17 @@ async def test_setup_zha(hass: HomeAssistant, addon_store_info) -> None:
         title="Home Assistant Yellow",
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.homeassistant_yellow.get_os_info",
-        return_value={"board": "yellow"},
-    ) as mock_get_os_info, patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": "yellow"},
+        ) as mock_get_os_info,
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert len(mock_get_os_info.mock_calls) == 1
 
     # Finish setting up ZHA
@@ -127,14 +134,17 @@ async def test_setup_zha_multipan(
         title="Home Assistant Yellow",
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.homeassistant_yellow.get_os_info",
-        return_value={"board": "yellow"},
-    ) as mock_get_os_info, patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": "yellow"},
+        ) as mock_get_os_info,
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert len(mock_get_os_info.mock_calls) == 1
 
     # Finish setting up ZHA
@@ -178,14 +188,17 @@ async def test_setup_zha_multipan_other_device(
         title="Home Assistant Yellow",
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.homeassistant_yellow.get_os_info",
-        return_value={"board": "yellow"},
-    ) as mock_get_os_info, patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": "yellow"},
+        ) as mock_get_os_info,
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert len(mock_get_os_info.mock_calls) == 1
 
     # Finish setting up ZHA
@@ -281,7 +294,7 @@ async def test_setup_entry_wait_hassio(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert len(mock_get_os_info.mock_calls) == 1
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_entry_addon_info_fails(
@@ -300,16 +313,19 @@ async def test_setup_entry_addon_info_fails(
         title="Home Assistant Yellow",
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.homeassistant_yellow.get_os_info",
-        return_value={"board": "yellow"},
-    ), patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": "yellow"},
+        ),
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        ),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
 
     await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_entry_addon_not_running(
@@ -327,14 +343,17 @@ async def test_setup_entry_addon_not_running(
         title="Home Assistant Yellow",
     )
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.homeassistant_yellow.get_os_info",
-        return_value={"board": "yellow"},
-    ), patch(
-        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": "yellow"},
+        ),
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+        ),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
     start_addon.assert_called_once()

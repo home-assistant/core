@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 import logging
 from types import MappingProxyType
-from typing import Any, Concatenate, Final, ParamSpec, TypeVar
+from typing import Any, Concatenate, Final
 
 from pybravia import (
     BraviaAuthError,
@@ -35,14 +35,12 @@ from .const import (
     SourceType,
 )
 
-_BraviaTVCoordinatorT = TypeVar("_BraviaTVCoordinatorT", bound="BraviaTVCoordinator")
-_P = ParamSpec("_P")
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL: Final = timedelta(seconds=10)
 
 
-def catch_braviatv_errors(
+def catch_braviatv_errors[_BraviaTVCoordinatorT: BraviaTVCoordinator, **_P](
     func: Callable[Concatenate[_BraviaTVCoordinatorT, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_BraviaTVCoordinatorT, _P], Coroutine[Any, Any, None]]:
     """Catch Bravia errors."""

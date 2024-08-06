@@ -68,7 +68,7 @@ async def test_rest_command_timeout(
 
     with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(DOMAIN, "get_test", {}, blocking=True)
-    assert str(exc.value) == "Timeout when calling resource 'https://example.com/'"
+    assert str(exc.value) == 'Timeout when calling resource "https://example.com/"'
 
     assert len(aioclient_mock.mock_calls) == 1
 
@@ -88,7 +88,7 @@ async def test_rest_command_aiohttp_error(
 
     assert (
         str(exc.value)
-        == "Client error occurred when calling resource 'https://example.com/'"
+        == 'Client error occurred when calling resource "https://example.com/"'
     )
     assert len(aioclient_mock.mock_calls) == 1
 
@@ -154,7 +154,7 @@ async def test_rest_command_methods(
     setup_component: ComponentSetup,
     aioclient_mock: AiohttpClientMocker,
     method: str,
-):
+) -> None:
     """Test various http methods."""
     await setup_component()
 
@@ -215,7 +215,7 @@ async def test_rest_command_headers(
     # provide post request data
     aioclient_mock.post(TEST_URL, content=b"success")
 
-    for test_service in [
+    for test_service in (
         "no_headers_test",
         "content_type_test",
         "headers_test",
@@ -223,7 +223,7 @@ async def test_rest_command_headers(
         "headers_and_content_type_override_test",
         "headers_template_test",
         "headers_and_content_type_override_template_test",
-    ]:
+    ):
         await hass.services.async_call(DOMAIN, test_service, {}, blocking=True)
 
     await hass.async_block_till_done()
@@ -341,7 +341,7 @@ async def test_rest_command_get_response_malformed_json(
         )
     assert (
         str(exc.value)
-        == "The response of 'https://example.com/' could not be decoded as JSON"
+        == 'The response of "https://example.com/" could not be decoded as JSON'
     )
 
 
@@ -375,7 +375,7 @@ async def test_rest_command_get_response_none(
         )
     assert (
         str(exc.value)
-        == "The response of 'https://example.com/' could not be decoded as text"
+        == 'The response of "https://example.com/" could not be decoded as text'
     )
 
     assert not response

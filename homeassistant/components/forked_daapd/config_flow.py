@@ -96,9 +96,9 @@ def fill_in_schema_dict(some_input):
     schema_dict = {}
     for field, _type in DATA_SCHEMA_DICT.items():
         if some_input.get(str(field)):
-            schema_dict[
-                vol.Optional(str(field), default=some_input[str(field)])
-            ] = _type
+            schema_dict[vol.Optional(str(field), default=some_input[str(field)])] = (
+                _type
+            )
         else:
             schema_dict[field] = _type
     return schema_dict
@@ -111,7 +111,7 @@ class ForkedDaapdFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize."""
-        self.discovery_schema = None
+        self.discovery_schema: vol.Schema | None = None
 
     @staticmethod
     @callback

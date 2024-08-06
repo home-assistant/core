@@ -3,13 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Hashable
-from typing import Any, TypeVar
-
-_KT = TypeVar("_KT", bound=Hashable)
-_VT = TypeVar("_VT", bound=Callable[..., Any])
+from typing import Any
 
 
-class Registry(dict[_KT, _VT]):
+class Registry[_KT: Hashable, _VT: Callable[..., Any]](dict[_KT, _VT]):
     """Registry of items."""
 
     def register(self, name: _KT) -> Callable[[_VT], _VT]:

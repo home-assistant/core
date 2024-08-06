@@ -53,7 +53,7 @@ class ChargepointEntity(BlueCurrentEntity):
 
     def __init__(self, connector: Connector, evse_id: str) -> None:
         """Initialize the entity."""
-        super().__init__(connector, f"{DOMAIN}_value_update_{evse_id}")
+        super().__init__(connector, f"{DOMAIN}_charge_point_update_{evse_id}")
 
         chargepoint_name = connector.charge_points[evse_id][ATTR_NAME]
 

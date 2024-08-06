@@ -53,13 +53,13 @@ MEDIA_SET_REPEAT_MAP: Final[dict[RepeatMode, int]] = {
     RepeatMode.ALL: 2,
 }
 
-MEDIA_PLAYER_DESCRIPTION: Final[
-    MediaPlayerEntityDescription
-] = MediaPlayerEntityDescription(
-    key="media",
-    translation_key="media",
-    icon="mdi:volume-high",
-    device_class=MediaPlayerDeviceClass.RECEIVER,
+MEDIA_PLAYER_DESCRIPTION: Final[MediaPlayerEntityDescription] = (
+    MediaPlayerEntityDescription(
+        key="media",
+        translation_key="media",
+        icon="mdi:volume-high",
+        device_class=MediaPlayerDeviceClass.RECEIVER,
+    )
 )
 
 

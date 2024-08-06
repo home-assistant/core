@@ -1,36 +1,27 @@
 """Support for Axis switches."""
 
-from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from functools import partial
 from typing import Any
 
-from axis.models.event import Event, EventOperation, EventTopic
+from axis.models.event import Event, EventTopic
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import AxisEventEntity
+from . import AxisConfigEntry
+from .entity import AxisEventDescription, AxisEventEntity
 from .hub import AxisHub
 
 
 @dataclass(frozen=True, kw_only=True)
-class AxisSwitchDescription(SwitchEntityDescription):
+class AxisSwitchDescription(AxisEventDescription, SwitchEntityDescription):
     """Axis switch entity description."""
-
-    event_topic: EventTopic
-    """Event topic that provides state updates."""
-    name_fn: Callable[[AxisHub, Event], str]
-    """Function providing the corresponding name to the event ID."""
-    supported_fn: Callable[[AxisHub, Event], bool]
-    """Function validating if event is supported."""
 
 
 ENTITY_DESCRIPTIONS = (
@@ -47,42 +38,26 @@ ENTITY_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AxisConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Axis switch platform."""
-    hub = AxisHub.get_hub(hass, config_entry)
-
-    @callback
-    def register_platform(descriptions: Iterable[AxisSwitchDescription]) -> None:
-        """Register entity platform to create entities on event initialized signal."""
-
-        @callback
-        def create_entity(description: AxisSwitchDescription, event: Event) -> None:
-            """Create Axis entity."""
-            if description.supported_fn(hub, event):
-                async_add_entities([AxisSwitch(hub, description, event)])
-
-        for description in descriptions:
-            hub.api.event.subscribe(
-                partial(create_entity, description),
-                topic_filter=description.event_topic,
-                operation_filter=EventOperation.INITIALIZED,
-            )
-
-    register_platform(ENTITY_DESCRIPTIONS)
+    config_entry.runtime_data.entity_loader.register_platform(
+        async_add_entities, AxisSwitch, ENTITY_DESCRIPTIONS
+    )
 
 
 class AxisSwitch(AxisEventEntity, SwitchEntity):
     """Representation of a Axis switch."""
 
+    entity_description: AxisSwitchDescription
+
     def __init__(
         self, hub: AxisHub, description: AxisSwitchDescription, event: Event
     ) -> None:
         """Initialize the Axis switch."""
-        super().__init__(event, hub)
-        self.entity_description = description
-        self._attr_name = description.name_fn(hub, event) or self._attr_name
+        super().__init__(hub, description, event)
+
         self._attr_is_on = event.is_tripped
 
     @callback

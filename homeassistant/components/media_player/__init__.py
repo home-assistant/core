@@ -9,14 +9,15 @@ from contextlib import suppress
 import datetime as dt
 from enum import StrEnum
 import functools as ft
-from functools import lru_cache
+from functools import cached_property, lru_cache
 import hashlib
 from http import HTTPStatus
 import logging
 import secrets
-from typing import TYPE_CHECKING, Any, Final, Required, TypedDict, final
+from typing import Any, Final, Required, TypedDict, final
 from urllib.parse import quote, urlparse
 
+import aiohttp
 from aiohttp import web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
@@ -51,19 +52,14 @@ from homeassistant.const import (  # noqa: F401
     STATE_STANDBY,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from . import group as group_pre_import  # noqa: F401
 from .browse_media import BrowseMedia, async_process_play_media_url  # noqa: F401
 from .const import (  # noqa: F401
     ATTR_APP_ID,
@@ -134,22 +130,18 @@ from .const import (  # noqa: F401
 )
 from .errors import BrowseError
 
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
 _LOGGER = logging.getLogger(__name__)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = dt.timedelta(seconds=10)
 
 CACHE_IMAGES: Final = "images"
 CACHE_MAXSIZE: Final = "maxsize"
 CACHE_LOCK: Final = "lock"
 CACHE_URL: Final = "url"
 CACHE_CONTENT: Final = "content"
-
-SCAN_INTERVAL = dt.timedelta(seconds=10)
 
 
 class MediaPlayerEnqueue(StrEnum):
@@ -1341,6 +1333,9 @@ async def websocket_browse_media(
     connection.send_result(msg["id"], result)
 
 
+_FETCH_TIMEOUT = aiohttp.ClientTimeout(total=10)
+
+
 async def async_fetch_image(
     logger: logging.Logger, hass: HomeAssistant, url: str
 ) -> tuple[bytes | None, str | None]:
@@ -1348,12 +1343,11 @@ async def async_fetch_image(
     content, content_type = (None, None)
     websession = async_get_clientsession(hass)
     with suppress(TimeoutError):
-        async with asyncio.timeout(10):
-            response = await websession.get(url)
-            if response.status == HTTPStatus.OK:
-                content = await response.read()
-                if content_type := response.headers.get(CONTENT_TYPE):
-                    content_type = content_type.split(";")[0]
+        response = await websession.get(url, timeout=_FETCH_TIMEOUT)
+        if response.status == HTTPStatus.OK:
+            content = await response.read()
+            if content_type := response.headers.get(CONTENT_TYPE):
+                content_type = content_type.split(";")[0]
 
     if content is None:
         url_parts = URL(url)

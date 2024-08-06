@@ -54,7 +54,7 @@ async def velbus_connect_task(
 
 
 def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:
-    """Migrate old device indentifiers."""
+    """Migrate old device identifiers."""
     dev_reg = dr.async_get(hass)
     devices: list[dr.DeviceEntry] = dr.async_entries_for_config_entry(dev_reg, entry_id)
     for device in devices:
@@ -89,9 +89,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return True
 
     def check_entry_id(interface: str) -> str:
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            if "port" in entry.data and entry.data["port"] == interface:
-                return entry.entry_id
+        for config_entry in hass.config_entries.async_entries(DOMAIN):
+            if "port" in config_entry.data and config_entry.data["port"] == interface:
+                return config_entry.entry_id
         raise vol.Invalid(
             "The interface provided is not defined as a port in a Velbus integration"
         )
@@ -145,7 +145,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Handle a clear cache service call."""
         # clear the cache
         with suppress(FileNotFoundError):
-            if CONF_ADDRESS in call.data and call.data[CONF_ADDRESS]:
+            if call.data.get(CONF_ADDRESS):
                 await hass.async_add_executor_job(
                     os.unlink,
                     hass.config.path(

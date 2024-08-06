@@ -18,6 +18,7 @@ from homeassistant.components.profiler import (
     CONF_ENABLED,
     CONF_SECONDS,
     SERVICE_DUMP_LOG_OBJECTS,
+    SERVICE_LOG_CURRENT_TASKS,
     SERVICE_LOG_EVENT_LOOP_SCHEDULED,
     SERVICE_LOG_THREAD_FRAMES,
     SERVICE_LRU_STATS,
@@ -180,7 +181,7 @@ async def test_dump_log_object(
 
         def __repr__(self):
             if self.fail:
-                raise Exception("failed")
+                raise Exception("failed")  # noqa: TRY002
             return "<DumpLogDummy success>"
 
     obj1 = DumpLogDummy(False)
@@ -215,6 +216,28 @@ async def test_log_thread_frames(
     await hass.services.async_call(DOMAIN, SERVICE_LOG_THREAD_FRAMES, {}, blocking=True)
 
     assert "SyncWorker_0" in caplog.text
+    caplog.clear()
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_log_current_tasks(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we can log current tasks."""
+
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(DOMAIN, SERVICE_LOG_CURRENT_TASKS)
+
+    await hass.services.async_call(DOMAIN, SERVICE_LOG_CURRENT_TASKS, {}, blocking=True)
+
+    assert "test_log_current_tasks" in caplog.text
     caplog.clear()
 
     assert await hass.config_entries.async_unload(entry.entry_id)
@@ -332,18 +355,19 @@ async def test_log_object_sources(
         caplog.clear()
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert "No new object growth found" in caplog.text
 
     fake_object2 = FakeObject()
 
-    with patch("gc.collect"), patch(
-        "gc.get_objects", return_value=[fake_object, fake_object2]
+    with (
+        patch("gc.collect"),
+        patch("gc.get_objects", return_value=[fake_object, fake_object2]),
     ):
         caplog.clear()
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=21))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert "New object FakeObject (1/2)" in caplog.text
 
     many_objects = [FakeObject() for _ in range(30)]
@@ -351,7 +375,7 @@ async def test_log_object_sources(
         caplog.clear()
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=31))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert "New object FakeObject (2/30)" in caplog.text
         assert "New objects overflowed by {'FakeObject': 25}" in caplog.text
 
@@ -361,7 +385,7 @@ async def test_log_object_sources(
     caplog.clear()
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=41))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert "FakeObject" not in caplog.text
     assert "No new object growth found" not in caplog.text
 
@@ -369,7 +393,7 @@ async def test_log_object_sources(
     await hass.async_block_till_done()
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=51))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert "FakeObject" not in caplog.text
     assert "No new object growth found" not in caplog.text
 

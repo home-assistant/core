@@ -7,9 +7,10 @@ import collections
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from functools import cached_property
 import logging
 from random import SystemRandom
-from typing import TYPE_CHECKING, Final, final
+from typing import Final, final
 
 from aiohttp import hdrs, web
 import httpx
@@ -17,16 +18,12 @@ import httpx
 from homeassistant.components.http import KEY_AUTHENTICATED, KEY_HASS, HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONTENT_TYPE_MULTIPART, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     async_track_state_change_event,
     async_track_time_interval,
 )
@@ -35,16 +32,12 @@ from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
 from .const import DOMAIN, IMAGE_TIMEOUT
 
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
-
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL: Final = timedelta(seconds=30)
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL: Final = timedelta(seconds=30)
 
 DEFAULT_CONTENT_TYPE: Final = "image/jpeg"
 ENTITY_IMAGE_URL: Final = "/api/image_proxy/{0}?token={1}"
@@ -88,8 +81,7 @@ async def _async_get_image(image_entity: ImageEntity, timeout: int) -> Image:
         async with asyncio.timeout(timeout):
             if image_bytes := await image_entity.async_image():
                 content_type = valid_image_content_type(image_entity.content_type)
-                image = Image(content_type, image_bytes)
-                return image
+                return Image(content_type, image_bytes)
 
     raise HomeAssistantError("Unable to get image")
 
@@ -199,7 +191,6 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 url, timeout=GET_IMAGE_TIMEOUT, follow_redirects=True
             )
             response.raise_for_status()
-            return response
         except httpx.TimeoutException:
             _LOGGER.error("%s: Timeout getting image from %s", self.entity_id, url)
             return None
@@ -211,6 +202,7 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 err,
             )
             return None
+        return response
 
     async def _async_load_image_from_url(self, url: str) -> Image | None:
         """Load an image by url."""

@@ -17,12 +17,12 @@ from tests.common import MockConfigEntry
 
 
 async def test_roku_binary_sensors(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test the Roku binary sensors."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
     state = hass.states.get("binary_sensor.my_roku_3_headphones_connected")
     entry = entity_registry.async_get("binary_sensor.my_roku_3_headphones_connected")
     assert entry
@@ -83,14 +83,13 @@ async def test_roku_binary_sensors(
 @pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_rokutv_binary_sensors(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
     mock_device: RokuDevice,
     mock_roku: MagicMock,
 ) -> None:
     """Test the Roku binary sensors."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
     state = hass.states.get("binary_sensor.58_onn_roku_tv_headphones_connected")
     entry = entity_registry.async_get(
         "binary_sensor.58_onn_roku_tv_headphones_connected"

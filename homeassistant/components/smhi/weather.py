@@ -13,6 +13,7 @@ from smhi import Smhi
 from smhi.smhi_lib import SmhiForecast, SmhiForecastException
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
     ATTR_CONDITION_EXCEPTIONAL,
     ATTR_CONDITION_FOG,
@@ -55,11 +56,11 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import aiohttp_client, sun
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
-from homeassistant.util import Throttle, slugify
+from homeassistant.util import Throttle, dt as dt_util, slugify
 
 from .const import ATTR_SMHI_THUNDER_PROBABILITY, DOMAIN, ENTITY_ID_SENSOR_FORMAT
 
@@ -189,40 +190,15 @@ class SmhiWeather(WeatherEntity):
             self._attr_native_wind_gust_speed = self._forecast_daily[0].wind_gust
             self._attr_cloud_coverage = self._forecast_daily[0].cloudiness
             self._attr_condition = CONDITION_MAP.get(self._forecast_daily[0].symbol)
+            if self._attr_condition == ATTR_CONDITION_SUNNY and not sun.is_up(
+                self.hass
+            ):
+                self._attr_condition = ATTR_CONDITION_CLEAR_NIGHT
         await self.async_update_listeners(("daily", "hourly"))
 
     async def retry_update(self, _: datetime) -> None:
         """Retry refresh weather forecast."""
         await self.async_update(no_throttle=True)
-
-    @property
-    def forecast(self) -> list[Forecast] | None:
-        """Return the forecast."""
-        if self._forecast_daily is None or len(self._forecast_daily) < 2:
-            return None
-
-        data: list[Forecast] = []
-
-        for forecast in self._forecast_daily[1:]:
-            condition = CONDITION_MAP.get(forecast.symbol)
-
-            data.append(
-                {
-                    ATTR_FORECAST_TIME: forecast.valid_time.isoformat(),
-                    ATTR_FORECAST_NATIVE_TEMP: forecast.temperature_max,
-                    ATTR_FORECAST_NATIVE_TEMP_LOW: forecast.temperature_min,
-                    ATTR_FORECAST_NATIVE_PRECIPITATION: forecast.total_precipitation,
-                    ATTR_FORECAST_CONDITION: condition,
-                    ATTR_FORECAST_NATIVE_PRESSURE: forecast.pressure,
-                    ATTR_FORECAST_WIND_BEARING: forecast.wind_direction,
-                    ATTR_FORECAST_NATIVE_WIND_SPEED: forecast.wind_speed,
-                    ATTR_FORECAST_HUMIDITY: forecast.humidity,
-                    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: forecast.wind_gust,
-                    ATTR_FORECAST_CLOUD_COVERAGE: forecast.cloudiness,
-                }
-            )
-
-        return data
 
     def _get_forecast_data(
         self, forecast_data: list[SmhiForecast] | None
@@ -235,10 +211,16 @@ class SmhiWeather(WeatherEntity):
 
         for forecast in forecast_data[1:]:
             condition = CONDITION_MAP.get(forecast.symbol)
+            if condition == ATTR_CONDITION_SUNNY and not sun.is_up(
+                self.hass, forecast.valid_time.replace(tzinfo=dt_util.UTC)
+            ):
+                condition = ATTR_CONDITION_CLEAR_NIGHT
 
             data.append(
                 {
-                    ATTR_FORECAST_TIME: forecast.valid_time.isoformat(),
+                    ATTR_FORECAST_TIME: forecast.valid_time.replace(
+                        tzinfo=dt_util.UTC
+                    ).isoformat(),
                     ATTR_FORECAST_NATIVE_TEMP: forecast.temperature_max,
                     ATTR_FORECAST_NATIVE_TEMP_LOW: forecast.temperature_min,
                     ATTR_FORECAST_NATIVE_PRECIPITATION: forecast.total_precipitation,

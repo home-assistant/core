@@ -3,3 +3,7 @@ modbus:
   host: "testHost"
   port: 5001
   name: "testModbus"
+  sensors:
+    - name: "dummy"
+      address: 117
+      slave: 0

@@ -89,6 +89,7 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
             """Get the next chunk from audio stream."""
             async for chunk_bytes in stream:
                 return chunk_bytes
+            return None
 
         try:
             async with AsyncTcpClient(self.service.host, self.service.port) as client:
@@ -187,8 +188,8 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
                     for task in pending:
                         task.cancel()
 
-        except (OSError, WyomingError) as err:
-            _LOGGER.exception("Error processing audio stream: %s", err)
+        except (OSError, WyomingError):
+            _LOGGER.exception("Error processing audio stream")
 
         return None
 

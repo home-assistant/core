@@ -52,15 +52,15 @@ async def async_setup_entry(
     )
 
 
-_STATE_CLASSES: EsphomeEnumMapper[
-    EsphomeSensorStateClass, SensorStateClass | None
-] = EsphomeEnumMapper(
-    {
-        EsphomeSensorStateClass.NONE: None,
-        EsphomeSensorStateClass.MEASUREMENT: SensorStateClass.MEASUREMENT,
-        EsphomeSensorStateClass.TOTAL_INCREASING: SensorStateClass.TOTAL_INCREASING,
-        EsphomeSensorStateClass.TOTAL: SensorStateClass.TOTAL,
-    }
+_STATE_CLASSES: EsphomeEnumMapper[EsphomeSensorStateClass, SensorStateClass | None] = (
+    EsphomeEnumMapper(
+        {
+            EsphomeSensorStateClass.NONE: None,
+            EsphomeSensorStateClass.MEASUREMENT: SensorStateClass.MEASUREMENT,
+            EsphomeSensorStateClass.TOTAL_INCREASING: SensorStateClass.TOTAL_INCREASING,
+            EsphomeSensorStateClass.TOTAL: SensorStateClass.TOTAL,
+        }
+    )
 )
 
 
@@ -99,7 +99,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
         state = self._state
         if state.missing_state or not math.isfinite(state.state):
             return None
-        if self._attr_device_class == SensorDeviceClass.TIMESTAMP:
+        if self._attr_device_class is SensorDeviceClass.TIMESTAMP:
             return dt_util.utc_from_timestamp(state.state)
         return f"{state.state:.{self._static_info.accuracy_decimals}f}"
 

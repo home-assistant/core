@@ -1,9 +1,8 @@
 """The test for the Melissa Climate component."""
 
-
 from homeassistant.core import HomeAssistant
 
-from tests.components.melissa import setup_integration
+from . import setup_integration
 
 
 async def test_setup(hass: HomeAssistant, mock_melissa) -> None:

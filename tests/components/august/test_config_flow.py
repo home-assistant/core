@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from yalexs.authenticator import ValidationResult
+from yalexs.manager.exceptions import CannotConnect, InvalidAuth, RequireValidation
 
 from homeassistant import config_entries
 from homeassistant.components.august.const import (
@@ -12,11 +13,6 @@ from homeassistant.components.august.const import (
     CONF_LOGIN_METHOD,
     DOMAIN,
     VERIFICATION_CODE_KEY,
-)
-from homeassistant.components.august.exceptions import (
-    CannotConnect,
-    InvalidAuth,
-    RequireValidation,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -34,13 +30,16 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.august.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.august.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -142,13 +141,16 @@ async def test_form_needs_validate(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
-        side_effect=RequireValidation,
-    ), patch(
-        "homeassistant.components.august.gateway.AuthenticatorAsync.async_send_verification_code",
-        return_value=True,
-    ) as mock_send_verification_code:
+    with (
+        patch(
+            "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
+            side_effect=RequireValidation,
+        ),
+        patch(
+            "yalexs.manager.gateway.AuthenticatorAsync.async_send_verification_code",
+            return_value=True,
+        ) as mock_send_verification_code,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -164,16 +166,20 @@ async def test_form_needs_validate(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "validation"
 
     # Try with the WRONG verification code give us the form back again
-    with patch(
-        "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
-        side_effect=RequireValidation,
-    ), patch(
-        "homeassistant.components.august.gateway.AuthenticatorAsync.async_validate_verification_code",
-        return_value=ValidationResult.INVALID_VERIFICATION_CODE,
-    ) as mock_validate_verification_code, patch(
-        "homeassistant.components.august.gateway.AuthenticatorAsync.async_send_verification_code",
-        return_value=True,
-    ) as mock_send_verification_code:
+    with (
+        patch(
+            "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
+            side_effect=RequireValidation,
+        ),
+        patch(
+            "yalexs.manager.gateway.AuthenticatorAsync.async_validate_verification_code",
+            return_value=ValidationResult.INVALID_VERIFICATION_CODE,
+        ) as mock_validate_verification_code,
+        patch(
+            "yalexs.manager.gateway.AuthenticatorAsync.async_send_verification_code",
+            return_value=True,
+        ) as mock_send_verification_code,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {VERIFICATION_CODE_KEY: "incorrect"},
@@ -188,18 +194,23 @@ async def test_form_needs_validate(hass: HomeAssistant) -> None:
     assert result3["step_id"] == "validation"
 
     # Try with the CORRECT verification code and we setup
-    with patch(
-        "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.august.gateway.AuthenticatorAsync.async_validate_verification_code",
-        return_value=ValidationResult.VALIDATED,
-    ) as mock_validate_verification_code, patch(
-        "homeassistant.components.august.gateway.AuthenticatorAsync.async_send_verification_code",
-        return_value=True,
-    ) as mock_send_verification_code, patch(
-        "homeassistant.components.august.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
+            return_value=True,
+        ),
+        patch(
+            "yalexs.manager.gateway.AuthenticatorAsync.async_validate_verification_code",
+            return_value=ValidationResult.VALIDATED,
+        ) as mock_validate_verification_code,
+        patch(
+            "yalexs.manager.gateway.AuthenticatorAsync.async_send_verification_code",
+            return_value=True,
+        ) as mock_send_verification_code,
+        patch(
+            "homeassistant.components.august.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {VERIFICATION_CODE_KEY: "correct"},
@@ -243,13 +254,16 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.august.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.august.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -286,13 +300,16 @@ async def test_form_reauth_with_2fa(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
-        side_effect=RequireValidation,
-    ), patch(
-        "homeassistant.components.august.gateway.AuthenticatorAsync.async_send_verification_code",
-        return_value=True,
-    ) as mock_send_verification_code:
+    with (
+        patch(
+            "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
+            side_effect=RequireValidation,
+        ),
+        patch(
+            "yalexs.manager.gateway.AuthenticatorAsync.async_send_verification_code",
+            return_value=True,
+        ) as mock_send_verification_code,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -307,18 +324,23 @@ async def test_form_reauth_with_2fa(hass: HomeAssistant) -> None:
     assert result2["step_id"] == "validation"
 
     # Try with the CORRECT verification code and we setup
-    with patch(
-        "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.august.gateway.AuthenticatorAsync.async_validate_verification_code",
-        return_value=ValidationResult.VALIDATED,
-    ) as mock_validate_verification_code, patch(
-        "homeassistant.components.august.gateway.AuthenticatorAsync.async_send_verification_code",
-        return_value=True,
-    ) as mock_send_verification_code, patch(
-        "homeassistant.components.august.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
+            return_value=True,
+        ),
+        patch(
+            "yalexs.manager.gateway.AuthenticatorAsync.async_validate_verification_code",
+            return_value=ValidationResult.VALIDATED,
+        ) as mock_validate_verification_code,
+        patch(
+            "yalexs.manager.gateway.AuthenticatorAsync.async_send_verification_code",
+            return_value=True,
+        ) as mock_send_verification_code,
+        patch(
+            "homeassistant.components.august.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {VERIFICATION_CODE_KEY: "correct"},
@@ -354,13 +376,16 @@ async def test_switching_brands(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.august.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.august.config_flow.AugustGateway.async_authenticate",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.august.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

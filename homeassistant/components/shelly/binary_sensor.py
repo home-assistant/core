@@ -8,17 +8,18 @@ from typing import Final, cast
 from aioshelly.const import RPC_GENERATIONS
 
 from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_PLATFORM,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import CONF_SLEEP_PERIOD
+from .coordinator import ShellyConfigEntry
 from .entity import (
     BlockEntityDescription,
     RestEntityDescription,
@@ -33,7 +34,9 @@ from .entity import (
     async_setup_entry_rpc,
 )
 from .utils import (
+    async_remove_orphaned_virtual_entities,
     get_device_entry_gen,
+    get_virtual_component_ids,
     is_block_momentary_input,
     is_rpc_momentary_input,
 )
@@ -167,7 +170,7 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "external_power": RpcBinarySensorDescription(
-        key="devicepower:0",
+        key="devicepower",
         sub_key="external",
         name="External power",
         value=lambda status, _: status["present"],
@@ -201,6 +204,15 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
         supported=lambda status: status.get("apower") is not None,
     ),
+    "overcurrent": RpcBinarySensorDescription(
+        key="switch",
+        sub_key="errors",
+        name="Overcurrent",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value=lambda status, _: False if status is None else "overcurrent" in status,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        supported=lambda status: status.get("apower") is not None,
+    ),
     "smoke": RpcBinarySensorDescription(
         key="smoke",
         sub_key="alarm",
@@ -215,12 +227,17 @@ RPC_SENSORS: Final = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    "boolean": RpcBinarySensorDescription(
+        key="boolean",
+        sub_key="value",
+        has_entity_name=True,
+    ),
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for device."""
@@ -234,8 +251,25 @@ async def async_setup_entry(
                 RpcSleepingBinarySensor,
             )
         else:
+            coordinator = config_entry.runtime_data.rpc
+            assert coordinator
+
             async_setup_entry_rpc(
                 hass, config_entry, async_add_entities, RPC_SENSORS, RpcBinarySensor
+            )
+
+            # the user can remove virtual components from the device configuration, so
+            # we need to remove orphaned entities
+            virtual_binary_sensor_ids = get_virtual_component_ids(
+                coordinator.device.config, BINARY_SENSOR_PLATFORM
+            )
+            async_remove_orphaned_virtual_entities(
+                hass,
+                config_entry.entry_id,
+                coordinator.mac,
+                BINARY_SENSOR_PLATFORM,
+                "boolean",
+                virtual_binary_sensor_ids,
             )
         return
 

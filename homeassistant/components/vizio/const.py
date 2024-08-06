@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_NAME,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import VolDictType
 
 SERVICE_UPDATE_SETTING = "update_setting"
 
@@ -26,7 +27,7 @@ ATTR_SETTING_TYPE = "setting_type"
 ATTR_SETTING_NAME = "setting_name"
 ATTR_NEW_VALUE = "new_value"
 
-UPDATE_SETTING_SCHEMA = {
+UPDATE_SETTING_SCHEMA: VolDictType = {
     vol.Required(ATTR_SETTING_TYPE): vol.All(cv.string, vol.Lower, cv.slugify),
     vol.Required(ATTR_SETTING_NAME): vol.All(cv.string, vol.Lower, cv.slugify),
     vol.Required(ATTR_NEW_VALUE): vol.Any(vol.Coerce(int), cv.string),
@@ -52,7 +53,9 @@ DEVICE_ID = "pyvizio"
 DOMAIN = "vizio"
 
 COMMON_SUPPORTED_COMMANDS = (
-    MediaPlayerEntityFeature.SELECT_SOURCE
+    MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.SELECT_SOURCE
     | MediaPlayerEntityFeature.TURN_ON
     | MediaPlayerEntityFeature.TURN_OFF
     | MediaPlayerEntityFeature.VOLUME_MUTE

@@ -1,5 +1,6 @@
 """Tests for homekit_controller init."""
 
+from collections.abc import Callable
 from datetime import timedelta
 import pathlib
 from unittest.mock import patch
@@ -23,7 +24,6 @@ from homeassistant.util.dt import utcnow
 
 from .common import (
     Helper,
-    remove_device,
     setup_accessories_from_file,
     setup_test_accessories,
     setup_test_accessories_with_controller,
@@ -47,9 +47,11 @@ def create_motion_sensor_service(accessory):
     cur_state.value = 0
 
 
-async def test_unload_on_stop(hass: HomeAssistant) -> None:
+async def test_unload_on_stop(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test async_unload is called on stop."""
-    await setup_test_component(hass, create_motion_sensor_service)
+    await setup_test_component(hass, get_next_aid(), create_motion_sensor_service)
     with patch(
         "homeassistant.components.homekit_controller.HKDevice.async_unload"
     ) as async_unlock_mock:
@@ -59,9 +61,13 @@ async def test_unload_on_stop(hass: HomeAssistant) -> None:
     assert async_unlock_mock.called
 
 
-async def test_async_remove_entry(hass: HomeAssistant) -> None:
+async def test_async_remove_entry(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test unpairing a component."""
-    helper = await setup_test_component(hass, create_motion_sensor_service)
+    helper = await setup_test_component(
+        hass, get_next_aid(), create_motion_sensor_service
+    )
     controller = helper.pairing.controller
 
     hkid = "00:00:00:00:00:00"
@@ -71,7 +77,7 @@ async def test_async_remove_entry(hass: HomeAssistant) -> None:
     assert hkid in hass.data[ENTITY_MAP].storage_data
 
     # Remove it via config entry and number of pairings should go down
-    await helper.config_entry.async_remove(hass)
+    await hass.config_entries.async_remove(helper.config_entry.entry_id)
     assert len(controller.pairings) == 0
 
     assert hkid not in hass.data[ENTITY_MAP].storage_data
@@ -89,35 +95,38 @@ async def test_device_remove_devices(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     hass_ws_client: WebSocketGenerator,
+    get_next_aid: Callable[[], int],
 ) -> None:
     """Test we can only remove a device that no longer exists."""
     assert await async_setup_component(hass, "config", {})
-    helper: Helper = await setup_test_component(hass, create_alive_service)
+    helper: Helper = await setup_test_component(
+        hass, get_next_aid(), create_alive_service
+    )
     config_entry = helper.config_entry
     entry_id = config_entry.entry_id
 
     entity = entity_registry.entities[ALIVE_DEVICE_ENTITY_ID]
 
     live_device_entry = device_registry.async_get(entity.device_id)
-    assert (
-        await remove_device(await hass_ws_client(hass), live_device_entry.id, entry_id)
-        is False
-    )
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(live_device_entry.id, entry_id)
+    assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={("homekit_controller:accessory-id", "E9:88:E7:B8:B4:40:aid:1")},
     )
-    assert (
-        await remove_device(await hass_ws_client(hass), dead_device_entry.id, entry_id)
-        is True
-    )
+    response = await client.remove_device(dead_device_entry.id, entry_id)
+    assert response["success"]
 
 
-async def test_offline_device_raises(hass: HomeAssistant, controller) -> None:
+async def test_offline_device_raises(
+    hass: HomeAssistant, get_next_aid: Callable[[], int], controller
+) -> None:
     """Test an offline device raises ConfigEntryNotReady."""
 
     is_connected = False
+    aid = get_next_aid()
 
     class OfflineFakePairing(FakePairing):
         """Fake pairing that can flip is_connected."""
@@ -144,7 +153,7 @@ async def test_offline_device_raises(hass: HomeAssistant, controller) -> None:
             return {}
 
     accessory = Accessory.create_with_info(
-        "TestDevice", "example.com", "Test", "0001", "0.1"
+        aid, "TestDevice", "example.com", "Test", "0001", "0.1"
     )
     create_alive_service(accessory)
 
@@ -155,22 +164,23 @@ async def test_offline_device_raises(hass: HomeAssistant, controller) -> None:
         )
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
     is_connected = True
 
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-    await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.LOADED
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("light.testdevice").state == STATE_OFF
 
 
 async def test_ble_device_only_checks_is_available(
-    hass: HomeAssistant, controller
+    hass: HomeAssistant, get_next_aid: Callable[[], int], controller
 ) -> None:
     """Test a BLE device only checks is_available."""
 
     is_available = False
+    aid = get_next_aid()
 
     class FakeBLEPairing(FakePairing):
         """Fake BLE pairing that can flip is_available."""
@@ -201,7 +211,7 @@ async def test_ble_device_only_checks_is_available(
             return {}
 
     accessory = Accessory.create_with_info(
-        "TestDevice", "example.com", "Test", "0001", "0.1"
+        aid, "TestDevice", "example.com", "Test", "0001", "0.1"
     )
     create_alive_service(accessory)
 
@@ -212,21 +222,23 @@ async def test_ble_device_only_checks_is_available(
         )
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
     is_available = True
 
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
-    await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.LOADED
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("light.testdevice").state == STATE_OFF
 
     is_available = False
     async_fire_time_changed(hass, utcnow() + timedelta(hours=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get("light.testdevice").state == STATE_UNAVAILABLE
 
     is_available = True
     async_fire_time_changed(hass, utcnow() + timedelta(hours=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get("light.testdevice").state == STATE_OFF
 
 
@@ -275,12 +287,16 @@ async def test_snapshots(
             entry = asdict(entity_entry)
             entry.pop("id", None)
             entry.pop("device_id", None)
+            entry.pop("created_at", None)
+            entry.pop("modified_at", None)
 
             entities.append({"entry": entry, "state": state_dict})
 
         device_dict = asdict(device)
         device_dict.pop("id", None)
         device_dict.pop("via_device_id", None)
+        device_dict.pop("created_at", None)
+        device_dict.pop("modified_at", None)
         devices.append({"device": device_dict, "entities": entities})
 
     assert snapshot == devices

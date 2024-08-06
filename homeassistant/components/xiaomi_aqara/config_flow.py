@@ -204,7 +204,7 @@ class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
                 valid_key = True
 
             if valid_key:
-                # format_mac, for a gateway the sid equels the mac address
+                # format_mac, for a gateway the sid equals the mac address
                 mac_address = format_mac(self.sid)
 
                 # set unique_id

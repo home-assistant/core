@@ -30,8 +30,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.network import is_link_local
 
+from . import AxisConfigEntry
 from .const import (
     CONF_STREAM_PROFILE,
     CONF_VIDEO_SOURCE,
@@ -62,7 +64,7 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
     def __init__(self) -> None:
         """Initialize the Axis config flow."""
         self.config: dict[str, Any] = {}
-        self.discovery_schema: dict[vol.Required, type[str | int]] | None = None
+        self.discovery_schema: VolDictType | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -146,6 +148,14 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
         title = f"{model} - {serial}"
         return self.async_create_entry(title=title, data=self.config)
 
+    async def async_step_reconfigure(
+        self, user_input: Mapping[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Trigger a reconfiguration flow."""
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert entry
+        return await self._redo_configuration(entry.data, keep_password=True)
+
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
@@ -154,14 +164,19 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
             CONF_NAME: entry_data[CONF_NAME],
             CONF_HOST: entry_data[CONF_HOST],
         }
+        return await self._redo_configuration(entry_data, keep_password=False)
 
+    async def _redo_configuration(
+        self, entry_data: Mapping[str, Any], keep_password: bool
+    ) -> ConfigFlowResult:
+        """Re-run configuration step."""
+        protocol = entry_data.get(CONF_PROTOCOL, "http")
+        password = entry_data[CONF_PASSWORD] if keep_password else ""
         self.discovery_schema = {
-            vol.Required(
-                CONF_PROTOCOL, default=entry_data.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)
-            ): str,
+            vol.Required(CONF_PROTOCOL, default=protocol): vol.In(PROTOCOL_CHOICES),
             vol.Required(CONF_HOST, default=entry_data[CONF_HOST]): str,
             vol.Required(CONF_USERNAME, default=entry_data[CONF_USERNAME]): str,
-            vol.Required(CONF_PASSWORD): str,
+            vol.Required(CONF_PASSWORD, default=password): str,
             vol.Required(CONF_PORT, default=entry_data[CONF_PORT]): int,
         }
 
@@ -247,13 +262,14 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
 class AxisOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """Handle Axis device options."""
 
+    config_entry: AxisConfigEntry
     hub: AxisHub
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the Axis device options."""
-        self.hub = AxisHub.get_hub(self.hass, self.config_entry)
+        self.hub = self.config_entry.runtime_data
         return await self.async_step_configure_stream()
 
     async def async_step_configure_stream(

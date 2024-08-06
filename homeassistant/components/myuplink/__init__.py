@@ -5,7 +5,7 @@ from __future__ import annotations
 from http import HTTPStatus
 
 from aiohttp import ClientError, ClientResponseError
-from myuplink import MyUplinkAPI, get_manufacturer, get_system_name
+from myuplink import MyUplinkAPI, get_manufacturer, get_model, get_system_name
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -16,6 +16,7 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     device_registry as dr,
 )
+from homeassistant.helpers.device_registry import DeviceEntry
 
 from .api import AsyncConfigEntryAuth
 from .const import DOMAIN, OAUTH2_SCOPES
@@ -24,15 +25,19 @@ from .coordinator import MyUplinkDataCoordinator
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
 ]
 
+type MyUplinkConfigEntry = ConfigEntry[MyUplinkDataCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: MyUplinkConfigEntry
+) -> bool:
     """Set up myUplink from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
 
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -58,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     api = MyUplinkAPI(auth)
     coordinator = MyUplinkDataCoordinator(hass, api)
     await coordinator.async_config_entry_first_refresh()
-    hass.data[DOMAIN][config_entry.entry_id] = coordinator
+    config_entry.runtime_data = coordinator
 
     # Update device registry
     create_devices(hass, config_entry, coordinator)
@@ -70,10 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 @callback
@@ -92,7 +94,18 @@ def create_devices(
                     identifiers={(DOMAIN, device_id)},
                     name=get_system_name(system),
                     manufacturer=get_manufacturer(device),
-                    model=device.productName,
+                    model=get_model(device),
                     sw_version=device.firmwareCurrent,
                     serial_number=device.product_serial_number,
                 )
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: MyUplinkConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove myuplink config entry from a device."""
+
+    myuplink_data = config_entry.runtime_data
+    return not device_entry.identifiers.intersection(
+        (DOMAIN, device_id) for device_id in myuplink_data.data.devices
+    )

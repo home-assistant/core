@@ -3,14 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping
-from typing import Any, TypeVar, cast, overload
+from typing import Any, cast, overload
 
 from homeassistant.core import callback
 
 REDACTED = "**REDACTED**"
-
-_T = TypeVar("_T")
-_ValueT = TypeVar("_ValueT")
 
 
 def partial_redact(
@@ -32,21 +29,19 @@ def partial_redact(
 
 
 @overload
-def async_redact_data(  # type: ignore[overload-overlap]
+def async_redact_data[_ValueT](
     data: Mapping, to_redact: Iterable[Any] | Mapping[Any, Callable[[_ValueT], _ValueT]]
-) -> dict:
-    ...
+) -> dict: ...
 
 
 @overload
-def async_redact_data(
+def async_redact_data[_T, _ValueT](
     data: _T, to_redact: Iterable[Any] | Mapping[Any, Callable[[_ValueT], _ValueT]]
-) -> _T:
-    ...
+) -> _T: ...
 
 
 @callback
-def async_redact_data(
+def async_redact_data[_T, _ValueT](
     data: _T, to_redact: Iterable[Any] | Mapping[Any, Callable[[_ValueT], _ValueT]]
 ) -> _T:
     """Redact sensitive data in a dict."""

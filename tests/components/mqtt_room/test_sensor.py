@@ -6,8 +6,8 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components import sensor
 from homeassistant.components.mqtt import CONF_QOS, CONF_STATE_TOPIC, DEFAULT_QOS
-import homeassistant.components.sensor as sensor
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_NAME,

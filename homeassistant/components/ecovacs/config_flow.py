@@ -22,6 +22,7 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import aiohttp_client, selector
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.loader import async_get_issue_tracker
 from homeassistant.util.ssl import get_default_no_verify_context
 
@@ -71,7 +72,7 @@ async def _validate_input(
     if errors:
         return errors
 
-    device_id = get_client_device_id()
+    device_id = get_client_device_id(hass, rest_url is not None)
     country = user_input[CONF_COUNTRY]
     rest_config = create_rest_config(
         aiohttp_client.async_get_clientsession(hass),
@@ -93,7 +94,7 @@ async def _validate_input(
         errors["base"] = "cannot_connect"
     except InvalidAuthenticationError:
         errors["base"] = "invalid_auth"
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Unexpected exception during login")
         errors["base"] = "unknown"
 
@@ -121,7 +122,7 @@ async def _validate_input(
         errors[cannot_connect_field] = "cannot_connect"
     except InvalidAuthenticationError:
         errors["base"] = "invalid_auth"
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Unexpected exception during mqtt connection verification")
         errors["base"] = "unknown"
 
@@ -181,7 +182,7 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_USERNAME], data=user_input
                 )
 
-        schema = {
+        schema: VolDictType = {
             vol.Required(CONF_USERNAME): selector.TextSelector(
                 selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
             ),
@@ -303,7 +304,7 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
         except AbortFlow as ex:
             if ex.reason == "already_configured":
                 create_repair()
-            raise ex
+            raise
 
         if errors := result.get("errors"):
             error = errors["base"]

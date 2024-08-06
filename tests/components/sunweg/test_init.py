@@ -10,6 +10,7 @@ from homeassistant.components.sunweg.const import DOMAIN, DeviceType
 from homeassistant.components.sunweg.sensor_types.sensor_entity_description import (
     SunWEGSensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -21,11 +22,13 @@ async def test_methods(hass: HomeAssistant, plant_fixture, inverter_fixture) -> 
     mock_entry = SUNWEG_MOCK_ENTRY
     mock_entry.add_to_hass(hass)
 
-    with patch.object(APIHelper, "authenticate", return_value=True), patch.object(
-        APIHelper, "listPlants", return_value=[plant_fixture]
-    ), patch.object(APIHelper, "plant", return_value=plant_fixture), patch.object(
-        APIHelper, "inverter", return_value=inverter_fixture
-    ), patch.object(APIHelper, "complete_inverter"):
+    with (
+        patch.object(APIHelper, "authenticate", return_value=True),
+        patch.object(APIHelper, "listPlants", return_value=[plant_fixture]),
+        patch.object(APIHelper, "plant", return_value=plant_fixture),
+        patch.object(APIHelper, "inverter", return_value=inverter_fixture),
+        patch.object(APIHelper, "complete_inverter"),
+    ):
         assert await async_setup_component(hass, DOMAIN, mock_entry.data)
         await hass.async_block_till_done()
         assert await hass.config_entries.async_unload(mock_entry.entry_id)
@@ -191,3 +194,16 @@ async def test_sunwegdata_get_data_never_reset() -> None:
         never_resets=entity_description.never_resets,
         previous_value_drop_threshold=entity_description.previous_value_drop_threshold,
     ) == (2.8, None)
+
+
+async def test_reauth_started(hass: HomeAssistant) -> None:
+    """Test reauth flow started."""
+    mock_entry = SUNWEG_MOCK_ENTRY
+    mock_entry.add_to_hass(hass)
+    with patch.object(APIHelper, "authenticate", return_value=False):
+        await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        assert mock_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"

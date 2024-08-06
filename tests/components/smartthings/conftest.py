@@ -1,6 +1,7 @@
 """Test configuration and mocks for the SmartThings component."""
 
 import secrets
+from typing import Any
 from unittest.mock import Mock, patch
 from uuid import uuid4
 
@@ -38,13 +39,14 @@ from homeassistant.components.smartthings.const import (
     STORAGE_VERSION,
 )
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_WEBHOOK_ID,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -53,7 +55,9 @@ from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 COMPONENT_PREFIX = "homeassistant.components.smartthings."
 
 
-async def setup_platform(hass, platform: str, *, devices=None, scenes=None):
+async def setup_platform(
+    hass: HomeAssistant, platform: str, *, devices=None, scenes=None
+):
     """Set up the SmartThings platform and prerequisites."""
     hass.config.components.add(DOMAIN)
     config_entry = MockConfigEntry(
@@ -68,13 +72,16 @@ async def setup_platform(hass, platform: str, *, devices=None, scenes=None):
     )
 
     hass.data[DOMAIN] = {DATA_BROKERS: {config_entry.entry_id: broker}}
-    await hass.config_entries.async_forward_entry_setup(config_entry, platform)
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    await hass.config_entries.async_forward_entry_setups(config_entry, [platform])
     await hass.async_block_till_done()
     return config_entry
 
 
 @pytest.fixture(autouse=True)
-async def setup_component(hass, config_file, hass_storage):
+async def setup_component(
+    hass: HomeAssistant, config_file: dict[str, str], hass_storage: dict[str, Any]
+) -> None:
     """Load the SmartThing component."""
     hass_storage[STORAGE_KEY] = {"data": config_file, "version": STORAGE_VERSION}
     await async_process_ha_core_config(
@@ -166,7 +173,7 @@ def installed_apps_fixture(installed_app, locations, app):
 
 
 @pytest.fixture(name="config_file")
-def config_file_fixture():
+def config_file_fixture() -> dict[str, str]:
     """Fixture representing the local config file contents."""
     return {CONF_INSTANCE_ID: str(uuid4()), CONF_WEBHOOK_ID: secrets.token_hex()}
 
@@ -183,9 +190,11 @@ def smartthings_mock_fixture(locations):
     smartthings_mock = Mock(SmartThings)
     smartthings_mock.location.side_effect = _location
     mock = Mock(return_value=smartthings_mock)
-    with patch(COMPONENT_PREFIX + "SmartThings", new=mock), patch(
-        COMPONENT_PREFIX + "config_flow.SmartThings", new=mock
-    ), patch(COMPONENT_PREFIX + "smartapp.SmartThings", new=mock):
+    with (
+        patch(COMPONENT_PREFIX + "SmartThings", new=mock),
+        patch(COMPONENT_PREFIX + "config_flow.SmartThings", new=mock),
+        patch(COMPONENT_PREFIX + "smartapp.SmartThings", new=mock),
+    ):
         yield smartthings_mock
 
 
@@ -251,7 +260,7 @@ def device_factory_fixture():
     api = Mock(Api)
     api.post_device_command.return_value = {"results": [{"status": "ACCEPTED"}]}
 
-    def _factory(label, capabilities, status: dict = None):
+    def _factory(label, capabilities, status: dict | None = None):
         device_data = {
             "deviceId": str(uuid4()),
             "name": "Device Type Handler Name",
@@ -340,7 +349,7 @@ def event_request_factory_fixture(event_factory):
         if events is None:
             events = []
         if device_ids:
-            events.extend([event_factory(id) for id in device_ids])
+            events.extend([event_factory(device_id) for device_id in device_ids])
             events.append(event_factory(uuid4()))
             events.append(event_factory(device_ids[0], event_type="OTHER"))
         request.events = events

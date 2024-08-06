@@ -13,13 +13,6 @@ from aioswitcher.device import (
     ThermostatSwing,
 )
 
-from homeassistant.components.switcher_kis import (
-    CONF_DEVICE_ID,
-    CONF_DEVICE_PASSWORD,
-    CONF_PHONE_ID,
-    DOMAIN,
-)
-
 DUMMY_AUTO_OFF_SET = "01:30:00"
 DUMMY_AUTO_SHUT_DOWN = "02:00:00"
 DUMMY_DEVICE_ID1 = "a123bc"
@@ -58,14 +51,6 @@ DUMMY_SWING = ThermostatSwing.OFF
 DUMMY_REMOTE_ID = "ELEC7001"
 DUMMY_POSITION = 54
 DUMMY_DIRECTION = ShutterDirection.SHUTTER_STOP
-
-YAML_CONFIG = {
-    DOMAIN: {
-        CONF_PHONE_ID: DUMMY_PHONE_ID,
-        CONF_DEVICE_ID: DUMMY_DEVICE_ID1,
-        CONF_DEVICE_PASSWORD: DUMMY_DEVICE_PASSWORD,
-    }
-}
 
 DUMMY_PLUG_DEVICE = SwitcherPowerPlug(
     DeviceType.POWER_PLUG,

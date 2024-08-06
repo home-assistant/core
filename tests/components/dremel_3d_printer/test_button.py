@@ -1,6 +1,6 @@
 """Button tests for the Dremel 3D Printer integration."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -22,11 +22,10 @@ from tests.common import MockConfigEntry
         ("resume", "resume"),
     ],
 )
+@pytest.mark.usefixtures("connection", "entity_registry_enabled_by_default")
 async def test_buttons(
     hass: HomeAssistant,
-    connection: None,
     config_entry: MockConfigEntry,
-    entity_registry_enabled_by_default: AsyncMock,
     button: str,
     function: str,
 ) -> None:
@@ -44,10 +43,13 @@ async def test_buttons(
         )
     assert mock.call_count == 1
 
-    with patch(
-        f"homeassistant.components.dremel_3d_printer.Dremel3DPrinter.{function}_print",
-        side_effect=RuntimeError,
-    ) as mock, pytest.raises(HomeAssistantError):
+    with (
+        patch(
+            f"homeassistant.components.dremel_3d_printer.Dremel3DPrinter.{function}_print",
+            side_effect=RuntimeError,
+        ) as mock,
+        pytest.raises(HomeAssistantError),
+    ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
