@@ -124,7 +124,6 @@ EXCEPTIONS = {
     "PyXiaomiGateway",  # https://github.com/Danielhiversen/PyXiaomiGateway/pull/201
     "aiocomelit",  # https://github.com/chemelli74/aiocomelit/pull/138
     "aioecowitt",  # https://github.com/home-assistant-libs/aioecowitt/pull/180
-    "aiohappyeyeballs",  # PSF-2.0 license
     "aioopenexchangerates",  # https://github.com/MartinHjelmare/aioopenexchangerates/pull/94
     "aiooui",  # https://github.com/Bluetooth-Devices/aiooui/pull/8
     "aioruuvigateway",  # https://github.com/akx/aioruuvigateway/pull/6
@@ -162,7 +161,6 @@ EXCEPTIONS = {
     "pyeconet",  # https://github.com/w1ll1am23/pyeconet/pull/41
     "pylutron-caseta",  # https://github.com/gurumitts/pylutron-caseta/pull/168
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
-    "pyswitchbee",  # https://github.com/jafar-atili/pySwitchbee/pull/5
     "pyvera",  # https://github.com/maximvelichko/pyvera/pull/164
     "pyxeoma",  # https://github.com/jeradM/pyxeoma/pull/11
     "repoze.lru",
@@ -173,7 +171,6 @@ EXCEPTIONS = {
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
     "tellduslive",  # https://github.com/molobrakos/tellduslive/pull/24
     "tellsticknet",  # https://github.com/molobrakos/tellsticknet/pull/33
-    "webrtc_noise_gain",  # https://github.com/rhasspy/webrtc-noise-gain/pull/24
     "vincenty",  # Public domain
     "zeversolar",  # https://github.com/kvanzuijlen/zeversolar/pull/46
 }
@@ -182,19 +179,10 @@ TODO = {
     "aiocache": AwesomeVersion(
         "0.12.2"
     ),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
-    "asterisk_mbox": AwesomeVersion(
-        "0.5.0"
-    ),  # No license, integration is deprecated and scheduled for removal in 2024.9.0
     "mficlient": AwesomeVersion(
         "0.3.0"
     ),  # No license https://github.com/kk7ds/mficlient/issues/4
-    "pyElectra": AwesomeVersion(
-        "1.2.3"
-    ),  # No License https://github.com/jafar-atili/pyElectra/issues/3
     "pyflic": AwesomeVersion("2.0.3"),  # No OSI approved license CC0-1.0 Universal)
-    "uvcclient": AwesomeVersion(
-        "0.11.0"
-    ),  # No License https://github.com/kk7ds/uvcclient/issues/7
 }
 
 
@@ -214,7 +202,7 @@ def main() -> int:
             if previous_unapproved_version < package.version:
                 if approved:
                     print(
-                        "Approved license detected for"
+                        "Approved license detected for "
                         f"{package.name}@{package.version}: {package.license}"
                     )
                     print("Please remove the package from the TODO list.")
@@ -228,14 +216,14 @@ def main() -> int:
                 exit_code = 1
         elif not approved and package.name not in EXCEPTIONS:
             print(
-                "We could not detect an OSI-approved license for"
+                "We could not detect an OSI-approved license for "
                 f"{package.name}@{package.version}: {package.license}"
             )
             print()
             exit_code = 1
         elif approved and package.name in EXCEPTIONS:
             print(
-                "Approved license detected for"
+                "Approved license detected for "
                 f"{package.name}@{package.version}: {package.license}"
             )
             print(f"Please remove the package from the EXCEPTIONS list: {package.name}")

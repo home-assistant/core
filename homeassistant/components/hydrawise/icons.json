@@ -29,5 +29,10 @@
         }
       }
     }
+  },
+  "services": {
+    "start_watering": "mdi:sprinkler-variant",
+    "suspend": "mdi:pause-circle-outline",
+    "resume": "mdi:play"
   }
 }

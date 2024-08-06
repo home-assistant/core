@@ -21,13 +21,12 @@ from homeassistant.components.deconz.services import (
     SERVICE_REMOVE_ORPHANED_ENTRIES,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .test_hub import BRIDGE_ID
 
-from tests.common import async_capture_events
+from tests.common import MockConfigEntry, async_capture_events
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -329,7 +328,7 @@ async def test_remove_orphaned_entries_service(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Test service works and also don't remove more than expected."""
     device = device_registry.async_get_or_create(

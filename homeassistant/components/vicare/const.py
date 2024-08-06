@@ -10,6 +10,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
+    Platform.FAN,
     Platform.NUMBER,
     Platform.SENSOR,
     Platform.WATER_HEATER,
