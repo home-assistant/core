@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from pysnmp.hlapi import Integer32, OctetString
+from pysnmp.hlapi import Integer32, IpAddress, OctetString
 import pytest
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -123,3 +123,23 @@ async def test_snmp_string_switch_unknown(
         state = hass.states.get("switch.snmp")
         assert state.state == STATE_UNKNOWN
         assert "Invalid payload '1,0,1,0' received for entity" in caplog.text
+
+
+async def test_snmp_string_switch_unknown_ipaddress(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test snmp switch returning an IpAddress for unknown."""
+
+    # This is a valid IP Address SNMP response,
+    # which we don't handle yet
+    # (along with several other RFC1902 OBJECT-TYPEs)
+    mock_data = IpAddress("127.0.0.1")
+    with patch(
+        "homeassistant.components.snmp.switch.getCmd",
+        return_value=(None, None, None, [[mock_data]]),
+    ):
+        assert await async_setup_component(hass, SWITCH_DOMAIN, string_config)
+        await hass.async_block_till_done()
+        state = hass.states.get("switch.snmp")
+        assert state.state == STATE_UNKNOWN
+        assert "Invalid payload '\x7f\x00\x00\x01' received for entity" in caplog.text
