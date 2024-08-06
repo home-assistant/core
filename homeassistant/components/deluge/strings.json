@@ -37,10 +37,10 @@
       "download_speed": {
         "name": "Download speed"
       },
-      "protocol_traffic_download_speed": {
+      "dht_download_rate": {
         "name": "Protocol traffic download speed"
       },
-      "protocol_traffic_upload_speed": {
+      "dht_upload_rate": {
         "name": "Protocol traffic upload speed"
       },
       "upload_speed": {

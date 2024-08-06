@@ -13,8 +13,8 @@ DOMAIN: Final = "deluge"
 DOWNLOAD_SPEED = "download_speed"
 
 LOGGER = logging.getLogger(__package__)
-PROTOCOL_TRAFFIC_DOWNLOAD_SPEED = "protocol_traffic_download_speed"
-PROTOCOL_TRAFFIC_UPLOAD_SPEED = "protocol_traffic_upload_speed"
+DHT_DOWNLOAD_RATE = "dht_download_rate"
+DHT_UPLOAD_RATE = "dht_upload_rate"
 UPLOAD_SPEED = "upload_speed"
 
 
