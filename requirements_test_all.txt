@@ -2240,7 +2240,7 @@ upcloud-api==2.5.1
 url-normalize==1.4.3
 
 # homeassistant.components.uvc
-uvcclient==0.11.1
+uvcclient==0.12.1
 
 # homeassistant.components.roborock
 vacuum-map-parser-roborock==0.1.2
