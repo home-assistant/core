@@ -44,11 +44,8 @@ async def async_setup_actions(hass: HomeAssistant) -> bool:
             device = device_registry.async_get(device_id)
             if device is not None:
                 for entry_id in device.config_entries:
-                    if (
-                        config_entry := hass.config_entries.async_get_entry(entry_id)
-                    ) is None:
-                        continue
-                    if config_entry.domain == DOMAIN:
+                    config_entry = hass.config_entries.async_get_entry(entry_id)
+                    if config_entry is not None and config_entry.domain == DOMAIN:
                         break
             if (
                 config_entry is None
