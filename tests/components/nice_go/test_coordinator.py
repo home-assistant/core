@@ -10,7 +10,7 @@ import pytest
 from homeassistant.components.nice_go.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import issue_registry as ir
 
 from . import setup_integration
@@ -87,6 +87,7 @@ async def test_update_refresh_token(
     mock_nice_go.authenticate.return_value = "new-refresh-token"
     freezer.tick(timedelta(days=30))
     async_fire_time_changed(hass)
+    await mock_config_entry.runtime_data.async_config_entry_first_refresh()
 
     assert mock_nice_go.authenticate_refresh.call_count == 1
     assert mock_nice_go.authenticate.call_count == 1
@@ -111,6 +112,8 @@ async def test_update_refresh_token_api_error(
     mock_nice_go.authenticate.side_effect = ApiError
     freezer.tick(timedelta(days=30))
     async_fire_time_changed(hass)
+    with pytest.raises(ConfigEntryNotReady):
+        await mock_config_entry.runtime_data.async_config_entry_first_refresh()
 
     assert mock_nice_go.authenticate_refresh.call_count == 1
     assert mock_nice_go.authenticate.call_count == 1
@@ -140,6 +143,8 @@ async def test_update_refresh_token_auth_failed(
     mock_nice_go.authenticate.side_effect = AuthFailedError
     freezer.tick(timedelta(days=30))
     async_fire_time_changed(hass)
+    with pytest.raises(ConfigEntryAuthFailed):
+        await mock_config_entry.runtime_data.async_config_entry_first_refresh()
 
     assert mock_nice_go.authenticate_refresh.call_count == 1
     assert mock_nice_go.authenticate.call_count == 1
@@ -150,7 +155,6 @@ async def test_update_refresh_token_auth_failed(
         mock_config_entry.runtime_data.last_exception.__class__.__name__
         == "ConfigEntryAuthFailed"
     )
-    assert any(mock_config_entry.async_get_active_flows(hass, {"reauth"}))
 
 
 async def test_client_listen_api_error(

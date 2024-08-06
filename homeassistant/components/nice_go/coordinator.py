@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 import json
 import logging
 from typing import Any
@@ -51,7 +51,6 @@ class NiceGODevice:
 class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
     """DataUpdateCoordinator for Nice G.O."""
 
-    _devices: list[dict[str, Any]] | None = None
     config_entry: ConfigEntry
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -60,7 +59,6 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
             hass,
             _LOGGER,
             name="Nice G.O.",
-            update_interval=timedelta(seconds=60),
         )
 
         self.refresh_token = self.config_entry.data[CONF_REFRESH_TOKEN]
@@ -116,6 +114,9 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
             fw_version=fw_version,
             connected=connected,
         )
+
+    async def _async_update_data(self) -> dict[str, NiceGODevice]:
+        return self.data
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
