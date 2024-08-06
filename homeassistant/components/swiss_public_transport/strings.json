@@ -54,9 +54,9 @@
       "name": "Fetch Connections",
       "description": "Fetch a list of connections from the swiss public transport.",
       "fields": {
-        "entity_id": {
-          "name": "List",
-          "description": "Swiss public transport sensor to fetch connections for."
+        "config_entry_id": {
+          "name": "Integration",
+          "description": "Swiss public transport integration to fetch connections for."
         },
         "limit": {
           "name": "Limit",
@@ -75,8 +75,11 @@
     "cannot_connect": {
       "message": "Cannot connect to server.\n{error}"
     },
-    "service_entity_unavailable": {
-      "message": "Sensor entity or service is unavailable."
+    "not_loaded": {
+      "message": "{target} is not loaded."
+    },
+    "integration_not_found": {
+      "message": "Integration \"{target}\" not found in registry."
     }
   }
 }

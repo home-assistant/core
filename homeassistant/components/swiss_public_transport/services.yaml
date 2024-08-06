@@ -1,9 +1,10 @@
 fetch_connections:
-  target:
-    entity:
-      integration: swiss_public_transport
-      domain: sensor
   fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: swiss_public_transport
     limit:
       example: 3
       required: true
