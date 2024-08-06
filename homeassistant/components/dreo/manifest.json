@@ -1,6 +1,7 @@
 {
   "domain": "dreo",
   "name": "Dreo",
+  "version": "1.0.0",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/dreo",
   "integration_type": "hub",

@@ -39,12 +39,12 @@ class DreoEntity(Entity):
 
     def _try_command(self, mask_error, **kwargs) -> bool:
         """Call a hscluod device command handling error messages."""
-        _LOGGER.info(f"command: {kwargs}")
+        _LOGGER.info("command: {}".format({kwargs}))
+
         try:
             self._config_entry.runtime_data.client.update_status(
                 self._device_id, **kwargs
             )
-            return True
 
         except HsCloudException as ex:
             _LOGGER.error(mask_error)
@@ -65,3 +65,6 @@ class DreoEntity(Entity):
         except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.error(mask_error)
             raise HomeAssistantError(mask_error) from ex
+
+        else:
+            return True

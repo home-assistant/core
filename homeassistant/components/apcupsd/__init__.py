@@ -8,7 +8,6 @@ from typing import Final
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
 from .coordinator import APCUPSdCoordinator
@@ -16,8 +15,6 @@ from .coordinator import APCUPSdCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: Final = (Platform.BINARY_SENSOR, Platform.SENSOR)
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:

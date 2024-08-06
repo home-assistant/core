@@ -11,12 +11,9 @@ from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_SITE_ID, DOMAIN, LOGGER
+from .const import CONF_SITE_ID, LOGGER
 from .types import SolarEdgeConfigEntry, SolarEdgeData
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 PLATFORMS = [Platform.SENSOR]
 
