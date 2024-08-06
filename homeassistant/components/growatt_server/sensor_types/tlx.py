@@ -327,14 +327,14 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
     GrowattSensorEntityDescription(
         key="tlx_battery_2_discharge_w",
         translation_key="tlx_battery_2_discharge_w",
-        api_key="bdc1DischargePower",
+        api_key="bdc2DischargePower",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
     ),
     GrowattSensorEntityDescription(
         key="tlx_battery_2_discharge_total",
         translation_key="tlx_battery_2_discharge_total",
-        api_key="bdc1DischargeTotal",
+        api_key="bdc2DischargeTotal",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -376,14 +376,14 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
     GrowattSensorEntityDescription(
         key="tlx_battery_2_charge_w",
         translation_key="tlx_battery_2_charge_w",
-        api_key="bdc1ChargePower",
+        api_key="bdc2ChargePower",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
     ),
     GrowattSensorEntityDescription(
         key="tlx_battery_2_charge_total",
         translation_key="tlx_battery_2_charge_total",
-        api_key="bdc1ChargeTotal",
+        api_key="bdc2ChargeTotal",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,

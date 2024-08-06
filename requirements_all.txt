@@ -237,7 +237,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==24.6.2
+aioesphomeapi==25.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1007,7 +1007,7 @@ gpiozero==1.6.2
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==2.0.0
+greeclimate==2.1.0
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==3.0.3
@@ -1093,7 +1093,7 @@ hole==0.8.0
 holidays==0.53
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240805.1
+home-assistant-frontend==20240806.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.7.29
@@ -1216,7 +1216,7 @@ kiwiki-client==0.1.1
 knocki==0.3.1
 
 # homeassistant.components.knx
-knx-frontend==2024.7.25.204106
+knx-frontend==2024.8.6.85349
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -2622,7 +2622,7 @@ soco==0.30.4
 solaredge-local==0.2.3
 
 # homeassistant.components.solarlog
-solarlog_cli==0.1.5
+solarlog_cli==0.1.6
 
 # homeassistant.components.solax
 solax==3.1.1
@@ -2971,7 +2971,7 @@ youless-api==2.1.2
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp==2024.07.16
+yt-dlp==2024.08.06
 
 # homeassistant.components.zamg
 zamg==0.3.6
