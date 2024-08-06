@@ -5,6 +5,7 @@ from unittest.mock import patch
 from pysnmp.hlapi import Integer32
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
