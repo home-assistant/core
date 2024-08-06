@@ -1,6 +1,6 @@
 """Test the Nice G.O. config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 from nice_go import AuthFailedError
@@ -16,6 +16,8 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 
 async def test_form(
     hass: HomeAssistant,
@@ -30,27 +32,21 @@ async def test_form(
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
-    with patch(
-        "uuid.uuid4",
-        return_value="test-uuid",
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_EMAIL: "test-email",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: "test-email",
+            CONF_PASSWORD: "test-password",
+        },
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-email"
-    assert result["data"] == {
-        CONF_EMAIL: "test-email",
-        CONF_PASSWORD: "test-password",
-        CONF_REFRESH_TOKEN: "test-refresh-token",
-        CONF_REFRESH_TOKEN_CREATION_TIME: freezer.time_to_freeze.timestamp(),
-    }
+    assert result["data"][CONF_EMAIL] == "test-email"
+    assert result["data"][CONF_PASSWORD] == "test-password"
+    assert result["data"][CONF_REFRESH_TOKEN] == "test-refresh-token"
+    assert CONF_REFRESH_TOKEN_CREATION_TIME in result["data"]
+    assert result["result"].unique_id == "test-email"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -70,7 +66,7 @@ async def test_form_exceptions(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    await hass.async_block_till_done()
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -91,3 +87,25 @@ async def test_form_exceptions(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_duplicate_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nice_go: AsyncMock,
+) -> None:
+    """Test that duplicate devices are handled."""
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: "test-email",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
