@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from pysnmp.hlapi import Integer32
+import pytest
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
@@ -49,7 +50,9 @@ async def test_snmp_integer_switch_on(hass: HomeAssistant) -> None:
         assert state.state == STATE_ON
 
 
-async def test_snmp_integer_switch_unknown(hass: HomeAssistant) -> None:
+async def test_snmp_integer_switch_unknown(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test snmp switch returning int 3 (not a configured payload) for unknown."""
 
     mock_data = Integer32(3)
@@ -61,3 +64,4 @@ async def test_snmp_integer_switch_unknown(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         state = hass.states.get("switch.snmp")
         assert state.state == STATE_UNKNOWN
+        assert "Invalid payload '3' received for entity" in caplog.text
