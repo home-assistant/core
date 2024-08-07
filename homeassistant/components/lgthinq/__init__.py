@@ -122,17 +122,7 @@ async def async_unload_entry(
 ##### thinq #####
 
 THINQ_PLATFORMS = [
-    Platform.BINARY_SENSOR,
-    Platform.BUTTON,
-    Platform.CLIMATE,
-    Platform.FAN,
-    Platform.NUMBER,
-    Platform.SELECT,
-    Platform.SENSOR,
     Platform.SWITCH,
-    Platform.TEXT,
-    Platform.VACUUM,
-    Platform.EVENT,
 ]
 
 SERVICE_GET_DEVICE_PROFILE_SCHEMA = vol.Schema(
