@@ -34,3 +34,8 @@ class NiceGOEntity(CoordinatorEntity[NiceGOUpdateCoordinator]):
     def data(self) -> NiceGODevice:
         """Return the Nice G.O. device."""
         return self.coordinator.data[self._device_id]
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.data.connected
