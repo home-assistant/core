@@ -39,7 +39,11 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import Template, result_as_boolean
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .__init__ import DOMAIN, PLATFORMS
+from . import (
+    DOMAIN,
+    PLATFORM_SCHEMA,  # noqa: F401
+    PLATFORMS,
+)
 from .const import (
     ATTR_OBSERVATIONS,
     ATTR_OCCURRED_OBSERVATION_ENTITIES,

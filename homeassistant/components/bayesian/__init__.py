@@ -21,7 +21,9 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_OBSERVATIONS,
@@ -92,14 +94,20 @@ PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     }
 )
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Bayesian integration from YAML."""
+    if DOMAIN not in config:
+        return True
+
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            discovery.async_load_platform(hass, platform, DOMAIN, {}, config)
+        )
+    return True
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bayesian from a config entry."""
-
-    _LOGGER.error(
-        "Config %s", entry.options
-    )  # TODO Entries are coming through without Observations: list[dict]
-    # but instead like 2024-08-05 19:58:22.241 ERROR (MainThread) [homeassistant.components.bayesian] Config {'name': 'Bayesian Binary Sensor', 'probability_threshold': 50.0, 'prior': 50.0, 'device_class': 'connectivity', 'entity_id': 'sensor.google_com', 'to_state': 'on', 'prob_given_true': 98.0, 'prob_given_false': 2.0}
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
