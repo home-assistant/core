@@ -94,7 +94,7 @@ class MatterValve(MatterEntity, ValveEntity):
             # value needs to be inverted and is sent in 100ths
             clusters.ValveConfigurationAndControl.Commands.GoToLiftPercentage((100 - position) * 100)
         )
-    
+
     async def send_device_command(self, command: Any) -> None:
         """Send device command."""
         await self.matter_client.send_device_command(
