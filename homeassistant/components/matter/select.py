@@ -27,7 +27,6 @@ type SelectCluster = (
     | clusters.RvcRunMode
     | clusters.RvcCleanMode
     | clusters.DishwasherMode
-    | clusters.MicrowaveOvenMode
     | clusters.EnergyEvseMode
     | clusters.DeviceEnergyManagementMode
 )
