@@ -1229,7 +1229,7 @@ async def test_manager_voice_assistant_handlers_api(
             "", 0, None, None
         )
 
-        assert "Voice assistant UDP server was not stopped" in caplog.text
+        assert "Previous Voice assistant pipeline was not stopped" in caplog.text
 
     await device.mock_voice_assistant_handle_audio(bytes(_ONE_SECOND))
 
