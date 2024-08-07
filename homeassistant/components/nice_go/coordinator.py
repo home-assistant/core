@@ -21,7 +21,7 @@ from nice_go import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -159,8 +159,10 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
                 self.email, self.password, async_get_clientsession(self.hass)
             )
         except AuthFailedError as e:
+            _LOGGER.exception("Authentication failed")
             raise ConfigEntryAuthFailed from e
         except ApiError as e:
+            _LOGGER.exception("API error")
             raise UpdateFailed from e
 
         self.refresh_token = refresh_token
@@ -173,12 +175,12 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
 
     async def client_listen(self) -> None:
         """Listen to the websocket for updates."""
+        self.api.event(self.on_connected)
+        self.api.event(self.on_data)
         try:
-            self.api.event(self.on_connected)
-            self.api.event(self.on_data)
             await self.api.connect(reconnect=True)
-        except ApiError as e:
-            raise ConfigEntryNotReady from e
+        except ApiError:
+            _LOGGER.exception("API error")
 
         if not self.hass.is_stopping:
             await asyncio.sleep(5)
@@ -186,6 +188,8 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
 
     async def on_data(self, data: dict[str, Any]) -> None:
         """Handle incoming data from the websocket."""
+        _LOGGER.debug("Received data from the websocket")
+        _LOGGER.debug(data)
         raw_data = data["data"]["devicesStatesUpdateFeed"]["item"]
         parsed_data = await self._parse_barrier(
             BarrierState(
@@ -195,7 +199,9 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
                 connectionState=ConnectionState(
                     connected=raw_data["connectionState"]["connected"],
                     updatedTimestamp=raw_data["connectionState"]["updatedTimestamp"],
-                ),
+                )
+                if raw_data["connectionState"]
+                else None,
                 version=raw_data["version"],
                 timestamp=raw_data["timestamp"],
             )
@@ -210,4 +216,5 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
 
     async def on_connected(self) -> None:
         """Handle the websocket connection."""
+        _LOGGER.debug("Connected to the websocket")
         await self.api.subscribe(self.organization_id)
