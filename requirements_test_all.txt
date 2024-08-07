@@ -1430,7 +1430,7 @@ pycfdns==3.0.0
 pycomfoconnect==0.5.1
 
 # homeassistant.components.coolmaster
-pycoolmasternet-async==0.2.0
+pycoolmasternet-async==0.1.5
 
 # homeassistant.components.microsoft
 pycsspeechtts==1.0.8
@@ -2301,7 +2301,7 @@ whois==0.9.27
 wiffi==1.1.2
 
 # homeassistant.components.wled
-wled==0.20.0
+wled==0.20.1
 
 # homeassistant.components.wolflink
 wolf-comm==0.0.9
