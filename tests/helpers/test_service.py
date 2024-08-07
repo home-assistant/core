@@ -405,7 +405,7 @@ async def test_service_call(hass: HomeAssistant) -> None:
     """Test service call with templating."""
     calls = async_mock_service(hass, "test_domain", "test_service")
     config = {
-        "service": "{{ 'test_domain.test_service' }}",
+        "action": "{{ 'test_domain.test_service' }}",
         "entity_id": "hello.world",
         "data": {
             "hello": "{{ 'goodbye' }}",
@@ -435,7 +435,7 @@ async def test_service_call(hass: HomeAssistant) -> None:
     }
 
     config = {
-        "service": "{{ 'test_domain.test_service' }}",
+        "action": "{{ 'test_domain.test_service' }}",
         "target": {
             "area_id": ["area-42", "{{ 'area-51' }}"],
             "device_id": ["abcdef", "{{ 'fedcba' }}"],
@@ -455,7 +455,7 @@ async def test_service_call(hass: HomeAssistant) -> None:
     }
 
     config = {
-        "service": "{{ 'test_domain.test_service' }}",
+        "action": "{{ 'test_domain.test_service' }}",
         "target": "{{ var_target }}",
     }
 
@@ -542,19 +542,19 @@ async def test_split_entity_string(hass: HomeAssistant) -> None:
     await service.async_call_from_config(
         hass,
         {
-            "service": "test_domain.test_service",
+            "action": "test_domain.test_service",
             "entity_id": "hello.world, sensor.beer",
         },
     )
     await hass.async_block_till_done()
-    assert ["hello.world", "sensor.beer"] == calls[-1].data.get("entity_id")
+    assert calls[-1].data.get("entity_id") == ["hello.world", "sensor.beer"]
 
 
 async def test_not_mutate_input(hass: HomeAssistant) -> None:
     """Test for immutable input."""
     async_mock_service(hass, "test_domain", "test_service")
     config = {
-        "service": "test_domain.test_service",
+        "action": "test_domain.test_service",
         "entity_id": "hello.world, sensor.beer",
         "data": {"hello": 1},
         "data_template": {"nested": {"value": "{{ 1 + 1 }}"}},
@@ -581,7 +581,7 @@ async def test_fail_silently_if_no_service(mock_log, hass: HomeAssistant) -> Non
     await service.async_call_from_config(hass, {})
     assert mock_log.call_count == 2
 
-    await service.async_call_from_config(hass, {"service": "invalid"})
+    await service.async_call_from_config(hass, {"action": "invalid"})
     assert mock_log.call_count == 3
 
 
@@ -597,7 +597,7 @@ async def test_service_call_entry_id(
     assert entry.entity_id == "hello.world"
 
     config = {
-        "service": "test_domain.test_service",
+        "action": "test_domain.test_service",
         "target": {"entity_id": entry.id},
     }
 
@@ -613,7 +613,7 @@ async def test_service_call_all_none(hass: HomeAssistant, target) -> None:
     calls = async_mock_service(hass, "test_domain", "test_service")
 
     config = {
-        "service": "test_domain.test_service",
+        "action": "test_domain.test_service",
         "target": {"entity_id": target},
     }
 
@@ -1792,10 +1792,10 @@ async def test_extract_from_service_available_device(hass: HomeAssistant) -> Non
 
     call_1 = ServiceCall("test", "service", data={"entity_id": ENTITY_MATCH_ALL})
 
-    assert ["test_domain.test_1", "test_domain.test_3"] == [
+    assert [
         ent.entity_id
         for ent in (await service.async_extract_entities(hass, entities, call_1))
-    ]
+    ] == ["test_domain.test_1", "test_domain.test_3"]
 
     call_2 = ServiceCall(
         "test",
@@ -1803,10 +1803,10 @@ async def test_extract_from_service_available_device(hass: HomeAssistant) -> Non
         data={"entity_id": ["test_domain.test_3", "test_domain.test_4"]},
     )
 
-    assert ["test_domain.test_3"] == [
+    assert [
         ent.entity_id
         for ent in (await service.async_extract_entities(hass, entities, call_2))
-    ]
+    ] == ["test_domain.test_3"]
 
     assert (
         await service.async_extract_entities(
@@ -1830,10 +1830,10 @@ async def test_extract_from_service_empty_if_no_entity_id(hass: HomeAssistant) -
     ]
     call = ServiceCall("test", "service")
 
-    assert [] == [
+    assert [
         ent.entity_id
         for ent in (await service.async_extract_entities(hass, entities, call))
-    ]
+    ] == []
 
 
 async def test_extract_from_service_filter_out_non_existing_entities(
@@ -1851,10 +1851,10 @@ async def test_extract_from_service_filter_out_non_existing_entities(
         {"entity_id": ["test_domain.test_2", "test_domain.non_exist"]},
     )
 
-    assert ["test_domain.test_2"] == [
+    assert [
         ent.entity_id
         for ent in (await service.async_extract_entities(hass, entities, call))
-    ]
+    ] == ["test_domain.test_2"]
 
 
 async def test_extract_from_service_area_id(

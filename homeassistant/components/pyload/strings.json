@@ -98,6 +98,12 @@
     },
     "setup_authentication_exception": {
       "message": "Authentication failed for {username}, verify your login credentials"
+    },
+    "service_call_exception": {
+      "message": "Unable to send command to pyLoad due to a connection error, try again later"
+    },
+    "service_call_auth_exception": {
+      "message": "Unable to send command to pyLoad due to an authentication error, try again later"
     }
   },
   "issues": {

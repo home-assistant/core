@@ -1,10 +1,10 @@
 """Fixtures for BSBLAN integration tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from bsblan import Device, Info, State
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME

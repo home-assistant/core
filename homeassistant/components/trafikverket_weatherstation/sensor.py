@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
-from pytrafikverket.trafikverket_weather import WeatherStationInfo
+from pytrafikverket.models import WeatherStationInfoModel
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -47,7 +47,7 @@ PRECIPITATION_TYPE = [
 class TrafikverketSensorEntityDescription(SensorEntityDescription):
     """Describes Trafikverket sensor entity."""
 
-    value_fn: Callable[[WeatherStationInfo], StateType | datetime]
+    value_fn: Callable[[WeatherStationInfoModel], StateType | datetime]
 
 
 def add_utc_timezone(date_time: datetime | None) -> datetime | None:

@@ -174,10 +174,9 @@ class InputButton(collection.CollectionEntity, ButtonEntity, RestoreEntity):
     async def async_press(self) -> None:
         """Press the button.
 
-        Left emtpty intentionally.
+        Left empty intentionally.
         The input button itself doesn't trigger anything.
         """
-        return None
 
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""

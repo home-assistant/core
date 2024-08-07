@@ -1,9 +1,9 @@
 """Test Traccar Server diagnostics."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock
 
 from syrupy import SnapshotAssertion
-from typing_extensions import Generator
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er

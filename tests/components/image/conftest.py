@@ -1,7 +1,8 @@
 """Test helpers for image."""
 
+from collections.abc import Generator
+
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import image
 from homeassistant.config_entries import ConfigEntry, ConfigFlow

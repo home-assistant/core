@@ -179,14 +179,14 @@ async def test_get_hvac_modes(
 
     state = hass.states.get(ENTITY_CLIMATE)
     modes = state.attributes.get("hvac_modes")
-    assert [
+    assert modes == [
         HVACMode.AUTO,
         HVACMode.OFF,
         HVACMode.COOL,
         HVACMode.HEAT,
         HVACMode.DRY,
         HVACMode.FAN_ONLY,
-    ] == modes
+    ]
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -654,11 +654,11 @@ async def test_set_target_temperature(
     assert state.state == "heat"
     mqtt_mock.async_publish.assert_called_once_with("mode-topic", "heat", 0, False)
     mqtt_mock.async_publish.reset_mock()
-    await common.async_set_temperature(hass, temperature=47, entity_id=ENTITY_CLIMATE)
+    await common.async_set_temperature(hass, temperature=35, entity_id=ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("temperature") == 47
+    assert state.attributes.get("temperature") == 35
     mqtt_mock.async_publish.assert_called_once_with(
-        "temperature-topic", "47.0", 0, False
+        "temperature-topic", "35.0", 0, False
     )
 
     # also test directly supplying the operation mode to set_temperature
@@ -713,7 +713,7 @@ async def test_set_target_temperature_pessimistic(
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("temperature") is None
     await common.async_set_hvac_mode(hass, "heat", ENTITY_CLIMATE)
-    await common.async_set_temperature(hass, temperature=47, entity_id=ENTITY_CLIMATE)
+    await common.async_set_temperature(hass, temperature=35, entity_id=ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("temperature") is None
 
@@ -1017,7 +1017,16 @@ async def test_handle_action_received(
 
     # Cycle through valid modes
     # Redefine actions according to https://developers.home-assistant.io/docs/core/entity/climate/#hvac-action
-    actions = ["off", "preheating", "heating", "cooling", "drying", "idle", "fan"]
+    actions = [
+        "off",
+        "preheating",
+        "defrosting",
+        "heating",
+        "cooling",
+        "drying",
+        "idle",
+        "fan",
+    ]
     assert all(elem in actions for elem in HVACAction)
     for action in actions:
         async_fire_mqtt_message(hass, "action", action)
@@ -1581,13 +1590,13 @@ async def test_set_and_templates(
     assert state.attributes.get("swing_mode") == "on"
 
     # Temperature
-    await common.async_set_temperature(hass, temperature=47, entity_id=ENTITY_CLIMATE)
+    await common.async_set_temperature(hass, temperature=35, entity_id=ENTITY_CLIMATE)
     mqtt_mock.async_publish.assert_called_once_with(
-        "temperature-topic", "temp: 47.0", 0, False
+        "temperature-topic", "temp: 35.0", 0, False
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("temperature") == 47
+    assert state.attributes.get("temperature") == 35
 
     # Temperature Low/High
     await common.async_set_temperature(
@@ -1867,11 +1876,7 @@ async def test_update_with_json_attrs_not_dict(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        climate.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, climate.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -1882,11 +1887,7 @@ async def test_update_with_json_attrs_bad_json(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        climate.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, climate.DOMAIN, DEFAULT_CONFIG
     )
 
 

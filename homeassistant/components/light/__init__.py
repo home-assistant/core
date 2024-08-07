@@ -299,7 +299,7 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 
 def preprocess_turn_on_alternatives(
-    hass: HomeAssistant, params: dict[str, Any] | dict[str | vol.Optional, Any]
+    hass: HomeAssistant, params: dict[str, Any] | VolDictType
 ) -> None:
     """Process extra data for turn light on request.
 
@@ -403,11 +403,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     # of the light base platform.
     hass.async_create_task(profiles.async_initialize(), eager_start=True)
 
-    def preprocess_data(
-        data: dict[str | vol.Optional, Any],
-    ) -> dict[str | vol.Optional, Any]:
+    def preprocess_data(data: VolDictType) -> VolDictType:
         """Preprocess the service data."""
-        base: dict[str | vol.Optional, Any] = {
+        base: VolDictType = {
             entity_field: data.pop(entity_field)
             for entity_field in cv.ENTITY_SERVICE_FIELDS
             if entity_field in data
@@ -866,6 +864,16 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ATTR_MAX_MIREDS,
             ATTR_MIN_COLOR_TEMP_KELVIN,
             ATTR_MAX_COLOR_TEMP_KELVIN,
+            ATTR_BRIGHTNESS,
+            ATTR_COLOR_MODE,
+            ATTR_COLOR_TEMP,
+            ATTR_COLOR_TEMP_KELVIN,
+            ATTR_EFFECT,
+            ATTR_HS_COLOR,
+            ATTR_RGB_COLOR,
+            ATTR_RGBW_COLOR,
+            ATTR_RGBWW_COLOR,
+            ATTR_XY_COLOR,
         }
     )
 

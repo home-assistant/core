@@ -10,7 +10,6 @@ from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import Context, HomeAssistant, State
 
 from .const import (
-    ATTR_AUX_HEAT,
     ATTR_FAN_MODE,
     ATTR_HUMIDITY,
     ATTR_HVAC_MODE,
@@ -20,7 +19,6 @@ from .const import (
     ATTR_TARGET_TEMP_LOW,
     DOMAIN,
     HVAC_MODES,
-    SERVICE_SET_AUX_HEAT,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE,
@@ -55,9 +53,6 @@ async def _async_reproduce_states(
 
     if state.state in HVAC_MODES:
         await call_service(SERVICE_SET_HVAC_MODE, [], {ATTR_HVAC_MODE: state.state})
-
-    if ATTR_AUX_HEAT in state.attributes:
-        await call_service(SERVICE_SET_AUX_HEAT, [ATTR_AUX_HEAT])
 
     if (
         (ATTR_TEMPERATURE in state.attributes)

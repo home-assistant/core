@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Generator
 import logging
 from typing import Any
 from unittest.mock import AsyncMock, call, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.hassio.addon_manager import (
     AddonError,

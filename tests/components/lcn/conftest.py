@@ -12,11 +12,10 @@ import pytest
 from homeassistant.components.lcn.const import DOMAIN
 from homeassistant.components.lcn.helpers import generate_unique_id
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, async_mock_service, load_fixture
+from tests.common import MockConfigEntry, load_fixture
 
 
 class MockModuleConnection(ModuleConnection):
@@ -76,12 +75,6 @@ def create_config_entry(name):
         data=entry_data,
         options=options,
     )
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 @pytest.fixture(name="entry")

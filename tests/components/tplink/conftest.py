@@ -1,10 +1,10 @@
 """tplink conftest."""
 
+from collections.abc import Generator
 import copy
 from unittest.mock import DEFAULT, AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.tplink import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -22,7 +22,7 @@ from . import (
     _mocked_device,
 )
 
-from tests.common import MockConfigEntry, mock_device_registry, mock_registry
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -75,18 +75,6 @@ def mock_connect():
 
         mock_connect.side_effect = get_device
         yield {"connect": mock_connect, "mock_devices": devices}
-
-
-@pytest.fixture(name="device_reg")
-def device_reg_fixture(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture(name="entity_reg")
-def entity_reg_fixture(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 @pytest.fixture

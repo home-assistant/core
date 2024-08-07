@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 import voluptuous as vol
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
+from xknx.exceptions import ConversionError
 from xknx.telegram import Telegram
 from xknx.telegram.address import parse_device_group_address
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
@@ -31,7 +32,7 @@ from .const import (
     SERVICE_KNX_SEND,
 )
 from .expose import create_knx_exposure
-from .schema import ExposeSchema, ga_validator, sensor_type_validator
+from .schema import ExposeSchema, dpt_base_type_validator, ga_validator
 
 if TYPE_CHECKING:
     from . import KNXModule
@@ -95,7 +96,7 @@ SERVICE_KNX_EVENT_REGISTER_SCHEMA = vol.Schema(
             cv.ensure_list,
             [ga_validator],
         ),
-        vol.Optional(CONF_TYPE): sensor_type_validator,
+        vol.Optional(CONF_TYPE): dpt_base_type_validator,
         vol.Optional(SERVICE_KNX_ATTR_REMOVE, default=False): cv.boolean,
     }
 )
@@ -125,10 +126,7 @@ async def service_event_register_modify(hass: HomeAssistant, call: ServiceCall) 
         transcoder := DPTBase.parse_transcoder(dpt)
     ):
         knx_module.group_address_transcoder.update(
-            {
-                _address: transcoder  # type: ignore[type-abstract]
-                for _address in group_addresses
-            }
+            {_address: transcoder for _address in group_addresses}
         )
     for group_address in group_addresses:
         if group_address in knx_module.knx_event_callback.group_addresses:
@@ -173,7 +171,7 @@ async def service_exposure_register_modify(
                 f"Could not find exposure for '{group_address}' to remove."
             ) from err
 
-        removed_exposure.shutdown()
+        removed_exposure.async_remove()
         return
 
     if group_address in knx_module.service_exposures:
@@ -186,7 +184,7 @@ async def service_exposure_register_modify(
             group_address,
             replaced_exposure.device.name,
         )
-        replaced_exposure.shutdown()
+        replaced_exposure.async_remove()
     exposure = create_knx_exposure(knx_module.hass, knx_module.xknx, call.data)
     knx_module.service_exposures[group_address] = exposure
     _LOGGER.debug(
@@ -204,7 +202,7 @@ SERVICE_KNX_SEND_SCHEMA = vol.Any(
                 [ga_validator],
             ),
             vol.Required(SERVICE_KNX_ATTR_PAYLOAD): cv.match_all,
-            vol.Required(SERVICE_KNX_ATTR_TYPE): sensor_type_validator,
+            vol.Required(SERVICE_KNX_ATTR_TYPE): dpt_base_type_validator,
             vol.Optional(SERVICE_KNX_ATTR_RESPONSE, default=False): cv.boolean,
         }
     ),
@@ -237,8 +235,15 @@ async def service_send_to_knx_bus(hass: HomeAssistant, call: ServiceCall) -> Non
     if attr_type is not None:
         transcoder = DPTBase.parse_transcoder(attr_type)
         if transcoder is None:
-            raise ValueError(f"Invalid type for knx.send service: {attr_type}")
-        payload = transcoder.to_knx(attr_payload)
+            raise ServiceValidationError(
+                f"Invalid type for knx.send service: {attr_type}"
+            )
+        try:
+            payload = transcoder.to_knx(attr_payload)
+        except ConversionError as err:
+            raise ServiceValidationError(
+                f"Invalid payload for knx.send service: {err}"
+            ) from err
     elif isinstance(attr_payload, int):
         payload = DPTBinary(attr_payload)
     else:

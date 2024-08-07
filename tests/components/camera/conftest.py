@@ -1,9 +1,9 @@
 """Test helpers for camera."""
 
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import PropertyMock, patch
 
 import pytest
-from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant.components import camera
 from homeassistant.components.camera.const import StreamType

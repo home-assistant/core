@@ -10,13 +10,11 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LutronCasetaDeviceUpdatableEntity
-from .const import DOMAIN as CASETA_DOMAIN
-from .models import LutronCasetaData
+from .models import LutronCasetaConfigEntry
 
 
 class LutronCasetaShade(LutronCasetaDeviceUpdatableEntity, CoverEntity):
@@ -114,7 +112,7 @@ PYLUTRON_TYPE_TO_CLASSES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LutronCasetaConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Lutron Caseta cover platform.
@@ -122,7 +120,7 @@ async def async_setup_entry(
     Adds shades from the Caseta bridge associated with the config_entry as
     cover entities.
     """
-    data: LutronCasetaData = hass.data[CASETA_DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     bridge = data.bridge
     cover_devices = bridge.get_devices_by_domain(DOMAIN)
     async_add_entities(
