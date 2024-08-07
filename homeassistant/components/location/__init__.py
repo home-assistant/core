@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_LOCATION
+from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import BaseServiceInfo
@@ -46,5 +46,5 @@ async def _discover(
         if region in location_definitions:
             for domain in location_definitions[region]:
                 discovery_flow.async_create_flow(
-                    hass, domain, {"source": SOURCE_LOCATION}, location
+                    hass, domain, {"source": config_entries.SOURCE_LOCATION}, location
                 )

@@ -29,7 +29,6 @@ from typing_extensions import TypeVar
 
 from . import data_entry_flow, loader
 from .components import persistent_notification
-from .components.location import LocationServiceInfo
 from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
 from .core import (
     CALLBACK_TYPE,
@@ -78,6 +77,7 @@ if TYPE_CHECKING:
     from .components.bluetooth import BluetoothServiceInfoBleak
     from .components.dhcp import DhcpServiceInfo
     from .components.hassio import HassioServiceInfo
+    from .components.location import LocationServiceInfo
     from .components.ssdp import SsdpServiceInfo
     from .components.usb import UsbServiceInfo
     from .components.zeroconf import ZeroconfServiceInfo
