@@ -7,7 +7,7 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.components import location
+from homeassistant.components.location import LocationServiceInfo
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_COUNTRY_CODE, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
@@ -118,7 +118,7 @@ class BuienradarFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_location(
-        self, discovery_info: location.LocationServiceInfo
+        self, discovery_info: LocationServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by location."""
         await self.async_set_unique_id(
