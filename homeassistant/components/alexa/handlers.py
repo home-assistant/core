@@ -1513,7 +1513,7 @@ async def async_api_adjust_range(
     if instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
         service = SERVICE_SET_COVER_POSITION
-        if not (current := entity.attributes.get(cover.ATTR_POSITION)):
+        if not (current := entity.attributes.get(cover.ATTR_CURRENT_POSITION)):
             msg = f"Unable to determine {entity.entity_id} current position"
             raise AlexaInvalidValueError(msg)
         position = response_value = min(100, max(0, range_delta + current))

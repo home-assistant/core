@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
     "error": {
       "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -235,6 +238,9 @@
       },
       "vehicle_state_rt": {
         "name": "Trunk"
+      },
+      "vehicle_state_sun_roof_state": {
+        "name": "Sunroof"
       }
     },
     "select": {

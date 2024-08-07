@@ -8,7 +8,6 @@ import logging
 from aiohttp import ClientResponseError
 from doorbirdpy import DoorBird
 
-from homeassistant.components import persistent_notification
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -17,7 +16,8 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -27,11 +27,11 @@ from .device import ConfiguredDoorBird
 from .models import DoorBirdConfigEntry, DoorBirdData
 from .view import DoorBirdRequestView
 
-_LOGGER = logging.getLogger(__name__)
-
 CONF_CUSTOM_URL = "hass_url_override"
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -52,27 +52,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> 
 
     device = DoorBird(device_ip, username, password, http_session=session)
     try:
-        status = await device.ready()
         info = await device.info()
     except ClientResponseError as err:
         if err.status == HTTPStatus.UNAUTHORIZED:
-            _LOGGER.error(
-                "Authorization rejected by DoorBird for %s@%s", username, device_ip
-            )
-            return False
+            raise ConfigEntryAuthFailed from err
         raise ConfigEntryNotReady from err
     except OSError as oserr:
-        _LOGGER.error("Failed to setup doorbird at %s: %s", device_ip, oserr)
         raise ConfigEntryNotReady from oserr
-
-    if not status[0]:
-        _LOGGER.error(
-            "Could not connect to DoorBird as %s@%s: Error %s",
-            username,
-            device_ip,
-            str(status[1]),
-        )
-        raise ConfigEntryNotReady
 
     token: str = door_station_config.get(CONF_TOKEN, config_entry_id)
     custom_url: str | None = door_station_config.get(CONF_CUSTOM_URL)
@@ -85,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> 
     door_bird_data = DoorBirdData(door_station, info, event_entity_ids)
     door_station.update_events(events)
     # Subscribe to doorbell or motion events
-    if not await _async_register_events(hass, door_station):
+    if not await _async_register_events(hass, door_station, entry):
         raise ConfigEntryNotReady
 
     entry.async_on_unload(entry.add_update_listener(_update_listener))
@@ -101,24 +87,30 @@ async def async_unload_entry(hass: HomeAssistant, entry: DoorBirdConfigEntry) ->
 
 
 async def _async_register_events(
-    hass: HomeAssistant, door_station: ConfiguredDoorBird
+    hass: HomeAssistant, door_station: ConfiguredDoorBird, entry: DoorBirdConfigEntry
 ) -> bool:
     """Register events on device."""
+    issue_id = f"doorbird_schedule_error_{entry.entry_id}"
     try:
         await door_station.async_register_events()
-    except ClientResponseError:
-        persistent_notification.async_create(
+    except ClientResponseError as ex:
+        ir.async_create_issue(
             hass,
-            (
-                "Doorbird configuration failed.  Please verify that API "
-                "Operator permission is enabled for the Doorbird user. "
-                "A restart will be required once permissions have been "
-                "verified."
-            ),
-            title="Doorbird Configuration Failure",
-            notification_id="doorbird_schedule_error",
+            DOMAIN,
+            issue_id,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="error_registering_events",
+            data={"entry_id": entry.entry_id},
+            is_fixable=True,
+            translation_placeholders={
+                "error": str(ex),
+                "name": door_station.name or entry.data[CONF_NAME],
+            },
         )
+        _LOGGER.debug("Error registering DoorBird events", exc_info=True)
         return False
+    else:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
 
     return True
 
@@ -128,4 +120,4 @@ async def _update_listener(hass: HomeAssistant, entry: DoorBirdConfigEntry) -> N
     door_station = entry.runtime_data.door_station
     door_station.update_events(entry.options[CONF_EVENTS])
     # Subscribe to doorbell or motion events
-    await _async_register_events(hass, door_station)
+    await _async_register_events(hass, door_station, entry)

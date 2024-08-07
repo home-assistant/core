@@ -71,7 +71,8 @@ class RecorderPool(SingletonThreadPool, NullPool):
 
     def _do_return_conn(self, record: ConnectionPoolEntry) -> None:
         if threading.get_ident() in self.recorder_and_worker_thread_ids:
-            return super()._do_return_conn(record)
+            super()._do_return_conn(record)
+            return
         record.close()
 
     def shutdown(self) -> None:

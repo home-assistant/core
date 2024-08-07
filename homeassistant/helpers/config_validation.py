@@ -34,6 +34,7 @@ from homeassistant.const import (
     ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
     CONF_ABOVE,
+    CONF_ACTION,
     CONF_ALIAS,
     CONF_ATTRIBUTE,
     CONF_BELOW,
@@ -1325,11 +1326,30 @@ EVENT_SCHEMA = vol.Schema(
     }
 )
 
+
+def _backward_compat_service_schema(value: Any | None) -> Any:
+    """Backward compatibility for service schemas."""
+
+    if not isinstance(value, dict):
+        return value
+
+    # `service` has been renamed to `action`
+    if CONF_SERVICE in value:
+        if CONF_ACTION in value:
+            raise vol.Invalid(
+                "Cannot specify both 'service' and 'action'. Please use 'action' only."
+            )
+        value[CONF_ACTION] = value.pop(CONF_SERVICE)
+
+    return value
+
+
 SERVICE_SCHEMA = vol.All(
+    _backward_compat_service_schema,
     vol.Schema(
         {
             **SCRIPT_ACTION_BASE_SCHEMA,
-            vol.Exclusive(CONF_SERVICE, "service name"): vol.Any(
+            vol.Exclusive(CONF_ACTION, "service name"): vol.Any(
                 service, dynamic_template
             ),
             vol.Exclusive(CONF_SERVICE_TEMPLATE, "service name"): vol.Any(
@@ -1348,7 +1368,7 @@ SERVICE_SCHEMA = vol.All(
             vol.Remove("metadata"): dict,
         }
     ),
-    has_at_least_one_key(CONF_SERVICE, CONF_SERVICE_TEMPLATE),
+    has_at_least_one_key(CONF_ACTION, CONF_SERVICE_TEMPLATE),
 )
 
 NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
@@ -1844,6 +1864,7 @@ ACTIONS_MAP = {
     CONF_WAIT_FOR_TRIGGER: SCRIPT_ACTION_WAIT_FOR_TRIGGER,
     CONF_VARIABLES: SCRIPT_ACTION_VARIABLES,
     CONF_IF: SCRIPT_ACTION_IF,
+    CONF_ACTION: SCRIPT_ACTION_CALL_SERVICE,
     CONF_SERVICE: SCRIPT_ACTION_CALL_SERVICE,
     CONF_SERVICE_TEMPLATE: SCRIPT_ACTION_CALL_SERVICE,
     CONF_STOP: SCRIPT_ACTION_STOP,

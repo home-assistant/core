@@ -40,7 +40,7 @@ async def _validate_input(data):
 
     upb = upb_lib.UpbPim({"url": url, "UPStartExportFile": file_path})
 
-    upb.connect(_connected_callback)
+    await upb.async_connect(_connected_callback)
 
     if not upb.config_ok:
         _LOGGER.error("Missing or invalid UPB file: %s", file_path)

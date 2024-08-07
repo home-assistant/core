@@ -1,4 +1,52 @@
 # serializer version: 1
+# name: test_entity_and_device_data[site_payload0-wlan_payload0][image.ssid_1_qr_code-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'image.ssid_1_qr_code',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'QR Code',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'qr_code-012345678910111213141516',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[site_payload0-wlan_payload0][image.ssid_1_qr_code-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1',
+      'entity_picture': '/api/image_proxy/image.ssid_1_qr_code?token=1',
+      'friendly_name': 'SSID 1 QR Code',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.ssid_1_qr_code',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-01-01T01:01:00+00:00',
+  })
+# ---
 # name: test_wlan_qr_code
   b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x84\x00\x00\x00\x84\x01\x00\x00\x00\x00y?\xbe\n\x00\x00\x00\xcaIDATx\xda\xedV[\n\xc30\x0c\x13\xbb\x80\xef\x7fK\xdd\xc0\x93\x94\xfd\xac\x1fcL\xfbl(\xc4\x04*\xacG\xdcb/\x8b\xb8O\xdeO\x00\xccP\x95\x8b\xe5\x03\xd7\xf5\xcd\x89pF\xcf\x8c \\48\x08\nS\x948\x03p\xfe\x80C\xa8\x9d\x16\xc7P\xabvJ}\xe2\xd7\x84[\xe5W\xfc7\xbbS\xfd\xde\xcfB\xf115\xa2\xe3%\x99\xad\x93\xa0:\xbf6\xbeS\xec\x1a^\xb4\xed\xfb\xb2\xab\xd1\x99\xc9\xcdAjx\x89\x0e\xc5\xea\xf4T\xf9\xee\xe40m58\xb6<\x1b\xab~\xf4\xban\xd7:\xceu\x9e\x05\xc4I\xa6\xbb\xfb%q<7:\xbf\xa2\x90wo\xf5<t_\xf5\\]\xe7\xa7\xe5\x15\x1c\xa5\xd1\xdf\x8cV\x1f#,*\x9c\xccC+S\xce\x9f\xfb\xaf\xe0\xc3\xc9\x13/\xb7\x08A\x10\xbe\x06\xd0\x00\x00\x00\x00IEND\xaeB`\x82'
 # ---

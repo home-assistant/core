@@ -1,11 +1,14 @@
 """Tests for the Mealie todo."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from aiomealie.exceptions import MealieError
+from aiomealie import MealieError, ShoppingListsResponse
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.mealie import DOMAIN
 from homeassistant.components.todo import (
     ATTR_ITEM,
     ATTR_RENAME,
@@ -20,7 +23,12 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_fixture,
+    snapshot_platform,
+)
 
 
 async def test_entities(
@@ -153,3 +161,37 @@ async def test_delete_todo_list_item_error(
             target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
             blocking=True,
         )
+
+
+async def test_runtime_management(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test for creating and deleting shopping lists."""
+    response = ShoppingListsResponse.from_json(
+        load_fixture("get_shopping_lists.json", DOMAIN)
+    ).items
+    mock_mealie_client.get_shopping_lists.return_value = ShoppingListsResponse(
+        items=[response[0]]
+    )
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("todo.mealie_supermarket") is not None
+    assert hass.states.get("todo.mealie_special_groceries") is None
+
+    mock_mealie_client.get_shopping_lists.return_value = ShoppingListsResponse(
+        items=response[0:2]
+    )
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get("todo.mealie_special_groceries") is not None
+
+    mock_mealie_client.get_shopping_lists.return_value = ShoppingListsResponse(
+        items=[response[0]]
+    )
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get("todo.mealie_special_groceries") is None
