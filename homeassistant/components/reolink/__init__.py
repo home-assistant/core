@@ -191,13 +191,18 @@ async def async_remove_config_entry_device(
     if is_chime:
         await host.api.get_state(cmd="GetDingDongList")
         chime = host.api.chime(ch)
-        if chime is None or chime.connect_state < 0 or chime.channel not in host.api.channels:
+        if (
+            chime is None
+            or chime.connect_state is None
+            or chime.connect_state < 0
+            or chime.channel not in host.api.channels
+        ):
             _LOGGER.debug(
                 "Removing Reolink chime %s with id %s, "
                 "since it is not coupled to %s anymore",
                 device.name,
                 ch,
-                host.api.nvr_name
+                host.api.nvr_name,
             )
             return True
 
@@ -209,7 +214,7 @@ async def async_remove_config_entry_device(
                 "Removed Reolink chime %s with id %s from %s",
                 device.name,
                 ch,
-                host.api.nvr_name
+                host.api.nvr_name,
             )
             return True
 
@@ -219,7 +224,7 @@ async def async_remove_config_entry_device(
             "in the reolink app",
             device.name,
             ch,
-            host.api.nvr_name
+            host.api.nvr_name,
         )
         return False
 
