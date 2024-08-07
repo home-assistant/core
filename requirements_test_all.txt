@@ -382,6 +382,7 @@ aiowaqi==3.1.0
 # homeassistant.components.watttime
 aiowatttime==0.1.1
 
+# homeassistant.components.lgthinq
 # homeassistant.components.webostv
 aiowebostv==0.4.2
 
@@ -1432,6 +1433,9 @@ pycomfoconnect==0.5.1
 # homeassistant.components.coolmaster
 pycoolmasternet-async==0.2.0
 
+# homeassistant.components.lgthinq
+pycountry==23.12.11
+
 # homeassistant.components.microsoft
 pycsspeechtts==1.0.8
 
@@ -2149,6 +2153,7 @@ tailscale==0.6.1
 tellduslive==0.10.11
 
 # homeassistant.components.lg_soundbar
+# homeassistant.components.lgthinq
 temescal==0.5
 
 # homeassistant.components.temper
@@ -2173,6 +2178,9 @@ thermobeacon-ble==0.7.0
 
 # homeassistant.components.thermopro
 thermopro-ble==0.10.0
+
+# homeassistant.components.lgthinq
+thinqconnect==0.9.2
 
 # homeassistant.components.tilt_ble
 tilt-ble==0.2.3
