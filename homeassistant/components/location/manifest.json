@@ -1,0 +1,9 @@
+{
+  "domain": "location",
+  "name": "Location based discovery",
+  "codeowners": ["@joostlek"],
+  "documentation": "https://www.home-assistant.io/integrations/location",
+  "integration_type": "system",
+  "iot_class": "local_push",
+  "quality_scale": "internal"
+}
