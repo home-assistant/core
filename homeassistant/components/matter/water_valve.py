@@ -170,7 +170,7 @@ class MatterValve(MatterEntity, ValveEntity):
         commands = self.get_matter_attribute_value(
             clusters.ValveConfigurationAndControl.Attributes.AcceptedCommandList
         )
-        if clusters.ValveConfigurationAndControl.Commands.GoToLiftPercentage.command_id in commands:
+        if clusters.ValveConfigurationAndControl.Commands.Open.command_id in commands:
             supported_features |= ValveEntityFeature.SET_POSITION
         self._attr_supported_features = supported_features
 
