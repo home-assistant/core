@@ -25,16 +25,6 @@ async def dimmable_light_node_fixture(
     )
 
 
-@pytest.fixture(name="microwave_oven_node")
-async def microwave_oven_node_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
-) -> MatterNode:
-    """Fixture for a microwave oven node."""
-    return await setup_integration_with_node_fixture(
-        hass, "microwave-oven", matter_client
-    )
-
-
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_mode_select_entities(
