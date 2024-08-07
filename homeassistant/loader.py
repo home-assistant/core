@@ -35,6 +35,7 @@ from .generated.application_credentials import APPLICATION_CREDENTIALS
 from .generated.bluetooth import BLUETOOTH
 from .generated.config_flows import FLOWS
 from .generated.dhcp import DHCP
+from .generated.locations import LOCATIONS
 from .generated.mqtt import MQTT
 from .generated.ssdp import SSDP
 from .generated.usb import USB
@@ -224,12 +225,6 @@ class ZeroconfMatcher(TypedDict, total=False):
     name: str
     properties: dict[str, str]
 
-
-class LocationMatcher(TypedDict, total=False):
-    """Matcher for location."""
-
-    domain: str
-    region: str
 
 class Manifest(TypedDict, total=False):
     """Integration manifest.
@@ -541,19 +536,19 @@ async def async_get_bluetooth(hass: HomeAssistant) -> list[BluetoothMatcher]:
 
     return bluetooth
 
-async def async_get_locations(hass: HomeAssistant) -> list[LocationMatcher]:
+
+async def async_get_locations(hass: HomeAssistant) -> dict[str, list[str]]:
     """Return cached list of location types."""
-    locations: list[LocationMatcher] = []
+    locations: dict[str, list[str]] = LOCATIONS.copy()
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
         if not integration.locations:
             continue
         for entry in integration.locations:
-            locations.append(
-                cast(LocationMatcher, {"domain": integration.domain, "region": entry})
-            )
+            locations.setdefault(entry, []).append(integration.domain)
     return locations
+
 
 async def async_get_dhcp(hass: HomeAssistant) -> list[DHCPMatcher]:
     """Return cached list of dhcp types."""

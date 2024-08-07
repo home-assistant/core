@@ -29,6 +29,7 @@ from typing_extensions import TypeVar
 
 from . import data_entry_flow, loader
 from .components import persistent_notification
+from .components.location import LocationServiceInfo
 from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
 from .core import (
     CALLBACK_TYPE,
@@ -2579,6 +2580,12 @@ class ConfigFlow(ConfigEntryBaseFlow):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by Zeroconf discovery."""
+        return await self._async_step_discovery_without_unique_id()
+
+    async def async_step_location(
+        self, discovery_info: LocationServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by Location discovery."""
         return await self._async_step_discovery_without_unique_id()
 
     @callback
