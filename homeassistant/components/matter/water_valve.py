@@ -165,7 +165,7 @@ class MatterValve(MatterEntity, ValveEntity):
         self._attr_device_class = TYPE_MAP.get(device_type, ValveDeviceClass.WATER.AWNING)
 
         supported_features = (
-            ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE | ValveEntityFeature.STOP
+            ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
         )
         commands = self.get_matter_attribute_value(
             clusters.ValveConfigurationAndControl.Attributes.AcceptedCommandList
