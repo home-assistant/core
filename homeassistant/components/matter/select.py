@@ -27,7 +27,6 @@ type SelectCluster = (
     | clusters.RvcRunMode
     | clusters.RvcCleanMode
     | clusters.DishwasherMode
-    | clusters.MicrowaveOvenMode
     | clusters.EnergyEvseMode
     | clusters.DeviceEnergyManagementMode
 )
@@ -197,18 +196,6 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.DishwasherMode.Attributes.CurrentMode,
             clusters.DishwasherMode.Attributes.SupportedModes,
-        ),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.SELECT,
-        entity_description=MatterSelectEntityDescription(
-            key="MatterMicrowaveOvenMode",
-            translation_key="mode",
-        ),
-        entity_class=MatterModeSelectEntity,
-        required_attributes=(
-            clusters.MicrowaveOvenMode.Attributes.CurrentMode,
-            clusters.MicrowaveOvenMode.Attributes.SupportedModes,
         ),
     ),
     MatterDiscoverySchema(
