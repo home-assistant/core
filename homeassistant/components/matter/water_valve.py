@@ -82,11 +82,11 @@ class MatterValve(MatterEntity, ValveEntity):
 
     async def async_open_water_valve(self, **kwargs: Any) -> None:
         """Open the  water valve."""
-        await self.send_device_command(clusters.ValveConfigurationAndControl.Commands.UpOrOpen())
+        await self.send_device_command(clusters.ValveConfigurationAndControl.Commands.Open())
 
     async def async_close_water_valve(self, **kwargs: Any) -> None:
         """Close the  water valve."""
-        await self.send_device_command(clusters.ValveConfigurationAndControl.Commands.DownOrClose())
+        await self.send_device_command(clusters.ValveConfigurationAndControl.Commands.Close())
 
     async def async_set_water_valve_position(self, **kwargs: Any) -> None:
         """Set the water valve to a specific position."""
