@@ -11,8 +11,11 @@ from homeassistant.components.tibber.const import DOMAIN
 from homeassistant.components.tibber.services import PRICE_SERVICE_NAME, __get_prices
 from homeassistant.core import ServiceCall
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.util import dt as dt_util
 
-STARTTIME = dt.datetime.fromtimestamp(1615766400)
+STARTTIME = dt.datetime.fromtimestamp(1615766400).replace(
+    tzinfo=dt_util.get_default_time_zone()
+)
 
 
 def generate_mock_home_data():
@@ -238,6 +241,90 @@ async def test_get_prices_start_tomorrow(
                 },
                 {
                     "start_time": tomorrow + dt.timedelta(hours=1),
+                    "price": 0.46914,
+                    "level": "VERY_EXPENSIVE",
+                },
+            ],
+        }
+    }
+
+
+async def test_get_prices_with_timezone(
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test __get_prices with start date tomorrow."""
+    freezer.move_to(STARTTIME)
+    call = ServiceCall(
+        DOMAIN, PRICE_SERVICE_NAME, {"start": dt_util.start_of_local_day().isoformat()}
+    )
+
+    result = await __get_prices(call, hass=create_mock_hass())
+
+    assert result == {
+        "prices": {
+            "first_home": [
+                {
+                    "start_time": STARTTIME,
+                    "price": 0.46914,
+                    "level": "VERY_EXPENSIVE",
+                },
+                {
+                    "start_time": STARTTIME + dt.timedelta(hours=1),
+                    "price": 0.46914,
+                    "level": "VERY_EXPENSIVE",
+                },
+            ],
+            "second_home": [
+                {
+                    "start_time": STARTTIME,
+                    "price": 0.46914,
+                    "level": "VERY_EXPENSIVE",
+                },
+                {
+                    "start_time": STARTTIME + dt.timedelta(hours=1),
+                    "price": 0.46914,
+                    "level": "VERY_EXPENSIVE",
+                },
+            ],
+        }
+    }
+
+
+async def test_get_prices_without_timezone(
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test __get_prices with start date tomorrow."""
+    freezer.move_to(STARTTIME)
+    call = ServiceCall(
+        DOMAIN,
+        PRICE_SERVICE_NAME,
+        {"start": dt_util.start_of_local_day().replace(tzinfo=None).isoformat()},
+    )
+
+    result = await __get_prices(call, hass=create_mock_hass())
+
+    assert result == {
+        "prices": {
+            "first_home": [
+                {
+                    "start_time": STARTTIME,
+                    "price": 0.46914,
+                    "level": "VERY_EXPENSIVE",
+                },
+                {
+                    "start_time": STARTTIME + dt.timedelta(hours=1),
+                    "price": 0.46914,
+                    "level": "VERY_EXPENSIVE",
+                },
+            ],
+            "second_home": [
+                {
+                    "start_time": STARTTIME,
+                    "price": 0.46914,
+                    "level": "VERY_EXPENSIVE",
+                },
+                {
+                    "start_time": STARTTIME + dt.timedelta(hours=1),
                     "price": 0.46914,
                     "level": "VERY_EXPENSIVE",
                 },
