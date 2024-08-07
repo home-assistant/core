@@ -1216,7 +1216,7 @@ kiwiki-client==0.1.1
 knocki==0.3.1
 
 # homeassistant.components.knx
-knx-frontend==2024.8.6.85349
+knx-frontend==2024.8.6.211307
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -2915,7 +2915,7 @@ wiffi==1.1.2
 wirelesstagpy==0.8.1
 
 # homeassistant.components.wled
-wled==0.20.0
+wled==0.20.1
 
 # homeassistant.components.wolflink
 wolf-comm==0.0.9
@@ -2986,7 +2986,7 @@ zeroconf==0.132.2
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha==0.0.27
+zha==0.0.28
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.12
