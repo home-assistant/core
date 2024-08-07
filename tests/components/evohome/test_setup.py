@@ -51,7 +51,7 @@ class ExpectedResults:
         """Assert the entity was expected and selected state attrs match."""
 
         state = self._hass.states.get(entity_id)
-        assert state is not None, f"Entity {entity_id} has no state"
+        assert state is not None, f"Expected entity {entity_id} has no state"
 
         expected: dict = self.entities[entity_id]
 
@@ -68,15 +68,17 @@ class ExpectedResults:
 
     @staticmethod
     def _serialize(state: State) -> dict[str, Any]:
-        expected: dict = {"state": state.state}
+        expected: dict = {"state": state.state, "attributes": {}}
 
-        expected |= {
-            "current_temperature": state.attributes["current_temperature"],
-            "supported_features": state.attributes["supported_features"],
-        }
-        for k in ("away_mode", "operation_mode", "preset_mode"):
+        for k in (
+            "away_mode",
+            "current_temperature",
+            "operation_mode",
+            "preset_mode",
+            "supported_features",
+        ):
             if k in state.attributes:
-                expected[k] = state.attributes[k]
+                expected["attributes"][k] = state.attributes[k]
 
         return expected
 
