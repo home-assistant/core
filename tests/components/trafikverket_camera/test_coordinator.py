@@ -11,9 +11,9 @@ from pytrafikverket.exceptions import (
     NoCameraFound,
     UnknownError,
 )
+from pytrafikverket.models import CameraInfoModel
 
 from homeassistant.components.trafikverket_camera.const import DOMAIN
-from homeassistant.components.trafikverket_camera.coordinator import CameraData
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -28,7 +28,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 async def test_coordinator(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    get_camera: CameraData,
+    get_camera: CameraInfoModel,
 ) -> None:
     """Test the Trafikverket Camera coordinator."""
     aioclient_mock.get(
@@ -86,7 +86,7 @@ async def test_coordinator(
 async def test_coordinator_failed_update(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    get_camera: CameraData,
+    get_camera: CameraInfoModel,
     sideeffect: str,
     p_error: Exception,
     entry_state: str,
@@ -123,7 +123,7 @@ async def test_coordinator_failed_update(
 async def test_coordinator_failed_get_image(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    get_camera: CameraData,
+    get_camera: CameraInfoModel,
 ) -> None:
     """Test the Trafikverket Camera coordinator."""
     aioclient_mock.get(

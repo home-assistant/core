@@ -10,6 +10,7 @@ from homeassistant.components.jewish_calendar.const import (
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
     CONF_HAVDALAH_OFFSET_MINUTES,
+    DEFAULT_NAME,
     DOMAIN,
 )
 from homeassistant.const import CONF_LANGUAGE, CONF_PLATFORM, STATE_OFF, STATE_ON
@@ -192,6 +193,7 @@ async def test_issur_melacha_sensor(
 
     with alter_time(test_time):
         entry = MockConfigEntry(
+            title=DEFAULT_NAME,
             domain=DOMAIN,
             data={
                 CONF_LANGUAGE: "english",
@@ -264,6 +266,7 @@ async def test_issur_melacha_sensor_update(
 
     with alter_time(test_time):
         entry = MockConfigEntry(
+            title=DEFAULT_NAME,
             domain=DOMAIN,
             data={
                 CONF_LANGUAGE: "english",

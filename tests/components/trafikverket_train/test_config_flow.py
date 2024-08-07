@@ -12,7 +12,7 @@ from pytrafikverket.exceptions import (
     NoTrainStationFound,
     UnknownError,
 )
-from pytrafikverket.trafikverket_train import TrainStop
+from pytrafikverket.models import TrainStopModel
 
 from homeassistant import config_entries
 from homeassistant.components.trafikverket_train.const import (
@@ -479,8 +479,8 @@ async def test_reauth_flow_error_departures(
 
 async def test_options_flow(
     hass: HomeAssistant,
-    get_trains: list[TrainStop],
-    get_train_stop: TrainStop,
+    get_trains: list[TrainStopModel],
+    get_train_stop: TrainStopModel,
 ) -> None:
     """Test a reauthentication flow."""
     entry = MockConfigEntry(

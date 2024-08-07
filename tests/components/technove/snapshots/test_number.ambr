@@ -1,0 +1,57 @@
+# serializer version: 1
+# name: test_numbers[number.technove_station_maximum_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 32,
+      'min': 8,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.technove_station_maximum_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Maximum current',
+    'platform': 'technove',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'max_current',
+    'unique_id': 'AA:AA:AA:AA:AA:BB_max_current',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_numbers[number.technove_station_maximum_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'TechnoVE Station Maximum current',
+      'max': 32,
+      'min': 8,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.technove_station_maximum_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '24',
+  })
+# ---

@@ -13,7 +13,7 @@ from pytrafikverket.exceptions import (
     NoTrainAnnouncementFound,
     UnknownError,
 )
-from pytrafikverket.trafikverket_train import StationInfo, TrainStop
+from pytrafikverket.models import StationInfoModel, TrainStopModel
 
 from homeassistant.const import CONF_API_KEY, CONF_WEEKDAY
 from homeassistant.core import HomeAssistant
@@ -35,7 +35,7 @@ class TrainData:
 
     departure_time: datetime | None
     departure_state: str
-    cancelled: bool
+    cancelled: bool | None
     delayed_time: int | None
     planned_time: datetime | None
     estimated_time: datetime | None
@@ -73,8 +73,8 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
     def __init__(
         self,
         hass: HomeAssistant,
-        to_station: StationInfo,
-        from_station: StationInfo,
+        to_station: StationInfoModel,
+        from_station: StationInfoModel,
     ) -> None:
         """Initialize the Trafikverket coordinator."""
         super().__init__(
@@ -86,8 +86,8 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
         self._train_api = TrafikverketTrain(
             async_get_clientsession(hass), self.config_entry.data[CONF_API_KEY]
         )
-        self.from_station: StationInfo = from_station
-        self.to_station: StationInfo = to_station
+        self.from_station: StationInfoModel = from_station
+        self.to_station: StationInfoModel = to_station
         self._time: time | None = dt_util.parse_time(self.config_entry.data[CONF_TIME])
         self._weekdays: list[str] = self.config_entry.data[CONF_WEEKDAY]
         self._filter_product: str | None = self.config_entry.options.get(
@@ -98,8 +98,8 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
         """Fetch data from Trafikverket."""
 
         when = dt_util.now()
-        state: TrainStop | None = None
-        states: list[TrainStop] | None = None
+        state: TrainStopModel | None = None
+        states: list[TrainStopModel] | None = None
         if self._time:
             departure_day = next_departuredate(self._weekdays)
             when = datetime.combine(

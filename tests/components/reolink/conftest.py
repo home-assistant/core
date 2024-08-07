@@ -1,9 +1,9 @@
 """Setup the Reolink tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.reolink import const
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
@@ -35,6 +35,7 @@ TEST_NVR_NAME = "test_reolink_name"
 TEST_NVR_NAME2 = "test2_reolink_name"
 TEST_USE_HTTPS = True
 TEST_HOST_MODEL = "RLN8-410"
+TEST_ITEM_NUMBER = "P000"
 TEST_CAM_MODEL = "RLC-123"
 
 
@@ -83,10 +84,12 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.sw_version = "v1.0.0.0.0.0000"
         host_mock.manufacturer = "Reolink"
         host_mock.model = TEST_HOST_MODEL
+        host_mock.item_number = TEST_ITEM_NUMBER
         host_mock.camera_model.return_value = TEST_CAM_MODEL
         host_mock.camera_name.return_value = TEST_NVR_NAME
         host_mock.camera_hardware_version.return_value = "IPC_00001"
         host_mock.camera_sw_version.return_value = "v1.1.0.0.0.0000"
+        host_mock.camera_sw_version_update_required.return_value = False
         host_mock.camera_uid.return_value = TEST_UID_CAM
         host_mock.channel_for_uid.return_value = 0
         host_mock.get_encoding.return_value = "h264"

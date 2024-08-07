@@ -1,10 +1,10 @@
 """Tests for the Prosegur alarm control panel device."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from pyprosegur.installation import Status
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 from homeassistant.const import (

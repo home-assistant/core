@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import functools
+from functools import cache
 import linecache
 import logging
 import threading
@@ -26,6 +27,11 @@ def _get_line_from_cache(filename: str, lineno: int) -> str:
     return (linecache.getline(filename, lineno) or "?").strip()
 
 
+# Set of previously reported blocking calls
+# (integration, filename, lineno)
+_PREVIOUSLY_REPORTED: set[tuple[str | None, str, int | Any]] = set()
+
+
 def raise_for_blocking_call(
     func: Callable[..., Any],
     check_allowed: Callable[[dict[str, Any]], bool] | None = None,
@@ -42,28 +48,48 @@ def raise_for_blocking_call(
     offender_filename = offender_frame.f_code.co_filename
     offender_lineno = offender_frame.f_lineno
     offender_line = _get_line_from_cache(offender_filename, offender_lineno)
+    report_key: tuple[str | None, str, int | Any]
 
     try:
         integration_frame = get_integration_frame()
     except MissingIntegrationFrame:
         # Did not source from integration? Hard error.
+        report_key = (None, offender_filename, offender_lineno)
+        was_reported = report_key in _PREVIOUSLY_REPORTED
+        _PREVIOUSLY_REPORTED.add(report_key)
         if not strict_core:
-            _LOGGER.warning(
-                "Detected blocking call to %s with args %s in %s, "
-                "line %s: %s inside the event loop; "
-                "This is causing stability issues. "
-                "Please create a bug report at "
-                "https://github.com/home-assistant/core/issues?q=is%%3Aopen+is%%3Aissue\n"
-                "%s\n"
-                "Traceback (most recent call last):\n%s",
-                func.__name__,
-                mapped_args.get("args"),
-                offender_filename,
-                offender_lineno,
-                offender_line,
-                _dev_help_message(func.__name__),
-                "".join(traceback.format_stack(f=offender_frame)),
-            )
+            if was_reported:
+                _LOGGER.debug(
+                    "Detected blocking call to %s with args %s in %s, "
+                    "line %s: %s inside the event loop; "
+                    "This is causing stability issues. "
+                    "Please create a bug report at "
+                    "https://github.com/home-assistant/core/issues?q=is%%3Aopen+is%%3Aissue\n"
+                    "%s\n",
+                    func.__name__,
+                    mapped_args.get("args"),
+                    offender_filename,
+                    offender_lineno,
+                    offender_line,
+                    _dev_help_message(func.__name__),
+                )
+            else:
+                _LOGGER.warning(
+                    "Detected blocking call to %s with args %s in %s, "
+                    "line %s: %s inside the event loop; "
+                    "This is causing stability issues. "
+                    "Please create a bug report at "
+                    "https://github.com/home-assistant/core/issues?q=is%%3Aopen+is%%3Aissue\n"
+                    "%s\n"
+                    "Traceback (most recent call last):\n%s",
+                    func.__name__,
+                    mapped_args.get("args"),
+                    offender_filename,
+                    offender_lineno,
+                    offender_line,
+                    _dev_help_message(func.__name__),
+                    "".join(traceback.format_stack(f=offender_frame)),
+                )
             return
 
         if found_frame is None:
@@ -77,39 +103,63 @@ def raise_for_blocking_call(
                 f"{_dev_help_message(func.__name__)}"
             )
 
+    report_key = (integration_frame.integration, offender_filename, offender_lineno)
+    was_reported = report_key in _PREVIOUSLY_REPORTED
+    _PREVIOUSLY_REPORTED.add(report_key)
+
     report_issue = async_suggest_report_issue(
         async_get_hass_or_none(),
         integration_domain=integration_frame.integration,
         module=integration_frame.module,
     )
 
-    _LOGGER.warning(
-        "Detected blocking call to %s with args %s "
-        "inside the event loop by %sintegration '%s' "
-        "at %s, line %s: %s (offender: %s, line %s: %s), please %s\n"
-        "%s\n"
-        "Traceback (most recent call last):\n%s",
-        func.__name__,
-        mapped_args.get("args"),
-        "custom " if integration_frame.custom_integration else "",
-        integration_frame.integration,
-        integration_frame.relative_filename,
-        integration_frame.line_number,
-        integration_frame.line,
-        offender_filename,
-        offender_lineno,
-        offender_line,
-        report_issue,
-        _dev_help_message(func.__name__),
-        "".join(traceback.format_stack(f=integration_frame.frame)),
-    )
+    if was_reported:
+        _LOGGER.debug(
+            "Detected blocking call to %s with args %s "
+            "inside the event loop by %sintegration '%s' "
+            "at %s, line %s: %s (offender: %s, line %s: %s), please %s\n"
+            "%s\n",
+            func.__name__,
+            mapped_args.get("args"),
+            "custom " if integration_frame.custom_integration else "",
+            integration_frame.integration,
+            integration_frame.relative_filename,
+            integration_frame.line_number,
+            integration_frame.line,
+            offender_filename,
+            offender_lineno,
+            offender_line,
+            report_issue,
+            _dev_help_message(func.__name__),
+        )
+    else:
+        _LOGGER.warning(
+            "Detected blocking call to %s with args %s "
+            "inside the event loop by %sintegration '%s' "
+            "at %s, line %s: %s (offender: %s, line %s: %s), please %s\n"
+            "%s\n"
+            "Traceback (most recent call last):\n%s",
+            func.__name__,
+            mapped_args.get("args"),
+            "custom " if integration_frame.custom_integration else "",
+            integration_frame.integration,
+            integration_frame.relative_filename,
+            integration_frame.line_number,
+            integration_frame.line,
+            offender_filename,
+            offender_lineno,
+            offender_line,
+            report_issue,
+            _dev_help_message(func.__name__),
+            "".join(traceback.format_stack(f=integration_frame.frame)),
+        )
 
     if strict:
         raise RuntimeError(
-            "Caught blocking call to {func.__name__} with args "
-            f"{mapped_args.get('args')} inside the event loop by"
+            f"Caught blocking call to {func.__name__} with args "
+            f"{mapped_args.get('args')} inside the event loop by "
             f"{'custom ' if integration_frame.custom_integration else ''}"
-            "integration '{integration_frame.integration}' at "
+            f"integration '{integration_frame.integration}' at "
             f"{integration_frame.relative_filename}, line {integration_frame.line_number}:"
             f" {integration_frame.line}. (offender: {offender_filename}, line "
             f"{offender_lineno}: {offender_line}), please {report_issue}\n"
@@ -117,6 +167,7 @@ def raise_for_blocking_call(
         )
 
 
+@cache
 def _dev_help_message(what: str) -> str:
     """Generate help message to guide developers."""
     return (

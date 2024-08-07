@@ -1114,6 +1114,7 @@ async def test_zeroconf_sleeping_device_not_triggers_refresh(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test zeroconf discovery does not triggers refresh for sleeping device."""
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     entry = MockConfigEntry(
         domain="shelly",
@@ -1304,3 +1305,22 @@ async def test_reconfigure_with_exception(
         )
 
     assert result["errors"] == {"base": base_error}
+
+
+async def test_zeroconf_rejects_ipv6(hass: HomeAssistant) -> None:
+    """Test zeroconf discovery rejects ipv6."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            ip_address=ip_address("fd00::b27c:63bb:cc85:4ea0"),
+            ip_addresses=[ip_address("fd00::b27c:63bb:cc85:4ea0")],
+            hostname="mock_hostname",
+            name="shelly1pm-12345",
+            port=None,
+            properties={zeroconf.ATTR_PROPERTIES_ID: "shelly1pm-12345"},
+            type="mock_type",
+        ),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "ipv6_not_supported"

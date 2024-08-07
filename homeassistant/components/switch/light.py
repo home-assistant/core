@@ -6,7 +6,11 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.light import PLATFORM_SCHEMA, ColorMode, LightEntity
+from homeassistant.components.light import (
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
+    ColorMode,
+    LightEntity,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
@@ -27,7 +31,7 @@ from .const import DOMAIN as SWITCH_DOMAIN
 
 DEFAULT_NAME = "Light Switch"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_ENTITY_ID): cv.entity_domain(SWITCH_DOMAIN),

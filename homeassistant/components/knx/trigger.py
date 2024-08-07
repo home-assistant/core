@@ -13,12 +13,12 @@ from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 
 from .const import DOMAIN
 from .schema import ga_validator
 from .telegrams import SIGNAL_KNX_TELEGRAM, TelegramDict, decode_telegram_payload
-from .validation import sensor_type_validator
+from .validation import dpt_base_type_validator
 
 TRIGGER_TELEGRAM: Final = "telegram"
 
@@ -32,7 +32,7 @@ CONF_KNX_INCOMING: Final = "incoming"
 CONF_KNX_OUTGOING: Final = "outgoing"
 
 
-TELEGRAM_TRIGGER_SCHEMA: Final = {
+TELEGRAM_TRIGGER_SCHEMA: VolDictType = {
     vol.Optional(CONF_KNX_DESTINATION): vol.All(cv.ensure_list, [ga_validator]),
     vol.Optional(CONF_KNX_GROUP_VALUE_WRITE, default=True): cv.boolean,
     vol.Optional(CONF_KNX_GROUP_VALUE_RESPONSE, default=True): cv.boolean,
@@ -44,7 +44,7 @@ TELEGRAM_TRIGGER_SCHEMA: Final = {
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): PLATFORM_TYPE_TRIGGER_TELEGRAM,
-        vol.Optional(CONF_TYPE, default=None): vol.Any(sensor_type_validator, None),
+        vol.Optional(CONF_TYPE, default=None): vol.Any(dpt_base_type_validator, None),
         **TELEGRAM_TRIGGER_SCHEMA,
     }
 )
@@ -99,7 +99,7 @@ async def async_attach_trigger(
         ):
             decoded_payload = decode_telegram_payload(
                 payload=telegram.payload.value,  # type: ignore[union-attr]  # checked via payload_apci
-                transcoder=trigger_transcoder,  # type: ignore[type-abstract]  # parse_transcoder don't return abstract classes
+                transcoder=trigger_transcoder,
             )
             # overwrite decoded payload values in telegram_dict
             telegram_trigger_data = {**trigger_data, **telegram_dict, **decoded_payload}

@@ -6,7 +6,8 @@
     "@vlebourl",
     "@tetienne",
     "@nyroDev",
-    "@tronix117"
+    "@tronix117",
+    "@alexfp14"
   ],
   "config_flow": true,
   "dhcp": [
@@ -19,7 +20,7 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["boto3", "botocore", "pyhumps", "pyoverkiz", "s3transfer"],
-  "requirements": ["pyoverkiz==1.13.11"],
+  "requirements": ["pyoverkiz==1.13.14"],
   "zeroconf": [
     {
       "type": "_kizbox._tcp.local.",

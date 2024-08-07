@@ -1,11 +1,11 @@
 """Configure tests for Energenie-Power-Sockets."""
 
+from collections.abc import Generator
 from typing import Final
 from unittest.mock import MagicMock, patch
 
 from pyegps.fakes.powerstrip import FakePowerStrip
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.energenie_power_sockets.const import (
     CONF_DEVICE_API_ID,

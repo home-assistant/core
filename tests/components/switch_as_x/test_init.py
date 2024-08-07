@@ -171,8 +171,10 @@ async def test_device_registry_config_entry_1(
         original_name="ABC",
     )
     # Add another config entry to the same device
+    other_config_entry = MockConfigEntry()
+    other_config_entry.add_to_hass(hass)
     device_registry.async_update_device(
-        device_entry.id, add_config_entry_id=MockConfigEntry().entry_id
+        device_entry.id, add_config_entry_id=other_config_entry.entry_id
     )
 
     switch_as_x_config_entry = MockConfigEntry(
