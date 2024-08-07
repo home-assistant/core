@@ -1,5 +1,7 @@
 """The sensor tests for the QNAP QSW platform."""
 
+from unittest.mock import patch
+
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -387,13 +389,13 @@ async def test_deprecated_uptime_seconds(
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test cleanup of the Uptime seconds sensor entity."""
+    """Test deprecation warning of the Uptime seconds sensor entity."""
     original_id = "sensor.qsw_m408_4c_uptime"
     domain = Platform.SENSOR
 
     config_entry = init_config_entry(hass)
 
-    entity_registry.async_get_or_create(
+    entity = entity_registry.async_get_or_create(
         domain=domain,
         platform=DOMAIN,
         unique_id=original_id,
@@ -404,9 +406,14 @@ async def test_deprecated_uptime_seconds(
 
     assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id)
 
-    await async_init_integration(hass, config_entry=config_entry)
-
-    assert (DOMAIN, "uptime_seconds_deprecated") in issue_registry.issues
+    with patch(
+        "homeassistant.components.qnap_qsw.sensor.automations_with_entity",
+        return_value=["item"],
+    ):
+        await async_init_integration(hass, config_entry=config_entry)
+        assert issue_registry.async_get_issue(
+            DOMAIN, f"uptime_seconds_deprecated_{entity.entity_id}_item"
+        )
 
 
 async def test_cleanup_deprecated_uptime_seconds(

@@ -31,6 +31,8 @@ from aioqsw.const import (
     QSD_UPTIME_TIMESTAMP,
 )
 
+from homeassistant.components.automation import automations_with_entity
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -358,8 +360,10 @@ async def async_setup_entry(
     reg_entities = er.async_entries_for_config_entry(entity_reg, entry.entry_id)
     for entity in reg_entities:
         if entity.domain == "sensor" and entity.unique_id.endswith("_uptime"):
+            entity_id = entity.entity_id
+
             if entity.disabled:
-                entity_reg.async_remove(entity.entity_id)
+                entity_reg.async_remove(entity_id)
                 continue
 
             if (
@@ -367,17 +371,27 @@ async def async_setup_entry(
                 and DEPRECATED_UPTIME_SECONDS.subkey
                 in coordinator.data[DEPRECATED_UPTIME_SECONDS.key]
             ):
-                ir.async_create_issue(
-                    hass,
-                    DOMAIN,
-                    "uptime_seconds_deprecated",
-                    is_fixable=False,
-                    severity=ir.IssueSeverity.WARNING,
-                    translation_key="uptime_seconds_deprecated",
-                )
                 entities.append(
                     QswSensor(coordinator, DEPRECATED_UPTIME_SECONDS, entry)
                 )
+
+                entity_automations = automations_with_entity(hass, entity_id)
+                entity_scripts = scripts_with_entity(hass, entity_id)
+
+                for item in entity_automations + entity_scripts:
+                    ir.async_create_issue(
+                        hass,
+                        DOMAIN,
+                        f"uptime_seconds_deprecated_{entity_id}_{item}",
+                        breaks_in_ha_version="2025.2.0",
+                        is_fixable=False,
+                        severity=ir.IssueSeverity.WARNING,
+                        translation_key="uptime_seconds_deprecated",
+                        translation_placeholders={
+                            "entity": entity_id,
+                            "info": item,
+                        },
+                    )
 
     async_add_entities(entities)
 
