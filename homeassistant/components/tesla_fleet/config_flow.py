@@ -8,10 +8,14 @@ from typing import Any
 
 import jwt
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import DOMAIN, LOGGER
+from .const import CLIENT_ID, DOMAIN, LOGGER
 
 
 class OAuth2FlowHandler(
@@ -26,6 +30,23 @@ class OAuth2FlowHandler(
     def logger(self) -> logging.Logger:
         """Return logger."""
         return LOGGER
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow start."""
+        implementations = await config_entry_oauth2_flow.async_get_implementations(
+            self.hass, self.DOMAIN
+        )
+        if not implementations:
+            # Create the Home Assistant specific "open source application" credential
+            await async_import_client_credential(
+                self.hass,
+                self.DOMAIN,
+                ClientCredential(CLIENT_ID, "", name="Home Assistant"),
+            )
+
+        return await self.async_step_pick_implementation()
 
     async def async_oauth_create_entry(
         self,
