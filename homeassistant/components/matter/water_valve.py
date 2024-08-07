@@ -187,11 +187,15 @@ DISVALVEY_SCHEMAS = [
         entity_class=MatterValve,
         required_attributes=(
             clusters.ValveConfigurationAndControl.Attributes.OperationalStatus,
-            clusters.ValveConfigurationAndControl.Attributes.Type,
+            clusters.ValveConfigurationAndControl.Attributes.OpenDuration,
+            clusters.ValveConfigurationAndControl.Attributes.DefaultOpenDuration,
+            clusters.ValveConfigurationAndControl.Attributes.RemainingDuration
+            clusters.ValveConfigurationAndControl.Attributes.CurrentState,
+            clusters.ValveConfigurationAndControl.Attributes.TargetState,
         ),
         absent_attributes=(
             clusters.ValveConfigurationAndControl.Attributes.CurrentLevel,
-            clusters.ValveConfigurationAndControl.Attributes.CurrentPositionTiltPercent100ths,
+            clusters.ValveConfigurationAndControl.Attributes.TargetLevel,
         ),
     ),
     MatterDiscoverySchema(
