@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from reolink_aio.api import Chime
 from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
 
 from homeassistant.components.reolink import (
@@ -39,6 +40,8 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 pytestmark = pytest.mark.usefixtures("reolink_connect", "reolink_platforms")
+
+CHIME_MODEL = "Reolink Chime"
 
 
 async def test_wait(*args, **key_args):
@@ -224,16 +227,85 @@ async def test_removing_disconnected_cams(
     device_models = [device.model for device in device_entries]
     assert sorted(device_models) == sorted([TEST_HOST_MODEL, TEST_CAM_MODEL])
 
-    # reload integration after 'disconnecting' a camera.
+    # Try to remove the device after 'disconnecting' a camera.
     if attr is not None:
         setattr(reolink_connect, attr, value)
-    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
-        assert await hass.config_entries.async_reload(config_entry.entry_id)
-    await hass.async_block_till_done()
-
     expected_success = TEST_CAM_MODEL not in expected_models
     for device in device_entries:
         if device.model == TEST_CAM_MODEL:
+            response = await client.remove_device(device.id, config_entry.entry_id)
+            assert response["success"] == expected_success
+
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    device_models = [device.model for device in device_entries]
+    assert sorted(device_models) == sorted(expected_models)
+
+
+@pytest.mark.parametrize(
+    ("attr", "value", "expected_models"),
+    [
+        (
+            None,
+            None,
+            [TEST_HOST_MODEL, TEST_CAM_MODEL, CHIME_MODEL],
+        ),
+        (
+            "connect_state",
+            -1,
+            [TEST_HOST_MODEL, TEST_CAM_MODEL],
+        ),
+        (
+            "remove",
+            -1,
+            [TEST_HOST_MODEL, TEST_CAM_MODEL],
+        ),
+    ],
+)
+async def test_removing_chime(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+    test_chime: Chime,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    attr: str | None,
+    value: Any,
+    expected_models: list[str],
+) -> None:
+    """Test removing a chime."""
+    reolink_connect.channels = [0]
+    assert await async_setup_component(hass, "config", {})
+    client = await hass_ws_client(hass)
+    # setup CH 0 and NVR switch entities/device
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    device_models = [device.model for device in device_entries]
+    assert sorted(device_models) == sorted(
+        [TEST_HOST_MODEL, TEST_CAM_MODEL, CHIME_MODEL]
+    )
+
+    if attr == "remove":
+
+        async def test_remove_chime(*args, **key_args):
+            """Remove chime."""
+            test_chime.connect_state = -1
+
+        test_chime.remove = test_remove_chime
+    elif attr is not None:
+        setattr(test_chime, attr, value)
+
+    # Try to remove the device after 'disconnecting' a chime.
+    expected_success = CHIME_MODEL not in expected_models
+    for device in device_entries:
+        if device.model == CHIME_MODEL:
             response = await client.remove_device(device.id, config_entry.entry_id)
             assert response["success"] == expected_success
 
