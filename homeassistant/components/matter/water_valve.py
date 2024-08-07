@@ -10,7 +10,6 @@ from chip.clusters import Objects as clusters
 
 from homeassistant.components.valve import (
     ATTR_POSITION,
-    ATTR_TILT_POSITION,
     ValveDeviceClass.WATER,
     ValveEntity,
     ValveEntityDescription,
@@ -65,7 +64,7 @@ class MatterValve(MatterEntity, ValveEntity):
     def is_closed(self) -> bool | None:
         """Return true if water valve is closed, if there is no position report, return None."""
         if not self._entity_info.endpoint.has_attribute(
-            None, clusters.ValveConfigurationAndControl.Attributes.CurrentPositionLiftPercent100ths
+            None, clusters.ValveConfigurationAndControl.Attributes.CurrentLevel
         ):
             return None
 
@@ -95,15 +94,7 @@ class MatterValve(MatterEntity, ValveEntity):
             # value needs to be inverted and is sent in 100ths
             clusters.ValveConfigurationAndControl.Commands.GoToLiftPercentage((100 - position) * 100)
         )
-
-    async def async_set_water_valve_tilt_position(self, **kwargs: Any) -> None:
-        """Set the water valve tilt to a specific position."""
-        position = kwargs[ATTR_TILT_POSITION]
-        await self.send_device_command(
-            # value needs to be inverted and is sent in 100ths
-            clusters.ValveConfigurationAndControl.Commands.GoToTiltPercentage((100 - position) * 100)
-        )
-
+    
     async def send_device_command(self, command: Any) -> None:
         """Send device command."""
         await self.matter_client.send_device_command(
@@ -144,14 +135,17 @@ class MatterValve(MatterEntity, ValveEntity):
                 self._attr_is_closing = False
 
         if self._entity_info.endpoint.has_attribute(
-            None, clusters.ValveConfigurationAndControl.Attributes.CurrentPositionLiftPercent100ths
+            None, clusters.ValveConfigurationAndControl.Attributes.CurrentLevel
         ):
-            # current position is inverted in matter (100 is closed, 0 is open)
+
+            # A value of 100 percent SHALL indicate the fully open position
+            # A value of 0 percent SHALL indicate the fully closed position
+            # A value of null SHALL indicate that the current state is not known
             current_valve_position = self.get_matter_attribute_value(
-                clusters.ValveConfigurationAndControl.Attributes.CurrentPositionLiftPercent100ths
+                clusters.ValveConfigurationAndControl.Attributes.CurrentLevel
             )
             self._attr_current_valve_position = (
-                100 - floor(current_valve_position / 100)
+                floor(current_valve_position / 100)
                 if current_valve_position is not None
                 else None
             )
@@ -163,25 +157,6 @@ class MatterValve(MatterEntity, ValveEntity):
                 self.current_valve_position,
             )
 
-        if self._entity_info.endpoint.has_attribute(
-            None, clusters.ValveConfigurationAndControl.Attributes.CurrentPositionTiltPercent100ths
-        ):
-            # current tilt position is inverted in matter (100 is closed, 0 is open)
-            current_water_valve_tilt_position = self.get_matter_attribute_value(
-                clusters.ValveConfigurationAndControl.Attributes.CurrentPositionTiltPercent100ths
-            )
-            self._attr_current_water_valve_tilt_position = (
-                100 - floor(current_water_valve_tilt_position / 100)
-                if current_water_valve_tilt_position is not None
-                else None
-            )
-
-            LOGGER.debug(
-                "Current tilt position for %s - raw: %s - corrected: %s",
-                self.entity_id,
-                current_water_valve_tilt_position,
-                self.current_water_valve_tilt_position,
-            )
 
         # map matter type to HA deviceclass
         device_type: clusters.ValveConfigurationAndControl.Enums.Type = (
@@ -215,7 +190,7 @@ DISVALVEY_SCHEMAS = [
             clusters.ValveConfigurationAndControl.Attributes.Type,
         ),
         absent_attributes=(
-            clusters.ValveConfigurationAndControl.Attributes.CurrentPositionLiftPercent100ths,
+            clusters.ValveConfigurationAndControl.Attributes.CurrentLevel,
             clusters.ValveConfigurationAndControl.Attributes.CurrentPositionTiltPercent100ths,
         ),
     ),
@@ -228,37 +203,9 @@ DISVALVEY_SCHEMAS = [
         required_attributes=(
             clusters.ValveConfigurationAndControl.Attributes.OperationalStatus,
             clusters.ValveConfigurationAndControl.Attributes.Type,
-            clusters.ValveConfigurationAndControl.Attributes.CurrentPositionLiftPercent100ths,
+            clusters.ValveConfigurationAndControl.Attributes.CurrentLevel,
         ),
         absent_attributes=(
-            clusters.ValveConfigurationAndControl.Attributes.CurrentPositionTiltPercent100ths,
-        ),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.VALVE,
-        entity_description=ValveEntityDescription(
-            key="MatterValvePositionAwareTilt", translation_key="cover"
-        ),
-        entity_class=MatterValve,
-        required_attributes=(
-            clusters.ValveConfigurationAndControl.Attributes.OperationalStatus,
-            clusters.ValveConfigurationAndControl.Attributes.Type,
-            clusters.ValveConfigurationAndControl.Attributes.CurrentPositionTiltPercent100ths,
-        ),
-        absent_attributes=(
-            clusters.ValveConfigurationAndControl.Attributes.CurrentPositionLiftPercent100ths,
-        ),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.VALVE,
-        entity_description=ValveEntityDescription(
-            key="MatterValvePositionAwareLiftAndTilt", translation_key="cover"
-        ),
-        entity_class=MatterValve,
-        required_attributes=(
-            clusters.ValveConfigurationAndControl.Attributes.OperationalStatus,
-            clusters.ValveConfigurationAndControl.Attributes.Type,
-            clusters.ValveConfigurationAndControl.Attributes.CurrentPositionLiftPercent100ths,
             clusters.ValveConfigurationAndControl.Attributes.CurrentPositionTiltPercent100ths,
         ),
     ),
