@@ -22,7 +22,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .actions import async_setup_actions
+from .services import async_setup_services
 from .const import DOMAIN
 from .exceptions import PasswordIncompatible, ReolinkException, UserNotAdmin
 from .host import ReolinkHost
@@ -52,7 +52,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Reolink shared code."""
 
-    return await async_setup_actions(hass)
+    return await async_setup_services(hass)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:

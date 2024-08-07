@@ -1,4 +1,4 @@
-"""Reolink integration for HomeAssistant."""
+"""Reolink additional services."""
 
 from __future__ import annotations
 
@@ -20,8 +20,8 @@ from .util import get_device_uid_and_ch
 ATTR_RINGTONE = "ringtone"
 
 
-async def async_setup_actions(hass: HomeAssistant) -> bool:
-    """Set up Reolink actions."""
+async def async_setup_services(hass: HomeAssistant) -> bool:
+    """Set up Reolink services."""
 
     async def async_chime_play(service_call: ServiceCall) -> None:
         """Play a ringtone."""

@@ -1,4 +1,4 @@
-"""Test the Reolink select platform."""
+"""Test the Reolink services."""
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -18,13 +18,13 @@ from .conftest import TEST_NVR_NAME
 from tests.common import MockConfigEntry
 
 
-async def test_chime_play_action_entity(
+async def test_chime_play_service_entity(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     reolink_connect: MagicMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test chime select entity."""
+    """Test chime play service."""
     TEST_CHIME = Chime(
         host=reolink_connect,
         dev_id=12345678,
@@ -53,7 +53,7 @@ async def test_chime_play_action_entity(
     assert entity is not None
     device_id = entity.device_id
 
-    # Test chime play action with entity
+    # Test chime play service with entity
     TEST_CHIME.play = AsyncMock()
     await hass.services.async_call(
         REOLINK_DOMAIN,
@@ -63,7 +63,7 @@ async def test_chime_play_action_entity(
     )
     TEST_CHIME.play.assert_called_once()
 
-    # Test chime play action with device
+    # Test chime play service with device
     TEST_CHIME.play = AsyncMock()
     await hass.services.async_call(
         REOLINK_DOMAIN,
