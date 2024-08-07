@@ -53,7 +53,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Matter water valve from Config Entry."""
     matter = get_matter(hass)
-    matter.register_platform_handler(Platform.COVER, async_add_entities)
+    matter.register_platform_handler(Platform.VALVE, async_add_entities)
 
 
 class MatterValve(MatterEntity, ValveEntity):
@@ -199,9 +199,9 @@ class MatterValve(MatterEntity, ValveEntity):
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
-DISCOVERY_SCHEMAS = [
+DISVALVEY_SCHEMAS = [
     MatterDiscoverySchema(
-        platform=Platform.COVER,
+        platform=Platform.VALVE,
         entity_description=ValveEntityDescription(
             key="MatterValve", translation_key="cover"
         ),
@@ -216,7 +216,7 @@ DISCOVERY_SCHEMAS = [
         ),
     ),
     MatterDiscoverySchema(
-        platform=Platform.COVER,
+        platform=Platform.VALVE,
         entity_description=ValveEntityDescription(
             key="MatterValvePositionAwareLift", translation_key="cover"
         ),
@@ -231,7 +231,7 @@ DISCOVERY_SCHEMAS = [
         ),
     ),
     MatterDiscoverySchema(
-        platform=Platform.COVER,
+        platform=Platform.VALVE,
         entity_description=ValveEntityDescription(
             key="MatterValvePositionAwareTilt", translation_key="cover"
         ),
@@ -246,7 +246,7 @@ DISCOVERY_SCHEMAS = [
         ),
     ),
     MatterDiscoverySchema(
-        platform=Platform.COVER,
+        platform=Platform.VALVE,
         entity_description=ValveEntityDescription(
             key="MatterValvePositionAwareLiftAndTilt", translation_key="cover"
         ),
