@@ -172,8 +172,6 @@ class MatterValve(MatterEntity, ValveEntity):
         )
         if clusters.ValveConfigurationAndControl.Commands.GoToLiftPercentage.command_id in commands:
             supported_features |= ValveEntityFeature.SET_POSITION
-        if clusters.ValveConfigurationAndControl.Commands.GoToTiltPercentage.command_id in commands:
-            supported_features |= ValveEntityFeature.SET_TILT_POSITION
         self._attr_supported_features = supported_features
 
 
@@ -196,21 +194,6 @@ DISVALVEY_SCHEMAS = [
         absent_attributes=(
             clusters.ValveConfigurationAndControl.Attributes.CurrentLevel,
             clusters.ValveConfigurationAndControl.Attributes.TargetLevel,
-        ),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.VALVE,
-        entity_description=ValveEntityDescription(
-            key="MatterValvePositionAwareLift", translation_key="valve"
-        ),
-        entity_class=MatterValve,
-        required_attributes=(
-            clusters.ValveConfigurationAndControl.Attributes.OperationalStatus,
-            clusters.ValveConfigurationAndControl.Attributes.Type,
-            clusters.ValveConfigurationAndControl.Attributes.CurrentLevel,
-        ),
-        absent_attributes=(
-            clusters.ValveConfigurationAndControl.Attributes.CurrentPositionTiltPercent100ths,
         ),
     ),
 ]
