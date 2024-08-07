@@ -162,7 +162,7 @@ class MatterValve(MatterEntity, ValveEntity):
         device_type: clusters.ValveConfigurationAndControl.Enums.Type = (
             self.get_matter_attribute_value(clusters.ValveConfigurationAndControl.Attributes.Type)
         )
-        self._attr_device_class = TYPE_MAP.get(device_type, ValveDeviceClass.WATER.AWNING)
+        self._attr_device_class = TYPE_MAP.get(device_type, ValveDeviceClass.WATER)
 
         supported_features = (
             ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
