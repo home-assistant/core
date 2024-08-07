@@ -10,7 +10,7 @@ from chip.clusters import Objects as clusters
 
 from homeassistant.components.valve import (
     ATTR_POSITION,
-    ValveDeviceClass.WATER,
+    ValveDeviceClass,
     ValveEntity,
     ValveEntityDescription,
     ValveEntityFeature,
@@ -31,7 +31,7 @@ OPERATIONAL_STATUS_MASK = 0b11
 # map Matter valve types to HA device class
 '''
 TYPE_MAP = {
-    clusters.ValveConfigurationAndControl.Enums.Type.kAwning: ValveDeviceClass.WATER,
+    clusters.ValveConfigurationAndControl.Enums.Type.kWater: ValveDeviceClass.WATER, // TODO
     #clusters.ValveConfigurationAndControl.Enums.Type.kDrapery: ValveDeviceClass.GAS,
 }
 '''
