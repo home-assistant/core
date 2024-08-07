@@ -11,7 +11,7 @@ from chip.clusters import Objects as clusters
 from homeassistant.components.valve import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    CoverDeviceClass,
+    ValveDeviceClass.WATER,
     ValveEntity,
     ValveEntityDescription,
     ValveEntityFeature,
@@ -31,8 +31,8 @@ OPERATIONAL_STATUS_MASK = 0b11
 
 # map Matter window cover types to HA device class
 TYPE_MAP = {
-    clusters.WindowCovering.Enums.Type.kAwning: CoverDeviceClass.AWNING,
-    clusters.WindowCovering.Enums.Type.kDrapery: CoverDeviceClass.CURTAIN,
+    clusters.WindowCovering.Enums.Type.kAwning: ValveDeviceClass.WATER.AWNING,
+    clusters.WindowCovering.Enums.Type.kDrapery: ValveDeviceClass.WATER.CURTAIN,
 }
 
 
@@ -181,7 +181,7 @@ class MatterCover(MatterEntity, ValveEntity):
         device_type: clusters.WindowCovering.Enums.Type = (
             self.get_matter_attribute_value(clusters.WindowCovering.Attributes.Type)
         )
-        self._attr_device_class = TYPE_MAP.get(device_type, CoverDeviceClass.AWNING)
+        self._attr_device_class = TYPE_MAP.get(device_type, ValveDeviceClass.WATER.AWNING)
 
         supported_features = (
             ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE | ValveEntityFeature.STOP
