@@ -237,7 +237,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==24.6.2
+aioesphomeapi==25.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -480,9 +480,6 @@ arris-tg2492lg==2.2.0
 
 # homeassistant.components.ampio
 asmog==0.0.6
-
-# homeassistant.components.asterisk_mbox
-asterisk_mbox==0.5.0
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
@@ -1010,7 +1007,7 @@ gpiozero==1.6.2
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==1.4.6
+greeclimate==2.1.0
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==3.0.3
@@ -1096,7 +1093,7 @@ hole==0.8.0
 holidays==0.53
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240802.0
+home-assistant-frontend==20240806.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.7.29
@@ -1219,7 +1216,7 @@ kiwiki-client==0.1.1
 knocki==0.3.1
 
 # homeassistant.components.knx
-knx-frontend==2024.7.25.204106
+knx-frontend==2024.8.6.85349
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -2625,7 +2622,7 @@ soco==0.30.4
 solaredge-local==0.2.3
 
 # homeassistant.components.solarlog
-solarlog_cli==0.1.5
+solarlog_cli==0.1.6
 
 # homeassistant.components.solax
 solax==3.1.1
@@ -2845,7 +2842,7 @@ upcloud-api==2.5.1
 url-normalize==1.4.3
 
 # homeassistant.components.uvc
-uvcclient==0.11.0
+uvcclient==0.12.1
 
 # homeassistant.components.roborock
 vacuum-map-parser-roborock==0.1.2
@@ -2974,7 +2971,7 @@ youless-api==2.1.2
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp==2024.07.16
+yt-dlp==2024.08.06
 
 # homeassistant.components.zamg
 zamg==0.3.6
@@ -2989,7 +2986,7 @@ zeroconf==0.132.2
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha==0.0.25
+zha==0.0.27
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.12

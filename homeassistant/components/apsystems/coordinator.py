@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 
-from APsystemsEZ1 import APsystemsEZ1M, ReturnOutputData
+from APsystemsEZ1 import APsystemsEZ1M, ReturnAlarmInfo, ReturnOutputData
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -12,7 +13,15 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import LOGGER
 
 
-class ApSystemsDataCoordinator(DataUpdateCoordinator[ReturnOutputData]):
+@dataclass
+class ApSystemsSensorData:
+    """Representing different Apsystems sensor data."""
+
+    output_data: ReturnOutputData
+    alarm_info: ReturnAlarmInfo
+
+
+class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
     """Coordinator used for all sensors."""
 
     def __init__(self, hass: HomeAssistant, api: APsystemsEZ1M) -> None:
@@ -25,5 +34,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ReturnOutputData]):
         )
         self.api = api
 
-    async def _async_update_data(self) -> ReturnOutputData:
-        return await self.api.get_output_data()
+    async def _async_update_data(self) -> ApSystemsSensorData:
+        output_data = await self.api.get_output_data()
+        alarm_info = await self.api.get_alarm_info()
+        return ApSystemsSensorData(output_data=output_data, alarm_info=alarm_info)
