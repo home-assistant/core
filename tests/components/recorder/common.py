@@ -79,10 +79,18 @@ async def async_block_recorder(hass: HomeAssistant, seconds: float) -> None:
     await event.wait()
 
 
+def get_start_time(start: datetime) -> datetime:
+    """Calculate a valid start time for statistics."""
+    start_minutes = start.minute - start.minute % 5
+    return start.replace(minute=start_minutes, second=0, microsecond=0)
+
+
 def do_adhoc_statistics(hass: HomeAssistant, **kwargs: Any) -> None:
     """Trigger an adhoc statistics run."""
     if not (start := kwargs.get("start")):
         start = statistics.get_start_time()
+    elif (start.minute % 5) != 0 or start.second != 0 or start.microsecond != 0:
+        raise ValueError(f"Statistics must start on 5 minute boundary got {start}")
     get_instance(hass).queue_task(StatisticsTask(start, False))
 
 
@@ -291,11 +299,11 @@ def record_states(hass):
         wait_recording_done(hass)
         return hass.states.get(entity_id)
 
-    zero = dt_util.utcnow()
+    zero = get_start_time(dt_util.utcnow())
     one = zero + timedelta(seconds=1 * 5)
     two = one + timedelta(seconds=15 * 5)
     three = two + timedelta(seconds=30 * 5)
-    four = three + timedelta(seconds=15 * 5)
+    four = three + timedelta(seconds=14 * 5)
 
     states = {mp: [], sns1: [], sns2: [], sns3: [], sns4: []}
     with freeze_time(one) as freezer:

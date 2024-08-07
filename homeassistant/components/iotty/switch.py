@@ -53,7 +53,7 @@ async def async_setup_entry(
     def async_update_data() -> None:
         """Handle updated data from the API endpoint."""
         if not coordinator.last_update_success:
-            return None
+            return
 
         devices = coordinator.data.devices
         entities = []

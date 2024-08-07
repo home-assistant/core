@@ -81,7 +81,6 @@ async def _async_send_historical_events(
     msg_id: int,
     start_time: dt,
     end_time: dt,
-    formatter: Callable[[int, Any], dict[str, Any]],
     event_processor: EventProcessor,
     partial: bool,
     force_send: bool = False,
@@ -109,7 +108,6 @@ async def _async_send_historical_events(
             msg_id,
             start_time,
             end_time,
-            formatter,
             event_processor,
             partial,
         )
@@ -131,7 +129,6 @@ async def _async_send_historical_events(
         msg_id,
         recent_query_start,
         end_time,
-        formatter,
         event_processor,
         partial=True,
     )
@@ -143,7 +140,6 @@ async def _async_send_historical_events(
         msg_id,
         start_time,
         recent_query_start,
-        formatter,
         event_processor,
         partial,
     )
@@ -164,7 +160,6 @@ async def _async_get_ws_stream_events(
     msg_id: int,
     start_time: dt,
     end_time: dt,
-    formatter: Callable[[int, Any], dict[str, Any]],
     event_processor: EventProcessor,
     partial: bool,
 ) -> tuple[bytes, dt | None]:
@@ -174,7 +169,6 @@ async def _async_get_ws_stream_events(
         msg_id,
         start_time,
         end_time,
-        formatter,
         event_processor,
         partial,
     )
@@ -195,7 +189,6 @@ def _ws_stream_get_events(
     msg_id: int,
     start_day: dt,
     end_day: dt,
-    formatter: Callable[[int, Any], dict[str, Any]],
     event_processor: EventProcessor,
     partial: bool,
 ) -> tuple[bytes, dt | None]:
@@ -211,7 +204,7 @@ def _ws_stream_get_events(
         # data in case the UI needs to show that historical
         # data is still loading in the future
         message["partial"] = True
-    return json_bytes(formatter(msg_id, message)), last_time
+    return json_bytes(messages.event_message(msg_id, message)), last_time
 
 
 async def _async_events_consumer(
@@ -318,7 +311,6 @@ async def ws_event_stream(
             msg_id,
             start_time,
             end_time,
-            messages.event_message,
             event_processor,
             partial=False,
         )
@@ -385,7 +377,6 @@ async def ws_event_stream(
         msg_id,
         start_time,
         subscriptions_setup_complete_time,
-        messages.event_message,
         event_processor,
         partial=True,
         # Force a send since the wait for the sync task
@@ -431,7 +422,6 @@ async def ws_event_stream(
         # we could fetch the same event twice
         (last_event_time or start_time) + timedelta(microseconds=1),
         subscriptions_setup_complete_time,
-        messages.event_message,
         event_processor,
         partial=False,
     )

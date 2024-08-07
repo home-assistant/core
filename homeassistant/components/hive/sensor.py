@@ -74,7 +74,7 @@ SENSOR_TYPES: tuple[HiveSensorEntityDescription, ...] = (
     HiveSensorEntityDescription(
         key="Heating_Mode",
         device_class=SensorDeviceClass.ENUM,
-        options=["schedule", "on", "off"],
+        options=["schedule", "manual", "off"],
         translation_key="heating",
         fn=lambda x: x.lower() if isinstance(x, str) else None,
     ),
