@@ -61,9 +61,7 @@ async def __get_prices(call: ServiceCall, *, hass: HomeAssistant) -> ServiceResp
         ]
 
         selected_data = [
-            price
-            for price in price_data
-            if price["start_time"] >= start and price["start_time"] < end
+            price for price in price_data if start <= price["start_time"] < end
         ]
         tibber_prices[home_nickname] = selected_data
 
