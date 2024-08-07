@@ -8,13 +8,13 @@ from typing import Any
 
 from chip.clusters import Objects as clusters
 
-from homeassistant.components.cover import (
+from homeassistant.components.valve import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     CoverDeviceClass,
-    CoverEntity,
-    CoverEntityDescription,
-    CoverEntityFeature,
+    ValveEntity,
+    ValveEntityDescription,
+    ValveEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -55,10 +55,10 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.COVER, async_add_entities)
 
 
-class MatterCover(MatterEntity, CoverEntity):
+class MatterCover(MatterEntity, ValveEntity):
     """Representation of a Matter Cover."""
 
-    entity_description: CoverEntityDescription
+    entity_description: ValveEntityDescription
 
     @property
     def is_closed(self) -> bool | None:
@@ -184,15 +184,15 @@ class MatterCover(MatterEntity, CoverEntity):
         self._attr_device_class = TYPE_MAP.get(device_type, CoverDeviceClass.AWNING)
 
         supported_features = (
-            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+            ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE | ValveEntityFeature.STOP
         )
         commands = self.get_matter_attribute_value(
             clusters.WindowCovering.Attributes.AcceptedCommandList
         )
         if clusters.WindowCovering.Commands.GoToLiftPercentage.command_id in commands:
-            supported_features |= CoverEntityFeature.SET_POSITION
+            supported_features |= ValveEntityFeature.SET_POSITION
         if clusters.WindowCovering.Commands.GoToTiltPercentage.command_id in commands:
-            supported_features |= CoverEntityFeature.SET_TILT_POSITION
+            supported_features |= ValveEntityFeature.SET_TILT_POSITION
         self._attr_supported_features = supported_features
 
 
@@ -200,7 +200,7 @@ class MatterCover(MatterEntity, CoverEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.COVER,
-        entity_description=CoverEntityDescription(
+        entity_description=ValveEntityDescription(
             key="MatterCover", translation_key="cover"
         ),
         entity_class=MatterCover,
@@ -215,7 +215,7 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.COVER,
-        entity_description=CoverEntityDescription(
+        entity_description=ValveEntityDescription(
             key="MatterCoverPositionAwareLift", translation_key="cover"
         ),
         entity_class=MatterCover,
@@ -230,7 +230,7 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.COVER,
-        entity_description=CoverEntityDescription(
+        entity_description=ValveEntityDescription(
             key="MatterCoverPositionAwareTilt", translation_key="cover"
         ),
         entity_class=MatterCover,
@@ -245,7 +245,7 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.COVER,
-        entity_description=CoverEntityDescription(
+        entity_description=ValveEntityDescription(
             key="MatterCoverPositionAwareLiftAndTilt", translation_key="cover"
         ),
         entity_class=MatterCover,
