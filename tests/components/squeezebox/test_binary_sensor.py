@@ -1,4 +1,4 @@
-"""Test BMW binary sensors."""
+"""Test squeezebox binary sensors."""
 
 from unittest.mock import patch
 
@@ -23,7 +23,7 @@ async def test_binary_sensor(
         ),
         patch(
             "pysqueezebox.Server.async_query",
-            return_value=FAKE_QUERY_RESPONCE,
+            return_value=FAKE_QUERY_RESPONSE,
         ),
     ):
         await setup_mocked_integration(hass)

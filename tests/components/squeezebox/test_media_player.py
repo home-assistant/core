@@ -1,4 +1,4 @@
-"""Test BMW binary sensors."""
+"""Test squeezebox media player."""
 
 from unittest.mock import patch
 
