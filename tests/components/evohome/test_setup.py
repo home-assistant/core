@@ -9,10 +9,7 @@ import pytest
 
 from homeassistant.components.climate import ATTR_CURRENT_TEMPERATURE, ATTR_PRESET_MODE
 from homeassistant.components.evohome import DOMAIN
-from homeassistant.components.water_heater import (
-    ATTR_AWAY_MODE,
-    ATTR_OPERATION_MODE,
-)  # also: ATTR_CURRENT_TEMPERATURE
+from homeassistant.components.water_heater import ATTR_AWAY_MODE, ATTR_OPERATION_MODE
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
