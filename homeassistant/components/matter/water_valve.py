@@ -37,13 +37,13 @@ TYPE_MAP = {
 }
 '''
 
+# ValveStateEnum
 class OperationalStatus(IntEnum):
-    """Currently ongoing operations enumeration for coverings, as defined in the Matter spec."""
+    """Currently ongoing operations enumeration for water valve, as defined in the Matter spec."""
 
-    COVERING_IS_CURRENTLY_NOT_MOVING = 0b00
-    COVERING_IS_CURRENTLY_OPENING = 0b01
-    COVERING_IS_CURRENTLY_CLOSING = 0b10
-    RESERVED = 0b11
+    VALVEIS_CURRENTLY_CLOSED = 0b00
+    VALVEIS_CURRENTLY_OPEN = 0b01
+    VALVEIS_CURRENTLY_TRANSITIONING = 0b10
 
 
 async def async_setup_entry(
@@ -51,7 +51,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Matter Cover from Config Entry."""
+    """Set up Matter water valve from Config Entry."""
     matter = get_matter(hass)
     matter.register_platform_handler(Platform.COVER, async_add_entities)
 
@@ -128,10 +128,10 @@ class MatterCover(MatterEntity, ValveEntity):
 
         state = operational_status & OPERATIONAL_STATUS_MASK
         match state:
-            case OperationalStatus.COVERING_IS_CURRENTLY_OPENING:
+            case OperationalStatus.VALVEIS_CURRENTLY_OPENING:
                 self._attr_is_opening = True
                 self._attr_is_closing = False
-            case OperationalStatus.COVERING_IS_CURRENTLY_CLOSING:
+            case OperationalStatus.VALVEIS_CURRENTLY_CLOSING:
                 self._attr_is_opening = False
                 self._attr_is_closing = True
             case _:
