@@ -8,8 +8,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.tesla_fleet.application_credentials import CLIENT_ID
-from homeassistant.components.tesla_fleet.const import DOMAIN
+from homeassistant.components.tesla_fleet.const import CLIENT_ID, DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er

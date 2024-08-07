@@ -5,12 +5,13 @@ from urllib.parse import parse_qs, urlparse
 
 import pytest
 
-from homeassistant.components.tesla_fleet.application_credentials import (
+from homeassistant.components.tesla_fleet.const import (
     AUTHORIZE_URL,
     CLIENT_ID,
+    DOMAIN,
+    SCOPES,
     TOKEN_URL,
 )
-from homeassistant.components.tesla_fleet.const import DOMAIN, SCOPES
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
