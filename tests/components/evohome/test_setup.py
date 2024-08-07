@@ -7,13 +7,29 @@ from typing import Any
 
 import pytest
 
+from homeassistant.components.climate import ATTR_CURRENT_TEMPERATURE, ATTR_PRESET_MODE
 from homeassistant.components.evohome import DOMAIN
+from homeassistant.components.water_heater import (
+    ATTR_AWAY_MODE,
+    ATTR_OPERATION_MODE,
+)  # also: ATTR_CURRENT_TEMPERATURE
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import expected_results_fixture, setup_evohome
 from .const import TEST_INSTALLS
 
 _LOGGER = logging.getLogger(__name__)
+
+CORE_STATE_ATTRS = (
+    ATTR_AWAY_MODE,
+    ATTR_CURRENT_TEMPERATURE,
+    ATTR_OPERATION_MODE,
+    ATTR_PRESET_MODE,
+    ATTR_SUPPORTED_FEATURES,
+    ATTR_TEMPERATURE,
+)
 
 
 class ExpectedResults:
@@ -28,6 +44,7 @@ class ExpectedResults:
         """Initialize the database of expected states/services."""
 
         self._hass = hass
+        self._entity_registry = er.async_get(hass)
 
         self.entities = {
             i: j for k in ("tcs", "zones", "dhw") for i, j in expected[k].items()
@@ -48,39 +65,36 @@ class ExpectedResults:
         assert set(self._hass.states.async_entity_ids()) == set(self.entities)
 
     def assert_entity_state(self, entity_id: str) -> None:
-        """Assert the entity was expected and selected state attrs match."""
+        """Assert the entity was instantiated and selected state attrs match."""
 
-        state = self._hass.states.get(entity_id)
-        assert state is not None, f"Expected entity {entity_id} has no state"
+        entry = self._entity_registry.async_get(entity_id)
+        assert entry is not None, f"Entity {entity_id} is not found"
 
-        expected: dict = self.entities[entity_id]
+        actual_state = self._hass.states.get(entity_id)
+        assert actual_state is not None, f"Entity {entity_id} has no state"
+
+        expect_state: dict = self.entities[entity_id]
 
         try:
-            assert state.state == expected["state"], f"state is {state.state}"
-            for attr, value in expected["attributes"].items():
-                assert state.attributes[attr] == value
+            assert actual_state.state == expect_state["state"]
+
+            for attr, value in expect_state["attributes"].items():
+                assert actual_state.attributes[attr] == value
 
         except AssertionError:
             _LOGGER.warning(
-                "Mocked state of %s is: %s", entity_id, self._serialize(state)
+                "Actual state of %s is: %s", entity_id, self._serialize(actual_state)
             )
             raise
 
     @staticmethod
     def _serialize(state: State) -> dict[str, Any]:
-        expected: dict = {"state": state.state, "attributes": {}}
+        """Return a serialized version of the entity state and its core attrs."""
 
-        for k in (
-            "away_mode",
-            "current_temperature",
-            "operation_mode",
-            "preset_mode",
-            "supported_features",
-        ):
-            if k in state.attributes:
-                expected["attributes"][k] = state.attributes[k]
-
-        return expected
+        return {
+            "state": state.state,
+            "attributes": {k: state.attributes[k] for k in CORE_STATE_ATTRS},
+        }
 
     def assert_services(self) -> None:
         """Assert the actual services are as expected."""
