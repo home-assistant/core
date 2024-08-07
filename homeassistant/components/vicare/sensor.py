@@ -950,6 +950,8 @@ class ViCareSensor(ViCareEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(device_config, api, description.key)
         self.entity_description = description
+        # run update to have device_class set depending on unit_of_measurement
+        self.update()
 
     @property
     def available(self) -> bool:

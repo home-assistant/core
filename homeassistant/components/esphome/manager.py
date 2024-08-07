@@ -346,7 +346,7 @@ class ESPHomeManager:
     ) -> int | None:
         """Start a voice assistant pipeline."""
         if self.voice_assistant_pipeline is not None:
-            _LOGGER.warning("Voice assistant UDP server was not stopped")
+            _LOGGER.warning("Previous Voice assistant pipeline was not stopped")
             self.voice_assistant_pipeline.stop()
             self.voice_assistant_pipeline = None
 
@@ -654,12 +654,13 @@ def _async_setup_device_registry(
     if device_info.manufacturer:
         manufacturer = device_info.manufacturer
     model = device_info.model
-    hw_version = None
     if device_info.project_name:
         project_name = device_info.project_name.split(".")
         manufacturer = project_name[0]
         model = project_name[1]
-        hw_version = device_info.project_version
+        sw_version = (
+            f"{device_info.project_version} (ESPHome {device_info.esphome_version})"
+        )
 
     suggested_area = None
     if device_info.suggested_area:
@@ -674,7 +675,6 @@ def _async_setup_device_registry(
         manufacturer=manufacturer,
         model=model,
         sw_version=sw_version,
-        hw_version=hw_version,
         suggested_area=suggested_area,
     )
     return device_entry.id

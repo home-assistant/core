@@ -86,7 +86,8 @@
         "name": "Charging Mode",
         "state": {
           "immediate_charging": "Immediate charging",
-          "delayed_charging": "Delayed charging"
+          "delayed_charging": "Delayed charging",
+          "no_action": "No action"
         }
       }
     },

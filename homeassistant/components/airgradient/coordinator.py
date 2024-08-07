@@ -19,7 +19,6 @@ if TYPE_CHECKING:
 class AirGradientCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Class to manage fetching AirGradient data."""
 
-    _update_interval: timedelta
     config_entry: AirGradientConfigEntry
 
     def __init__(self, hass: HomeAssistant, client: AirGradientClient) -> None:
@@ -28,7 +27,7 @@ class AirGradientCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             hass,
             logger=LOGGER,
             name=f"AirGradient {client.host}",
-            update_interval=self._update_interval,
+            update_interval=timedelta(minutes=1),
         )
         self.client = client
         assert self.config_entry.unique_id
@@ -47,16 +46,12 @@ class AirGradientCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 class AirGradientMeasurementCoordinator(AirGradientCoordinator[Measures]):
     """Class to manage fetching AirGradient data."""
 
-    _update_interval = timedelta(minutes=1)
-
     async def _update_data(self) -> Measures:
         return await self.client.get_current_measures()
 
 
 class AirGradientConfigCoordinator(AirGradientCoordinator[Config]):
     """Class to manage fetching AirGradient data."""
-
-    _update_interval = timedelta(minutes=5)
 
     async def _update_data(self) -> Config:
         return await self.client.get_config()

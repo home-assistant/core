@@ -253,11 +253,12 @@ class DenonDevice(MediaPlayerEntity):
         return SUPPORT_DENON
 
     @property
-    def source(self):
+    def source(self) -> str | None:
         """Return the current input source."""
         for pretty_name, name in self._source_list.items():
             if self._mediasource == name:
                 return pretty_name
+        return None
 
     def turn_off(self) -> None:
         """Turn off media player."""

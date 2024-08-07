@@ -85,7 +85,8 @@
           "value_template": "Value template"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]",
+          "value_template": "Defines a template to set the state of the switch. If not defined, the switch will optimistically assume all commands are successful."
         },
         "title": "Template switch"
       }
@@ -159,7 +160,8 @@
           "turn_on": "[%key:component::template::config::step::switch::data::turn_on%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]",
+          "value_template": "[%key:component::template::config::step::switch::data_description::value_template%]"
         },
         "title": "[%key:component::template::config::step::switch::title%]"
       }
