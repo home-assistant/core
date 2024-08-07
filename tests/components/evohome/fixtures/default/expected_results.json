@@ -2,69 +2,87 @@
   "tcs": {
     "climate.my_home": {
       "state": "heat",
-      "current_temperature": 19.7,
-      "preset_mode": "eco",
-      "supported_features": 400
+      "attributes": {
+        "current_temperature": 19.7,
+        "preset_mode": "eco",
+        "supported_features": 400
+      }
     }
   },
   "zones": {
     "climate.bathroom_dn": {
       "state": "heat",
-      "current_temperature": 20.0,
-      "preset_mode": "none",
-      "supported_features": 401,
-      "temperature": 16.0
+      "attributes": {
+        "current_temperature": 20.0,
+        "preset_mode": "none",
+        "supported_features": 401,
+        "temperature": 16.0
+      }
     },
     "climate.dead_zone": {
       "state": "heat",
-      "current_temperature": null,
-      "preset_mode": "none",
-      "supported_features": 401,
-      "temperature": 17.0
+      "attributes": {
+        "current_temperature": null,
+        "preset_mode": "none",
+        "supported_features": 401,
+        "temperature": 17.0
+      }
     },
     "climate.front_room": {
       "state": "heat",
-      "current_temperature": 19.0,
-      "preset_mode": "temporary",
-      "supported_features": 401,
-      "temperature": 21.0
+      "attributes": {
+        "current_temperature": 19.0,
+        "preset_mode": "temporary",
+        "supported_features": 401,
+        "temperature": 21.0
+      }
     },
     "climate.kids_room": {
       "state": "heat",
-      "current_temperature": 19.5,
-      "preset_mode": "none",
-      "supported_features": 401,
-      "temperature": 17.0
+      "attributes": {
+        "current_temperature": 19.5,
+        "preset_mode": "none",
+        "supported_features": 401,
+        "temperature": 17.0
+      }
     },
     "climate.kitchen": {
       "state": "heat",
-      "current_temperature": 20.0,
-      "preset_mode": "none",
-      "supported_features": 401,
-      "temperature": 17.0
+      "attributes": {
+        "current_temperature": 20.0,
+        "preset_mode": "none",
+        "supported_features": 401,
+        "temperature": 17.0
+      }
     },
     "climate.main_bedroom": {
       "state": "heat",
-      "current_temperature": 21.0,
-      "preset_mode": "none",
-      "supported_features": 401,
-      "temperature": 16.0
+      "attributes": {
+        "current_temperature": 21.0,
+        "preset_mode": "none",
+        "supported_features": 401,
+        "temperature": 16.0
+      }
     },
     "climate.main_room": {
       "state": "heat",
-      "current_temperature": 19.0,
-      "preset_mode": "permanent",
-      "supported_features": 401,
-      "temperature": 17.0
+      "attributes": {
+        "current_temperature": 19.0,
+        "preset_mode": "permanent",
+        "supported_features": 401,
+        "temperature": 17.0
+      }
     }
   },
   "dhw": {
     "water_heater.domestic_hot_water": {
       "state": "off",
-      "away_mode": "on",
-      "current_temperature": 23.0,
-      "operation_mode": "off",
-      "supported_features": 6
+      "attributes": {
+        "away_mode": "on",
+        "current_temperature": 23.0,
+        "operation_mode": "off",
+        "supported_features": 6
+      }
     }
   },
   "services": [

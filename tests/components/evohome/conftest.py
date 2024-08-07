@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from typing import Any, Final
 from unittest.mock import MagicMock, patch
@@ -49,7 +49,7 @@ def location_status_fixture(install: str, loc_id: str | None = None) -> JsonObje
     """Load JSON for the status of a specific location."""
     if loc_id is None:
         _install = load_json_array_fixture(f"{install}/user_locations.json", DOMAIN)
-        loc_id = _install[0]["locationInfo"]["locationId"]
+        loc_id = _install[0]["locationInfo"]["locationId"]  # type: ignore[assignment, call-overload, index]
     return load_json_object_fixture(f"{install}/status_{loc_id}.json", DOMAIN)
 
 
@@ -69,7 +69,7 @@ def zone_schedule_fixture(install: str) -> JsonObjectType:
         return load_json_object_fixture("default/schedule_zone.json", DOMAIN)
 
 
-def mock_get_factory(install: str) -> Awaitable:
+def mock_get_factory(install: str) -> Callable:
     """Return a get method for a specified installation."""
 
     async def mock_get(
@@ -109,7 +109,7 @@ def mock_get_factory(install: str) -> Awaitable:
     return mock_get
 
 
-def mock_put_factory() -> Awaitable:
+def mock_put_factory() -> Callable:
     """Return a get method for a specified installation."""
 
     async def mock_put(self: Broker, url: str, **kwargs: Any) -> None:

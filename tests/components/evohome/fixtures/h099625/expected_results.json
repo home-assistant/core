@@ -2,24 +2,30 @@
   "tcs": {
     "climate.my_home": {
       "state": "heat",
-      "preset_mode": null,
-      "supported_features": 400
+      "attributes": {
+        "preset_mode": null,
+        "supported_features": 400
+      }
     }
   },
   "zones": {
     "climate.thermostat": {
       "state": "heat",
-      "current_temperature": 21.5,
-      "preset_mode": "none",
-      "supported_features": 401,
-      "temperature": 21.5
+      "attributes": {
+        "current_temperature": 21.5,
+        "preset_mode": "none",
+        "supported_features": 401,
+        "temperature": 21.5
+      }
     },
     "climate.thermostat_2": {
       "state": "heat",
-      "current_temperature": 21.5,
-      "preset_mode": "none",
-      "supported_features": 401,
-      "temperature": 21.5
+      "attributes": {
+        "current_temperature": 21.5,
+        "preset_mode": "none",
+        "supported_features": 401,
+        "temperature": 21.5
+      }
     }
   },
   "dhw": {},

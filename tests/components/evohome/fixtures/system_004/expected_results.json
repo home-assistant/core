@@ -2,17 +2,21 @@
   "tcs": {
     "climate.living_room": {
       "state": "heat",
-      "preset_mode": null,
-      "supported_features": 400
+      "attributes": {
+        "preset_mode": null,
+        "supported_features": 400
+      }
     }
   },
   "zones": {
     "climate.thermostat": {
       "state": "heat",
-      "current_temperature": 19.5,
-      "preset_mode": "permanent",
-      "supported_features": 401,
-      "temperature": 15.0
+      "attributes": {
+        "current_temperature": 19.5,
+        "preset_mode": "permanent",
+        "supported_features": 401,
+        "temperature": 15.0
+      }
     }
   },
   "dhw": {},
