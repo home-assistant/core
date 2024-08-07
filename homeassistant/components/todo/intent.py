@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import voluptuous as vol
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 from homeassistant.helpers.entity_component import EntityComponent
@@ -21,7 +23,10 @@ class ListAddItemIntent(intent.IntentHandler):
 
     intent_type = INTENT_LIST_ADD_ITEM
     description = "Add item to a todo list"
-    slot_schema = {"item": intent.non_empty_string, "name": intent.non_empty_string}
+    slot_schema = {
+        vol.Required("item"): intent.non_empty_string,
+        vol.Required("name"): intent.non_empty_string,
+    }
     platforms = {DOMAIN}
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:

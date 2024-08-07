@@ -62,12 +62,12 @@ async def test_no_number(
 @pytest.mark.parametrize(
     ("mock_envoy"), ["envoy_metered_batt_relay"], indirect=["mock_envoy"]
 )
-async def test_number_operation(
+async def test_number_operation_storage(
     hass: HomeAssistant,
     mock_envoy: AsyncMock,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test enphase_envoy number entities operation."""
+    """Test enphase_envoy number storage entities operation."""
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.NUMBER]):
         await setup_integration(hass, config_entry)
 
@@ -90,3 +90,64 @@ async def test_number_operation(
     )
 
     mock_envoy.set_reserve_soc.assert_awaited_once_with(test_value)
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy"), ["envoy_metered_batt_relay"], indirect=["mock_envoy"]
+)
+async def test_number_operation_relays(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test enphase_envoy number relay entities operation."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.NUMBER]):
+        await setup_integration(hass, config_entry)
+
+    entity_base = f"{Platform.NUMBER}."
+
+    for counter, (contact_id, dry_contact) in enumerate(
+        mock_envoy.data.dry_contact_settings.items()
+    ):
+        name = dry_contact.load_name.lower().replace(" ", "_")
+        test_entity = f"{entity_base}{name}_cutoff_battery_level"
+        assert (entity_state := hass.states.get(test_entity))
+        assert mock_envoy.data.dry_contact_settings[contact_id].soc_low == float(
+            entity_state.state
+        )
+        test_value = 10.0 + counter
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: test_entity,
+                ATTR_VALUE: test_value,
+            },
+            blocking=True,
+        )
+
+        mock_envoy.update_dry_contact.assert_awaited_once_with(
+            {"id": contact_id, "soc_low": test_value}
+        )
+        mock_envoy.update_dry_contact.reset_mock()
+
+        test_entity = f"{entity_base}{name}_restore_battery_level"
+        assert (entity_state := hass.states.get(test_entity))
+        assert mock_envoy.data.dry_contact_settings[contact_id].soc_high == float(
+            entity_state.state
+        )
+        test_value = 80.0 - counter
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: test_entity,
+                ATTR_VALUE: test_value,
+            },
+            blocking=True,
+        )
+
+        mock_envoy.update_dry_contact.assert_awaited_once_with(
+            {"id": contact_id, "soc_high": test_value}
+        )
+        mock_envoy.update_dry_contact.reset_mock()

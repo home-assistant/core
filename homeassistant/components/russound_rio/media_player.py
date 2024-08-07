@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import logging
 
+from aiorussound import Source, Zone
+
 from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -14,12 +17,13 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import RussoundConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, MP_FEATURES_BY_FLAG
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,21 +84,18 @@ async def async_setup_entry(
     """Set up the Russound RIO platform."""
     russ = entry.runtime_data
 
-    # Discover sources and zones
-    sources = await russ.enumerate_sources()
-    valid_zones = await russ.enumerate_zones()
+    # Discover controllers
+    controllers = await russ.enumerate_controllers()
 
     entities = []
-    for zone_id, name in valid_zones:
-        if zone_id.controller > 6:
-            _LOGGER.debug(
-                "Zone ID %s exceeds RIO controller maximum, skipping",
-                zone_id.device_str(),
-            )
-            continue
-        await russ.watch_zone(zone_id)
-        zone = RussoundZoneDevice(russ, zone_id, name, sources)
-        entities.append(zone)
+    for controller in controllers.values():
+        sources = controller.sources
+        for source in sources.values():
+            await source.watch()
+        for zone in controller.zones.values():
+            await zone.watch()
+            mp = RussoundZoneDevice(zone, sources)
+            entities.append(mp)
 
     @callback
     def on_stop(event):
@@ -109,66 +110,61 @@ async def async_setup_entry(
 class RussoundZoneDevice(MediaPlayerEntity):
     """Representation of a Russound Zone."""
 
+    _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_media_content_type = MediaType.MUSIC
     _attr_should_poll = False
+    _attr_has_entity_name = True
     _attr_supported_features = (
-        MediaPlayerEntityFeature.VOLUME_MUTE
-        | MediaPlayerEntityFeature.VOLUME_SET
+        MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_STEP
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, russ, zone_id, name, sources) -> None:
+    def __init__(self, zone: Zone, sources: dict[int, Source]) -> None:
         """Initialize the zone device."""
-        super().__init__()
-        self._name = name
-        self._russ = russ
-        self._zone_id = zone_id
+        self._controller = zone.controller
+        self._zone = zone
         self._sources = sources
+        self._attr_name = zone.name
+        self._attr_unique_id = f"{self._controller.mac_address}-{zone.device_str()}"
+        self._attr_device_info = DeviceInfo(
+            # Use MAC address of Russound device as identifier
+            identifiers={(DOMAIN, self._controller.mac_address)},
+            connections={(CONNECTION_NETWORK_MAC, self._controller.mac_address)},
+            manufacturer="Russound",
+            name=self._controller.controller_type,
+            model=self._controller.controller_type,
+            sw_version=self._controller.firmware_version,
+        )
+        if self._controller.parent_controller:
+            self._attr_device_info["via_device"] = (
+                DOMAIN,
+                self._controller.parent_controller.mac_address,
+            )
+        for flag, feature in MP_FEATURES_BY_FLAG.items():
+            if flag in zone.instance.supported_features:
+                self._attr_supported_features |= feature
 
-    def _zone_var(self, name, default=None):
-        return self._russ.get_cached_zone_variable(self._zone_id, name, default)
-
-    def _source_var(self, name, default=None):
-        current = int(self._zone_var("currentsource", 0))
-        if current:
-            return self._russ.get_cached_source_variable(current, name, default)
-        return default
-
-    def _source_na_var(self, name):
-        """Will replace invalid values with None."""
-        current = int(self._zone_var("currentsource", 0))
-        if current:
-            value = self._russ.get_cached_source_variable(current, name, None)
-            if value in (None, "", "------"):
-                return None
-            return value
-        return None
-
-    def _zone_callback_handler(self, zone_id, *args):
-        if zone_id == self._zone_id:
-            self.schedule_update_ha_state()
-
-    def _source_callback_handler(self, source_id, *args):
-        current = int(self._zone_var("currentsource", 0))
-        if source_id == current:
+    def _callback_handler(self, device_str, *args):
+        if (
+            device_str == self._zone.device_str()
+            or device_str == self._current_source().device_str()
+        ):
             self.schedule_update_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Register callback handlers."""
-        self._russ.add_zone_callback(self._zone_callback_handler)
-        self._russ.add_source_callback(self._source_callback_handler)
+        self._zone.add_callback(self._callback_handler)
 
-    @property
-    def name(self):
-        """Return the name of the zone."""
-        return self._zone_var("name", self._name)
+    def _current_source(self) -> Source:
+        return self._zone.fetch_current_source()
 
     @property
     def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
-        status = self._zone_var("status", "OFF")
+        status = self._zone.status
         if status == "ON":
             return MediaPlayerState.ON
         if status == "OFF":
@@ -178,32 +174,32 @@ class RussoundZoneDevice(MediaPlayerEntity):
     @property
     def source(self):
         """Get the currently selected source."""
-        return self._source_na_var("name")
+        return self._current_source().name
 
     @property
     def source_list(self):
         """Return a list of available input sources."""
-        return [x[1] for x in self._sources]
+        return [x.name for x in self._sources.values()]
 
     @property
     def media_title(self):
         """Title of current playing media."""
-        return self._source_na_var("songname")
+        return self._current_source().song_name
 
     @property
     def media_artist(self):
         """Artist of current playing media, music track only."""
-        return self._source_na_var("artistname")
+        return self._current_source().artist_name
 
     @property
     def media_album_name(self):
         """Album name of current playing media, music track only."""
-        return self._source_na_var("albumname")
+        return self._current_source().album_name
 
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        return self._source_na_var("coverarturl")
+        return self._current_source().cover_art_url
 
     @property
     def volume_level(self):
@@ -212,25 +208,33 @@ class RussoundZoneDevice(MediaPlayerEntity):
         Value is returned based on a range (0..50).
         Therefore float divide by 50 to get to the required range.
         """
-        return float(self._zone_var("volume", 0)) / 50.0
+        return float(self._zone.volume or "0") / 50.0
 
     async def async_turn_off(self) -> None:
         """Turn off the zone."""
-        await self._russ.send_zone_event(self._zone_id, "ZoneOff")
+        await self._zone.zone_off()
 
     async def async_turn_on(self) -> None:
         """Turn on the zone."""
-        await self._russ.send_zone_event(self._zone_id, "ZoneOn")
+        await self._zone.zone_on()
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
         rvol = int(volume * 50.0)
-        await self._russ.send_zone_event(self._zone_id, "KeyPress", "Volume", rvol)
+        await self._zone.set_volume(rvol)
 
     async def async_select_source(self, source: str) -> None:
         """Select the source input for this zone."""
-        for source_id, name in self._sources:
-            if name.lower() != source.lower():
+        for source_id, src in self._sources.items():
+            if src.name.lower() != source.lower():
                 continue
-            await self._russ.send_zone_event(self._zone_id, "SelectSource", source_id)
+            await self._zone.select_source(source_id)
             break
+
+    async def async_volume_up(self) -> None:
+        """Step the volume up."""
+        await self._zone.volume_up()
+
+    async def async_volume_down(self) -> None:
+        """Step the volume down."""
+        await self._zone.volume_down()

@@ -1,5 +1,6 @@
 """Support for Ecovacs Deebot vacuums."""
 
+from sucks import VacBot
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -61,6 +62,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: EcovacsConfigEntry) -> b
 
     entry.async_on_unload(on_unload)
     entry.runtime_data = controller
+
+    async def _async_wait_connect(device: VacBot) -> None:
+        await hass.async_add_executor_job(device.connect_and_wait_until_ready)
+
+    for device in controller.legacy_devices:
+        entry.async_create_background_task(
+            hass=hass,
+            target=_async_wait_connect(device),
+            name=f"{entry.title}_wait_connect_{device.vacuum['did']}",
+        )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

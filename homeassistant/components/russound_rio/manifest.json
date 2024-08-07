@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/russound_rio",
   "iot_class": "local_push",
   "loggers": ["aiorussound"],
-  "requirements": ["aiorussound==1.1.2"]
+  "requirements": ["aiorussound==2.2.0"]
 }

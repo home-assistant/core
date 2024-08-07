@@ -5,10 +5,10 @@ from unittest.mock import Mock, PropertyMock, patch
 import pyspcwebgw
 from pyspcwebgw.const import AreaMode
 
-from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.spc import DATA_API
 from homeassistant.const import STATE_ALARM_ARMED_AWAY, STATE_ALARM_DISARMED
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 
 async def test_valid_device_config(hass: HomeAssistant) -> None:

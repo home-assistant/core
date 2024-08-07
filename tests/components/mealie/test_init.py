@@ -33,6 +33,15 @@ async def test_device_info(
 
 
 @pytest.mark.parametrize(
+    "field",
+    [
+        "get_about",
+        "get_mealplans",
+        "get_shopping_lists",
+        "get_statistics",
+    ],
+)
+@pytest.mark.parametrize(
     ("exc", "state"),
     [
         (MealieConnectionError, ConfigEntryState.SETUP_RETRY),
@@ -43,11 +52,12 @@ async def test_setup_failure(
     hass: HomeAssistant,
     mock_mealie_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    field: str,
     exc: Exception,
     state: ConfigEntryState,
 ) -> None:
     """Test setup failure."""
-    mock_mealie_client.get_about.side_effect = exc
+    getattr(mock_mealie_client, field).side_effect = exc
 
     await setup_integration(hass, mock_config_entry)
 
@@ -60,7 +70,6 @@ async def test_setup_failure(
         ("v1.0.0beta-5"),
         ("v1.0.0-RC2"),
         ("v0.1.0"),
-        ("something"),
     ],
 )
 async def test_setup_too_old(
@@ -75,6 +84,24 @@ async def test_setup_too_old(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_invalid(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup of Mealie entry with too old version of Mealie."""
+    mock_mealie_client.get_about.return_value = About(version="nightly")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        "It seems like you are using the nightly version of Mealie, nightly"
+        " versions could have changes that stop this integration working" in caplog.text
+    )
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_load_unload_entry(

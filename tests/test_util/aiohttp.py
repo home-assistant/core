@@ -1,6 +1,7 @@
 """Aiohttp test utils."""
 
 import asyncio
+from collections.abc import Iterator
 from contextlib import contextmanager
 from http import HTTPStatus
 import re
@@ -296,7 +297,7 @@ class AiohttpClientMockResponse:
 
 
 @contextmanager
-def mock_aiohttp_client():
+def mock_aiohttp_client() -> Iterator[AiohttpClientMocker]:
     """Context manager to mock aiohttp client."""
     mocker = AiohttpClientMocker()
 

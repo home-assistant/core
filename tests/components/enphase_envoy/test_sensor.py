@@ -3,12 +3,14 @@
 from itertools import chain
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pyenphase.const import PHASENAMES
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.enphase_envoy.const import Platform
-from homeassistant.const import UnitOfTemperature
+from homeassistant.components.enphase_envoy.coordinator import SCAN_INTERVAL
+from homeassistant.const import STATE_UNKNOWN, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -16,7 +18,7 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.parametrize(
@@ -86,7 +88,7 @@ async def test_sensor_production_data(
 
     for name, target in list(zip(PRODUCTION_NAMES, PRODUCTION_TARGETS, strict=False)):
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
-        assert target == float(entity_state.state)
+        assert float(entity_state.state) == target
 
 
 PRODUCTION_PHASE_NAMES: list[str] = [
@@ -131,7 +133,7 @@ async def test_sensor_production_phase_data(
         zip(PRODUCTION_PHASE_NAMES, PRODUCTION_PHASE_TARGET, strict=False)
     ):
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
-        assert target == float(entity_state.state)
+        assert float(entity_state.state) == target
 
 
 CONSUMPTION_NAMES: tuple[str, ...] = (
@@ -174,7 +176,7 @@ async def test_sensor_consumption_data(
 
     for name, target in list(zip(CONSUMPTION_NAMES, CONSUMPTION_TARGETS, strict=False)):
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
-        assert target == float(entity_state.state)
+        assert float(entity_state.state) == target
 
 
 CONSUMPTION_PHASE_NAMES: list[str] = [
@@ -219,7 +221,7 @@ async def test_sensor_consumption_phase_data(
         zip(CONSUMPTION_PHASE_NAMES, CONSUMPTION_PHASE_TARGET, strict=False)
     ):
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
-        assert target == float(entity_state.state)
+        assert float(entity_state.state) == target
 
 
 CT_PRODUCTION_NAMES_INT = ("meter_status_flags_active_production_ct",)
@@ -254,14 +256,14 @@ async def test_sensor_production_ct_data(
         zip(CT_PRODUCTION_NAMES_INT, CT_PRODUCTION_TARGETS_INT, strict=False)
     ):
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
-        assert target == float(entity_state.state)
+        assert float(entity_state.state) == target
 
     CT_PRODUCTION_TARGETS_STR = (data.metering_status,)
     for name, target in list(
         zip(CT_PRODUCTION_NAMES_STR, CT_PRODUCTION_TARGETS_STR, strict=False)
     ):
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
-        assert target == entity_state.state
+        assert entity_state.state == target
 
 
 CT_PRODUCTION_NAMES_FLOAT_PHASE = [
@@ -311,7 +313,7 @@ async def test_sensor_production_ct_phase_data(
         )
     ):
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
-        assert target == float(entity_state.state)
+        assert float(entity_state.state) == target
 
     CT_PRODUCTION_NAMES_STR_TARGET = [
         phase_data.metering_status
@@ -326,7 +328,7 @@ async def test_sensor_production_ct_phase_data(
         )
     ):
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
-        assert target == entity_state.state
+        assert entity_state.state == target
 
 
 CT_CONSUMPTION_NAMES_FLOAT: tuple[str, ...] = (
@@ -376,14 +378,14 @@ async def test_sensor_consumption_ct_data(
         zip(CT_CONSUMPTION_NAMES_FLOAT, CT_CONSUMPTION_TARGETS_FLOAT, strict=False)
     ):
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
-        assert target == float(entity_state.state)
+        assert float(entity_state.state) == target
 
     CT_CONSUMPTION_TARGETS_STR = (data.metering_status,)
     for name, target in list(
         zip(CT_CONSUMPTION_NAMES_STR, CT_CONSUMPTION_TARGETS_STR, strict=False)
     ):
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
-        assert target == entity_state.state
+        assert entity_state.state == target
 
 
 CT_CONSUMPTION_NAMES_FLOAT_PHASE = [
@@ -442,7 +444,7 @@ async def test_sensor_consumption_ct_phase_data(
         )
     ):
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
-        assert target == float(entity_state.state)
+        assert float(entity_state.state) == target
 
     CT_CONSUMPTION_NAMES_STR_PHASE_TARGET = [
         phase_data.metering_status
@@ -457,7 +459,7 @@ async def test_sensor_consumption_ct_phase_data(
         )
     ):
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
-        assert target == entity_state.state
+        assert entity_state.state == target
 
 
 CT_STORAGE_NAMES_FLOAT = (
@@ -503,14 +505,14 @@ async def test_sensor_storage_ct_data(
         zip(CT_STORAGE_NAMES_FLOAT, CT_STORAGE_TARGETS_FLOAT, strict=False)
     ):
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
-        assert target == float(entity_state.state)
+        assert float(entity_state.state) == target
 
     CT_STORAGE_TARGETS_STR = (data.metering_status,)
     for name, target in list(
         zip(CT_STORAGE_NAMES_STR, CT_STORAGE_TARGETS_STR, strict=False)
     ):
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
-        assert target == entity_state.state
+        assert entity_state.state == target
 
 
 CT_STORAGE_NAMES_FLOAT_PHASE = [
@@ -565,7 +567,7 @@ async def test_sensor_storage_ct_phase_data(
         )
     ):
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
-        assert target == float(entity_state.state)
+        assert float(entity_state.state) == target
 
     CT_STORAGE_NAMES_STR_PHASE_TARGET = [
         phase_data.metering_status
@@ -580,7 +582,7 @@ async def test_sensor_storage_ct_phase_data(
         )
     ):
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{name}"))
-        assert target == entity_state.state
+        assert entity_state.state == target
 
 
 @pytest.mark.parametrize(
@@ -670,11 +672,11 @@ async def test_sensor_inverter_data(
 
     for sn, inverter in mock_envoy.data.inverters.items():
         assert (entity_state := hass.states.get(f"{entity_base}_{sn}"))
-        assert (inverter.last_report_watts) == float(entity_state.state)
+        assert float(entity_state.state) == (inverter.last_report_watts)
         assert (last_reported := hass.states.get(f"{entity_base}_{sn}_last_reported"))
-        assert dt_util.utc_from_timestamp(
-            inverter.last_report_date
-        ) == dt_util.parse_datetime(last_reported.state)
+        assert dt_util.parse_datetime(
+            last_reported.state
+        ) == dt_util.utc_from_timestamp(inverter.last_report_date)
 
 
 @pytest.mark.parametrize(
@@ -736,7 +738,7 @@ async def test_sensor_encharge_aggregate_data(
         ("battery_capacity", data.max_available_capacity),
     ):
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{target[0]}"))
-        assert target[1] == float(entity_state.state)
+        assert float(entity_state.state) == target[1]
 
 
 @pytest.mark.parametrize(
@@ -759,19 +761,22 @@ async def test_sensor_encharge_enpower_data(
     ENTITY_BASE = f"{Platform.SENSOR}.enpower"
 
     assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{sn}_temperature"))
-    assert mock_envoy.data.enpower.temperature == round(
-        TemperatureConverter.convert(
-            float(entity_state.state),
-            hass.config.units.temperature_unit,
-            UnitOfTemperature.FAHRENHEIT
-            if mock_envoy.data.enpower.temperature_unit == "F"
-            else UnitOfTemperature.CELSIUS,
+    assert (
+        round(
+            TemperatureConverter.convert(
+                float(entity_state.state),
+                hass.config.units.temperature_unit,
+                UnitOfTemperature.FAHRENHEIT
+                if mock_envoy.data.enpower.temperature_unit == "F"
+                else UnitOfTemperature.CELSIUS,
+            )
         )
+        == mock_envoy.data.enpower.temperature
     )
     assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{sn}_last_reported"))
-    assert dt_util.utc_from_timestamp(
+    assert dt_util.parse_datetime(entity_state.state) == dt_util.utc_from_timestamp(
         mock_envoy.data.enpower.last_report_date
-    ) == dt_util.parse_datetime(entity_state.state)
+    )
 
 
 @pytest.mark.parametrize(
@@ -813,23 +818,26 @@ async def test_sensor_encharge_power_data(
     for sn, sn_target in ENCHARGE_POWER_TARGETS:
         for name, target in list(zip(ENCHARGE_POWER_NAMES, sn_target, strict=False)):
             assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{sn}_{name}"))
-            assert target == float(entity_state.state)
+            assert float(entity_state.state) == target
 
     for sn, encharge_inventory in mock_envoy.data.encharge_inventory.items():
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{sn}_temperature"))
-        assert encharge_inventory.temperature == round(
-            TemperatureConverter.convert(
-                float(entity_state.state),
-                hass.config.units.temperature_unit,
-                UnitOfTemperature.FAHRENHEIT
-                if encharge_inventory.temperature_unit == "F"
-                else UnitOfTemperature.CELSIUS,
+        assert (
+            round(
+                TemperatureConverter.convert(
+                    float(entity_state.state),
+                    hass.config.units.temperature_unit,
+                    UnitOfTemperature.FAHRENHEIT
+                    if encharge_inventory.temperature_unit == "F"
+                    else UnitOfTemperature.CELSIUS,
+                )
             )
+            == encharge_inventory.temperature
         )
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{sn}_last_reported"))
-        assert dt_util.utc_from_timestamp(
+        assert dt_util.parse_datetime(entity_state.state) == dt_util.utc_from_timestamp(
             encharge_inventory.last_report_date
-        ) == dt_util.parse_datetime(entity_state.state)
+        )
 
 
 def integration_disabled_entities(
@@ -843,3 +851,64 @@ def integration_disabled_entities(
         )
         if entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
     ]
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        "envoy_metered_batt_relay",
+    ],
+    indirect=["mock_envoy"],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_missing_data(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test enphase_envoy sensor platform midding data handling."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry)
+
+    ENTITY_BASE = f"{Platform.SENSOR}.envoy_{mock_envoy.serial_number}"
+
+    # force missing data to test 'if == none' code sections
+    mock_envoy.data.system_production_phases["L2"] = None
+    mock_envoy.data.system_consumption_phases["L2"] = None
+    mock_envoy.data.ctmeter_production = None
+    mock_envoy.data.ctmeter_consumption = None
+    mock_envoy.data.ctmeter_storage = None
+    mock_envoy.data.ctmeter_production_phases = None
+    mock_envoy.data.ctmeter_consumption_phases = None
+    mock_envoy.data.ctmeter_storage_phases = None
+
+    # use different inverter serial to test 'expected inverter missing' code
+    mock_envoy.data.inverters["2"] = mock_envoy.data.inverters.pop("1")
+
+    # force HA to detect changed data by changing raw
+    mock_envoy.data.raw = {"I": "am changed"}
+
+    # MOve time to next update
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # all these should now be in unknown state
+    for entity in (
+        "lifetime_energy_production_l2",
+        "lifetime_energy_consumption_l2",
+        "metering_status_production_ct",
+        "metering_status_net_consumption_ct",
+        "metering_status_storage_ct",
+        "metering_status_production_ct_l2",
+        "metering_status_net_consumption_ct_l2",
+        "metering_status_storage_ct_l2",
+    ):
+        assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{entity}"))
+        assert entity_state.state == STATE_UNKNOWN
+
+    # test the original inverter is now unknown
+    assert (entity_state := hass.states.get("sensor.inverter_1"))
+    assert entity_state.state == STATE_UNKNOWN
