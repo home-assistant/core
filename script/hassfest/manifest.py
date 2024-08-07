@@ -85,6 +85,7 @@ NO_IOT_CLASS = [
     "input_text",
     "intent_script",
     "intent",
+    "location",
     "logbook",
     "logger",
     "lovelace",
