@@ -229,9 +229,7 @@ class LocationMatcher(TypedDict, total=False):
     """Matcher for location."""
 
     domain: str
-    name: str
-    latitude: float
-    longitude: float
+    region: str
 
 class Manifest(TypedDict, total=False):
     """Integration manifest.
@@ -549,11 +547,11 @@ async def async_get_locations(hass: HomeAssistant) -> list[LocationMatcher]:
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
-        if not integration.location:
+        if not integration.locations:
             continue
-        for entry in integration.location:
+        for entry in integration.locations:
             locations.append(
-                cast(LocationMatcher, {"domain": integration.domain, **entry})
+                cast(LocationMatcher, {"domain": integration.domain, "region": entry})
             )
     return locations
 
@@ -927,9 +925,9 @@ class Integration:
         return self.manifest.get("homekit")
 
     @property
-    def location(self) -> list[str] | None:
+    def locations(self) -> list[str] | None:
         """Return Integration location matchers."""
-        return self.manifest.get("homekit")
+        return self.manifest.get("locations")
 
     @property
     def is_built_in(self) -> bool:
