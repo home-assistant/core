@@ -8,10 +8,12 @@ from typing import Any
 
 import jwt
 
+from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import DOMAIN, LOGGER
+from .application_credentials import TeslaOAuth2Implementation
+from .const import CLIENT_ID, DOMAIN, LOGGER, NAME
 
 
 class OAuth2FlowHandler(
@@ -26,6 +28,19 @@ class OAuth2FlowHandler(
     def logger(self) -> logging.Logger:
         """Return logger."""
         return LOGGER
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow start."""
+        self.async_register_implementation(
+            self.hass,
+            TeslaOAuth2Implementation(
+                self.hass, DOMAIN, ClientCredential(CLIENT_ID, "", NAME)
+            ),
+        )
+
+        return await super().async_step_user()
 
     async def async_oauth_create_entry(
         self,

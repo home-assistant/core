@@ -5,15 +5,17 @@ import hashlib
 import secrets
 from typing import Any
 
-from homeassistant.components.application_credentials import ClientCredential
+from homeassistant.components.application_credentials import (
+    AuthImplementation,
+    AuthorizationServer,
+    ClientCredential,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import DOMAIN, SCOPES
+from .const import AUTHORIZE_URL, DOMAIN, SCOPES, TOKEN_URL
 
-CLIENT_ID = "71b813eb-4a2e-483a-b831-4dec5cb9bf0d"
-AUTHORIZE_URL = "https://auth.tesla.com/oauth2/v3/authorize"
-TOKEN_URL = "https://auth.tesla.com/oauth2/v3/token"
+AUTH_SERVER = AuthorizationServer(AUTHORIZE_URL, TOKEN_URL)
 
 
 async def async_get_auth_implementation(
@@ -23,15 +25,16 @@ async def async_get_auth_implementation(
     return TeslaOAuth2Implementation(
         hass,
         DOMAIN,
+        credential,
     )
 
 
-class TeslaOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
+class TeslaOAuth2Implementation(AuthImplementation):
     """Tesla Fleet API Open Source Oauth2 implementation."""
 
-    _name = "Tesla Fleet API"
-
-    def __init__(self, hass: HomeAssistant, domain: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, domain: str, credential: ClientCredential
+    ) -> None:
         """Initialize local auth implementation."""
         self.hass = hass
         self._domain = domain
@@ -45,10 +48,8 @@ class TeslaOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementati
         super().__init__(
             hass,
             domain,
-            CLIENT_ID,
-            "",  # Implementation has no client secret
-            AUTHORIZE_URL,
-            TOKEN_URL,
+            credential,
+            AUTH_SERVER,
         )
 
     @property
