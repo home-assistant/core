@@ -129,12 +129,16 @@ class MatterValve(MatterEntity, ValveEntity):
 
         state = operational_status & OPERATIONAL_STATUS_MASK
         match state:
-            case OperationalStatus.VALVE_IS_CURRENTLY_OPENING:
-                self._attr_is_opening = True
-                self._attr_is_closing = False
+            # Valve is transitioning between closed and open positions or between levels
+            case OperationalStatus.VALVE_IS_CURRENTLY_TRANSITIONING:
+                #self._attr_is_opening = True
+                #self._attr_is_closing = False
+                self._attr_is_transitioning = True
+            '''
             case OperationalStatus.VALVE_IS_CURRENTLY_CLOSING:
                 self._attr_is_opening = False
                 self._attr_is_closing = True
+            ''
             case _:
                 self._attr_is_opening = False
                 self._attr_is_closing = False
