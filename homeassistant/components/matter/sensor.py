@@ -478,6 +478,7 @@ DISCOVERY_SCHEMAS = [
             # convert to set first to remove the duplicate unknown value
             options=list(set(MICROWAVE_OVEN_MODE_MAP.values())),
             measurement_to_ha=lambda x: MICROWAVE_OVEN_MODE_MAP[x],
+            icon="mdi:microwave",
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.MicrowaveOvenMode.Attributes.CurrentMode,),
