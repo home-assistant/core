@@ -120,11 +120,12 @@ async def test_set_temperature(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mocked_hub: Device
 ) -> None:
     """Test that set_temperature service calls the setter."""
+    mocked_thermostat = mocked_hub.children[0]
+    mocked_thermostat.features["target_temperature"].minimum_value = 0
+
     await setup_platform_for_device(
         hass, mock_config_entry, Platform.CLIMATE, mocked_hub
     )
-
-    mocked_thermostat = mocked_hub.children[0]
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,

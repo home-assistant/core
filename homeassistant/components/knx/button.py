@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from xknx import XKNX
 from xknx.devices import RawValue as XknxRawValue
 
 from homeassistant import config_entries
@@ -12,8 +11,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
+from . import KNXModule
 from .const import CONF_PAYLOAD_LENGTH, DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS
-from .knx_entity import KnxEntity
+from .knx_entity import KnxYamlEntity
 
 
 async def async_setup_entry(
@@ -22,28 +22,30 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the KNX binary sensor platform."""
-    xknx: XKNX = hass.data[DOMAIN].xknx
+    knx_module: KNXModule = hass.data[DOMAIN]
     config: ConfigType = hass.data[DATA_KNX_CONFIG]
 
     async_add_entities(
-        KNXButton(xknx, entity_config) for entity_config in config[Platform.BUTTON]
+        KNXButton(knx_module, entity_config)
+        for entity_config in config[Platform.BUTTON]
     )
 
 
-class KNXButton(KnxEntity, ButtonEntity):
+class KNXButton(KnxYamlEntity, ButtonEntity):
     """Representation of a KNX button."""
 
     _device: XknxRawValue
 
-    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
+    def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize a KNX button."""
         super().__init__(
+            knx_module=knx_module,
             device=XknxRawValue(
-                xknx,
+                xknx=knx_module.xknx,
                 name=config[CONF_NAME],
                 payload_length=config[CONF_PAYLOAD_LENGTH],
                 group_address=config[KNX_ADDRESS],
-            )
+            ),
         )
         self._payload = config[CONF_PAYLOAD]
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)

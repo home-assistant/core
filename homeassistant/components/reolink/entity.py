@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from reolink_aio.api import DUAL_LENS_MODELS, Host
+from reolink_aio.api import DUAL_LENS_MODELS, Chime, Host
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -59,8 +59,9 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
 
         http_s = "https" if self._host.api.use_https else "http"
         self._conf_url = f"{http_s}://{self._host.api.host}:{self._host.api.port}"
+        self._dev_id = self._host.unique_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._host.unique_id)},
+            identifiers={(DOMAIN, self._dev_id)},
             connections={(CONNECTION_NETWORK_MAC, self._host.api.mac_address)},
             name=self._host.api.nvr_name,
             model=self._host.api.model,
@@ -126,12 +127,14 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
 
         if self._host.api.is_nvr:
             if self._host.api.supported(dev_ch, "UID"):
-                dev_id = f"{self._host.unique_id}_{self._host.api.camera_uid(dev_ch)}"
+                self._dev_id = (
+                    f"{self._host.unique_id}_{self._host.api.camera_uid(dev_ch)}"
+                )
             else:
-                dev_id = f"{self._host.unique_id}_ch{dev_ch}"
+                self._dev_id = f"{self._host.unique_id}_ch{dev_ch}"
 
             self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, dev_id)},
+                identifiers={(DOMAIN, self._dev_id)},
                 via_device=(DOMAIN, self._host.unique_id),
                 name=self._host.api.camera_name(dev_ch),
                 model=self._host.api.camera_model(dev_ch),
@@ -156,3 +159,34 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
             self._host.async_unregister_update_cmd(cmd_key, self._channel)
 
         await super().async_will_remove_from_hass()
+
+
+class ReolinkChimeCoordinatorEntity(ReolinkChannelCoordinatorEntity):
+    """Parent class for Reolink chime entities connected."""
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        chime: Chime,
+        coordinator: DataUpdateCoordinator[None] | None = None,
+    ) -> None:
+        """Initialize ReolinkChimeCoordinatorEntity for a chime."""
+        super().__init__(reolink_data, chime.channel, coordinator)
+
+        self._chime = chime
+
+        self._attr_unique_id = (
+            f"{self._host.unique_id}_chime{chime.dev_id}_{self.entity_description.key}"
+        )
+        cam_dev_id = self._dev_id
+        self._dev_id = f"{self._host.unique_id}_chime{chime.dev_id}"
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._dev_id)},
+            via_device=(DOMAIN, cam_dev_id),
+            name=chime.name,
+            model="Reolink Chime",
+            manufacturer=self._host.api.manufacturer,
+            serial_number=str(chime.dev_id),
+            configuration_url=self._conf_url,
+        )

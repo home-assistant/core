@@ -199,7 +199,7 @@ async def test_climate(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: 25},
+            {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: 34},
             blocking=True,
         )
 
