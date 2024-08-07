@@ -6,7 +6,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import FAKE_QUERY_RESPONCE, setup_mocked_integration
+from . import FAKE_QUERY_RESPONSE, setup_mocked_integration
 
 
 async def test_binary_sensor(

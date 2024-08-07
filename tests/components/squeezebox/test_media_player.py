@@ -6,7 +6,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import FAKE_QUERY_RESPONCE, setup_mocked_integration
+from . import FAKE_QUERY_RESPONSE, setup_mocked_integration
 
 
 async def test_media_player(
@@ -23,7 +23,7 @@ async def test_media_player(
         ),
         patch(
             "pysqueezebox.Server.async_query",
-            return_value=FAKE_QUERY_RESPONCE,
+            return_value=FAKE_QUERY_RESPONSE,
         ),
     ):
         await setup_mocked_integration(hass)
