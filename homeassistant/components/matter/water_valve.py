@@ -129,7 +129,7 @@ class MatterValve(MatterEntity, ValveEntity):
             case OperationalStatus.VALVE_IS_CURRENTLY_CLOSING:
                 self._attr_is_opening = False
                 self._attr_is_closing = True
-            ''
+            '''
             case _:
                 self._attr_is_opening = False
                 self._attr_is_closing = False
