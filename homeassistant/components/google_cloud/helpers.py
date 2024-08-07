@@ -59,7 +59,10 @@ def tts_options_schema(
             vol.Optional(
                 CONF_GENDER,
                 description={"suggested_value": config_options.get(CONF_GENDER)},
-                default=texttospeech.SsmlVoiceGender.NEUTRAL.name,  # type: ignore[attr-defined]
+                default=config_options.get(
+                    CONF_GENDER,
+                    texttospeech.SsmlVoiceGender.NEUTRAL.name,  # type: ignore[attr-defined]
+                ),
             ): vol.All(
                 vol.Upper,
                 SelectSelector(
@@ -72,7 +75,7 @@ def tts_options_schema(
             vol.Optional(
                 CONF_VOICE,
                 description={"suggested_value": config_options.get(CONF_VOICE)},
-                default=DEFAULT_VOICE,
+                default=config_options.get(CONF_VOICE, DEFAULT_VOICE),
             ): SelectSelector(
                 SelectSelectorConfig(
                     mode=SelectSelectorMode.DROPDOWN,
@@ -82,7 +85,10 @@ def tts_options_schema(
             vol.Optional(
                 CONF_ENCODING,
                 description={"suggested_value": config_options.get(CONF_ENCODING)},
-                default=texttospeech.AudioEncoding.MP3.name,  # type: ignore[attr-defined]
+                default=config_options.get(
+                    CONF_ENCODING,
+                    texttospeech.AudioEncoding.MP3.name,  # type: ignore[attr-defined]
+                ),
             ): vol.All(
                 vol.Upper,
                 SelectSelector(
@@ -95,22 +101,22 @@ def tts_options_schema(
             vol.Optional(
                 CONF_SPEED,
                 description={"suggested_value": config_options.get(CONF_SPEED)},
-                default=1.0,
+                default=config_options.get(CONF_SPEED, 1.0),
             ): NumberSelector(NumberSelectorConfig(min=0.25, max=4.0, step=0.01)),
             vol.Optional(
                 CONF_PITCH,
                 description={"suggested_value": config_options.get(CONF_PITCH)},
-                default=0,
+                default=config_options.get(CONF_PITCH, 0),
             ): NumberSelector(NumberSelectorConfig(min=-20.0, max=20.0, step=0.1)),
             vol.Optional(
                 CONF_GAIN,
                 description={"suggested_value": config_options.get(CONF_GAIN)},
-                default=0,
+                default=config_options.get(CONF_GAIN, 0),
             ): NumberSelector(NumberSelectorConfig(min=-96.0, max=16.0, step=0.1)),
             vol.Optional(
                 CONF_PROFILES,
                 description={"suggested_value": config_options.get(CONF_PROFILES)},
-                default=[],
+                default=config_options.get(CONF_PROFILES, []),
             ): SelectSelector(
                 SelectSelectorConfig(
                     mode=SelectSelectorMode.DROPDOWN,
@@ -132,7 +138,7 @@ def tts_options_schema(
             vol.Optional(
                 CONF_TEXT_TYPE,
                 description={"suggested_value": config_options.get(CONF_TEXT_TYPE)},
-                default="text",
+                default=config_options.get(CONF_TEXT_TYPE, "text"),
             ): vol.All(
                 vol.Lower,
                 SelectSelector(
