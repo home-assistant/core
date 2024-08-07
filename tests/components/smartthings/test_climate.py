@@ -87,6 +87,7 @@ def basic_thermostat_fixture(device_factory):
     device.status.attributes[Attribute.temperature] = Status(70, "F", None)
     return device
 
+
 @pytest.fixture(name="minimal_thermostat")
 def minimal_thermostat_fixture(device_factory):
     """Fixture returns a minimal thermostat without cooling."""
@@ -105,6 +106,7 @@ def minimal_thermostat_fixture(device_factory):
     )
     device.status.attributes[Attribute.temperature] = Status(70, "F", None)
     return device
+
 
 @pytest.fixture(name="thermostat")
 def thermostat_fixture(device_factory):
@@ -327,19 +329,20 @@ async def test_basic_thermostat_entity_state(
     ]
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.1  # celsius
 
+
 async def test_minimal_thermostat_entity_state(
-        hass: HomeAssistant, minimal_thermostat
+    hass: HomeAssistant, minimal_thermostat
 ) -> None:
     """Tests the state attributes properly match the thermostat type."""
     await setup_platform(hass, CLIMATE_DOMAIN, devices=[minimal_thermostat])
     state = hass.states.get("climate.minimal_thermostat")
     assert state.state == HVACMode.OFF
     assert (
-            state.attributes[ATTR_SUPPORTED_FEATURES]
-            == ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-            | ClimateEntityFeature.TARGET_TEMPERATURE
-            | ClimateEntityFeature.TURN_OFF
-            | ClimateEntityFeature.TURN_ON
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        == ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert ATTR_HVAC_ACTION not in state.attributes
     assert sorted(state.attributes[ATTR_HVAC_MODES]) == [
@@ -347,6 +350,7 @@ async def test_minimal_thermostat_entity_state(
         HVACMode.OFF,
     ]
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.1  # celsius
+
 
 async def test_thermostat_entity_state(hass: HomeAssistant, thermostat) -> None:
     """Tests the state attributes properly match the thermostat type."""
