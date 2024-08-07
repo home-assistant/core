@@ -179,9 +179,6 @@ TODO = {
     "aiocache": AwesomeVersion(
         "0.12.2"
     ),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
-    "mficlient": AwesomeVersion(
-        "0.3.0"
-    ),  # No license https://github.com/kk7ds/mficlient/issues/4
     "pyflic": AwesomeVersion("2.0.3"),  # No OSI approved license CC0-1.0 Universal)
 }
 

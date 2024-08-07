@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from functools import cached_property
 import logging
 import math
-from functools import cached_property
 from typing import Any
+
+from hscloud.const import DEVICE_TYPE, FAN_DEVICE
+from hscloud.hscloudexception import HsCloudBusinessException, HsCloudException
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
@@ -16,8 +19,6 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 from homeassistant.util.scaling import int_states_in_range
-from hscloud.const import DEVICE_TYPE, FAN_DEVICE
-from hscloud.hscloudexception import HsCloudBusinessException, HsCloudException
 
 from . import DreoConfigEntry
 from .entity import DreoEntity
