@@ -12,6 +12,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
@@ -77,7 +78,7 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Bayesian Binary sensor."""
+    """Set up the Bayesian Binary sensor from a yaml config."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     name: str = config[CONF_NAME]
@@ -110,6 +111,35 @@ async def async_setup_platform(
         ]
     )
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the Bayesian Binary sensor from a config entry."""
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    config = config_entry.options
+    _LOGGER.warning("Config: %s with options %s", config_entry, config)  # delete-me
+    name: str = config[CONF_NAME]
+    unique_id: str | None = config.get(CONF_UNIQUE_ID)
+    observations: list[ConfigType] = config[CONF_OBSERVATIONS]
+    prior: float = config[CONF_PRIOR]
+    probability_threshold: float = config[CONF_PROBABILITY_THRESHOLD]
+    device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
+
+    async_add_entities(
+        [
+            BayesianBinarySensor(
+                name,
+                unique_id,
+                prior,
+                observations,
+                probability_threshold,
+                device_class,
+            )
+        ]
+    )
 
 class BayesianBinarySensor(BinarySensorEntity):
     """Representation of a Bayesian sensor."""
