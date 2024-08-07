@@ -41,9 +41,9 @@ TYPE_MAP = {
 class OperationalStatus(IntEnum):
     """Currently ongoing operations enumeration for water valve, as defined in the Matter spec."""
 
-    VALVEIS_CURRENTLY_CLOSED = 0b00
-    VALVEIS_CURRENTLY_OPEN = 0b01
-    VALVEIS_CURRENTLY_TRANSITIONING = 0b10
+    VALVE_IS_CURRENTLY_CLOSED = 0b00
+    VALVE_IS_CURRENTLY_OPEN = 0b01
+    VALVE_IS_CURRENTLY_TRANSITIONING = 0b10
 
 
 async def async_setup_entry(
@@ -129,10 +129,10 @@ class MatterValve(MatterEntity, ValveEntity):
 
         state = operational_status & OPERATIONAL_STATUS_MASK
         match state:
-            case OperationalStatus.VALVEIS_CURRENTLY_OPENING:
+            case OperationalStatus.VALVE_IS_CURRENTLY_OPENING:
                 self._attr_is_opening = True
                 self._attr_is_closing = False
-            case OperationalStatus.VALVEIS_CURRENTLY_CLOSING:
+            case OperationalStatus.VALVE_IS_CURRENTLY_CLOSING:
                 self._attr_is_opening = False
                 self._attr_is_closing = True
             case _:
