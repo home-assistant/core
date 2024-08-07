@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CORE_STATE_ATTRS = (
     ATTR_AWAY_MODE,
-    ATTR_CURRENT_TEMPERATURE,
+    ATTR_CURRENT_TEMPERATURE,  # climate and water_heater
     ATTR_OPERATION_MODE,
     ATTR_PRESET_MODE,
     ATTR_SUPPORTED_FEATURES,
