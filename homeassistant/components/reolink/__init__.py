@@ -191,7 +191,7 @@ async def async_remove_config_entry_device(
     if is_chime:
         await host.api.get_state(cmd="GetDingDongList")
         chime = host.api.chime(ch)
-        if chime is None or chime.connect_state < 0:
+        if chime is None or chime.connect_state < 0 or chime.channel not in host.api.channels:
             _LOGGER.debug(
                 "Removing Reolink chime %s with id %s, "
                 "since it is not coupled to %s anymore",
