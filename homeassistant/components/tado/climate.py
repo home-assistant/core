@@ -57,15 +57,20 @@ from .const import (
     SUPPORT_PRESET_MANUAL,
     TADO_DEFAULT_MAX_TEMP,
     TADO_DEFAULT_MIN_TEMP,
+    TADO_FANLEVEL_SETTING,
+    TADO_FANSPEED_SETTING,
+    TADO_HORIZONTAL_SWING_SETTING,
     TADO_HVAC_ACTION_TO_HA_HVAC_ACTION,
     TADO_MODES_WITH_NO_TEMP_SETTING,
     TADO_SWING_OFF,
     TADO_SWING_ON,
+    TADO_SWING_SETTING,
     TADO_TO_HA_FAN_MODE_MAP,
     TADO_TO_HA_FAN_MODE_MAP_LEGACY,
     TADO_TO_HA_HVAC_MODE_MAP,
     TADO_TO_HA_OFFSET_MAP,
     TADO_TO_HA_SWING_MODE_MAP,
+    TADO_VERTICAL_SWING_SETTING,
     TEMP_OFFSET,
     TYPE_AIR_CONDITIONING,
     TYPE_HEATING,
@@ -166,17 +171,17 @@ def create_climate_entity(
 
             supported_hvac_modes.append(TADO_TO_HA_HVAC_MODE_MAP[mode])
             if (
-                capabilities[mode].get("swings")
-                or capabilities[mode].get("verticalSwing")
+                capabilities[mode].get(TADO_SWING_SETTING)
+                or capabilities[mode].get(TADO_VERTICAL_SWING_SETTING)
                 or capabilities[mode].get("horizontalSwing")
             ):
                 support_flags |= ClimateEntityFeature.SWING_MODE
                 supported_swing_modes = []
-                if capabilities[mode].get("swings"):
+                if capabilities[mode].get(TADO_SWING_SETTING):
                     supported_swing_modes.append(
                         TADO_TO_HA_SWING_MODE_MAP[TADO_SWING_ON]
                     )
-                if capabilities[mode].get("verticalSwing"):
+                if capabilities[mode].get(TADO_VERTICAL_SWING_SETTING):
                     supported_swing_modes.append(SWING_VERTICAL)
                 if capabilities[mode].get("horizontalSwing"):
                     supported_swing_modes.append(SWING_HORIZONTAL)
@@ -187,9 +192,9 @@ def create_climate_entity(
                     supported_swing_modes.append(SWING_BOTH)
                 supported_swing_modes.append(TADO_TO_HA_SWING_MODE_MAP[TADO_SWING_OFF])
 
-            if not capabilities[mode].get("fanSpeeds") and not capabilities[mode].get(
-                "fanLevel"
-            ):
+            if not capabilities[mode].get(TADO_FANSPEED_SETTING) and not capabilities[
+                mode
+            ].get(TADO_FANLEVEL_SETTING):
                 continue
 
             support_flags |= ClimateEntityFeature.FAN_MODE
@@ -197,14 +202,15 @@ def create_climate_entity(
             if supported_fan_modes:
                 continue
 
-            if capabilities[mode].get("fanSpeeds"):
+            if capabilities[mode].get(TADO_FANSPEED_SETTING):
                 supported_fan_modes = generate_supported_fanmodes(
-                    TADO_TO_HA_FAN_MODE_MAP_LEGACY, capabilities[mode]["fanSpeeds"]
+                    TADO_TO_HA_FAN_MODE_MAP_LEGACY,
+                    capabilities[mode][TADO_FANSPEED_SETTING],
                 )
 
             else:
                 supported_fan_modes = generate_supported_fanmodes(
-                    TADO_TO_HA_FAN_MODE_MAP, capabilities[mode]["fanLevel"]
+                    TADO_TO_HA_FAN_MODE_MAP, capabilities[mode][TADO_FANLEVEL_SETTING]
                 )
 
         cool_temperatures = capabilities[CONST_MODE_COOL]["temperatures"]
@@ -386,11 +392,11 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         if self._ac_device:
-            if self._does_current_hvac_mode_have_fan_speeds():
+            if self._does_current_hvac_mode_have_setting(TADO_FANSPEED_SETTING):
                 return TADO_TO_HA_FAN_MODE_MAP_LEGACY.get(
                     self._current_tado_fan_speed, FAN_AUTO
                 )
-            if self._does_current_hvac_mode_have_fan_level():
+            if self._does_current_hvac_mode_have_setting(TADO_FANLEVEL_SETTING):
                 return TADO_TO_HA_FAN_MODE_MAP.get(
                     self._current_tado_fan_level, FAN_AUTO
                 )
@@ -399,9 +405,9 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Turn fan on/off."""
-        if self._does_current_hvac_mode_have_fan_speeds():
+        if self._does_current_hvac_mode_have_setting(TADO_FANSPEED_SETTING):
             self._control_hvac(fan_mode=HA_TO_TADO_FAN_MODE_MAP_LEGACY[fan_mode])
-        elif self._does_current_hvac_mode_have_fan_level():
+        elif self._does_current_hvac_mode_have_setting(TADO_FANLEVEL_SETTING):
             self._control_hvac(fan_mode=HA_TO_TADO_FAN_MODE_MAP[fan_mode])
 
     @property
@@ -563,28 +569,28 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         if self._attr_swing_modes is None:
             return
         if swing_mode == SWING_OFF:
-            if self._does_current_hvac_mode_have_legacy_swing():
+            if self._does_current_hvac_mode_have_setting(TADO_SWING_SETTING):
                 swing = TADO_SWING_OFF
-            if self._does_current_hvac_mode_have_horizontal_swing():
+            if self._does_current_hvac_mode_have_setting(TADO_HORIZONTAL_SWING_SETTING):
                 horizontal_swing = TADO_SWING_OFF
-            if self._does_current_hvac_mode_have_vertical_swing():
+            if self._does_current_hvac_mode_have_setting(TADO_VERTICAL_SWING_SETTING):
                 vertical_swing = TADO_SWING_OFF
         if swing_mode == SWING_ON:
             swing = TADO_SWING_ON
         if swing_mode == SWING_VERTICAL:
-            if self._does_current_hvac_mode_have_vertical_swing():
+            if self._does_current_hvac_mode_have_setting(TADO_VERTICAL_SWING_SETTING):
                 vertical_swing = TADO_SWING_ON
-            if self._does_current_hvac_mode_have_horizontal_swing():
+            if self._does_current_hvac_mode_have_setting(TADO_HORIZONTAL_SWING_SETTING):
                 horizontal_swing = TADO_SWING_OFF
         if swing_mode == SWING_HORIZONTAL:
-            if self._does_current_hvac_mode_have_vertical_swing():
+            if self._does_current_hvac_mode_have_setting(TADO_VERTICAL_SWING_SETTING):
                 vertical_swing = TADO_SWING_OFF
-            if self._does_current_hvac_mode_have_horizontal_swing():
+            if self._does_current_hvac_mode_have_setting(TADO_HORIZONTAL_SWING_SETTING):
                 horizontal_swing = TADO_SWING_ON
         if swing_mode == SWING_BOTH:
-            if self._does_current_hvac_mode_have_vertical_swing():
+            if self._does_current_hvac_mode_have_setting(TADO_VERTICAL_SWING_SETTING):
                 vertical_swing = TADO_SWING_ON
-            if self._does_current_hvac_mode_have_horizontal_swing():
+            if self._does_current_hvac_mode_have_setting(TADO_HORIZONTAL_SWING_SETTING):
                 horizontal_swing = TADO_SWING_ON
 
         self._control_hvac(
@@ -612,17 +618,17 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._current_tado_hvac_mode = self._tado_zone_data.current_hvac_mode
         self._current_tado_hvac_action = self._tado_zone_data.current_hvac_action
 
-        if self._does_current_hvac_mode_have_fan_level():
+        if self._does_current_hvac_mode_have_setting(TADO_FANLEVEL_SETTING):
             self._current_tado_fan_level = self._tado_zone_data.current_fan_level
-        if self._does_current_hvac_mode_have_fan_speeds():
+        if self._does_current_hvac_mode_have_setting(TADO_FANSPEED_SETTING):
             self._current_tado_fan_speed = self._tado_zone_data.current_fan_speed
-        if self._does_current_hvac_mode_have_legacy_swing():
+        if self._does_current_hvac_mode_have_setting(TADO_SWING_SETTING):
             self._current_tado_swing_mode = self._tado_zone_data.current_swing_mode
-        if self._does_current_hvac_mode_have_vertical_swing():
+        if self._does_current_hvac_mode_have_setting(TADO_VERTICAL_SWING_SETTING):
             self._current_tado_vertical_swing = (
                 self._tado_zone_data.current_vertical_swing_mode
             )
-        if self._does_current_hvac_mode_have_horizontal_swing():
+        if self._does_current_hvac_mode_have_setting(TADO_HORIZONTAL_SWING_SETTING):
             self._current_tado_horizontal_swing = (
                 self._tado_zone_data.current_horizontal_swing_mode
             )
@@ -680,9 +686,9 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             self._target_temp = target_temp
 
         if fan_mode:
-            if self._does_current_hvac_mode_have_fan_speeds():
+            if self._does_current_hvac_mode_have_setting(TADO_FANSPEED_SETTING):
                 self._current_tado_fan_speed = fan_mode
-            if self._does_current_hvac_mode_have_fan_level():
+            if self._does_current_hvac_mode_have_setting(TADO_FANLEVEL_SETTING):
                 self._current_tado_fan_level = fan_mode
 
         if swing_mode:
@@ -753,18 +759,12 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         fan_speed = None
         fan_level = None
         if self.supported_features & ClimateEntityFeature.FAN_MODE:
-            # if self._current_tado_fan_speed in self._current_tado_capabilities[
-            #    self._current_tado_hvac_mode
-            # ].get("fanSpeeds", []):
             if self._does_current_tado_setting_is_managed_by_current_hvac_mode(
-                "fanSpeeds", self._current_tado_fan_speed
+                TADO_FANSPEED_SETTING, self._current_tado_fan_speed
             ):
                 fan_speed = self._current_tado_fan_speed
-            # if self._current_tado_fan_level in self._current_tado_capabilities[
-            #    self._current_tado_hvac_mode
-            # ].get("fanLevel", []):
             if self._does_current_tado_setting_is_managed_by_current_hvac_mode(
-                "fanLevel", self._current_tado_fan_level
+                TADO_FANLEVEL_SETTING, self._current_tado_fan_level
             ):
                 fan_level = self._current_tado_fan_level
 
@@ -774,19 +774,16 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         if (
             self.supported_features & ClimateEntityFeature.SWING_MODE
         ) and self._attr_swing_modes is not None:
-            # if SWING_VERTICAL in self._attr_swing_modes:
             if self._does_current_tado_setting_is_managed_by_current_hvac_mode(
-                "verticalSwing", self._current_tado_vertical_swing
+                TADO_VERTICAL_SWING_SETTING, self._current_tado_vertical_swing
             ):
                 vertical_swing = self._current_tado_vertical_swing
-            # if SWING_HORIZONTAL in self._attr_swing_modes:
             if self._does_current_tado_setting_is_managed_by_current_hvac_mode(
                 "horizontalSwing", self._current_tado_horizontal_swing
             ):
                 horizontal_swing = self._current_tado_horizontal_swing
-            # if vertical_swing is None and horizontal_swing is None:
             if self._does_current_tado_setting_is_managed_by_current_hvac_mode(
-                "swings", self._current_tado_swing_mode
+                TADO_SWING_SETTING, self._current_tado_swing_mode
             ):
                 swing = self._current_tado_swing_mode
 
@@ -805,37 +802,18 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         )
 
     def _does_current_hvac_mode_have_setting(self, setting: str) -> bool:
-    return self._current_tado_capabilities.get(
-        self._current_tado_hvac_mode, {}
-    ).get(setting) is not None
-        evaluation = self._current_tado_capabilities.get(
-            self._current_tado_hvac_mode, {}
-        ).get(setting, None)
-        if evaluation is not None:
-            return True
-        return False
-
-    def _does_current_hvac_mode_have_fan_speeds(self):
-        return self._does_current_hvac_mode_have_setting("fanSpeeds")
-
-    def _does_current_hvac_mode_have_fan_level(self):
-        return self._does_current_hvac_mode_have_setting("fanLevel")
-
-    def _does_current_hvac_mode_have_vertical_swing(self):
-        return self._does_current_hvac_mode_have_setting("verticalSwing")
-
-    def _does_current_hvac_mode_have_horizontal_swing(self):
-        return self._does_current_hvac_mode_have_setting("horizontalSwing")
-
-    def _does_current_hvac_mode_have_legacy_swing(self):
-        return self._does_current_hvac_mode_have_setting("swings")
+        return (
+            self._current_tado_capabilities.get(self._current_tado_hvac_mode, {}).get(
+                setting
+            )
+            is not None
+        )
 
     def _does_current_tado_setting_is_managed_by_current_hvac_mode(
-        self, setting: str, current_state
-    ):
+        self, setting: str, current_state: str | None
+    ) -> bool:
         if self._does_current_hvac_mode_have_setting(setting):
-            if current_state in self._current_tado_capabilities[
+            return current_state in self._current_tado_capabilities[
                 self._current_tado_hvac_mode
-            ].get(setting, []):
-                return True
+            ].get(setting, [])
         return False
