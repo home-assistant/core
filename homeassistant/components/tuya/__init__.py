@@ -10,6 +10,8 @@ from tuya_sharing import (
     Manager,
     SharingDeviceListener,
     SharingTokenListener,
+    logger as tuya_logger,
+    strategy as tuya_strategy,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -51,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
         raise ConfigEntryAuthFailed("Authentication failed. Please re-authenticate.")
 
     token_listener = TokenListener(hass, entry)
-    manager = Manager(
+    manager = TuyaManager(
         TUYA_CLIENT_ID,
         entry.data[CONF_USER_CODE],
         entry.data[CONF_TERMINAL_ID],
@@ -132,6 +134,55 @@ async def async_remove_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> Non
         entry.data[CONF_TOKEN_INFO],
     )
     await hass.async_add_executor_job(manager.unload)
+
+
+class TuyaManager(Manager):
+    """Patched tuya_sharing Manager.
+
+    This can be removed once change has been merged upstream in tuya-device-sharing-sdk. Please
+    check the status of https://github.com/tuya/tuya-device-sharing-sdk/pull/17
+    """
+
+    def __update_device(
+        self, device: CustomerDevice, updated_status_properties: list[str] | None = None
+    ):
+        for listener in self.device_listeners:
+            listener.update_device(device, updated_status_properties)
+
+    def _on_device_report(self, device_id: str, status: list):
+        device = self.device_map.get(device_id, None)
+        if not device:
+            return
+        tuya_logger.debug(f"mq _on_device_report-> {status}")
+        updated_status_properties = []
+        value = None
+        if device.support_local:
+            for item in status:
+                if "dpId" in item and "value" in item:
+                    dp_id_item = device.local_strategy[item["dpId"]]
+                    strategy_name = dp_id_item["value_convert"]
+                    config_item = dp_id_item["config_item"]
+                    dp_item = (dp_id_item["status_code"], item["value"])
+                    tuya_logger.debug(
+                        f"mq _on_device_report before strategy convert strategy_name={strategy_name},dp_item={dp_item},config_item={config_item}"
+                    )
+                    code, value = tuya_strategy.convert(
+                        strategy_name, dp_item, config_item
+                    )
+                    tuya_logger.debug(
+                        f"mq _on_device_report after strategy convert code={code},value={value}"
+                    )
+                    device.status[code] = value
+                    updated_status_properties.append(code)
+        else:
+            for item in status:
+                if "code" in item and "value" in item:
+                    code = item["code"]
+                    value = item["value"]
+                    device.status[code] = value
+                    updated_status_properties.append(code)
+
+        self.__update_device(device, updated_status_properties)
 
 
 class DeviceListener(SharingDeviceListener):
