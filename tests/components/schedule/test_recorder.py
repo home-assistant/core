@@ -49,6 +49,8 @@ async def test_exclude_attributes(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_FRIENDLY_NAME]
     assert state.attributes[ATTR_ICON]
     assert state.attributes[ATTR_NEXT_EVENT]
+    assert state.attributes[CONF_DATA]
+    assert state.attributes["party_level"]
 
     await hass.async_block_till_done()
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))

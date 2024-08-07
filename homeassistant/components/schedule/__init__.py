@@ -263,6 +263,9 @@ class Schedule(CollectionEntity):
         # The "data" attribute is always excluded from the recorder, but
         # also exclude any custom attributes that may be present on time ranges.
         self._unrecorded_attributes = self.all_custom_data_keys()
+        self._Entity__combined_unrecorded_attributes = (
+            self._entity_component_unrecorded_attributes | self._unrecorded_attributes
+        )
 
     @classmethod
     def from_storage(cls, config: ConfigType) -> Schedule:
