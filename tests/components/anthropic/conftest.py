@@ -43,6 +43,7 @@ async def mock_init_component(hass, mock_config_entry):
     ):
         assert await async_setup_component(hass, "anthropic", {})
         await hass.async_block_till_done()
+        yield
 
 
 @pytest.fixture(autouse=True)
