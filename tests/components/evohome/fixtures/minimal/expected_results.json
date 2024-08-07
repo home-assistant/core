@@ -2,17 +2,21 @@
   "tcs": {
     "climate.my_home": {
       "state": "heat",
-      "preset_mode": "eco",
-      "supported_features": 400
+      "attributes": {
+        "preset_mode": "eco",
+        "supported_features": 400
+      }
     }
   },
   "zones": {
     "climate.main_room": {
       "state": "heat",
-      "current_temperature": 19.0,
-      "preset_mode": "none",
-      "supported_features": 401,
-      "temperature": 17.0
+      "attributes": {
+        "current_temperature": 19.0,
+        "preset_mode": "none",
+        "supported_features": 401,
+        "temperature": 17.0
+      }
     }
   },
   "dhw": {},
