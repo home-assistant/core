@@ -70,8 +70,8 @@ class MatterValve(MatterEntity, ValveEntity):
             return None
 
         return (
-            self.current_water_valve_position == 0
-            if self.current_water_valve_position is not None
+            self.current_valve_position == 0
+            if self.current_valve_position is not None
             else None
         )
     '''
@@ -131,9 +131,9 @@ class MatterValve(MatterEntity, ValveEntity):
         match state:
             # Valve is transitioning between closed and open positions or between levels
             case OperationalStatus.VALVE_IS_CURRENTLY_TRANSITIONING:
-                #self._attr_is_opening = True
+                self._attr_is_opening = True
                 #self._attr_is_closing = False
-                self._attr_is_transitioning = True
+                #self._attr_is_transitioning = True --> Not implemented here: https://developers.home-assistant.io/docs/core/entity/valve
             '''
             case OperationalStatus.VALVE_IS_CURRENTLY_CLOSING:
                 self._attr_is_opening = False
@@ -147,20 +147,20 @@ class MatterValve(MatterEntity, ValveEntity):
             None, clusters.ValveConfigurationAndControl.Attributes.CurrentPositionLiftPercent100ths
         ):
             # current position is inverted in matter (100 is closed, 0 is open)
-            current_water_valve_position = self.get_matter_attribute_value(
+            current_valve_position = self.get_matter_attribute_value(
                 clusters.ValveConfigurationAndControl.Attributes.CurrentPositionLiftPercent100ths
             )
-            self._attr_current_water_valve_position = (
-                100 - floor(current_water_valve_position / 100)
-                if current_water_valve_position is not None
+            self._attr_current_valve_position = (
+                100 - floor(current_valve_position / 100)
+                if current_valve_position is not None
                 else None
             )
 
             LOGGER.debug(
                 "Current position for %s - raw: %s - corrected: %s",
                 self.entity_id,
-                current_water_valve_position,
-                self.current_water_valve_position,
+                current_valve_position,
+                self.current_valve_position,
             )
 
         if self._entity_info.endpoint.has_attribute(
