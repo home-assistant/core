@@ -8,10 +8,7 @@ import logging
 from typing import Any
 from uuid import UUID
 
-import voluptuous as vol
-
 from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -22,7 +19,6 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_NAME,
     CONF_PLATFORM,
-    CONF_STATE,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     STATE_UNAVAILABLE,
@@ -31,7 +27,6 @@ from homeassistant.const import (
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import ConditionError, TemplateError
 from homeassistant.helpers import condition
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     TrackTemplate,
@@ -55,18 +50,12 @@ from .const import (
     CONF_P_GIVEN_T,
     CONF_PRIOR,
     CONF_PROBABILITY_THRESHOLD,
-    CONF_TEMPLATE,
     CONF_TO_STATE,
-    DEFAULT_NAME,
-    DEFAULT_PROBABILITY_THRESHOLD,
 )
-from .__init__ import NUMERIC_STATE_SCHEMA, STATE_SCHEMA,TEMPLATE_SCHEMA,PLATFORM_SCHEMA
 from .helpers import Observation
 from .issues import raise_mirrored_entries, raise_no_prob_given_false
 
 _LOGGER = logging.getLogger(__name__)
-
-
 
 
 def update_probability(
