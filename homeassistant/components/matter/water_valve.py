@@ -182,7 +182,7 @@ DISVALVEY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.VALVE,
         entity_description=ValveEntityDescription(
-            key="MatterValve", translation_key="cover"
+            key="MatterValve", translation_key="valve"
         ),
         entity_class=MatterValve,
         required_attributes=(
@@ -197,7 +197,7 @@ DISVALVEY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.VALVE,
         entity_description=ValveEntityDescription(
-            key="MatterValvePositionAwareLift", translation_key="cover"
+            key="MatterValvePositionAwareLift", translation_key="valve"
         ),
         entity_class=MatterValve,
         required_attributes=(
