@@ -2301,7 +2301,7 @@ whois==0.9.27
 wiffi==1.1.2
 
 # homeassistant.components.wled
-wled==0.20.0
+wled==0.20.1
 
 # homeassistant.components.wolflink
 wolf-comm==0.0.9
