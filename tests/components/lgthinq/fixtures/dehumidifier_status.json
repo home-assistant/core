@@ -1,0 +1,14 @@
+{
+    "dehumidifierJobMode": {
+        "currentJobMode": "RAPID_HUMIDITY"
+    },
+    "operation": {
+        "dehumidifierOperationMode": "POWER_ON"
+    },
+    "humidity": {
+        "currentHumidity": 50
+    },
+    "airFlow": {
+        "windStrength": "HIGH"
+    }
+}

@@ -1,0 +1,20 @@
+{
+  "temperature": [
+    {
+      "targetTemperature": 5,
+      "locationName": "FRIDGE",
+      "unit": "C"
+    },
+    {
+      "targetTemperature": -23,
+      "locationName": "FREEZER",
+      "unit": "F"
+    }
+  ],
+  "refrigeration": {
+    "expressMode": true
+  },
+  "powerSave": {
+    "powerSaveEnabled": true
+  }
+}

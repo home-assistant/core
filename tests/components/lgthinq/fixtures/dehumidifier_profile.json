@@ -1,0 +1,50 @@
+{
+  "notification":{
+    "push": ["WATER_IS_FULL"]},
+  "property": {
+    "airFlow": {
+      "windStrength": {
+        "mode": ["r", "w"],
+        "type": "enum",
+        "value": {
+          "r": [
+            "HIGH",
+            "LOW"],
+          "w": [
+            "HIGH",
+            "LOW"]}}},
+    "dehumidifierJobMode": {
+      "currentJobMode": {
+        "mode": ["r"],
+        "type": "enum",
+        "value": {
+          "r": [
+            "RAPID_HUMIDITY",
+            "CLOTHES_DRY",
+            "AIR_CLEAN",
+            "QUIET_HUMIDITY",
+            "SMART_HUMIDITY",
+            "INTENSIVE_DRY"]}}},
+    "humidity": {
+      "currentHumidity": {
+        "mode": ["r"],
+        "type": "range",
+        "value": {
+          "r": {
+            "max": 100,
+            "min": 0,
+            "step": 1
+          }}}},
+    "operation": {
+      "dehumidifierOperationMode": {
+        "mode": ["r", "w"],
+        "type": "enum",
+        "value": {
+          "r": [
+            "POWER_OFF",
+            "POWER_ON"],
+          "w": [
+            "POWER_OFF",
+            "POWER_ON"]}}}
+  }
+}

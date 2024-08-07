@@ -1,0 +1,9 @@
+{
+  "deviceId": "WBE-1E349A21-A456-12BE-11T6-820R9E10A577",
+  "deviceInfo": {
+      "deviceType": "DEVICE_COOKTOP",
+      "modelName": "WBEY3GWT",
+      "alias": "Test cooktop",
+      "reportable": true
+  }
+}
