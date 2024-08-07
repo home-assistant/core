@@ -56,47 +56,48 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.COVER, async_add_entities)
 
 
-class MatterCover(MatterEntity, ValveEntity):
-    """Representation of a Matter Cover."""
+class MatterValve(MatterEntity, ValveEntity):
+    """Representation of a Matter Valve."""
 
     entity_description: ValveEntityDescription
 
     @property
     def is_closed(self) -> bool | None:
-        """Return true if cover is closed, if there is no position report, return None."""
+        """Return true if water valve is closed, if there is no position report, return None."""
         if not self._entity_info.endpoint.has_attribute(
             None, clusters.ValveConfigurationAndControl.Attributes.CurrentPositionLiftPercent100ths
         ):
             return None
 
         return (
-            self.current_cover_position == 0
-            if self.current_cover_position is not None
+            self.current_water_valve_position == 0
+            if self.current_water_valve_position is not None
             else None
         )
-
-    async def async_stop_cover(self, **kwargs: Any) -> None:
-        """Stop the cover movement."""
+    '''
+    async def async_stop_water_valve(self, **kwargs: Any) -> None:
+        """Stop the water valve movement."""
         await self.send_device_command(clusters.ValveConfigurationAndControl.Commands.StopMotion())
+    '''
 
-    async def async_open_cover(self, **kwargs: Any) -> None:
-        """Open the cover."""
+    async def async_open_water_valve(self, **kwargs: Any) -> None:
+        """Open the  water valve."""
         await self.send_device_command(clusters.ValveConfigurationAndControl.Commands.UpOrOpen())
 
-    async def async_close_cover(self, **kwargs: Any) -> None:
-        """Close the cover."""
+    async def async_close_water_valve(self, **kwargs: Any) -> None:
+        """Close the  water valve."""
         await self.send_device_command(clusters.ValveConfigurationAndControl.Commands.DownOrClose())
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
-        """Set the cover to a specific position."""
+    async def async_set_water_valve_position(self, **kwargs: Any) -> None:
+        """Set the water valve to a specific position."""
         position = kwargs[ATTR_POSITION]
         await self.send_device_command(
             # value needs to be inverted and is sent in 100ths
             clusters.ValveConfigurationAndControl.Commands.GoToLiftPercentage((100 - position) * 100)
         )
 
-    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
-        """Set the cover tilt to a specific position."""
+    async def async_set_water_valve_tilt_position(self, **kwargs: Any) -> None:
+        """Set the water valve tilt to a specific position."""
         position = kwargs[ATTR_TILT_POSITION]
         await self.send_device_command(
             # value needs to be inverted and is sent in 100ths
@@ -142,40 +143,40 @@ class MatterCover(MatterEntity, ValveEntity):
             None, clusters.ValveConfigurationAndControl.Attributes.CurrentPositionLiftPercent100ths
         ):
             # current position is inverted in matter (100 is closed, 0 is open)
-            current_cover_position = self.get_matter_attribute_value(
+            current_water_valve_position = self.get_matter_attribute_value(
                 clusters.ValveConfigurationAndControl.Attributes.CurrentPositionLiftPercent100ths
             )
-            self._attr_current_cover_position = (
-                100 - floor(current_cover_position / 100)
-                if current_cover_position is not None
+            self._attr_current_water_valve_position = (
+                100 - floor(current_water_valve_position / 100)
+                if current_water_valve_position is not None
                 else None
             )
 
             LOGGER.debug(
                 "Current position for %s - raw: %s - corrected: %s",
                 self.entity_id,
-                current_cover_position,
-                self.current_cover_position,
+                current_water_valve_position,
+                self.current_water_valve_position,
             )
 
         if self._entity_info.endpoint.has_attribute(
             None, clusters.ValveConfigurationAndControl.Attributes.CurrentPositionTiltPercent100ths
         ):
             # current tilt position is inverted in matter (100 is closed, 0 is open)
-            current_cover_tilt_position = self.get_matter_attribute_value(
+            current_water_valve_tilt_position = self.get_matter_attribute_value(
                 clusters.ValveConfigurationAndControl.Attributes.CurrentPositionTiltPercent100ths
             )
-            self._attr_current_cover_tilt_position = (
-                100 - floor(current_cover_tilt_position / 100)
-                if current_cover_tilt_position is not None
+            self._attr_current_water_valve_tilt_position = (
+                100 - floor(current_water_valve_tilt_position / 100)
+                if current_water_valve_tilt_position is not None
                 else None
             )
 
             LOGGER.debug(
                 "Current tilt position for %s - raw: %s - corrected: %s",
                 self.entity_id,
-                current_cover_tilt_position,
-                self.current_cover_tilt_position,
+                current_water_valve_tilt_position,
+                self.current_water_valve_tilt_position,
             )
 
         # map matter type to HA deviceclass
@@ -202,9 +203,9 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.COVER,
         entity_description=ValveEntityDescription(
-            key="MatterCover", translation_key="cover"
+            key="MatterValve", translation_key="cover"
         ),
-        entity_class=MatterCover,
+        entity_class=MatterValve,
         required_attributes=(
             clusters.ValveConfigurationAndControl.Attributes.OperationalStatus,
             clusters.ValveConfigurationAndControl.Attributes.Type,
@@ -217,9 +218,9 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.COVER,
         entity_description=ValveEntityDescription(
-            key="MatterCoverPositionAwareLift", translation_key="cover"
+            key="MatterValvePositionAwareLift", translation_key="cover"
         ),
-        entity_class=MatterCover,
+        entity_class=MatterValve,
         required_attributes=(
             clusters.ValveConfigurationAndControl.Attributes.OperationalStatus,
             clusters.ValveConfigurationAndControl.Attributes.Type,
@@ -232,9 +233,9 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.COVER,
         entity_description=ValveEntityDescription(
-            key="MatterCoverPositionAwareTilt", translation_key="cover"
+            key="MatterValvePositionAwareTilt", translation_key="cover"
         ),
-        entity_class=MatterCover,
+        entity_class=MatterValve,
         required_attributes=(
             clusters.ValveConfigurationAndControl.Attributes.OperationalStatus,
             clusters.ValveConfigurationAndControl.Attributes.Type,
@@ -247,9 +248,9 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.COVER,
         entity_description=ValveEntityDescription(
-            key="MatterCoverPositionAwareLiftAndTilt", translation_key="cover"
+            key="MatterValvePositionAwareLiftAndTilt", translation_key="cover"
         ),
-        entity_class=MatterCover,
+        entity_class=MatterValve,
         required_attributes=(
             clusters.ValveConfigurationAndControl.Attributes.OperationalStatus,
             clusters.ValveConfigurationAndControl.Attributes.Type,
