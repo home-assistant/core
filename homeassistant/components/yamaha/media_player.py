@@ -245,7 +245,7 @@ class YamahaDeviceZone(MediaPlayerEntity):
                 self._attr_unique_id,
             )
         else:
-            _LOGGER.info(
+            _LOGGER.warn(
                 "Receiver zone: %s zone %s no uid %s",
                 self._name,
                 self._zone,
