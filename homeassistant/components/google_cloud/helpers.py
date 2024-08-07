@@ -52,15 +52,24 @@ async def async_tts_voices(
 
 
 def tts_options_schema(
-    config_options: dict[str, Any], voices: dict[str, list[str]]
+    config_options: dict[str, Any],
+    voices: dict[str, list[str]],
+    from_config_flow: bool = False,
 ) -> vol.Schema:
     """Return schema for TTS options with default values from config or constants."""
+    # If we are called from the config flow we want the defaults to be from constants
+    # to allow clearing the current value (passed as suggested_value) in the UI.
+    # If we aren't called from the config flow we want the defaults to be from the config.
+    defaults = {} if from_config_flow else config_options
     return vol.Schema(
         {
             vol.Optional(
                 CONF_GENDER,
                 description={"suggested_value": config_options.get(CONF_GENDER)},
-                default=texttospeech.SsmlVoiceGender.NEUTRAL.name,  # type: ignore[attr-defined]
+                default=defaults.get(
+                    CONF_GENDER,
+                    texttospeech.SsmlVoiceGender.NEUTRAL.name,  # type: ignore[attr-defined]
+                ),
             ): vol.All(
                 vol.Upper,
                 SelectSelector(
@@ -73,7 +82,7 @@ def tts_options_schema(
             vol.Optional(
                 CONF_VOICE,
                 description={"suggested_value": config_options.get(CONF_VOICE)},
-                default=DEFAULT_VOICE,
+                default=defaults.get(CONF_VOICE, DEFAULT_VOICE),
             ): SelectSelector(
                 SelectSelectorConfig(
                     mode=SelectSelectorMode.DROPDOWN,
@@ -83,7 +92,10 @@ def tts_options_schema(
             vol.Optional(
                 CONF_ENCODING,
                 description={"suggested_value": config_options.get(CONF_ENCODING)},
-                default=texttospeech.AudioEncoding.MP3.name,  # type: ignore[attr-defined]
+                default=defaults.get(
+                    CONF_ENCODING,
+                    texttospeech.AudioEncoding.MP3.name,  # type: ignore[attr-defined]
+                ),
             ): vol.All(
                 vol.Upper,
                 SelectSelector(
@@ -96,22 +108,22 @@ def tts_options_schema(
             vol.Optional(
                 CONF_SPEED,
                 description={"suggested_value": config_options.get(CONF_SPEED)},
-                default=1.0,
+                default=defaults.get(CONF_SPEED, 1.0),
             ): NumberSelector(NumberSelectorConfig(min=0.25, max=4.0, step=0.01)),
             vol.Optional(
                 CONF_PITCH,
                 description={"suggested_value": config_options.get(CONF_PITCH)},
-                default=0,
+                default=defaults.get(CONF_PITCH, 0),
             ): NumberSelector(NumberSelectorConfig(min=-20.0, max=20.0, step=0.1)),
             vol.Optional(
                 CONF_GAIN,
                 description={"suggested_value": config_options.get(CONF_GAIN)},
-                default=0,
+                default=defaults.get(CONF_GAIN, 0),
             ): NumberSelector(NumberSelectorConfig(min=-96.0, max=16.0, step=0.1)),
             vol.Optional(
                 CONF_PROFILES,
                 description={"suggested_value": config_options.get(CONF_PROFILES)},
-                default=[],
+                default=defaults.get(CONF_PROFILES, []),
             ): SelectSelector(
                 SelectSelectorConfig(
                     mode=SelectSelectorMode.DROPDOWN,
@@ -133,7 +145,7 @@ def tts_options_schema(
             vol.Optional(
                 CONF_TEXT_TYPE,
                 description={"suggested_value": config_options.get(CONF_TEXT_TYPE)},
-                default="text",
+                default=defaults.get(CONF_TEXT_TYPE, "text"),
             ): vol.All(
                 vol.Lower,
                 SelectSelector(

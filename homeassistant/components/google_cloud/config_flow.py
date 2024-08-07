@@ -204,7 +204,7 @@ class GoogleCloudOptionsFlowHandler(OptionsFlowWithConfigEntry):
                             mode=SelectSelectorMode.DROPDOWN, options=list(voices)
                         )
                     ),
-                    **tts_options_schema(self.options, voices).schema,
+                    **tts_options_schema(self.options, voices, True).schema,
                     vol.Optional(
                         CONF_STT_MODEL,
                         description={
