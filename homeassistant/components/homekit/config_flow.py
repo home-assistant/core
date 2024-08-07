@@ -17,6 +17,7 @@ from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
+from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
     ConfigEntry,
@@ -105,6 +106,7 @@ SUPPORTED_DOMAINS = [
     "switch",
     "vacuum",
     "water_heater",
+    VALVE_DOMAIN,
 ]
 
 DEFAULT_DOMAINS = [

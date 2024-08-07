@@ -17,13 +17,11 @@ from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
 
-from . import RoborockCoordinators
+from . import RoborockConfigEntry
 from .const import DOMAIN, GET_MAPS_SERVICE_NAME
 from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntityV1
@@ -57,14 +55,13 @@ STATE_CODE_TO_STATE = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RoborockConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Roborock sensor."""
-    coordinators: RoborockCoordinators = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
         RoborockVacuum(coordinator)
-        for coordinator in coordinators.v1
+        for coordinator in config_entry.runtime_data.v1
         if isinstance(coordinator, RoborockDataUpdateCoordinator)
     )
 
@@ -105,7 +102,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         StateVacuumEntity.__init__(self)
         RoborockCoordinatedEntityV1.__init__(
             self,
-            slugify(coordinator.duid),
+            coordinator.duid_slug,
             coordinator,
             listener_request=[
                 RoborockDataProtocol.FAN_POWER,

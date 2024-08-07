@@ -23,8 +23,8 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
-MINOR_VERSION: Final = 7
-PATCH_VERSION: Final = "4"
+MINOR_VERSION: Final = 8
+PATCH_VERSION: Final = "0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 12, 0)
@@ -113,6 +113,7 @@ SUN_EVENT_SUNRISE: Final = "sunrise"
 # #### CONFIG ####
 CONF_ABOVE: Final = "above"
 CONF_ACCESS_TOKEN: Final = "access_token"
+CONF_ACTION: Final = "action"
 CONF_ADDRESS: Final = "address"
 CONF_AFTER: Final = "after"
 CONF_ALIAS: Final = "alias"

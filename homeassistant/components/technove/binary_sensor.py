@@ -12,12 +12,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import TechnoVEConfigEntry
 from .coordinator import TechnoVEDataUpdateCoordinator
 from .entity import TechnoVEEntity
 
@@ -72,13 +71,12 @@ BINARY_SENSORS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TechnoVEConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the binary sensor platform."""
-    coordinator: TechnoVEDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        TechnoVEBinarySensorEntity(coordinator, description)
+        TechnoVEBinarySensorEntity(entry.runtime_data, description)
         for description in BINARY_SENSORS
     )
 

@@ -426,10 +426,7 @@ class HTML5NotificationService(BaseNotificationService):
     @property
     def targets(self):
         """Return a dictionary of registered targets."""
-        targets = {}
-        for registration in self.registrations:
-            targets[registration] = registration
-        return targets
+        return {registration: registration for registration in self.registrations}
 
     def dismiss(self, **kwargs):
         """Dismisses a notification."""

@@ -1,5 +1,6 @@
 """Test Home Assistant yaml loader."""
 
+from collections.abc import Generator
 import importlib
 import io
 import os
@@ -9,7 +10,6 @@ import unittest
 from unittest.mock import Mock, patch
 
 import pytest
-from typing_extensions import Generator
 import voluptuous as vol
 import yaml as pyyaml
 
@@ -566,8 +566,8 @@ def test_no_recursive_secrets() -> None:
 
 def test_input_class() -> None:
     """Test input class."""
-    yaml_input = yaml_loader.Input("hello")
-    yaml_input2 = yaml_loader.Input("hello")
+    yaml_input = yaml.Input("hello")
+    yaml_input2 = yaml.Input("hello")
 
     assert yaml_input.name == "hello"
     assert yaml_input == yaml_input2

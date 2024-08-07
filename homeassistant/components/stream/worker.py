@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict, deque
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Generator, Iterator, Mapping
 import contextlib
 from dataclasses import fields
 import datetime
@@ -13,7 +13,6 @@ from threading import Event
 from typing import Any, Self, cast
 
 import av
-from typing_extensions import Generator
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util

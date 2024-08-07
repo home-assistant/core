@@ -83,7 +83,7 @@ def filename(tmp_path: Path) -> str:
 
 
 @pytest.fixture(autouse=True)
-def mock_stream_settings(hass):
+def mock_stream_settings(hass: HomeAssistant) -> None:
     """Set the stream settings data in hass before each test."""
     hass.data[DOMAIN] = {
         ATTR_SETTINGS: StreamSettings(

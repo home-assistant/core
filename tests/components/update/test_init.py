@@ -1,9 +1,9 @@
 """The tests for the Update component."""
 
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.update import (
     ATTR_BACKUP,

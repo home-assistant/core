@@ -329,6 +329,16 @@ def async_track_state_change_event(
 
 
 @callback
+def _async_dispatch_entity_id_event_soon(
+    hass: HomeAssistant,
+    callbacks: dict[str, list[HassJob[[Event[_StateEventDataT]], Any]]],
+    event: Event[_StateEventDataT],
+) -> None:
+    """Dispatch to listeners soon to ensure one event loop runs before dispatch."""
+    hass.loop.call_soon(_async_dispatch_entity_id_event, hass, callbacks, event)
+
+
+@callback
 def _async_dispatch_entity_id_event(
     hass: HomeAssistant,
     callbacks: dict[str, list[HassJob[[Event[_StateEventDataT]], Any]]],
@@ -361,7 +371,7 @@ def _async_state_filter(
 _KEYED_TRACK_STATE_CHANGE = _KeyedEventTracker(
     key=_TRACK_STATE_CHANGE_DATA,
     event_type=EVENT_STATE_CHANGED,
-    dispatcher_callable=_async_dispatch_entity_id_event,
+    dispatcher_callable=_async_dispatch_entity_id_event_soon,
     filter_callable=_async_state_filter,
 )
 

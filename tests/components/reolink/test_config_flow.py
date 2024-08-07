@@ -166,8 +166,23 @@ async def test_config_flow_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {CONF_HOST: "invalid_auth"}
+    assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
+    reolink_connect.valid_password.return_value = False
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_HOST: TEST_HOST,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {CONF_PASSWORD: "password_incompatible"}
+
+    reolink_connect.valid_password.return_value = True
     reolink_connect.get_host_data.side_effect = ApiError("Test error")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

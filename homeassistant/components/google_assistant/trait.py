@@ -81,7 +81,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers.network import get_url
 from homeassistant.util import color as color_util, dt as dt_util
 from homeassistant.util.dt import utcnow
@@ -511,7 +511,7 @@ class OnOffTrait(_Trait):
     async def execute(self, command, data, params, challenge):
         """Execute an OnOff command."""
         if (domain := self.state.domain) == group.DOMAIN:
-            service_domain = HA_DOMAIN
+            service_domain = HOMEASSISTANT_DOMAIN
             service = SERVICE_TURN_ON if params["on"] else SERVICE_TURN_OFF
 
         else:

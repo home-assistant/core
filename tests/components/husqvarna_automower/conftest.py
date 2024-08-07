@@ -1,5 +1,6 @@
 """Test helpers for Husqvarna Automower."""
 
+from collections.abc import Generator
 import time
 from unittest.mock import AsyncMock, patch
 
@@ -7,7 +8,6 @@ from aioautomower.session import AutomowerSession, _MowerCommands
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from aiohttp import ClientWebSocketResponse
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.application_credentials import (
     ClientCredential,

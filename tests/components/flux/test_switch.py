@@ -29,7 +29,7 @@ from tests.components.light.common import MockLight
 
 
 @pytest.fixture(autouse=True)
-async def set_utc(hass):
+async def set_utc(hass: HomeAssistant) -> None:
     """Set timezone to UTC."""
     await hass.config.async_set_time_zone("UTC")
 
@@ -723,10 +723,8 @@ async def test_flux_after_sunrise_before_sunset_stop_next_day(
     assert call.data[light.ATTR_XY_COLOR] == [0.439, 0.37]
 
 
-@pytest.mark.parametrize("x", [0, 1])
 async def test_flux_after_sunset_before_midnight_stop_next_day(
     hass: HomeAssistant,
-    x,
     mock_light_entities: list[MockLight],
 ) -> None:
     """Test the flux switch after sunset and before stop.

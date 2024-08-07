@@ -12,14 +12,11 @@ from roborock.command_cache import CacheableAttribute
 from roborock.version_1_apis.roborock_client_v1 import AttributeCache
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
 
-from . import RoborockCoordinators
-from .const import DOMAIN
+from . import RoborockConfigEntry
 from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockEntityV1
 
@@ -99,16 +96,15 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RoborockConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Roborock switch platform."""
-    coordinators: RoborockCoordinators = hass.data[DOMAIN][config_entry.entry_id]
     possible_entities: list[
         tuple[RoborockDataUpdateCoordinator, RoborockSwitchDescription]
     ] = [
         (coordinator, description)
-        for coordinator in coordinators.v1
+        for coordinator in config_entry.runtime_data.v1
         for description in SWITCH_DESCRIPTIONS
     ]
     # We need to check if this function is supported by the device.
@@ -128,7 +124,7 @@ async def async_setup_entry(
         else:
             valid_entities.append(
                 RoborockSwitch(
-                    f"{description.key}_{slugify(coordinator.duid)}",
+                    f"{description.key}_{coordinator.duid_slug}",
                     coordinator,
                     description,
                 )

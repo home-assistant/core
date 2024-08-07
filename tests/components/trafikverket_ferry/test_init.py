@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from pytrafikverket.trafikverket_ferry import FerryStop
+from pytrafikverket.models import FerryStopModel
 
 from homeassistant.components.trafikverket_ferry.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
@@ -15,7 +15,9 @@ from . import ENTRY_CONFIG
 from tests.common import MockConfigEntry
 
 
-async def test_setup_entry(hass: HomeAssistant, get_ferries: list[FerryStop]) -> None:
+async def test_setup_entry(
+    hass: HomeAssistant, get_ferries: list[FerryStopModel]
+) -> None:
     """Test setup entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -37,7 +39,9 @@ async def test_setup_entry(hass: HomeAssistant, get_ferries: list[FerryStop]) ->
     assert len(mock_tvt_ferry.mock_calls) == 1
 
 
-async def test_unload_entry(hass: HomeAssistant, get_ferries: list[FerryStop]) -> None:
+async def test_unload_entry(
+    hass: HomeAssistant, get_ferries: list[FerryStopModel]
+) -> None:
     """Test unload an entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,

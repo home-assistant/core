@@ -45,3 +45,5 @@ SERVICE_GET_PACKAGES = "get_packages"
 
 ATTR_PACKAGE_STATE = "package_state"
 ATTR_CONFIG_ENTRY_ID = "config_entry_id"
+
+DEPRECATED_KEY = "deprecated"
