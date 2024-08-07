@@ -29,12 +29,13 @@ from .models import MatterDiscoverySchema
 # The MASK used for extracting bits 0 to 1 of the byte.
 OPERATIONAL_STATUS_MASK = 0b11
 
-# map Matter window cover types to HA device class
+# map Matter valve types to HA device class
+'''
 TYPE_MAP = {
-    clusters.WindowCovering.Enums.Type.kAwning: ValveDeviceClass.WATER.AWNING,
-    clusters.WindowCovering.Enums.Type.kDrapery: ValveDeviceClass.WATER.CURTAIN,
+    clusters.ValveConfigurationAndControl.Enums.Type.kAwning: ValveDeviceClass.WATER,
+    #clusters.ValveConfigurationAndControl.Enums.Type.kDrapery: ValveDeviceClass.GAS,
 }
-
+'''
 
 class OperationalStatus(IntEnum):
     """Currently ongoing operations enumeration for coverings, as defined in the Matter spec."""
@@ -64,7 +65,7 @@ class MatterCover(MatterEntity, ValveEntity):
     def is_closed(self) -> bool | None:
         """Return true if cover is closed, if there is no position report, return None."""
         if not self._entity_info.endpoint.has_attribute(
-            None, clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths
+            None, clusters.ValveConfigurationAndControl.Attributes.CurrentPositionLiftPercent100ths
         ):
             return None
 
@@ -76,22 +77,22 @@ class MatterCover(MatterEntity, ValveEntity):
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover movement."""
-        await self.send_device_command(clusters.WindowCovering.Commands.StopMotion())
+        await self.send_device_command(clusters.ValveConfigurationAndControl.Commands.StopMotion())
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self.send_device_command(clusters.WindowCovering.Commands.UpOrOpen())
+        await self.send_device_command(clusters.ValveConfigurationAndControl.Commands.UpOrOpen())
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self.send_device_command(clusters.WindowCovering.Commands.DownOrClose())
+        await self.send_device_command(clusters.ValveConfigurationAndControl.Commands.DownOrClose())
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
         await self.send_device_command(
             # value needs to be inverted and is sent in 100ths
-            clusters.WindowCovering.Commands.GoToLiftPercentage((100 - position) * 100)
+            clusters.ValveConfigurationAndControl.Commands.GoToLiftPercentage((100 - position) * 100)
         )
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
@@ -99,7 +100,7 @@ class MatterCover(MatterEntity, ValveEntity):
         position = kwargs[ATTR_TILT_POSITION]
         await self.send_device_command(
             # value needs to be inverted and is sent in 100ths
-            clusters.WindowCovering.Commands.GoToTiltPercentage((100 - position) * 100)
+            clusters.ValveConfigurationAndControl.Commands.GoToTiltPercentage((100 - position) * 100)
         )
 
     async def send_device_command(self, command: Any) -> None:
@@ -114,7 +115,7 @@ class MatterCover(MatterEntity, ValveEntity):
     def _update_from_device(self) -> None:
         """Update from device."""
         operational_status = self.get_matter_attribute_value(
-            clusters.WindowCovering.Attributes.OperationalStatus
+            clusters.ValveConfigurationAndControl.Attributes.OperationalStatus
         )
 
         assert operational_status is not None
@@ -138,11 +139,11 @@ class MatterCover(MatterEntity, ValveEntity):
                 self._attr_is_closing = False
 
         if self._entity_info.endpoint.has_attribute(
-            None, clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths
+            None, clusters.ValveConfigurationAndControl.Attributes.CurrentPositionLiftPercent100ths
         ):
             # current position is inverted in matter (100 is closed, 0 is open)
             current_cover_position = self.get_matter_attribute_value(
-                clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths
+                clusters.ValveConfigurationAndControl.Attributes.CurrentPositionLiftPercent100ths
             )
             self._attr_current_cover_position = (
                 100 - floor(current_cover_position / 100)
@@ -158,11 +159,11 @@ class MatterCover(MatterEntity, ValveEntity):
             )
 
         if self._entity_info.endpoint.has_attribute(
-            None, clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths
+            None, clusters.ValveConfigurationAndControl.Attributes.CurrentPositionTiltPercent100ths
         ):
             # current tilt position is inverted in matter (100 is closed, 0 is open)
             current_cover_tilt_position = self.get_matter_attribute_value(
-                clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths
+                clusters.ValveConfigurationAndControl.Attributes.CurrentPositionTiltPercent100ths
             )
             self._attr_current_cover_tilt_position = (
                 100 - floor(current_cover_tilt_position / 100)
@@ -178,8 +179,8 @@ class MatterCover(MatterEntity, ValveEntity):
             )
 
         # map matter type to HA deviceclass
-        device_type: clusters.WindowCovering.Enums.Type = (
-            self.get_matter_attribute_value(clusters.WindowCovering.Attributes.Type)
+        device_type: clusters.ValveConfigurationAndControl.Enums.Type = (
+            self.get_matter_attribute_value(clusters.ValveConfigurationAndControl.Attributes.Type)
         )
         self._attr_device_class = TYPE_MAP.get(device_type, ValveDeviceClass.WATER.AWNING)
 
@@ -187,11 +188,11 @@ class MatterCover(MatterEntity, ValveEntity):
             ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE | ValveEntityFeature.STOP
         )
         commands = self.get_matter_attribute_value(
-            clusters.WindowCovering.Attributes.AcceptedCommandList
+            clusters.ValveConfigurationAndControl.Attributes.AcceptedCommandList
         )
-        if clusters.WindowCovering.Commands.GoToLiftPercentage.command_id in commands:
+        if clusters.ValveConfigurationAndControl.Commands.GoToLiftPercentage.command_id in commands:
             supported_features |= ValveEntityFeature.SET_POSITION
-        if clusters.WindowCovering.Commands.GoToTiltPercentage.command_id in commands:
+        if clusters.ValveConfigurationAndControl.Commands.GoToTiltPercentage.command_id in commands:
             supported_features |= ValveEntityFeature.SET_TILT_POSITION
         self._attr_supported_features = supported_features
 
@@ -205,12 +206,12 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterCover,
         required_attributes=(
-            clusters.WindowCovering.Attributes.OperationalStatus,
-            clusters.WindowCovering.Attributes.Type,
+            clusters.ValveConfigurationAndControl.Attributes.OperationalStatus,
+            clusters.ValveConfigurationAndControl.Attributes.Type,
         ),
         absent_attributes=(
-            clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths,
-            clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths,
+            clusters.ValveConfigurationAndControl.Attributes.CurrentPositionLiftPercent100ths,
+            clusters.ValveConfigurationAndControl.Attributes.CurrentPositionTiltPercent100ths,
         ),
     ),
     MatterDiscoverySchema(
@@ -220,12 +221,12 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterCover,
         required_attributes=(
-            clusters.WindowCovering.Attributes.OperationalStatus,
-            clusters.WindowCovering.Attributes.Type,
-            clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths,
+            clusters.ValveConfigurationAndControl.Attributes.OperationalStatus,
+            clusters.ValveConfigurationAndControl.Attributes.Type,
+            clusters.ValveConfigurationAndControl.Attributes.CurrentPositionLiftPercent100ths,
         ),
         absent_attributes=(
-            clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths,
+            clusters.ValveConfigurationAndControl.Attributes.CurrentPositionTiltPercent100ths,
         ),
     ),
     MatterDiscoverySchema(
@@ -235,12 +236,12 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterCover,
         required_attributes=(
-            clusters.WindowCovering.Attributes.OperationalStatus,
-            clusters.WindowCovering.Attributes.Type,
-            clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths,
+            clusters.ValveConfigurationAndControl.Attributes.OperationalStatus,
+            clusters.ValveConfigurationAndControl.Attributes.Type,
+            clusters.ValveConfigurationAndControl.Attributes.CurrentPositionTiltPercent100ths,
         ),
         absent_attributes=(
-            clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths,
+            clusters.ValveConfigurationAndControl.Attributes.CurrentPositionLiftPercent100ths,
         ),
     ),
     MatterDiscoverySchema(
@@ -250,10 +251,10 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterCover,
         required_attributes=(
-            clusters.WindowCovering.Attributes.OperationalStatus,
-            clusters.WindowCovering.Attributes.Type,
-            clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths,
-            clusters.WindowCovering.Attributes.CurrentPositionTiltPercent100ths,
+            clusters.ValveConfigurationAndControl.Attributes.OperationalStatus,
+            clusters.ValveConfigurationAndControl.Attributes.Type,
+            clusters.ValveConfigurationAndControl.Attributes.CurrentPositionLiftPercent100ths,
+            clusters.ValveConfigurationAndControl.Attributes.CurrentPositionTiltPercent100ths,
         ),
     ),
 ]
