@@ -804,7 +804,10 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             horizontal_swing=horizontal_swing,  # api defaults to not sending horizontalSwing if swing not None
         )
 
-    def _does_current_hvac_mode_have_setting(self, setting: str):
+    def _does_current_hvac_mode_have_setting(self, setting: str) -> bool:
+    return self._current_tado_capabilities.get(
+        self._current_tado_hvac_mode, {}
+    ).get(setting) is not None
         evaluation = self._current_tado_capabilities.get(
             self._current_tado_hvac_mode, {}
         ).get(setting, None)
