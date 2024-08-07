@@ -9,7 +9,6 @@
   "loggers": ["nmap"],
   "requirements": [    
     "aiowebostv==0.4.2",
-    "awsiotsdk==1.21.0",        
     "pycountry==23.12.11",
     "python-nmap==0.4.1",
     "temescal==0.5",
