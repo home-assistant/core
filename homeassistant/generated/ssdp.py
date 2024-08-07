@@ -198,6 +198,11 @@ SSDP = {
             "deviceType": "urn:schemas-upnp-org:device:LaMetric:1",
         },
     ],
+    "lgthinq": [
+        {
+            "st": "urn:lge-com:service:webos-second-screen:1",
+        },
+    ],
     "nanoleaf": [
         {
             "st": "Nanoleaf_aurora:light",

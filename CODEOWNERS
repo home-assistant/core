@@ -797,6 +797,8 @@ build.json @home-assistant/supervisor
 /tests/components/led_ble/ @bdraco
 /homeassistant/components/lg_netcast/ @Drafteed @splinter98
 /tests/components/lg_netcast/ @Drafteed @splinter98
+/homeassistant/components/lgthinq/ @LG-ThinQ-Integration
+/tests/components/lgthinq/ @LG-ThinQ-Integration
 /homeassistant/components/lidarr/ @tkdrob
 /tests/components/lidarr/ @tkdrob
 /homeassistant/components/lifx/ @Djelibeybi
