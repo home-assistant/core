@@ -346,7 +346,7 @@ class ESPHomeManager:
     ) -> int | None:
         """Start a voice assistant pipeline."""
         if self.voice_assistant_pipeline is not None:
-            _LOGGER.warning("Voice assistant UDP server was not stopped")
+            _LOGGER.warning("Previous Voice assistant pipeline was not stopped")
             self.voice_assistant_pipeline.stop()
             self.voice_assistant_pipeline = None
 
