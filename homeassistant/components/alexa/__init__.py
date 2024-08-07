@@ -18,20 +18,28 @@ from homeassistant.helpers import config_validation as cv, entityfilter
 from homeassistant.helpers.typing import ConfigType
 
 from . import flash_briefings, intent, smart_home
+from .capabilities import AlexaModeController
 from .const import (
+    CONF_ASSET,
+    CONF_ATTRIBUTE,
     CONF_AUDIO,
     CONF_DISPLAY_CATEGORIES,
     CONF_DISPLAY_URL,
     CONF_ENDPOINT,
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
+    CONF_GENERIC_CONTROLLER,
     CONF_LOCALE,
+    CONF_MODE_CONTROLLER,
+    #   CONF_RANGE_CONTROLLER,
     CONF_SUPPORTED_LOCALES,
     CONF_TEXT,
     CONF_TITLE,
     CONF_UID,
+    CONF_VALUES,
     DOMAIN,
 )
+from .resources import AlexaGlobalCatalog
 
 CONF_FLASH_BRIEFINGS = "flash_briefings"
 CONF_SMART_HOME = "smart_home"
@@ -45,12 +53,42 @@ VALID_ENDPOINTS = [
     "https://api.fe.amazonalexa.com/v3/events",
 ]
 
+# RANGE_CONTROLLER_SCHEMA = vol.Schema(
+#    {
+#        vol.Required(CONF_NAME): cv.string,
+#        vol.Required(CONF_ASSET): vol.In(AlexaGlobalCatalog.__dict__.values()),
+#       More work to do here
+#    }
+# )
+
+MODE_CONTROLLER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_ASSET): vol.In(AlexaGlobalCatalog.__dict__.values()),
+        vol.Required(CONF_ATTRIBUTE): cv.string,
+        vol.Required(CONF_VALUES): {
+            vol.Required(cv.string): {
+                vol.In(AlexaModeController.supported_locales): [cv.string],
+            },
+        },
+    }
+)
+
+GENERIC_CONTROLLER_SCHEMA = vol.Schema(
+    vol.Any(
+        {vol.Required(CONF_MODE_CONTROLLER): MODE_CONTROLLER_SCHEMA},
+        # {vol.Required(CONF_RANGE_CONTROLLER): RANGE_CONTROLLER_SCHEMA},
+    )
+)
 
 ALEXA_ENTITY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DESCRIPTION): cv.string,
         vol.Optional(CONF_DISPLAY_CATEGORIES): cv.string,
         vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_GENERIC_CONTROLLER): [
+            vol.Any(vol.Schema(GENERIC_CONTROLLER_SCHEMA))
+        ],
     }
 )
 

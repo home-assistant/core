@@ -12,7 +12,7 @@
   },
   // Port 5683 udp is used by Shelly integration
   "appPort": ["8123:8123", "5683:5683/udp"],
-  "runArgs": ["-e", "GIT_EDITOR=code --wait"],
+  "runArgs": ["-e", "GIT_EDITOR=code --wait", "--network=host"],
   "customizations": {
     "vscode": {
       "extensions": [

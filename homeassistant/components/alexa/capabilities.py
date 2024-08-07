@@ -34,6 +34,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_NAME,
     PERCENTAGE,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
@@ -63,6 +64,9 @@ from .const import (
     API_TEMP_UNITS,
     API_THERMOSTAT_MODES,
     API_THERMOSTAT_PRESETS,
+    CONF_ASSET,
+    CONF_MODE_CONTROLLER,
+    CONF_VALUES,
     DATE_FORMAT,
     PRESET_MODE_NA,
     Inputs,
@@ -119,7 +123,7 @@ class AlexaCapability:
 
     _resource: AlexaCapabilityResource | None
     _semantics: AlexaSemantics | None
-    supported_locales: set[str] = {"en-US"}
+    supported_locales: set[str] = {"en-US", "de-DE"}
 
     def __init__(
         self,
@@ -1389,12 +1393,17 @@ class AlexaModeController(AlexaCapability):
     }
 
     def __init__(
-        self, entity: State, instance: str, non_controllable: bool = False
+        self,
+        entity: State,
+        instance: str,
+        non_controllable: bool = False,
+        config: dict | None = None,
     ) -> None:
         """Initialize the entity."""
         AlexaCapability.__init__(self, entity, instance, non_controllable)
         self._resource = None
         self._semantics = None
+        self._config = config
 
     def name(self) -> str:
         """Return the Alexa API name of this interface."""
@@ -1620,6 +1629,27 @@ class AlexaModeController(AlexaCapability):
                 self._resource.add_mode(f"state.{PRESET_MODE_NA}", [PRESET_MODE_NA])
 
             return self._resource.serialize_capability_resources()
+
+        if self.instance is not None and self.instance.startswith("generic."):
+            if self._config is not None:
+                mode_controller = self._config[CONF_MODE_CONTROLLER]
+                self._resource = AlexaModeResource(
+                    [mode_controller[CONF_NAME], mode_controller[CONF_ASSET]], False
+                )
+                for mode in mode_controller[CONF_VALUES]:
+                    labels = [
+                        f"{locale}:{name}"
+                        for locale in mode_controller[CONF_VALUES][mode]
+                        for name in mode_controller[CONF_VALUES][mode][locale]
+                    ]
+
+                    labels.append(f"Alexa.Setting.{str(mode).capitalize()}")
+
+                    self._resource.add_mode(
+                        f"{mode_controller[CONF_ASSET].split(".")[2]}.{str(mode).capitalize()}",
+                        labels,
+                    )
+                return self._resource.serialize_capability_resources()
 
         return {}
 

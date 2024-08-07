@@ -83,7 +83,12 @@ from .capabilities import (
     AlexaTimeHoldController,
     AlexaToggleController,
 )
-from .const import CONF_DISPLAY_CATEGORIES
+from .const import (
+    CONF_ATTRIBUTE,
+    CONF_DISPLAY_CATEGORIES,
+    CONF_GENERIC_CONTROLLER,
+    CONF_MODE_CONTROLLER,
+)
 
 if TYPE_CHECKING:
     from .config import AbstractConfig
@@ -324,6 +329,26 @@ class AlexaEntity:
         """
         raise NotImplementedError
 
+    def generic_interfaces(
+        self, interfaces: Iterable[AlexaCapability]
+    ) -> Iterable[AlexaCapability]:
+        """Return a list of supported interfaces.
+
+        Used for discovery. The list should contain AlexaInterface instances.
+        If the list is empty, this entity will not be discovered.
+        """
+
+        entity_conf = self.config.entity_config.get(self.entity.entity_id, {})
+        if CONF_GENERIC_CONTROLLER in entity_conf:
+            for generic_controller in entity_conf[CONF_GENERIC_CONTROLLER]:
+                if CONF_MODE_CONTROLLER in generic_controller:
+                    yield AlexaModeController(
+                        self.entity,
+                        f"generic.{generic_controller[CONF_MODE_CONTROLLER].get(CONF_ATTRIBUTE)}",
+                        False,
+                        generic_controller,
+                    )
+
     def serialize_properties(self) -> Generator[dict[str, Any]]:
         """Yield each supported property in API format."""
         for interface in self.interfaces():
@@ -352,7 +377,9 @@ class AlexaEntity:
         locale = self.config.locale
         capabilities = []
 
-        for i in self.interfaces():
+        interfaces = list(self.interfaces())
+        interfaces += list(self.generic_interfaces(interfaces))
+        for i in interfaces:
             if locale not in i.supported_locales:
                 continue
 
@@ -384,6 +411,7 @@ def async_get_entities(
         try:
             alexa_entity = ENTITY_ADAPTERS[state.domain](hass, config, state)
             interfaces = list(alexa_entity.interfaces())
+            interfaces += list(alexa_entity.generic_interfaces(interfaces))
         except Exception:
             _LOGGER.exception("Unable to serialize %s for discovery", state.entity_id)
         else:
@@ -471,6 +499,7 @@ class ClimateCapabilities(AlexaEntity):
 
     def interfaces(self) -> Generator[AlexaCapability]:
         """Yield the supported interfaces."""
+        super().interfaces()
         # If we support two modes, one being off, we allow turning on too.
         supported_features = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if (
@@ -539,6 +568,7 @@ class CoverCapabilities(AlexaEntity):
 
     def interfaces(self) -> Generator[AlexaCapability]:
         """Yield the supported interfaces."""
+
         device_class = self.entity.attributes.get(ATTR_DEVICE_CLASS)
         if device_class not in (
             cover.CoverDeviceClass.GARAGE,

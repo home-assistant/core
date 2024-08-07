@@ -1253,6 +1253,23 @@ async def async_api_set_mode(
         elif position == valve.STATE_OPEN:
             service = valve.SERVICE_OPEN_VALVE
 
+    elif instance is not None and instance.startswith("generic."):
+        domain = "script"
+        attribute = str(mode.split(".")[0]).lower()
+        value = str(mode.split(".")[1]).lower()
+        new_attributes = dict(entity.attributes)
+        new_attributes[attribute] = value
+        hass.states.async_set(
+            entity.entity_id,
+            entity.state,
+            new_attributes,
+            False,
+            context,
+            entity.state_info,
+            entity.last_changed_timestamp,
+        )
+        service = f"{str(entity.entity_id).replace(".","_")}_{mode.split(".")[1]}"
+
     if not service:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
