@@ -46,7 +46,7 @@ class OAuth2FlowHandler(
                 ClientCredential(CLIENT_ID, "", name="Home Assistant"),
             )
 
-        return await self.async_step_pick_implementation()
+        return super().async_step_user()
 
     async def async_oauth_create_entry(
         self,
