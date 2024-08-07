@@ -1,98 +1,1238 @@
 {
-  "services": {
-    "reload_device_list": {
-      "name": "Reload device list",
-      "description": "Reload LG ThinQ device list."
-    },
-    "refresh_device_status": {
-      "name": "Refresh device status",
-      "description": "Refresh status of LG ThinQ device.",
-      "fields": {
-        "device_id": {
-          "name": "Device ID",
-          "description": "The target device id."
-        }
-      }
-    },
-    "get_device_profile": {
-      "name": "Get device profile",
-      "description": "Get profile of LG ThinQ device from the server.",
-      "fields": {
-        "device_id": {
-          "name": "Device ID",
-          "description": "The target device id."
-        }
-      }
-    },
-    "get_device_status": {
-      "name": "Get device status",
-      "description": "Get status of LG ThinQ device from the server.",
-      "fields": {
-        "device_id": {
-          "name": "Device ID",
-          "description": "The target device id."
-        }
-      }
-    },
-    "post_device_status": {
-      "name": "Post device status",
-      "description": "Post status of LG ThinQ device to the server.",
-      "fields": {
-        "device_id": {
-          "name": "Device ID",
-          "description": "The target device id."
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured.",
+            "already_in_progress": "Configuration flow is already in progress",
+            "error_pairing": "Connected to LG webOS TV but not paired",
+            "no_device_info" : "Cant not get device info from the device.",
+            "1218" : "The token is not valid.",
+            "1304" : "The service terms are not accepted.",
+            "1306" : "The number of API calls has been exceeded.",
+            "1307" : "The country is not supported.",
+            "1314" : "The number of API calls has been exceeded."
         },
-        "value": {
-          "name": "Value",
-          "description": "Value to post."
+        "error": {
+            "cannot_connect": "Failed to connect, please turn on your TV or check ip address"
+        },
+        "step": {
+            "user": {
+                "title": "Add LG Item",
+                "description": "Which item do you want to add?",
+                "data": {
+                    "entry_type": "Item Type"
+                },
+                "data_description": {
+                    "entry_type": "Item to add"
+                },
+                "menu_options": {
+                    "thinq": "Appliance",
+                    "webostv": "webOS TV",
+                    "soundbar": "Soundbar"
+                }
+            },
+            "thinq": {
+                "title": "Connect to ThinQ",
+                "description": "Please enter a ThinQ [PAT(Personal Access Token)]({pat_url}) created with your LG ThinQ account.",
+                "data": {
+                    "access_token": "Personal Access Token",
+                    "name": "Entry Name"
+                }
+            },
+            "region": {
+                "title": "Choose the region",
+                "data": {
+                    "country": "Country",
+                    "language": "Language"
+                }
+            },
+            "soundbar": {
+                "title": "Soundbar Search",
+                "description": "Click the **SUBMIT** button to start the search.\n\nPlease check the Wi-Fi connection staus of the **Soundbar**."
+            },
+            "soundbar_fill_data": {
+                "title": "Connect to Soundbar",
+                "description": "Input **IP address** of the LG Soundbar.\n\nYou can figure out the IP address through **LG Soundbar Application** on mobile",
+                "data": {
+                    "host": "IP Address",
+                    "name": "Device Name"
+                }
+            },
+            "webostv": {
+                "title": "webOS TV Search",
+                "description": "Click the **SUBMIT** button to start the search.\n\nPlease check the Wi-Fi connection staus of the **webOS TV**."
+            },
+            "webostv_fill_data": {
+                "title": "Connect to webOS TV",
+                "description": "Input **IP address** of the LG webOS TV.\n\nYou can figure out the IP address through the **Settings** of the webOS TV.",
+                "data": {
+                  "host": "IP Address",
+                  "name": "Device Name"
+                }
+            },
+            "pairing": {
+                "title": "Connect to webOS TV",
+                "description": "Click **SUBMIT** and accept the **pairing request on your TV**.\n\n![Image](/static/images/config_webos.png)"
+            },
+            "select_sources": {
+                "data": {
+                    "sources": "Sources list"
+                },
+                "title": "Select enabled sources",
+                "description": "You can select again via option."
+            }
         }
-      }
     },
-    "button": {
-      "name": "Button",
-      "description": "Sends a button press command.",
-      "fields": {
-        "entity_id": {
-          "name": "Entity",
-          "description": "Name(s) of the webostv entities where to run the API method."
+    "device_automation": {
+        "trigger_type": {
+            "webostv.turn_on": "Device is requested to turn on"
+        }
+    },
+    "options": {
+        "abort": {
+            "not_supported": "Options Flow is not supported."
+        },
+        "error": {
+            "cannot_retrieve": "Unable to retrieve the list of sources. Make sure device is switched on"
+        },
+        "step": {
+            "webostv": {
+                "title": "Options for webOS Smart TV",
+                "description": "Select enabled sources",
+                "data": {
+                    "sources": "Sources list"
+                }
+            }
+        }
+    },
+    "services": {
+        "reload_device_list": {
+            "name": "Reload device list",
+            "description": "Reload LG ThinQ device list."
+        },
+        "refresh_device_status": {
+            "name": "Refresh device status",
+            "description": "Refresh status of LG ThinQ device.",
+            "fields": {
+            "device_id": {
+                "name": "Device ID",
+                "description": "The target device id."
+            }
+          }
+        },
+        "get_device_profile": {
+            "name": "Get device profile",
+            "description": "Get profile of LG ThinQ device from the server.",
+            "fields": {
+                "device_id": {
+                    "name": "Device ID",
+                    "description": "The target device id."
+                }
+            }
+        },
+        "get_device_status": {
+            "name": "Get device status",
+            "description": "Get status of LG ThinQ device from the server.",
+            "fields": {
+                "device_id": {
+                    "name": "Device ID",
+                    "description": "The target device id."
+                }
+            }
+        },
+        "post_device_status": {
+            "name": "Post device status",
+            "description": "Post status of LG ThinQ device to the server.",
+            "fields": {
+                "device_id": {
+                    "name": "Device ID",
+                    "description": "The target device id."
+                },
+                "value": {
+                    "name": "Value",
+                    "description": "Value to post."
+                }
+            }
         },
         "button": {
-          "name": "Button",
-          "description": "Name of the button to press.  Known possible values are LEFT, RIGHT, DOWN, UP, HOME, MENU, BACK, ENTER, DASH, INFO, ASTERISK, CC, EXIT, MUTE, RED, GREEN, BLUE, YELLOW, VOLUMEUP, VOLUMEDOWN, CHANNELUP, CHANNELDOWN, PLAY, PAUSE, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9."
-        }
-      }
-    },
-    "command": {
-      "name": "Command",
-      "description": "Sends a command.",
-      "fields": {
-        "entity_id": {
-          "name": "Entity",
-          "description": "[%key:component::webostv::services::button::fields::entity_id::description%]"
+            "description": "Sends a button press command.",
+            "fields": {
+                "button": {
+                    "description": "Name of the button to press.  Known possible values are LEFT, RIGHT, DOWN, UP, HOME, MENU, BACK, ENTER, DASH, INFO, ASTERISK, CC, EXIT, MUTE, RED, GREEN, BLUE, YELLOW, VOLUMEUP, VOLUMEDOWN, CHANNELUP, CHANNELDOWN, PLAY, PAUSE, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9.",
+                    "name": "Button"
+                },
+                "entity_id": {
+                    "description": "Name(s) of the webOS TV entities where to run the API method.",
+                    "name": "Entity"
+                }
+            },
+            "name": "Button"
         },
         "command": {
-          "name": "Command",
-          "description": "Endpoint of the command."
+            "description": "Sends a command.",
+            "fields": {
+                "command": {
+                    "description": "Endpoint of the command.",
+                    "name": "Command"
+                },
+                "entity_id": {
+                    "description": "Name(s) of the webOS TV entities where to run the API method.",
+                    "name": "Entity"
+                },
+                "payload": {
+                    "description": "An optional payload to provide to the endpoint in the format of key value pair(s).",
+                    "name": "Payload"
+                }
+            },
+            "name": "Command"
         },
-        "payload": {
-          "name": "Payload",
-          "description": "An optional payload to provide to the endpoint in the format of key value pair(s)."
+        "select_sound_output": {
+            "description": "Sends the TV the command to change sound output.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name(s) of the webOS TV entities to change sound output on.",
+                    "name": "Entity"
+                },
+                "sound_output": {
+                    "description": "Name of the sound output to switch to.",
+                    "name": "Sound output"
+                }
+            },
+            "name": "Select sound output"
         }
-      }
     },
-    "select_sound_output": {
-      "name": "Select sound output",
-      "description": "Sends the TV the command to change sound output.",
-      "fields": {
-        "entity_id": {
-          "name": "Entity",
-          "description": "Name(s) of the webostv entities to change sound output on."
+    "entity": {
+        "sensor": {
+            "pm1": {
+                "name": "PM1.0"
+            },
+            "pm2": {
+                "name": "PM2.5"
+            },
+            "pm10": {
+                "name": "PM10"
+            },
+            "odor": {
+                "name": "Odor",
+                "state": {
+                    "1": "Weak",
+                    "2": "Normal",
+                    "3": "Strong",
+                    "4": "Very Strong"
+                }
+            },
+            "humidity": {
+                "name": "Humidity"
+            },
+            "current_humidity": {
+                "name": "Current Humidity"
+            },
+            "current_temperature": {
+                "name": "Current Temperature"
+            },
+            "temperature": {
+                "name": "Temperature"
+            },
+            "total_pollution": {
+                "name": "Overall Air Quality",
+                "state": {
+                    "0": "Sensor power-off state",
+                    "1": "Good",
+                    "2": "Moderate",
+                    "3": "Unhealthy",
+                    "4": "Poor"
+                }
+            },
+            "monitoring_enabled": {
+                "name": "Air Quality Sensor",
+                "state": {
+                    "ON_WORKING": "Turns on with product",
+                    "ALWAYS": "Always on"
+                }
+            },
+            "growth_mode": {
+                "name": "{location}Mode",
+                "state": {
+                    "STANDARD": "Auto",
+                    "EXT_LEAF": "Vegetables",
+                    "EXT_HERB": "Herbs",
+                    "EXT_FLOWER": "Flowers",
+                    "EXT_EXPERT": "Custom Growing Mode"
+                }
+            },
+            "wind_volume": {
+                "name": "{location}Wind Speed"
+            },
+            "brightness": {
+                "name": "{location}Lighting Intensity"
+            },
+            "duration": {
+                "name": "{location}Lighting Duration"
+            },
+            "day_target_temperature": {
+                "name": "{location}Day Growth Temperature"
+            },
+            "night_target_temperature": {
+                "name": "{location}Night Growth Temperature"
+            },
+            "temperature_state": {
+                "name": "{location}Temperature",
+                "state": {
+                    "HIGH": "High",
+                    "NORMAL": "Good"
+                }
+            },
+            "current_state": {
+                "name": "{location}Current status",
+                "state": {
+                    "ADD_DRAIN": "Filling",
+                    "AS_POP_UP": "Product Requires Attention",
+                    "CANCEL": "Cancel",
+                    "CARBONATION": "Carbonation",
+                    "CHANGE_CONDITION": "Settings Change",
+                    "CHARGING": "Charging",
+                    "CHARGING_COMPLETE": "Charging completed",
+                    "CHECKING_TURBIDITY": "Detecting Soil Level",
+                    "CLEANING": "Cleaning",
+                    "CLEANING_IS_DONE": "Cleaning is done",
+                    "COMPLETE": "Done",
+                    "COOK": "Cooking",
+                    "COOK_COMPLETE": "Done",
+                    "COOKING_IN_PROGRESS": "Cooking",
+                    "COOL_DOWN": "Cool Down",
+                    "COOLING": "Cooling",
+                    "DETECTING": "Detecting",
+                    "DETERGENT_AMOUNT": "Providing the info about the amount of detergent",
+                    "DIAGNOSIS": "Smart Diagnosis is in progress",
+                    "DISPENSING": "Auto Dispensing",
+                    "DISPLAY_LOADSIZE": "Load Size",
+                    "DONE": "Done",
+                    "DRYING": "Drying",
+                    "DURING_AGING": "Aging",
+                    "DURING_FERMENTATION": "Fermentation",
+                    "END": "Finished",
+                    "END_COOLING": "Drying",
+                    "ERROR": "Product Requires Attention",
+                    "EXTRACTING_CAPSULE": "Capsule Brewing",
+                    "EXTRACTION_MODE": "Storing",
+                    "FIRMWARE": "Updating Firmware",
+                    "FOTA": "Updating",
+                    "FROZEN_PREVENT_INITIAL": "Freeze Protection Standby",
+                    "FROZEN_PREVENT_RUNNING": "Freeze Protection in progress",
+                    "FROZEN_PREVENT_PAUSE": "Freeze Protection Paused",
+                    "HOMING": "Moving",
+                    "INITIAL": "Standby",
+                    "INITIALIZING": "Standby",
+                    "LOCK": "Control Lock",
+                    "MACROSECTOR": "Remote is in Use",
+                    "MELTING": "Wort Dissolving",
+                    "MONITORING_DETECTING": "HomeGuard is active",
+                    "MONITORING_MOVING": "Going to the Starting Point",
+                    "MONITORING_POSITIONING": "Setting HomeGuard Start Point",
+                    "NIGHT_DRY": "Night Dry",
+                    "OVEN_SETTING": "Cooktop Connected",
+                    "PAUSE": "Paused",
+                    "PAUSED": "Paused",
+                    "POWER_FAIL": "Power Fail",
+                    "POWER_ON": "On",
+                    "POWER_OFF": "Off",
+                    "PREFERENCE": "Setting",
+                    "PREHEAT": "Preheating",
+                    "PREHEAT_COMPLETE": "Preheating Complete",
+                    "PREHEATING": "Preheating",
+                    "PREHEATING_IS_DONE": "Preheating is done",
+                    "PREPAREING_FERMENTATION": "Preparing Now",
+                    "PRESTEAM": "Ready to steam",
+                    "PREWASH": "Prewashing",
+                    "PROOFING": "Proofing",
+                    "REFRESHING": "Refreshing",
+                    "RESERVATION": "Remote is in Use",
+                    "RESERVED": "Delay Set",
+                    "RINSE_HOLD": "Waiting to Rinse",
+                    "RINSING": "Rinsing",
+                    "RUNNING": "Running",
+                    "RUNNING_END": "Complete",
+                    "SETDATE": "Remote is in Use",
+                    "SHOES_MODULE": "Drying Shoes",
+                    "SLEEP": "In sleep mode",
+                    "SMART_GRID_RUN": "Running Smart Grid",
+                    "SOAKING": "Soak",
+                    "SOFTENING": "Softener",
+                    "SPINNING": "Spinning",
+                    "STAY": "Refresh",
+                    "STANDBY": "Standby",
+                    "STEAM": "Refresh",
+                    "STEAM_SOFTENING": "Steam Softening",
+                    "STERILIZE": "Sterilize",
+                    "TEMPERATURE_STABILIZATION": "Temperature Adjusting",
+                    "WORKING": "Cleaning",
+                    "WRINKLE_CARE": "Wrinkle Care"
+                }
+            },
+            "detergent_setting": {
+                "name": "{location}Default Detergent",
+                "state": {
+                    "AUTO": "Auto",
+                    "NORMAL": "Normal"
+                }
+            },
+            "door_state": {
+                "name": "Door open",
+                "state": {
+                    "CLOSE": "Closed",
+                    "OPEN": "Opened"
+                }
+            },
+            "fresh_air_filter": {
+                "name": "Fresh Air Filter",
+                "state": {
+                    "OFF": "Off",
+                    "AUTO": "Auto",
+                    "POWER": "Power",
+                    "REPLACE": "Replace Filter",
+                    "SMART_POWER": "Smart Safe Storage",
+                    "SMART_OFF": "Off",
+                    "SMART_ON": "Smart Safe Storage"
+                }
+            },
+            "filter_lifetime": {
+                "name": "Filter Remaining"
+            },
+            "water_filter_used_time": {
+                "name": "Water Filter Used"
+            },
+            "current_job_mode": {
+                "name": "Operating Mode",
+                "state": {
+                    "AIR_CLEAN": "Air Purify",
+                    "AUTO": "Auto",
+                    "CLOTHES_DRY": "Laundry",
+                    "EDGE": "Edge cleaning",
+                    "HEAT_PUMP": "Heat Pump",
+                    "HIGH": "Power",
+                    "INTENSIVE_DRY": "Spot",
+                    "MACRO": "Custom Mode",
+                    "MOP": "Mop",
+                    "NORMAL": "Normal",
+                    "OFF": "Off",
+                    "QUIET_HUMIDITY": "Silent",
+                    "RAPID_HUMIDITY": "Jet",
+                    "SECTOR_BASE": "Cell by Cell",
+                    "SELECT": "My Space",
+                    "SMART_HUMIDITY": "Smart",
+                    "SPOT": "Spiral Spot mode",
+                    "TURBO": "Turbo",
+                    "VACATION": "Vacation",
+                    "ZIGZAG": "Zigzag"
+                }
+            },
+            "personalization_mode": {
+                "name": "Personal Mode",
+                "state": {
+                    "AUTO_INSIDE": "Auto Mode",
+                    "SLEEP": "Sleep Mode",
+                    "BABY": "Baby care Mode",
+                    "SICK_HOUSE": "New Home Mode",
+                    "AUTO_OUTSIDE": "Interlocking Mode",
+                    "PET": "Pet Mode",
+                    "COOKING": "Cooking Mode",
+                    "SMOKE": "Smoke Mode",
+                    "EXERCISE": "Exercise mode",
+                    "OTHERS": "Others"
+                }
+            },
+            "current_dish_washing_course": {
+                "name": "Current Cycle",
+                "state": {
+                    "AUTO": "Auto",
+                    "HEAVY": "Intensive",
+                    "DELICATE": "Delicate",
+                    "TURBO": "Turbo",
+                    "NORMAL": "Normal",
+                    "RINSE": "Rinse",
+                    "REFRESH": "Refresh",
+                    "EXPRESS": "Express",
+                    "MACHINE_CLEAN": "Machine Clean",
+                    "SHORT_MODE": "Short Mode",
+                    "DOWNLOAD_CYCLE": "Download Cycle",
+                    "QUICK": "Quick",
+                    "STEAM": "Steam Care",
+                    "SPRAY": "Spray",
+                    "ECO": "Eco"
+                }
+            },
+            "rinse_level": {
+                "name": "Rinse Aid Dispenser Level",
+                "state": {
+                    "RINSELEVEL_0": "0",
+                    "RINSELEVEL_1": "1",
+                    "RINSELEVEL_2": "2",
+                    "RINSELEVEL_3": "3",
+                    "RINSELEVEL_4": "4"
+                }
+            },
+            "softening_level": {
+                "name": "Softening Level",
+                "state": {
+                    "SOFTENINGLEVEL_0": "0",
+                    "SOFTENINGLEVEL_1": "1",
+                    "SOFTENINGLEVEL_2": "2",
+                    "SOFTENINGLEVEL_3": "3",
+                    "SOFTENINGLEVEL_4": "4"
+                }
+            },
+            "machine_clean_reminder": {
+                "name": "Machine Clean Reminder",
+                "state": {
+                    "MCREMINDER_OFF": "Off",
+                    "MCREMINDER_ON": "On"
+                }
+            },
+            "signal_level": {
+                "name": "Chime Sound",
+                "state": {
+                    "SIGNALLEVEL_OFF": "Off",
+                    "SIGNALLEVEL_ON": "On"
+                }
+            },
+            "clean_light_reminder": {
+                "name": "Clean Indicator Light",
+                "state": {
+                    "CLEANLREMINDER_OFF": "Off",
+                    "CLEANLREMINDER_ON": "On"
+                }
+            },
+            "cock_state": {
+                "name": "UVnano",
+                "state": {
+                    "CLEANING": "In Progress",
+                    "NORMAL": "Standby"
+                }
+            },
+            "sterilizing_state": {
+                "name": "High-temp sterilization",
+                "state": {
+                    "OFF": "Off",
+                    "ON": "Sterilizing",
+                    "CANCEL": "Cancel"
+                }
+            },
+            "water_type": {
+                "name": "Type",
+                "state": {
+                    "COLD": "Cold",
+                    "HOT": "Hot",
+                    "NORMAL": "Tepid",
+                    "MINERAL": "Mineral",
+                    "SODA": "Carbonated"
+                }
+            },
+            "target_temperature": {
+                "name": "{location}Temperature",
+                "state": {
+                    "KIMCHI": "Kimchi",
+                    "OFF": "Off",
+                    "FREEZER": "Freezer",
+                    "FRIDGE": "Fridge",
+                    "STORAGE": "Storage",
+                    "MEAT_FISH": "Meat/Fish",
+                    "RICE_GRAIN": "Rice/Grain",
+                    "VEGETABLE_FRUIT": "Vege/Fruit",
+                    "TEMPERATURE_NUMBER": "Number"
+                }
+            },
+            "one_touch_filter": {
+                "name": "Fresh Air Filter",
+                "state": {
+                    "OFF": "Off",
+                    "ON": "On"
+                }
+            },
+            "operation_mode": {
+                "name": "Power",
+                "state": {
+                    "POWER_ON": "On",
+                    "POWER_OFF": "Off"
+                }
+            },
+            "elapsed_day_state": {
+                "name": "Brewing period"
+            },
+            "elapsed_day_total": {
+                "name": "Brewing Duration"
+            },
+            "recipe_name": {
+                "name": "Homebrew Recipe",
+                "state": {
+                    "IPA": "IPA",
+                    "PALE_ALE": "Pale Ale",
+                    "STOUT": "Stout",
+                    "WHEAT": "Wheat",
+                    "PILSNER": "Pilsner",
+                    "RED_ALE": "Red Ale",
+                    "MY_RECIPE": "My Recipe"
+                }
+            },
+            "wort_info": {
+                "name": "Wort",
+                "state": {
+                    "HOPPY": "Hoppy",
+                    "DEEP_GOLD": "DeepGold",
+                    "WHEAT": "Wheat",
+                    "DARK": "Dark"
+                }
+            },
+            "yeast_info": {
+                "name": "Yeast",
+                "state": {
+                    "AMERICAN_ALE": "American Ale",
+                    "ENGLISH_ALE": "English Ale",
+                    "LAGER": "Lager",
+                    "WEIZEN": "Weizen"
+                }
+            },
+            "hop_oil_info": {
+                "name": "Hops",
+                "state": {
+                    "CASCADE": "Cascade",
+                    "CHINOOK": "Chinook",
+                    "GOLDINGS": "Goldings",
+                    "FUGGLES": "Fuggles",
+                    "HALLERTAU": "Hallertau",
+                    "CITRUSSY": "Citrussy"
+                }
+            },
+            "flavor_info": {
+                "name": "Flavor",
+                "state": {
+                    "CORIANDER": "Coriander",
+                    "ORANGE": "Orange"
+                }
+            },
+            "beer_remain": {
+                "name": "Recipe Progress"
+            },
+            "battery_level": {
+                "name": "Battery",
+                "state": {
+                    "HIGH": "Full",
+                    "MID": "Medium",
+                    "LOW": "Low",
+                    "WARNING": "Empty"
+                }
+            },
+            "relative_to_start": {
+                "name": "{location}Schedule: Turn On"
+            },
+            "relative_to_start_wm": {
+                "name": "{location}Delay: Starts in"
+            },
+            "relative_to_stop": {
+                "name": "{location}Schedule: Turn Off"
+            },
+            "relative_to_stop_wm": {
+                "name": "{location}Delay: Ends in"
+            },
+            "sleep_timer_relative_to_stop": {
+                "name": "{location}Sleep Timer"
+            },
+            "absolute_to_start": {
+                "name": "{location}Schedule: Turn On"
+            },
+            "absolute_to_stop": {
+                "name": "{location}Schedule: Turn Off"
+            },
+            "remain": {
+                "name": "{location}Time Remaining"
+            },
+            "running": {
+                "name": "{location}Time Running"
+            },
+            "total": {
+                "name": "{location}Time Total"
+            },
+            "target": {
+                "name": "{location}Cook time"
+            },
+            "light_start": {
+                "name": "{location}Lighting On Time"
+            },
+            "light_end": {
+                "name": "{location}Lighting Off Time"
+            },
+            "power_level": {
+                "name": "{location}Power level"
+            },
+            "error": {
+                "name": "Error",
+                "state": {
+                    "BLOCK_ERROR": "Cleaning has stopped. Check for obstacles.",
+                    "BRUSH_ERROR": "Moving brush has a problem.",
+                    "BUBBLE_ERROR": "Bubble Error",
+                    "CHILD_LOCK_ACTIVE_ERROR": "Child Lock",
+                    "CLIFF_ERROR": "Fall prevention sensor has an error.",
+                    "COMPRESSOR_ERROR": "Compressor Error",
+                    "DOOR_CLOSE_ERROR": "Door Closed Error",
+                    "DOOR_LOCK_ERROR": "Door Lock Error",
+                    "DOOR_OPEN_ERROR": "Door Open",
+                    "DOOR_SENSOR_ERROR": "Door sensor Error",
+                    "DRAINMOTOR_ERROR": "Drain Error",
+                    "DUST_FULL_ERROR": "Dust bin is full and needs to be emptied.",
+                    "EMPTY_WATER_ALERT_ERROR": "Empty Water",
+                    "FAN_MOTOR_ERROR": "Fan Lock Error",
+                    "FILTER_CLOGGING_ERROR": "Filter Error",
+                    "HEATER_CIRCUIT_ERROR": "Heater circuit failure",
+                    "HIGH_POWER_SUPPLY_ERROR": "Power Supply Error",
+                    "HIGH_TEMPERATURE_DETECTION_ERROR": "High-temperature Error",
+                    "LE_ERROR": "LE Error",
+                    "LE2_ERROR": "LE2 Error",
+                    "LEFT_WHEEL_ERROR": "Left wheel has a problem.",
+                    "LOCKED_MOTOR_ERROR": "Driver motor error",
+                    "MOP_ERROR": "Cannot operate properly without the mop attached.",
+                    "MOTOR_ERROR": "Motor trouble",
+                    "MOTOR_LOCK_ERROR": "Motor Lock Error",
+                    "MOVE_ERROR": "The wheels are not touching the floor.",
+                    "NEED_WATER_DRAIN": "Empty Water",
+                    "NEED_WATER_REPLENISHMENT": "Fill Water",
+                    "NO_BATTERY_ERROR": "Robot cleaner's battery is low.",
+                    "NO_DUST_BIN_ERROR": "Dust bin is not installed.",
+                    "NO_FILTER_ERROR": "Filter Error",
+                    "OUT_OF_BALANCE_ERROR": "Out of Balance Load",
+                    "OVERFILL_ERROR": "Overfill Error",
+                    "PART_MALFUNCTION_ERROR": "AIE Error",
+                    "POWER_CODE_CONNECTION_ERROR": "Power Cord Connection Error",
+                    "POWER_FAIL_ERROR": "Power Failure",
+                    "RIGHT_WHEEL_ERROR": "Right wheel has a problem.",
+                    "STEAM_HEAT_ERROR": "Steam Heater Error",
+                    "SUCTION_BLOCKED_ERROR": "Suction motor is clogged.",
+                    "TEMPERATURE_SENSOR_ERROR": "Thermistor Error",
+                    "TIME_TO_RUN_THE_TUB_CLEAN_CYCLE_ERROR": "Tub Clean Recommendation",
+                    "TIMEOUT_ERROR": "Timeout Error",
+                    "UNABLE_TO_LOCK_ERROR": "Door Lock Error",
+                    "UNBALANCED_LOAD_ERROR": "Out of Balance Load",
+                    "UNKNOWN_ERROR": "Product requires attention",
+                    "WATER_DRAIN_ERROR": "Water Drain Error",
+                    "WATER_LEAKAGE_ERROR": "Water leakage problem",
+                    "WATER_LEAKS_ERROR": "Water leakage problem",
+                    "WATER_LEVEL_SENSOR_ERROR": "Water Sensor Error",
+                    "WATER_SUPPLY_ERROR": "Water Supply Error"
+                }
+            },
+            "notification": {
+                "name": "Noti.",
+                "state": {
+                    "CHARGING_IS_COMPLETE": "Charging is completed.",
+                    "CLEANING_IS_COMPLETE": "Cycle is finished.",
+                    "CLEANING_IS_COMPLETED": "Cleaning is completed.",
+                    "CLEANING_IS_FAILED": "Cleaning has failed.",
+                    "COOKING_IS_COMPLETE": "Turned off.",
+                    "DOOR_IS_OPEN": "The door is open.",
+                    "DRYING_FAILED": "An error has occurred in the dryer.",
+                    "DRYING_IS_COMPLETE": "Drying is completed.",
+                    "ERROR_DURING_CLEANING": "Cleaning stopped due to an error.",
+                    "ERROR_DURING_WASHING": "An error has occurred in the washing machine.",
+                    "ERROR_HAS_OCCURRED": "An error has occurred.",
+                    "FROZEN_IS_COMPLETE": "Ice Plus is done.",
+                    "HOMEGUARD_IS_STOPPED": "Home Guard has stopped.",
+                    "LACK_OF_WATER": "There is no water in the water tank.",
+                    "MOTION_IS_DETECTED": "Photograph is sent as movement is detected during Home Guard.",
+                    "NEED_TO_CHECK_LOCATION": "Location check is required.",
+                    "POLLUTION_IS_HIGH": "Air status is rapidly becoming bad.",
+                    "PREHEATING_IS_COMPLETE": "Preheating is done.",
+                    "RINSE_IS_NOT_ENOUGH": "Add Rinse Aid for better drying performance.",
+                    "SALT_REFILL_IS_NEEDED": "Add Salt for better softening performance.",
+                    "SCHEDULED_CLEANING_STARTS": "Scheduled cleaning starts.",
+                    "STYLING_IS_COMPLETE": "Styling is completed.",
+                    "TIME_TO_CHANGE_FILTER": "It is time to replace the filter.",
+                    "TIME_TO_CHANGE_WATER_FILTER": "You need to replace Water Filter.",
+                    "TIME_TO_CLEAN": "Need to Selfcleaning.",
+                    "TIME_TO_CLEAN_FILTER": "It is time to clean the filter.",
+                    "TIMER_IS_COMPLETE": "Timer has been completed.",
+                    "WASHING_IS_COMPLETE": "Washing is completed.",
+                    "WATER_IS_FULL": "Water is full.",
+                    "WATER_LEAK_HAS_OCCURRED": "The Dishwasher has detected a water leak."
+                }
+            }
         },
-        "sound_output": {
-          "name": "Sound output",
-          "description": "Name of the sound output to switch to."
+        "binary_sensor": {
+            "remote_control_enabled": {
+                "name": "{location}Remote Start"
+            },
+            "power_save_enabled": {
+                "name": "Power Saving Mode"
+            },
+            "eco_friendly_mode": {
+                "name": "Eco Friendly"
+            },
+            "sabbath_mode": {
+                "name": "Sabbath"
+            },
+            "rinse_refill": {
+                "name": "Rinse refill needed"
+            }
+        },
+        "select": {
+            "wind_strength": {
+                "name": "Speed",
+                "state": {
+                    "SLOW": "Slow",
+                    "LOW": "Low",
+                    "MID": "Medium",
+                    "HIGH": "High",
+                    "POWER": "Turbo",
+                    "TURBO": "Turbo",
+                    "AUTO": "Auto",
+                    "WIND_1": "Step 1",
+                    "WIND_2": "Step 2",
+                    "WIND_3": "Step 3",
+                    "WIND_4": "Step 4",
+                    "WIND_5": "Step 5",
+                    "WIND_6": "Step 6",
+                    "WIND_7": "Step 7",
+                    "WIND_8": "Step 8",
+                    "WIND_9": "Step 9",
+                    "WIND_10": "Step 10"
+                }
+            },
+            "monitoring_enabled": {
+                "name": "Air Quality Sensor",
+                "state": {
+                    "ON_WORKING": "Turns on with product",
+                    "ALWAYS": "Always on"
+                }
+            },
+            "current_job_mode": {
+                "name": "Operating Mode",
+                "state": {
+                    "AIR_CLEAN": "Purifying",
+                    "AUTO": "Auto",
+                    "BABY_CARE": "Baby care Mode",
+                    "CIRCULATOR": "Booster",
+                    "CLEAN": "Single",
+                    "DIRECT_CLEAN": "Direct Mode",
+                    "DUAL_CLEAN": "Daul",
+                    "FAST": "Turbo",
+                    "HEAT_PUMP": "Heat Pump",
+                    "HUMIDIFY": "Mist",
+                    "HUMIDIFY_AND_AIR_CLEAN": "Mist & Purifying",
+                    "HUMIDITY": "Humid",
+                    "NATURE_CLEAN": "Natural Mode",
+                    "PET_CLEAN": "Pet Mode",
+                    "SILENT": "Silent",
+                    "SLEEP": "Sleep",
+                    "SMART": "Smart Mode",
+                    "SPACE_CLEAN": "Diffusion Mode",
+                    "SPOT_CLEAN": "Wide Mode",
+                    "TURBO": "Turbo",
+                    "UP_FEATURE": "Additional Mode",
+                    "VACATION": "Vacation"
+                }
+            },
+            "operation_mode": {
+                "name": "{location}Operation",
+                "state": {
+                    "CANCEL": "Cancel",
+                    "POWER_OFF": "Power Off",
+                    "PREHEATING": "Preheating",
+                    "START": "Start",
+                    "STOP": "Stop",
+                    "WAKE_UP": "Sleep mode off"
+                }
+            },
+            "air_clean_operation_mode": {
+                "name": "Air Purify",
+                "state": {
+                    "START": "Start",
+                    "STOP": "Stop"
+                }
+            },
+            "cook_mode": {
+                "name": "{location}Cook Mode",
+                "state": {
+                    "BAKE": "Bake",
+                    "CONVECTION_BAKE": "Convection Bake",
+                    "CONVECTION_ROAST": "Convection Roast",
+                    "ROAST": "Roast",
+                    "CRISP_CONVECTION": "Crisp Convection"
+                }
+            },
+            "styling_course": {
+                "name": "Styling",
+                "state": {
+                    "STANDARD": "Standard",
+                    "QUICK": "Quick",
+                    "STRONG": "Strong",
+                    "FINEDUST": "Sports Wear",
+                    "WOOL_KNITTED": "Wool/Knit",
+                    "SUITS_COATS": "Suit/Coats"
+                }
+            },
+            "light_brightness": {
+                "name": "Light"
+            },
+            "optimal_humidity": {
+                "name": "Ventilation",
+                "state": {
+                    "ON": "On",
+                    "OFF": "Off"
+                }
+            },
+            "hot_water_mode": {
+                "name": "Hot Water",
+                "state": {
+                    "ON": "On",
+                    "OFF": "Off"
+                }
+            },
+            "warm_mode": {
+                "name": "Heating",
+                "state": {
+                    "WARM_ON": "On",
+                    "WARM_OFF": "Off"
+                }
+            },
+            "humidity_warm_mode": {
+                "name": "Warm Mist",
+                "state": {
+                    "WARM_ON": "On",
+                    "WARM_OFF": "Off"
+                }
+            },
+            "wind_angle": {
+                "name": "Rotation",
+                "state": {
+                    "OFF": "Off",
+                    "ANGLE_45": "45",
+                    "ANGLE_60": "60",
+                    "ANGLE_90": "90",
+                    "ANGLE_140": "140"
+                }
+            },
+            "display_light": {
+                "name": "Display Brightness",
+                "state": {
+                    "OFF": "Off",
+                    "LEVEL_1": "Brightness 1",
+                    "LEVEL_2": "Brightness 2",
+                    "LEVEL_3": "Brightness 3"
+                }
+            },
+            "uv_nano": {
+                "name": "UVnano",
+                "state": {
+                    "ON": "On",
+                    "OFF": "Off"
+                }
+            },
+            "power_save_enabled": {
+                "name": "Energy Saving",
+                "state": {
+                    "True": "On",
+                    "False": "Off"
+                }
+            },
+            "rapid_freeze": {
+                "name": "Quick Freeze",
+                "state": {
+                    "True": "On",
+                    "False": "Off"
+                }
+            },
+            "express_mode": {
+                "name": "Ice Plus",
+                "state": {
+                    "True": "On",
+                    "False": "Off"
+                }
+            },
+            "fresh_air_filter": {
+                "name": "Fresh Air Filter",
+                "state": {
+                    "OFF": "Off",
+                    "AUTO": "Auto",
+                    "POWER": "Power",
+                    "REPLACE": "Replace Filter",
+                    "SMART_POWER": "Smart Safe Storage",
+                    "SMART_OFF": "Off",
+                    "SMART_ON": "Smart Safe Storage"
+                }
+            },
+            "auto_mode": {
+                "name": "Auto Mode",
+                "state": {
+                    "AUTO_ON": "On",
+                    "AUTO_OFF": "Off"
+                }
+            },
+            "sleep_mode": {
+                "name": "Sleep Mode",
+                "state": {
+                    "SLEEP_ON": "On",
+                    "SLEEP_OFF": "Off"
+                }
+            },
+            "hygiene_dry_mode": {
+                "name": "Drying Mode",
+                "state": {
+                    "OFF": "Off",
+                    "FAST": "Fast",
+                    "SILENT": "Silent",
+                    "NORMAL": "Delicate"
+                }
+            },
+            "mood_lamp_state": {
+                "name": "Mood light",
+                "state": {
+                    "ON": "On",
+                    "OFF": "Off"
+                }
+            }
+        },
+        "switch": {
+            "operation_power": {
+                "name": "Power"
+            }
+        },
+        "number": {
+            "target_temperature": {
+                "name": "{location}Temperature"
+            },
+            "target_humidity": {
+                "name": "Target Humidity"
+            },
+            "light_status": {
+                "name": "Light"
+            },
+            "power_level": {
+                "name": "{location}Power level"
+            },
+            "fan_speed": {
+                "name": "Fan"
+            },
+            "lamp_brightness": {
+                "name": "Light"
+            },
+            "wind_temperature": {
+                "name": "Wind Temperature"
+            },
+            "relative_hour_to_start": {
+                "name": "{location}Schedule: Turn On"
+            },
+            "relative_hour_to_start_wm": {
+                "name": "{location}Delay: Starts in"
+            },
+            "relative_minute_to_start": {
+                "name": "{location}Schedule: Turn On"
+            },
+            "relative_hour_to_stop": {
+                "name": "{location}Schedule: Turn Off"
+            },
+            "relative_hour_to_stop_wm": {
+                "name": "{location}Delay: Ends in"
+            },
+            "relative_minute_to_stop": {
+                "name": "{location}Schedule: Turn Off"
+            },
+            "sleep_timer_relative_hour_to_stop": {
+                "name": "{location}Sleep Timer"
+            },
+            "sleep_timer_relative_minute_to_stop": {
+                "name": "{location}Sleep Timer"
+            },
+            "remain_hour": {
+                "name": "{location}Time Remaining"
+            },
+            "remain_minute": {
+                "name": "{location}Time Remaining"
+            }
+        },
+        "button": {
+            "power_off": {
+                "name": "Power off"
+            }
+        },
+        "climate": {
+            "translation_climate": {
+                "state_attributes": {
+                    "fan_mode": {
+                        "state": {
+                            "SLOW": "Slow",
+                            "LOW": "Low",
+                            "MID": "Medium",
+                            "HIGH": "High",
+                            "POWER": "Power",
+                            "AUTO": "Auto"
+                        }
+                    },
+                    "preset_mode": {
+                        "state": {
+                            "AIR_CLEAN": "Air Purify",
+                            "AROMA": "Aroma",
+                            "ENERGY_SAVING": "Energy Saving"
+                        }
+                    }
+                }
+            }
+        },
+        "humidifier": {
+            "translation_humidifier": {
+                "state_attributes": {
+                    "mode": {
+                        "state": {
+                            "HUMIDIFY": "Mist",
+                            "HUMIDIFY_AND_AIR_CLEAN": "Mist & Purifying",
+                            "AIR_CLEAN": "Purifying"
+                        }
+                    }
+                }
+            }
+        },
+        "water_heater": {
+            "translation_water_heater": {
+                "state_attributes": {
+                    "current_operation": {
+                        "state": {
+                            "AUTO": "Auto",
+                            "HEAT_PUMP": "Heat Pump",
+                            "TURBO": "Turbo",
+                            "VACATION": "Vacation"
+                        }
+                    }
+                }
+            }
+        },
+        "text": {
+            "absolute_to_start": {
+                "name": "{location}Schedule: Turn On"
+            },
+            "absolute_to_stop": {
+                "name": "{location}Schedule: Turn Off"
+            }
+        },
+        "time": {
+            "absolute_to_start": {
+                "name": "{location}Schedule: Turn On"
+            },
+            "absolute_to_stop": {
+                "name": "{location}Schedule: Turn Off"
+            },
+            "target": {
+                "name": "{location}Cook time"
+            },
+            "timer": {
+                "name": "{location}Timer"
+            },
+            "remain": {
+                "name": "{location}Timer"
+            }
+        },
+        "event": {
+            "notification": {
+                "name": "Noti.",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "CHARGING_IS_COMPLETE": "Charging is completed.",
+                            "CLEANING_IS_COMPLETE": "Cycle is finished.",
+                            "CLEANING_IS_COMPLETED": "Cleaning is completed.",
+                            "CLEANING_IS_FAILED": "Cleaning has failed.",
+                            "COOKING_IS_COMPLETE": "Turned off.",
+                            "DOOR_IS_OPEN": "The door is open.",
+                            "DRYING_FAILED": "An error has occurred in the dryer.",
+                            "DRYING_IS_COMPLETE": "Drying is completed.",
+                            "ERROR_DURING_CLEANING": "Cleaning stopped due to an error.",
+                            "ERROR_DURING_WASHING": "An error has occurred in the washing machine.",
+                            "ERROR_HAS_OCCURRED": "An error has occurred.",
+                            "FROZEN_IS_COMPLETE": "Ice Plus is done.",
+                            "HOMEGUARD_IS_STOPPED": "Home Guard has stopped.",
+                            "LACK_OF_WATER": "There is no water in the water tank.",
+                            "MOTION_IS_DETECTED": "Photograph is sent as movement is detected during Home Guard.",
+                            "NEED_TO_CHECK_LOCATION": "Location check is required.",
+                            "POLLUTION_IS_HIGH": "Air status is rapidly becoming bad.",
+                            "PREHEATING_IS_COMPLETE": "Preheating is done.",
+                            "RINSE_IS_NOT_ENOUGH": "Add Rinse Aid for better drying performance.",
+                            "SALT_REFILL_IS_NEEDED": "Add Salt for better softening performance.",
+                            "SCHEDULED_CLEANING_STARTS": "Scheduled cleaning starts.",
+                            "STYLING_IS_COMPLETE": "Styling is completed.",
+                            "TIME_TO_CHANGE_FILTER": "It is time to replace the filter.",
+                            "TIME_TO_CHANGE_WATER_FILTER": "You need to replace Water Filter.",
+                            "TIME_TO_CLEAN": "Need to Selfcleaning.",
+                            "TIME_TO_CLEAN_FILTER": "It is time to clean the filter.",
+                            "TIMER_IS_COMPLETE": "Timer has been completed.",
+                            "WASHING_IS_COMPLETE": "Washing is completed.",
+                            "WATER_IS_FULL": "Water is full.",
+                            "WATER_LEAK_HAS_OCCURRED": "The Dishwasher has detected a water leak."
+                        }
+                    }
+                }
+            }
         }
-      }
+    },
+    "exceptions": {
+        "-1" : {
+            "message": "The control command is not supported."
+        },
+        "0000": {
+            "message": "Undefined error."
+        },
+        "1218": {
+            "message": "The token is not valid."
+        },
+        "1222": {
+            "message": "The device is not connected."
+        },
+        "1304": {
+            "message": "The service terms are not accepted."
+        },
+        "1306": {
+            "message": "The number of API calls has been exceeded."
+        },
+        "1307": {
+            "message": "The country is not supported."
+        },
+        "1309": {
+            "message": "The user does NOT have permission on the API call."
+        },
+        "1314": {
+            "message": "The number of User API calls has been exceeded."
+        },
+        "2201": {
+            "message": "The feature is not supported."
+        },
+        "2205": {
+            "message": "The device status data is not transmitted normally or the transmitted data is not parsed normally."
+        },
+        "2207": {
+            "message": "The control command is not valid."
+        },
+        "2208": {
+            "message": "Failed to control the device."
+        },
+        "2209": {
+            "message": "The response from the device is being delayed."
+        },
+        "2210": {
+            "message": "Retry the request."
+        },
+        "2211": {
+            "message": "Timeout occured."
+        },
+        "2214": {
+            "message": "Failed to request."
+        },
+        "2301": {
+            "message": "The control command cannot be processed because the device is remote off."
+        },
+        "2302": {
+            "message": "In the {state}, the control command is not supported."
+        },
+        "2303": {
+            "message": "The control command cannot be processed because the device is in an error state."
+        },
+        "2304": {
+            "message": "The control command cannot be processed because the device is powered off."
+        },
+        "2305": {
+            "message": "In the {state}, the control command is not supported."
+        }
     }
-  }
 }
