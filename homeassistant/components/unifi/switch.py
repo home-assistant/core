@@ -11,7 +11,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
@@ -20,6 +20,7 @@ from aiounifi.interfaces.dpi_restriction_groups import DPIRestrictionGroups
 from aiounifi.interfaces.outlets import Outlets
 from aiounifi.interfaces.port_forwarding import PortForwarding
 from aiounifi.interfaces.ports import Ports
+from aiounifi.interfaces.traffic_rules import TrafficRules
 from aiounifi.interfaces.wlans import Wlans
 from aiounifi.models.api import ApiItemT
 from aiounifi.models.client import Client, ClientBlockRequest
@@ -30,6 +31,7 @@ from aiounifi.models.event import Event, EventKey
 from aiounifi.models.outlet import Outlet
 from aiounifi.models.port import Port
 from aiounifi.models.port_forward import PortForward, PortForwardEnableRequest
+from aiounifi.models.traffic_rule import TrafficRule, TrafficRuleEnableRequest
 from aiounifi.models.wlan import Wlan, WlanEnableRequest
 
 from homeassistant.components.switch import (
@@ -94,8 +96,8 @@ def async_dpi_group_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
 
 
 @callback
-def async_port_forward_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
-    """Create device registry entry for port forward."""
+def async_unifi_network_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
+    """Create device registry entry for the UniFi Network application."""
     unique_id = hub.config.entry.unique_id
     assert unique_id is not None
     return DeviceInfo(
@@ -158,6 +160,16 @@ async def async_port_forward_control_fn(
     await hub.api.request(PortForwardEnableRequest.create(port_forward, target))
 
 
+async def async_traffic_rule_control_fn(
+    hub: UnifiHub, obj_id: str, target: bool
+) -> None:
+    """Control traffic rule state."""
+    traffic_rule = hub.api.traffic_rules[obj_id].raw
+    await hub.api.request(TrafficRuleEnableRequest.create(traffic_rule, target))
+    # Update the traffic rules so the UI is updated appropriately
+    await hub.api.traffic_rules.update()
+
+
 async def async_wlan_control_fn(hub: UnifiHub, obj_id: str, target: bool) -> None:
     """Control outlet relay."""
     await hub.api.request(WlanEnableRequest.create(obj_id, target))
@@ -189,7 +201,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         api_handler_fn=lambda api: api.clients,
         control_fn=async_block_client_control_fn,
         device_info_fn=async_client_device_info_fn,
-        event_is_on=CLIENT_UNBLOCKED,
+        event_is_on=set(CLIENT_UNBLOCKED),
         event_to_subscribe=CLIENT_BLOCKED + CLIENT_UNBLOCKED,
         is_on_fn=lambda hub, client: not client.blocked,
         object_fn=lambda api, obj_id: api.clients[obj_id],
@@ -232,11 +244,24 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         icon="mdi:upload-network",
         api_handler_fn=lambda api: api.port_forwarding,
         control_fn=async_port_forward_control_fn,
-        device_info_fn=async_port_forward_device_info_fn,
+        device_info_fn=async_unifi_network_device_info_fn,
         is_on_fn=lambda hub, port_forward: port_forward.enabled,
         name_fn=lambda port_forward: f"{port_forward.name}",
         object_fn=lambda api, obj_id: api.port_forwarding[obj_id],
         unique_id_fn=lambda hub, obj_id: f"port_forward-{obj_id}",
+    ),
+    UnifiSwitchEntityDescription[TrafficRules, TrafficRule](
+        key="Traffic rule control",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        icon="mdi:security-network",
+        api_handler_fn=lambda api: api.traffic_rules,
+        control_fn=async_traffic_rule_control_fn,
+        device_info_fn=async_unifi_network_device_info_fn,
+        is_on_fn=lambda hub, traffic_rule: traffic_rule.enabled,
+        name_fn=lambda traffic_rule: traffic_rule.description,
+        object_fn=lambda api, obj_id: api.traffic_rules[obj_id],
+        unique_id_fn=lambda hub, obj_id: f"traffic_rule-{obj_id}",
     ),
     UnifiSwitchEntityDescription[Ports, Port](
         key="PoE port control",
@@ -342,7 +367,7 @@ class UnifiSwitchEntity(UnifiEntity[HandlerT, ApiItemT], SwitchEntity):
             return
 
         description = self.entity_description
-        obj = description.object_fn(self.hub.api, self._obj_id)
+        obj = description.object_fn(self.api, self._obj_id)
         if (is_on := description.is_on_fn(self.hub, obj)) != self.is_on:
             self._attr_is_on = is_on
 
@@ -353,8 +378,9 @@ class UnifiSwitchEntity(UnifiEntity[HandlerT, ApiItemT], SwitchEntity):
             return
 
         description = self.entity_description
-        assert isinstance(description.event_to_subscribe, tuple)
-        assert isinstance(description.event_is_on, tuple)
+        if TYPE_CHECKING:
+            assert description.event_to_subscribe is not None
+            assert description.event_is_on is not None
 
         if event.key in description.event_to_subscribe:
             self._attr_is_on = event.key in description.event_is_on
@@ -367,7 +393,7 @@ class UnifiSwitchEntity(UnifiEntity[HandlerT, ApiItemT], SwitchEntity):
 
         if self.entity_description.custom_subscribe is not None:
             self.async_on_remove(
-                self.entity_description.custom_subscribe(self.hub.api)(
+                self.entity_description.custom_subscribe(self.api)(
                     self.async_signalling_callback, ItemEvent.CHANGED
                 ),
             )

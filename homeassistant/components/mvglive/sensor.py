@@ -1,5 +1,6 @@
 """Support for departure information for public transport in Munich."""
 
+# mypy: ignore-errors
 from __future__ import annotations
 
 from copy import deepcopy

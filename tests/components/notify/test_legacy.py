@@ -226,7 +226,11 @@ async def test_invalid_service(
 ) -> None:
     """Test service setup with an invalid service object or platform."""
 
-    def get_service(hass, config, discovery_info=None):
+    def get_service(
+        hass: HomeAssistant,
+        config: ConfigType,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> notify.BaseNotificationService | None:
         """Return None for an invalid notify service."""
         return None
 
@@ -261,7 +265,7 @@ async def test_platform_setup_with_error(
 
     async def async_get_service(hass, config, discovery_info=None):
         """Return None for an invalid notify service."""
-        raise Exception("Setup error")  # pylint: disable=broad-exception-raised
+        raise Exception("Setup error")  # noqa: TRY002
 
     mock_notify_platform(
         hass, tmp_path, "testnotify", async_get_service=async_get_service

@@ -2,6 +2,7 @@
 
 from ipaddress import ip_address
 import json
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from aioesphomeapi import (
@@ -329,7 +330,7 @@ async def test_user_invalid_password(hass: HomeAssistant, mock_client) -> None:
 async def test_user_dashboard_has_wrong_key(
     hass: HomeAssistant,
     mock_client,
-    mock_dashboard,
+    mock_dashboard: dict[str, Any],
     mock_setup_entry: None,
 ) -> None:
     """Test user step with key from dashboard that is incorrect."""
@@ -376,7 +377,7 @@ async def test_user_dashboard_has_wrong_key(
 async def test_user_discovers_name_and_gets_key_from_dashboard(
     hass: HomeAssistant,
     mock_client,
-    mock_dashboard,
+    mock_dashboard: dict[str, Any],
     mock_setup_entry: None,
 ) -> None:
     """Test user step can discover the name and get the key from the dashboard."""
@@ -429,7 +430,7 @@ async def test_user_discovers_name_and_gets_key_from_dashboard_fails(
     hass: HomeAssistant,
     dashboard_exception: Exception,
     mock_client,
-    mock_dashboard,
+    mock_dashboard: dict[str, Any],
     mock_setup_entry: None,
 ) -> None:
     """Test user step can discover the name and get the key from the dashboard."""
@@ -484,7 +485,7 @@ async def test_user_discovers_name_and_gets_key_from_dashboard_fails(
 async def test_user_discovers_name_and_dashboard_is_unavailable(
     hass: HomeAssistant,
     mock_client,
-    mock_dashboard,
+    mock_dashboard: dict[str, Any],
     mock_setup_entry: None,
 ) -> None:
     """Test user step can discover the name but the dashboard is unavailable."""
@@ -843,7 +844,7 @@ async def test_reauth_confirm_valid(
 async def test_reauth_fixed_via_dashboard(
     hass: HomeAssistant,
     mock_client,
-    mock_dashboard,
+    mock_dashboard: dict[str, Any],
     mock_setup_entry: None,
 ) -> None:
     """Test reauth fixed automatically via dashboard."""
@@ -894,7 +895,7 @@ async def test_reauth_fixed_via_dashboard(
 async def test_reauth_fixed_via_dashboard_add_encryption_remove_password(
     hass: HomeAssistant,
     mock_client,
-    mock_dashboard,
+    mock_dashboard: dict[str, Any],
     mock_config_entry,
     mock_setup_entry: None,
 ) -> None:
@@ -938,7 +939,7 @@ async def test_reauth_fixed_via_remove_password(
     hass: HomeAssistant,
     mock_client,
     mock_config_entry,
-    mock_dashboard,
+    mock_dashboard: dict[str, Any],
     mock_setup_entry: None,
 ) -> None:
     """Test reauth fixed automatically by seeing password removed."""
@@ -962,7 +963,7 @@ async def test_reauth_fixed_via_remove_password(
 async def test_reauth_fixed_via_dashboard_at_confirm(
     hass: HomeAssistant,
     mock_client,
-    mock_dashboard,
+    mock_dashboard: dict[str, Any],
     mock_setup_entry: None,
 ) -> None:
     """Test reauth fixed automatically via dashboard at confirm step."""
@@ -1153,7 +1154,9 @@ async def test_discovery_dhcp_no_changes(
     assert entry.data[CONF_HOST] == "192.168.43.183"
 
 
-async def test_discovery_hassio(hass: HomeAssistant, mock_dashboard) -> None:
+async def test_discovery_hassio(
+    hass: HomeAssistant, mock_dashboard: dict[str, Any]
+) -> None:
     """Test dashboard discovery."""
     result = await hass.config_entries.flow.async_init(
         "esphome",
@@ -1181,7 +1184,7 @@ async def test_discovery_hassio(hass: HomeAssistant, mock_dashboard) -> None:
 async def test_zeroconf_encryption_key_via_dashboard(
     hass: HomeAssistant,
     mock_client,
-    mock_dashboard,
+    mock_dashboard: dict[str, Any],
     mock_setup_entry: None,
 ) -> None:
     """Test encryption key retrieved from dashboard."""
@@ -1247,7 +1250,7 @@ async def test_zeroconf_encryption_key_via_dashboard(
 async def test_zeroconf_encryption_key_via_dashboard_with_api_encryption_prop(
     hass: HomeAssistant,
     mock_client,
-    mock_dashboard,
+    mock_dashboard: dict[str, Any],
     mock_setup_entry: None,
 ) -> None:
     """Test encryption key retrieved from dashboard with api_encryption property set."""
@@ -1313,7 +1316,7 @@ async def test_zeroconf_encryption_key_via_dashboard_with_api_encryption_prop(
 async def test_zeroconf_no_encryption_key_via_dashboard(
     hass: HomeAssistant,
     mock_client,
-    mock_dashboard,
+    mock_dashboard: dict[str, Any],
     mock_setup_entry: None,
 ) -> None:
     """Test encryption key not retrieved from dashboard."""

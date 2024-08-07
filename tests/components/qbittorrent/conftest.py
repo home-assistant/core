@@ -1,10 +1,10 @@
 """Fixtures for testing qBittorrent component."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
 import requests_mock
-from typing_extensions import Generator
 
 
 @pytest.fixture

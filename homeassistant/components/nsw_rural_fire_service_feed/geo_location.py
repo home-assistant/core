@@ -269,19 +269,19 @@ class NswRuralFireServiceLocationEvent(GeolocationEvent):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        attributes = {}
-        for key, value in (
-            (ATTR_EXTERNAL_ID, self._external_id),
-            (ATTR_CATEGORY, self._category),
-            (ATTR_LOCATION, self._location),
-            (ATTR_PUBLICATION_DATE, self._publication_date),
-            (ATTR_COUNCIL_AREA, self._council_area),
-            (ATTR_STATUS, self._status),
-            (ATTR_TYPE, self._type),
-            (ATTR_FIRE, self._fire),
-            (ATTR_SIZE, self._size),
-            (ATTR_RESPONSIBLE_AGENCY, self._responsible_agency),
-        ):
-            if value or isinstance(value, bool):
-                attributes[key] = value
-        return attributes
+        return {
+            key: value
+            for key, value in (
+                (ATTR_EXTERNAL_ID, self._external_id),
+                (ATTR_CATEGORY, self._category),
+                (ATTR_LOCATION, self._location),
+                (ATTR_PUBLICATION_DATE, self._publication_date),
+                (ATTR_COUNCIL_AREA, self._council_area),
+                (ATTR_STATUS, self._status),
+                (ATTR_TYPE, self._type),
+                (ATTR_FIRE, self._fire),
+                (ATTR_SIZE, self._size),
+                (ATTR_RESPONSIBLE_AGENCY, self._responsible_agency),
+            )
+            if value or isinstance(value, bool)
+        }

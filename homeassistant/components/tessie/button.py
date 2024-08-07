@@ -22,6 +22,8 @@ from . import TessieConfigEntry
 from .entity import TessieEntity
 from .models import TessieVehicleData
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class TessieButtonEntityDescription(ButtonEntityDescription):

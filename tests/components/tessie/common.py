@@ -54,6 +54,17 @@ LIVE_STATUS = load_json_object_fixture("live_status.json", DOMAIN)
 SITE_INFO = load_json_object_fixture("site_info.json", DOMAIN)
 RESPONSE_OK = {"response": {}, "error": None}
 COMMAND_OK = {"response": {"result": True, "reason": ""}}
+SCOPES = [
+    "user_data",
+    "vehicle_device_data",
+    "vehicle_cmds",
+    "vehicle_charging_cmds",
+    "energy_device_data",
+    "energy_cmds",
+    "offline_access",
+    "openid",
+]
+NO_SCOPES = ["user_data", "offline_access", "openid"]
 
 
 async def setup_platform(

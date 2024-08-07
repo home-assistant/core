@@ -122,7 +122,7 @@ def _color_mode_to_ha(mode: int) -> str:
         return ColorMode.UNKNOWN
 
     # choose the color mode with the most bits set
-    candidates.sort(key=lambda key: bin(key[1]).count("1"))
+    candidates.sort(key=lambda key: key[1].bit_count())
     return candidates[-1][0]
 
 
@@ -146,7 +146,7 @@ def _least_complex_color_mode(color_modes: tuple[int, ...]) -> int:
     # popcount with bin() function because it appears
     # to be the best way: https://stackoverflow.com/a/9831671
     color_modes_list = list(color_modes)
-    color_modes_list.sort(key=lambda mode: bin(mode).count("1"))
+    color_modes_list.sort(key=lambda mode: (mode).bit_count())
     return color_modes_list[0]
 
 

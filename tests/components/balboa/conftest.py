@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pybalboa.enums import HeatMode, LowHighRange
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.core import HomeAssistant
 

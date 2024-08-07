@@ -583,8 +583,7 @@ async def test_exception_from_update_method(
         nonlocal run_count
         run_count += 1
         if run_count == 2:
-            # pylint: disable-next=broad-exception-raised
-            raise Exception("Test exception")
+            raise Exception("Test exception")  # noqa: TRY002
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
     coordinator = PassiveBluetoothProcessorCoordinator(
@@ -1418,8 +1417,7 @@ async def test_exception_from_coordinator_update_method(
         nonlocal run_count
         run_count += 1
         if run_count == 2:
-            # pylint: disable-next=broad-exception-raised
-            raise Exception("Test exception")
+            raise Exception("Test exception")  # noqa: TRY002
         return {"test": "data"}
 
     @callback
@@ -1653,12 +1651,12 @@ async def test_integration_multiple_entity_platforms_with_reload_and_restart(
     unregister_binary_sensor_processor()
     unregister_sensor_processor()
 
-    async with async_test_home_assistant() as hass:
-        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    async with async_test_home_assistant() as test_hass:
+        await async_setup_component(test_hass, DOMAIN, {DOMAIN: {}})
 
         current_entry.set(entry)
         coordinator = PassiveBluetoothProcessorCoordinator(
-            hass,
+            test_hass,
             _LOGGER,
             "aa:bb:cc:dd:ee:ff",
             BluetoothScanningMode.ACTIVE,
@@ -1706,7 +1704,7 @@ async def test_integration_multiple_entity_platforms_with_reload_and_restart(
         ]
 
         sensor_entity_one: PassiveBluetoothProcessorEntity = sensor_entities[0]
-        sensor_entity_one.hass = hass
+        sensor_entity_one.hass = test_hass
         assert sensor_entity_one.available is False  # service data not injected
         assert sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-pressure"
         assert sensor_entity_one.device_info == {
@@ -1723,7 +1721,7 @@ async def test_integration_multiple_entity_platforms_with_reload_and_restart(
         binary_sensor_entity_one: PassiveBluetoothProcessorEntity = (
             binary_sensor_entities[0]
         )
-        binary_sensor_entity_one.hass = hass
+        binary_sensor_entity_one.hass = test_hass
         assert binary_sensor_entity_one.available is False  # service data not injected
         assert binary_sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-motion"
         assert binary_sensor_entity_one.device_info == {
@@ -1739,7 +1737,7 @@ async def test_integration_multiple_entity_platforms_with_reload_and_restart(
         cancel_coordinator()
         unregister_binary_sensor_processor()
         unregister_sensor_processor()
-        await hass.async_stop()
+        await test_hass.async_stop()
 
 
 NAMING_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(

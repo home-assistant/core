@@ -145,7 +145,7 @@ def websocket_command(
 
     def decorate(func: const.WebSocketCommandHandler) -> const.WebSocketCommandHandler:
         """Decorate ws command function."""
-        if is_dict and len(schema) == 1:  # type only empty schema
+        if is_dict and len(schema) == 1:  # type: ignore[arg-type]  # type only empty schema
             func._ws_schema = False  # type: ignore[attr-defined]  # noqa: SLF001
         elif is_dict:
             func._ws_schema = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend(schema)  # type: ignore[attr-defined]  # noqa: SLF001

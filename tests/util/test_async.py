@@ -14,7 +14,9 @@ from tests.common import extract_stack_to_frame
 
 @patch("concurrent.futures.Future")
 @patch("threading.get_ident")
-def test_run_callback_threadsafe_from_inside_event_loop(mock_ident, _) -> None:
+def test_run_callback_threadsafe_from_inside_event_loop(
+    mock_ident: MagicMock, mock_future: MagicMock
+) -> None:
     """Testing calling run_callback_threadsafe from inside an event loop."""
     callback = MagicMock()
 

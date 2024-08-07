@@ -6,14 +6,18 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
 
-from roborock.code_mappings import DyadError, RoborockDyadStateCode
+from roborock.code_mappings import DyadError, RoborockDyadStateCode, ZeoError, ZeoState
 from roborock.containers import (
     RoborockDockErrorCode,
     RoborockDockTypeCode,
     RoborockErrorCode,
     RoborockStateCode,
 )
-from roborock.roborock_message import RoborockDataProtocol, RoborockDyadDataProtocol
+from roborock.roborock_message import (
+    RoborockDataProtocol,
+    RoborockDyadDataProtocol,
+    RoborockZeoProtocol,
+)
 from roborock.roborock_typing import DeviceProp
 
 from homeassistant.components.sensor import (
@@ -30,7 +34,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util import slugify
 
 from . import RoborockConfigEntry
 from .coordinator import RoborockDataUpdateCoordinator, RoborockDataUpdateCoordinatorA01
@@ -50,7 +53,7 @@ class RoborockSensorDescription(SensorEntityDescription):
 class RoborockSensorDescriptionA01(SensorEntityDescription):
     """A class that describes Roborock sensors."""
 
-    data_protocol: RoborockDyadDataProtocol
+    data_protocol: RoborockDyadDataProtocol | RoborockZeoProtocol
 
 
 def _dock_error_value_fn(properties: DeviceProp) -> str | None:
@@ -248,6 +251,38 @@ A01_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
         translation_key="total_cleaning_time",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    RoborockSensorDescriptionA01(
+        key="state",
+        data_protocol=RoborockZeoProtocol.STATE,
+        translation_key="zeo_state",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENUM,
+        options=ZeoState.keys(),
+    ),
+    RoborockSensorDescriptionA01(
+        key="countdown",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        data_protocol=RoborockZeoProtocol.COUNTDOWN,
+        device_class=SensorDeviceClass.DURATION,
+        translation_key="countdown",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescriptionA01(
+        key="washing_left",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        data_protocol=RoborockZeoProtocol.WASHING_LEFT,
+        device_class=SensorDeviceClass.DURATION,
+        translation_key="washing_left",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescriptionA01(
+        key="error",
+        data_protocol=RoborockZeoProtocol.ERROR,
+        device_class=SensorDeviceClass.ENUM,
+        translation_key="zeo_error",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=ZeoError.keys(),
+    ),
 ]
 
 
@@ -291,7 +326,7 @@ class RoborockSensorEntity(RoborockCoordinatedEntityV1, SensorEntity):
         """Initialize the entity."""
         self.entity_description = description
         super().__init__(
-            f"{description.key}_{slugify(coordinator.duid)}",
+            f"{description.key}_{coordinator.duid_slug}",
             coordinator,
             description.protocol_listener,
         )
@@ -316,7 +351,7 @@ class RoborockSensorEntityA01(RoborockCoordinatedEntityA01, SensorEntity):
     ) -> None:
         """Initialize the entity."""
         self.entity_description = description
-        super().__init__(f"{description.key}_{slugify(coordinator.duid)}", coordinator)
+        super().__init__(f"{description.key}_{coordinator.duid_slug}", coordinator)
 
     @property
     def native_value(self) -> StateType:

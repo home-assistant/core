@@ -215,7 +215,7 @@
     ),
   ])
 # ---
-# name: test_default_prompt[config_entry_options0-None]
+# name: test_default_prompt[config_entry_options0-0-None]
   list([
     tuple(
       '',
@@ -263,7 +263,7 @@
     ),
   ])
 # ---
-# name: test_default_prompt[config_entry_options0-conversation.google_generative_ai_conversation]
+# name: test_default_prompt[config_entry_options0-0-conversation.google_generative_ai_conversation]
   list([
     tuple(
       '',
@@ -311,7 +311,7 @@
     ),
   ])
 # ---
-# name: test_default_prompt[config_entry_options1-None]
+# name: test_default_prompt[config_entry_options1-1-None]
   list([
     tuple(
       '',
@@ -360,7 +360,7 @@
     ),
   ])
 # ---
-# name: test_default_prompt[config_entry_options1-conversation.google_generative_ai_conversation]
+# name: test_default_prompt[config_entry_options1-1-conversation.google_generative_ai_conversation]
   list([
     tuple(
       '',
@@ -403,6 +403,189 @@
       '().start_chat().send_message_async',
       tuple(
         'hello',
+      ),
+      dict({
+      }),
+    ),
+  ])
+# ---
+# name: test_function_call
+  list([
+    tuple(
+      '',
+      tuple(
+      ),
+      dict({
+        'generation_config': dict({
+          'max_output_tokens': 150,
+          'temperature': 1.0,
+          'top_k': 64,
+          'top_p': 0.95,
+        }),
+        'model_name': 'models/gemini-1.5-flash-latest',
+        'safety_settings': dict({
+          'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
+          'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
+          'HATE': 'BLOCK_MEDIUM_AND_ABOVE',
+          'SEXUAL': 'BLOCK_MEDIUM_AND_ABOVE',
+        }),
+        'system_instruction': '''
+          Current time is 05:00:00. Today's date is 2024-05-24.
+          You are a voice assistant for Home Assistant.
+          Answer questions about the world truthfully.
+          Answer in plain text. Keep it simple and to the point.
+          Only if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.
+        ''',
+        'tools': list([
+          function_declarations {
+    name: "test_tool"
+    description: "Test function"
+    parameters {
+      type_: OBJECT
+      properties {
+        key: "param3"
+        value {
+          type_: OBJECT
+          properties {
+            key: "json"
+            value {
+              type_: STRING
+            }
+          }
+        }
+      }
+      properties {
+        key: "param2"
+        value {
+          type_: NUMBER
+        }
+      }
+      properties {
+        key: "param1"
+        value {
+          type_: ARRAY
+          description: "Test parameters"
+          items {
+            type_: STRING
+          }
+        }
+      }
+    }
+  }
+  ,
+        ]),
+      }),
+    ),
+    tuple(
+      '().start_chat',
+      tuple(
+      ),
+      dict({
+        'history': list([
+        ]),
+      }),
+    ),
+    tuple(
+      '().start_chat().send_message_async',
+      tuple(
+        'Please call the test function',
+      ),
+      dict({
+      }),
+    ),
+    tuple(
+      '().start_chat().send_message_async',
+      tuple(
+        parts {
+    function_response {
+      name: "test_tool"
+      response {
+        fields {
+          key: "result"
+          value {
+            string_value: "Test response"
+          }
+        }
+      }
+    }
+  }
+  ,
+      ),
+      dict({
+      }),
+    ),
+  ])
+# ---
+# name: test_function_call_without_parameters
+  list([
+    tuple(
+      '',
+      tuple(
+      ),
+      dict({
+        'generation_config': dict({
+          'max_output_tokens': 150,
+          'temperature': 1.0,
+          'top_k': 64,
+          'top_p': 0.95,
+        }),
+        'model_name': 'models/gemini-1.5-flash-latest',
+        'safety_settings': dict({
+          'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
+          'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
+          'HATE': 'BLOCK_MEDIUM_AND_ABOVE',
+          'SEXUAL': 'BLOCK_MEDIUM_AND_ABOVE',
+        }),
+        'system_instruction': '''
+          Current time is 05:00:00. Today's date is 2024-05-24.
+          You are a voice assistant for Home Assistant.
+          Answer questions about the world truthfully.
+          Answer in plain text. Keep it simple and to the point.
+          Only if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.
+        ''',
+        'tools': list([
+          function_declarations {
+    name: "test_tool"
+    description: "Test function"
+  }
+  ,
+        ]),
+      }),
+    ),
+    tuple(
+      '().start_chat',
+      tuple(
+      ),
+      dict({
+        'history': list([
+        ]),
+      }),
+    ),
+    tuple(
+      '().start_chat().send_message_async',
+      tuple(
+        'Please call the test function',
+      ),
+      dict({
+      }),
+    ),
+    tuple(
+      '().start_chat().send_message_async',
+      tuple(
+        parts {
+    function_response {
+      name: "test_tool"
+      response {
+        fields {
+          key: "result"
+          value {
+            string_value: "Test response"
+          }
+        }
+      }
+    }
+  }
+  ,
       ),
       dict({
       }),

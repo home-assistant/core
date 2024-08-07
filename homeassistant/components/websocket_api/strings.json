@@ -1,7 +1,7 @@
 {
   "exceptions": {
     "child_service_not_found": {
-      "message": "Service {domain}.{service} called service {child_domain}.{child_service} which was not found."
+      "message": "Action {domain}.{service} uses action {child_domain}.{child_service} which was not found."
     }
   }
 }

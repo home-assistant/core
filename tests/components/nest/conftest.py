@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from asyncio import AbstractEventLoop
+from collections.abc import Generator
 import copy
 import shutil
 import time
@@ -15,7 +16,6 @@ from google_nest_sdm import diagnostics
 from google_nest_sdm.auth import AbstractAuth
 from google_nest_sdm.device_manager import DeviceManager
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.application_credentials import (
     async_import_client_credential,
@@ -109,7 +109,7 @@ async def auth(aiohttp_client: ClientSessionGenerator) -> FakeAuth:
 
 
 @pytest.fixture(autouse=True)
-def cleanup_media_storage(hass):
+def cleanup_media_storage(hass: HomeAssistant) -> Generator[None]:
     """Test cleanup, remove any media storage persisted during the test."""
     tmp_path = str(uuid.uuid4())
     with patch("homeassistant.components.nest.media_source.MEDIA_PATH", new=tmp_path):

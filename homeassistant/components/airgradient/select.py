@@ -88,6 +88,7 @@ LEARNING_TIME_OFFSET_OPTIONS = [
 ]
 
 ABC_DAYS = [
+    "1",
     "8",
     "30",
     "90",

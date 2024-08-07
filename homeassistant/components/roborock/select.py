@@ -11,7 +11,6 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
 
 from . import RoborockConfigEntry
 from .coordinator import RoborockDataUpdateCoordinator
@@ -79,6 +78,12 @@ async def async_setup_entry(
         )
         is not None
     )
+    async_add_entities(
+        RoborockCurrentMapSelectEntity(
+            f"selected_map_{coordinator.duid_slug}", coordinator
+        )
+        for coordinator in config_entry.runtime_data.v1
+    )
 
 
 class RoborockSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
@@ -95,7 +100,7 @@ class RoborockSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
         """Create a select entity."""
         self.entity_description = entity_description
         super().__init__(
-            f"{entity_description.key}_{slugify(coordinator.duid)}",
+            f"{entity_description.key}_{coordinator.duid_slug}",
             coordinator,
             entity_description.protocol_listener,
         )
@@ -112,3 +117,32 @@ class RoborockSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
     def current_option(self) -> str | None:
         """Get the current status of the select entity from device_status."""
         return self.entity_description.value_fn(self._device_status)
+
+
+class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
+    """A class to let you set the selected map on Roborock vacuum."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "selected_map"
+
+    async def async_select_option(self, option: str) -> None:
+        """Set the option."""
+        for map_id, map_ in self.coordinator.maps.items():
+            if map_.name == option:
+                await self.send(
+                    RoborockCommand.LOAD_MULTI_MAP,
+                    [map_id],
+                )
+                break
+
+    @property
+    def options(self) -> list[str]:
+        """Gets all of the names of rooms that we are currently aware of."""
+        return [roborock_map.name for roborock_map in self.coordinator.maps.values()]
+
+    @property
+    def current_option(self) -> str | None:
+        """Get the current status of the select entity from device_status."""
+        if current_map := self.coordinator.current_map:
+            return self.coordinator.maps[current_map].name
+        return None

@@ -8,6 +8,7 @@ import glob
 from http.client import HTTPConnection
 import importlib
 import os
+from ssl import SSLContext
 import sys
 import threading
 import time
@@ -139,6 +140,24 @@ _BLOCKING_CALLS: tuple[BlockingCall, ...] = (
         object=importlib,
         function="import_module",
         check_allowed=_check_import_call_allowed,
+        strict=False,
+        strict_core=False,
+        skip_for_tests=True,
+    ),
+    BlockingCall(
+        original_func=SSLContext.load_default_certs,
+        object=SSLContext,
+        function="load_default_certs",
+        check_allowed=None,
+        strict=False,
+        strict_core=False,
+        skip_for_tests=True,
+    ),
+    BlockingCall(
+        original_func=SSLContext.load_verify_locations,
+        object=SSLContext,
+        function="load_verify_locations",
+        check_allowed=None,
         strict=False,
         strict_core=False,
         skip_for_tests=True,

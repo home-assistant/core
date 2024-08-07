@@ -11,6 +11,7 @@ from .common import (
     COMMAND_OK,
     LIVE_STATUS,
     PRODUCTS,
+    SCOPES,
     SITE_INFO,
     TEST_STATE_OF_ALL_VEHICLES,
     TEST_VEHICLE_STATE_ONLINE,
@@ -51,6 +52,16 @@ def mock_get_state_of_all_vehicles():
 
 
 # Fleet API
+@pytest.fixture(autouse=True)
+def mock_scopes():
+    """Mock scopes function."""
+    with patch(
+        "homeassistant.components.tessie.Tessie.scopes",
+        return_value=SCOPES,
+    ) as mock_scopes:
+        yield mock_scopes
+
+
 @pytest.fixture(autouse=True)
 def mock_products():
     """Mock Tesla Fleet Api products method."""
