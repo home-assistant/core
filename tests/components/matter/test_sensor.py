@@ -94,6 +94,16 @@ async def air_purifier_node_fixture(
     )
 
 
+@pytest.fixture(name="microwave_oven_mode_node")
+async def microwave_oven_mode_node_fixture(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> MatterNode:
+    """Fixture for an Microwave Oven mode sensor node."""
+    return await setup_integration_with_node_fixture(
+        hass, "microwave-oven", matter_client
+    )
+
+
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_sensor_null_value(
@@ -450,3 +460,23 @@ async def test_air_purifier_sensor(
     assert state.state == "100"
     assert state.attributes["state_class"] == "measurement"
     assert state.attributes["unit_of_measurement"] == "%"
+
+
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_microwave_oven_mode_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    microwave_oven_mode_node: MatterNode,
+) -> None:
+    """Test Microwave Oven mode sensor is created and shows the correct mode."""
+    # Carbon Dioxide
+    state = hass.states.get("sensor.microwave_oven_mode")
+    assert state
+    assert state.state == "normal"
+    expected_options = [
+        "normal",
+        "defrost",
+        "unknown",
+    ]
+    assert set(state.attributes["options"]) == set(expected_options)
+    assert state.attributes["device_class"] == "enum"

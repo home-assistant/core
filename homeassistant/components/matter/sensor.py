@@ -52,6 +52,12 @@ AIR_QUALITY_MAP = {
     clusters.AirQuality.Enums.AirQualityEnum.kUnknownEnumValue: "unknown",
 }
 
+MICROWAVE_OVEN_MODE_MAP = {
+    clusters.MicrowaveOvenMode.Enums.ModeTag.kNormal: "normal",
+    clusters.MicrowaveOvenMode.Enums.ModeTag.kDefrost: "defrost",
+    clusters.MicrowaveOvenMode.Enums.ModeTag.kUnknownEnumValue: "unknown",
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -461,5 +467,19 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSensor,
         required_attributes=(clusters.Switch.Attributes.CurrentPosition,),
         allow_multi=True,  # also used for event entity
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="MicrowaveOvenMode",
+            translation_key="microwave_oven_mode",
+            device_class=SensorDeviceClass.ENUM,
+            state_class=None,
+            # convert to set first to remove the duplicate unknown value
+            options=list(set(MICROWAVE_OVEN_MODE_MAP.values())),
+            measurement_to_ha=lambda x: MICROWAVE_OVEN_MODE_MAP[x],
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.MicrowaveOvenMode.Attributes.CurrentMode,),
     ),
 ]

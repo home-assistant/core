@@ -163,6 +163,14 @@
       },
       "switch_current_position": {
         "name": "Current switch position"
+      },
+      "microwave_oven_mode": {
+        "name": "Mode",
+        "state": {
+          "normal": "Normal",
+          "defrost": "Defrost",
+          "unknown": "Unknown"
+        }
       }
     },
     "switch": {

@@ -202,18 +202,6 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
-            key="MatterMicrowaveOvenMode",
-            translation_key="mode",
-        ),
-        entity_class=MatterModeSelectEntity,
-        required_attributes=(
-            clusters.MicrowaveOvenMode.Attributes.CurrentMode,
-            clusters.MicrowaveOvenMode.Attributes.SupportedModes,
-        ),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.SELECT,
-        entity_description=MatterSelectEntityDescription(
             key="MatterEnergyEvseMode",
             translation_key="mode",
         ),
