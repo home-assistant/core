@@ -70,8 +70,7 @@ from .soundbar_client import SOUNDBAR_PORT, config_connect, config_device
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_COUNTRIES = [
-    SelectOptionDict(value=x.alpha_2, label=x.name)
-    for x in pycountry.countries
+    SelectOptionDict(value=x.alpha_2, label=x.name) for x in pycountry.countries
 ]
 
 
@@ -158,9 +157,7 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
                 data_schema=vol.Schema(
                     {
                         vol.Required(CONF_ACCESS_TOKEN): cv.string,
-                        vol.Optional(
-                            CONF_NAME, default=THINQ_DEFAULT_NAME
-                        ): cv.string,
+                        vol.Optional(CONF_NAME, default=THINQ_DEFAULT_NAME): cv.string,
                     }
                 ),
                 errors=errors,
@@ -270,12 +267,8 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
 
         _data_schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_HOST, default=self._soundbar_host
-                ): cv.string,
-                vol.Optional(
-                    CONF_NAME, default=SOUNDBAR_DEFAULT_NAME
-                ): cv.string,
+                vol.Required(CONF_HOST, default=self._soundbar_host): cv.string,
+                vol.Optional(CONF_NAME, default=SOUNDBAR_DEFAULT_NAME): cv.string,
             },
             extra=vol.ALLOW_EXTRA,
         )
@@ -283,9 +276,7 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="soundbar_fill_data", data_schema=_data_schema
         )
 
-    async def _async_soundbar_connect(
-        self, user_input: dict[str, Any] | None = None
-    ):
+    async def _async_soundbar_connect(self, user_input: dict[str, Any] | None = None):
         _LOGGER.warning(f"start to connect. host : {user_input[CONF_HOST]}")
         result = {"ret": None}
 
@@ -315,9 +306,7 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
                 else:
                     self._async_abort_entries_match(info)
 
-                result = self.async_create_entry(
-                    title=user_input[CONF_NAME], data=info
-                )
+                result = self.async_create_entry(title=user_input[CONF_NAME], data=info)
             else:
                 return self.async_abort(reason="no_device_info")
 
@@ -330,9 +319,7 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
             for ssdp_listener in self._ssdp_listeners:
                 ssdp_listener.async_search()
                 if ssdp.is_ipv4_address(ssdp_listener.source):
-                    ssdp_listener.async_search(
-                        (str(IPV4_BROADCAST), ssdp.SSDP_PORT)
-                    )
+                    ssdp_listener.async_search((str(IPV4_BROADCAST), ssdp.SSDP_PORT))
             try:
                 await asyncio.wait_for(self._ssdp_res_fut, timeout=SSDP_MX)
                 self._webostv_host = self._ssdp_res_fut.result()
@@ -482,9 +469,7 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
                 vol.Optional(
                     CONF_SOURCES,
                     description={"suggested_value": sources_list},
-                ): cv.multi_select(
-                    {source: source for source in sources_list}
-                ),
+                ): cv.multi_select({source: source for source in sources_list}),
             }
         )
 
@@ -562,9 +547,7 @@ class WebOsTvOptionsFlowHandler(OptionsFlow):
                 vol.Optional(
                     CONF_SOURCES,
                     description={"suggested_value": sources},
-                ): cv.multi_select(
-                    {source: source for source in sources_list}
-                ),
+                ): cv.multi_select({source: source for source in sources_list}),
             }
         )
 

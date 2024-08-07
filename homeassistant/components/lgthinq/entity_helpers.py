@@ -6,11 +6,9 @@ import logging
 from dataclasses import dataclass
 from datetime import time
 from enum import StrEnum, unique
-from typing import Any, Awaitable, Callable, Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorEntityDescription,
-)
+from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.components.button import ButtonEntityDescription
 from homeassistant.components.climate import ClimateEntityDescription
 from homeassistant.components.event import EventEntityDescription
@@ -34,9 +32,7 @@ from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.components.text import TextEntityDescription
 from homeassistant.components.time import TimeEntityDescription
 from homeassistant.components.vacuum import StateVacuumEntityDescription
-from homeassistant.components.water_heater import (
-    WaterHeaterEntityEntityDescription,
-)
+from homeassistant.components.water_heater import WaterHeaterEntityEntityDescription
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
@@ -63,36 +59,50 @@ from .property import (
 
 _LOGGER = logging.getLogger(__name__)
 
+
 # Lambda functions for entity operations.
-VALIDATE_CREATION_READABLE: Callable[[bool, bool], bool] = (
-    lambda readable, writable: readable
-)
-VALIDATE_CREATION_WRITABLE: Callable[[bool, bool], bool] = (
-    lambda readable, writable: writable
-)
-VALIDATE_CREATION_READONLY: Callable[[bool, bool], bool] = (
-    lambda readable, writable: readable and not writable
-)
-VALUE_TO_INT_CONVERTER: Callable[[Any], int] = lambda value: int(value)
-VALUE_TO_STR_CONVERTER: Callable[[Any], str] = lambda value: str(value)
-VALUE_TO_POWER_STATE_CONVERTER: Callable[[Any], str] = lambda value: (
-    POWER_ON if bool(value) else POWER_OFF
-)
-VALUE_TO_TIMER_STR_CONVERTER: Callable[[list[Any], str]] = lambda value: (
-    f"{value:0>2}" if value is not None and value > 0 else "00"
-)
-VALUE_TO_TIME_TEXT_CONVERTER: Callable[[Any], AbsoluteTime] = lambda value: (
-    AbsoluteTime.str_to_time(value)
-    if value
-    else AbsoluteTime(hour=-1, minute=-1)
-)
+def VALIDATE_CREATION_READABLE(readable: bool, writable: bool) -> bool:
+    return readable
+
+
+def VALIDATE_CREATION_WRITABLE(readable: bool, writable: bool) -> bool:
+    return writable
+
+
+def VALIDATE_CREATION_READONLY(readable: bool, writable: bool) -> bool:
+    return readable and not writable
+
+
+def VALUE_TO_INT_CONVERTER(value: Any) -> int:
+    return int(value)
+
+
+def VALUE_TO_STR_CONVERTER(value: Any) -> str:
+    return str(value)
+
+
+def VALUE_TO_POWER_STATE_CONVERTER(value: Any) -> str:
+    return POWER_ON if bool(value) else POWER_OFF
+
+
+def VALUE_TO_TIMER_STR_CONVERTER(value: Any) -> str:
+    return f"{value:0>2}" if value is not None and value > 0 else "00"
+
+
+def VALUE_TO_TIME_TEXT_CONVERTER(value: Any) -> AbsoluteTime:
+    return (
+        AbsoluteTime.str_to_time(value) if value else AbsoluteTime(hour=-1, minute=-1)
+    )
+
+
 # HH:MM:SS
-TIMER_COMBINED_SENSOR_FORMATTER: Callable[[list[Any], str]] = (
-    lambda values: ":".join(map(VALUE_TO_TIMER_STR_CONVERTER, values))
-)
+def TIMER_COMBINED_SENSOR_FORMATTER(values: list[Any]) -> str:
+    return ":".join(map(VALUE_TO_TIMER_STR_CONVERTER, values))
+
+
 # HH:MM AM,PM
-TIMER_COMBINED_2_SENSOR_FORMATTER: Callable[[list[Any], str]] = (
-    lambda values: (
+def TIMER_COMBINED_2_SENSOR_FORMATTER(values: list[Any]) -> str:
+    return (
         time(values[0], values[1]).strftime("%I:%M %p")
         if values
         and isinstance(values[0], int)
@@ -101,9 +111,10 @@ TIMER_COMBINED_2_SENSOR_FORMATTER: Callable[[list[Any], str]] = (
         and values[1] >= 0
         else None
     )
-)
-TIMER_COMBINED_TIME_FORMATTER: Callable[[list[Any]], time | None] = (
-    lambda values: (
+
+
+def TIMER_COMBINED_TIME_FORMATTER(values: list[Any]) -> time | None:
+    return (
         time(values[0], values[1])
         if values
         and isinstance(values[0], int)
@@ -112,65 +123,73 @@ TIMER_COMBINED_TIME_FORMATTER: Callable[[list[Any]], time | None] = (
         and values[1] >= 0
         else None
     )
-)
-TIMER_COMBINED_TEXT_FORMATTER: Callable[[list[Any], str | None]] = (
-    lambda values: (
-        f"{values[0]:0>2}:{values[1]:0>2}" if values[0] and values[1] else None
+
+
+def TIMER_COMBINED_TEXT_FORMATTER(values: list[Any]) -> str | None:
+    return f"{values[0]:0>2}:{values[1]:0>2}" if values[0] and values[1] else None
+
+
+def TIMER_RELATIVE_HOUR_START_METHOD(
+    property: Property, value: int
+) -> ThinQApiResponse:
+    return property.api.set_relative_time_to_start(hour=value, minute=0)
+
+
+def TIMER_RELATIVE_HOUR_STOP_METHOD(property: Property, value: int) -> ThinQApiResponse:
+    return property.api.set_relative_time_to_stop(hour=value, minute=0)
+
+
+def TIMER_RELATIVE_MINUTE_START_METHOD(
+    property: Property, value: int
+) -> ThinQApiResponse:
+    return property.api.set_relative_time_to_start(hour=0, minute=value)
+
+
+def TIMER_RELATIVE_MINUTE_STOP_METHOD(
+    property: Property, value: int
+) -> ThinQApiResponse:
+    return property.api.set_relative_time_to_stop(hour=0, minute=value)
+
+
+def TIMER_SLEEP_TIMER_RELATIVE_HOUR_STOP_METHOD(
+    property: Property, value: int
+) -> ThinQApiResponse:
+    return property.api.set_sleep_timer_relative_time_to_stop(hour=value, minute=0)
+
+
+def TIMER_SLEEP_TIMER_RELATIVE_MINUTE_STOP_METHOD(
+    property: Property, value: int
+) -> ThinQApiResponse:
+    return property.api.set_sleep_timer_relative_time_to_stop(hour=0, minute=value)
+
+
+def TIMER_ABSOLUTE_TIME_START_METHOD(
+    property: Property, value: int
+) -> ThinQApiResponse:
+    return property.api.set_absolute_time_to_start(hour=value.hour, minute=value.minute)
+
+
+def TIMER_ABSOLUTE_TIME_STOP_METHOD(property: Property, value: int) -> ThinQApiResponse:
+    return property.api.set_absolute_time_to_stop(hour=value.hour, minute=value.minute)
+
+
+def TIMER_ABSOLUTE_TEXT_START_METHOD(
+    property: Property, value: int
+) -> ThinQApiResponse:
+    return property.api.set_absolute_time_to_start(
+        hour=int(value.hour), minute=int(value.minute)
     )
-)
-TIMER_RELATIVE_HOUR_START_METHOD: Callable[
-    [Property, int], Awaitable[ThinQApiResponse]
-] = lambda property, value: property.api.set_relative_time_to_start(
-    hour=value, minute=0
-)
-TIMER_RELATIVE_HOUR_STOP_METHOD: Callable[
-    [Property, int], Awaitable[ThinQApiResponse]
-] = lambda property, value: property.api.set_relative_time_to_stop(
-    hour=value, minute=0
-)
-TIMER_RELATIVE_MINUTE_START_METHOD: Callable[
-    [Property, int], Awaitable[ThinQApiResponse]
-] = lambda property, value: property.api.set_relative_time_to_start(
-    hour=0, minute=value
-)
-TIMER_RELATIVE_MINUTE_STOP_METHOD: Callable[
-    [Property, int], Awaitable[ThinQApiResponse]
-] = lambda property, value: property.api.set_relative_time_to_stop(
-    hour=0, minute=value
-)
-TIMER_SLEEP_TIMER_RELATIVE_HOUR_STOP_METHOD: Callable[
-    [Property, int], Awaitable[ThinQApiResponse]
-] = lambda property, value: property.api.set_sleep_timer_relative_time_to_stop(
-    hour=value, minute=0
-)
-TIMER_SLEEP_TIMER_RELATIVE_MINUTE_STOP_METHOD: Callable[
-    [Property, int], Awaitable[ThinQApiResponse]
-] = lambda property, value: property.api.set_sleep_timer_relative_time_to_stop(
-    hour=0, minute=value
-)
-TIMER_ABSOLUTE_TIME_START_METHOD: Callable[
-    [Property, time], Awaitable[ThinQApiResponse]
-] = lambda property, value: property.api.set_absolute_time_to_start(
-    hour=value.hour, minute=value.minute
-)
-TIMER_ABSOLUTE_TIME_STOP_METHOD: Callable[
-    [Property, time], Awaitable[ThinQApiResponse]
-] = lambda property, value: property.api.set_absolute_time_to_stop(
-    hour=value.hour, minute=value.minute
-)
-TIMER_ABSOLUTE_TEXT_START_METHOD: Callable[
-    [Property, AbsoluteTime], Awaitable[ThinQApiResponse]
-] = lambda property, value: property.api.set_absolute_time_to_start(
-    hour=int(value.hour), minute=int(value.minute)
-)
-TIMER_ABSOLUTE_TEXT_STOP_METHOD: Callable[
-    [Property, AbsoluteTime], Awaitable[ThinQApiResponse]
-] = lambda property, value: property.api.set_absolute_time_to_stop(
-    hour=int(value.hour), minute=int(value.minute)
-)
-RANGE_TO_OPTIONS_PROVIDER: Callable[[Profile], list[str]] = (
-    lambda profile: Range.range_to_options(profile)
-)
+
+
+def TIMER_ABSOLUTE_TEXT_STOP_METHOD(property: Property, value: int) -> ThinQApiResponse:
+    return property.api.set_absolute_time_to_stop(
+        hour=int(value.hour), minute=int(value.minute)
+    )
+
+
+def RANGE_TO_OPTIONS_PROVIDER(profile: Profile) -> list[str]:
+    return Range.range_to_options(profile)
+
 
 # Type hints for lg thinq entity.
 ThinQEntityT = TypeVar("ThinQEntityT", bound="ThinQEntity")
@@ -217,25 +236,19 @@ class ThinQBinarySensorEntityDescription(
 
 
 @dataclass(kw_only=True)
-class ThinQButtonEntityDescription(
-    ThinQEntityDescription, ButtonEntityDescription
-):
+class ThinQButtonEntityDescription(ThinQEntityDescription, ButtonEntityDescription):
     """The entity description for button."""
 
     arg: Any = None
 
 
 @dataclass(kw_only=True)
-class ThinQClimateEntityDescription(
-    ThinQEntityDescription, ClimateEntityDescription
-):
+class ThinQClimateEntityDescription(ThinQEntityDescription, ClimateEntityDescription):
     """The entity description for climate."""
 
 
 @dataclass(kw_only=True)
-class ThinQEventEntityDescription(
-    ThinQEntityDescription, EventEntityDescription
-):
+class ThinQEventEntityDescription(ThinQEntityDescription, EventEntityDescription):
     """The entity description for event."""
 
 
@@ -252,23 +265,17 @@ class ThinQHumidifierEntityDescription(
 
 
 @dataclass(kw_only=True)
-class ThinQNumberEntityDescription(
-    ThinQEntityDescription, NumberEntityDescription
-):
+class ThinQNumberEntityDescription(ThinQEntityDescription, NumberEntityDescription):
     """The entity description for number."""
 
 
 @dataclass(kw_only=True)
-class ThinQSelectEntityDescription(
-    ThinQEntityDescription, SelectEntityDescription
-):
+class ThinQSelectEntityDescription(ThinQEntityDescription, SelectEntityDescription):
     """The entity description for select."""
 
 
 @dataclass(kw_only=True)
-class ThinQSensorEntityDescription(
-    ThinQEntityDescription, SensorEntityDescription
-):
+class ThinQSensorEntityDescription(ThinQEntityDescription, SensorEntityDescription):
     """The entity description for sensor."""
 
 
@@ -280,23 +287,17 @@ class ThinQStateVacuumEntityDescription(
 
 
 @dataclass(kw_only=True)
-class ThinQSwitchEntityDescription(
-    ThinQEntityDescription, SwitchEntityDescription
-):
+class ThinQSwitchEntityDescription(ThinQEntityDescription, SwitchEntityDescription):
     """The entity description for switch."""
 
 
 @dataclass(kw_only=True)
-class ThinQTextEntityDescription(
-    ThinQEntityDescription, TextEntityDescription
-):
+class ThinQTextEntityDescription(ThinQEntityDescription, TextEntityDescription):
     """The entity description for text."""
 
 
 @dataclass(kw_only=True)
-class ThinQTimeEntityDescription(
-    ThinQEntityDescription, TimeEntityDescription
-):
+class ThinQTimeEntityDescription(ThinQEntityDescription, TimeEntityDescription):
     """The entity description for datetime."""
 
 
@@ -655,9 +656,7 @@ class FilterInfo(StrEnum):
     FILTER_LIFE_TIME = "filter_lifetime"
 
 
-FILTER_INFO_SENSOR_DESC: dict[
-    WaterFilterInfo, ThinQSensorEntityDescription
-] = {
+FILTER_INFO_SENSOR_DESC: dict[WaterFilterInfo, ThinQSensorEntityDescription] = {
     FilterInfo.FILTER_LIFE_TIME: ThinQSensorEntityDescription(
         key=FilterInfo.FILTER_LIFE_TIME,
         icon="mdi:air-filter",
@@ -1077,9 +1076,7 @@ class PowerSave(StrEnum):
     POWER_SAVE_ENABLED = "power_save_enabled"
 
 
-POWER_SAVE_BINARY_SENSOR_DESC: dict[
-    PowerSave, ThinQBinarySensorEntityDescription
-] = {
+POWER_SAVE_BINARY_SENSOR_DESC: dict[PowerSave, ThinQBinarySensorEntityDescription] = {
     PowerSave.POWER_SAVE_ENABLED: ThinQBinarySensorEntityDescription(
         key=PowerSave.POWER_SAVE_ENABLED,
         icon="mdi:meter-electric",
@@ -1205,9 +1202,7 @@ class Refrigeration(StrEnum):
     ONE_TOUCH_FILTER = "one_touch_filter"
 
 
-REFRIGERATION_SELECT_DESC: dict[
-    Refrigeration, ThinQSelectEntityDescription
-] = {
+REFRIGERATION_SELECT_DESC: dict[Refrigeration, ThinQSelectEntityDescription] = {
     Refrigeration.EXPRESS_MODE: ThinQSelectEntityDescription(
         key=Refrigeration.EXPRESS_MODE,
         icon="mdi:snowflake-variant",
@@ -1227,9 +1222,7 @@ REFRIGERATION_SELECT_DESC: dict[
         translation_key=Refrigeration.FRESH_AIR_FILTER,
     ),
 }
-REFRIGERATION_SENSOR_DESC: dict[
-    Refrigeration, ThinQSensorEntityDescription
-] = {
+REFRIGERATION_SENSOR_DESC: dict[Refrigeration, ThinQSensorEntityDescription] = {
     Refrigeration.FRESH_AIR_FILTER: ThinQSensorEntityDescription(
         key=Refrigeration.FRESH_AIR_FILTER,
         icon="mdi:air-filter",
@@ -1316,9 +1309,7 @@ class Sabbath(StrEnum):
     SABBATH_MODE = "sabbath_mode"
 
 
-SABBATH_BINARY_SENSOR_DESC: dict[
-    Sabbath, ThinQBinarySensorEntityDescription
-] = {
+SABBATH_BINARY_SENSOR_DESC: dict[Sabbath, ThinQBinarySensorEntityDescription] = {
     Sabbath.SABBATH_MODE: ThinQBinarySensorEntityDescription(
         key=Sabbath.SABBATH_MODE,
         icon="mdi:food-off-outline",
@@ -1983,9 +1974,7 @@ class WaterFilterInfo(StrEnum):
     USED_TIME = "used_time"
 
 
-WATER_FILTER_INFO_SENSOR_DESC: dict[
-    WaterFilterInfo, ThinQSensorEntityDescription
-] = {
+WATER_FILTER_INFO_SENSOR_DESC: dict[WaterFilterInfo, ThinQSensorEntityDescription] = {
     WaterFilterInfo.USED_TIME: ThinQSensorEntityDescription(
         key=WaterFilterInfo.USED_TIME,
         icon="mdi:air-filter",
@@ -2013,9 +2002,9 @@ WATER_INFO_SENSOR_DESC: dict[WaterInfo, ThinQSensorEntityDescription] = {
 }
 
 # Common Description
-REMOTE_CONTROL_BINARY_SENSOR: tuple[
-    ThinQBinarySensorEntityDescription, ...
-] = (REMOTE_CONTROL_BINARY_SENSOR_DESC[RemoteControl.REMOTE_CONTROL_ENABLED],)
+REMOTE_CONTROL_BINARY_SENSOR: tuple[ThinQBinarySensorEntityDescription, ...] = (
+    REMOTE_CONTROL_BINARY_SENSOR_DESC[RemoteControl.REMOTE_CONTROL_ENABLED],
+)
 ABSOLUTE_TIMER_TIME: tuple[ThinQTimeEntityDescription, ...] = (
     TIMER_TIME_DESC[Timer.ABSOLUTE_TO_START],
     TIMER_TIME_DESC[Timer.ABSOLUTE_TO_STOP],
@@ -2271,9 +2260,7 @@ DISH_WASHER_SELECT: tuple[ThinQSelectEntityDescription, ...] = (
 DISH_WASHER_SENSOR: tuple[ThinQSensorEntityDescription, ...] = (
     COMMON_SENSOR_DESC[Common.ERROR],
     COMMON_SENSOR_DESC[Common.NOTIFICATION],
-    DISH_WASHING_COURSE_SENSOR_DESC[
-        DishWashingCourse.CURRENT_DISH_WASHING_COURSE
-    ],
+    DISH_WASHING_COURSE_SENSOR_DESC[DishWashingCourse.CURRENT_DISH_WASHING_COURSE],
     DOOR_STATUS_SENSOR_DESC[DoorStatus.DOOR_STATE],
     PREFERENCE_SENSOR_DESC[Preference.RINSE_LEVEL],
     PREFERENCE_SENSOR_DESC[Preference.SOFTENING_LEVEL],
@@ -2503,9 +2490,7 @@ ROBOT_CLEANER_VACUUM: tuple[ThinQStateVacuumEntityDescription, ...] = (
                     feature=PropertyFeature.BATTERY,
                     children=(PropertyInfo(key=Battery.PERCENT),),
                 ),
-                PropertyInfo(
-                    key=RunState.CURRENT_STATE, feature=PropertyFeature.STATE
-                ),
+                PropertyInfo(key=RunState.CURRENT_STATE, feature=PropertyFeature.STATE),
             ),
         ),
     ),
@@ -2634,9 +2619,7 @@ WATER_HEATER_SENSOR: tuple[ThinQSensorEntityDescription, ...] = (
     TEMPERATURE_SENSOR_DESC[Temperature.CURRENT_TEMPERATURE],
     OPERATION_SENSOR_DESC[Operation.WATER_HEATER_OPERATION_MODE],
 )
-WATER_HEATER_WATER_HEATER: tuple[
-    ThinQWaterHeaterEntityEntityDescription, ...
-] = (
+WATER_HEATER_WATER_HEATER: tuple[ThinQWaterHeaterEntityEntityDescription, ...] = (
     ThinQWaterHeaterEntityEntityDescription(
         key="water_heater",
         icon="mdi:water-boiler",

@@ -1,4 +1,4 @@
-"""Implement SoundbarClient which is the extension of temescal library."""
+"""Implements SoundbarClient which is the extension of temescal library class"""
 
 from __future__ import annotations
 
@@ -14,8 +14,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def config_connect(host, port=SOUNDBAR_PORT):
-    """Connect to the Soundbar using SoundbarClient."""
-
     try:
         soundbar_client = SoundbarClient(host, port=port)
     except ConnectionError:
@@ -29,8 +27,6 @@ def config_connect(host, port=SOUNDBAR_PORT):
 
 
 def config_device(soundbar_client):
-    """Get device information(name, uuid) through the soundbar client."""
-
     device_info = {}
 
     try:
@@ -66,11 +62,9 @@ def config_device(soundbar_client):
 
 
 class SoundbarClient(temescal):
-    """Implement the class that extends temescal."""
+    """The extended implementation of temescal"""
 
-    def __init__(
-        self, address, port=SOUNDBAR_PORT, callback=None, logger=None
-    ):
+    def __init__(self, address, port=SOUNDBAR_PORT, callback=None, logger=None):
         self.iv = b"'%^Ur7gy$~t+f)%@"
         self.key = b"T^&*J%^7tr~4^%^&I(o%^!jIJ__+a0 k"
         self.address = address
@@ -88,7 +82,7 @@ class SoundbarClient(temescal):
         self.socket.settimeout(CONNECT_DEVICE_TIMEOUT)
         self.socket.connect((self.address, self.port))
 
-    """Create extended APIs below."""
+    """ extended apis below """
 
     def set_power_key(self, enable):
         data = {

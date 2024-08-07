@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from aiowebostv import WebOsClient, WebOsTvPairError
+from aiowebostv import WebOsClient
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -39,9 +39,7 @@ def async_get_device_entry_by_device_id(
 
 
 @callback
-def async_get_device_id_from_entity_id(
-    hass: HomeAssistant, entity_id: str
-) -> str:
+def async_get_device_id_from_entity_id(hass: HomeAssistant, entity_id: str) -> str:
     """Get device ID from an entity ID.
 
     Raises ValueError if entity or device ID is invalid.
@@ -68,9 +66,7 @@ def async_get_client_by_device_entry(
     Raises ValueError if client is not found.
     """
     for config_entry_id in device.config_entries:
-        if client := hass.data[DOMAIN][DATA_CONFIG_ENTRY_WEBOSTV].get(
-            config_entry_id
-        ):
+        if client := hass.data[DOMAIN][DATA_CONFIG_ENTRY_WEBOSTV].get(config_entry_id):
             break
 
     if not client:

@@ -40,7 +40,6 @@ from thinqconnect import (
     WaterPurifierDevice,
     WineCellarDevice,
 )
-from thinqconnect.const import DeviceType
 from thinqconnect.devices.connect_device import ConnectBaseDevice
 from websockets.exceptions import ConnectionClosed, ConnectionClosedOK
 

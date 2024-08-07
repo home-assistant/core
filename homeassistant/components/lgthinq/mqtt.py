@@ -56,14 +56,10 @@ class ThinQMQTT:
         """Returns the ThinQMQTTClient instance."""
         return self._mqtt_client
 
-    async def async_refresh_subscribe(
-        self, now: datetime | None = None
-    ) -> None:
+    async def async_refresh_subscribe(self, now: datetime | None = None) -> None:
         """Update event subscribes."""
         _LOGGER.debug("Attempting update event subscribes")
-        device_entry_map: dict[str, LGDevice] = (
-            self._entry.runtime_data.lge_device_map
-        )
+        device_entry_map: dict[str, LGDevice] = self._entry.runtime_data.lge_device_map
 
         if device_entry_map:
             tasks = [
@@ -80,9 +76,7 @@ class ThinQMQTT:
 
     async def async_start_subscribes(self) -> None:
         """Start push/event subscribes."""
-        device_entry_map: dict[str, LGDevice] = (
-            self._entry.runtime_data.lge_device_map
-        )
+        device_entry_map: dict[str, LGDevice] = self._entry.runtime_data.lge_device_map
 
         tasks = [
             self._hass.async_create_task(
@@ -94,9 +88,7 @@ class ThinQMQTT:
             tasks.extend(
                 [
                     self._hass.async_create_task(
-                        self._thinq.async_post_push_subscribe(
-                            device_id=device.id
-                        )
+                        self._thinq.async_post_push_subscribe(device_id=device.id)
                     )
                     for device in device_entry_map.values()
                 ]
@@ -121,9 +113,7 @@ class ThinQMQTT:
 
     async def async_end_subscribes(self, event: Event | None = None) -> None:
         """Start push/event unsubscribes."""
-        device_entry_map: dict[str, LGDevice] = (
-            self._entry.runtime_data.lge_device_map
-        )
+        device_entry_map: dict[str, LGDevice] = self._entry.runtime_data.lge_device_map
 
         tasks = [
             self._hass.async_create_task(
@@ -135,9 +125,7 @@ class ThinQMQTT:
             tasks.extend(
                 [
                     self._hass.async_create_task(
-                        self._thinq.async_delete_push_subscribe(
-                            device_id=device.id
-                        )
+                        self._thinq.async_delete_push_subscribe(device_id=device.id)
                     )
                     for device in device_entry_map.values()
                 ]
@@ -146,9 +134,7 @@ class ThinQMQTT:
             tasks.extend(
                 [
                     self._hass.async_create_task(
-                        self._thinq.async_delete_event_subscribe(
-                            device_id=device.id
-                        )
+                        self._thinq.async_delete_event_subscribe(device_id=device.id)
                     )
                     for device in device_entry_map.values()
                 ]
@@ -203,9 +189,7 @@ class ThinQMQTT:
             device.handle_device_alias_changed(alias=message.get("alias"))
             return
         if push_type == DEVICE_UNREGISTERED_MESSAGE:
-            device_registry: DeviceRegistry = async_get_device_registry(
-                self._hass
-            )
+            device_registry: DeviceRegistry = async_get_device_registry(self._hass)
             device_entry: DeviceEntry = device_registry.async_get_device(
                 identifiers={(DOMAIN, device.unique_id)}
             )
@@ -242,9 +226,7 @@ class ThinQMQTT:
             self._hass.async_create_task(self._async_add_device(message))
             return None
 
-        device_entry_map: dict[str, LGDevice] = (
-            self._entry.runtime_data.lge_device_map
-        )
+        device_entry_map: dict[str, LGDevice] = self._entry.runtime_data.lge_device_map
 
         if not device_entry_map or device_entry_map is None:
             return None
@@ -254,9 +236,7 @@ class ThinQMQTT:
             if device_id != device.id:
                 continue
             # Update device status
-            await self._async_update_device_status(
-                message, device, deleted_devices
-            )
+            await self._async_update_device_status(message, device, deleted_devices)
 
         if deleted_devices:
             # Update lge_device_map
@@ -287,9 +267,7 @@ class ThinQMQTT:
             return None
 
         # Register devices.
-        device_entry_map: dict[str, LGDevice] = (
-            self._entry.runtime_data.lge_device_map
-        )
+        device_entry_map: dict[str, LGDevice] = self._entry.runtime_data.lge_device_map
         device_registry: DeviceRegistry = async_get_device_registry(self._hass)
         for lg_device in lg_device_list:
             device_entry: DeviceEntry = device_registry.async_get_or_create(

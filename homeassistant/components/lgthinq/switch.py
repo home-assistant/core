@@ -38,9 +38,7 @@ async def async_setup_entry(
     )
 
 
-class ThinQSwitchEntity(
-    ThinQEntity[ThinQSwitchEntityDescription], SwitchEntity
-):
+class ThinQSwitchEntity(ThinQEntity[ThinQSwitchEntityDescription], SwitchEntity):
     """Represent a thinq switch platform."""
 
     target_platform = Platform.SWITCH
