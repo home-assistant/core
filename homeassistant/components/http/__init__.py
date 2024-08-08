@@ -30,10 +30,14 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components.network import async_get_source_ip
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, SERVER_PORT
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+    SERVER_PORT,
+)
+from homeassistant.core import DOMAIN as HA_DOMAIN, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import frame, storage
+from homeassistant.helpers import frame, issue_registry as ir, storage
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.http import (
     KEY_ALLOW_CONFIGURED_CORS,
@@ -263,6 +267,27 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.config.api = ApiConfig(
         local_ip, host, server_port, ssl_certificate is not None
     )
+
+    def _async_check_ssl_issue(_: Event) -> None:
+        from homeassistant.components import (  # pylint: disable=import-outside-toplevel
+            cloud,
+        )
+
+        if (
+            (hass.config.external_url is None or hass.config.internal_url is None)
+            and ssl_certificate is not None
+            and not cloud.async_is_connected(hass)
+        ):
+            ir.async_create_issue(
+                hass,
+                HA_DOMAIN,
+                "ssl_configured_without_configured_urls",
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="ssl_configured_without_configured_urls",
+            )
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_check_ssl_issue)
 
     return True
 
