@@ -116,7 +116,7 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             async_create_issue(
                 self.hass,
                 DOMAIN,
-                f"{error}_{DOMAIN}",
+                error,
                 is_fixable=False,
                 issue_domain=DOMAIN,
                 severity=IssueSeverity.ERROR,
