@@ -116,6 +116,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload Scrape config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    _LOGGER.debug(
+        "Options flow update for entry_id %s with options %s",
+        entry.entry_id,
+        entry.options,
+    )
+    hass.config_entries.async_schedule_reload(entry.entry_id)
