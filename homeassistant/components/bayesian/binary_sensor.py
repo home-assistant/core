@@ -5,7 +5,8 @@ from __future__ import annotations
 from collections import OrderedDict
 from collections.abc import Callable
 import logging
-from typing import Any
+import math
+from typing import Any, NamedTuple
 from uuid import UUID
 
 import voluptuous as vol
@@ -50,6 +51,7 @@ from .const import (
     ATTR_OCCURRED_OBSERVATION_ENTITIES,
     ATTR_PROBABILITY,
     ATTR_PROBABILITY_THRESHOLD,
+    CONF_NUMERIC_STATE,
     CONF_OBSERVATIONS,
     CONF_P_GIVEN_F,
     CONF_P_GIVEN_T,
@@ -68,7 +70,7 @@ _LOGGER = logging.getLogger(__name__)
 
 NUMERIC_STATE_SCHEMA = vol.Schema(
     {
-        CONF_PLATFORM: "numeric_state",
+        CONF_PLATFORM: CONF_NUMERIC_STATE,
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_ABOVE): vol.Coerce(float),
         vol.Optional(CONF_BELOW): vol.Coerce(float),
@@ -77,6 +79,59 @@ NUMERIC_STATE_SCHEMA = vol.Schema(
     },
     required=True,
 )
+
+
+def _above_greater_than_below(configs: list[dict[str, Any]]) -> list:
+    for config in configs:
+        if config.get(CONF_PLATFORM, None) != CONF_NUMERIC_STATE:
+            continue
+        above = config.get(CONF_ABOVE, None)
+        below = config.get(CONF_BELOW, None)
+        if above is None and below is None:
+            raise vol.Invalid(
+                "For bayesian numeric state at least one of 'above' or 'below' must be specified."
+            )
+        if above is not None and below is not None:
+            if above > below:
+                raise vol.Invalid(
+                    f"For bayesian numeric state 'above' ({above}) must be less than 'below' ({below})."
+                )
+    return configs
+
+
+def _no_overlaping(configs: list[dict]) -> list[dict]:
+    numeric_configs = [
+        config
+        for config in configs
+        if config.get(CONF_PLATFORM, None) == CONF_NUMERIC_STATE
+    ]
+    if len(numeric_configs) < 2:
+        return configs
+
+    class NumericConfig(NamedTuple):
+        above: float
+        below: float
+
+    d: dict[str, list[NumericConfig]] = {}
+    for _, config in enumerate(numeric_configs):
+        above = config.get(CONF_ABOVE, -math.inf)
+        below = config.get(CONF_BELOW, math.inf)
+        entity_id: str = str(config.get(CONF_ENTITY_ID))
+        d.setdefault(entity_id, [])
+        d[entity_id].append(NumericConfig(above, below))
+
+    for ent_id, intervals in d.items():
+        intervals = sorted(intervals, key=lambda tup: tup.above)
+
+        for i, tup in enumerate(intervals):
+            if len(intervals) <= i + 1:
+                continue
+            if tup.below > intervals[i + 1].above:
+                raise vol.Invalid(
+                    f"For bayesian numeric state entities with more than one range like {ent_id}, they must not overlap, but above:{tup.above}, below:{tup.below} overlaps with above:{intervals[i+1].above}, below:{intervals[i+1].below}."
+                )
+    return configs
+
 
 STATE_SCHEMA = vol.Schema(
     {
@@ -106,8 +161,10 @@ PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_DEVICE_CLASS): cv.string,
         vol.Required(CONF_OBSERVATIONS): vol.Schema(
             vol.All(
+                [vol.Any(TEMPLATE_SCHEMA, STATE_SCHEMA, NUMERIC_STATE_SCHEMA)],
+                _above_greater_than_below,
+                _no_overlaping,
                 cv.ensure_list,
-                [vol.Any(NUMERIC_STATE_SCHEMA, STATE_SCHEMA, TEMPLATE_SCHEMA)],
             )
         ),
         vol.Required(CONF_PRIOR): vol.Coerce(float),
@@ -211,10 +268,11 @@ class BayesianBinarySensor(BinarySensorEntity):
         self.observations_by_entity = self._build_observations_by_entity()
         self.observations_by_template = self._build_observations_by_template()
 
-        self.observation_handlers: dict[str, Callable[[Observation], bool | None]] = {
+        self.observation_handlers: dict[
+            str, Callable[[Observation, bool], bool | None]
+        ] = {
             "numeric_state": self._process_numeric_state,
             "state": self._process_state,
-            "multi_state": self._process_multi_state,
         }
 
     async def async_added_to_hass(self) -> None:
@@ -342,8 +400,9 @@ class BayesianBinarySensor(BinarySensorEntity):
         for observation in self.observations_by_entity[entity]:
             platform = observation.platform
 
-            observation.observed = self.observation_handlers[platform](observation)
-
+            observation.observed = self.observation_handlers[platform](
+                observation, observation.multi
+            )
             local_observations[observation.id] = observation
 
         return local_observations
@@ -408,9 +467,7 @@ class BayesianBinarySensor(BinarySensorEntity):
             if len(entity_observations) == 1:
                 continue
             for observation in entity_observations:
-                if observation.platform != "state":
-                    continue
-                observation.platform = "multi_state"
+                observation.multi = True
 
         return observations_by_entity
 
@@ -437,14 +494,24 @@ class BayesianBinarySensor(BinarySensorEntity):
 
         return observations_by_template
 
-    def _process_numeric_state(self, entity_observation: Observation) -> bool | None:
+    def _process_numeric_state(
+        self, entity_observation: Observation, multi: bool = False
+    ) -> bool | None:
         """Return True if numeric condition is met, return False if not, return None otherwise."""
-        entity = entity_observation.entity_id
+        entity_id = entity_observation.entity_id
+        # if we are dealing with numeric_state observations entity_id cannot be None
+        assert (
+            entity_id is not None
+        ), "Whilst processing the numeric state entity_id was found to be None when that should be impossible"
+
+        entity = self.hass.states.get(entity_id)
+        if entity is None:
+            return None
 
         try:
             if condition.state(self.hass, entity, [STATE_UNKNOWN, STATE_UNAVAILABLE]):
                 return None
-            return condition.async_numeric_state(
+            result = condition.async_numeric_state(
                 self.hass,
                 entity,
                 entity_observation.below,
@@ -452,10 +519,24 @@ class BayesianBinarySensor(BinarySensorEntity):
                 None,
                 entity_observation.to_dict(),
             )
+            if result:
+                return True
+            if multi:
+                state = float(entity.state)
+                if (
+                    entity_observation.below is not None
+                    and state == entity_observation.below
+                ):
+                    return True
+                return None
         except ConditionError:
             return None
+        else:
+            return False
 
-    def _process_state(self, entity_observation: Observation) -> bool | None:
+    def _process_state(
+        self, entity_observation: Observation, multi: bool = False
+    ) -> bool | None:
         """Return True if state conditions are met, return False if they are not.
 
         Returns None if the state is unavailable.
@@ -467,24 +548,13 @@ class BayesianBinarySensor(BinarySensorEntity):
             if condition.state(self.hass, entity, [STATE_UNKNOWN, STATE_UNAVAILABLE]):
                 return None
 
-            return condition.state(self.hass, entity, entity_observation.to_state)
+            result = condition.state(self.hass, entity, entity_observation.to_state)
+            if multi and not result:
+                return None
         except ConditionError:
             return None
-
-    def _process_multi_state(self, entity_observation: Observation) -> bool | None:
-        """Return True if state conditions are met, otherwise return None.
-
-        Never return False as all other states should have their own probabilities configured.
-        """
-
-        entity = entity_observation.entity_id
-
-        try:
-            if condition.state(self.hass, entity, entity_observation.to_state):
-                return True
-        except ConditionError:
-            return None
-        return None
+        else:
+            return result
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
