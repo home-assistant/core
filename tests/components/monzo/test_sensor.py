@@ -92,7 +92,10 @@ async def test_unavailable_entity(
 ) -> None:
     """Test entities enabled by default."""
     await setup_integration(hass, polling_config_entry)
-    basic_monzo.user_account.pots.return_value = [{"id": "pot_savings"}]
+    basic_monzo.user_account.pots.return_value = [
+        {"id": "pot_savings"},
+        {"id": "pot_transport"},
+    ]
     freezer.tick(timedelta(minutes=100))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
