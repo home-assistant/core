@@ -3,10 +3,11 @@
 from collections.abc import Mapping
 from enum import StrEnum
 import logging
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
+from homeassistant.components import websocket_api
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
@@ -15,6 +16,7 @@ from homeassistant.components.input_boolean import DOMAIN as INPUT_BOLEAN_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.template.sensor import async_create_preview_sensor
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
@@ -24,8 +26,11 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_STATE,
     CONF_VALUE_TEMPLATE,
+    Platform,
 )
-from homeassistant.helpers import selector
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er, selector
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -229,8 +234,10 @@ async def validate_observation_setup(
         raise SchemaFlowError("equal_probabilities")
 
     if user_input[CONF_PLATFORM] == ObservationTypes.STATE:
+        # TODO can we query hass to get the possible states of the entity id and check if to_state is one of them?
         pass
     if user_input[CONF_PLATFORM] == ObservationTypes.NUMERIC_STATE:
+        # TODO call validation in https://github.com/home-assistant/core/pull/119281 once merged
         pass
     if user_input[CONF_PLATFORM] == ObservationTypes.TEMPLATE:
         pass
@@ -300,7 +307,7 @@ CONFIG_FLOW = {
     str(ObservationTypes.TEMPLATE): SchemaFlowFormStep(
         TEMPLATE_SUBSCHEMA,
         next_step=_choose_observation_step,
-        preview="bayesian",
+        preview="template",
         validate_user_input=validate_observation_setup,
         suggested_values=None,
     ),
@@ -404,3 +411,105 @@ class BayesianConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         """Return config entry title."""
         name: str = options[CONF_NAME]
         return name
+
+    @staticmethod
+    async def async_setup_preview(hass: HomeAssistant) -> None:
+        """Set up preview WS API."""
+        websocket_api.async_register_command(hass, ws_start_preview)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "template/start_preview",
+        vol.Required("flow_id"): str,
+        vol.Required("flow_type"): vol.Any("config_flow", "options_flow"),
+        vol.Required("user_input"): dict,
+    }
+)
+@callback
+def ws_start_preview(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Generate a preview."""
+
+    def _validate(schema: vol.Schema, domain: str, user_input: dict[str, Any]) -> Any:
+        errors = {}
+        key: vol.Marker
+        for key, validator in schema.schema.items():
+            if key.schema not in user_input:
+                continue
+            try:
+                validator(user_input[key.schema])
+            except vol.Invalid as ex:
+                errors[key.schema] = str(ex.msg)
+
+        return errors
+
+    entity_registry_entry: er.RegistryEntry | None = None
+    if msg["flow_type"] == "config_flow":
+        flow_status = hass.config_entries.flow.async_get(msg["flow_id"])
+        template_type = flow_status["step_id"]
+        form_step = cast(SchemaFlowFormStep, OPTIONS_FLOW["template"])
+        schema = cast(vol.Schema, form_step.schema)
+        name = msg["user_input"]["name"]
+    else:
+        flow_status = hass.config_entries.options.async_get(msg["flow_id"])
+        config_entry = hass.config_entries.async_get_entry(flow_status["handler"])
+        if not config_entry:
+            raise HomeAssistantError
+        template_type = config_entry.options["template_type"]
+        name = config_entry.options["name"]
+        schema = cast(vol.Schema, OPTIONS_FLOW["template"])
+        entity_registry = er.async_get(hass)
+        entries = er.async_entries_for_config_entry(
+            entity_registry, flow_status["handler"]
+        )
+        if entries:
+            entity_registry_entry = entries[0]
+
+    errors = _validate(schema, template_type, msg["user_input"])
+
+    @callback
+    def async_preview_updated(
+        state: str | None,
+        attributes: Mapping[str, Any] | None,
+        listeners: dict[str, bool | set[str]] | None,
+        error: str | None,
+    ) -> None:
+        """Forward config entry state events to websocket."""
+        if error is not None:
+            connection.send_message(
+                websocket_api.event_message(
+                    msg["id"],
+                    {"error": error},
+                )
+            )
+            return
+        connection.send_message(
+            websocket_api.event_message(
+                msg["id"],
+                {"attributes": attributes, "listeners": listeners, "state": state},
+            )
+        )
+
+    if errors:
+        connection.send_message(
+            {
+                "id": msg["id"],
+                "type": websocket_api.TYPE_RESULT,
+                "success": False,
+                "error": {"code": "invalid_user_input", "message": errors},
+            }
+        )
+        return
+
+    preview_entity = async_create_preview_sensor(hass, name, msg["user_input"])
+    preview_entity.hass = hass
+    preview_entity.registry_entry = entity_registry_entry
+
+    connection.send_result(msg["id"])
+    connection.subscriptions[msg["id"]] = preview_entity.async_start_preview(
+        async_preview_updated
+    )
