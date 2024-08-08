@@ -560,10 +560,17 @@ async def test_out_of_disk_space_while_rebuild_states_table(
     assert "ix_states_entity_id_last_updated_ts" in states_index_names
 
     # Simulate out of disk space while rebuilding the states table by
-    # patching CreateTable to raise an exception
-    with patch(
-        "homeassistant.components.recorder.migration.CreateTable",
-        side_effect=SQLAlchemyError,
+    # - patching CreateTable to raise an exception for SQLite
+    # - patching DropConstraint to raise an exception for MySQL and PostgreSQL
+    with (
+        patch(
+            "homeassistant.components.recorder.migration.CreateTable",
+            side_effect=SQLAlchemyError,
+        ),
+        patch(
+            "homeassistant.components.recorder.migration.DropConstraint",
+            side_effect=SQLAlchemyError,
+        ),
     ):
         async with (
             async_test_home_assistant() as hass,
