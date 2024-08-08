@@ -25,6 +25,10 @@ from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
+ValveConfigurationAndControlFeature = clusters.ValveConfigurationAndControlFeature.Bitmaps.Feature
+TimeSyncBitmap = clusters.FanControl.Bitmaps.TimeSyncBitmap
+LevelBitmap = clusters.FanControl.Bitmaps.LevelBitmap
+
 # The MASK used for extracting bits 0 to 1 of the byte.
 OPERATIONAL_STATUS_MASK = 0b11
 
