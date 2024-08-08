@@ -177,20 +177,20 @@ class MatterValve(MatterEntity, ValveEntity):
         feature_map = int(
             self.get_matter_attribute_value(clusters.ValveConfigurationAndControl.Attributes.FeatureMap)
         )
+        self._feature_map = feature_map  
+        
         # NOTE: the featuremap can dynamically change, so we need to update the
         # supported features if the featuremap changes.
         # work out supported features and presets from matter featuremap
         if self._feature_map == feature_map:
             return
-        self._feature_map = feature_map
         self._attr_supported_features = ValveEntityFeature(0)
         if feature_map & ValveConfigurationAndControlFeature.kLevel:
             self._attr_supported_features |= ValveEntityFeature.SET_POSITION
-        """
+
         # TODO: add feature for TimeSync
-        if feature_map & ValveConfigurationAndControlFeature.TimeSync:
-            self._attr_supported_features |= ValveEntityFeature.TIMESYNC
-        """
+        # if feature_map & ValveConfigurationAndControlFeature.TimeSync:
+        #    self._attr_supported_features |= ValveEntityFeature.TIMESYNC
         self._attr_supported_features |= (
             ValveEntityFeature.CLOSE | ValveEntityFeature.OPEN
         )
