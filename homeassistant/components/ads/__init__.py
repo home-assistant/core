@@ -3,12 +3,16 @@
 import asyncio
 from asyncio import timeout
 from collections import namedtuple
+from collections.abc import Callable
 import ctypes
+from enum import Enum
 import logging
 import struct
 import threading
+from typing import Any
 
 import pyads
+import pyads.errorcodes
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -58,6 +62,8 @@ DOMAIN = "ads"
 
 SERVICE_WRITE_DATA_BY_NAME = "write_data_by_name"
 
+TASK_HEARTBEAT = "heartbeat"
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -88,8 +94,17 @@ SCHEMA_SERVICE_WRITE_DATA_BY_NAME = vol.Schema(
     }
 )
 
+type PLCDataType = (
+    pyads.PLCTYPE_BOOL
+    | pyads.PLCTYPE_BYTE
+    | pyads.PLCTYPE_DINT
+    | pyads.PLCTYPE_INT
+    | pyads.PLCTYPE_UDINT
+    | pyads.PLCTYPE_UINT
+)
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ADS component."""
 
     conf = config[DOMAIN]
@@ -112,7 +127,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return False
 
     hass.data[DATA_ADS] = ads
-    hass.bus.listen(EVENT_HOMEASSISTANT_STOP, ads.shutdown)
+    hass.async_create_background_task(ads.heartbeat(), TASK_HEARTBEAT)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, ads.shutdown)
 
     def handle_write_data_by_name(call: ServiceCall) -> None:
         """Write a value to the connected ADS device."""
@@ -125,7 +141,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         except pyads.ADSError as err:
             _LOGGER.error(err)
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN,
         SERVICE_WRITE_DATA_BY_NAME,
         handle_write_data_by_name,
@@ -140,46 +156,45 @@ NotificationItem = namedtuple(  # noqa: PYI024
     "NotificationItem", "hnotify huser name plc_datatype callback"
 )
 
+# Tuple to hold data needed to restore notification
+DeletedNotification = namedtuple("DeletedNotification", "name plc_datatype callback")
+
+
+class ConnectionState(Enum):
+    """Reresentation of ADS connection state."""
+
+    Connected = 1
+    ReadyToReconnect = 2
+    Disconnected = 3
+
 
 class AdsHub:
     """Representation of an ADS connection."""
 
-    def __init__(self, ads_client):
+    def __init__(self, ads_client: pyads.Connection) -> None:
         """Initialize the ADS hub."""
         self._client = ads_client
         self._client.open()
+        self._is_running = True
 
         # All ADS devices are registered here
-        self._devices = []
-        self._notification_items = {}
+        self._notification_items: dict[int, NotificationItem] = {}
         self._lock = threading.Lock()
 
-    def shutdown(self, *args, **kwargs):
+    def shutdown(self, *args, **kwargs) -> None:
         """Shutdown ADS connection."""
 
         _LOGGER.debug("Shutting down ADS")
-        for notification_item in self._notification_items.values():
-            _LOGGER.debug(
-                "Deleting device notification %d, %d",
-                notification_item.hnotify,
-                notification_item.huser,
-            )
-            try:
-                self._client.del_device_notification(
-                    notification_item.hnotify, notification_item.huser
-                )
-            except pyads.ADSError as err:
-                _LOGGER.error(err)
+
+        self._is_running = False
+        self._delete_device_notifications()
+
         try:
             self._client.close()
         except pyads.ADSError as err:
             _LOGGER.error(err)
 
-    def register_device(self, device):
-        """Register a new device."""
-        self._devices.append(device)
-
-    def write_by_name(self, name, value, plc_datatype):
+    def write_by_name(self, name: str, value: Any, plc_datatype: PLCDataType) -> None:
         """Write a value to the device."""
 
         with self._lock:
@@ -188,7 +203,7 @@ class AdsHub:
             except pyads.ADSError as err:
                 _LOGGER.error("Error writing %s: %s", name, err)
 
-    def read_by_name(self, name, plc_datatype):
+    def read_by_name(self, name: str, plc_datatype: PLCDataType) -> Any | None:
         """Read a value from the device."""
 
         with self._lock:
@@ -196,8 +211,11 @@ class AdsHub:
                 return self._client.read_by_name(name, plc_datatype)
             except pyads.ADSError as err:
                 _LOGGER.error("Error reading %s: %s", name, err)
+                return None
 
-    def add_device_notification(self, name, plc_datatype, callback):
+    def add_device_notification(
+        self, name: str, plc_datatype: PLCDataType, callback: Callable
+    ) -> None:
         """Add a notification to the ADS devices."""
 
         attr = pyads.NotificationAttrib(ctypes.sizeof(plc_datatype))
@@ -219,7 +237,76 @@ class AdsHub:
                     "Added device notification %d for variable %s", hnotify, name
                 )
 
-    def _device_notification_callback(self, notification, name):
+    async def heartbeat(
+        self,
+        heartbeat_interval: float = 5.0,
+        max_wait_time: float = 120.0,
+        communication_timeout_while_disconnected_ms: int = 100,
+    ) -> None:
+        """Periodically checks and handles the connection state of the client.
+
+        Adjusts the wait time and communication timeout based on the connection state, with exponential backoff when disconnected.
+
+        Attempts reconnection and manages device notifications upon reconnection.
+        """
+        deleted_device_notifications: list[DeletedNotification] = []
+
+        default_timeout_ms = 5000
+
+        wait_time = heartbeat_interval
+
+        while self._is_running:
+            connection_state = self._check_connection()
+            if connection_state == ConnectionState.Connected:
+                if wait_time != heartbeat_interval:
+                    _LOGGER.info("Reconnected")
+                    while deleted_device_notifications:
+                        self.add_device_notification(
+                            *deleted_device_notifications.pop()
+                        )
+
+                    self._client.set_timeout(ms=default_timeout_ms)
+                    wait_time = heartbeat_interval
+
+                await asyncio.sleep(wait_time)
+            elif connection_state == ConnectionState.Disconnected:
+                if wait_time == heartbeat_interval:
+                    _LOGGER.info("Disconnected, waiting for device availability")
+                    self._client.set_timeout(
+                        ms=communication_timeout_while_disconnected_ms
+                    )
+                    if not deleted_device_notifications:
+                        deleted_device_notifications = (
+                            self._delete_device_notifications()
+                        )
+
+                wait_time = (
+                    wait_time * 2 if wait_time * 2 < max_wait_time else max_wait_time
+                )
+                _LOGGER.debug("Waiting %d seconds to check device state", wait_time)
+                await asyncio.sleep(wait_time)
+            elif connection_state == ConnectionState.ReadyToReconnect:
+                self._reconnect()
+
+    def _check_connection(self) -> ConnectionState:
+        try:
+            self._client.read_state()
+        except pyads.ADSError as read_state_error:
+            if read_state_error.err_code not in pyads.errorcodes.ERROR_CODES:
+                return ConnectionState.ReadyToReconnect
+            return ConnectionState.Disconnected
+        else:
+            return ConnectionState.Connected
+
+    def _reconnect(self) -> None:
+        try:
+            self._client.close()
+            self._client.open()
+        except pyads.ADSError:
+            _LOGGER.exception("Error during reconnection")
+            return
+
+    def _device_notification_callback(self, notification: Any, name: str) -> None:
         """Handle device notifications."""
         contents = notification.contents
 
@@ -254,10 +341,32 @@ class AdsHub:
         elif notification_item.plc_datatype == pyads.PLCTYPE_UDINT:
             value = struct.unpack("<I", bytearray(data))[0]
         else:
-            value = bytearray(data)
+            value = data
             _LOGGER.warning("No callback available for this datatype")
 
         notification_item.callback(notification_item.name, value)
+
+    def _delete_device_notifications(self) -> list[DeletedNotification]:
+        result = [
+            DeletedNotification(item.name, item.plc_datatype, item.callback)
+            for item in self._notification_items.values()
+        ]
+
+        while self._notification_items:
+            _, notification_item = self._notification_items.popitem()
+            _LOGGER.debug(
+                "Deleting device notification %d, %d",
+                notification_item.hnotify,
+                notification_item.huser,
+            )
+            try:
+                self._client.del_device_notification(
+                    notification_item.hnotify, notification_item.huser
+                )
+            except pyads.ADSError as err:
+                _LOGGER.error(err)
+
+        return result
 
 
 class AdsEntity(Entity):
@@ -265,9 +374,9 @@ class AdsEntity(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, ads_hub, name, ads_var):
+    def __init__(self, ads_hub, name, ads_var) -> None:
         """Initialize ADS binary sensor."""
-        self._state_dict = {}
+        self._state_dict: dict[str, Any] = {}
         self._state_dict[STATE_KEY_STATE] = None
         self._ads_hub = ads_hub
         self._ads_var = ads_var
