@@ -1,4 +1,5 @@
 """The Twinkly light component."""
+
 from __future__ import annotations
 
 import logging
@@ -66,7 +67,7 @@ class TwinklyLight(LightEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_icon = "mdi:string-lights"
+    _attr_translation_key = "light"
 
     def __init__(
         self,
@@ -129,10 +130,7 @@ class TwinklyLight(LightEntity):
     @property
     def effect_list(self) -> list[str]:
         """Return the list of saved effects."""
-        effect_list = []
-        for movie in self._movies:
-            effect_list.append(f"{movie['id']} {movie['name']}")
-        return effect_list
+        return [f"{movie['id']} {movie['name']}" for movie in self._movies]
 
     async def async_added_to_hass(self) -> None:
         """Device is added to hass."""

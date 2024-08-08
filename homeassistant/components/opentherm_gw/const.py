@@ -1,4 +1,5 @@
 """Constants for the opentherm_gw integration."""
+
 from __future__ import annotations
 
 import pyotgw.vars as gw_vars
@@ -11,13 +12,15 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfTime,
-    UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 
 ATTR_GW_ID = "gateway_id"
 ATTR_LEVEL = "level"
 ATTR_DHW_OVRD = "dhw_override"
 ATTR_CH_OVRD = "ch_override"
+ATTR_TRANSP_CMD = "transp_cmd"
+ATTR_TRANSP_ARG = "transp_arg"
 
 CONF_CLIMATE = "climate"
 CONF_FLOOR_TEMP = "floor_temperature"
@@ -44,6 +47,7 @@ SERVICE_SET_LED_MODE = "set_led_mode"
 SERVICE_SET_MAX_MOD = "set_max_modulation"
 SERVICE_SET_OAT = "set_outside_temperature"
 SERVICE_SET_SB_TEMP = "set_setback_temperature"
+SERVICE_SEND_TRANSP_CMD = "send_transparent_command"
 
 TRANSLATE_SOURCE = {
     gw_vars.BOILER: "Boiler",
@@ -309,8 +313,8 @@ SENSOR_INFO: dict[str, list] = {
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_DHW_FLOW_RATE: [
-        None,
-        f"{UnitOfVolume.LITERS}/{UnitOfTime.MINUTES}",
+        SensorDeviceClass.VOLUME_FLOW_RATE,
+        UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
         "Hot Water Flow Rate {}",
         SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
         [gw_vars.BOILER, gw_vars.THERMOSTAT],

@@ -1,4 +1,5 @@
 """Base entity for the BSBLAN integration."""
+
 from __future__ import annotations
 
 from bsblan import BSBLAN, Device, Info, StaticState

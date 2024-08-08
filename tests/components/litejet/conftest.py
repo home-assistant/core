@@ -1,4 +1,5 @@
 """Fixtures for LiteJet testing."""
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
 

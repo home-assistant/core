@@ -1,4 +1,5 @@
 """Support for Big Ass Fans number."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -7,7 +8,6 @@ from typing import cast
 
 from aiobafi6 import Device
 
-from homeassistant import config_entries
 from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
@@ -17,21 +17,16 @@ from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, HALF_DAY_SECS, ONE_DAY_SECS, ONE_MIN_SECS, SPEED_RANGE
-from .entity import BAFEntity
-from .models import BAFData
+from . import BAFConfigEntry
+from .const import HALF_DAY_SECS, ONE_DAY_SECS, ONE_MIN_SECS, SPEED_RANGE
+from .entity import BAFDescriptionEntity
 
 
-@dataclass(frozen=True)
-class BAFNumberDescriptionMixin:
-    """Required values for BAF sensors."""
+@dataclass(frozen=True, kw_only=True)
+class BAFNumberDescription(NumberEntityDescription):
+    """Class describing BAF sensor entities."""
 
     value_fn: Callable[[Device], int | None]
-
-
-@dataclass(frozen=True)
-class BAFNumberDescription(NumberEntityDescription, BAFNumberDescriptionMixin):
-    """Class describing BAF sensor entities."""
 
 
 AUTO_COMFORT_NUMBER_DESCRIPTIONS = (
@@ -120,12 +115,11 @@ LIGHT_NUMBER_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: BAFConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up BAF numbers."""
-    data: BAFData = hass.data[DOMAIN][entry.entry_id]
-    device = data.device
+    device = entry.runtime_data
     descriptions: list[BAFNumberDescription] = []
     if device.has_fan:
         descriptions.extend(FAN_NUMBER_DESCRIPTIONS)
@@ -136,16 +130,10 @@ async def async_setup_entry(
     async_add_entities(BAFNumber(device, description) for description in descriptions)
 
 
-class BAFNumber(BAFEntity, NumberEntity):
+class BAFNumber(BAFDescriptionEntity, NumberEntity):
     """BAF number."""
 
     entity_description: BAFNumberDescription
-
-    def __init__(self, device: Device, description: BAFNumberDescription) -> None:
-        """Initialize the entity."""
-        self.entity_description = description
-        super().__init__(device)
-        self._attr_unique_id = f"{self._device.mac_address}-{description.key}"
 
     @callback
     def _async_update_attrs(self) -> None:

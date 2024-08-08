@@ -12,8 +12,9 @@
     'context': <ANY>,
     'entity_id': 'select.gs01234_prebrew_infusion_mode',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'preinfusion',
   })
 # ---
 # name: test_pre_brew_infusion_select[GS3 AV].1
@@ -33,7 +34,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': None,
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'select.gs01234_prebrew_infusion_mode',
     'has_entity_name': True,
     'hidden_by': None,
@@ -68,8 +69,9 @@
     'context': <ANY>,
     'entity_id': 'select.lm01234_prebrew_infusion_mode',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'preinfusion',
   })
 # ---
 # name: test_pre_brew_infusion_select[Linea Mini].1
@@ -89,7 +91,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': None,
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'select.lm01234_prebrew_infusion_mode',
     'has_entity_name': True,
     'hidden_by': None,
@@ -124,8 +126,9 @@
     'context': <ANY>,
     'entity_id': 'select.mr01234_prebrew_infusion_mode',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'preinfusion',
   })
 # ---
 # name: test_pre_brew_infusion_select[Micra].1
@@ -145,7 +148,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': None,
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'select.mr01234_prebrew_infusion_mode',
     'has_entity_name': True,
     'hidden_by': None,
@@ -180,8 +183,9 @@
     'context': <ANY>,
     'entity_id': 'select.mr01234_steam_level',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3',
+    'state': '1',
   })
 # ---
 # name: test_steam_boiler_level[Micra].1

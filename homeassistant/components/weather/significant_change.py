@@ -1,4 +1,5 @@
 """Helper to test significant Weather state changes."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -63,7 +64,7 @@ VALID_CARDINAL_DIRECTIONS: list[str] = [
 ]
 
 
-def _cardinal_to_degrees(value: str | int | float | None) -> int | float | None:
+def _cardinal_to_degrees(value: str | float | None) -> int | float | None:
     """Translate a cardinal direction into azimuth angle (degrees)."""
     if not isinstance(value, str):
         return value

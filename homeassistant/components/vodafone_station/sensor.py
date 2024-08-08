@@ -1,4 +1,5 @@
 """Vodafone Station sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -24,21 +25,14 @@ from .coordinator import VodafoneStationRouter
 NOT_AVAILABLE: list = ["", "N/A", "0.0.0.0"]
 
 
-@dataclass(frozen=True)
-class VodafoneStationBaseEntityDescription:
-    """Vodafone Station entity base description."""
+@dataclass(frozen=True, kw_only=True)
+class VodafoneStationEntityDescription(SensorEntityDescription):
+    """Vodafone Station entity description."""
 
     value: Callable[[Any, Any], Any] = (
         lambda coordinator, key: coordinator.data.sensors[key]
     )
     is_suitable: Callable[[dict], bool] = lambda val: True
-
-
-@dataclass(frozen=True, kw_only=True)
-class VodafoneStationEntityDescription(
-    VodafoneStationBaseEntityDescription, SensorEntityDescription
-):
-    """Vodafone Station entity description."""
 
 
 def _calculate_uptime(coordinator: VodafoneStationRouter, key: str) -> datetime:
@@ -72,26 +66,22 @@ SENSOR_TYPES: Final = (
     VodafoneStationEntityDescription(
         key="wan_ip4_addr",
         translation_key="external_ipv4",
-        icon="mdi:earth",
         is_suitable=lambda info: info["wan_ip4_addr"] not in NOT_AVAILABLE,
     ),
     VodafoneStationEntityDescription(
         key="wan_ip6_addr",
         translation_key="external_ipv6",
-        icon="mdi:earth",
         is_suitable=lambda info: info["wan_ip6_addr"] not in NOT_AVAILABLE,
     ),
     VodafoneStationEntityDescription(
         key="vf_internet_key_ip_addr",
         translation_key="external_ip_key",
-        icon="mdi:earth",
         is_suitable=lambda info: info["vf_internet_key_ip_addr"] not in NOT_AVAILABLE,
     ),
     VodafoneStationEntityDescription(
         key="inter_ip_address",
         translation_key="active_connection",
         device_class=SensorDeviceClass.ENUM,
-        icon="mdi:wan",
         options=LINE_TYPES,
         value=_line_connection,
     ),
@@ -112,20 +102,17 @@ SENSOR_TYPES: Final = (
     VodafoneStationEntityDescription(
         key="fw_version",
         translation_key="fw_version",
-        icon="mdi:new-box",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     VodafoneStationEntityDescription(
         key="phone_num1",
         translation_key="phone_num1",
-        icon="mdi:phone",
-        is_suitable=lambda info: info["phone_unavailable1"] == "0",
+        is_suitable=lambda info: info["phone_num1"] != "",
     ),
     VodafoneStationEntityDescription(
         key="phone_num2",
         translation_key="phone_num2",
-        icon="mdi:phone",
-        is_suitable=lambda info: info["phone_unavailable2"] == "0",
+        is_suitable=lambda info: info["phone_num2"] != "",
     ),
     VodafoneStationEntityDescription(
         key="sys_uptime",
@@ -137,7 +124,6 @@ SENSOR_TYPES: Final = (
     VodafoneStationEntityDescription(
         key="sys_cpu_usage",
         translation_key="sys_cpu_usage",
-        icon="mdi:chip",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda coordinator, key: float(coordinator.data.sensors[key][:-1]),
@@ -145,7 +131,6 @@ SENSOR_TYPES: Final = (
     VodafoneStationEntityDescription(
         key="sys_memory_usage",
         translation_key="sys_memory_usage",
-        icon="mdi:memory",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda coordinator, key: float(coordinator.data.sensors[key][:-1]),
@@ -153,7 +138,6 @@ SENSOR_TYPES: Final = (
     VodafoneStationEntityDescription(
         key="sys_reboot_cause",
         translation_key="sys_reboot_cause",
-        icon="mdi:restart-alert",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )

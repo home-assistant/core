@@ -1,4 +1,5 @@
 """Constants used for LG webOS Smart TV."""
+
 import asyncio
 
 from aiowebostv import WebOsTvCommandError

@@ -1,4 +1,5 @@
 """Support for IKEA Tradfri."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -13,7 +14,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -34,7 +34,6 @@ from .const import (
 )
 from .coordinator import TradfriDeviceDataUpdateCoordinator
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 PLATFORMS = [
     Platform.COVER,
     Platform.FAN,

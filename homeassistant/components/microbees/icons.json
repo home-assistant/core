@@ -7,6 +7,14 @@
       "socket_it": {
         "default": "mdi:power-socket-it"
       }
+    },
+    "button": {
+      "button_gate": {
+        "default": "mdi:gate"
+      },
+      "button_panic": {
+        "default": "mdi:alert-octagram"
+      }
     }
   }
 }

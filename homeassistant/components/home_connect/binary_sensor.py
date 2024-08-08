@@ -1,4 +1,5 @@
 """Provides a binary sensor for Home Connect."""
+
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity

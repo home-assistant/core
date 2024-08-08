@@ -1,0 +1,11 @@
+{
+  "services": {
+    "start_program": "mdi:play",
+    "select_program": "mdi:form-select",
+    "pause_program": "mdi:pause",
+    "resume_program": "mdi:play-pause",
+    "set_option_active": "mdi:gesture-tap",
+    "set_option_selected": "mdi:gesture-tap",
+    "change_setting": "mdi:cog"
+  }
+}

@@ -1,9 +1,10 @@
 """Entity object for shared properties of Gree entities."""
+
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .bridge import DeviceDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import DeviceDataUpdateCoordinator
 
 
 class GreeEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):

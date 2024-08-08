@@ -1,4 +1,5 @@
 """Support for tracking people."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -16,7 +17,6 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.const import (
     ATTR_EDITABLE,
-    ATTR_ENTITY_ID,
     ATTR_GPS_ACCURACY,
     ATTR_ID,
     ATTR_LATITUDE,
@@ -24,7 +24,6 @@ from homeassistant.const import (
     ATTR_NAME,
     CONF_ID,
     CONF_NAME,
-    CONF_TYPE,
     EVENT_HOMEASSISTANT_START,
     SERVICE_RELOAD,
     STATE_HOME,
@@ -34,6 +33,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     Event,
+    EventStateChangedData,
     HomeAssistant,
     ServiceCall,
     State,
@@ -47,14 +47,13 @@ from homeassistant.helpers import (
     service,
 )
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,8 +64,6 @@ ATTR_DEVICE_TRACKERS = "device_trackers"
 CONF_DEVICE_TRACKERS = "device_trackers"
 CONF_USER_ID = "user_id"
 CONF_PICTURE = "picture"
-
-DOMAIN = "person"
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 2
@@ -131,7 +128,7 @@ async def async_add_user_device_tracker(
 
         await coll.async_update_item(
             person[CONF_ID],
-            {CONF_DEVICE_TRACKERS: device_trackers + [device_tracker_entity_id]},
+            {CONF_DEVICE_TRACKERS: [*device_trackers, device_tracker_entity_id]},
         )
         break
 
@@ -168,7 +165,7 @@ def entities_in_person(hass: HomeAssistant, entity_id: str) -> list[str]:
     return person_entity.device_trackers
 
 
-CREATE_FIELDS = {
+CREATE_FIELDS: VolDictType = {
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Optional(CONF_USER_ID): vol.Any(str, None),
     vol.Optional(CONF_DEVICE_TRACKERS, default=list): vol.All(
@@ -178,7 +175,7 @@ CREATE_FIELDS = {
 }
 
 
-UPDATE_FIELDS = {
+UPDATE_FIELDS: VolDictType = {
     vol.Optional(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Optional(CONF_USER_ID): vol.Any(str, None),
     vol.Optional(CONF_DEVICE_TRACKERS, default=list): vol.All(
@@ -244,16 +241,20 @@ class PersonStorageCollection(collection.DictStorageCollection):
         )
 
     @callback
-    def _entity_registry_filter(self, event: Event) -> bool:
+    def _entity_registry_filter(
+        self, event_data: er.EventEntityRegistryUpdatedData
+    ) -> bool:
         """Filter entity registry events."""
         return (
-            event.data["action"] == "remove"
-            and split_entity_id(event.data[ATTR_ENTITY_ID])[0] == "device_tracker"
+            event_data["action"] == "remove"
+            and split_entity_id(event_data["entity_id"])[0] == "device_tracker"
         )
 
-    async def _entity_registry_updated(self, event: Event) -> None:
+    async def _entity_registry_updated(
+        self, event: Event[er.EventEntityRegistryUpdatedData]
+    ) -> None:
         """Handle entity registry updated."""
-        entity_id = event.data[ATTR_ENTITY_ID]
+        entity_id = event.data["entity_id"]
         for person in list(self.data.values()):
             if entity_id not in person[CONF_DEVICE_TRACKERS]:
                 continue
@@ -302,6 +303,23 @@ class PersonStorageCollection(collection.DictStorageCollection):
         for persons in (self.data.values(), self.yaml_collection.async_items()):
             if any(person for person in persons if person.get(CONF_USER_ID) == user_id):
                 raise ValueError("User already taken")
+
+
+class PersonStorageCollectionWebsocket(collection.DictStorageCollectionWebsocket):
+    """Class to expose storage collection management over websocket."""
+
+    def ws_list_item(
+        self,
+        hass: HomeAssistant,
+        connection: websocket_api.ActiveConnection,
+        msg: dict[str, Any],
+    ) -> None:
+        """List persons."""
+        yaml, storage, _ = hass.data[DOMAIN]
+        connection.send_result(
+            msg[ATTR_ID],
+            {"storage": storage.async_items(), "config": yaml.async_items()},
+        )
 
 
 async def filter_yaml_data(hass: HomeAssistant, persons: list[dict]) -> list[dict]:
@@ -367,11 +385,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DOMAIN] = (yaml_collection, storage_collection, entity_component)
 
-    collection.DictStorageCollectionWebsocket(
+    PersonStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
-    ).async_setup(hass, create_list=False)
-
-    websocket_api.async_register_command(hass, ws_list_person)
+    ).async_setup(hass)
 
     async def _handle_user_removed(event: Event) -> None:
         """Handle a user being removed."""
@@ -400,7 +416,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class Person(collection.CollectionEntity, RestoreEntity):
+class Person(
+    collection.CollectionEntity,
+    RestoreEntity,
+):
     """Represent a tracked person."""
 
     _entity_component_unrecorded_attributes = frozenset({ATTR_DEVICE_TRACKERS})
@@ -415,8 +434,18 @@ class Person(collection.CollectionEntity, RestoreEntity):
         self._longitude: float | None = None
         self._gps_accuracy: float | None = None
         self._source: str | None = None
-        self._state: str | None = None
         self._unsub_track_device: Callable[[], None] | None = None
+        self._attr_state: str | None = None
+        self.device_trackers: list[str] = []
+
+        self._attr_unique_id = config[CONF_ID]
+        self._set_attrs_from_config()
+
+    def _set_attrs_from_config(self) -> None:
+        """Set attributes from config."""
+        self._attr_name = self._config[CONF_NAME]
+        self._attr_entity_picture = self._config.get(CONF_PICTURE)
+        self.device_trackers = self._config[CONF_DEVICE_TRACKERS]
 
     @classmethod
     def from_storage(cls, config: ConfigType) -> Self:
@@ -432,48 +461,6 @@ class Person(collection.CollectionEntity, RestoreEntity):
         person.editable = False
         return person
 
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._config[CONF_NAME]
-
-    @property
-    def entity_picture(self) -> str | None:
-        """Return entity picture."""
-        return self._config.get(CONF_PICTURE)
-
-    @property
-    def state(self) -> str | None:
-        """Return the state of the person."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the person."""
-        data: dict[str, Any] = {ATTR_EDITABLE: self.editable, ATTR_ID: self.unique_id}
-        if self._latitude is not None:
-            data[ATTR_LATITUDE] = self._latitude
-        if self._longitude is not None:
-            data[ATTR_LONGITUDE] = self._longitude
-        if self._gps_accuracy is not None:
-            data[ATTR_GPS_ACCURACY] = self._gps_accuracy
-        if self._source is not None:
-            data[ATTR_SOURCE] = self._source
-        if (user_id := self._config.get(CONF_USER_ID)) is not None:
-            data[ATTR_USER_ID] = user_id
-        data[ATTR_DEVICE_TRACKERS] = self.device_trackers
-        return data
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID for the person."""
-        return self._config[CONF_ID]
-
-    @property
-    def device_trackers(self) -> list[str]:
-        """Return the device trackers for the person."""
-        return self._config[CONF_DEVICE_TRACKERS]
-
     async def async_added_to_hass(self) -> None:
         """Register device trackers."""
         await super().async_added_to_hass()
@@ -482,20 +469,30 @@ class Person(collection.CollectionEntity, RestoreEntity):
 
         if self.hass.is_running:
             # Update person now if hass is already running.
-            await self.async_update_config(self._config)
+            self._async_update_config(self._config)
         else:
             # Wait for hass start to not have race between person
             # and device trackers finishing setup.
-            async def person_start_hass(_: Event) -> None:
-                await self.async_update_config(self._config)
+            @callback
+            def _async_person_start_hass(_: Event) -> None:
+                self._async_update_config(self._config)
 
             self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START, person_start_hass
+                EVENT_HOMEASSISTANT_START, _async_person_start_hass
             )
+            # Update extra state attributes now
+            # as there are attributes that can already be set
+            self._update_extra_state_attributes()
 
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
+        self._async_update_config(config)
+
+    @callback
+    def _async_update_config(self, config: ConfigType) -> None:
+        """Handle when the config is updated."""
         self._config = config
+        self._set_attrs_from_config()
 
         if self._unsub_track_device is not None:
             self._unsub_track_device()
@@ -511,9 +508,7 @@ class Person(collection.CollectionEntity, RestoreEntity):
         self._update_state()
 
     @callback
-    def _async_handle_tracker_update(
-        self, event: EventType[EventStateChangedData]
-    ) -> None:
+    def _async_handle_tracker_update(self, event: Event[EventStateChangedData]) -> None:
         """Handle the device tracker state changes."""
         self._update_state()
 
@@ -544,12 +539,13 @@ class Person(collection.CollectionEntity, RestoreEntity):
         if latest:
             self._parse_source_state(latest)
         else:
-            self._state = None
+            self._attr_state = None
             self._source = None
             self._latitude = None
             self._longitude = None
             self._gps_accuracy = None
 
+        self._update_extra_state_attributes()
         self.async_write_ha_state()
 
     @callback
@@ -558,24 +554,33 @@ class Person(collection.CollectionEntity, RestoreEntity):
 
         This is a device tracker state or the restored person state.
         """
-        self._state = state.state
+        self._attr_state = state.state
         self._source = state.entity_id
         self._latitude = state.attributes.get(ATTR_LATITUDE)
         self._longitude = state.attributes.get(ATTR_LONGITUDE)
         self._gps_accuracy = state.attributes.get(ATTR_GPS_ACCURACY)
 
+    @callback
+    def _update_extra_state_attributes(self) -> None:
+        """Update extra state attributes."""
+        data: dict[str, Any] = {
+            ATTR_EDITABLE: self.editable,
+            ATTR_ID: self.unique_id,
+            ATTR_DEVICE_TRACKERS: self.device_trackers,
+        }
 
-@websocket_api.websocket_command({vol.Required(CONF_TYPE): "person/list"})
-def ws_list_person(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """List persons."""
-    yaml, storage, _ = hass.data[DOMAIN]
-    connection.send_result(
-        msg[ATTR_ID], {"storage": storage.async_items(), "config": yaml.async_items()}
-    )
+        if self._latitude is not None:
+            data[ATTR_LATITUDE] = self._latitude
+        if self._longitude is not None:
+            data[ATTR_LONGITUDE] = self._longitude
+        if self._gps_accuracy is not None:
+            data[ATTR_GPS_ACCURACY] = self._gps_accuracy
+        if self._source is not None:
+            data[ATTR_SOURCE] = self._source
+        if (user_id := self._config.get(CONF_USER_ID)) is not None:
+            data[ATTR_USER_ID] = user_id
+
+        self._attr_extra_state_attributes = data
 
 
 def _get_latest(prev: State | None, curr: State) -> State:

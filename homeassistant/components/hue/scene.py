@@ -1,4 +1,5 @@
 """Support for scene platform for Hue scenes (V2 only)."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -176,6 +177,9 @@ class HueSceneEntity(HueSceneEntityBase):
                 if action.action.dimming:
                     brightness = action.action.dimming.brightness
                     break
+        if brightness is not None:
+            # Hue uses a range of [0, 100] to control brightness.
+            brightness = round((brightness / 100) * 255)
         return {
             "group_name": self.group.metadata.name,
             "group_type": self.group.type.value,

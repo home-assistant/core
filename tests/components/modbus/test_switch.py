@@ -1,4 +1,5 @@
 """The tests for the Modbus switch component."""
+
 from datetime import timedelta
 from unittest import mock
 
@@ -276,7 +277,6 @@ async def test_switch_service_turn(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     mock_modbus,
-    mock_pymodbus_return,
 ) -> None:
     """Run test for service turn_on/turn_off."""
     assert MODBUS_DOMAIN in hass.config.components
@@ -336,13 +336,13 @@ async def test_switch_service_turn(
         },
     ],
 )
-async def test_service_switch_update(hass: HomeAssistant, mock_modbus, mock_ha) -> None:
+async def test_service_switch_update(hass: HomeAssistant, mock_modbus_ha) -> None:
     """Run test for service homeassistant.update_entity."""
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
-    mock_modbus.read_coils.return_value = ReadResult([0x01])
+    mock_modbus_ha.read_coils.return_value = ReadResult([0x01])
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
@@ -367,9 +367,7 @@ async def test_service_switch_update(hass: HomeAssistant, mock_modbus, mock_ha) 
         },
     ],
 )
-async def test_delay_switch(
-    hass: HomeAssistant, mock_modbus, mock_pymodbus_return
-) -> None:
+async def test_delay_switch(hass: HomeAssistant, mock_modbus) -> None:
     """Run test for switch verify delay."""
     mock_modbus.read_holding_registers.return_value = ReadResult([0x01])
     now = dt_util.utcnow()

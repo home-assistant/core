@@ -4,11 +4,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
       'friendly_name': 'Minecraft Server Status',
-      'icon': 'mdi:lan',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.minecraft_server_status',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -18,11 +18,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
       'friendly_name': 'Minecraft Server Status',
-      'icon': 'mdi:lan',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.minecraft_server_status',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -32,11 +32,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
       'friendly_name': 'Minecraft Server Status',
-      'icon': 'mdi:lan',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.minecraft_server_status',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -46,11 +46,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
       'friendly_name': 'Minecraft Server Status',
-      'icon': 'mdi:lan',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.minecraft_server_status',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })

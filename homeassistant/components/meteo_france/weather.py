@@ -1,4 +1,5 @@
 """Support for Meteo-France weather service."""
+
 import logging
 import time
 
@@ -164,6 +165,7 @@ class MeteoFranceWeather(
         wind_bearing = self.coordinator.data.current_forecast["wind"]["direction"]
         if wind_bearing != -1:
             return wind_bearing
+        return None
 
     def _forecast(self, mode: str) -> list[Forecast]:
         """Return the forecast."""
@@ -199,7 +201,7 @@ class MeteoFranceWeather(
                     break
                 forecast_data.append(
                     {
-                        ATTR_FORECAST_TIME: self.coordinator.data.timestamp_to_locale_time(
+                        ATTR_FORECAST_TIME: dt_util.utc_from_timestamp(
                             forecast["dt"]
                         ).isoformat(),
                         ATTR_FORECAST_CONDITION: format_condition(
@@ -214,11 +216,6 @@ class MeteoFranceWeather(
                     }
                 )
         return forecast_data
-
-    @property
-    def forecast(self) -> list[Forecast]:
-        """Return the forecast array."""
-        return self._forecast(self._mode)
 
     async def async_forecast_daily(self) -> list[Forecast]:
         """Return the daily forecast in native units."""

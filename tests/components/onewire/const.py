@@ -1,5 +1,6 @@
 """Constants for 1-Wire integration."""
-from pyownet.protocol import Error as ProtocolError
+
+from pyownet.protocol import ProtocolError
 
 from homeassistant.components.onewire.const import Platform
 
@@ -55,6 +56,12 @@ MOCK_OWPROXY_DEVICES = {
         Platform.SENSOR: [
             {ATTR_INJECT_READS: b"    251123"},
             {ATTR_INJECT_READS: b"    248125"},
+        ],
+    },
+    "16.111111111111": {
+        # Test case for issue #115984, where the device type cannot be read
+        ATTR_INJECT_READS: [
+            ProtocolError(),  # read device type
         ],
     },
     "1F.111111111111": {
@@ -155,7 +162,9 @@ MOCK_OWPROXY_DEVICES = {
             {ATTR_INJECT_READS: b"    1"},
             {ATTR_INJECT_READS: b"    0"},
             {ATTR_INJECT_READS: b"    0"},
-            {ATTR_INJECT_READS: b"    0"},
+            {
+                ATTR_INJECT_READS: ProtocolError,
+            },
             {ATTR_INJECT_READS: b"    0"},
             {ATTR_INJECT_READS: b"    0"},
             {ATTR_INJECT_READS: b"    0"},
@@ -165,7 +174,9 @@ MOCK_OWPROXY_DEVICES = {
             {ATTR_INJECT_READS: b"    1"},
             {ATTR_INJECT_READS: b"    0"},
             {ATTR_INJECT_READS: b"    1"},
-            {ATTR_INJECT_READS: b"    0"},
+            {
+                ATTR_INJECT_READS: ProtocolError,
+            },
             {ATTR_INJECT_READS: b"    1"},
             {ATTR_INJECT_READS: b"    0"},
             {ATTR_INJECT_READS: b"    1"},
@@ -221,6 +232,29 @@ MOCK_OWPROXY_DEVICES = {
         ],
         Platform.SENSOR: [
             {ATTR_INJECT_READS: b"    29.123"},
+        ],
+    },
+    "A6.111111111111": {
+        ATTR_INJECT_READS: [
+            b"DS2438",  # read device type
+        ],
+        Platform.SENSOR: [
+            {ATTR_INJECT_READS: b"    25.123"},
+            {ATTR_INJECT_READS: b"    72.7563"},
+            {ATTR_INJECT_READS: b"    73.7563"},
+            {ATTR_INJECT_READS: b"    74.7563"},
+            {ATTR_INJECT_READS: b"    75.7563"},
+            {
+                ATTR_INJECT_READS: ProtocolError,
+            },
+            {ATTR_INJECT_READS: b"    969.265"},
+            {ATTR_INJECT_READS: b"    65.8839"},
+            {ATTR_INJECT_READS: b"     2.97"},
+            {ATTR_INJECT_READS: b"    4.74"},
+            {ATTR_INJECT_READS: b"    0.12"},
+        ],
+        Platform.SWITCH: [
+            {ATTR_INJECT_READS: b"    1"},
         ],
     },
     "EF.111111111111": {

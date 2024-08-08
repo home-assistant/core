@@ -1,4 +1,5 @@
 """Constants for the Aftership integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -21,8 +22,6 @@ CONF_TRACKING_NUMBER: Final = "tracking_number"
 
 DEFAULT_NAME: Final = "aftership"
 UPDATE_TOPIC: Final = f"{DOMAIN}_update"
-
-ICON: Final = "mdi:package-variant-closed"
 
 MIN_TIME_BETWEEN_UPDATES: Final = timedelta(minutes=15)
 

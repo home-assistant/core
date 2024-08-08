@@ -1,8 +1,10 @@
 """Data update coordinator for the Tautulli integration."""
+
 from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from pytautulli import (
     PyTautulli,
@@ -16,18 +18,20 @@ from pytautulli.exceptions import (
 )
 from pytautulli.models.host_configuration import PyTautulliHostConfiguration
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
 
+if TYPE_CHECKING:
+    from . import TautulliConfigEntry
+
 
 class TautulliDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Data update coordinator for the Tautulli integration."""
 
-    config_entry: ConfigEntry
+    config_entry: TautulliConfigEntry
 
     def __init__(
         self,

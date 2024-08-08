@@ -1,4 +1,5 @@
 """Test the LED BLE Bluetooth config flow."""
+
 from unittest.mock import patch
 
 from bleak import BleakError
@@ -27,16 +28,19 @@ async def test_user_step_success(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.led_ble.config_flow.LEDBLE.update",
-    ), patch(
-        "homeassistant.components.led_ble.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.led_ble.config_flow.LEDBLE.update",
+        ),
+        patch(
+            "homeassistant.components.led_ble.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -45,7 +49,7 @@ async def test_user_step_success(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == LED_BLE_DISCOVERY_INFO.name
     assert result2["data"] == {
         CONF_ADDRESS: LED_BLE_DISCOVERY_INFO.address,
@@ -63,7 +67,7 @@ async def test_user_step_no_devices_found(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
 
@@ -84,7 +88,7 @@ async def test_user_step_no_new_devices_found(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
 
@@ -97,7 +101,7 @@ async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -113,16 +117,19 @@ async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
 
-    with patch(
-        "homeassistant.components.led_ble.config_flow.LEDBLE.update",
-    ), patch(
-        "homeassistant.components.led_ble.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.led_ble.config_flow.LEDBLE.update",
+        ),
+        patch(
+            "homeassistant.components.led_ble.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
@@ -131,7 +138,7 @@ async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == LED_BLE_DISCOVERY_INFO.name
     assert result3["data"] == {
         CONF_ADDRESS: LED_BLE_DISCOVERY_INFO.address,
@@ -149,7 +156,7 @@ async def test_user_step_unknown_exception(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -165,16 +172,19 @@ async def test_user_step_unknown_exception(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "unknown"}
 
-    with patch(
-        "homeassistant.components.led_ble.config_flow.LEDBLE.update",
-    ), patch(
-        "homeassistant.components.led_ble.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.led_ble.config_flow.LEDBLE.update",
+        ),
+        patch(
+            "homeassistant.components.led_ble.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
@@ -183,7 +193,7 @@ async def test_user_step_unknown_exception(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == LED_BLE_DISCOVERY_INFO.name
     assert result3["data"] == {
         CONF_ADDRESS: LED_BLE_DISCOVERY_INFO.address,
@@ -199,16 +209,19 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=LED_BLE_DISCOVERY_INFO,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.led_ble.config_flow.LEDBLE.update",
-    ), patch(
-        "homeassistant.components.led_ble.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.led_ble.config_flow.LEDBLE.update",
+        ),
+        patch(
+            "homeassistant.components.led_ble.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -217,7 +230,7 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == LED_BLE_DISCOVERY_INFO.name
     assert result2["data"] == {
         CONF_ADDRESS: LED_BLE_DISCOVERY_INFO.address,
@@ -233,5 +246,5 @@ async def test_bluetooth_unsupported_model(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_BLUETOOTH},
         data=UNSUPPORTED_LED_BLE_DISCOVERY_INFO,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_supported"

@@ -1,4 +1,5 @@
 """Support for OpenTherm Gateway sensors."""
+
 import logging
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT, SensorEntity
@@ -22,29 +23,21 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the OpenTherm Gateway sensors."""
-    sensors = []
     gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]]
-    for var, info in SENSOR_INFO.items():
-        device_class = info[0]
-        unit = info[1]
-        friendly_name_format = info[2]
-        suggested_display_precision = info[3]
-        status_sources = info[4]
 
-        for source in status_sources:
-            sensors.append(
-                OpenThermSensor(
-                    gw_dev,
-                    var,
-                    source,
-                    device_class,
-                    unit,
-                    friendly_name_format,
-                    suggested_display_precision,
-                )
-            )
-
-    async_add_entities(sensors)
+    async_add_entities(
+        OpenThermSensor(
+            gw_dev,
+            var,
+            source,
+            info[0],
+            info[1],
+            info[2],
+            info[3],
+        )
+        for var, info in SENSOR_INFO.items()
+        for source in info[4]
+    )
 
 
 class OpenThermSensor(SensorEntity):
@@ -52,6 +45,7 @@ class OpenThermSensor(SensorEntity):
 
     _attr_should_poll = False
     _attr_entity_registry_enabled_default = False
+    _attr_available = False
 
     def __init__(
         self,
@@ -101,14 +95,10 @@ class OpenThermSensor(SensorEntity):
         _LOGGER.debug("Removing OpenTherm Gateway sensor %s", self._attr_name)
         self._unsub_updates()
 
-    @property
-    def available(self):
-        """Return availability of the sensor."""
-        return self._attr_native_value is not None
-
     @callback
     def receive_report(self, status):
         """Handle status updates from the component."""
+        self._attr_available = self._gateway.connected
         value = status[self._source].get(self._var)
         self._attr_native_value = value
         self.async_write_ha_state()

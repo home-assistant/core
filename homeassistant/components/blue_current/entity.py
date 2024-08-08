@@ -1,4 +1,5 @@
 """Entity representing a Blue Current charge point."""
+
 from abc import abstractmethod
 
 from homeassistant.const import ATTR_NAME
@@ -39,7 +40,7 @@ class BlueCurrentEntity(Entity):
     @property
     def available(self) -> bool:
         """Return entity availability."""
-        return self.connector.available and self.has_value
+        return self.connector.connected and self.has_value
 
     @callback
     @abstractmethod
@@ -52,7 +53,7 @@ class ChargepointEntity(BlueCurrentEntity):
 
     def __init__(self, connector: Connector, evse_id: str) -> None:
         """Initialize the entity."""
-        super().__init__(connector, f"{DOMAIN}_value_update_{evse_id}")
+        super().__init__(connector, f"{DOMAIN}_charge_point_update_{evse_id}")
 
         chargepoint_name = connector.charge_points[evse_id][ATTR_NAME]
 

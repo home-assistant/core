@@ -1,4 +1,5 @@
 """The tests for the Update component."""
+
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
@@ -49,6 +50,7 @@ from tests.common import (
     mock_integration,
     mock_platform,
     mock_restore_cache,
+    setup_test_component_platform,
 )
 from tests.typing import WebSocketGenerator
 
@@ -165,11 +167,10 @@ async def test_update(hass: HomeAssistant) -> None:
 
 async def test_entity_with_no_install(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    mock_update_entities: list[MockUpdateEntity],
 ) -> None:
     """Test entity with no updates."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_update_entities)
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
@@ -231,11 +232,10 @@ async def test_entity_with_no_install(
 
 async def test_entity_with_no_updates(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    mock_update_entities: list[MockUpdateEntity],
 ) -> None:
     """Test entity with no updates."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_update_entities)
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
@@ -280,12 +280,11 @@ async def test_entity_with_no_updates(
 
 async def test_entity_with_auto_update(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    mock_update_entities: list[MockUpdateEntity],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update entity that has auto update feature."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_update_entities)
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
@@ -332,12 +331,11 @@ async def test_entity_with_auto_update(
 
 async def test_entity_with_updates_available(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    mock_update_entities: list[MockUpdateEntity],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test basic update entity with updates available."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_update_entities)
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
@@ -386,12 +384,11 @@ async def test_entity_with_updates_available(
 
 async def test_entity_with_unknown_version(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    mock_update_entities: list[MockUpdateEntity],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update entity that has an unknown version."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_update_entities)
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
@@ -424,12 +421,11 @@ async def test_entity_with_unknown_version(
 
 async def test_entity_with_specific_version(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    mock_update_entities: list[MockUpdateEntity],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update entity that support specific version."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_update_entities)
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
@@ -487,12 +483,11 @@ async def test_entity_with_specific_version(
 
 async def test_entity_with_backup_support(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    mock_update_entities: list[MockUpdateEntity],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update entity with backup support."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_update_entities)
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
@@ -547,12 +542,11 @@ async def test_entity_with_backup_support(
 
 async def test_entity_already_in_progress(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    mock_update_entities: list[MockUpdateEntity],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update install already in progress."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_update_entities)
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
@@ -578,22 +572,24 @@ async def test_entity_already_in_progress(
 
 async def test_entity_without_progress_support(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    mock_update_entities: list[MockUpdateEntity],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update entity without progress support.
 
     In that case, progress is still handled by Home Assistant.
     """
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_update_entities)
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
     events = []
     async_track_state_change_event(
-        hass, "update.update_available", callback(lambda event: events.append(event))
+        hass,
+        "update.update_available",
+        # pylint: disable-next=unnecessary-lambda
+        callback(lambda event: events.append(event)),
     )
 
     await hass.services.async_call(
@@ -617,34 +613,41 @@ async def test_entity_without_progress_support(
 
 async def test_entity_without_progress_support_raising(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    mock_update_entities: list[MockUpdateEntity],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update entity without progress support that raises during install.
 
     In that case, progress is still handled by Home Assistant.
     """
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_update_entities)
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
     events = []
     async_track_state_change_event(
-        hass, "update.update_available", callback(lambda event: events.append(event))
+        hass,
+        "update.update_available",
+        # pylint: disable-next=unnecessary-lambda
+        callback(lambda event: events.append(event)),
     )
 
-    with patch(
-        "homeassistant.components.update.UpdateEntity.async_install",
-        side_effect=RuntimeError,
-    ), pytest.raises(RuntimeError):
+    with (
+        patch(
+            "homeassistant.components.update.UpdateEntity.async_install",
+            side_effect=RuntimeError,
+        ),
+        pytest.raises(RuntimeError),
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_INSTALL,
             {ATTR_ENTITY_ID: "update.update_available"},
             blocking=True,
         )
+
+    await hass.async_block_till_done()
 
     assert len(events) == 2
     assert events[0].data.get("old_state").attributes[ATTR_IN_PROGRESS] is False
@@ -659,7 +662,7 @@ async def test_entity_without_progress_support_raising(
 
 
 async def test_restore_state(
-    hass: HomeAssistant, enable_custom_integrations: None
+    hass: HomeAssistant, mock_update_entities: list[MockUpdateEntity]
 ) -> None:
     """Test we restore skipped version state."""
     mock_restore_cache(
@@ -675,8 +678,7 @@ async def test_restore_state(
         ),
     )
 
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_update_entities)
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
@@ -691,12 +693,11 @@ async def test_restore_state(
 
 async def test_release_notes(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    mock_update_entities: list[MockUpdateEntity],
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test getting the release notes over the websocket connection."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_update_entities)
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
@@ -717,12 +718,11 @@ async def test_release_notes(
 
 async def test_release_notes_entity_not_found(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    mock_update_entities: list[MockUpdateEntity],
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test getting the release notes for not found entity."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_update_entities)
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
@@ -744,12 +744,11 @@ async def test_release_notes_entity_not_found(
 
 async def test_release_notes_entity_does_not_support_release_notes(
     hass: HomeAssistant,
-    enable_custom_integrations: None,
+    mock_update_entities: list[MockUpdateEntity],
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test getting the release notes for entity that does not support release notes."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
-    platform.init()
+    setup_test_component_platform(hass, DOMAIN, mock_update_entities)
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
@@ -774,7 +773,7 @@ class MockFlow(ConfigFlow):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -789,7 +788,7 @@ async def test_name(hass: HomeAssistant) -> None:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
         return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
@@ -897,7 +896,7 @@ async def test_deprecated_supported_features_ints_with_service_call(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
         return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")

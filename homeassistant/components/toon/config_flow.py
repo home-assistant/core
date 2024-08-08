@@ -1,4 +1,5 @@
 """Config flow to configure the Toon component."""
+
 from __future__ import annotations
 
 import logging
@@ -7,7 +8,7 @@ from typing import Any
 from toonapi import Agreement, Toon, ToonError
 import voluptuous as vol
 
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
@@ -28,7 +29,7 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Return logger."""
         return logging.getLogger(__name__)
 
-    async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Test connection and load up agreements."""
         self.data = data
 
@@ -48,7 +49,7 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     async def async_step_import(
         self, config: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Start a configuration flow based on imported data.
 
         This step is merely here to trigger "discovery" when the `toon`
@@ -65,7 +66,7 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     async def async_step_agreement(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Select Toon agreement to add."""
         if len(self.agreements) == 1:
             return await self._create_entry(self.agreements[0])
@@ -86,7 +87,7 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         agreement_index = agreements_list.index(user_input[CONF_AGREEMENT])
         return await self._create_entry(self.agreements[agreement_index])
 
-    async def _create_entry(self, agreement: Agreement) -> FlowResult:
+    async def _create_entry(self, agreement: Agreement) -> ConfigFlowResult:
         if CONF_MIGRATE in self.context:
             await self.hass.config_entries.async_remove(self.context[CONF_MIGRATE])
 

@@ -1,4 +1,5 @@
 """Support for the Nissan Leaf Carwings/Nissan Connect API."""
+
 from __future__ import annotations
 
 import asyncio
@@ -320,9 +321,9 @@ class LeafDataStore:
                     self.data[DATA_RANGE_AC] = None
 
                 if hasattr(server_response, "cruising_range_ac_off_km"):
-                    self.data[
-                        DATA_RANGE_AC_OFF
-                    ] = server_response.cruising_range_ac_off_km
+                    self.data[DATA_RANGE_AC_OFF] = (
+                        server_response.cruising_range_ac_off_km
+                    )
                 else:
                     self.data[DATA_RANGE_AC_OFF] = None
 
@@ -417,13 +418,13 @@ class LeafDataStore:
             server_info = await self.hass.async_add_executor_job(
                 self.leaf.get_latest_battery_status
             )
-            return server_info
         except CarwingsError:
             _LOGGER.error("An error occurred getting battery status")
             return None
         except (KeyError, TypeError):
             _LOGGER.error("An error occurred parsing response from server")
             return None
+        return server_info
 
     async def async_get_climate(
         self,

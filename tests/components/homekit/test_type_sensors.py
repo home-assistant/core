@@ -1,9 +1,12 @@
 """Test different accessory types: Sensors."""
+
 from unittest.mock import patch
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.homekit import get_accessory
 from homeassistant.components.homekit.const import (
+    CONF_THRESHOLD_CO,
+    CONF_THRESHOLD_CO2,
     PROP_CELSIUS,
     THRESHOLD_CO,
     THRESHOLD_CO2,
@@ -210,6 +213,16 @@ async def test_pm25(hass: HomeAssistant, hk_driver) -> None:
     assert acc.char_density.value == 0
     assert acc.char_quality.value == 0
 
+    hass.states.async_set(entity_id, "8")
+    await hass.async_block_till_done()
+    assert acc.char_density.value == 8
+    assert acc.char_quality.value == 1
+
+    hass.states.async_set(entity_id, "12")
+    await hass.async_block_till_done()
+    assert acc.char_density.value == 12
+    assert acc.char_quality.value == 2
+
     hass.states.async_set(entity_id, "23")
     await hass.async_block_till_done()
     assert acc.char_density.value == 23
@@ -374,6 +387,34 @@ async def test_co(hass: HomeAssistant, hk_driver) -> None:
     assert acc.char_detected.value == 0
 
 
+async def test_co_with_configured_threshold(hass: HomeAssistant, hk_driver) -> None:
+    """Test if co threshold of accessory can be configured ."""
+    entity_id = "sensor.co"
+
+    co_threshold = 10
+    assert co_threshold < THRESHOLD_CO
+
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    acc = CarbonMonoxideSensor(
+        hass, hk_driver, "CO", entity_id, 2, {CONF_THRESHOLD_CO: co_threshold}
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    value = 15
+    assert value > co_threshold
+    hass.states.async_set(entity_id, str(value))
+    await hass.async_block_till_done()
+    assert acc.char_detected.value == 1
+
+    value = 5
+    assert value < co_threshold
+    hass.states.async_set(entity_id, str(value))
+    await hass.async_block_till_done()
+    assert acc.char_detected.value == 0
+
+
 async def test_co2(hass: HomeAssistant, hk_driver) -> None:
     """Test if accessory is updated after state change."""
     entity_id = "sensor.co2"
@@ -411,6 +452,34 @@ async def test_co2(hass: HomeAssistant, hk_driver) -> None:
     await hass.async_block_till_done()
     assert acc.char_level.value == 800
     assert acc.char_peak.value == 1100
+    assert acc.char_detected.value == 0
+
+
+async def test_co2_with_configured_threshold(hass: HomeAssistant, hk_driver) -> None:
+    """Test if co2 threshold of accessory can be configured ."""
+    entity_id = "sensor.co2"
+
+    co2_threshold = 500
+    assert co2_threshold < THRESHOLD_CO2
+
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    acc = CarbonDioxideSensor(
+        hass, hk_driver, "CO2", entity_id, 2, {CONF_THRESHOLD_CO2: co2_threshold}
+    )
+    acc.run()
+    await hass.async_block_till_done()
+
+    value = 800
+    assert value > co2_threshold
+    hass.states.async_set(entity_id, str(value))
+    await hass.async_block_till_done()
+    assert acc.char_detected.value == 1
+
+    value = 400
+    assert value < co2_threshold
+    hass.states.async_set(entity_id, str(value))
+    await hass.async_block_till_done()
     assert acc.char_detected.value == 0
 
 
@@ -542,7 +611,7 @@ async def test_binary_device_classes(hass: HomeAssistant, hk_driver) -> None:
 
 
 async def test_sensor_restore(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver, events
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver
 ) -> None:
     """Test setting up an entity from state in the event registry."""
     hass.set_state(CoreState.not_running)

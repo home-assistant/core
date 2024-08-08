@@ -1,0 +1,178 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "hand_open": {
+        "default": "mdi:hand-wave"
+      }
+    },
+    "number": {
+      "timer_duration": {
+        "default": "mdi:timer"
+      },
+      "filter_life_time": {
+        "default": "mdi:timer"
+      },
+      "dimming_speed_up_remote": {
+        "default": "mdi:speedometer"
+      },
+      "button_delay": {
+        "default": "mdi:speedometer"
+      },
+      "dimming_speed_up_local": {
+        "default": "mdi:speedometer"
+      },
+      "ramp_rate_off_to_on_local": {
+        "default": "mdi:speedometer"
+      },
+      "ramp_rate_off_to_on_remote": {
+        "default": "mdi:speedometer"
+      },
+      "dimming_speed_down_remote": {
+        "default": "mdi:speedometer"
+      },
+      "dimming_speed_down_local": {
+        "default": "mdi:speedometer"
+      },
+      "ramp_rate_on_to_off_local": {
+        "default": "mdi:speedometer"
+      },
+      "ramp_rate_on_to_off_remote": {
+        "default": "mdi:speedometer"
+      },
+      "minimum_level": {
+        "default": "mdi:brightness-percent"
+      },
+      "maximum_level": {
+        "default": "mdi:brightness-percent"
+      },
+      "auto_off_timer": {
+        "default": "mdi:timer"
+      },
+      "quick_start_time": {
+        "default": "mdi:speedometer"
+      },
+      "load_level_indicator_timeout": {
+        "default": "mdi:timer"
+      },
+      "led_color_when_on": {
+        "default": "mdi:palette"
+      },
+      "led_color_when_off": {
+        "default": "mdi:palette"
+      },
+      "led_intensity_when_on": {
+        "default": "mdi:brightness-percent"
+      },
+      "led_intensity_when_off": {
+        "default": "mdi:brightness-percent"
+      },
+      "double_tap_up_level": {
+        "default": "mdi:brightness-percent"
+      },
+      "double_tap_down_level": {
+        "default": "mdi:brightness-percent"
+      },
+      "serving_size": {
+        "default": "mdi:counter"
+      },
+      "portion_weight": {
+        "default": "mdi:weight-gram"
+      },
+      "away_preset_temperature": {
+        "default": "mdi:temperature-celsius"
+      },
+      "local_temperature_calibration": {
+        "default": "mdi:temperature-celsius"
+      },
+      "presence_detection_timeout": {
+        "default": "mdi:timer-edit"
+      }
+    },
+    "select": {
+      "feeding_mode": {
+        "default": "mdi:wrench-clock"
+      },
+      "keypad_lockout": {
+        "default": "mdi:lock"
+      }
+    },
+    "sensor": {
+      "timer_time_left": {
+        "default": "mdi:timer"
+      },
+      "device_run_time": {
+        "default": "mdi:timer"
+      },
+      "filter_run_time": {
+        "default": "mdi:timer"
+      },
+      "last_feeding_source": {
+        "default": "mdi:devices"
+      },
+      "last_feeding_size": {
+        "default": "mdi:counter"
+      },
+      "portions_dispensed_today": {
+        "default": "mdi:counter"
+      },
+      "weight_dispensed_today": {
+        "default": "mdi:weight-gram"
+      },
+      "smoke_density": {
+        "default": "mdi:google-circles-communities"
+      },
+      "last_illumination_state": {
+        "default": "mdi:theme-light-dark"
+      },
+      "pi_heating_demand": {
+        "default": "mdi:radiator"
+      },
+      "setpoint_change_source": {
+        "default": "mdi:thermostat"
+      },
+      "hooks_state": {
+        "default": "mdi:hook"
+      }
+    },
+    "switch": {
+      "led_indicator": {
+        "default": "mdi:led-on"
+      },
+      "child_lock": {
+        "default": "mdi:account-lock"
+      },
+      "heartbeat_indicator": {
+        "default": "mdi:heart-flash"
+      },
+      "linkage_alarm": {
+        "default": "mdi:shield-link-variant"
+      },
+      "buzzer_manual_mute": {
+        "default": "mdi:volume-off"
+      },
+      "buzzer_manual_alarm": {
+        "default": "mdi:bullhorn"
+      },
+      "inverted": {
+        "default": "mdi:arrow-up-down"
+      },
+      "hooks_locked": {
+        "default": "mdi:lock"
+      }
+    }
+  },
+  "services": {
+    "permit": "mdi:cellphone-link",
+    "remove": "mdi:cellphone-remove",
+    "reconfigure_device": "mdi:cellphone-cog",
+    "set_zigbee_cluster_attribute": "mdi:cog",
+    "issue_zigbee_cluster_command": "mdi:console",
+    "issue_zigbee_group_command": "mdi:console",
+    "warning_device_squawk": "mdi:alert",
+    "warning_device_warn": "mdi:alert",
+    "clear_lock_user_code": "mdi:lock-remove",
+    "enable_lock_user_code": "mdi:lock",
+    "disable_lock_user_code": "mdi:lock-off",
+    "set_lock_user_code": "mdi:lock"
+  }
+}

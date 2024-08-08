@@ -1,4 +1,5 @@
 """Support for Velux covers."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -26,12 +27,12 @@ async def async_setup_entry(
     hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up cover(s) for Velux platform."""
-    entities = []
     module = hass.data[DOMAIN][config.entry_id]
-    for node in module.pyvlx.nodes:
-        if isinstance(node, OpeningDevice):
-            entities.append(VeluxCover(node))
-    async_add_entities(entities)
+    async_add_entities(
+        VeluxCover(node, config.entry_id)
+        for node in module.pyvlx.nodes
+        if isinstance(node, OpeningDevice)
+    )
 
 
 class VeluxCover(VeluxEntity, CoverEntity):
@@ -40,9 +41,9 @@ class VeluxCover(VeluxEntity, CoverEntity):
     _is_blind = False
     node: OpeningDevice
 
-    def __init__(self, node: OpeningDevice) -> None:
+    def __init__(self, node: OpeningDevice, config_entry_id: str) -> None:
         """Initialize VeluxCover."""
-        super().__init__(node)
+        super().__init__(node, config_entry_id)
         self._attr_device_class = CoverDeviceClass.WINDOW
         if isinstance(node, Awning):
             self._attr_device_class = CoverDeviceClass.AWNING

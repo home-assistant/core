@@ -1,4 +1,5 @@
 """Support for lights under the iGlo brand."""
+
 from __future__ import annotations
 
 import math
@@ -13,7 +14,7 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -28,7 +29,7 @@ import homeassistant.util.color as color_util
 DEFAULT_NAME = "iGlo Light"
 DEFAULT_PORT = 8080
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

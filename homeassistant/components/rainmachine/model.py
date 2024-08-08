@@ -1,4 +1,5 @@
 """Define RainMachine data models."""
+
 from dataclasses import dataclass
 
 from homeassistant.helpers.entity import EntityDescription

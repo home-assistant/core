@@ -1,4 +1,5 @@
 """Matter to Home Assistant adapter."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
@@ -184,10 +185,14 @@ class MatterAdapter:
             endpoint,
         )
         identifiers = {(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
+        serial_number: str | None = None
         # if available, we also add the serialnumber as identifier
-        if basic_info.serialNumber and "test" not in basic_info.serialNumber.lower():
+        if (
+            basic_info_serial_number := basic_info.serialNumber
+        ) and "test" not in basic_info_serial_number.lower():
             # prefix identifier with 'serial_' to be able to filter it
-            identifiers.add((DOMAIN, f"{ID_TYPE_SERIAL}_{basic_info.serialNumber}"))
+            identifiers.add((DOMAIN, f"{ID_TYPE_SERIAL}_{basic_info_serial_number}"))
+            serial_number = basic_info_serial_number
 
         model = (
             get_clean_name(basic_info.productName) or device_type.__name__
@@ -202,6 +207,7 @@ class MatterAdapter:
             sw_version=basic_info.softwareVersionString,
             manufacturer=basic_info.vendorName or endpoint.node.device_info.vendorName,
             model=model,
+            serial_number=serial_number,
             via_device=(DOMAIN, bridge_device_id) if bridge_device_id else None,
         )
 

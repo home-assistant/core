@@ -1,4 +1,5 @@
 """Tests for Overkiz integration init."""
+
 from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er

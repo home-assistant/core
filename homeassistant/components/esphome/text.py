@@ -1,32 +1,21 @@
 """Support for esphome texts."""
+
 from __future__ import annotations
+
+from functools import partial
 
 from aioesphomeapi import EntityInfo, TextInfo, TextMode as EsphomeTextMode, TextState
 
 from homeassistant.components.text import TextEntity, TextMode
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import callback
 
-from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .entity import (
+    EsphomeEntity,
+    convert_api_error_ha_error,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 from .enum_mapper import EsphomeEnumMapper
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up esphome texts based on a config entry."""
-    await platform_async_setup_entry(
-        hass,
-        entry,
-        async_add_entities,
-        info_type=TextInfo,
-        entity_type=EsphomeText,
-        state_type=TextState,
-    )
-
 
 TEXT_MODES: EsphomeEnumMapper[EsphomeTextMode, TextMode] = EsphomeEnumMapper(
     {
@@ -58,6 +47,15 @@ class EsphomeText(EsphomeEntity[TextInfo, TextState], TextEntity):
             return None
         return state.state
 
+    @convert_api_error_ha_error
     async def async_set_value(self, value: str) -> None:
         """Update the current value."""
         self._client.text_command(self._key, value)
+
+
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=TextInfo,
+    entity_type=EsphomeText,
+    state_type=TextState,
+)

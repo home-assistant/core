@@ -1,4 +1,5 @@
 """Support for 1-Wire entities."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

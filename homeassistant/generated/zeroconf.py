@@ -64,6 +64,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX A21": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX BR30": {
         "always_discover": True,
         "domain": "lifx",
@@ -73,6 +77,10 @@ HOMEKIT = {
         "domain": "lifx",
     },
     "LIFX Candle": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX Ceiling": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -108,6 +116,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX Indoor Neon": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX Lightstrip": {
         "always_discover": True,
         "domain": "lifx",
@@ -124,11 +136,23 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX PAR38": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX Pls": {
         "always_discover": True,
         "domain": "lifx",
     },
     "LIFX Plus": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX Round": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX Square": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -253,6 +277,11 @@ ZEROCONF = {
             "domain": "romy",
         },
     ],
+    "_airgradient._tcp.local.": [
+        {
+            "domain": "airgradient",
+        },
+    ],
     "_airplay._tcp.local.": [
         {
             "domain": "apple_tv",
@@ -343,6 +372,12 @@ ZEROCONF = {
             },
         },
         {
+            "domain": "axis",
+            "properties": {
+                "macaddress": "e82725*",
+            },
+        },
+        {
             "domain": "doorbird",
             "properties": {
                 "macaddress": "1ccae3*",
@@ -367,6 +402,12 @@ ZEROCONF = {
     "_companion-link._tcp.local.": [
         {
             "domain": "apple_tv",
+        },
+    ],
+    "_czc._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "czc*",
         },
     ],
     "_daap._tcp.local.": [
@@ -409,6 +450,11 @@ ZEROCONF = {
     "_elg._tcp.local.": [
         {
             "domain": "elgato",
+        },
+    ],
+    "_elmax-ssl._tcp.local.": [
+        {
+            "domain": "elmax",
         },
     ],
     "_enphase-envoy._tcp.local.": [
@@ -543,6 +589,11 @@ ZEROCONF = {
             "name": "gateway*",
         },
     ],
+    "_linkplay._tcp.local.": [
+        {
+            "domain": "linkplay",
+        },
+    ],
     "_lookin._tcp.local.": [
         {
             "domain": "lookin",
@@ -568,6 +619,16 @@ ZEROCONF = {
             },
         },
     ],
+    "_matter._tcp.local.": [
+        {
+            "domain": "matter",
+        },
+    ],
+    "_matterc._udp.local.": [
+        {
+            "domain": "matter",
+        },
+    ],
     "_mediaremotetv._tcp.local.": [
         {
             "domain": "apple_tv",
@@ -588,6 +649,11 @@ ZEROCONF = {
         {
             "domain": "yeelight",
             "name": "yeelink-*",
+        },
+    ],
+    "_musc._tcp.local.": [
+        {
+            "domain": "bluesound",
         },
     ],
     "_nanoleafapi._tcp.local.": [
@@ -759,6 +825,12 @@ ZEROCONF = {
     "_xbmc-jsonrpc-h._tcp.local.": [
         {
             "domain": "kodi",
+        },
+    ],
+    "_xzg._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "xzg*",
         },
     ],
     "_zigate-zigbee-gateway._tcp.local.": [

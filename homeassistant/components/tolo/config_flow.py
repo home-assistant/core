@@ -5,17 +5,15 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from tololib import ToloClient
-from tololib.errors import ResponseTimedOutError
+from tololib import ToloClient, ToloCommunicationError
 import voluptuous as vol
 
 from homeassistant.components import dhcp
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import DEFAULT_NAME, DEFAULT_RETRY_COUNT, DEFAULT_RETRY_TIMEOUT, DOMAIN
+from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,16 +29,14 @@ class ToloSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
     def _check_device_availability(host: str) -> bool:
         client = ToloClient(host)
         try:
-            result = client.get_status_info(
-                resend_timeout=DEFAULT_RETRY_TIMEOUT, retries=DEFAULT_RETRY_COUNT
-            )
-        except ResponseTimedOutError:
+            result = client.get_status()
+        except ToloCommunicationError:
             return False
         return result is not None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
 
@@ -64,7 +60,9 @@ class ToloSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
         await self.async_set_unique_id(format_mac(discovery_info.macaddress))
         self._abort_if_unique_id_configured({CONF_HOST: discovery_info.ip})
@@ -81,7 +79,7 @@ class ToloSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle user-confirmation of discovered node."""
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: self._discovered_host})

@@ -1,4 +1,5 @@
 """Sensors for Tesla Wall Connector."""
+
 from dataclasses import dataclass
 import logging
 
@@ -66,13 +67,30 @@ WALL_CONNECTOR_SENSORS = [
             data[WALLCONNECTOR_DATA_VITALS].evse_state
         ),
         options=list(EVSE_STATE.values()),
-        icon="mdi:ev-station",
     ),
     WallConnectorSensorDescription(
         key="handle_temp_c",
         translation_key="handle_temp_c",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda data: round(data[WALLCONNECTOR_DATA_VITALS].handle_temp_c, 1),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    WallConnectorSensorDescription(
+        key="pcba_temp_c",
+        translation_key="pcba_temp_c",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda data: round(data[WALLCONNECTOR_DATA_VITALS].pcba_temp_c, 1),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    WallConnectorSensorDescription(
+        key="mcu_temp_c",
+        translation_key="mcu_temp_c",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=lambda data: round(data[WALLCONNECTOR_DATA_VITALS].mcu_temp_c, 1),
         device_class=SensorDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,

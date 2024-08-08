@@ -13,15 +13,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
-from .model import PowerviewDeviceInfo, PowerviewEntryData
+from .model import PowerviewConfigEntry, PowerviewDeviceInfo
 
 
 @dataclass(frozen=True)
@@ -62,7 +60,7 @@ SENSORS: Final = [
         native_unit_fn=lambda shade: PERCENTAGE,
         native_value_fn=lambda shade: shade.get_battery_strength(),
         create_entity_fn=lambda shade: shade.is_battery_powered(),
-        update_fn=lambda shade: shade.refresh_battery(),
+        update_fn=lambda shade: shade.refresh_battery(suppress_timeout=True),
     ),
     PowerviewSensorDescription(
         key="signal",
@@ -72,35 +70,34 @@ SENSORS: Final = [
         native_unit_fn=get_signal_native_unit,
         native_value_fn=lambda shade: shade.get_signal_strength(),
         create_entity_fn=lambda shade: shade.has_signal_strength(),
-        update_fn=lambda shade: shade.refresh(),
+        update_fn=lambda shade: shade.refresh(suppress_timeout=True),
         entity_registry_enabled_default=False,
     ),
 ]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: PowerviewConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the hunter douglas sensor entities."""
-
-    pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
-
+    pv_entry = entry.runtime_data
     entities: list[PowerViewSensor] = []
     for shade in pv_entry.shade_data.values():
         room_name = getattr(pv_entry.room_data.get(shade.room_id), ATTR_NAME, "")
-        for description in SENSORS:
-            if description.create_entity_fn(shade):
-                entities.append(
-                    PowerViewSensor(
-                        pv_entry.coordinator,
-                        pv_entry.device_info,
-                        room_name,
-                        shade,
-                        shade.name,
-                        description,
-                    )
-                )
-
+        entities.extend(
+            PowerViewSensor(
+                pv_entry.coordinator,
+                pv_entry.device_info,
+                room_name,
+                shade,
+                shade.name,
+                description,
+            )
+            for description in SENSORS
+            if description.create_entity_fn(shade)
+        )
     async_add_entities(entities)
 
 
@@ -154,5 +151,6 @@ class PowerViewSensor(ShadeEntity, SensorEntity):
 
     async def async_update(self) -> None:
         """Refresh sensor entity."""
-        await self.entity_description.update_fn(self._shade)
+        async with self.coordinator.radio_operation_lock:
+            await self.entity_description.update_fn(self._shade)
         self.async_write_ha_state()

@@ -1,22 +1,34 @@
 """Config flow for Enphase Envoy integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
+from types import MappingProxyType
 from typing import Any
 
 from awesomeversion import AwesomeVersion
 from pyenphase import AUTH_TOKEN_MIN_VERSION, Envoy, EnvoyError
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithConfigEntry,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.typing import VolDictType
 
-from .const import DOMAIN, INVALID_AUTH_ERRORS
+from .const import (
+    DOMAIN,
+    INVALID_AUTH_ERRORS,
+    OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
+    OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +49,7 @@ async def validate_input(
     return envoy
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Enphase Envoy."""
 
     VERSION = 1
@@ -47,12 +59,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.ip_address: str | None = None
         self.username = None
         self.protovers: str | None = None
-        self._reauth_entry: config_entries.ConfigEntry | None = None
+        self._reauth_entry: ConfigEntry | None = None
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> EnvoyOptionsFlowHandler:
+        """Options flow handler for Enphase_Envoy."""
+        return EnvoyOptionsFlowHandler(config_entry)
 
     @callback
     def _async_generate_schema(self) -> vol.Schema:
         """Generate schema."""
-        schema = {}
+        schema: VolDictType = {}
 
         if self.ip_address:
             schema[vol.Required(CONF_HOST, default=self.ip_address)] = vol.In(
@@ -87,8 +105,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            current_hosts = self._async_current_hosts()
+            _LOGGER.debug(
+                "Zeroconf ip %s processing %s, current hosts: %s",
+                discovery_info.ip_address.version,
+                discovery_info.host,
+                current_hosts,
+            )
         if discovery_info.ip_address.version != 4:
             return self.async_abort(reason="not_ipv4_address")
         serial = discovery_info.properties["serialnum"]
@@ -96,20 +122,32 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(serial)
         self.ip_address = discovery_info.host
         self._abort_if_unique_id_configured({CONF_HOST: self.ip_address})
+        _LOGGER.debug(
+            "Zeroconf ip %s, fw %s, no existing entry with serial %s",
+            self.ip_address,
+            self.protovers,
+            serial,
+        )
         for entry in self._async_current_entries(include_ignore=False):
             if (
                 entry.unique_id is None
                 and CONF_HOST in entry.data
                 and entry.data[CONF_HOST] == self.ip_address
             ):
+                _LOGGER.debug(
+                    "Zeroconf update envoy with this ip and blank serial in unique_id",
+                )
                 title = f"{ENVOY} {serial}" if entry.title == ENVOY else ENVOY
                 return self.async_update_reload_and_abort(
                     entry, title=title, unique_id=serial, reason="already_configured"
                 )
 
+        _LOGGER.debug("Zeroconf ip %s to step user", self.ip_address)
         return await self.async_step_user()
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -125,7 +163,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
@@ -149,7 +187,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except EnvoyError as e:
                 errors["base"] = "cannot_connect"
                 description_placeholders = {"reason": str(e)}
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -192,4 +230,102 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=self._async_generate_schema(),
             description_placeholders=description_placeholders,
             errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Add reconfigure step to allow to manually reconfigure a config entry."""
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
+
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert entry
+
+        suggested_values: dict[str, Any] | MappingProxyType[str, Any] = (
+            user_input or entry.data
+        )
+
+        host: Any = suggested_values.get(CONF_HOST)
+        username: Any = suggested_values.get(CONF_USERNAME)
+        password: Any = suggested_values.get(CONF_PASSWORD)
+
+        if user_input is not None:
+            try:
+                envoy = await validate_input(
+                    self.hass,
+                    host,
+                    username,
+                    password,
+                )
+            except INVALID_AUTH_ERRORS as e:
+                errors["base"] = "invalid_auth"
+                description_placeholders = {"reason": str(e)}
+            except EnvoyError as e:
+                errors["base"] = "cannot_connect"
+                description_placeholders = {"reason": str(e)}
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                if self.unique_id != envoy.serial_number:
+                    errors["base"] = "unexpected_envoy"
+                    description_placeholders = {
+                        "reason": f"target: {self.unique_id}, actual: {envoy.serial_number}"
+                    }
+                else:
+                    # If envoy exists in configuration update fields and exit
+                    self._abort_if_unique_id_configured(
+                        {
+                            CONF_HOST: host,
+                            CONF_USERNAME: username,
+                            CONF_PASSWORD: password,
+                        },
+                        error="reconfigure_successful",
+                    )
+        if not self.unique_id:
+            await self.async_set_unique_id(entry.unique_id)
+
+        self.context["title_placeholders"] = {
+            CONF_SERIAL: self.unique_id,
+            CONF_HOST: host,
+        }
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                self._async_generate_schema(), suggested_values
+            ),
+            description_placeholders=description_placeholders,
+            errors=errors,
+        )
+
+
+class EnvoyOptionsFlowHandler(OptionsFlowWithConfigEntry):
+    """Envoy config flow options handler."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
+                        default=self.config_entry.options.get(
+                            OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
+                            OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
+                        ),
+                    ): bool,
+                }
+            ),
+            description_placeholders={
+                CONF_SERIAL: self.config_entry.unique_id,
+                CONF_HOST: self.config_entry.data.get("host"),
+            },
         )

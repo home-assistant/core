@@ -1,4 +1,5 @@
 """The roomba constants."""
+
 from homeassistant.const import Platform
 
 DOMAIN = "roomba"

@@ -1,4 +1,5 @@
 """The Fully Kiosk Browser integration."""
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -12,7 +13,10 @@ from .services import async_setup_services
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CAMERA,
+    Platform.IMAGE,
     Platform.MEDIA_PLAYER,
+    Platform.NOTIFY,
     Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,

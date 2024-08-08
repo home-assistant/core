@@ -1,0 +1,189 @@
+# serializer version: 1
+# name: test_switch_setup[mockedusbdevice_socket_0]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
+      'friendly_name': 'MockedUSBDevice Socket 0',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mockedusbdevice_socket_0',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_setup[mockedusbdevice_socket_0].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.mockedusbdevice_socket_0',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': 'Socket 0',
+    'platform': 'energenie_power_sockets',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'socket',
+    'unique_id': 'DYPS:00:11:22_0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_setup[mockedusbdevice_socket_1]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
+      'friendly_name': 'MockedUSBDevice Socket 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mockedusbdevice_socket_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_setup[mockedusbdevice_socket_1].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.mockedusbdevice_socket_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': 'Socket 1',
+    'platform': 'energenie_power_sockets',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'socket',
+    'unique_id': 'DYPS:00:11:22_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_setup[mockedusbdevice_socket_2]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
+      'friendly_name': 'MockedUSBDevice Socket 2',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mockedusbdevice_socket_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch_setup[mockedusbdevice_socket_2].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.mockedusbdevice_socket_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': 'Socket 2',
+    'platform': 'energenie_power_sockets',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'socket',
+    'unique_id': 'DYPS:00:11:22_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_setup[mockedusbdevice_socket_3]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
+      'friendly_name': 'MockedUSBDevice Socket 3',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mockedusbdevice_socket_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_setup[mockedusbdevice_socket_3].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.mockedusbdevice_socket_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': 'Socket 3',
+    'platform': 'energenie_power_sockets',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'socket',
+    'unique_id': 'DYPS:00:11:22_3',
+    'unit_of_measurement': None,
+  })
+# ---

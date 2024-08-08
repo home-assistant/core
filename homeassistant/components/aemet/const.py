@@ -1,4 +1,5 @@
 """Constant values for the AEMET OpenData component."""
+
 from __future__ import annotations
 
 from aemet_opendata.const import (
@@ -54,8 +55,6 @@ CONF_STATION_UPDATES = "station_updates"
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 DEFAULT_NAME = "AEMET"
 DOMAIN = "aemet"
-ENTRY_NAME = "name"
-ENTRY_WEATHER_COORDINATOR = "weather_coordinator"
 
 ATTR_API_CONDITION = "condition"
 ATTR_API_FORECAST_CONDITION = "condition"
@@ -119,9 +118,4 @@ FORECAST_MAP = {
         AOD_WIND_SPEED_MAX: ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
         AOD_WIND_SPEED: ATTR_FORECAST_NATIVE_WIND_SPEED,
     },
-}
-
-WEATHER_FORECAST_MODES = {
-    AOD_FORECAST_DAILY: "daily",
-    AOD_FORECAST_HOURLY: "hourly",
 }

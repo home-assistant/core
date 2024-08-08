@@ -1,8 +1,9 @@
 """Statistics helper for sensor."""
+
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Callable, Iterable, MutableMapping
+from collections.abc import Callable, Iterable
 import datetime
 import itertools
 import logging
@@ -79,6 +80,7 @@ def _get_sensor_states(hass: HomeAssistant) -> list[State]:
     # We check for state class first before calling the filter
     # function as the filter function is much more expensive
     # than checking the state class
+    entity_filter = instance.entity_filter
     return [
         state
         for state in hass.states.all(DOMAIN)
@@ -87,7 +89,7 @@ def _get_sensor_states(hass: HomeAssistant) -> list[State]:
             type(state_class) is SensorStateClass
             or try_parse_enum(SensorStateClass, state_class)
         )
-        and instance.entity_filter(state.entity_id)
+        and (not entity_filter or entity_filter(state.entity_id))
     ]
 
 
@@ -107,7 +109,7 @@ def _time_weighted_average(
     for fstate, state in fstates:
         # The recorder will give us the last known state, which may be well
         # before the requested start time for the statistics
-        start_time = start if state.last_updated < start else state.last_updated
+        start_time = max(state.last_updated, start)
         if old_start_time is None:
             # Adjust start time, if there was no last known state
             start = start_time
@@ -401,7 +403,7 @@ def compile_statistics(  # noqa: C901
     entities_full_history = [
         i.entity_id for i in sensor_states if "sum" in wanted_statistics[i.entity_id]
     ]
-    history_list: MutableMapping[str, list[State]] = {}
+    history_list: dict[str, list[State]] = {}
     if entities_full_history:
         history_list = history.get_full_significant_states_with_session(
             hass,
@@ -510,9 +512,13 @@ def compile_statistics(  # noqa: C901
         # Make calculations
         stat: StatisticData = {"start": start}
         if "max" in wanted_statistics[entity_id]:
-            stat["max"] = max(*itertools.islice(zip(*valid_float_states), 1))
+            stat["max"] = max(
+                *itertools.islice(zip(*valid_float_states, strict=False), 1)
+            )
         if "min" in wanted_statistics[entity_id]:
-            stat["min"] = min(*itertools.islice(zip(*valid_float_states), 1))
+            stat["min"] = min(
+                *itertools.islice(zip(*valid_float_states, strict=False), 1)
+            )
 
         if "mean" in wanted_statistics[entity_id]:
             stat["mean"] = _time_weighted_average(valid_float_states, start, end)
@@ -675,6 +681,7 @@ def validate_statistics(
     sensor_entity_ids = {i.entity_id for i in sensor_states}
     sensor_statistic_ids = set(metadatas)
     instance = get_instance(hass)
+    entity_filter = instance.entity_filter
 
     for state in sensor_states:
         entity_id = state.entity_id
@@ -684,7 +691,7 @@ def validate_statistics(
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if metadata := metadatas.get(entity_id):
-            if not instance.entity_filter(state.entity_id):
+            if entity_filter and not entity_filter(state.entity_id):
                 # Sensor was previously recorded, but no longer is
                 validation_result[entity_id].append(
                     statistics.ValidationIssue(
@@ -734,7 +741,7 @@ def validate_statistics(
                     )
                 )
         elif state_class is not None:
-            if not instance.entity_filter(state.entity_id):
+            if entity_filter and not entity_filter(state.entity_id):
                 # Sensor is not recorded
                 validation_result[entity_id].append(
                     statistics.ValidationIssue(

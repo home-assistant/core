@@ -1,12 +1,15 @@
 """Support for Vanderbilt (formerly Siemens) SPC alarm systems."""
+
 from __future__ import annotations
 
 from pyspcwebgw import SpcWebGateway
 from pyspcwebgw.area import Area
 from pyspcwebgw.const import AreaMode
 
-import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
+)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -50,7 +53,7 @@ async def async_setup_platform(
     async_add_entities([SpcAlarm(area=area, api=api) for area in api.areas.values()])
 
 
-class SpcAlarm(alarm.AlarmControlPanelEntity):
+class SpcAlarm(AlarmControlPanelEntity):
     """Representation of the SPC alarm panel."""
 
     _attr_should_poll = False
@@ -59,6 +62,7 @@ class SpcAlarm(alarm.AlarmControlPanelEntity):
         | AlarmControlPanelEntityFeature.ARM_AWAY
         | AlarmControlPanelEntityFeature.ARM_NIGHT
     )
+    _attr_code_arm_required = False
 
     def __init__(self, area: Area, api: SpcWebGateway) -> None:
         """Initialize the SPC alarm panel."""

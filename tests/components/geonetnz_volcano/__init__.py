@@ -1,4 +1,5 @@
 """The tests for the GeoNet NZ Volcano Feed integration."""
+
 from unittest.mock import MagicMock
 
 

@@ -1,17 +1,21 @@
 """The discovery flow helper."""
+
 from __future__ import annotations
 
 from collections.abc import Coroutine
 from typing import Any, NamedTuple
 
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import gather_with_limited_concurrency
+from homeassistant.util.hass_dict import HassKey
 
-FLOW_INIT_LIMIT = 2
-DISCOVERY_FLOW_DISPATCHER = "discovery_flow_dispatcher"
+FLOW_INIT_LIMIT = 20
+DISCOVERY_FLOW_DISPATCHER: HassKey[FlowDispatcher] = HassKey(
+    "discovery_flow_dispatcher"
+)
 
 
 @bind_hass
@@ -29,16 +33,18 @@ def async_create_flow(
 
     if not dispatcher or dispatcher.started:
         if init_coro := _async_init_flow(hass, domain, context, data):
-            hass.async_create_task(init_coro, f"discovery flow {domain} {context}")
+            hass.async_create_background_task(
+                init_coro, f"discovery flow {domain} {context}", eager_start=True
+            )
         return
 
-    return dispatcher.async_create(domain, context, data)
+    dispatcher.async_create(domain, context, data)
 
 
 @callback
 def _async_init_flow(
     hass: HomeAssistant, domain: str, context: dict[str, Any], data: Any
-) -> Coroutine[None, None, FlowResult] | None:
+) -> Coroutine[None, None, ConfigFlowResult] | None:
     """Create a discovery flow."""
     # Avoid spawning flows that have the same initial discovery data
     # as ones in progress as it may cause additional device probing

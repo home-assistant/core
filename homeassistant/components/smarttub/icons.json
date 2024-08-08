@@ -1,0 +1,8 @@
+{
+  "services": {
+    "set_primary_filtration": "mdi:filter",
+    "set_secondary_filtration": "mdi:filter-multiple",
+    "snooze_reminder": "mdi:timer-pause",
+    "reset_reminder": "mdi:timer-sync"
+  }
+}

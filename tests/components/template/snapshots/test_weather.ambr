@@ -55,22 +55,12 @@
 # name: test_forecasts[config0-1-weather-get_forecast]
   dict({
     'forecast': list([
-      dict({
-        'condition': 'cloudy',
-        'datetime': '2023-02-17T14:00:00+00:00',
-        'temperature': 14.2,
-      }),
     ]),
   })
 # ---
 # name: test_forecasts[config0-1-weather-get_forecast].1
   dict({
     'forecast': list([
-      dict({
-        'condition': 'cloudy',
-        'datetime': '2023-02-17T14:00:00+00:00',
-        'temperature': 14.2,
-      }),
     ]),
   })
 # ---
@@ -89,11 +79,6 @@
 # name: test_forecasts[config0-1-weather-get_forecast].3
   dict({
     'forecast': list([
-      dict({
-        'condition': 'cloudy',
-        'datetime': '2023-02-17T14:00:00+00:00',
-        'temperature': 16.9,
-      }),
     ]),
   })
 # ---
@@ -101,11 +86,6 @@
   dict({
     'weather.forecast': dict({
       'forecast': list([
-        dict({
-          'condition': 'cloudy',
-          'datetime': '2023-02-17T14:00:00+00:00',
-          'temperature': 14.2,
-        }),
       ]),
     }),
   })
@@ -114,11 +94,6 @@
   dict({
     'weather.forecast': dict({
       'forecast': list([
-        dict({
-          'condition': 'cloudy',
-          'datetime': '2023-02-17T14:00:00+00:00',
-          'temperature': 14.2,
-        }),
       ]),
     }),
   })
@@ -141,11 +116,6 @@
   dict({
     'weather.forecast': dict({
       'forecast': list([
-        dict({
-          'condition': 'cloudy',
-          'datetime': '2023-02-17T14:00:00+00:00',
-          'temperature': 16.9,
-        }),
       ]),
     }),
   })

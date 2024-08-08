@@ -1,4 +1,5 @@
 """Config flow for Netgear LTE integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -8,36 +9,20 @@ from eternalegypt import Error, Modem
 from eternalegypt.eternalegypt import Information
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import DEFAULT_HOST, DOMAIN, LOGGER, MANUFACTURER
 
 
-class NetgearLTEFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class NetgearLTEFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Netgear LTE."""
-
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Import a configuration from config.yaml."""
-        host = config[CONF_HOST]
-        password = config[CONF_PASSWORD]
-        self._async_abort_entries_match({CONF_HOST: host})
-        try:
-            info = await self._async_validate_input(host, password)
-        except InputValidationError:
-            return self.async_abort(reason="cannot_connect")
-        await self.async_set_unique_id(info.serial_number)
-        self._abort_if_unique_id_configured()
-        return self.async_create_entry(
-            title=f"{MANUFACTURER} {info.items['general.devicename']}",
-            data={CONF_HOST: host, CONF_PASSWORD: password},
-        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
@@ -94,7 +79,7 @@ class NetgearLTEFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return info
 
 
-class InputValidationError(exceptions.HomeAssistantError):
+class InputValidationError(HomeAssistantError):
     """Error to indicate we cannot proceed due to invalid input."""
 
     def __init__(self, base: str) -> None:

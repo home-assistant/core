@@ -59,7 +59,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': 'mdi:timer-lock-open',
+    'original_icon': None,
     'original_name': 'Pullspring duration',
     'platform': 'tedee',
     'previous_unique_id': None,
@@ -80,6 +80,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.lock_1a2b_battery',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '70',
   })
@@ -89,13 +90,13 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Lock-1A2B Pullspring duration',
-      'icon': 'mdi:timer-lock-open',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.lock_1a2b_pullspring_duration',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })

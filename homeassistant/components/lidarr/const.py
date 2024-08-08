@@ -1,4 +1,5 @@
 """Constants for Lidarr."""
+
 import logging
 from typing import Final
 

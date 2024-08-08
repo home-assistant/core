@@ -1,4 +1,5 @@
 """Constants for the Anthem A/V Receivers integration."""
+
 ANTHEMAV_UPDATE_SIGNAL = "anthemav_update"
 
 DEFAULT_NAME = "Anthem AV"

@@ -1,4 +1,5 @@
 """Support for Spider thermostats."""
+
 from typing import Any
 
 from homeassistant.components.climate import (

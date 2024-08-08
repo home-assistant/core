@@ -21,14 +21,14 @@ jobs:
 
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.1.7
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3.24.4
+        uses: github/codeql-action/init@v3.26.0
         with:
           languages: python
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3.24.4
+        uses: github/codeql-action/analyze@v3.26.0
         with:
           category: "/language:python"

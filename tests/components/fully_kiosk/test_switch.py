@@ -1,8 +1,9 @@
 """Test the Fully Kiosk Browser switches."""
+
 from unittest.mock import MagicMock
 
+from homeassistant.components import switch
 from homeassistant.components.fully_kiosk.const import DOMAIN
-import homeassistant.components.switch as switch
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er

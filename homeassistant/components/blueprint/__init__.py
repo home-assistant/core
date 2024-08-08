@@ -1,4 +1,5 @@
 """The blueprint integration."""
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType

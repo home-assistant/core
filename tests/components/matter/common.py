@@ -1,4 +1,5 @@
 """Provide common test tools."""
+
 from __future__ import annotations
 
 from functools import cache
@@ -30,9 +31,12 @@ async def setup_integration_with_node_fixture(
     hass: HomeAssistant,
     node_fixture: str,
     client: MagicMock,
+    override_attributes: dict[str, Any] | None = None,
 ) -> MatterNode:
     """Set up Matter integration with fixture as node."""
     node_data = load_and_parse_node_fixture(node_fixture)
+    if override_attributes:
+        node_data["attributes"].update(override_attributes)
     node = MatterNode(
         dataclass_from_dict(
             MatterNodeData,

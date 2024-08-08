@@ -1,4 +1,5 @@
 """Test reproduce state for Vacuum."""
+
 import pytest
 
 from homeassistant.components.vacuum import (

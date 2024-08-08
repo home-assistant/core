@@ -1,4 +1,5 @@
 """Tradfri cover (recognised as blinds in the IKEA ecosystem) platform tests."""
+
 from __future__ import annotations
 
 from typing import Any

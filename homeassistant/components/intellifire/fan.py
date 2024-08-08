@@ -1,4 +1,5 @@
 """Fan definition for Intellifire."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -74,7 +75,12 @@ class IntellifireFan(IntellifireEntity, FanEntity):
     """Fan entity for the fireplace."""
 
     entity_description: IntellifireFanEntityDescription
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
+    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def is_on(self) -> bool:

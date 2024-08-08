@@ -1,4 +1,5 @@
 """Tests for the Flexit Nordic (BACnet) integration."""
+
 from unittest.mock import patch
 
 from homeassistant.const import Platform

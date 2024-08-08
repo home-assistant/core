@@ -1,4 +1,5 @@
 """Test Local Media Source."""
+
 import logging
 from unittest.mock import AsyncMock, Mock, call
 
@@ -73,7 +74,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)
-async def setup_media_source(hass) -> None:
+async def setup_media_source(hass: HomeAssistant) -> None:
     """Set up media source."""
     assert await async_setup_component(hass, "media_source", {})
 

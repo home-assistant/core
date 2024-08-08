@@ -1,4 +1,5 @@
 """Support for OpenTherm Gateway binary sensors."""
+
 import logging
 
 from homeassistant.components.binary_sensor import ENTITY_ID_FORMAT, BinarySensorEntity
@@ -27,25 +28,19 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the OpenTherm Gateway binary sensors."""
-    sensors = []
     gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]]
-    for var, info in BINARY_SENSOR_INFO.items():
-        device_class = info[0]
-        friendly_name_format = info[1]
-        status_sources = info[2]
 
-        for source in status_sources:
-            sensors.append(
-                OpenThermBinarySensor(
-                    gw_dev,
-                    var,
-                    source,
-                    device_class,
-                    friendly_name_format,
-                )
-            )
-
-    async_add_entities(sensors)
+    async_add_entities(
+        OpenThermBinarySensor(
+            gw_dev,
+            var,
+            source,
+            info[0],
+            info[1],
+        )
+        for var, info in BINARY_SENSOR_INFO.items()
+        for source in info[2]
+    )
 
 
 class OpenThermBinarySensor(BinarySensorEntity):
@@ -53,6 +48,7 @@ class OpenThermBinarySensor(BinarySensorEntity):
 
     _attr_should_poll = False
     _attr_entity_registry_enabled_default = False
+    _attr_available = False
 
     def __init__(self, gw_dev, var, source, device_class, friendly_name_format):
         """Initialize the binary sensor."""
@@ -90,14 +86,10 @@ class OpenThermBinarySensor(BinarySensorEntity):
         _LOGGER.debug("Removing OpenTherm Gateway binary sensor %s", self._attr_name)
         self._unsub_updates()
 
-    @property
-    def available(self):
-        """Return availability of the sensor."""
-        return self._attr_is_on is not None
-
     @callback
     def receive_report(self, status):
         """Handle status updates from the component."""
+        self._attr_available = self._gateway.connected
         state = status[self._source].get(self._var)
         self._attr_is_on = None if state is None else bool(state)
         self.async_write_ha_state()

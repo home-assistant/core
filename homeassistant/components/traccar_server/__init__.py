@@ -1,4 +1,5 @@
 """The Traccar Server integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -29,7 +30,11 @@ from .const import (
 )
 from .coordinator import TraccarServerCoordinator
 
-PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.DEVICE_TRACKER,
+    Platform.SENSOR,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -74,6 +79,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 name="traccar_server_import_events",
             )
         )
+
+    entry.async_create_background_task(
+        hass=hass,
+        target=coordinator.subscribe(),
+        name="Traccar Server subscription",
+    )
 
     return True
 

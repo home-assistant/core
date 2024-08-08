@@ -1,10 +1,13 @@
 """The tests for lastfm."""
+
+from typing import Any
 from unittest.mock import patch
 
 from pylast import PyLastError, Track
 
 from homeassistant.components.lastfm.const import CONF_MAIN_USER, CONF_USERS
 from homeassistant.const import CONF_API_KEY
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 API_KEY = "asdasdasdasdasd"
 USERNAME_1 = "testaccount1"
@@ -51,16 +54,16 @@ class MockUser:
         username: str = USERNAME_1,
         now_playing_result: Track | None = None,
         thrown_error: Exception | None = None,
-        friends: list = [],
-        recent_tracks: list[Track] = [],
-        top_tracks: list[Track] = [],
+        friends: list | UndefinedType = UNDEFINED,
+        recent_tracks: list[Track] | UndefinedType = UNDEFINED,
+        top_tracks: list[Track] | UndefinedType = UNDEFINED,
     ) -> None:
         """Initialize the mock."""
         self._now_playing_result = now_playing_result
         self._thrown_error = thrown_error
-        self._friends = friends
-        self._recent_tracks = recent_tracks
-        self._top_tracks = top_tracks
+        self._friends = [] if friends is UNDEFINED else friends
+        self._recent_tracks = [] if recent_tracks is UNDEFINED else recent_tracks
+        self._top_tracks = [] if top_tracks is UNDEFINED else top_tracks
         self.name = username
 
     def get_name(self, capitalized: bool) -> str:
@@ -89,7 +92,7 @@ class MockUser:
         """Get mock now playing."""
         return self._now_playing_result
 
-    def get_friends(self) -> list[any]:
+    def get_friends(self) -> list[Any]:
         """Get mock friends."""
         if len(self._friends) == 0:
             raise PyLastError("network", "status", "Page not found")

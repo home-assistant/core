@@ -65,6 +65,21 @@
         "name": "Heating"
       }
     },
+    "fan": {
+      "ventilation": {
+        "name": "Ventilation",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "permanent": "permanent",
+              "ventilation": "schedule",
+              "sensor_driven": "sensor",
+              "sensor_override": "schedule with sensor-override"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "heating_curve_shift": {
         "name": "Heating curve shift"
@@ -89,6 +104,9 @@
       },
       "comfort_heating_temperature": {
         "name": "[%key:component::vicare::entity::number::comfort_temperature::name%]"
+      },
+      "dhw_secondary_temperature": {
+        "name": "DHW secondary temperature"
       }
     },
     "sensor": {
@@ -274,6 +292,66 @@
       },
       "volumetric_flow": {
         "name": "Volumetric flow"
+      },
+      "ess_power_current": {
+        "name": "Battery power"
+      },
+      "ess_state": {
+        "name": "Battery state",
+        "state": {
+          "charge": "Charging",
+          "discharge": "Discharging",
+          "standby": "Standby"
+        }
+      },
+      "ess_discharge_today": {
+        "name": "Battery discharge today"
+      },
+      "ess_discharge_this_week": {
+        "name": "Battery discharge this week"
+      },
+      "ess_discharge_this_month": {
+        "name": "Battery discharge this month"
+      },
+      "ess_discharge_this_year": {
+        "name": "Battery discharge this year"
+      },
+      "ess_discharge_total": {
+        "name": "Battery discharge total"
+      },
+      "pcc_transfer_power_exchange": {
+        "name": "Power exchange with grid"
+      },
+      "pcc_energy_consumption": {
+        "name": "Energy import from grid"
+      },
+      "pcc_energy_feed_in": {
+        "name": "Energy export to grid"
+      },
+      "photovoltaic_power_production_current": {
+        "name": "Solar power"
+      },
+      "photovoltaic_energy_production_today": {
+        "name": "Solar energy production today"
+      },
+      "photovoltaic_energy_production_this_week": {
+        "name": "Solar energy production this week"
+      },
+      "photovoltaic_energy_production_this_month": {
+        "name": "Solar energy production this month"
+      },
+      "photovoltaic_energy_production_this_year": {
+        "name": "Solar energy production this year"
+      },
+      "photovoltaic_energy_production_total": {
+        "name": "Solar energy production total"
+      },
+      "photovoltaic_status": {
+        "name": "Solar state",
+        "state": {
+          "ready": "Standby",
+          "production": "Producing"
+        }
       },
       "supply_temperature": {
         "name": "Supply temperature"

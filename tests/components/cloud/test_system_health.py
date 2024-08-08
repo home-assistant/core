@@ -1,4 +1,5 @@
 """Test cloud system health."""
+
 import asyncio
 from collections.abc import Callable, Coroutine
 from typing import Any
@@ -7,7 +8,7 @@ from unittest.mock import MagicMock
 from aiohttp import ClientError
 from hass_nabucasa.remote import CertificateStatus
 
-from homeassistant.components.cloud import DOMAIN
+from homeassistant.components.cloud.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 

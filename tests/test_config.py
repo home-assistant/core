@@ -1,12 +1,16 @@
 """Test config utils."""
+
+import asyncio
 from collections import OrderedDict
+from collections.abc import Generator
 import contextlib
 import copy
 import logging
 import os
+from pathlib import Path
 from typing import Any
 from unittest import mock
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -14,6 +18,7 @@ import voluptuous as vol
 from voluptuous import Invalid, MultipleInvalid
 import yaml
 
+from homeassistant import loader
 import homeassistant.config as config_util
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -24,25 +29,31 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
-    CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
+    CONF_PACKAGES,
     __version__,
 )
-from homeassistant.core import ConfigSource, HomeAssistant, HomeAssistantError
-from homeassistant.exceptions import ConfigValidationError
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
-import homeassistant.helpers.check_config as check_config
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    ConfigSource,
+    HomeAssistant,
+)
+from homeassistant.exceptions import ConfigValidationError, HomeAssistantError
+from homeassistant.helpers import (
+    check_config,
+    config_validation as cv,
+    issue_registry as ir,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration
+from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import (
-    _CONF_UNIT_SYSTEM_US_CUSTOMARY,
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
     UnitSystem,
 )
 from homeassistant.util.yaml import SECRET_YAML
+from homeassistant.util.yaml.objects import NodeDictClass
 
 from .common import (
     MockModule,
@@ -65,7 +76,7 @@ SAFE_MODE_PATH = os.path.join(CONFIG_DIR, config_util.SAFE_MODE_FILENAME)
 
 def create_file(path):
     """Create an empty file."""
-    with open(path, "w"):
+    with open(path, "w", encoding="utf8"):
         pass
 
 
@@ -183,13 +194,13 @@ async def mock_non_adr_0007_integration_with_docs(hass: HomeAssistant) -> None:
 async def mock_adr_0007_integrations(hass: HomeAssistant) -> list[Integration]:
     """Mock ADR-0007 compliant integrations."""
     integrations = []
-    for domain in [
+    for domain in (
         "adr_0007_1",
         "adr_0007_2",
         "adr_0007_3",
         "adr_0007_4",
         "adr_0007_5",
-    ]:
+    ):
         adr_0007_config_schema = vol.Schema(
             {
                 domain: vol.Schema(
@@ -216,13 +227,13 @@ async def mock_adr_0007_integrations_with_docs(
 ) -> list[Integration]:
     """Mock ADR-0007 compliant integrations."""
     integrations = []
-    for domain in [
+    for domain in (
         "adr_0007_1",
         "adr_0007_2",
         "adr_0007_3",
         "adr_0007_4",
         "adr_0007_5",
-    ]:
+    ):
         adr_0007_config_schema = vol.Schema(
             {
                 domain: vol.Schema(
@@ -284,10 +295,10 @@ async def mock_custom_validator_integrations(hass: HomeAssistant) -> list[Integr
             Mock(async_validate_config=gen_async_validate_config(domain)),
         )
 
-    for domain, exception in [
+    for domain, exception in (
         ("custom_validator_bad_1", HomeAssistantError("broken")),
         ("custom_validator_bad_2", ValueError("broken")),
-    ]:
+    ):
         integrations.append(mock_integration(hass, MockModule(domain)))
         mock_platform(
             hass,
@@ -343,10 +354,10 @@ async def mock_custom_validator_integrations_with_docs(
             Mock(async_validate_config=gen_async_validate_config(domain)),
         )
 
-    for domain, exception in [
+    for domain, exception in (
         ("custom_validator_bad_1", HomeAssistantError("broken")),
         ("custom_validator_bad_2", ValueError("broken")),
-    ]:
+    ):
         integrations.append(
             mock_integration(
                 hass,
@@ -363,6 +374,13 @@ async def mock_custom_validator_integrations_with_docs(
             f"{domain}.config",
             Mock(async_validate_config=AsyncMock(side_effect=exception)),
         )
+
+
+class ConfigTestClass(NodeDictClass):
+    """Test class for config with wrapper."""
+
+    __line__ = 140
+    __config_file__ = "configuration.yaml"
 
 
 async def test_create_default_config(hass: HomeAssistant) -> None:
@@ -395,11 +413,10 @@ async def test_ensure_config_exists_creates_config(hass: HomeAssistant) -> None:
 
 async def test_ensure_config_exists_uses_existing_config(hass: HomeAssistant) -> None:
     """Test that calling ensure_config_exists uses existing config."""
-    create_file(YAML_PATH)
+    await hass.async_add_executor_job(create_file, YAML_PATH)
     await config_util.async_ensure_config_exists(hass)
 
-    with open(YAML_PATH) as fp:
-        content = fp.read()
+    content = await hass.async_add_executor_job(Path(YAML_PATH).read_text)
 
     # File created with create_file are empty
     assert content == ""
@@ -407,12 +424,11 @@ async def test_ensure_config_exists_uses_existing_config(hass: HomeAssistant) ->
 
 async def test_ensure_existing_files_is_not_overwritten(hass: HomeAssistant) -> None:
     """Test that calling async_create_default_config does not overwrite existing files."""
-    create_file(SECRET_PATH)
+    await hass.async_add_executor_job(create_file, SECRET_PATH)
 
     await config_util.async_create_default_config(hass)
 
-    with open(SECRET_PATH) as fp:
-        content = fp.read()
+    content = await hass.async_add_executor_job(Path(SECRET_PATH).read_text)
 
     # File created with create_file are empty
     assert content == ""
@@ -427,7 +443,7 @@ def test_load_yaml_config_converts_empty_files_to_dict() -> None:
 
 def test_load_yaml_config_raises_error_if_not_dict() -> None:
     """Test error raised when YAML file is not a dict."""
-    with open(YAML_PATH, "w") as fp:
+    with open(YAML_PATH, "w", encoding="utf8") as fp:
         fp.write("5")
 
     with pytest.raises(HomeAssistantError):
@@ -436,7 +452,7 @@ def test_load_yaml_config_raises_error_if_not_dict() -> None:
 
 def test_load_yaml_config_raises_error_if_malformed_yaml() -> None:
     """Test error raised if invalid YAML."""
-    with open(YAML_PATH, "w") as fp:
+    with open(YAML_PATH, "w", encoding="utf8") as fp:
         fp.write(":-")
 
     with pytest.raises(HomeAssistantError):
@@ -445,11 +461,12 @@ def test_load_yaml_config_raises_error_if_malformed_yaml() -> None:
 
 def test_load_yaml_config_raises_error_if_unsafe_yaml() -> None:
     """Test error raised if unsafe YAML."""
-    with open(YAML_PATH, "w") as fp:
+    with open(YAML_PATH, "w", encoding="utf8") as fp:
         fp.write("- !!python/object/apply:os.system []")
 
-    with patch.object(os, "system") as system_mock, contextlib.suppress(
-        HomeAssistantError
+    with (
+        patch.object(os, "system") as system_mock,
+        contextlib.suppress(HomeAssistantError),
     ):
         config_util.load_yaml_config_file(YAML_PATH)
 
@@ -457,7 +474,10 @@ def test_load_yaml_config_raises_error_if_unsafe_yaml() -> None:
 
     # Here we validate that the test above is a good test
     # since previously the syntax was not valid
-    with open(YAML_PATH) as fp, patch.object(os, "system") as system_mock:
+    with (
+        open(YAML_PATH, encoding="utf8") as fp,
+        patch.object(os, "system") as system_mock,
+    ):
         list(yaml.unsafe_load_all(fp))
 
     assert len(system_mock.mock_calls) == 1
@@ -465,13 +485,14 @@ def test_load_yaml_config_raises_error_if_unsafe_yaml() -> None:
 
 def test_load_yaml_config_preserves_key_order() -> None:
     """Test removal of library."""
-    with open(YAML_PATH, "w") as fp:
+    with open(YAML_PATH, "w", encoding="utf8") as fp:
         fp.write("hello: 2\n")
         fp.write("world: 1\n")
 
-    assert [("hello", 2), ("world", 1)] == list(
-        config_util.load_yaml_config_file(YAML_PATH).items()
-    )
+    assert list(config_util.load_yaml_config_file(YAML_PATH).items()) == [
+        ("hello", 2),
+        ("world", 1),
+    ]
 
 
 async def test_create_default_config_returns_none_if_write_error(
@@ -490,7 +511,7 @@ async def test_create_default_config_returns_none_if_write_error(
 def test_core_config_schema() -> None:
     """Test core config schema."""
     for value in (
-        {CONF_UNIT_SYSTEM: "K"},
+        {"unit_system": "K"},
         {"time_zone": "non-exist"},
         {"latitude": "91"},
         {"longitude": -181},
@@ -502,6 +523,7 @@ def test_core_config_schema() -> None:
         {"customize": {"entity_id": []}},
         {"country": "xx"},
         {"language": "xx"},
+        {"radius": -10},
     ):
         with pytest.raises(MultipleInvalid):
             config_util.CORE_CONFIG_SCHEMA(value)
@@ -513,11 +535,12 @@ def test_core_config_schema() -> None:
             "longitude": "123.45",
             "external_url": "https://www.example.com",
             "internal_url": "http://example.local",
-            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
+            "unit_system": "metric",
             "currency": "USD",
             "customize": {"sensor.temperature": {"hidden": True}},
             "country": "SE",
             "language": "sv",
+            "radius": "10",
         }
     )
 
@@ -634,8 +657,9 @@ def test_process_config_upgrade(hass: HomeAssistant) -> None:
     ha_version = "0.92.0"
 
     mock_open = mock.mock_open()
-    with patch("homeassistant.config.open", mock_open, create=True), patch.object(
-        config_util, "__version__", "0.91.0"
+    with (
+        patch("homeassistant.config.open", mock_open, create=True),
+        patch.object(config_util, "__version__", "0.91.0"),
     ):
         opened_file = mock_open.return_value
         opened_file.readline.return_value = ha_version
@@ -688,10 +712,11 @@ async def test_loading_configuration_from_storage(
             "currency": "EUR",
             "country": "SE",
             "language": "sv",
+            "radius": 150,
         },
         "key": "core.config",
         "version": 1,
-        "minor_version": 3,
+        "minor_version": 4,
     }
     await config_util.async_process_ha_core_config(
         hass, {"allowlist_external_dirs": "/etc"}
@@ -708,6 +733,7 @@ async def test_loading_configuration_from_storage(
     assert hass.config.currency == "EUR"
     assert hass.config.country == "SE"
     assert hass.config.language == "sv"
+    assert hass.config.radius == 150
     assert len(hass.config.allowlist_external_dirs) == 3
     assert "/etc" in hass.config.allowlist_external_dirs
     assert hass.config.config_source is ConfigSource.STORAGE
@@ -777,15 +803,19 @@ async def test_migration_and_updating_configuration(
     expected_new_core_data["data"]["currency"] = "USD"
     # 1.1 -> 1.2 store migration with migrated unit system
     expected_new_core_data["data"]["unit_system_v2"] = "us_customary"
-    expected_new_core_data["minor_version"] = 3
-    # defaults for country and language
+    # 1.1 -> 1.3 defaults for country and language
     expected_new_core_data["data"]["country"] = None
     expected_new_core_data["data"]["language"] = "en"
+    # 1.1 -> 1.4 defaults for zone radius
+    expected_new_core_data["data"]["radius"] = 100
+    # Bumped minor version
+    expected_new_core_data["minor_version"] = 4
     assert hass_storage["core.config"] == expected_new_core_data
     assert hass.config.latitude == 50
     assert hass.config.currency == "USD"
     assert hass.config.country is None
     assert hass.config.language == "en"
+    assert hass.config.radius == 100
 
 
 async def test_override_stored_configuration(
@@ -828,16 +858,17 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
             "longitude": 50,
             "elevation": 25,
             "name": "Huis",
-            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+            "unit_system": "imperial",
             "time_zone": "America/New_York",
             "allowlist_external_dirs": "/etc",
             "external_url": "https://www.example.com",
             "internal_url": "http://example.local",
             "media_dirs": {"mymedia": "/usr"},
-            "legacy_templates": True,
+            "debug": True,
             "currency": "EUR",
             "country": "SE",
             "language": "sv",
+            "radius": 150,
         },
     )
 
@@ -854,15 +885,16 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
     assert "/usr" in hass.config.allowlist_external_dirs
     assert hass.config.media_dirs == {"mymedia": "/usr"}
     assert hass.config.config_source is ConfigSource.YAML
-    assert hass.config.legacy_templates is True
+    assert hass.config.debug is True
     assert hass.config.currency == "EUR"
     assert hass.config.country == "SE"
     assert hass.config.language == "sv"
+    assert hass.config.radius == 150
 
 
 @pytest.mark.parametrize(
     ("minor_version", "users", "user_data", "default_language"),
-    (
+    [
         (2, (), {}, "en"),
         (2, ({"is_owner": True},), {}, "en"),
         (
@@ -891,7 +923,7 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
             {"user1": {"language": {"language": "sv"}}},
             "en",
         ),
-    ),
+    ],
 )
 async def test_language_default(
     hass: HomeAssistant,
@@ -958,7 +990,7 @@ async def test_loading_configuration_from_packages(hass: HomeAssistant) -> None:
             "longitude": -1,
             "elevation": 500,
             "name": "Huis",
-            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
+            "unit_system": "metric",
             "time_zone": "Europe/Madrid",
             "external_url": "https://www.example.com",
             "internal_url": "http://example.local",
@@ -982,7 +1014,7 @@ async def test_loading_configuration_from_packages(hass: HomeAssistant) -> None:
                 "longitude": -1,
                 "elevation": 500,
                 "name": "Huis",
-                CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC,
+                "unit_system": "metric",
                 "time_zone": "Europe/Madrid",
                 "packages": {"empty_package": None},
             },
@@ -992,9 +1024,9 @@ async def test_loading_configuration_from_packages(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("unit_system_name", "expected_unit_system"),
     [
-        (CONF_UNIT_SYSTEM_METRIC, METRIC_SYSTEM),
-        (CONF_UNIT_SYSTEM_IMPERIAL, US_CUSTOMARY_SYSTEM),
-        (_CONF_UNIT_SYSTEM_US_CUSTOMARY, US_CUSTOMARY_SYSTEM),
+        ("metric", METRIC_SYSTEM),
+        ("imperial", US_CUSTOMARY_SYSTEM),
+        ("us_customary", US_CUSTOMARY_SYSTEM),
     ],
 )
 async def test_loading_configuration_unit_system(
@@ -1038,37 +1070,36 @@ async def test_check_ha_config_file_wrong(mock_check, hass: HomeAssistant) -> No
     "hass_config",
     [
         {
-            config_util.CONF_CORE: {
-                config_util.CONF_PACKAGES: {
-                    "pack_dict": {"input_boolean": {"ib1": None}}
-                }
+            HOMEASSISTANT_DOMAIN: {
+                CONF_PACKAGES: {"pack_dict": {"input_boolean": {"ib1": None}}}
             },
             "input_boolean": {"ib2": None},
             "light": {"platform": "test"},
         }
     ],
 )
+@pytest.mark.usefixtures("mock_hass_config")
 async def test_async_hass_config_yaml_merge(
-    merge_log_err, hass: HomeAssistant, mock_hass_config: None
+    merge_log_err: MagicMock, hass: HomeAssistant
 ) -> None:
     """Test merge during async config reload."""
     conf = await config_util.async_hass_config_yaml(hass)
 
     assert merge_log_err.call_count == 0
-    assert conf[config_util.CONF_CORE].get(config_util.CONF_PACKAGES) is not None
+    assert conf[HOMEASSISTANT_DOMAIN].get(CONF_PACKAGES) is not None
     assert len(conf) == 3
     assert len(conf["input_boolean"]) == 2
     assert len(conf["light"]) == 1
 
 
 @pytest.fixture
-def merge_log_err(hass):
+def merge_log_err() -> Generator[MagicMock]:
     """Patch _merge_log_error from packages."""
     with patch("homeassistant.config._LOGGER.error") as logerr:
         yield logerr
 
 
-async def test_merge(merge_log_err, hass: HomeAssistant) -> None:
+async def test_merge(merge_log_err: MagicMock, hass: HomeAssistant) -> None:
     """Test if we can merge packages."""
     packages = {
         "pack_dict": {"input_boolean": {"ib1": None}},
@@ -1083,7 +1114,7 @@ async def test_merge(merge_log_err, hass: HomeAssistant) -> None:
         },
     }
     config = {
-        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        HOMEASSISTANT_DOMAIN: {CONF_PACKAGES: packages},
         "input_boolean": {"ib2": None},
         "light": {"platform": "test"},
         "automation": [],
@@ -1103,14 +1134,14 @@ async def test_merge(merge_log_err, hass: HomeAssistant) -> None:
     assert isinstance(config["wake_on_lan"], OrderedDict)
 
 
-async def test_merge_try_falsy(merge_log_err, hass: HomeAssistant) -> None:
+async def test_merge_try_falsy(merge_log_err: MagicMock, hass: HomeAssistant) -> None:
     """Ensure we don't add falsy items like empty OrderedDict() to list."""
     packages = {
         "pack_falsy_to_lst": {"automation": OrderedDict()},
         "pack_list2": {"light": OrderedDict()},
     }
     config = {
-        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        HOMEASSISTANT_DOMAIN: {CONF_PACKAGES: packages},
         "automation": {"do": "something"},
         "light": {"some": "light"},
     }
@@ -1122,7 +1153,7 @@ async def test_merge_try_falsy(merge_log_err, hass: HomeAssistant) -> None:
     assert len(config["light"]) == 1
 
 
-async def test_merge_new(merge_log_err, hass: HomeAssistant) -> None:
+async def test_merge_new(merge_log_err: MagicMock, hass: HomeAssistant) -> None:
     """Test adding new components to outer scope."""
     packages = {
         "pack_1": {"light": [{"platform": "one"}]},
@@ -1133,7 +1164,7 @@ async def test_merge_new(merge_log_err, hass: HomeAssistant) -> None:
             "api": {},
         },
     }
-    config = {config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages}}
+    config = {HOMEASSISTANT_DOMAIN: {CONF_PACKAGES: packages}}
     await config_util.merge_packages_config(hass, config, packages)
 
     assert merge_log_err.call_count == 0
@@ -1143,7 +1174,9 @@ async def test_merge_new(merge_log_err, hass: HomeAssistant) -> None:
     assert len(config["panel_custom"]) == 1
 
 
-async def test_merge_type_mismatch(merge_log_err, hass: HomeAssistant) -> None:
+async def test_merge_type_mismatch(
+    merge_log_err: MagicMock, hass: HomeAssistant
+) -> None:
     """Test if we have a type mismatch for packages."""
     packages = {
         "pack_1": {"input_boolean": [{"ib1": None}]},
@@ -1151,7 +1184,7 @@ async def test_merge_type_mismatch(merge_log_err, hass: HomeAssistant) -> None:
         "pack_2": {"light": {"ib1": None}},  # light gets merged - ensure_list
     }
     config = {
-        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        HOMEASSISTANT_DOMAIN: {CONF_PACKAGES: packages},
         "input_boolean": {"ib2": None},
         "input_select": [{"ib2": None}],
         "light": [{"platform": "two"}],
@@ -1164,16 +1197,18 @@ async def test_merge_type_mismatch(merge_log_err, hass: HomeAssistant) -> None:
     assert len(config["light"]) == 2
 
 
-async def test_merge_once_only_keys(merge_log_err, hass: HomeAssistant) -> None:
+async def test_merge_once_only_keys(
+    merge_log_err: MagicMock, hass: HomeAssistant
+) -> None:
     """Test if we have a merge for a comp that may occur only once. Keys."""
     packages = {"pack_2": {"api": None}}
-    config = {config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages}, "api": None}
+    config = {HOMEASSISTANT_DOMAIN: {CONF_PACKAGES: packages}, "api": None}
     await config_util.merge_packages_config(hass, config, packages)
     assert config["api"] == OrderedDict()
 
     packages = {"pack_2": {"api": {"key_3": 3}}}
     config = {
-        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        HOMEASSISTANT_DOMAIN: {CONF_PACKAGES: packages},
         "api": {"key_1": 1, "key_2": 2},
     }
     await config_util.merge_packages_config(hass, config, packages)
@@ -1182,7 +1217,7 @@ async def test_merge_once_only_keys(merge_log_err, hass: HomeAssistant) -> None:
     # Duplicate keys error
     packages = {"pack_2": {"api": {"key": 2}}}
     config = {
-        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        HOMEASSISTANT_DOMAIN: {CONF_PACKAGES: packages},
         "api": {"key": 1},
     }
     await config_util.merge_packages_config(hass, config, packages)
@@ -1197,7 +1232,7 @@ async def test_merge_once_only_lists(hass: HomeAssistant) -> None:
         }
     }
     config = {
-        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        HOMEASSISTANT_DOMAIN: {CONF_PACKAGES: packages},
         "api": {"list_1": ["item_1"]},
     }
     await config_util.merge_packages_config(hass, config, packages)
@@ -1220,7 +1255,7 @@ async def test_merge_once_only_dictionaries(hass: HomeAssistant) -> None:
         }
     }
     config = {
-        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        HOMEASSISTANT_DOMAIN: {CONF_PACKAGES: packages},
         "api": {"dict_1": {"key_1": 1, "dict_1.1": {"key_1.1": 1.1}}},
     }
     await config_util.merge_packages_config(hass, config, packages)
@@ -1250,11 +1285,13 @@ async def test_merge_id_schema(hass: HomeAssistant) -> None:
         assert typ == expected_type, f"{domain} expected {expected_type}, got {typ}"
 
 
-async def test_merge_duplicate_keys(merge_log_err, hass: HomeAssistant) -> None:
+async def test_merge_duplicate_keys(
+    merge_log_err: MagicMock, hass: HomeAssistant
+) -> None:
     """Test if keys in dicts are duplicates."""
     packages = {"pack_1": {"input_select": {"ib1": None}}}
     config = {
-        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        HOMEASSISTANT_DOMAIN: {CONF_PACKAGES: packages},
         "input_select": {"ib1": 1},
     }
     await config_util.merge_packages_config(hass, config, packages)
@@ -1271,7 +1308,7 @@ async def test_merge_customize(hass: HomeAssistant) -> None:
         "longitude": 50,
         "elevation": 25,
         "name": "Huis",
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        "unit_system": "imperial",
         "time_zone": "GMT",
         "customize": {"a.a": {"friendly_name": "A"}},
         "packages": {
@@ -1290,11 +1327,10 @@ async def test_auth_provider_config(hass: HomeAssistant) -> None:
         "longitude": 50,
         "elevation": 25,
         "name": "Huis",
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        "unit_system": "imperial",
         "time_zone": "GMT",
         CONF_AUTH_PROVIDERS: [
             {"type": "homeassistant"},
-            {"type": "legacy_api_password", "api_password": "some-pass"},
         ],
         CONF_AUTH_MFA_MODULES: [{"type": "totp"}, {"type": "totp", "id": "second"}],
     }
@@ -1302,9 +1338,8 @@ async def test_auth_provider_config(hass: HomeAssistant) -> None:
         del hass.auth
     await config_util.async_process_ha_core_config(hass, core_config)
 
-    assert len(hass.auth.auth_providers) == 2
+    assert len(hass.auth.auth_providers) == 1
     assert hass.auth.auth_providers[0].type == "homeassistant"
-    assert hass.auth.auth_providers[1].type == "legacy_api_password"
     assert len(hass.auth.auth_mfa_modules) == 2
     assert hass.auth.auth_mfa_modules[0].id == "totp"
     assert hass.auth.auth_mfa_modules[1].id == "second"
@@ -1317,7 +1352,7 @@ async def test_auth_provider_config_default(hass: HomeAssistant) -> None:
         "longitude": 50,
         "elevation": 25,
         "name": "Huis",
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        "unit_system": "imperial",
         "time_zone": "GMT",
     }
     if hasattr(hass, "auth"):
@@ -1337,7 +1372,7 @@ async def test_disallowed_auth_provider_config(hass: HomeAssistant) -> None:
         "longitude": 50,
         "elevation": 25,
         "name": "Huis",
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        "unit_system": "imperial",
         "time_zone": "GMT",
         CONF_AUTH_PROVIDERS: [
             {
@@ -1363,7 +1398,7 @@ async def test_disallowed_duplicated_auth_provider_config(hass: HomeAssistant) -
         "longitude": 50,
         "elevation": 25,
         "name": "Huis",
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        "unit_system": "imperial",
         "time_zone": "GMT",
         CONF_AUTH_PROVIDERS: [{"type": "homeassistant"}, {"type": "homeassistant"}],
     }
@@ -1378,7 +1413,7 @@ async def test_disallowed_auth_mfa_module_config(hass: HomeAssistant) -> None:
         "longitude": 50,
         "elevation": 25,
         "name": "Huis",
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        "unit_system": "imperial",
         "time_zone": "GMT",
         CONF_AUTH_MFA_MODULES: [
             {
@@ -1400,7 +1435,7 @@ async def test_disallowed_duplicated_auth_mfa_module_config(
         "longitude": 50,
         "elevation": 25,
         "name": "Huis",
-        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        "unit_system": "imperial",
         "time_zone": "GMT",
         CONF_AUTH_MFA_MODULES: [{"type": "totp"}, {"type": "totp"}],
     }
@@ -1414,7 +1449,7 @@ async def test_merge_split_component_definition(hass: HomeAssistant) -> None:
         "pack_1": {"light one": {"l1": None}},
         "pack_2": {"light two": {"l2": None}, "light three": {"l3": None}},
     }
-    config = {config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages}}
+    config = {HOMEASSISTANT_DOMAIN: {CONF_PACKAGES: packages}}
     await config_util.merge_packages_config(hass, config, packages)
 
     assert len(config) == 4
@@ -1427,10 +1462,28 @@ async def test_component_config_exceptions(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test unexpected exceptions validating component config."""
-    # Config validator
+
+    # Create test config with embedded info
+    test_config = ConfigTestClass({"test_domain": {}})
+    test_platform_config = ConfigTestClass(
+        {"test_domain": {"platform": "test_platform"}}
+    )
+    test_multi_platform_config = ConfigTestClass(
+        {
+            "test_domain": [
+                {"platform": "test_platform1"},
+                {"platform": "test_platform2"},
+            ]
+        },
+    )
+
+    # Make sure the exception translation cache is loaded
+    await async_setup_component(hass, "homeassistant", {})
+
     test_integration = Mock(
         domain="test_domain",
-        get_platform=Mock(
+        async_get_component=AsyncMock(),
+        async_get_platform=AsyncMock(
             return_value=Mock(
                 async_validate_config=AsyncMock(side_effect=ValueError("broken"))
             )
@@ -1438,7 +1491,7 @@ async def test_component_config_exceptions(
     )
     assert (
         await config_util.async_process_component_and_handle_errors(
-            hass, {}, integration=test_integration
+            hass, test_config, integration=test_integration
         )
         is None
     )
@@ -1447,72 +1500,79 @@ async def test_component_config_exceptions(
     caplog.clear()
     with pytest.raises(HomeAssistantError) as ex:
         await config_util.async_process_component_and_handle_errors(
-            hass, {}, integration=test_integration, raise_on_failure=True
+            hass, test_config, integration=test_integration, raise_on_failure=True
         )
     assert "ValueError: broken" in caplog.text
     assert "Unknown error calling test_domain config validator" in caplog.text
-    assert str(ex.value) == "Unknown error calling test_domain config validator"
-
+    assert (
+        str(ex.value) == "Unknown error calling test_domain config validator - broken"
+    )
     test_integration = Mock(
         domain="test_domain",
-        get_platform=Mock(
+        async_get_platform=AsyncMock(
             return_value=Mock(
                 async_validate_config=AsyncMock(
                     side_effect=HomeAssistantError("broken")
                 )
             )
         ),
-        get_component=Mock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
+        async_get_component=AsyncMock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
     )
     caplog.clear()
     assert (
         await config_util.async_process_component_and_handle_errors(
-            hass, {}, integration=test_integration, raise_on_failure=False
+            hass, test_config, integration=test_integration, raise_on_failure=False
         )
         is None
     )
-    assert "Invalid config for 'test_domain': broken" in caplog.text
+    assert (
+        "Invalid config for 'test_domain' at ../../configuration.yaml, "
+        "line 140: broken, please check the docs at" in caplog.text
+    )
     with pytest.raises(HomeAssistantError) as ex:
         await config_util.async_process_component_and_handle_errors(
-            hass, {}, integration=test_integration, raise_on_failure=True
+            hass, test_config, integration=test_integration, raise_on_failure=True
         )
-    assert "Invalid config for 'test_domain': broken" in str(ex.value)
-
+    assert (
+        str(ex.value)
+        == "Invalid config for integration test_domain at configuration.yaml, "
+        "line 140: broken"
+    )
     # component.CONFIG_SCHEMA
     caplog.clear()
     test_integration = Mock(
         domain="test_domain",
-        get_platform=Mock(return_value=None),
-        get_component=Mock(
+        async_get_platform=AsyncMock(return_value=None),
+        async_get_component=AsyncMock(
             return_value=Mock(CONFIG_SCHEMA=Mock(side_effect=ValueError("broken")))
         ),
     )
     assert (
         await config_util.async_process_component_and_handle_errors(
             hass,
-            {},
+            test_config,
             integration=test_integration,
             raise_on_failure=False,
         )
         is None
     )
     assert "Unknown error calling test_domain CONFIG_SCHEMA" in caplog.text
+    caplog.clear()
     with pytest.raises(HomeAssistantError) as ex:
         await config_util.async_process_component_and_handle_errors(
             hass,
-            {},
+            test_config,
             integration=test_integration,
             raise_on_failure=True,
         )
     assert "Unknown error calling test_domain CONFIG_SCHEMA" in caplog.text
-    assert str(ex.value) == "Unknown error calling test_domain CONFIG_SCHEMA"
-
+    assert str(ex.value) == "Unknown error calling test_domain CONFIG_SCHEMA - broken"
     # component.PLATFORM_SCHEMA
     caplog.clear()
     test_integration = Mock(
         domain="test_domain",
-        get_platform=Mock(return_value=None),
-        get_component=Mock(
+        async_get_platform=AsyncMock(return_value=None),
+        async_get_component=AsyncMock(
             return_value=Mock(
                 spec=["PLATFORM_SCHEMA_BASE"],
                 PLATFORM_SCHEMA_BASE=Mock(side_effect=ValueError("broken")),
@@ -1521,43 +1581,43 @@ async def test_component_config_exceptions(
     )
     assert await config_util.async_process_component_and_handle_errors(
         hass,
-        {"test_domain": {"platform": "test_platform"}},
+        test_platform_config,
         integration=test_integration,
         raise_on_failure=False,
     ) == {"test_domain": []}
     assert "ValueError: broken" in caplog.text
     assert (
-        "Unknown error validating config for test_platform platform "
-        "for test_domain component with PLATFORM_SCHEMA"
+        "Unknown error when validating config for test_domain "
+        "from integration test_platform - broken"
     ) in caplog.text
     caplog.clear()
     with pytest.raises(HomeAssistantError) as ex:
         await config_util.async_process_component_and_handle_errors(
             hass,
-            {"test_domain": {"platform": "test_platform"}},
+            test_platform_config,
             integration=test_integration,
             raise_on_failure=True,
         )
     assert (
-        "Unknown error validating config for test_platform platform "
-        "for test_domain component with PLATFORM_SCHEMA"
+        "Unknown error when validating config for test_domain "
+        "from integration test_platform - broken"
     ) in caplog.text
     assert str(ex.value) == (
-        "Unknown error validating config for test_platform platform "
-        "for test_domain component with PLATFORM_SCHEMA"
+        "Unknown error when validating config for test_domain "
+        "from integration test_platform - broken"
     )
 
     # platform.PLATFORM_SCHEMA
     caplog.clear()
     test_integration = Mock(
         domain="test_domain",
-        get_platform=Mock(return_value=None),
-        get_component=Mock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
+        async_get_platform=AsyncMock(return_value=None),
+        async_get_component=AsyncMock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
     )
     with patch(
         "homeassistant.config.async_get_integration_with_requirements",
         return_value=Mock(  # integration that owns platform
-            get_platform=Mock(
+            async_get_platform=AsyncMock(
                 return_value=Mock(  # platform
                     PLATFORM_SCHEMA=Mock(side_effect=ValueError("broken"))
                 )
@@ -1566,86 +1626,73 @@ async def test_component_config_exceptions(
     ):
         assert await config_util.async_process_component_and_handle_errors(
             hass,
-            {"test_domain": {"platform": "test_platform"}},
+            test_platform_config,
             integration=test_integration,
             raise_on_failure=False,
         ) == {"test_domain": []}
         assert "ValueError: broken" in caplog.text
         assert (
-            "Unknown error validating config for test_platform platform for test_domain"
-            " component with PLATFORM_SCHEMA"
+            "Unknown error when validating config for test_domain "
+            "from integration test_platform - broken"
         ) in caplog.text
         caplog.clear()
         with pytest.raises(HomeAssistantError) as ex:
             assert await config_util.async_process_component_and_handle_errors(
                 hass,
-                {"test_domain": {"platform": "test_platform"}},
+                test_platform_config,
                 integration=test_integration,
                 raise_on_failure=True,
             )
         assert (
-            "Unknown error validating config for test_platform platform for test_domain"
-            " component with PLATFORM_SCHEMA"
-        ) in str(ex.value)
+            "Unknown error when validating config for test_domain "
+            "from integration test_platform - broken" in str(ex.value)
+        )
         assert "ValueError: broken" in caplog.text
         assert (
-            "Unknown error validating config for test_platform platform for test_domain"
-            " component with PLATFORM_SCHEMA" in caplog.text
+            "Unknown error when validating config for test_domain "
+            "from integration test_platform - broken" in caplog.text
         )
         # Test multiple platform failures
         assert await config_util.async_process_component_and_handle_errors(
             hass,
-            {
-                "test_domain": [
-                    {"platform": "test_platform1"},
-                    {"platform": "test_platform2"},
-                ]
-            },
+            test_multi_platform_config,
             integration=test_integration,
             raise_on_failure=False,
         ) == {"test_domain": []}
         assert "ValueError: broken" in caplog.text
         assert (
-            "Unknown error validating config for test_platform1 platform "
-            "for test_domain component with PLATFORM_SCHEMA"
-        ) in caplog.text
-        assert (
-            "Unknown error validating config for test_platform2 platform "
-            "for test_domain component with PLATFORM_SCHEMA"
+            "Unknown error when validating config for test_domain "
+            "from integration test_platform - broken"
         ) in caplog.text
         caplog.clear()
         with pytest.raises(HomeAssistantError) as ex:
             assert await config_util.async_process_component_and_handle_errors(
                 hass,
-                {
-                    "test_domain": [
-                        {"platform": "test_platform1"},
-                        {"platform": "test_platform2"},
-                    ]
-                },
+                test_multi_platform_config,
                 integration=test_integration,
                 raise_on_failure=True,
             )
         assert (
-            "Failed to process component config for integration test_domain"
-            " due to multiple errors (2), check the logs for more information."
-        ) in str(ex.value)
+            "Failed to process config for integration test_domain "
+            "due to multiple (2) errors. Check the logs for more information"
+            in str(ex.value)
+        )
         assert "ValueError: broken" in caplog.text
         assert (
-            "Unknown error validating config for test_platform1 platform "
-            "for test_domain component with PLATFORM_SCHEMA"
+            "Unknown error when validating config for test_domain "
+            "from integration test_platform1 - broken"
         ) in caplog.text
         assert (
-            "Unknown error validating config for test_platform2 platform "
-            "for test_domain component with PLATFORM_SCHEMA"
+            "Unknown error when validating config for test_domain "
+            "from integration test_platform2 - broken"
         ) in caplog.text
 
-    # get_platform("domain") raising on ImportError
+    # async_get_platform("domain") raising on ImportError
     caplog.clear()
     test_integration = Mock(
         domain="test_domain",
-        get_platform=Mock(return_value=None),
-        get_component=Mock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
+        async_get_platform=AsyncMock(return_value=None),
+        async_get_component=AsyncMock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
     )
     import_error = ImportError(
         ("ModuleNotFoundError: No module named 'not_installed_something'"),
@@ -1654,12 +1701,12 @@ async def test_component_config_exceptions(
     with patch(
         "homeassistant.config.async_get_integration_with_requirements",
         return_value=Mock(  # integration that owns platform
-            get_platform=Mock(side_effect=import_error)
+            async_get_platform=AsyncMock(side_effect=import_error)
         ),
     ):
         assert await config_util.async_process_component_and_handle_errors(
             hass,
-            {"test_domain": {"platform": "test_platform"}},
+            test_platform_config,
             integration=test_integration,
             raise_on_failure=False,
         ) == {"test_domain": []}
@@ -1671,7 +1718,7 @@ async def test_component_config_exceptions(
         with pytest.raises(HomeAssistantError) as ex:
             assert await config_util.async_process_component_and_handle_errors(
                 hass,
-                {"test_domain": {"platform": "test_platform"}},
+                test_platform_config,
                 integration=test_integration,
                 raise_on_failure=True,
             )
@@ -1688,12 +1735,13 @@ async def test_component_config_exceptions(
             "No module named 'not_installed_something'"
         ) in str(ex.value)
 
-    # get_platform("config") raising
+    # async_get_platform("config") raising
     caplog.clear()
     test_integration = Mock(
         pkg_path="homeassistant.components.test_domain",
         domain="test_domain",
-        get_platform=Mock(
+        async_get_component=AsyncMock(),
+        async_get_platform=AsyncMock(
             side_effect=ImportError(
                 ("ModuleNotFoundError: No module named 'not_installed_something'"),
                 name="not_installed_something",
@@ -1703,7 +1751,7 @@ async def test_component_config_exceptions(
     assert (
         await config_util.async_process_component_and_handle_errors(
             hass,
-            {"test_domain": {}},
+            test_config,
             integration=test_integration,
             raise_on_failure=False,
         )
@@ -1716,7 +1764,7 @@ async def test_component_config_exceptions(
     with pytest.raises(HomeAssistantError) as ex:
         await config_util.async_process_component_and_handle_errors(
             hass,
-            {"test_domain": {}},
+            test_config,
             integration=test_integration,
             raise_on_failure=True,
         )
@@ -1729,19 +1777,19 @@ async def test_component_config_exceptions(
         "No module named 'not_installed_something'" in str(ex.value)
     )
 
-    # get_component raising
+    # async_get_component raising
     caplog.clear()
     test_integration = Mock(
         pkg_path="homeassistant.components.test_domain",
         domain="test_domain",
-        get_component=Mock(
+        async_get_component=AsyncMock(
             side_effect=FileNotFoundError("No such file or directory: b'liblibc.a'")
         ),
     )
     assert (
         await config_util.async_process_component_and_handle_errors(
             hass,
-            {"test_domain": {}},
+            test_config,
             integration=test_integration,
             raise_on_failure=False,
         )
@@ -1751,7 +1799,7 @@ async def test_component_config_exceptions(
     with pytest.raises(HomeAssistantError) as ex:
         await config_util.async_process_component_and_handle_errors(
             hass,
-            {"test_domain": {}},
+            test_config,
             integration=test_integration,
             raise_on_failure=True,
         )
@@ -1768,7 +1816,7 @@ async def test_component_config_exceptions(
                     ImportError("bla"),
                     "component_import_err",
                     "test_domain",
-                    {"test_domain": []},
+                    ConfigTestClass({"test_domain": []}),
                     "https://example.com",
                 )
             ],
@@ -1783,13 +1831,14 @@ async def test_component_config_exceptions(
                     HomeAssistantError("bla"),
                     "config_validation_err",
                     "test_domain",
-                    {"test_domain": []},
+                    ConfigTestClass({"test_domain": []}),
                     "https://example.com",
                 )
             ],
             "bla",
             [
-                "Invalid config for 'test_domain': bla, "
+                "Invalid config for 'test_domain' at "
+                "../../configuration.yaml, line 140: bla, "
                 "please check the docs at https://example.com",
                 "bla",
             ],
@@ -1802,14 +1851,15 @@ async def test_component_config_exceptions(
                     vol.Invalid("bla", ["path"]),
                     "config_validation_err",
                     "test_domain",
-                    {"test_domain": []},
+                    ConfigTestClass({"test_domain": []}),
                     "https://example.com",
                 )
             ],
             "bla @ data['path']",
             [
-                "Invalid config for 'test_domain': bla 'path', got None, "
-                "please check the docs at https://example.com",
+                "Invalid config for 'test_domain' at "
+                "../../configuration.yaml, line 140: bla 'path', "
+                "got None, please check the docs at https://example.com",
                 "bla",
             ],
             False,
@@ -1821,14 +1871,15 @@ async def test_component_config_exceptions(
                     vol.Invalid("bla", ["path"]),
                     "platform_config_validation_err",
                     "test_domain",
-                    {"test_domain": []},
+                    ConfigTestClass({"test_domain": []}),
                     "https://alt.example.com",
                 )
             ],
             "bla @ data['path']",
             [
-                "Invalid config for 'test_domain': bla 'path', got None, "
-                "please check the docs at https://alt.example.com",
+                "Invalid config for 'test_domain' at "
+                "../../configuration.yaml, line 140: bla 'path', "
+                "got None, please check the docs at https://alt.example.com",
                 "bla",
             ],
             False,
@@ -1840,7 +1891,7 @@ async def test_component_config_exceptions(
                     ImportError("bla"),
                     "platform_component_load_err",
                     "test_domain",
-                    {"test_domain": []},
+                    ConfigTestClass({"test_domain": []}),
                     "https://example.com",
                 )
             ],
@@ -1854,13 +1905,18 @@ async def test_component_config_exceptions(
 async def test_component_config_error_processing(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    error: str,
     exception_info_list: list[config_util.ConfigExceptionInfo],
+    snapshot: SnapshotAssertion,
+    error: str,
     messages: list[str],
     show_stack_trace: bool,
     translation_key: str,
 ) -> None:
     """Test component config error processing."""
+
+    # Make sure the exception translation cache is loaded
+    await async_setup_component(hass, "homeassistant", {})
+
     test_integration = Mock(
         domain="test_domain",
         documentation="https://example.com",
@@ -1870,17 +1926,20 @@ async def test_component_config_error_processing(
             )
         ),
     )
-    with patch(
-        "homeassistant.config.async_process_component_config",
-        return_value=config_util.IntegrationConfigInfo(None, exception_info_list),
-    ), pytest.raises(ConfigValidationError) as ex:
+    with (
+        patch(
+            "homeassistant.config.async_process_component_config",
+            return_value=config_util.IntegrationConfigInfo(None, exception_info_list),
+        ),
+        pytest.raises(ConfigValidationError) as ex,
+    ):
         await config_util.async_process_component_and_handle_errors(
             hass, {}, test_integration, raise_on_failure=True
         )
     records = [record for record in caplog.records if record.msg == messages[0]]
     assert len(records) == 1
     assert (records[0].exc_info is not None) == show_stack_trace
-    assert str(ex.value) == messages[0]
+    assert str(ex.value) == snapshot
     assert ex.value.translation_key == translation_key
     assert ex.value.translation_domain == "homeassistant"
     assert ex.value.translation_placeholders["domain"] == "test_domain"
@@ -1892,7 +1951,7 @@ async def test_component_config_error_processing(
         return_value=config_util.IntegrationConfigInfo(None, exception_info_list),
     ):
         await config_util.async_process_component_and_handle_errors(
-            hass, {}, test_integration
+            hass, ConfigTestClass({}), test_integration
         )
     assert all(message in caplog.text for message in messages)
 
@@ -1935,18 +1994,19 @@ def test_identify_config_schema(domain, schema, expected) -> None:
     )
 
 
-async def test_core_config_schema_historic_currency(hass: HomeAssistant) -> None:
+async def test_core_config_schema_historic_currency(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test core config schema."""
     await config_util.async_process_ha_core_config(hass, {"currency": "LTT"})
 
-    issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue("homeassistant", "historic_currency")
     assert issue
     assert issue.translation_placeholders == {"currency": "LTT"}
 
 
 async def test_core_store_historic_currency(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
+    hass: HomeAssistant, hass_storage: dict[str, Any], issue_registry: ir.IssueRegistry
 ) -> None:
     """Test core config store."""
     core_data = {
@@ -1960,52 +2020,28 @@ async def test_core_store_historic_currency(
     hass_storage["core.config"] = dict(core_data)
     await config_util.async_process_ha_core_config(hass, {})
 
-    issue_registry = ir.async_get(hass)
     issue_id = "historic_currency"
     issue = issue_registry.async_get_issue("homeassistant", issue_id)
     assert issue
     assert issue.translation_placeholders == {"currency": "LTT"}
 
-    await hass.config.async_update(**{"currency": "EUR"})
+    await hass.config.async_update(currency="EUR")
     issue = issue_registry.async_get_issue("homeassistant", issue_id)
     assert not issue
 
 
-async def test_core_config_schema_no_country(hass: HomeAssistant) -> None:
+async def test_core_config_schema_no_country(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test core config schema."""
     await config_util.async_process_ha_core_config(hass, {})
 
-    issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue("homeassistant", "country_not_configured")
     assert issue
 
 
-@pytest.mark.parametrize(
-    ("config", "expected_issue"),
-    [
-        ({}, None),
-        ({"legacy_templates": True}, "legacy_templates_true"),
-        ({"legacy_templates": False}, "legacy_templates_false"),
-    ],
-)
-async def test_core_config_schema_legacy_template(
-    hass: HomeAssistant, config: dict[str, Any], expected_issue: str | None
-) -> None:
-    """Test legacy_template core config schema."""
-    await config_util.async_process_ha_core_config(hass, config)
-
-    issue_registry = ir.async_get(hass)
-    for issue_id in {"legacy_templates_true", "legacy_templates_false"}:
-        issue = issue_registry.async_get_issue("homeassistant", issue_id)
-        assert issue if issue_id == expected_issue else not issue
-
-    await config_util.async_process_ha_core_config(hass, {})
-    for issue_id in {"legacy_templates_true", "legacy_templates_false"}:
-        assert not issue_registry.async_get_issue("homeassistant", issue_id)
-
-
 async def test_core_store_no_country(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
+    hass: HomeAssistant, hass_storage: dict[str, Any], issue_registry: ir.IssueRegistry
 ) -> None:
     """Test core config store."""
     core_data = {
@@ -2017,12 +2053,11 @@ async def test_core_store_no_country(
     hass_storage["core.config"] = dict(core_data)
     await config_util.async_process_ha_core_config(hass, {})
 
-    issue_registry = ir.async_get(hass)
     issue_id = "country_not_configured"
     issue = issue_registry.async_get_issue("homeassistant", issue_id)
     assert issue
 
-    await hass.config.async_update(**{"country": "SE"})
+    await hass.config.async_update(country="SE")
     issue = issue_registry.async_get_issue("homeassistant", issue_id)
     assert not issue
 
@@ -2303,7 +2338,7 @@ async def test_packages_schema_validation_error(
     ]
     assert error_records == snapshot
 
-    assert len(config[config_util.CONF_CORE][config_util.CONF_PACKAGES]) == 0
+    assert len(config[HOMEASSISTANT_DOMAIN][CONF_PACKAGES]) == 0
 
 
 def test_extract_domain_configs() -> None:
@@ -2337,3 +2372,139 @@ def test_config_per_platform() -> None:
         (None, 1),
         ("hello 2", config["zone Hallo"][1]),
     ] == list(config_util.config_per_platform(config, "zone"))
+
+
+def test_extract_platform_integrations() -> None:
+    """Test extract_platform_integrations."""
+    config = OrderedDict(
+        [
+            (b"zone", {"platform": "not str"}),
+            ("zone", {"platform": "hello"}),
+            ("switch", {"platform": ["un", "hash", "able"]}),
+            ("zonex", []),
+            ("zoney", ""),
+            ("notzone", {"platform": "nothello"}),
+            ("zoner", None),
+            ("zone Hallo", [1, {"platform": "hello 2"}]),
+            ("zone 100", None),
+            ("i n v a-@@", None),
+            ("i n v a-@@", {"platform": "hello"}),
+            ("zoneq", "pig"),
+            ("zoneempty", {"platform": ""}),
+        ]
+    )
+    assert config_util.extract_platform_integrations(config, {"zone"}) == {
+        "zone": {"hello", "hello 2"}
+    }
+    assert config_util.extract_platform_integrations(config, {"switch"}) == {}
+    assert config_util.extract_platform_integrations(config, {"zonex"}) == {}
+    assert config_util.extract_platform_integrations(config, {"zoney"}) == {}
+    assert config_util.extract_platform_integrations(
+        config, {"zone", "not_valid", "notzone"}
+    ) == {"zone": {"hello 2", "hello"}, "notzone": {"nothello"}}
+    assert config_util.extract_platform_integrations(config, {"zoneq"}) == {}
+    assert config_util.extract_platform_integrations(config, {"zoneempty"}) == {}
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_loading_platforms_gathers(hass: HomeAssistant) -> None:
+    """Test loading platform integrations gathers."""
+
+    mock_integration(
+        hass,
+        MockModule(
+            domain="platform_int",
+        ),
+    )
+    mock_integration(
+        hass,
+        MockModule(
+            domain="platform_int2",
+        ),
+    )
+
+    # Its important that we do not mock the platforms with mock_platform
+    # as the loader is smart enough to know they are already loaded and
+    # will not create an executor job to load them. We are testing in
+    # what order the executor jobs happen here as we want to make
+    # sure the platform integrations are at the front of the line
+    light_integration = await loader.async_get_integration(hass, "light")
+    sensor_integration = await loader.async_get_integration(hass, "sensor")
+
+    order: list[tuple[str, str]] = []
+
+    def _load_platform(self, platform: str) -> MockModule:
+        order.append((self.domain, platform))
+        return MockModule()
+
+    # We need to patch what runs in the executor so we are counting
+    # the order that jobs are scheduled in th executor
+    with patch(
+        "homeassistant.loader.Integration._load_platform",
+        _load_platform,
+    ):
+        light_task = hass.async_create_task(
+            config_util.async_process_component_config(
+                hass,
+                {
+                    "light": [
+                        {"platform": "platform_int"},
+                        {"platform": "platform_int2"},
+                    ]
+                },
+                light_integration,
+            ),
+            eager_start=True,
+        )
+        sensor_task = hass.async_create_task(
+            config_util.async_process_component_config(
+                hass,
+                {
+                    "sensor": [
+                        {"platform": "platform_int"},
+                        {"platform": "platform_int2"},
+                    ]
+                },
+                sensor_integration,
+            ),
+            eager_start=True,
+        )
+
+        await asyncio.gather(light_task, sensor_task)
+
+    # Should be called in order so that
+    # all the light platforms are imported
+    # before the sensor platforms
+    assert order == [
+        ("platform_int", "light"),
+        ("platform_int2", "light"),
+        ("platform_int", "sensor"),
+        ("platform_int2", "sensor"),
+    ]
+
+
+async def test_configuration_legacy_template_is_removed(hass: HomeAssistant) -> None:
+    """Test loading core config onto hass object."""
+    await config_util.async_process_ha_core_config(
+        hass,
+        {
+            "latitude": 60,
+            "longitude": 50,
+            "elevation": 25,
+            "name": "Huis",
+            "unit_system": "imperial",
+            "time_zone": "America/New_York",
+            "allowlist_external_dirs": "/etc",
+            "external_url": "https://www.example.com",
+            "internal_url": "http://example.local",
+            "media_dirs": {"mymedia": "/usr"},
+            "legacy_templates": True,
+            "debug": True,
+            "currency": "EUR",
+            "country": "SE",
+            "language": "sv",
+            "radius": 150,
+        },
+    )
+
+    assert not getattr(hass.config, "legacy_templates")

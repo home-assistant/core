@@ -1,4 +1,5 @@
 """Base UptimeRobot entity."""
+
 from __future__ import annotations
 
 from pyuptimerobot import UptimeRobotMonitor

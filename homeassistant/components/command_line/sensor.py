@@ -1,4 +1,5 @@
 """Allows to configure custom shell commands to turn a value for a sensor."""
+
 from __future__ import annotations
 
 import asyncio
@@ -7,16 +8,14 @@ from datetime import datetime, timedelta
 import json
 from typing import Any, cast
 
-from homeassistant.components.sensor import CONF_STATE_CLASS, SensorDeviceClass
+from jsonpath import jsonpath
+
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.sensor.helpers import async_parse_date_datetime
 from homeassistant.const import (
     CONF_COMMAND,
-    CONF_DEVICE_CLASS,
-    CONF_ICON,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
-    CONF_UNIQUE_ID,
-    CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
@@ -24,30 +23,20 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.trigger_template_entity import (
-    CONF_AVAILABILITY,
-    CONF_PICTURE,
-    ManualTriggerSensorEntity,
-)
+from homeassistant.helpers.trigger_template_entity import ManualTriggerSensorEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_COMMAND_TIMEOUT, LOGGER
-from .utils import check_output_or_log
-
-CONF_JSON_ATTRIBUTES = "json_attributes"
+from .const import (
+    CONF_COMMAND_TIMEOUT,
+    CONF_JSON_ATTRIBUTES,
+    CONF_JSON_ATTRIBUTES_PATH,
+    LOGGER,
+    TRIGGER_ENTITY_OPTIONS,
+)
+from .utils import async_check_output_or_log
 
 DEFAULT_NAME = "Command Sensor"
-
-TRIGGER_ENTITY_OPTIONS = (
-    CONF_AVAILABILITY,
-    CONF_DEVICE_CLASS,
-    CONF_ICON,
-    CONF_PICTURE,
-    CONF_UNIQUE_ID,
-    CONF_STATE_CLASS,
-    CONF_UNIT_OF_MEASUREMENT,
-)
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -63,21 +52,20 @@ async def async_setup_platform(
     discovery_info = cast(DiscoveryInfoType, discovery_info)
     sensor_config = discovery_info
 
-    name: str = sensor_config[CONF_NAME]
     command: str = sensor_config[CONF_COMMAND]
-    value_template: Template | None = sensor_config.get(CONF_VALUE_TEMPLATE)
     command_timeout: int = sensor_config[CONF_COMMAND_TIMEOUT]
-    if value_template is not None:
-        value_template.hass = hass
     json_attributes: list[str] | None = sensor_config.get(CONF_JSON_ATTRIBUTES)
+    json_attributes_path: str | None = sensor_config.get(CONF_JSON_ATTRIBUTES_PATH)
     scan_interval: timedelta = sensor_config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     data = CommandSensorData(hass, command, command_timeout)
 
-    trigger_entity_config = {CONF_NAME: Template(name, hass)}
-    for key in TRIGGER_ENTITY_OPTIONS:
-        if key not in sensor_config:
-            continue
-        trigger_entity_config[key] = sensor_config[key]
+    if value_template := sensor_config.get(CONF_VALUE_TEMPLATE):
+        value_template.hass = hass
+
+    trigger_entity_config = {
+        CONF_NAME: Template(sensor_config[CONF_NAME], hass),
+        **{k: v for k, v in sensor_config.items() if k in TRIGGER_ENTITY_OPTIONS},
+    }
 
     async_add_entities(
         [
@@ -86,6 +74,7 @@ async def async_setup_platform(
                 trigger_entity_config,
                 value_template,
                 json_attributes,
+                json_attributes_path,
                 scan_interval,
             )
         ]
@@ -103,6 +92,7 @@ class CommandSensor(ManualTriggerSensorEntity):
         config: ConfigType,
         value_template: Template | None,
         json_attributes: list[str] | None,
+        json_attributes_path: str | None,
         scan_interval: timedelta,
     ) -> None:
         """Initialize the sensor."""
@@ -110,6 +100,7 @@ class CommandSensor(ManualTriggerSensorEntity):
         self.data = data
         self._attr_extra_state_attributes: dict[str, Any] = {}
         self._json_attributes = json_attributes
+        self._json_attributes_path = json_attributes_path
         self._attr_native_value = None
         self._value_template = value_template
         self._scan_interval = scan_interval
@@ -138,6 +129,7 @@ class CommandSensor(ManualTriggerSensorEntity):
         """Update the state of the entity."""
         if self._process_updates is None:
             self._process_updates = asyncio.Lock()
+
         if self._process_updates.locked():
             LOGGER.warning(
                 "Updating Command Line Sensor %s took longer than the scheduled update interval %s",
@@ -151,7 +143,7 @@ class CommandSensor(ManualTriggerSensorEntity):
 
     async def _async_update(self) -> None:
         """Get the latest data and updates the state."""
-        await self.hass.async_add_executor_job(self.data.update)
+        await self.data.async_update()
         value = self.data.value
 
         if self._json_attributes:
@@ -159,6 +151,13 @@ class CommandSensor(ManualTriggerSensorEntity):
             if value:
                 try:
                     json_dict = json.loads(value)
+                    if self._json_attributes_path is not None:
+                        json_dict = jsonpath(json_dict, self._json_attributes_path)
+                    # jsonpath will always store the result in json_dict[0]
+                    # so the next line happens to work exactly as needed to
+                    # find the result
+                    if isinstance(json_dict, list):
+                        json_dict = json_dict[0]
                     if isinstance(json_dict, Mapping):
                         self._attr_extra_state_attributes = {
                             k: json_dict[k]
@@ -216,7 +215,7 @@ class CommandSensorData:
         self.command = command
         self.timeout = command_timeout
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Get the latest data with a shell command."""
         command = self.command
 
@@ -231,7 +230,7 @@ class CommandSensorData:
         if args_compiled:
             try:
                 args_to_render = {"arguments": args}
-                rendered_args = args_compiled.render(args_to_render)
+                rendered_args = args_compiled.async_render(args_to_render)
             except TemplateError as ex:
                 LOGGER.exception("Error rendering command template: %s", ex)
                 return
@@ -246,4 +245,4 @@ class CommandSensorData:
             command = f"{prog} {rendered_args}"
 
         LOGGER.debug("Running command: %s", command)
-        self.value = check_output_or_log(command, self.timeout)
+        self.value = await async_check_output_or_log(command, self.timeout)

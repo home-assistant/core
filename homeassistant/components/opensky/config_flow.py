@@ -1,4 +1,5 @@
 """Config flow for OpenSky integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -11,6 +12,7 @@ import voluptuous as vol
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
+    ConfigFlowResult,
     OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import (
@@ -22,7 +24,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -48,7 +49,7 @@ class OpenSkyConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Initialize user input."""
         if user_input is not None:
             return self.async_create_entry(
@@ -87,7 +88,7 @@ class OpenSkyOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Initialize form."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -99,19 +100,17 @@ class OpenSkyOptionsFlowHandler(OptionsFlowWithConfigEntry):
             if user_input[CONF_CONTRIBUTING_USER] and not authentication:
                 errors["base"] = "no_authentication"
             if authentication and not errors:
-                async with OpenSky(
-                    session=async_get_clientsession(self.hass)
-                ) as opensky:
-                    try:
-                        await opensky.authenticate(
-                            BasicAuth(
-                                login=user_input[CONF_USERNAME],
-                                password=user_input[CONF_PASSWORD],
-                            ),
-                            contributing_user=user_input[CONF_CONTRIBUTING_USER],
-                        )
-                    except OpenSkyUnauthenticatedError:
-                        errors["base"] = "invalid_auth"
+                opensky = OpenSky(session=async_get_clientsession(self.hass))
+                try:
+                    await opensky.authenticate(
+                        BasicAuth(
+                            login=user_input[CONF_USERNAME],
+                            password=user_input[CONF_PASSWORD],
+                        ),
+                        contributing_user=user_input[CONF_CONTRIBUTING_USER],
+                    )
+                except OpenSkyUnauthenticatedError:
+                    errors["base"] = "invalid_auth"
             if not errors:
                 return self.async_create_entry(
                     title=self.options.get(CONF_NAME, "OpenSky"),

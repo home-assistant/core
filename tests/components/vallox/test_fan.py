@@ -1,4 +1,5 @@
 """Tests for Vallox fan platform."""
+
 from unittest.mock import call
 
 import pytest

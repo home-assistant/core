@@ -1,4 +1,5 @@
 """BSBLAN platform to control a compatible Climate Device."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -149,7 +150,6 @@ class BSBLANClimate(
             await self.async_set_data(preset_mode=preset_mode)
         else:
             raise ServiceValidationError(
-                "Can't set preset mode when hvac mode is not auto",
                 translation_domain=DOMAIN,
                 translation_key="set_preset_mode_error",
                 translation_placeholders={"preset_mode": preset_mode},

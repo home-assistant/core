@@ -1,4 +1,5 @@
 """Idasen Desk integration cover platform."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -12,7 +13,6 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -39,13 +39,15 @@ class IdasenDeskCover(CoordinatorEntity[IdasenDeskCoordinator], CoverEntity):
     """Representation of Idasen Desk device."""
 
     _attr_device_class = CoverDeviceClass.DAMPER
-    _attr_icon = "mdi:desk"
     _attr_supported_features = (
         CoverEntityFeature.OPEN
         | CoverEntityFeature.CLOSE
         | CoverEntityFeature.STOP
         | CoverEntityFeature.SET_POSITION
     )
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_translation_key = "desk"
 
     def __init__(
         self,
@@ -56,7 +58,6 @@ class IdasenDeskCover(CoordinatorEntity[IdasenDeskCoordinator], CoverEntity):
         """Initialize an Idasen Desk cover."""
         super().__init__(coordinator)
         self._desk = coordinator.desk
-        self._attr_name = device_info[ATTR_NAME]
         self._attr_unique_id = address
         self._attr_device_info = device_info
 
@@ -65,7 +66,7 @@ class IdasenDeskCover(CoordinatorEntity[IdasenDeskCoordinator], CoverEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._desk.is_connected is True
+        return super().available and self._desk.is_connected is True
 
     @property
     def is_closed(self) -> bool:

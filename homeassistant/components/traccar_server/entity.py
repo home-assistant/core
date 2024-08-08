@@ -1,4 +1,5 @@
 """Base entity for Traccar Server."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -34,10 +35,7 @@ class TraccarServerEntity(CoordinatorEntity[TraccarServerCoordinator]):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return (
-            self.coordinator.last_update_success
-            and self.device_id in self.coordinator.data
-        )
+        return bool(self.coordinator.data and self.device_id in self.coordinator.data)
 
     @property
     def traccar_device(self) -> DeviceModel:

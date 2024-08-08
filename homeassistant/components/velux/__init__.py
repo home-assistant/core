@@ -1,4 +1,5 @@
 """Support for VELUX KLF 200 devices."""
+
 from pyvlx import Node, PyVLX, PyVLXException
 import voluptuous as vol
 
@@ -22,8 +23,8 @@ CONFIG_SCHEMA = vol.Schema(
                 }
             )
         },
-        extra=vol.ALLOW_EXTRA,
-    )
+    ),
+    extra=vol.ALLOW_EXTRA,
 )
 
 
@@ -107,10 +108,14 @@ class VeluxEntity(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, node: Node) -> None:
+    def __init__(self, node: Node, config_entry_id: str) -> None:
         """Initialize the Velux device."""
         self.node = node
-        self._attr_unique_id = node.serial_number
+        self._attr_unique_id = (
+            node.serial_number
+            if node.serial_number
+            else f"{config_entry_id}_{node.node_id}"
+        )
         self._attr_name = node.name if node.name else f"#{node.node_id}"
 
     @callback

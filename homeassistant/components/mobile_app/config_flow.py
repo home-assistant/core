@@ -1,15 +1,16 @@
 """Config flow for Mobile App."""
+
 import uuid
 
-from homeassistant import config_entries
 from homeassistant.components import person
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.helpers import entity_registry as er
 
 from .const import ATTR_APP_ID, ATTR_DEVICE_NAME, CONF_USER_ID, DOMAIN
 
 
-class MobileAppFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class MobileAppFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Mobile App config flow."""
 
     VERSION = 1

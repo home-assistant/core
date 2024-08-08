@@ -1,4 +1,5 @@
 """Support for sending data to a Graphite installation."""
+
 from contextlib import suppress
 import logging
 import queue
@@ -176,7 +177,7 @@ class GraphiteFeeder(threading.Thread):
                     self._report_attributes(
                         event.data["entity_id"], event.data["new_state"]
                     )
-                except Exception:  # pylint: disable=broad-except
+                except Exception:
                     # Catch this so we can avoid the thread dying and
                     # make it visible.
                     _LOGGER.exception("Failed to process STATE_CHANGED event")

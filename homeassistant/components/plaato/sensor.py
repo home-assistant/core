@@ -1,4 +1,5 @@
 """Support for Plaato Airlock sensors."""
+
 from __future__ import annotations
 
 from pyplaato.models.device import PlaatoDevice

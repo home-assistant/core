@@ -1,4 +1,5 @@
 """Support for Traccar device tracking."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -9,7 +10,7 @@ from pytraccar import ApiClient, TraccarException
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     AsyncSeeCallback,
     SourceType,
     TrackerEntity,
@@ -103,7 +104,7 @@ EVENTS = [
     EVENT_ALL_EVENTS,
 ]
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
@@ -143,17 +144,16 @@ async def async_setup_entry(
             [TraccarEntity(device, latitude, longitude, battery, accuracy, attrs)]
         )
 
-    hass.data[DOMAIN]["unsub_device_tracker"][
-        entry.entry_id
-    ] = async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
+    hass.data[DOMAIN]["unsub_device_tracker"][entry.entry_id] = (
+        async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
+    )
 
     # Restore previously loaded devices
     dev_reg = dr.async_get(hass)
     dev_ids = {
         identifier[1]
-        for device in dev_reg.devices.values()
+        for device in dev_reg.devices.get_devices_for_config_entry_id(entry.entry_id)
         for identifier in device.identifiers
-        if identifier[0] == DOMAIN
     }
     if not dev_ids:
         return

@@ -1,0 +1,33 @@
+{
+  "entity": {
+    "sensor": {
+      "lifetime_energy": {
+        "default": "mdi:solar-power"
+      },
+      "energy_this_year": {
+        "default": "mdi:solar-power"
+      },
+      "energy_this_month": {
+        "default": "mdi:solar-power"
+      },
+      "energy_today": {
+        "default": "mdi:solar-power"
+      },
+      "current_power": {
+        "default": "mdi:solar-power"
+      },
+      "power_consumption": {
+        "default": "mdi:flash"
+      },
+      "solar_power": {
+        "default": "mdi:solar-power"
+      },
+      "grid_power": {
+        "default": "mdi:power-plug"
+      },
+      "storage_power": {
+        "default": "mdi:car-battery"
+      }
+    }
+  }
+}

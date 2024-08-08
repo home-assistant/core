@@ -1,4 +1,5 @@
 """Support for the Airzone sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -21,22 +22,17 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import AirzoneConfigEntry
 from .coordinator import AirzoneUpdateCoordinator
 from .entity import AirzoneEntity, AirzoneZoneEntity
 
 
-@dataclass(frozen=True)
-class AirzoneSelectDescriptionMixin:
-    """Define an entity description mixin for select entities."""
+@dataclass(frozen=True, kw_only=True)
+class AirzoneSelectDescription(SelectEntityDescription):
+    """Class to describe an Airzone select entity."""
 
     api_param: str
     options_dict: dict[str, int]
-
-
-@dataclass(frozen=True)
-class AirzoneSelectDescription(SelectEntityDescription, AirzoneSelectDescriptionMixin):
-    """Class to describe an Airzone select entity."""
 
 
 GRILLE_ANGLE_DICT: Final[dict[str, int]] = {
@@ -83,27 +79,38 @@ ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AirzoneConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Add Airzone sensors from a config_entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    """Add Airzone select from a config_entry."""
+    coordinator = entry.runtime_data
 
-    entities: list[AirzoneBaseSelect] = []
+    added_zones: set[str] = set()
 
-    for system_zone_id, zone_data in coordinator.data[AZD_ZONES].items():
-        for description in ZONE_SELECT_TYPES:
-            if description.key in zone_data:
-                entities.append(
-                    AirzoneZoneSelect(
-                        coordinator,
-                        description,
-                        entry,
-                        system_zone_id,
-                        zone_data,
-                    )
+    def _async_entity_listener() -> None:
+        """Handle additions of select."""
+
+        zones_data = coordinator.data.get(AZD_ZONES, {})
+        received_zones = set(zones_data)
+        new_zones = received_zones - added_zones
+        if new_zones:
+            async_add_entities(
+                AirzoneZoneSelect(
+                    coordinator,
+                    description,
+                    entry,
+                    system_zone_id,
+                    zones_data.get(system_zone_id),
                 )
+                for system_zone_id in new_zones
+                for description in ZONE_SELECT_TYPES
+                if description.key in zones_data.get(system_zone_id)
+            )
+            added_zones.update(new_zones)
 
-    async_add_entities(entities)
+    entry.async_on_unload(coordinator.async_add_listener(_async_entity_listener))
+    _async_entity_listener()
 
 
 class AirzoneBaseSelect(AirzoneEntity, SelectEntity):

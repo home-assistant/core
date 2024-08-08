@@ -1,4 +1,5 @@
 """Support for Rflink sensors."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -7,7 +8,7 @@ from rflink.parser import PACKET_FIELDS, UNITS
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -261,7 +262,7 @@ SENSOR_TYPES = (
 
 SENSOR_TYPES_DICT = {desc.key: desc for desc in SENSOR_TYPES}
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
         vol.Optional(CONF_DEVICES, default={}): {

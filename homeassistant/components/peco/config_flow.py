@@ -1,4 +1,5 @@
 """Config flow for PECO Outage Counter integration."""
+
 from __future__ import annotations
 
 import logging
@@ -12,8 +13,7 @@ from peco import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_COUNTY, CONF_PHONE_NUMBER, COUNTY_LIST, DOMAIN
@@ -28,7 +28,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class PecoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for PECO Outage Counter."""
 
     VERSION = 1
@@ -54,7 +54,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -90,7 +90,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_finish_smart_meter(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the finish smart meter step."""
         if "phone_number" in self.meter_error:
             if self.meter_error["type"] == "error":

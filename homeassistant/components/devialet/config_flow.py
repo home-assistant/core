@@ -1,4 +1,5 @@
 """Support for Devialet Phantom speakers."""
+
 from __future__ import annotations
 
 import logging
@@ -8,9 +9,8 @@ from devialet.devialet_api import DevialetApi
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -31,7 +31,7 @@ class DevialetFlowHandler(ConfigFlow, domain=DOMAIN):
         self._serial: str | None = None
         self._errors: dict[str, str] = {}
 
-    async def async_validate_input(self) -> FlowResult | None:
+    async def async_validate_input(self) -> ConfigFlowResult | None:
         """Validate the input using the Devialet API."""
 
         self._errors.clear()
@@ -53,7 +53,7 @@ class DevialetFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user or zeroconf."""
 
         if user_input is not None:
@@ -70,7 +70,7 @@ class DevialetFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
         LOGGER.info("Devialet device found via ZEROCONF: %s", discovery_info)
 
@@ -87,7 +87,7 @@ class DevialetFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle user-confirmation of discovered node."""
         title = f"{self._name} ({self._model})"
 

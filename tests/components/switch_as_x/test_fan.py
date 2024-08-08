@@ -1,4 +1,5 @@
 """Tests for the Switch as X Fan platform."""
+
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.switch_as_x.config_flow import SwitchAsXConfigFlowHandler
@@ -43,7 +44,7 @@ async def test_default_state(hass: HomeAssistant) -> None:
     state = hass.states.get("fan.wind_machine")
     assert state is not None
     assert state.state == "unavailable"
-    assert state.attributes["supported_features"] == 0
+    assert state.attributes["supported_features"] == 48
 
 
 async def test_service_calls(hass: HomeAssistant) -> None:

@@ -1,4 +1,5 @@
 """Support for device tracking of Huawei LTE routers."""
+
 from __future__ import annotations
 
 import logging
@@ -33,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 _DEVICE_SCAN = f"{DEVICE_TRACKER_DOMAIN}/device_scan"
 
-_HostType = dict[str, Any]
+type _HostType = dict[str, Any]
 
 
 def _get_hosts(

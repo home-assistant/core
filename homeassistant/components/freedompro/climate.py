@@ -1,4 +1,5 @@
 """Support for Freedompro climate."""
+
 from __future__ import annotations
 
 import json

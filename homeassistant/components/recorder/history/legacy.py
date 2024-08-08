@@ -1,8 +1,9 @@
 """Provide pre-made queries on top of the recorder component."""
+
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Callable, Iterable, Iterator, MutableMapping
+from collections.abc import Callable, Iterable, Iterator
 from datetime import datetime
 from itertools import groupby
 from operator import attrgetter
@@ -208,7 +209,7 @@ def get_significant_states(
     minimal_response: bool = False,
     no_attributes: bool = False,
     compressed_state_format: bool = False,
-) -> MutableMapping[str, list[State | dict[str, Any]]]:
+) -> dict[str, list[State | dict[str, Any]]]:
     """Wrap get_significant_states_with_session with an sql session."""
     with session_scope(hass=hass, read_only=True) as session:
         return get_significant_states_with_session(
@@ -316,7 +317,7 @@ def get_significant_states_with_session(
     minimal_response: bool = False,
     no_attributes: bool = False,
     compressed_state_format: bool = False,
-) -> MutableMapping[str, list[State | dict[str, Any]]]:
+) -> dict[str, list[State | dict[str, Any]]]:
     """Return states changes during UTC period start_time - end_time.
 
     entity_ids is an optional iterable of entities to include in the results.
@@ -364,14 +365,14 @@ def get_full_significant_states_with_session(
     include_start_time_state: bool = True,
     significant_changes_only: bool = True,
     no_attributes: bool = False,
-) -> MutableMapping[str, list[State]]:
+) -> dict[str, list[State]]:
     """Variant of get_significant_states_with_session.
 
     Difference with get_significant_states_with_session is that it does not
     return minimal responses.
     """
     return cast(
-        MutableMapping[str, list[State]],
+        dict[str, list[State]],
         get_significant_states_with_session(
             hass=hass,
             session=session,
@@ -453,7 +454,7 @@ def state_changes_during_period(
     descending: bool = False,
     limit: int | None = None,
     include_start_time_state: bool = True,
-) -> MutableMapping[str, list[State]]:
+) -> dict[str, list[State]]:
     """Return states changes during UTC period start_time - end_time."""
     if not entity_id:
         raise ValueError("entity_id must be provided")
@@ -470,7 +471,7 @@ def state_changes_during_period(
         )
         states = execute_stmt_lambda_element(session, stmt, None, end_time)
         return cast(
-            MutableMapping[str, list[State]],
+            dict[str, list[State]],
             _sorted_states_to_dict(
                 hass,
                 session,
@@ -521,7 +522,7 @@ def _get_last_state_changes_stmt(
 
 def get_last_state_changes(
     hass: HomeAssistant, number_of_states: int, entity_id: str
-) -> MutableMapping[str, list[State]]:
+) -> dict[str, list[State]]:
     """Return the last number_of_states."""
     entity_id_lower = entity_id.lower()
     entity_ids = [entity_id_lower]
@@ -532,7 +533,7 @@ def get_last_state_changes(
         )
         states = list(execute_stmt_lambda_element(session, stmt))
         return cast(
-            MutableMapping[str, list[State]],
+            dict[str, list[State]],
             _sorted_states_to_dict(
                 hass,
                 session,
@@ -692,7 +693,7 @@ def _sorted_states_to_dict(
     minimal_response: bool = False,
     no_attributes: bool = False,
     compressed_state_format: bool = False,
-) -> MutableMapping[str, list[State | dict[str, Any]]]:
+) -> dict[str, list[State | dict[str, Any]]]:
     """Convert SQL results into JSON friendly data structure.
 
     This takes our state list and turns it into a JSON friendly data
@@ -813,6 +814,7 @@ def _sorted_states_to_dict(
                         }
                     )
                     prev_state = state
+            continue
 
         for row in group:
             if (state := row[state_idx]) != prev_state:

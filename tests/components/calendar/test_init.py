@@ -1,4 +1,5 @@
 """The tests for the calendar component."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -11,23 +12,18 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
-from homeassistant.components.calendar import (
-    DOMAIN,
-    LEGACY_SERVICE_LIST_EVENTS,
-    SERVICE_GET_EVENTS,
-)
+from homeassistant.components.calendar import DOMAIN, SERVICE_GET_EVENTS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.issue_registry import IssueRegistry
 import homeassistant.util.dt as dt_util
 
-from .conftest import TEST_DOMAIN, MockCalendarEntity, create_mock_platform
+from .conftest import MockCalendarEntity, MockConfigEntry
 
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(name="frozen_time")
-def mock_frozen_time() -> None:
+def mock_frozen_time() -> str | None:
     """Fixture to set a frozen time used in tests.
 
     This is needed so that it can run before other fixtures.
@@ -36,7 +32,7 @@ def mock_frozen_time() -> None:
 
 
 @pytest.fixture(autouse=True)
-def mock_set_frozen_time(frozen_time: Any) -> Generator[None, None, None]:
+def mock_set_frozen_time(frozen_time: str | None) -> Generator[None]:
     """Fixture to freeze time that also can work for other fixtures."""
     if not frozen_time:
         yield
@@ -48,13 +44,14 @@ def mock_set_frozen_time(frozen_time: Any) -> Generator[None, None, None]:
 @pytest.fixture(name="setup_platform", autouse=True)
 async def mock_setup_platform(
     hass: HomeAssistant,
-    set_time_zone: Any,
-    frozen_time: Any,
-    mock_setup_integration: Any,
-    test_entities: list[MockCalendarEntity],
+    set_time_zone: None,
+    frozen_time: str | None,
+    mock_setup_integration: None,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Fixture to setup platforms used in the test and fixtures are set up in the right order."""
-    await create_mock_platform(hass, test_entities)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
 
 async def test_events_http_api(
@@ -414,20 +411,6 @@ async def test_create_event_service_invalid_params(
     ("service", "expected"),
     [
         (
-            LEGACY_SERVICE_LIST_EVENTS,
-            {
-                "events": [
-                    {
-                        "start": "2023-06-22T05:00:00-06:00",
-                        "end": "2023-06-22T06:00:00-06:00",
-                        "summary": "Future Event",
-                        "description": "Future Description",
-                        "location": "Future Location",
-                    }
-                ]
-            },
-        ),
-        (
             SERVICE_GET_EVENTS,
             {
                 "calendar.calendar_1": {
@@ -484,7 +467,6 @@ async def test_list_events_service(
 @pytest.mark.parametrize(
     ("service"),
     [
-        (LEGACY_SERVICE_LIST_EVENTS),
         SERVICE_GET_EVENTS,
     ],
 )
@@ -566,37 +548,3 @@ async def test_list_events_missing_fields(hass: HomeAssistant) -> None:
             blocking=True,
             return_response=True,
         )
-
-
-async def test_issue_deprecated_service_calendar_list_events(
-    hass: HomeAssistant,
-    issue_registry: IssueRegistry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test the issue is raised on deprecated service weather.get_forecast."""
-
-    _ = await hass.services.async_call(
-        DOMAIN,
-        LEGACY_SERVICE_LIST_EVENTS,
-        target={"entity_id": ["calendar.calendar_1"]},
-        service_data={
-            "entity_id": "calendar.calendar_1",
-            "duration": "01:00:00",
-        },
-        blocking=True,
-        return_response=True,
-    )
-
-    issue = issue_registry.async_get_issue(
-        "calendar", "deprecated_service_calendar_list_events"
-    )
-    assert issue
-    assert issue.issue_domain == TEST_DOMAIN
-    assert issue.issue_id == "deprecated_service_calendar_list_events"
-    assert issue.translation_key == "deprecated_service_calendar_list_events"
-
-    assert (
-        "Detected use of service 'calendar.list_events'. "
-        "This is deprecated and will stop working in Home Assistant 2024.6. "
-        "Use 'calendar.get_events' instead which supports multiple entities"
-    ) in caplog.text

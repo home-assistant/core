@@ -1,4 +1,5 @@
 """Platform for climate integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -329,12 +330,11 @@ class AtwDeviceZoneClimate(MelCloudClimate):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes with device specific additions."""
-        data = {
+        return {
             ATTR_STATUS: ATW_ZONE_HVAC_MODE_LOOKUP.get(
                 self._zone.status, self._zone.status
             )
         }
-        return data
 
     @property
     def hvac_mode(self) -> HVACMode:

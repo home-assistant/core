@@ -1,4 +1,5 @@
 """Tradfri sensor platform tests."""
+
 from __future__ import annotations
 
 import pytest

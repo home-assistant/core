@@ -1,4 +1,5 @@
 """Home Assistant Cast integration for Cast."""
+
 from __future__ import annotations
 
 import voluptuous as vol

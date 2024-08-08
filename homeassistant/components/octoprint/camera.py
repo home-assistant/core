@@ -1,4 +1,5 @@
 """Support for OctoPrint binary camera."""
+
 from __future__ import annotations
 
 from pyoctoprintapi import OctoprintClient, WebcamSettings

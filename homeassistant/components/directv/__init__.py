@@ -1,4 +1,5 @@
 """The DirecTV integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -9,12 +10,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 SCAN_INTERVAL = timedelta(seconds=30)

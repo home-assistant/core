@@ -1,4 +1,5 @@
 """Test 1-Wire diagnostics."""
+
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
@@ -16,7 +17,7 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
-def override_platforms() -> Generator[None, None, None]:
+def override_platforms() -> Generator[None]:
     """Override PLATFORMS."""
     with patch("homeassistant.components.onewire.PLATFORMS", [Platform.SWITCH]):
         yield

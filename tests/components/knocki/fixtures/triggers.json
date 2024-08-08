@@ -1,0 +1,16 @@
+[
+  {
+    "device": "KNC1-W-00000214",
+    "gesture": "d060b870-15ba-42c9-a932-2d2951087152",
+    "details": {
+      "description": "Eeee",
+      "name": "Aaaa",
+      "id": 31
+    },
+    "type": "homeassistant",
+    "user": "7a4d5bf9-01b1-413b-bb4d-77728e931dcc",
+    "updatedAt": 1716378013721,
+    "createdAt": 1716378013721,
+    "id": "1a050b25-7fed-4e0e-b5af-792b8b4650de"
+  }
+]

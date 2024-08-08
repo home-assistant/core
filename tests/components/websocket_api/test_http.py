@@ -1,10 +1,11 @@
 """Test Websocket API http module."""
+
 import asyncio
 from datetime import timedelta
 from typing import Any, cast
 from unittest.mock import patch
 
-from aiohttp import ServerDisconnectedError, WSMsgType, web
+from aiohttp import WSMsgType, WSServerHandshakeError, web
 import pytest
 
 from homeassistant.components.websocket_api import (
@@ -42,7 +43,7 @@ async def test_pending_msg_overflow(
     for idx in range(10):
         await websocket_client.send_json({"id": idx + 1, "type": "ping"})
     msg = await websocket_client.receive()
-    assert msg.type == WSMsgType.CLOSED
+    assert msg.type is WSMsgType.CLOSE
 
 
 async def test_cleanup_on_cancellation(
@@ -85,7 +86,7 @@ async def test_cleanup_on_cancellation(
 
         @callback
         def _raise():
-            raise ValueError()
+            raise ValueError
 
         connection.subscriptions[msg_id] = _raise
         connection.send_result(msg_id)
@@ -103,7 +104,7 @@ async def test_cleanup_on_cancellation(
     def cancel_in_handler(
         hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
     ) -> None:
-        raise asyncio.CancelledError()
+        raise asyncio.CancelledError
 
     async_register_command(hass, cancel_in_handler)
 
@@ -248,7 +249,7 @@ async def test_pending_msg_peak(
     )
 
     msg = await websocket_client.receive()
-    assert msg.type == WSMsgType.CLOSED
+    assert msg.type is WSMsgType.CLOSE
     assert "Client unable to keep up with pending messages" in caplog.text
     assert "Stayed over 5 for 5 seconds" in caplog.text
     assert "overload" in caplog.text
@@ -294,9 +295,7 @@ async def test_pending_msg_peak_recovery(
     instance._handle_task.cancel()
 
     msg = await websocket_client.receive()
-    assert msg.type == WSMsgType.TEXT
-    msg = await websocket_client.receive()
-    assert msg.type == WSMsgType.CLOSED
+    assert msg.type is WSMsgType.CLOSE
     assert "Client unable to keep up with pending messages" not in caplog.text
 
 
@@ -370,10 +369,13 @@ async def test_prepare_fail(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test failing to prepare."""
-    with patch(
-        "homeassistant.components.websocket_api.http.web.WebSocketResponse.prepare",
-        side_effect=(TimeoutError, web.WebSocketResponse.prepare),
-    ), pytest.raises(ServerDisconnectedError):
+    with (
+        patch(
+            "homeassistant.components.websocket_api.http.web.WebSocketResponse.prepare",
+            side_effect=(TimeoutError, web.WebSocketResponse.prepare),
+        ),
+        pytest.raises(WSServerHandshakeError),
+    ):
         await hass_ws_client(hass)
 
     assert "Timeout preparing request" in caplog.text

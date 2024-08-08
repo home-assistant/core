@@ -1,6 +1,8 @@
 """The pi_hole component."""
+
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 
 from hole import Hole
@@ -18,7 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -27,17 +29,10 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import (
-    CONF_STATISTICS_ONLY,
-    DATA_KEY_API,
-    DATA_KEY_COORDINATOR,
-    DOMAIN,
-    MIN_TIME_BETWEEN_UPDATES,
-)
+from .const import CONF_STATISTICS_ONLY, DOMAIN, MIN_TIME_BETWEEN_UPDATES
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -46,15 +41,25 @@ PLATFORMS = [
     Platform.UPDATE,
 ]
 
+type PiHoleConfigEntry = ConfigEntry[PiHoleData]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+@dataclass
+class PiHoleData:
+    """Runtime data definition."""
+
+    api: Hole
+    coordinator: DataUpdateCoordinator[None]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bool:
     """Set up Pi-hole entry."""
     name = entry.data[CONF_NAME]
     host = entry.data[CONF_HOST]
     use_tls = entry.data[CONF_SSL]
     verify_tls = entry.data[CONF_VERIFY_SSL]
     location = entry.data[CONF_LOCATION]
-    api_key = entry.data.get(CONF_API_KEY)
+    api_key = entry.data.get(CONF_API_KEY, "")
 
     # remove obsolet CONF_STATISTICS_ONLY from entry.data
     if CONF_STATISTICS_ONLY in entry.data:
@@ -125,11 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_KEY_API: api,
-        DATA_KEY_COORDINATOR: coordinator,
-    }
+    entry.runtime_data = PiHoleData(api, coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -138,19 +139,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Pi-hole entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-class PiHoleEntity(CoordinatorEntity):
+class PiHoleEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
     """Representation of a Pi-hole entity."""
 
     def __init__(
         self,
         api: Hole,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[None],
         name: str,
         server_unique_id: str,
     ) -> None:

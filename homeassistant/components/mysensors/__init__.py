@@ -1,4 +1,5 @@
 """Connect to a MySensors gateway via pymysensors API."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -9,7 +10,6 @@ from mysensors import BaseAsyncGateway
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import (
@@ -29,9 +29,6 @@ from .gateway import finish_setup, gw_stop, setup_gateway
 _LOGGER = logging.getLogger(__name__)
 
 DATA_HASS_CONFIG = "hass_config"
-
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -109,7 +106,7 @@ def setup_mysensors_platform(
     device_class: type[MySensorsChildEntity]
     | Mapping[SensorType, type[MySensorsChildEntity]],
     device_args: (
-        None | tuple
+        tuple | None
     ) = None,  # extra arguments that will be given to the entity constructor
     async_add_entities: Callable | None = None,
 ) -> list[MySensorsChildEntity] | None:

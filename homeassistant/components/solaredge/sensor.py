@@ -1,10 +1,11 @@
 """Support for SolarEdge Monitoring API."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
 
-from solaredge import Solaredge
+from aiosolaredge import SolarEdge
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -12,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -31,20 +31,14 @@ from .coordinator import (
     SolarEdgeOverviewDataService,
     SolarEdgePowerFlowDataService,
 )
+from .types import SolarEdgeConfigEntry
 
 
-@dataclass(frozen=True)
-class SolarEdgeSensorEntityRequiredKeyMixin:
-    """Sensor entity description with json_key for SolarEdge."""
+@dataclass(frozen=True, kw_only=True)
+class SolarEdgeSensorEntityDescription(SensorEntityDescription):
+    """Sensor entity description for SolarEdge."""
 
     json_key: str
-
-
-@dataclass(frozen=True)
-class SolarEdgeSensorEntityDescription(
-    SensorEntityDescription, SolarEdgeSensorEntityRequiredKeyMixin
-):
-    """Sensor entity description for SolarEdge."""
 
 
 SENSOR_TYPES = [
@@ -52,7 +46,6 @@ SENSOR_TYPES = [
         key="lifetime_energy",
         json_key="lifeTimeData",
         translation_key="lifetime_energy",
-        icon="mdi:solar-power",
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -62,7 +55,6 @@ SENSOR_TYPES = [
         json_key="lastYearData",
         translation_key="energy_this_year",
         entity_registry_enabled_default=False,
-        icon="mdi:solar-power",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
     ),
@@ -71,7 +63,6 @@ SENSOR_TYPES = [
         json_key="lastMonthData",
         translation_key="energy_this_month",
         entity_registry_enabled_default=False,
-        icon="mdi:solar-power",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
     ),
@@ -80,7 +71,6 @@ SENSOR_TYPES = [
         json_key="lastDayData",
         translation_key="energy_today",
         entity_registry_enabled_default=False,
-        icon="mdi:solar-power",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
     ),
@@ -88,7 +78,6 @@ SENSOR_TYPES = [
         key="current_power",
         json_key="currentPower",
         translation_key="current_power",
-        icon="mdi:solar-power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -134,28 +123,24 @@ SENSOR_TYPES = [
         json_key="LOAD",
         translation_key="power_consumption",
         entity_registry_enabled_default=False,
-        icon="mdi:flash",
     ),
     SolarEdgeSensorEntityDescription(
         key="solar_power",
         json_key="PV",
         translation_key="solar_power",
         entity_registry_enabled_default=False,
-        icon="mdi:solar-power",
     ),
     SolarEdgeSensorEntityDescription(
         key="grid_power",
         json_key="GRID",
         translation_key="grid_power",
         entity_registry_enabled_default=False,
-        icon="mdi:power-plug",
     ),
     SolarEdgeSensorEntityDescription(
         key="storage_power",
         json_key="STORAGE",
         translation_key="storage_power",
         entity_registry_enabled_default=False,
-        icon="mdi:car-battery",
     ),
     SolarEdgeSensorEntityDescription(
         key="purchased_energy",
@@ -215,13 +200,12 @@ SENSOR_TYPES = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SolarEdgeConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add an solarEdge entry."""
     # Add the needed sensors to hass
-    api: Solaredge = hass.data[DOMAIN][entry.entry_id][DATA_API_CLIENT]
-
+    api = entry.runtime_data[DATA_API_CLIENT]
     sensor_factory = SolarEdgeSensorFactory(hass, entry.data[CONF_SITE_ID], api)
     for service in sensor_factory.all_services:
         service.async_setup()
@@ -238,7 +222,7 @@ async def async_setup_entry(
 class SolarEdgeSensorFactory:
     """Factory which creates sensors based on the sensor_key."""
 
-    def __init__(self, hass: HomeAssistant, site_id: str, api: Solaredge) -> None:
+    def __init__(self, hass: HomeAssistant, site_id: str, api: SolarEdge) -> None:
         """Initialize the factory."""
 
         details = SolarEdgeDetailsDataService(hass, api, site_id)

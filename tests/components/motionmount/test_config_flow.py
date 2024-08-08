@@ -1,4 +1,5 @@
 """Tests for the Vogel's MotionMount config flow."""
+
 import dataclasses
 import socket
 from unittest.mock import MagicMock, PropertyMock
@@ -37,7 +38,7 @@ async def test_show_user_form(hass: HomeAssistant) -> None:
     )
 
     assert result["step_id"] == "user"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
 
 async def test_user_connection_error(
@@ -55,7 +56,7 @@ async def test_user_connection_error(
         data=user_input,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -74,7 +75,7 @@ async def test_user_connection_error_invalid_hostname(
         data=user_input,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -93,7 +94,7 @@ async def test_user_timeout_error(
         data=user_input,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "time_out"
 
 
@@ -112,7 +113,7 @@ async def test_user_not_connected_error(
         data=user_input,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_connected"
 
 
@@ -133,7 +134,7 @@ async def test_user_response_error_single_device_old_ce_old_new_pro(
         data=user_input,
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == HOST
 
     assert result["data"]
@@ -161,7 +162,7 @@ async def test_user_response_error_single_device_new_ce_old_pro(
         data=user_input,
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == ZEROCONF_NAME
 
     assert result["data"]
@@ -187,7 +188,7 @@ async def test_user_response_error_single_device_new_ce_new_pro(
         data=user_input,
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == ZEROCONF_NAME
 
     assert result["data"]
@@ -218,7 +219,7 @@ async def test_user_response_error_multi_device_old_ce_old_new_pro(
         data=user_input,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -241,7 +242,7 @@ async def test_user_response_error_multi_device_new_ce_new_pro(
         data=user_input,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -260,7 +261,7 @@ async def test_zeroconf_connection_error(
         data=discovery_info,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -279,7 +280,7 @@ async def test_zeroconf_connection_error_invalid_hostname(
         data=discovery_info,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -298,7 +299,7 @@ async def test_zeroconf_timout_error(
         data=discovery_info,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "time_out"
 
 
@@ -317,7 +318,7 @@ async def test_zeroconf_not_connected_error(
         data=discovery_info,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_connected"
 
 
@@ -338,7 +339,7 @@ async def test_show_zeroconf_form_old_ce_old_pro(
     )
 
     assert result["step_id"] == "zeroconf_confirm"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["description_placeholders"] == {CONF_NAME: "My MotionMount"}
 
 
@@ -359,7 +360,7 @@ async def test_show_zeroconf_form_old_ce_new_pro(
     )
 
     assert result["step_id"] == "zeroconf_confirm"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["description_placeholders"] == {CONF_NAME: "My MotionMount"}
 
 
@@ -380,7 +381,7 @@ async def test_show_zeroconf_form_new_ce_old_pro(
     )
 
     assert result["step_id"] == "zeroconf_confirm"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["description_placeholders"] == {CONF_NAME: "My MotionMount"}
 
 
@@ -399,7 +400,7 @@ async def test_show_zeroconf_form_new_ce_new_pro(
     )
 
     assert result["step_id"] == "zeroconf_confirm"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["description_placeholders"] == {CONF_NAME: "My MotionMount"}
 
 
@@ -418,7 +419,7 @@ async def test_zeroconf_device_exists_abort(
         data=discovery_info,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -436,14 +437,14 @@ async def test_full_user_flow_implementation(
     )
 
     assert result["step_id"] == "user"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=MOCK_USER_INPUT.copy(),
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == ZEROCONF_NAME
 
     assert result["data"]
@@ -470,13 +471,13 @@ async def test_full_zeroconf_flow_implementation(
     )
 
     assert result["step_id"] == "zeroconf_confirm"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == ZEROCONF_NAME
 
     assert result["data"]

@@ -1,4 +1,5 @@
 """Support for the Airzone water heater."""
+
 from __future__ import annotations
 
 from typing import Any, Final
@@ -29,7 +30,8 @@ from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, TEMP_UNIT_LIB_TO_HASS
+from . import AirzoneConfigEntry
+from .const import TEMP_UNIT_LIB_TO_HASS
 from .coordinator import AirzoneUpdateCoordinator
 from .entity import AirzoneHotWaterEntity
 
@@ -55,10 +57,12 @@ OPERATION_MODE_TO_DHW_PARAMS: Final[dict[str, dict[str, Any]]] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AirzoneConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Add Airzone sensors from a config_entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    """Add Airzone Water Heater from a config_entry."""
+    coordinator = entry.runtime_data
     if AZD_HOT_WATER in coordinator.data:
         async_add_entities([AirzoneWaterHeater(coordinator, entry)])
 

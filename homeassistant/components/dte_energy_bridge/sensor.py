@@ -1,4 +1,5 @@
 """Support for monitoring energy usage using the DTE energy bridge."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -8,7 +9,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
@@ -17,6 +18,7 @@ from homeassistant.const import CONF_NAME, UnitOfPower
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,8 +28,9 @@ CONF_VERSION = "version"
 
 DEFAULT_NAME = "Current Energy Usage"
 DEFAULT_VERSION = 1
+DOMAIN = "dte_energy_bridge"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_IP_ADDRESS): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -45,6 +48,18 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the DTE energy bridge sensor."""
+    create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_integration",
+        breaks_in_ha_version="2025.1.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_integration",
+        translation_placeholders={"domain": DOMAIN},
+    )
+
     name = config[CONF_NAME]
     ip_address = config[CONF_IP_ADDRESS]
     version = config[CONF_VERSION]

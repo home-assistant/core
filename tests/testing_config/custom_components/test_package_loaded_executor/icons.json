@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "switch": {
+      "something": {
+        "state": {
+          "away": "mdi:home-outline",
+          "home": "mdi:home"
+        }
+      }
+    }
+  },
+  "services": {
+    "enable_god_mode": "mdi:shield"
+  }
+}

@@ -1,36 +1,40 @@
 """Config flow for Ping (ICMP) integration."""
+
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
+from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 from homeassistant.util.network import is_ip_address
 
-from .const import CONF_IMPORTED_BY, CONF_PING_COUNT, DEFAULT_PING_COUNT, DOMAIN
+from .const import CONF_PING_COUNT, DEFAULT_PING_COUNT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class PingConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ping."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -56,44 +60,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_import(self, import_info: Mapping[str, Any]) -> FlowResult:
-        """Import an entry."""
-
-        to_import = {
-            CONF_HOST: import_info[CONF_HOST],
-            CONF_PING_COUNT: import_info[CONF_PING_COUNT],
-            CONF_CONSIDER_HOME: import_info.get(
-                CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME
-            ).seconds,
-        }
-        title = import_info.get(CONF_NAME, import_info[CONF_HOST])
-
-        self._async_abort_entries_match({CONF_HOST: to_import[CONF_HOST]})
-        return self.async_create_entry(
-            title=title,
-            data={CONF_IMPORTED_BY: import_info[CONF_IMPORTED_BY]},
-            options=to_import,
-        )
-
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
         """Create the options flow."""
         return OptionsFlowHandler(config_entry)
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Handle an options flow for Ping."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

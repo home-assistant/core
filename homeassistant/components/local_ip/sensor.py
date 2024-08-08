@@ -24,7 +24,7 @@ class IPSensor(SensorEntity):
     """A simple sensor."""
 
     _attr_unique_id = SENSOR
-    _attr_icon = "mdi:ip"
+    _attr_translation_key = "local_ip"
 
     def __init__(self, name: str) -> None:
         """Initialize the sensor."""

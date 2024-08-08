@@ -1,4 +1,5 @@
 """Tests for the LaMetric integration."""
+
 from unittest.mock import MagicMock
 
 from demetriek import (

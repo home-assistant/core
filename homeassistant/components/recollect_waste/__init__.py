@@ -1,4 +1,5 @@
 """The ReCollect Waste integration."""
+
 from __future__ import annotations
 
 from datetime import date, timedelta

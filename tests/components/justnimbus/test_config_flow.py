@@ -1,10 +1,11 @@
 """Test the JustNimbus config flow."""
+
 from unittest.mock import patch
 
 from justnimbus.exceptions import InvalidClientID, JustNimbusError
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.justnimbus.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -19,7 +20,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     await _set_up_justnimbus(hass=hass, flow_id=result["flow_id"])
@@ -27,7 +28,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("side_effect", "errors"),
-    (
+    [
         (
             InvalidClientID(client_id="test_id"),
             {"base": "invalid_auth"},
@@ -40,7 +41,7 @@ async def test_form(hass: HomeAssistant) -> None:
             RuntimeError,
             {"base": "unknown"},
         ),
-    ),
+    ],
 )
 async def test_form_errors(
     hass: HomeAssistant,
@@ -61,7 +62,7 @@ async def test_form_errors(
             user_input=FIXTURE_USER_INPUT,
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == errors
 
     await _set_up_justnimbus(hass=hass, flow_id=result["flow_id"])
@@ -80,7 +81,7 @@ async def test_abort_already_configured(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") is None
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -88,23 +89,26 @@ async def test_abort_already_configured(hass: HomeAssistant) -> None:
         user_input=FIXTURE_USER_INPUT,
     )
 
-    assert result2.get("type") == FlowResultType.ABORT
+    assert result2.get("type") is FlowResultType.ABORT
     assert result2.get("reason") == "already_configured"
 
 
 async def _set_up_justnimbus(hass: HomeAssistant, flow_id: str) -> None:
     """Reusable successful setup of JustNimbus sensor."""
-    with patch("justnimbus.JustNimbusClient.get_data"), patch(
-        "homeassistant.components.justnimbus.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch("justnimbus.JustNimbusClient.get_data"),
+        patch(
+            "homeassistant.components.justnimbus.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             flow_id=flow_id,
             user_input=FIXTURE_USER_INPUT,
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "JustNimbus"
     assert result2["data"] == FIXTURE_USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
@@ -130,7 +134,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
             data=FIXTURE_OLD_USER_INPUT,
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
 
     with patch(
@@ -143,6 +147,6 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result2["type"] is FlowResultType.ABORT
         assert result2["reason"] == "reauth_successful"
         assert mock_config.data == FIXTURE_USER_INPUT

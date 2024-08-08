@@ -1,4 +1,5 @@
 """Temperature helpers for Home Assistant."""
+
 from __future__ import annotations
 
 from numbers import Number

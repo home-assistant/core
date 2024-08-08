@@ -1,4 +1,5 @@
 """The FireServiceRota integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -183,7 +184,7 @@ class FireServiceRotaClient:
     async def update_call(self, func, *args):
         """Perform update call and return data."""
         if self.token_refresh_failure:
-            return
+            return None
 
         try:
             return await self._hass.async_add_executor_job(func, *args)

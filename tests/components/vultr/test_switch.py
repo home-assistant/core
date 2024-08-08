@@ -1,4 +1,5 @@
 """Test the Vultr switch platform."""
+
 from __future__ import annotations
 
 import json
@@ -49,7 +50,7 @@ def load_hass_devices(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("valid_config")
-def test_switch(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]):
+def test_switch(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]) -> None:
     """Test successful instance."""
 
     assert len(hass_devices) == 3
@@ -96,12 +97,15 @@ def test_switch(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]):
 
 
 @pytest.mark.usefixtures("valid_config")
-def test_turn_on(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]):
+def test_turn_on(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]) -> None:
     """Test turning a subscription on."""
-    with patch(
-        "vultr.Vultr.server_list",
-        return_value=json.loads(load_fixture("server_list.json", "vultr")),
-    ), patch("vultr.Vultr.server_start") as mock_start:
+    with (
+        patch(
+            "vultr.Vultr.server_list",
+            return_value=json.loads(load_fixture("server_list.json", "vultr")),
+        ),
+        patch("vultr.Vultr.server_start") as mock_start,
+    ):
         for device in hass_devices:
             if device.name == "Failed Server":
                 device.update()
@@ -112,12 +116,15 @@ def test_turn_on(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]):
 
 
 @pytest.mark.usefixtures("valid_config")
-def test_turn_off(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]):
+def test_turn_off(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]) -> None:
     """Test turning a subscription off."""
-    with patch(
-        "vultr.Vultr.server_list",
-        return_value=json.loads(load_fixture("server_list.json", "vultr")),
-    ), patch("vultr.Vultr.server_halt") as mock_halt:
+    with (
+        patch(
+            "vultr.Vultr.server_list",
+            return_value=json.loads(load_fixture("server_list.json", "vultr")),
+        ),
+        patch("vultr.Vultr.server_halt") as mock_halt,
+    ):
         for device in hass_devices:
             if device.name == "A Server":
                 device.update()
@@ -140,8 +147,7 @@ def test_invalid_switches(hass: HomeAssistant) -> None:
 
     def add_entities(devices, action):
         """Mock add devices."""
-        for device in devices:
-            hass_devices.append(device)
+        hass_devices.extend(devices)
 
     bad_conf = {}  # No subscription
 

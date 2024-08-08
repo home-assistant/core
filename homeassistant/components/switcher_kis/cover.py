@@ -1,8 +1,9 @@
 """Switcher integration Cover platform."""
+
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from aioswitcher.api import SwitcherBaseResponse, SwitcherType2Api
 from aioswitcher.device import DeviceCategory, ShutterDirection, SwitcherShutter
@@ -22,8 +23,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SwitcherDataUpdateCoordinator
 from .const import SIGNAL_DEVICE_ADD
+from .coordinator import SwitcherDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,7 +84,7 @@ class SwitcherCoverEntity(
 
     def _update_data(self) -> None:
         """Update data from device."""
-        data: SwitcherShutter = self.coordinator.data
+        data = cast(SwitcherShutter, self.coordinator.data)
         self._attr_current_cover_position = data.position
         self._attr_is_closed = data.position == 0
         self._attr_is_closing = data.direction == ShutterDirection.SHUTTER_DOWN
@@ -92,7 +93,7 @@ class SwitcherCoverEntity(
     async def _async_call_api(self, api: str, *args: Any) -> None:
         """Call Switcher API."""
         _LOGGER.debug("Calling api for %s, api: '%s', args: %s", self.name, api, args)
-        response: SwitcherBaseResponse = None
+        response: SwitcherBaseResponse | None = None
         error = None
 
         try:
@@ -125,6 +126,6 @@ class SwitcherCoverEntity(
         """Move the cover to a specific position."""
         await self._async_call_api(API_SET_POSITON, kwargs[ATTR_POSITION])
 
-    async def async_stop_cover(self, **_kwargs: Any) -> None:
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._async_call_api(API_STOP)

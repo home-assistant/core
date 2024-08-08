@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for coolmaster integration."""
+
 import logging
 
 from homeassistant.components.climate import SCAN_INTERVAL

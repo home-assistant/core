@@ -1,0 +1,45 @@
+{
+  "entity": {
+    "sensor": {
+      "current_dc": {
+        "default": "mdi:current-dc"
+      },
+      "current_dc_2": {
+        "default": "mdi:current-dc"
+      },
+      "voltage_dc": {
+        "default": "mdi:current-dc"
+      },
+      "voltage_dc_2": {
+        "default": "mdi:current-dc"
+      },
+      "co2_factor": {
+        "default": "mdi:molecule-co2"
+      },
+      "cash_factor": {
+        "default": "mdi:cash-plus"
+      },
+      "delivery_factor": {
+        "default": "mdi:cash-minus"
+      },
+      "energy_reactive_ac_consumed": {
+        "default": "mdi:lightning-bolt-outline"
+      },
+      "energy_reactive_ac_produced": {
+        "default": "mdi:lightning-bolt-outline"
+      },
+      "relative_autonomy": {
+        "default": "mdi:home-circle-outline"
+      },
+      "relative_self_consumption": {
+        "default": "mdi:solar-power"
+      },
+      "voltage_dc_maximum_cell": {
+        "default": "mdi:current-dc"
+      },
+      "voltage_dc_minimum_cell": {
+        "default": "mdi:current-dc"
+      }
+    }
+  }
+}

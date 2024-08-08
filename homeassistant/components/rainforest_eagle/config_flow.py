@@ -1,4 +1,5 @@
 """Config flow for Rainforest Eagle integration."""
+
 from __future__ import annotations
 
 import logging
@@ -6,12 +7,11 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TYPE
-from homeassistant.data_entry_flow import FlowResult
 
-from . import data
 from .const import CONF_CLOUD_ID, CONF_HARDWARE_ADDRESS, CONF_INSTALL_CODE, DOMAIN
+from .data import CannotConnect, InvalidAuth, async_get_type
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,14 +31,14 @@ def create_schema(user_input: dict[str, Any] | None) -> vol.Schema:
     )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Rainforest Eagle."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -49,17 +49,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            eagle_type, hardware_address = await data.async_get_type(
+            eagle_type, hardware_address = await async_get_type(
                 self.hass,
                 user_input[CONF_CLOUD_ID],
                 user_input[CONF_INSTALL_CODE],
                 user_input[CONF_HOST],
             )
-        except data.CannotConnect:
+        except CannotConnect:
             errors["base"] = "cannot_connect"
-        except data.InvalidAuth:
+        except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:

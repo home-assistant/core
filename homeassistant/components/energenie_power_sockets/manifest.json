@@ -1,0 +1,11 @@
+{
+  "domain": "energenie_power_sockets",
+  "name": "Energenie Power Sockets",
+  "codeowners": ["@gnumpi"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/energenie_power_sockets",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["pyegps"],
+  "requirements": ["pyegps==0.2.5"]
+}

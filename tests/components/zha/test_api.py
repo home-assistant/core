@@ -1,17 +1,17 @@
 """Test ZHA API."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
+from zha.application.const import RadioType
 import zigpy.backups
 import zigpy.state
 
-from homeassistant.components import zha
 from homeassistant.components.zha import api
-from homeassistant.components.zha.core.const import RadioType
-from homeassistant.components.zha.core.helpers import get_zha_gateway
+from homeassistant.components.zha.helpers import get_zha_gateway_proxy
 from homeassistant.core import HomeAssistant
 
 if TYPE_CHECKING:
@@ -41,8 +41,8 @@ async def test_async_get_network_settings_inactive(
     """Test reading settings with an inactive ZHA installation."""
     await setup_zha()
 
-    gateway = get_zha_gateway(hass)
-    await zha.async_unload_entry(hass, gateway.config_entry)
+    gateway = get_zha_gateway_proxy(hass)
+    await hass.config_entries.async_unload(gateway.config_entry.entry_id)
 
     backup = zigpy.backups.NetworkBackup()
     backup.network_info.channel = 20
@@ -53,7 +53,7 @@ async def test_async_get_network_settings_inactive(
     controller.new = AsyncMock(return_value=zigpy_app_controller)
 
     with patch.dict(
-        "homeassistant.components.zha.core.const.RadioType._member_map_",
+        "homeassistant.components.zha.api.RadioType._member_map_",
         ezsp=MagicMock(controller=controller, description="EZSP"),
     ):
         settings = await api.async_get_network_settings(hass)
@@ -68,8 +68,8 @@ async def test_async_get_network_settings_missing(
     """Test reading settings with an inactive ZHA installation, no valid channel."""
     await setup_zha()
 
-    gateway = get_zha_gateway(hass)
-    await gateway.config_entry.async_unload(hass)
+    gateway = get_zha_gateway_proxy(hass)
+    await hass.config_entries.async_unload(gateway.config_entry.entry_id)
 
     # Network settings were never loaded for whatever reason
     zigpy_app_controller.state.network_info = zigpy.state.NetworkInfo()

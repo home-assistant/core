@@ -1,7 +1,7 @@
 """The AirVisual component."""
+
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 from datetime import timedelta
 from math import ceil
@@ -31,7 +31,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import (
     aiohttp_client,
-    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
 )
@@ -61,8 +60,6 @@ DOMAIN_AIRVISUAL_PRO = "airvisual_pro"
 PLATFORMS = [Platform.SENSOR]
 
 DEFAULT_ATTRIBUTION = "Data provided by AirVisual"
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 @callback
@@ -161,13 +158,13 @@ def _standardize_geography_config_entry(
         # about, infer it from the data we have:
         entry_updates["data"] = {**entry.data}
         if CONF_CITY in entry.data:
-            entry_updates["data"][
-                CONF_INTEGRATION_TYPE
-            ] = INTEGRATION_TYPE_GEOGRAPHY_NAME
+            entry_updates["data"][CONF_INTEGRATION_TYPE] = (
+                INTEGRATION_TYPE_GEOGRAPHY_NAME
+            )
         else:
-            entry_updates["data"][
-                CONF_INTEGRATION_TYPE
-            ] = INTEGRATION_TYPE_GEOGRAPHY_COORDS
+            entry_updates["data"][CONF_INTEGRATION_TYPE] = (
+                INTEGRATION_TYPE_GEOGRAPHY_COORDS
+            )
 
     if not entry_updates:
         return
@@ -306,15 +303,19 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # domain:
             new_entry_data = {**entry.data}
             new_entry_data.pop(CONF_INTEGRATION_TYPE)
-            tasks = [
+
+            # Schedule the removal in a task to avoid a deadlock
+            # since we cannot remove a config entry that is in
+            # the process of being setup.
+            hass.async_create_background_task(
                 hass.config_entries.async_remove(entry.entry_id),
-                hass.config_entries.flow.async_init(
-                    DOMAIN_AIRVISUAL_PRO,
-                    context={"source": SOURCE_IMPORT},
-                    data=new_entry_data,
-                ),
-            ]
-            await asyncio.gather(*tasks)
+                name="remove config legacy airvisual entry {entry.title}",
+            )
+            await hass.config_entries.flow.async_init(
+                DOMAIN_AIRVISUAL_PRO,
+                context={"source": SOURCE_IMPORT},
+                data=new_entry_data,
+            )
 
             # After the migration has occurred, grab the new config and device entries
             # (now under the `airvisual_pro` domain):

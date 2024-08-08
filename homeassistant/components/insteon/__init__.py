@@ -1,4 +1,5 @@
 """Support for INSTEON Modems (PLM and Hub)."""
+
 from contextlib import suppress
 import logging
 
@@ -9,12 +10,12 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PLATFORM, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers import device_registry as dr
 
 from . import api
 from .const import (
     CONF_CAT,
+    CONF_DEV_PATH,
     CONF_DIM_STEPS,
     CONF_HOUSECODE,
     CONF_OVERRIDE,
@@ -33,8 +34,6 @@ from .utils import (
 
 _LOGGER = logging.getLogger(__name__)
 OPTIONS = "options"
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_get_device_config(hass, config_entry):
@@ -75,13 +74,15 @@ async def close_insteon_connection(*args):
     await async_close()
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Insteon platform."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an Insteon entry."""
+
+    if dev_path := entry.options.get(CONF_DEV_PATH):
+        hass.data[DOMAIN] = {}
+        hass.data[DOMAIN][CONF_DEV_PATH] = dev_path
+
+    api.async_load_api(hass)
+    await api.async_register_insteon_frontend(hass)
 
     if not devices.modem:
         try:
@@ -147,9 +148,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async_register_services(hass)
 
     create_insteon_device(hass, devices.modem, entry.entry_id)
-
-    api.async_load_api(hass)
-    await api.async_register_insteon_frontend(hass)
 
     entry.async_create_background_task(
         hass, async_get_device_config(hass, entry), "insteon-get-device-config"

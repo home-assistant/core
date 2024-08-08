@@ -1,4 +1,5 @@
 """Support for Avion dimmers."""
+
 from __future__ import annotations
 
 import importlib
@@ -9,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
 )
@@ -34,7 +35,7 @@ DEVICE_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
         vol.Optional(CONF_USERNAME): cv.string,
@@ -52,21 +53,25 @@ def setup_platform(
     """Set up an Avion switch."""
     avion = importlib.import_module("avion")
 
-    lights = []
-    if CONF_USERNAME in config and CONF_PASSWORD in config:
-        devices = avion.get_devices(config[CONF_USERNAME], config[CONF_PASSWORD])
-        for device in devices:
-            lights.append(AvionLight(device))
-
-    for address, device_config in config[CONF_DEVICES].items():
-        device = avion.Avion(
-            mac=address,
-            passphrase=device_config[CONF_API_KEY],
-            name=device_config.get(CONF_NAME),
-            object_id=device_config.get(CONF_ID),
-            connect=False,
+    lights = [
+        AvionLight(
+            avion.Avion(
+                mac=address,
+                passphrase=device_config[CONF_API_KEY],
+                name=device_config.get(CONF_NAME),
+                object_id=device_config.get(CONF_ID),
+                connect=False,
+            )
         )
-        lights.append(AvionLight(device))
+        for address, device_config in config[CONF_DEVICES].items()
+    ]
+    if CONF_USERNAME in config and CONF_PASSWORD in config:
+        lights.extend(
+            AvionLight(device)
+            for device in avion.get_devices(
+                config[CONF_USERNAME], config[CONF_PASSWORD]
+            )
+        )
 
     add_entities(lights)
 

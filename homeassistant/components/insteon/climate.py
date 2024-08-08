@@ -1,4 +1,5 @@
 """Support for Insteon thermostat."""
+
 from __future__ import annotations
 
 from typing import Any

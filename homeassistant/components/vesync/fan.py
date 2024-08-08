@@ -1,4 +1,5 @@
 """Support for VeSync fans."""
+
 from __future__ import annotations
 
 import logging
@@ -83,8 +84,14 @@ def _setup_entities(devices, async_add_entities):
 class VeSyncFanHA(VeSyncDevice, FanEntity):
     """Representation of a VeSync fan."""
 
-    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
     _attr_name = None
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, fan) -> None:
         """Initialize the VeSync fan device."""
@@ -183,6 +190,8 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
             self.smartfan.auto_mode()
         elif preset_mode == FAN_MODE_SLEEP:
             self.smartfan.sleep_mode()
+        elif preset_mode == FAN_MODE_PET:
+            self.smartfan.pet_mode()
 
         self.schedule_update_ha_state()
 

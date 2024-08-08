@@ -1,4 +1,5 @@
 """Config flow for GPSD integration."""
+
 from __future__ import annotations
 
 import socket
@@ -7,9 +8,8 @@ from typing import Any
 from gps3.agps3threaded import GPSD_PORT as DEFAULT_PORT, HOST as DEFAULT_HOST
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
@@ -22,27 +22,39 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class GPSDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class GPSDConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for GPSD."""
 
     VERSION = 1
 
-    async def async_step_import(self, import_data: dict[str, Any]) -> FlowResult:
+    @staticmethod
+    def test_connection(host: str, port: int) -> bool:
+        """Test socket connection."""
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.connect((host, port))
+                sock.shutdown(2)
+        except OSError:
+            return False
+        else:
+            return True
+
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry from configuration.yaml."""
         return await self.async_step_user(import_data)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
             self._async_abort_entries_match(user_input)
 
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            try:
-                sock.connect((user_input[CONF_HOST], user_input[CONF_PORT]))
-                sock.shutdown(2)
-            except OSError:
+            connected = await self.hass.async_add_executor_job(
+                self.test_connection, user_input[CONF_HOST], user_input[CONF_PORT]
+            )
+
+            if not connected:
                 return self.async_abort(reason="cannot_connect")
 
             port = ""

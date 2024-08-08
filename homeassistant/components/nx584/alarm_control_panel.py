@@ -1,4 +1,5 @@
 """Support for NX584 alarm control panels."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -8,10 +9,11 @@ from nx584 import client
 import requests
 import voluptuous as vol
 
-import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as ALARM_CONTROL_PANEL_PLATFORM_SCHEMA,
+    AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -39,7 +41,7 @@ SERVICE_BYPASS_ZONE = "bypass_zone"
 SERVICE_UNBYPASS_ZONE = "unbypass_zone"
 ATTR_ZONE = "zone"
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -89,15 +91,16 @@ async def async_setup_platform(
     )
 
 
-class NX584Alarm(alarm.AlarmControlPanelEntity):
+class NX584Alarm(AlarmControlPanelEntity):
     """Representation of a NX584-based alarm panel."""
 
-    _attr_code_format = alarm.CodeFormat.NUMBER
+    _attr_code_format = CodeFormat.NUMBER
     _attr_state: str | None
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
+    _attr_code_arm_required = False
 
     def __init__(self, name: str, alarm_client: client.Client, url: str) -> None:
         """Init the nx584 alarm panel."""

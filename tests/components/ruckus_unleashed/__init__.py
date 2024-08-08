@@ -1,4 +1,7 @@
 """Tests for the Ruckus Unleashed integration."""
+
+from __future__ import annotations
+
 from unittest.mock import AsyncMock, patch
 
 from aioruckus import AjaxSession, RuckusAjaxApi
@@ -110,7 +113,7 @@ class RuckusAjaxApiPatchContext:
 
     def __init__(
         self,
-        login_mock: AsyncMock = None,
+        login_mock: AsyncMock | None = None,
         system_info: dict | None = None,
         mesh_info: dict | None = None,
         active_clients: list[dict] | AsyncMock | None = None,
@@ -180,7 +183,7 @@ class RuckusAjaxApiPatchContext:
 
         def _patched_async_create(
             host: str, username: str, password: str
-        ) -> "AjaxSession":
+        ) -> AjaxSession:
             return AjaxSession(None, host, username, password)
 
         self.patchers.append(

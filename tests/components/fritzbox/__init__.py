@@ -1,4 +1,5 @@
 """Tests for the AVM Fritz!Box integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -22,9 +23,9 @@ async def setup_config_entry(
     hass: HomeAssistant,
     data: dict[str, Any],
     unique_id: str = "any",
-    device: Mock = None,
-    fritz: Mock = None,
-    template: Mock = None,
+    device: Mock | None = None,
+    fritz: Mock | None = None,
+    template: Mock | None = None,
 ) -> bool:
     """Do setup of a MockConfigEntry."""
     entry = MockConfigEntry(
@@ -102,10 +103,10 @@ class FritzDeviceClimateMock(FritzEntityBaseMock):
     has_temperature_sensor = True
     has_thermostat = True
     has_blind = False
-    holiday_active = "fake_holiday"
+    holiday_active = False
     lock = "fake_locked"
     present = True
-    summer_active = "fake_summer"
+    summer_active = False
     target_temperature = 19.5
     window_open = "fake_window"
     nextchange_temperature = 22.0
@@ -150,7 +151,7 @@ class FritzDeviceSwitchMock(FritzEntityBaseMock):
     has_thermostat = False
     has_blind = False
     switch_state = "fake_state"
-    lock = "fake_locked"
+    lock = False
     power = 5678
     present = True
     temperature = 1.23

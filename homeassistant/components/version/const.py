@@ -1,4 +1,5 @@
 """Constants for the Version integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -71,6 +72,7 @@ BOARD_MAP: Final[dict[str, str]] = {
     "ODROID C2": "odroid-c2",
     "ODROID C4": "odroid-c4",
     "ODROID M1": "odroid-m1",
+    "ODROID M1S": "odroid-m1s",
     "ODROID N2": "odroid-n2",
     "ODROID XU4": "odroid-xu4",
     "Generic AArch64": "generic-aarch64",
@@ -90,7 +92,8 @@ VERSION_SOURCE_MAP: Final[dict[str, str]] = {
     VERSION_SOURCE_PYPI: "pypi",
 }
 
-VALID_SOURCES: Final[list[str]] = HA_VERSION_SOURCES + [
+VALID_SOURCES: Final[list[str]] = [
+    *HA_VERSION_SOURCES,
     "hassio",  # Kept to not break existing configurations
     "docker",  # Kept to not break existing configurations
 ]

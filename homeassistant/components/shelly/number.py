@@ -1,40 +1,62 @@
 """Number for Shelly."""
+
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, Final, cast
 
 from aioshelly.block_device import Block
+from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 
 from homeassistant.components.number import (
+    DOMAIN as NUMBER_PLATFORM,
+    NumberEntity,
     NumberEntityDescription,
     NumberExtraStoredData,
     NumberMode,
     RestoreNumber,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 
-from .const import CONF_SLEEP_PERIOD, LOGGER
-from .coordinator import ShellyBlockCoordinator
+from .const import CONF_SLEEP_PERIOD, LOGGER, VIRTUAL_NUMBER_MODE_MAP
+from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
+    RpcEntityDescription,
+    ShellyRpcAttributeEntity,
     ShellySleepingBlockAttributeEntity,
     async_setup_entry_attribute_entities,
+    async_setup_entry_rpc,
+)
+from .utils import (
+    async_remove_orphaned_virtual_entities,
+    get_device_entry_gen,
+    get_virtual_component_ids,
 )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class BlockNumberDescription(BlockEntityDescription, NumberEntityDescription):
     """Class to describe a BLOCK sensor."""
 
     rest_path: str = ""
     rest_arg: str = ""
+
+
+@dataclass(frozen=True, kw_only=True)
+class RpcNumberDescription(RpcEntityDescription, NumberEntityDescription):
+    """Class to describe a RPC number entity."""
+
+    max_fn: Callable[[dict], float] | None = None
+    min_fn: Callable[[dict], float] | None = None
+    step_fn: Callable[[dict], float] | None = None
+    mode_fn: Callable[[dict], NumberMode] | None = None
 
 
 NUMBERS: dict[tuple[str, str], BlockNumberDescription] = {
@@ -55,12 +77,54 @@ NUMBERS: dict[tuple[str, str], BlockNumberDescription] = {
 }
 
 
+RPC_NUMBERS: Final = {
+    "number": RpcNumberDescription(
+        key="number",
+        sub_key="value",
+        has_entity_name=True,
+        max_fn=lambda config: config["max"],
+        min_fn=lambda config: config["min"],
+        mode_fn=lambda config: VIRTUAL_NUMBER_MODE_MAP.get(
+            config["meta"]["ui"]["view"], NumberMode.BOX
+        ),
+        step_fn=lambda config: config["meta"]["ui"]["step"],
+        # If the unit is not set, the device sends an empty string
+        unit=lambda config: config["meta"]["ui"]["unit"]
+        if config["meta"]["ui"]["unit"]
+        else None,
+    ),
+}
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up numbers for device."""
+    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
+        coordinator = config_entry.runtime_data.rpc
+        assert coordinator
+
+        async_setup_entry_rpc(
+            hass, config_entry, async_add_entities, RPC_NUMBERS, RpcNumber
+        )
+
+        # the user can remove virtual components from the device configuration, so
+        # we need to remove orphaned entities
+        virtual_number_ids = get_virtual_component_ids(
+            coordinator.device.config, NUMBER_PLATFORM
+        )
+        async_remove_orphaned_virtual_entities(
+            hass,
+            config_entry.entry_id,
+            coordinator.mac,
+            NUMBER_PLATFORM,
+            "number",
+            virtual_number_ids,
+        )
+        return
+
     if config_entry.data[CONF_SLEEP_PERIOD]:
         async_setup_entry_attribute_entities(
             hass,
@@ -122,7 +186,48 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
                 f"Setting state for entity {self.name} failed, state: {params}, error:"
-                f" {repr(err)}"
+                f" {err!r}"
             ) from err
         except InvalidAuthError:
-            self.coordinator.entry.async_start_reauth(self.hass)
+            await self.coordinator.async_shutdown_device_and_start_reauth()
+
+
+class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
+    """Represent a RPC number entity."""
+
+    entity_description: RpcNumberDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcNumberDescription,
+    ) -> None:
+        """Initialize sensor."""
+        super().__init__(coordinator, key, attribute, description)
+
+        if callable(description.max_fn):
+            self._attr_native_max_value = description.max_fn(
+                coordinator.device.config[key]
+            )
+        if callable(description.min_fn):
+            self._attr_native_min_value = description.min_fn(
+                coordinator.device.config[key]
+            )
+        if callable(description.step_fn):
+            self._attr_native_step = description.step_fn(coordinator.device.config[key])
+        if callable(description.mode_fn):
+            self._attr_mode = description.mode_fn(coordinator.device.config[key])
+
+    @property
+    def native_value(self) -> float | None:
+        """Return value of number."""
+        if TYPE_CHECKING:
+            assert isinstance(self.attribute_value, float | None)
+
+        return self.attribute_value
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Change the value."""
+        await self.call_rpc("Number.Set", {"id": self._id, "value": value})

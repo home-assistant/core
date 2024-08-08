@@ -1,4 +1,5 @@
 """Config flow for the Home Assistant Yellow integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -15,9 +16,8 @@ from homeassistant.components.hassio import (
     async_set_yellow_settings,
 )
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 
 from .const import DOMAIN, ZHA_HW_DISCOVERY_DATA
@@ -46,7 +46,9 @@ class HomeAssistantYellowConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return the options flow."""
         return HomeAssistantYellowOptionsFlow(config_entry)
 
-    async def async_step_system(self, data: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_system(
+        self, data: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -61,11 +63,11 @@ class HomeAssistantYellowOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandl
 
     async def async_step_on_supervisor(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle logic when on Supervisor host."""
         return await self.async_step_main_menu()
 
-    async def async_step_main_menu(self, _: None = None) -> FlowResult:
+    async def async_step_main_menu(self, _: None = None) -> ConfigFlowResult:
         """Show the main menu."""
         return self.async_show_menu(
             step_id="main_menu",
@@ -77,7 +79,7 @@ class HomeAssistantYellowOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandl
 
     async def async_step_hardware_settings(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle hardware settings."""
 
         if user_input is not None:
@@ -108,7 +110,7 @@ class HomeAssistantYellowOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandl
 
     async def async_step_reboot_menu(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reboot host."""
         return self.async_show_menu(
             step_id="reboot_menu",
@@ -120,20 +122,20 @@ class HomeAssistantYellowOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandl
 
     async def async_step_reboot_now(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Reboot now."""
         await async_reboot_host(self.hass)
         return self.async_create_entry(data={})
 
     async def async_step_reboot_later(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Reboot later."""
         return self.async_create_entry(data={})
 
     async def async_step_multipan_settings(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle multipan settings."""
         return await super().async_step_on_supervisor(user_input)
 

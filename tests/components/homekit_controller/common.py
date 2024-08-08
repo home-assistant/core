@@ -1,4 +1,5 @@
 """Code to support homekit_controller tests."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -10,12 +11,7 @@ from unittest import mock
 
 from aiohomekit.controller.abstract import AbstractDescription, AbstractPairing
 from aiohomekit.hkjson import loads as hkloads
-from aiohomekit.model import (
-    Accessories,
-    AccessoriesState,
-    Accessory,
-    mixin as model_mixin,
-)
+from aiohomekit.model import Accessories, AccessoriesState, Accessory
 from aiohomekit.testing import FakeController, FakePairing
 
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -194,8 +190,7 @@ async def setup_accessories_from_file(hass: HomeAssistant, path: str) -> Accesso
         load_fixture, os.path.join("homekit_controller", path)
     )
     accessories_json = hkloads(accessories_fixture)
-    accessories = Accessories.from_list(accessories_json)
-    return accessories
+    return Accessories.from_list(accessories_json)
 
 
 async def setup_platform(hass):
@@ -282,7 +277,7 @@ async def device_config_changed(hass: HomeAssistant, accessories: Accessories):
 
 
 async def setup_test_component(
-    hass, setup_accessory, capitalize=False, suffix=None, connection=None
+    hass, aid, setup_accessory, capitalize=False, suffix=None, connection=None
 ):
     """Load a fake homekit accessory based on a homekit accessory model.
 
@@ -291,7 +286,7 @@ async def setup_test_component(
     If suffix is set, entityId will include the suffix
     """
     accessory = Accessory.create_with_info(
-        "TestDevice", "example.com", "Test", "0001", "0.1"
+        aid, "TestDevice", "example.com", "Test", "0001", "0.1"
     )
     setup_accessory(accessory)
 
@@ -306,7 +301,7 @@ async def setup_test_component(
 
     config_entry, pairing = await setup_test_accessories(hass, [accessory], connection)
     entity = "testdevice" if suffix is None else f"testdevice_{suffix}"
-    return Helper(hass, ".".join((domain, entity)), pairing, accessory, config_entry)
+    return Helper(hass, f"{domain}.{entity}", pairing, accessory, config_entry)
 
 
 async def assert_devices_and_entities_created(
@@ -397,22 +392,3 @@ async def assert_devices_and_entities_created(
 
     # Root device must not have a via, otherwise its not the device
     assert root_device.via_device_id is None
-
-
-async def remove_device(ws_client, device_id, config_entry_id):
-    """Remove config entry from a device."""
-    await ws_client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": config_entry_id,
-            "device_id": device_id,
-        }
-    )
-    response = await ws_client.receive_json()
-    return response["success"]
-
-
-def get_next_aid():
-    """Get next aid."""
-    return model_mixin.id_counter + 1

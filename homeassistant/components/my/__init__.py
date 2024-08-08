@@ -1,4 +1,5 @@
 """Support for my.home-assistant.io redirect service."""
+
 from homeassistant.components import frontend
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv

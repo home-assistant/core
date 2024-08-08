@@ -1,12 +1,14 @@
 """Support for esphome entities."""
+
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import math
-from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Concatenate, Generic, ParamSpec, TypeVar, cast
 
 from aioesphomeapi import (
+    APIConnectionError,
     EntityCategory as EsphomeEntityCategory,
     EntityInfo,
     EntityState,
@@ -14,24 +16,22 @@ from aioesphomeapi import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .domain_data import DomainData
-
 # Import config flow so that it's added to the registry
-from .entry_data import RuntimeEntryData
+from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
 
 _R = TypeVar("_R")
+_P = ParamSpec("_P")
 _InfoT = TypeVar("_InfoT", bound=EntityInfo)
 _EntityT = TypeVar("_EntityT", bound="EsphomeEntity[Any,Any]")
 _StateT = TypeVar("_StateT", bound=EntityState)
@@ -82,7 +82,7 @@ def async_static_info_updated(
 
 async def platform_async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ESPHomeConfigEntry,
     async_add_entities: AddEntitiesCallback,
     *,
     info_type: type[_InfoT],
@@ -94,7 +94,7 @@ async def platform_async_setup_entry(
     This method is in charge of receiving, distributing and storing
     info and state updates.
     """
-    entry_data: RuntimeEntryData = DomainData.get(hass).get_entry_data(entry)
+    entry_data = entry.runtime_data
     entry_data.info[info_type] = {}
     entry_data.state.setdefault(state_type, {})
     platform = entity_platform.async_get_current_platform()
@@ -127,7 +127,6 @@ def esphome_state_property(
 
     @functools.wraps(func)
     def _wrapper(self: _EntityT) -> _R | None:
-        # pylint: disable-next=protected-access
         if not self._has_state:
             return None
         val = func(self)
@@ -140,17 +139,37 @@ def esphome_state_property(
     return _wrapper
 
 
+def convert_api_error_ha_error(
+    func: Callable[Concatenate[_EntityT, _P], Awaitable[None]],
+) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
+    """Decorate ESPHome command calls that send commands/make changes to the device.
+
+    A decorator that wraps the passed in function, catches APIConnectionError errors,
+    and raises a HomeAssistant error instead.
+    """
+
+    async def handler(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        try:
+            return await func(self, *args, **kwargs)
+        except APIConnectionError as error:
+            raise HomeAssistantError(
+                f"Error communicating with device: {error}"
+            ) from error
+
+    return handler
+
+
 ICON_SCHEMA = vol.Schema(cv.icon)
 
 
-ENTITY_CATEGORIES: EsphomeEnumMapper[
-    EsphomeEntityCategory, EntityCategory | None
-] = EsphomeEnumMapper(
-    {
-        EsphomeEntityCategory.NONE: None,
-        EsphomeEntityCategory.CONFIG: EntityCategory.CONFIG,
-        EsphomeEntityCategory.DIAGNOSTIC: EntityCategory.DIAGNOSTIC,
-    }
+ENTITY_CATEGORIES: EsphomeEnumMapper[EsphomeEntityCategory, EntityCategory | None] = (
+    EsphomeEnumMapper(
+        {
+            EsphomeEntityCategory.NONE: None,
+            EsphomeEntityCategory.CONFIG: EntityCategory.CONFIG,
+            EsphomeEntityCategory.DIAGNOSTIC: EntityCategory.DIAGNOSTIC,
+        }
+    )
 )
 
 
@@ -171,13 +190,13 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     ) -> None:
         """Initialize."""
         self._entry_data = entry_data
+        assert entry_data.device_info is not None
+        device_info = entry_data.device_info
+        self._device_info = device_info
         self._on_entry_data_changed()
         self._key = entity_info.key
         self._state_type = state_type
         self._on_static_info_update(entity_info)
-        assert entry_data.device_info is not None
-        device_info = entry_data.device_info
-        self._device_info = device_info
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
         )
@@ -204,25 +223,19 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         entry_data = self._entry_data
-        hass = self.hass
-        key = self._key
-        static_info = self._static_info
-
         self.async_on_remove(
-            async_dispatcher_connect(
-                hass,
-                entry_data.signal_device_updated,
+            entry_data.async_subscribe_device_updated(
                 self._on_device_update,
             )
         )
         self.async_on_remove(
             entry_data.async_subscribe_state_update(
-                self._state_type, key, self._on_state_update
+                self._state_type, self._key, self._on_state_update
             )
         )
         self.async_on_remove(
             entry_data.async_register_key_static_info_updated_callback(
-                static_info, self._on_static_info_update
+                self._static_info, self._on_static_info_update
             )
         )
         self._update_state_from_entry_data()
@@ -275,6 +288,12 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         entry_data = self._entry_data
         self._api_version = entry_data.api_version
         self._client = entry_data.client
+        if self._device_info.has_deep_sleep:
+            # During deep sleep the ESP will not be connectable (by design)
+            # For these cases, show it as available
+            self._attr_available = entry_data.expected_disconnect
+        else:
+            self._attr_available = entry_data.available
 
     @callback
     def _on_device_update(self) -> None:
@@ -286,16 +305,6 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
             # is available when the full state arrives
             # through the next entity state packet.
             self.async_write_ha_state()
-
-    @property
-    def available(self) -> bool:
-        """Return if the entity is available."""
-        if self._device_info.has_deep_sleep:
-            # During deep sleep the ESP will not be connectable (by design)
-            # For these cases, show it as available
-            return self._entry_data.expected_disconnect
-
-        return self._entry_data.available
 
 
 class EsphomeAssistEntity(Entity):

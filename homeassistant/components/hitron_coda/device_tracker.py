@@ -1,4 +1,5 @@
 """Support for the Hitron CODA-4582U, provided by Rogers."""
+
 from __future__ import annotations
 
 from collections import namedtuple
@@ -10,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TYPE, CONF_USERNAME
@@ -22,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TYPE = "rogers"
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
@@ -41,7 +42,7 @@ def get_scanner(
     return scanner if scanner.success_init else None
 
 
-Device = namedtuple("Device", ["mac", "name"])
+Device = namedtuple("Device", ["mac", "name"])  # noqa: PYI024
 
 
 class HitronCODADeviceScanner(DeviceScanner):
@@ -94,10 +95,10 @@ class HitronCODADeviceScanner(DeviceScanner):
             return False
         try:
             self._userid = res.cookies["userid"]
-            return True
         except KeyError:
             _LOGGER.error("Failed to log in to router")
             return False
+        return True
 
     def _update_info(self):
         """Get ARP from router."""

@@ -1,4 +1,5 @@
 """Helpers for managing a pairing with a HomeKit accessory or bridge."""
+
 from __future__ import annotations
 
 import asyncio
@@ -18,7 +19,7 @@ from aiohomekit.exceptions import (
     EncryptionError,
 )
 from aiohomekit.model import Accessories, Accessory, Transport
-from aiohomekit.model.characteristics import Characteristic
+from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.thread.dataset_store import async_get_preferred_dataset
@@ -56,9 +57,9 @@ BLE_AVAILABILITY_CHECK_INTERVAL = 1800  # seconds
 
 _LOGGER = logging.getLogger(__name__)
 
-AddAccessoryCb = Callable[[Accessory], bool]
-AddServiceCb = Callable[[Service], bool]
-AddCharacteristicCb = Callable[[Characteristic], bool]
+type AddAccessoryCb = Callable[[Accessory], bool]
+type AddServiceCb = Callable[[Service], bool]
+type AddCharacteristicCb = Callable[[Characteristic], bool]
 
 
 def valid_serial_number(serial: str) -> bool:
@@ -109,7 +110,7 @@ class HKDevice:
         # A list of callbacks that turn HK characteristics into entities
         self.char_factories: list[AddCharacteristicCb] = []
 
-        # The platorms we have forwarded the config entry so far. If a new
+        # The platforms we have forwarded the config entry so far. If a new
         # accessory is added to a bridge we may have to load additional
         # platforms. We don't want to load all platforms up front if its just
         # a lightbulb. And we don't want to forward a config entry twice
@@ -144,6 +145,7 @@ class HKDevice:
             cooldown=DEBOUNCE_COOLDOWN,
             immediate=False,
             function=self.async_update,
+            background=True,
         )
 
         self._availability_callbacks: set[CALLBACK_TYPE] = set()
@@ -151,6 +153,7 @@ class HKDevice:
         self._subscriptions: dict[tuple[int, int], set[CALLBACK_TYPE]] = {}
         self._pending_subscribes: set[tuple[int, int]] = set()
         self._subscribe_timer: CALLBACK_TYPE | None = None
+        self._load_platforms_lock = asyncio.Lock()
 
     @property
     def entity_map(self) -> Accessories:
@@ -196,13 +199,19 @@ class HKDevice:
             self._subscribe_timer()
             self._subscribe_timer = None
 
-    async def _async_subscribe(self, _now: datetime) -> None:
+    @callback
+    def _async_subscribe(self, _now: datetime) -> None:
         """Subscribe to characteristics."""
         self._subscribe_timer = None
         if self._pending_subscribes:
             subscribes = self._pending_subscribes.copy()
             self._pending_subscribes.clear()
-            await self.pairing.subscribe(subscribes)
+            self.config_entry.async_create_task(
+                self.hass,
+                self.pairing.subscribe(subscribes),
+                name=f"hkc subscriptions {self.unique_id}",
+                eager_start=True,
+            )
 
     def remove_watchable_characteristics(
         self, characteristics: list[tuple[int, int]]
@@ -319,7 +328,8 @@ class HKDevice:
             )
             # BLE devices always get an RSSI sensor as well
             if "sensor" not in self.platforms:
-                await self.async_load_platform("sensor")
+                async with self._load_platforms_lock:
+                    await self._async_load_platforms({"sensor"})
 
     @callback
     def _async_start_polling(self) -> None:
@@ -330,10 +340,20 @@ class HKDevice:
         self.config_entry.async_on_unload(
             async_track_time_interval(
                 self.hass,
-                self.async_request_update,
+                self._async_schedule_update,
                 self.pairing.poll_interval,
                 name=f"HomeKit Device {self.unique_id} availability check poll",
             )
+        )
+
+    @callback
+    def _async_schedule_update(self, now: datetime) -> None:
+        """Schedule an update."""
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self._debounced_update.async_call(),
+            name=f"hkc {self.unique_id} alive poll",
+            eager_start=True,
         )
 
     async def async_add_new_entities(self) -> None:
@@ -365,6 +385,7 @@ class HKDevice:
             model=accessory.model,
             sw_version=accessory.firmware_revision,
             hw_version=accessory.hardware_revision,
+            serial_number=accessory.serial_number,
         )
 
         if accessory.aid != 1:
@@ -544,6 +565,10 @@ class HKDevice:
                 current_unique_id.add((accessory.aid, service.iid, None))
 
                 for char in service.characteristics:
+                    if self.pairing.transport != Transport.BLE:
+                        if char.type == CharacteristicsTypes.THREAD_CONTROL_POINT:
+                            continue
+
                     current_unique_id.add(
                         (
                             accessory.aid,
@@ -681,7 +706,9 @@ class HKDevice:
 
     def process_config_changed(self, config_num: int) -> None:
         """Handle a config change notification from the pairing."""
-        self.hass.async_create_task(self.async_update_new_accessories_state())
+        self.config_entry.async_create_task(
+            self.hass, self.async_update_new_accessories_state(), eager_start=True
+        )
 
     async def async_update_new_accessories_state(self) -> None:
         """Process a change in the pairings accessories state."""
@@ -777,40 +804,35 @@ class HKDevice:
                         self.entities.add(entity_key)
                         break
 
-    async def async_load_platform(self, platform: str) -> None:
-        """Load a single platform idempotently."""
-        if platform in self.platforms:
+    async def _async_load_platforms(self, platforms: set[str]) -> None:
+        """Load a group of platforms."""
+        assert self._load_platforms_lock.locked(), "Must be called with lock held"
+        if not (to_load := platforms - self.platforms):
             return
-
-        self.platforms.add(platform)
-        try:
-            await self.hass.config_entries.async_forward_entry_setup(
-                self.config_entry, platform
-            )
-        except Exception:
-            self.platforms.remove(platform)
-            raise
+        self.platforms.update(to_load)
+        await self.hass.config_entries.async_forward_entry_setups(
+            self.config_entry, platforms
+        )
 
     async def async_load_platforms(self) -> None:
         """Load any platforms needed by this HomeKit device."""
-        to_load: set[str] = set()
-        for accessory in self.entity_map.accessories:
-            for service in accessory.services:
-                if service.type in HOMEKIT_ACCESSORY_DISPATCH:
-                    platform = HOMEKIT_ACCESSORY_DISPATCH[service.type]
-                    if platform not in self.platforms:
-                        to_load.add(platform)
-
-                for char in service.characteristics:
-                    if char.type in CHARACTERISTIC_PLATFORMS:
-                        platform = CHARACTERISTIC_PLATFORMS[char.type]
+        async with self._load_platforms_lock:
+            to_load: set[str] = set()
+            for accessory in self.entity_map.accessories:
+                for service in accessory.services:
+                    if service.type in HOMEKIT_ACCESSORY_DISPATCH:
+                        platform = HOMEKIT_ACCESSORY_DISPATCH[service.type]
                         if platform not in self.platforms:
                             to_load.add(platform)
 
-        if to_load:
-            await asyncio.gather(
-                *[self.async_load_platform(platform) for platform in to_load]
-            )
+                    for char in service.characteristics:
+                        if char.type in CHARACTERISTIC_PLATFORMS:
+                            platform = CHARACTERISTIC_PLATFORMS[char.type]
+                            if platform not in self.platforms:
+                                to_load.add(platform)
+
+            if to_load:
+                await self._async_load_platforms(to_load)
 
     @callback
     def async_update_available_state(self, *_: Any) -> None:
@@ -823,6 +845,20 @@ class HKDevice:
 
     async def async_update(self, now: datetime | None = None) -> None:
         """Poll state of all entities attached to this bridge/accessory."""
+        if (
+            len(self.entity_map.accessories) == 1
+            and self.available
+            and not (self.pollable_characteristics - self.watchable_characteristics)
+            and self.pairing.is_available
+            and await self.pairing.controller.async_reachable(
+                self.unique_id, timeout=5.0
+            )
+        ):
+            # If its a single accessory and all chars are watchable,
+            # we don't need to poll.
+            _LOGGER.debug("Accessory is reachable, skip polling: %s", self.unique_id)
+            return
+
         if not self.pollable_characteristics:
             self.async_update_available_state()
             _LOGGER.debug(

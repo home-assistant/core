@@ -1,4 +1,5 @@
 """Support gathering system information of hosts which are running netdata."""
+
 from __future__ import annotations
 
 import logging
@@ -7,7 +8,10 @@ from netdata import Netdata
 from netdata.exceptions import NetdataError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_ICON,
@@ -43,7 +47,7 @@ RESOURCE_SCHEMA = vol.Any(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

@@ -1,9 +1,10 @@
 """Tests for Fritz!Tools diagnostics platform."""
+
 from __future__ import annotations
 
 from homeassistant.components.diagnostics import REDACTED
-from homeassistant.components.fritz.common import AvmWrapper
 from homeassistant.components.fritz.const import DOMAIN
+from homeassistant.components.fritz.coordinator import AvmWrapper
 from homeassistant.components.fritz.diagnostics import TO_REDACT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -27,7 +28,7 @@ async def test_entry_diagnostics(
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     entry_dict = entry.as_dict()
     for key in TO_REDACT:

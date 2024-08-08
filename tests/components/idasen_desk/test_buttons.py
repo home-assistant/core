@@ -1,4 +1,5 @@
 """Test the IKEA Idasen Desk connection buttons."""
+
 from unittest.mock import MagicMock
 
 from homeassistant.core import HomeAssistant
