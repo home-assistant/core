@@ -113,7 +113,7 @@ def mock_get_factory(install: str) -> Callable:
 async def block_request(
     self: Broker, method: HTTPMethod, url: str, **kwargs: Any
 ) -> None:
-    """Fail if the code it attempts any actual I/O via aiohttp."""
+    """Fail if the code attempts any actual I/O via aiohttp."""
 
     pytest.fail(f"Unexpected request: {method} {url}")
 
