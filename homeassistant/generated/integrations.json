@@ -2835,6 +2835,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "iotmeter": {
+      "name": "IoTMeter",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "iotty": {
       "name": "iotty",
       "integration_type": "device",
