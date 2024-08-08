@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import deque
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 import contextlib
 from datetime import datetime, timedelta
 import logging
@@ -371,6 +371,29 @@ class StatisticsSensor(SensorEntity):
         )
 
         self._update_listener: CALLBACK_TYPE | None = None
+        self._preview_callback: Callable[[str, Mapping[str, Any]], None] | None = None
+
+    @callback
+    def async_start_preview(
+        self,
+        preview_callback: Callable[[str, Mapping[str, Any]], None],
+    ) -> CALLBACK_TYPE:
+        """Render a preview."""
+        # abort early if there is no entity_id
+        # as without we can't track changes
+        # or either size or max_age is not set
+        if not self._source_entity_id or (
+            self._samples_max_buffer_size is None and self._samples_max_age is None
+        ):
+            self._attr_available = False
+            calculated_state = self._async_calculate_state()
+            preview_callback(calculated_state.state, calculated_state.attributes)
+            return self._call_on_remove_callbacks
+
+        self._preview_callback = preview_callback
+
+        self._async_stats_sensor_startup(self.hass)
+        return self._call_on_remove_callbacks
 
     @callback
     def _async_stats_sensor_state_listener(
@@ -382,7 +405,13 @@ class StatisticsSensor(SensorEntity):
             return
         self._add_state_to_queue(new_state)
         self._async_purge_update_and_schedule()
-        self.async_write_ha_state()
+
+        if self._preview_callback:
+            calculated_state = self._async_calculate_state()
+            self._preview_callback(calculated_state.state, calculated_state.attributes)
+        # only write state to the state machine if we are not in preview mode
+        if not self._preview_callback:
+            self.async_write_ha_state()
 
     @callback
     def _async_stats_sensor_startup(self, _: HomeAssistant) -> None:
@@ -604,7 +633,9 @@ class StatisticsSensor(SensorEntity):
         _LOGGER.debug("%s: executing scheduled update", self.entity_id)
         self._async_cancel_update_listener()
         self._async_purge_update_and_schedule()
-        self.async_write_ha_state()
+        # only write state to the state machine if we are not in preview mode
+        if not self._preview_callback:
+            self.async_write_ha_state()
 
     def _fetch_states_from_database(self) -> list[State]:
         """Fetch the states from the database."""
@@ -648,7 +679,13 @@ class StatisticsSensor(SensorEntity):
                 self._add_state_to_queue(state)
 
         self._async_purge_update_and_schedule()
-        self.async_write_ha_state()
+
+        # only write state to the state machine if we are not in preview mode
+        if self._preview_callback:
+            calculated_state = self._async_calculate_state()
+            self._preview_callback(calculated_state.state, calculated_state.attributes)
+        else:
+            self.async_write_ha_state()
         _LOGGER.debug("%s: initializing from database completed", self.entity_id)
 
     def _update_attributes(self) -> None:
