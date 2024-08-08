@@ -329,6 +329,7 @@ class QNAPSensor(CoordinatorEntity[QnapCoordinator], SensorEntity):
             self._attr_unique_id = f"{self._attr_unique_id}_{monitor_device}"
             self._attr_translation_placeholders = {"monitor_device": monitor_device}
         self._attr_device_info = DeviceInfo(
+            configuration_url=f"{coordinator.api_url}:{coordinator.api_port}",
             identifiers={(DOMAIN, unique_id)},
             serial_number=unique_id,
             name=self.device_name,
