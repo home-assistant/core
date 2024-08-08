@@ -6,6 +6,7 @@
     "deactivate_eco_mode": "mdi:leaf-off",
     "deactivate_vacation": "mdi:compass-off",
     "set_active_climate_profile": "mdi:home-thermometer",
+    "set_minimum_floor_heating_valve_position": "mdi:heating-coil",
     "dump_hap_config": "mdi:database-export",
     "reset_energy_counter": "mdi:reload"
   }
