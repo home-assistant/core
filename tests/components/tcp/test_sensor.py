@@ -8,8 +8,9 @@ import pytest
 import homeassistant.components.tcp.common as tcp
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
 
-from tests.common import assert_setup_component
+from tests.common import assert_setup_component, async_fire_time_changed
 
 TEST_CONFIG = {
     "sensor": {
@@ -244,3 +245,29 @@ async def test_ssl_state_verify_off(
     )
     assert mock_ssl_socket.recv.called
     assert mock_ssl_socket.recv.call_args == call(SENSOR_TEST_CONFIG["buffer_size"])
+
+
+async def test_update_socket_error_after_success(
+    hass: HomeAssistant, mock_socket
+) -> None:
+    """Test state is updated with socket errors during update, when there is an old state."""
+    assert await async_setup_component(hass, "sensor", TEST_CONFIG)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+
+    assert state
+    assert state.state == "7.123"
+
+    mock_socket.connect.side_effect = OSError("Boom")
+    # FIXME: where is the default scan interval for tcp sensor?
+    from datetime import timedelta
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+
+    assert state
+    # FIXME: state should remain the same, but how to assert the available flag?
+    assert state.state == "7.123"
