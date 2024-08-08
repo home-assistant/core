@@ -18,8 +18,9 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import issue_registry as ir
 
 from tests.common import MockConfigEntry
 
@@ -41,7 +42,9 @@ IMPORT_DATA = {
 }
 
 
-async def test_step_import(hass: HomeAssistant) -> None:
+async def test_step_import(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test for import step."""
 
     with (
@@ -57,9 +60,14 @@ async def test_step_import(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "pchk"
         assert result["data"] == IMPORT_DATA
+        assert issue_registry.async_get_issue(
+            HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+        )
 
 
-async def test_step_import_existing_host(hass: HomeAssistant) -> None:
+async def test_step_import_existing_host(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test for update of config_entry if imported host already exists."""
 
     # Create config entry and add it to hass
@@ -79,6 +87,9 @@ async def test_step_import_existing_host(hass: HomeAssistant) -> None:
         assert result["reason"] == "existing_configuration_updated"
         assert mock_entry.source == config_entries.SOURCE_IMPORT
         assert mock_entry.data == IMPORT_DATA
+        assert issue_registry.async_get_issue(
+            HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+        )
 
 
 @pytest.mark.parametrize(
@@ -89,7 +100,9 @@ async def test_step_import_existing_host(hass: HomeAssistant) -> None:
         (TimeoutError, "connection_refused"),
     ],
 )
-async def test_step_import_error(hass: HomeAssistant, error, reason) -> None:
+async def test_step_import_error(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, error, reason
+) -> None:
     """Test for error in import is handled correctly."""
     with patch(
         "pypck.connection.PchkConnectionManager.async_connect", side_effect=error
@@ -102,6 +115,7 @@ async def test_step_import_error(hass: HomeAssistant, error, reason) -> None:
 
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == reason
+        assert issue_registry.async_get_issue(DOMAIN, reason)
 
 
 async def test_show_form(hass: HomeAssistant) -> None:
