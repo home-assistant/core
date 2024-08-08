@@ -447,10 +447,10 @@ async def test_migrate_can_resume_ix_states_event_id_removed(
         await hass.async_stop()
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
 @pytest.mark.parametrize("enable_migrate_event_ids", [True])
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
-@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
 async def test_out_of_disk_space_while_rebuild_states_table(
     async_test_recorder: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
@@ -622,10 +622,10 @@ async def test_out_of_disk_space_while_rebuild_states_table(
         await hass.async_stop()
 
 
+@pytest.mark.skip_on_db_engine(["sqlite"])
 @pytest.mark.parametrize("enable_migrate_event_ids", [True])
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
-@pytest.mark.skip_on_db_engine(["sqlite"])
 async def test_out_of_disk_space_while_removing_foreign_key(
     async_test_recorder: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
