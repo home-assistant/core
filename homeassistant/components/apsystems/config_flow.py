@@ -11,7 +11,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_PORT, DOMAIN, MAX_OUTPUT
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -48,7 +48,7 @@ class APsystemsLocalAPIFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title="Solar",
-                    data=user_input,
+                    data={**user_input, MAX_OUTPUT: device_info.maxPower},
                 )
 
         return self.async_show_form(
