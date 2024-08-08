@@ -252,6 +252,7 @@ FLOWS = {
         "honeywell",
         "huawei_lte",
         "hue",
+        "hue_ble",
         "huisbaasje",
         "hunterdouglas_powerview",
         "husqvarna_automower",
