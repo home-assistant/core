@@ -770,9 +770,9 @@ def socket_timeout(value: Any | None) -> object:
         float_value = float(value)
         if float_value > 0.0:
             return float_value
-        raise vol.Invalid("Invalid socket timeout value. float > 0.0 required.")
     except Exception as err:
         raise vol.Invalid(f"Invalid socket timeout: {err}") from err
+    raise vol.Invalid("Invalid socket timeout value. float > 0.0 required.")
 
 
 def url(
