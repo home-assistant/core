@@ -23,8 +23,8 @@ from .const import ACCESS_TOKEN, REFRESH_TOKEN
 from tests.common import load_json_array_fixture, load_json_object_fixture
 
 DEFAULT_TEST_CONFIG: Final = {
-    "username": "username",
-    "password": "password",
+    CONF_USERNAME: "username",
+    CONF_PASSWORD: "password",
 }
 
 
