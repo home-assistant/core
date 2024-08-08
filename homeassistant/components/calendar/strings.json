@@ -24,6 +24,9 @@
         "location": {
           "name": "Location"
         },
+        "attendees": {
+          "name": "Attendees"
+        },
         "message": {
           "name": "Message"
         },
