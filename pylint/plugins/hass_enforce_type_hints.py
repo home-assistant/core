@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from astroid.typing import InferenceResult
 
 _COMMON_ARGUMENTS: dict[str, list[str]] = {
-    "hass": ["HomeAssistant", "HomeAssistant | None"]
+    # "hass": ["HomeAssistant", "HomeAssistant | None"]
 }
 _PLATFORMS: set[str] = {platform.value for platform in Platform}
 _KNOWN_GENERIC_TYPES: set[str] = {
@@ -89,10 +89,10 @@ _TYPE_HINT_MATCHERS.update(
 _MODULE_REGEX: re.Pattern[str] = re.compile(r"^homeassistant\.components\.\w+(\.\w+)?$")
 
 _METHOD_MATCH: list[TypeHintMatch] = [
-    TypeHintMatch(
-        function_name="__init__",
-        return_type=None,
-    ),
+    # TypeHintMatch(
+    #    function_name="__init__",
+    #    return_type=None,
+    # ),
 ]
 
 _TEST_FIXTURES: dict[str, list[str] | str] = {
