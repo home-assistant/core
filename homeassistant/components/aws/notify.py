@@ -32,10 +32,10 @@ from .const import CONF_CONTEXT, CONF_CREDENTIAL_NAME, CONF_REGION, DATA_SESSION
 _LOGGER = logging.getLogger(__name__)
 
 
-async def get_available_regions(hass, service):
+async def get_available_regions(hass: HomeAssistant, service: str) -> list[str]:
     """Get available regions for a service."""
     session = AioSession()
-    return await session.get_available_regions(service)
+    return await hass.async_add_executor_job(session.get_available_regions, service)
 
 
 async def async_get_service(
