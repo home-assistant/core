@@ -80,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
     tadoconnector = TadoConnector(hass, username, password, fallback)
 
     try:
-        await hass.async_add_executor_job(tadoconnector.setup)
+        await tadoconnector.setup()
     except KeyError:
         _LOGGER.error("Failed to login to tado")
         return False
@@ -96,7 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
         raise ConfigEntryNotReady from ex
 
     # Do first update
-    await hass.async_add_executor_job(tadoconnector.update)
+    await tadoconnector.update()
 
     # Poll for updates in the background
     update_track = async_track_time_interval(
@@ -149,13 +149,4 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    hass.data[DOMAIN][entry.entry_id][UPDATE_TRACK]()
-    hass.data[DOMAIN][entry.entry_id][UPDATE_LISTENER]()
-    hass.data[DOMAIN][entry.entry_id][UPDATE_MOBILE_DEVICE_TRACK]()
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

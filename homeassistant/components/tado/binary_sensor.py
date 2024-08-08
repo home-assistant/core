@@ -43,38 +43,40 @@ class TadoBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 BATTERY_STATE_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="battery state",
-    state_fn=lambda data: data["batteryState"] == "LOW",
+    state_fn=lambda data: data.get("battery_state") == "LOW",
     device_class=BinarySensorDeviceClass.BATTERY,
 )
 CONNECTION_STATE_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="connection state",
     translation_key="connection_state",
-    state_fn=lambda data: data.get("connectionState", {}).get("value", False),
+    state_fn=lambda data: data.connection_state.value
+    if hasattr(data, "connection_state") and hasattr(data.connection_state, "value")
+    else False,
     device_class=BinarySensorDeviceClass.CONNECTIVITY,
 )
 POWER_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="power",
-    state_fn=lambda data: data.power == "ON",
+    state_fn=lambda data: data.setting.power == "ON",
     device_class=BinarySensorDeviceClass.POWER,
 )
 LINK_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="link",
-    state_fn=lambda data: data.link == "ONLINE",
+    state_fn=lambda data: data.link.state == "ONLINE",
     device_class=BinarySensorDeviceClass.CONNECTIVITY,
 )
 OVERLAY_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="overlay",
     translation_key="overlay",
-    state_fn=lambda data: data.overlay_active,
+    state_fn=lambda data: data.overlay_type,
     attributes_fn=lambda data: (
-        {"termination": data.overlay_termination_type} if data.overlay_active else {}
+        {"termination": data.overlay.termination["type"]} if data.overlay_type else {}
     ),
     device_class=BinarySensorDeviceClass.POWER,
 )
 OPEN_WINDOW_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="open window",
-    state_fn=lambda data: bool(data.open_window or data.open_window_detected),
-    attributes_fn=lambda data: data.open_window_attr,
+    state_fn=lambda data: bool(data.open_window),
+    attributes_fn=lambda data: bool(data.open_window),
     device_class=BinarySensorDeviceClass.WINDOW,
 )
 EARLY_START_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
@@ -128,7 +130,7 @@ async def async_setup_entry(
 
     # Create device sensors
     for device in devices:
-        if "batteryState" in device:
+        if device.battery_state is not None:
             device_type = TYPE_BATTERY
         else:
             device_type = TYPE_POWER
@@ -142,14 +144,14 @@ async def async_setup_entry(
 
     # Create zone sensors
     for zone in zones:
-        zone_type = zone["type"]
+        zone_type = zone.type
         if zone_type not in ZONE_SENSORS:
             _LOGGER.warning("Unknown zone type skipped: %s", zone_type)
             continue
 
         entities.extend(
             [
-                TadoZoneBinarySensor(tado, zone["name"], zone["id"], entity_description)
+                TadoZoneBinarySensor(tado, zone.name, zone.id, entity_description)
                 for entity_description in ZONE_SENSORS[zone_type]
             ]
         )

@@ -6,7 +6,6 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-import PyTado
 import voluptuous as vol
 
 from homeassistant.components.climate import (
@@ -126,23 +125,21 @@ def _generate_entities(tado: TadoConnector) -> list[TadoClimate]:
     """Create all climate entities."""
     entities = []
     for zone in tado.zones:
-        if zone["type"] in [TYPE_HEATING, TYPE_AIR_CONDITIONING]:
-            entity = create_climate_entity(
-                tado, zone["name"], zone["id"], zone["devices"][0]
-            )
+        if zone.type in [TYPE_HEATING, TYPE_AIR_CONDITIONING]:
+            entity = create_climate_entity(tado, zone.name, zone.id, zone.devices[0])
             if entity:
                 entities.append(entity)
     return entities
 
 
-def create_climate_entity(
+async def create_climate_entity(
     tado: TadoConnector, name: str, zone_id: int, device_info: dict
 ) -> TadoClimate | None:
     """Create a Tado climate entity."""
-    capabilities = tado.get_capabilities(zone_id)
+    capabilities = await tado.get_capabilities(zone_id)
     _LOGGER.debug("Capabilities for zone %s: %s", zone_id, capabilities)
 
-    zone_type = capabilities["type"]
+    zone_type = capabilities.type
     support_flags = (
         ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE
@@ -322,7 +319,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._current_tado_vertical_swing = TADO_SWING_OFF
         self._current_tado_horizontal_swing = TADO_SWING_OFF
 
-        self._tado_zone_data: PyTado.TadoZone = {}
+        self._tado_zone_data = {}  # TODO: place back in typing later on
         self._tado_geofence_data: dict[str, str] | None = None
 
         self._tado_zone_temp_offset: dict[str, Any] = {}

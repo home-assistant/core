@@ -92,9 +92,9 @@ def _generate_entities(tado: TadoConnector) -> list:
     entities = []
 
     for zone in tado.zones:
-        if zone["type"] == TYPE_HOT_WATER:
+        if zone.type == TYPE_HOT_WATER:
             entity = create_water_heater_entity(
-                tado, zone["name"], zone["id"], str(zone["name"])
+                tado, zone.name, zone.id, str(zone.name)
             )
             entities.append(entity)
 
