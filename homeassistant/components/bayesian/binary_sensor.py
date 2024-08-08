@@ -122,10 +122,13 @@ async def async_setup_entry(
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     config = config_entry.options
     _LOGGER.warning(
-        "Config Flow: %s with options %s", config_entry, config
+        "Config Flow: %s with options %s with unique ID %s",
+        config_entry,
+        config,
+        config_entry.unique_id,
     )  # TODO delete-me
     name: str = config[CONF_NAME]
-    unique_id: str | None = config.get(CONF_UNIQUE_ID)
+    unique_id: str | None = config.get(CONF_UNIQUE_ID, config_entry.entry_id)
     observations: list[ConfigType] = config[CONF_OBSERVATIONS]
     prior: float = config[CONF_PRIOR]
     probability_threshold: float = config[CONF_PROBABILITY_THRESHOLD]
