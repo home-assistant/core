@@ -32,7 +32,8 @@
         },
         "data_description": {
           "prompt": "Instruct how the LLM should respond. This can be a template.",
-          "keep_alive": "Duration in seconds for Ollama to keep model in memory. -1 = indefinite, 0 = never."
+          "keep_alive": "Duration in seconds for Ollama to keep model in memory. -1 = indefinite, 0 = never.",
+          "num_ctx": "Increase this if you have a complex smart home, or the LLM seems to ignore knowingly exposed devices."
         }
       }
     }
