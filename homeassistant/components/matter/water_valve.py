@@ -91,7 +91,9 @@ class MatterValve(MatterEntity, ValveEntity):
         """Set the water valve to a specific position."""
         position = kwargs[ATTR_POSITION]
         await self.send_device_command(
-            # value needs to be inverted and is sent in 100ths
+            # A value of 100 percent SHALL indicate the fully open position
+            # A value of 0 percent SHALL indicate the fully closed position
+            # A value of null SHALL indicate that the current state is not known
             clusters.ValveConfigurationAndControl.Commands.Open(position) # TargetLevel type="percent"
         )
 
