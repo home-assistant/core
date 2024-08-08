@@ -15,6 +15,94 @@
       "description": "Reloads bayesian sensors from the YAML-configuration."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "menu_options": {
+          "base_options": "Modify sensor settings",
+          "observation_selector": "Add another entity or template for observation",
+          "select_edit_observation": "Edit an observed entity or template",
+          "remove_observation": "Remove an observed entity or template"
+        }
+      },
+      "base_options": {
+        "title": "Sensor Options",
+        "description": "These are the core options that affect the overall behaviour of the sensor.",
+        "data": {
+          "probability_threshold": "[%key:component::bayesian::config::step::user::data::probability_threshold%]",
+          "prior": "[%key:component::bayesian::config::step::user::data::prior%]",
+          "device_class": "[%key:component::bayesian::config::step::user::data::device_class%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "probability_threshold": "[%key:component::bayesian::config::step::user::data_description::probability_threshold%]",
+          "prior": "[%key:component::bayesian::config::step::user::data_description::prior%]"
+        }
+      },
+      "observation_selector": {
+        "title": "[%key:component::bayesian::config::step::observation_selector::title%]",
+        "description": "[%key:component::bayesian::config::step::observation_selector::description%]",
+        "menu_options": {
+          "state": "[%key:component::bayesian::config::step::observation_selector::menu_options::state%]",
+          "numeric_state": "[%key:component::bayesian::config::step::observation_selector::menu_options::numeric_state%]",
+          "template": "[%key:component::bayesian::config::step::observation_selector::menu_options::template%]"
+        }
+      },
+      "state": {
+        "title": "[%key:component::bayesian::config::step::state::title%]",
+        "description": "[%key:component::bayesian::config::step::state::description%]",
+        "data": {
+          "entity_id": "[%key:component::bayesian::config::step::state::data::entity_id%]",
+          "to_state": "[%key:component::bayesian::config::step::state::data::to_state%]",
+          "prob_given_true": "[%key:component::bayesian::config::step::state::data::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config::step::state::data::prob_given_false%]",
+          "add_another": "[%key:component::bayesian::config::step::state::data::add_another%]"
+        },
+        "data_description": {
+          "entity_id": "[%key:component::bayesian::config::step::state::data_description::entity_id%]",
+          "to_state": "[%key:component::bayesian::config::step::state::data_description::to_state%]",
+          "prob_given_true": "[%key:component::bayesian::config::step::state::data_description::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config::step::state::data_description::prob_given_false%]"
+        }
+      },
+      "numeric_state": {
+        "title": "[%key:component::bayesian::config::step::state::title%]",
+        "description": "[%key:component::bayesian::config::step::numeric_state::description%]",
+        "data": {
+          "entity_id": "[%key:component::bayesian::config::step::state::data::entity_id%]",
+          "above": "[%key:component::bayesian::config::step::numeric_state::data::above%]",
+          "below": "[%key:component::bayesian::config::step::numeric_state::data::below%]",
+          "prob_given_true": "[%key:component::bayesian::config::step::state::data::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config::step::state::data::prob_given_false%]",
+          "add_another": "[%key:component::bayesian::config::step::state::data::add_another%]"
+        },
+        "data_description": {
+          "entity_id": "[%key:component::bayesian::config::step::state::data_description::entity_id%]",
+          "above": "[%key:component::bayesian::config::step::numeric_state::data_description::above%]",
+          "below": "[%key:component::bayesian::config::step::numeric_state::data_description::below%]",
+          "prob_given_true": "[%key:component::bayesian::config::step::state::data_description::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config::step::state::data_description::prob_given_false%]"
+        }
+      },
+      "template": {
+        "title": "[%key:component::bayesian::config::step::state::title%]",
+        "description": "[%key:component::bayesian::config::step::template::description%]",
+        "data": {
+          "entity_id": "[%key:component::bayesian::config::step::state::data::entity_id%]",
+          "template": "[%key:component::bayesian::config::step::template::data::template%]",
+          "prob_given_true": "[%key:component::bayesian::config::step::state::data::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config::step::state::data::prob_given_false%]",
+          "add_another": "[%key:component::bayesian::config::step::state::data::add_another%]"
+        },
+        "data_description": {
+          "entity_id": "[%key:component::bayesian::config::step::state::data_description::entity_id%]",
+          "template": "[%key:component::bayesian::config::step::template::data_description::template%]",
+          "prob_given_true": "[%key:component::bayesian::config::step::state::data_description::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config::step::state::data_description::prob_given_false%]"
+        }
+      }
+    }
+  },
   "config": {
     "step": {
       "user": {
