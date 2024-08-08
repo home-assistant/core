@@ -118,7 +118,7 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Update_trigger)
 
-        self.async_write_ha_state()
+        self.coordinator.async_update_listeners()
 
         if len(self._previous_positions) < 2 or not all(
             self._blind.position == prev_position

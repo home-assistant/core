@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from motionblinds.motion_blinds import LimitStatus
+
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
@@ -23,8 +25,9 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
 
     for blind in motion_gateway.device_list.values():
-        entities.append(MotionGoFavoriteButton(coordinator, blind))
-        entities.append(MotionSetFavoriteButton(coordinator, blind))
+        if blind.limit_status == LimitStatus.Limit3Detected.name:
+            entities.append(MotionGoFavoriteButton(coordinator, blind))
+            entities.append(MotionSetFavoriteButton(coordinator, blind))
 
     async_add_entities(entities)
 
