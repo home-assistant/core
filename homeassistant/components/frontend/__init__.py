@@ -50,6 +50,7 @@ CONF_FRONTEND_REPO = "development_repo"
 CONF_JS_VERSION = "javascript_version"
 
 DEFAULT_THEME_COLOR = "#03A9F4"
+DEFAULT_BACKGROUND_COLOR = "#FFFFFF"
 
 
 DATA_PANELS = "frontend_panels"
@@ -72,6 +73,7 @@ DEFAULT_THEME = "default"
 VALUE_NO_THEME = "none"
 
 PRIMARY_COLOR = "primary-color"
+PRIMARY_BACKGROUND_COLOR = "primary-background-color"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -156,7 +158,7 @@ class Manifest:
 
 MANIFEST_JSON = Manifest(
     {
-        "background_color": "#FFFFFF",
+        "background_color": DEFAULT_BACKGROUND_COLOR,
         "description": (
             "Home automation platform that puts local control and privacy first."
         ),
@@ -493,7 +495,7 @@ async def _async_setup_themes(
 
     @callback
     def update_theme_and_fire_event() -> None:
-        """Update theme_color in manifest."""
+        """Update theme_color and background_color in manifest."""
         name = hass.data[DATA_DEFAULT_THEME]
         themes = hass.data[DATA_THEMES]
         if name != DEFAULT_THEME:
@@ -504,8 +506,13 @@ async def _async_setup_themes(
                     themes[name].get(PRIMARY_COLOR, DEFAULT_THEME_COLOR),
                 ),
             )
+            MANIFEST_JSON.update_key(
+                "background_color",
+                themes[name].get(PRIMARY_BACKGROUND_COLOR, DEFAULT_BACKGROUND_COLOR),
+            )
         else:
             MANIFEST_JSON.update_key("theme_color", DEFAULT_THEME_COLOR)
+            MANIFEST_JSON.update_key("background_color", DEFAULT_BACKGROUND_COLOR)
         hass.bus.async_fire(EVENT_THEMES_UPDATED)
 
     @callback
