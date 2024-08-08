@@ -80,7 +80,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Bayesian Binary sensor from a yaml config."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-
+    _LOGGER.warning("Config YAML: %s ", config)  # TODO delete-me
     name: str = config[CONF_NAME]
     unique_id: str | None = config.get(CONF_UNIQUE_ID)
     observations: list[ConfigType] = config[CONF_OBSERVATIONS]
@@ -111,6 +111,7 @@ async def async_setup_platform(
         ]
     )
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -120,7 +121,9 @@ async def async_setup_entry(
     """Set up the Bayesian Binary sensor from a config entry."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     config = config_entry.options
-    _LOGGER.warning("Config: %s with options %s", config_entry, config)  # delete-me
+    _LOGGER.warning(
+        "Config Flow: %s with options %s", config_entry, config
+    )  # TODO delete-me
     name: str = config[CONF_NAME]
     unique_id: str | None = config.get(CONF_UNIQUE_ID)
     observations: list[ConfigType] = config[CONF_OBSERVATIONS]
@@ -140,6 +143,7 @@ async def async_setup_entry(
             )
         ]
     )
+
 
 class BayesianBinarySensor(BinarySensorEntity):
     """Representation of a Bayesian sensor."""

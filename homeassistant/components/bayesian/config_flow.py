@@ -11,7 +11,6 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
 )
-from homeassistant.components.citybikes.sensor import PLATFORM
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -32,6 +31,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
     SchemaFlowFormStep,
     SchemaFlowMenuStep,
+    SchemaFlowStep,
 )
 
 from .const import (
@@ -48,6 +48,7 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
 
 class ObservationTypes(StrEnum):
     """StrEnum for all the different observation types."""
@@ -210,11 +211,10 @@ async def _choose_observation_step(
     user_input: dict[str, Any],
 ) -> ConfigFlowSteps | None:
     """Return next step_id for options flow according to template_type."""
-    _LOGGER.warning("_choose observation step called !!!!!!!!!!")  # TODO delete me
     if user_input.get("add_another", False):
-        # TODO - we need to clear the last user input somehow else it remains saved in the ui
         return ConfigFlowSteps.OBSERVATION_SELECTOR
     return None
+
 
 async def validate_observation_setup(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
@@ -222,25 +222,17 @@ async def validate_observation_setup(
     """Validate observation input."""
 
     # TODO validate based on observation type
+    # add_another is really just a variable for controlling the flow
+    add_another: bool = user_input.pop("add_another", False)
 
     # Standard behavior is to merge the result with the options.
     # In this case, we want to add a sub-item so we update the options directly.
-    _LOGGER.warning(
-        "Validation called handler flow state: %s,%s,%s user_input: %s",
-        handler.flow_state,
-        handler.options,
-        handler.parent_handler,
-        user_input,
-    )  # TODO delete-me
-
-    # add_another is really just a variable for controling the flow
-    add_another: bool = user_input.pop("add_another")
-
     observations: list[dict[str, Any]] = handler.options.setdefault(
         CONF_OBSERVATIONS, []
     )
     observations.append(user_input)
-    return {"add_another": add_another}
+    return {"add_another": True} if add_another else {}
+
 
 CONFIG_FLOW = {
     str(ConfigFlowSteps.USER): SchemaFlowFormStep(
@@ -318,10 +310,10 @@ async def _get_edit_observation_schema(
 ) -> vol.Schema:  # TODO
     """Select which schema to return depending on which observation type it is."""
 
-    return  # TODO we will also need to drop the "add another" box here
+    return  # TODO we will also need to drop the "add another" box from the schema here
 
 
-OPTIONS_FLOW = {
+OPTIONS_FLOW: dict[str, SchemaFlowStep] = {
     str(OptionsFlowSteps.INIT): SchemaFlowMenuStep(
         OptionsFlowSteps.list_primary_steps()
     ),
@@ -341,7 +333,8 @@ OPTIONS_FLOW = {
         _get_remove_observation_schema,
         suggested_values=None,
     ),
-}.update(CONFIG_FLOW)
+}
+OPTIONS_FLOW.update(CONFIG_FLOW)
 
 
 class BayesianConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
