@@ -378,15 +378,20 @@ def _async_get_rtsp_to_web_rtc_providers(
     return providers.values()
 
 
+async def init_camera_prefs(hass: HomeAssistant) -> CameraPreferences:
+    """Initialize camera preferences."""
+    prefs = CameraPreferences(hass)
+    await prefs.async_load()
+    hass.data[DATA_CAMERA_PREFS] = prefs
+    return prefs
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the camera component."""
     component = hass.data[DOMAIN] = EntityComponent[Camera](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
-
-    prefs = CameraPreferences(hass)
-    await prefs.async_load()
-    hass.data[DATA_CAMERA_PREFS] = prefs
+    prefs = await init_camera_prefs(hass)
 
     hass.http.register_view(CameraImageView(component))
     hass.http.register_view(CameraMjpegStream(component))

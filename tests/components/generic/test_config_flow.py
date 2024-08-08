@@ -90,7 +90,7 @@ async def test_form(
             TESTDATA,
         )
         assert result1["type"] is FlowResultType.FORM
-        assert result1["step_id"] == "user_confirm_still"
+        assert result1["step_id"] == "user_confirm"
         client = await hass_client()
         preview_id = result1["flow_id"]
         # Check the preview image works.
@@ -110,9 +110,8 @@ async def test_form(
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
         CONF_USERNAME: "fred_flintstone",
         CONF_PASSWORD: "bambam",
-        CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
         CONF_CONTENT_TYPE: "image/png",
-        CONF_FRAMERATE: 5,
+        CONF_FRAMERATE: 5.0,
         CONF_VERIFY_SSL: False,
     }
 
@@ -145,7 +144,7 @@ async def test_form_only_stillimage(
         )
         await hass.async_block_till_done()
         assert result1["type"] is FlowResultType.FORM
-        assert result1["step_id"] == "user_confirm_still"
+        assert result1["step_id"] == "user_confirm"
         result2 = await hass.config_entries.flow.async_configure(
             result1["flow_id"],
             user_input={CONF_CONFIRMED_OK: True},
@@ -157,9 +156,8 @@ async def test_form_only_stillimage(
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
         CONF_USERNAME: "fred_flintstone",
         CONF_PASSWORD: "bambam",
-        CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
         CONF_CONTENT_TYPE: "image/png",
-        CONF_FRAMERATE: 5,
+        CONF_FRAMERATE: 5.0,
         CONF_VERIFY_SSL: False,
     }
 
@@ -167,13 +165,13 @@ async def test_form_only_stillimage(
 
 
 @respx.mock
-async def test_form_reject_still_preview(
+async def test_form_reject_preview(
     hass: HomeAssistant,
     fakeimgbytes_png: bytes,
     mock_create_stream: _patch[MagicMock],
     user_flow: ConfigFlowResult,
 ) -> None:
-    """Test we go back to the config screen if the user rejects the still preview."""
+    """Test we go back to the config screen if the user rejects the preview."""
     respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
     with mock_create_stream:
         result1 = await hass.config_entries.flow.async_configure(
@@ -181,7 +179,7 @@ async def test_form_reject_still_preview(
             TESTDATA,
         )
     assert result1["type"] is FlowResultType.FORM
-    assert result1["step_id"] == "user_confirm_still"
+    assert result1["step_id"] == "user_confirm"
     result2 = await hass.config_entries.flow.async_configure(
         result1["flow_id"],
         user_input={CONF_CONFIRMED_OK: False},
@@ -211,7 +209,7 @@ async def test_form_still_preview_cam_off(
             TESTDATA,
         )
         assert result1["type"] is FlowResultType.FORM
-        assert result1["step_id"] == "user_confirm_still"
+        assert result1["step_id"] == "user_confirm"
         preview_id = result1["flow_id"]
         # Try to view the image, should be unavailable.
         client = await hass_client()
@@ -233,7 +231,7 @@ async def test_form_only_stillimage_gif(
             data,
         )
         assert result1["type"] is FlowResultType.FORM
-        assert result1["step_id"] == "user_confirm_still"
+        assert result1["step_id"] == "user_confirm"
         result2 = await hass.config_entries.flow.async_configure(
             result1["flow_id"],
             user_input={CONF_CONFIRMED_OK: True},
@@ -258,7 +256,7 @@ async def test_form_only_svg_whitespace(
             data,
         )
         assert result1["type"] is FlowResultType.FORM
-        assert result1["step_id"] == "user_confirm_still"
+        assert result1["step_id"] == "user_confirm"
         result2 = await hass.config_entries.flow.async_configure(
             result1["flow_id"],
             user_input={CONF_CONFIRMED_OK: True},
@@ -293,7 +291,7 @@ async def test_form_only_still_sample(
             data,
         )
         assert result1["type"] is FlowResultType.FORM
-        assert result1["step_id"] == "user_confirm_still"
+        assert result1["step_id"] == "user_confirm"
         result2 = await hass.config_entries.flow.async_configure(
             result1["flow_id"],
             user_input={CONF_CONFIRMED_OK: True},
@@ -310,13 +308,13 @@ async def test_form_only_still_sample(
         (
             "http://localhost:812{{3}}/static/icons/favicon-apple-180x180.png",
             "http://localhost:8123/static/icons/favicon-apple-180x180.png",
-            "user_confirm_still",
+            "user_confirm",
             None,
         ),
         (
             "{% if 1 %}https://bla{% else %}https://yo{% endif %}",
             "https://bla/",
-            "user_confirm_still",
+            "user_confirm",
             None,
         ),
         (
@@ -385,7 +383,7 @@ async def test_form_rtsp_mode(
             user_flow["flow_id"], data
         )
         assert result1["type"] is FlowResultType.FORM
-        assert result1["step_id"] == "user_confirm_still"
+        assert result1["step_id"] == "user_confirm"
         result2 = await hass.config_entries.flow.async_configure(
             result1["flow_id"],
             user_input={CONF_CONFIRMED_OK: True},
@@ -399,9 +397,8 @@ async def test_form_rtsp_mode(
         CONF_RTSP_TRANSPORT: "tcp",
         CONF_USERNAME: "fred_flintstone",
         CONF_PASSWORD: "bambam",
-        CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
         CONF_CONTENT_TYPE: "image/png",
-        CONF_FRAMERATE: 5,
+        CONF_FRAMERATE: 5.0,
         CONF_VERIFY_SSL: False,
     }
 
@@ -419,21 +416,28 @@ async def test_form_only_stream(
     data = TESTDATA.copy()
     data.pop(CONF_STILL_IMAGE_URL)
     data[CONF_STREAM_SOURCE] = "rtsp://user:pass@127.0.0.1/testurl/2"
-    with mock_create_stream as mock_setup:
+    with mock_create_stream:
         result1 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"],
             data,
         )
-    assert result1["type"] is FlowResultType.CREATE_ENTRY
-    assert result1["title"] == "127_0_0_1"
-    assert result1["options"] == {
+
+    assert result1["type"] is FlowResultType.FORM
+    with mock_create_stream:
+        result2 = await hass.config_entries.flow.async_configure(
+            result1["flow_id"],
+            user_input={CONF_CONFIRMED_OK: True},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["title"] == "127_0_0_1"
+    assert result2["options"] == {
         CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
         CONF_STREAM_SOURCE: "rtsp://user:pass@127.0.0.1/testurl/2",
         CONF_USERNAME: "fred_flintstone",
         CONF_PASSWORD: "bambam",
-        CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
         CONF_CONTENT_TYPE: "image/jpeg",
-        CONF_FRAMERATE: 5,
+        CONF_FRAMERATE: 5.0,
         CONF_VERIFY_SSL: False,
     }
 
@@ -445,7 +449,6 @@ async def test_form_only_stream(
     ):
         image_obj = await async_get_image(hass, "camera.127_0_0_1")
         assert image_obj.content == fakeimgbytes_jpg
-    assert len(mock_setup.mock_calls) == 1
 
 
 async def test_form_still_and_stream_not_provided(
@@ -585,6 +588,8 @@ async def test_form_stream_timeout(
         "homeassistant.components.generic.config_flow.create_stream"
     ) as create_stream:
         create_stream.return_value.start = AsyncMock()
+        create_stream.return_value.stop = AsyncMock()
+        create_stream.return_value.hass = hass
         create_stream.return_value.add_provider.return_value.part_recv = AsyncMock()
         create_stream.return_value.add_provider.return_value.part_recv.return_value = (
             False

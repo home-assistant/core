@@ -38,11 +38,11 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       },
-      "user_confirm_still": {
-        "title": "Preview",
-        "description": "![Camera Still Image Preview]({preview_url})",
+      "user_confirm": {
+        "title": "Confirmation",
+        "description": "Please wait for previews to load...",
         "data": {
-          "confirmed_ok": "This image looks good."
+          "confirmed_ok": "Everything looks good."
         }
       }
     }
@@ -67,10 +67,10 @@
         }
       },
       "confirm_still": {
-        "title": "[%key:component::generic::config::step::user_confirm_still::title%]",
-        "description": "[%key:component::generic::config::step::user_confirm_still::description%]",
+        "title": "Preview",
+        "description": "![Camera Still Image Preview]({preview_url})",
         "data": {
-          "confirmed_ok": "[%key:component::generic::config::step::user_confirm_still::data::confirmed_ok%]"
+          "confirmed_ok": "This image looks good."
         }
       }
     },
