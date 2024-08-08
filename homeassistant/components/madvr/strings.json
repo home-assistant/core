@@ -3,7 +3,19 @@
     "step": {
       "user": {
         "title": "Setup madVR Envy",
-        "description": "Your device needs to be turned in order to add the integation. ",
+        "description": "Your device needs to be on in order to add the integation. ",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your madVR Envy device.",
+          "port": "The port your madVR Envy is listening on. In 99% of cases, leave this as the default."
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure madVR Envy",
+        "description": "Your device needs to be on in order to reconfigure the integation. ",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
@@ -15,11 +27,13 @@
       }
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_mac": "A MAC address was not found. It required to identify the device. Please ensure your device is connectable."
+      "no_mac": "A MAC address was not found. It required to identify the device. Please ensure your device is connectable.",
+      "set_up_new_device": "A new device was detected. Please set it up as a new entity instead of reconfiguring."
     }
   },
   "entity": {
