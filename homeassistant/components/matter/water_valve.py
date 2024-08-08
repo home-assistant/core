@@ -189,7 +189,7 @@ DISVALVEY_SCHEMAS = [
             clusters.ValveConfigurationAndControl.Attributes.OperationalStatus,
             clusters.ValveConfigurationAndControl.Attributes.OpenDuration,
             clusters.ValveConfigurationAndControl.Attributes.DefaultOpenDuration,
-            clusters.ValveConfigurationAndControl.Attributes.RemainingDuration
+            clusters.ValveConfigurationAndControl.Attributes.RemainingDuration,
             clusters.ValveConfigurationAndControl.Attributes.CurrentState,
             clusters.ValveConfigurationAndControl.Attributes.TargetState,
         ),
