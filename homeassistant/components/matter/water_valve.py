@@ -181,7 +181,7 @@ class MatterValve(MatterEntity, ValveEntity):
             )
         )
 
-        self._feature_map = feature_map  
+        self._feature_map = feature_map
 
         # NOTE: the featuremap can dynamically change, so we need to update the
         # supported features if the featuremap changes.
