@@ -28,6 +28,12 @@ async def async_init_integration(
     device_wr1_fixture = "tado/device_wr1.json"
 
     # Smart AC with fanLevel, Vertical and Horizontal swings
+    zone_7_state_fixture = "tado/smartac4.off.json"
+    zone_7_capabilities_fixture = (
+        "tado/zone_with_fanlevel_horizontal_vertical_swing.json"
+    )
+
+    # Smart AC with fanLevel, Vertical and Horizontal swings
     zone_6_state_fixture = "tado/smartac4.with_fanlevel.json"
     zone_6_capabilities_fixture = (
         "tado/zone_with_fanlevel_horizontal_vertical_swing.json"
@@ -102,6 +108,10 @@ async def async_init_integration(
             text=load_fixture(zone_states_fixture),
         )
         m.get(
+            "https://my.tado.com/api/v2/homes/1/zones/7/capabilities",
+            text=load_fixture(zone_7_capabilities_fixture),
+        )
+        m.get(
             "https://my.tado.com/api/v2/homes/1/zones/6/capabilities",
             text=load_fixture(zone_6_capabilities_fixture),
         )
@@ -148,6 +158,14 @@ async def async_init_integration(
         m.get(
             "https://my.tado.com/api/v2/homes/1/zones/6/defaultOverlay",
             text=load_fixture(zone_def_overlay),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/zones/7/defaultOverlay",
+            text=load_fixture(zone_def_overlay),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/zones/7/state",
+            text=load_fixture(zone_7_state_fixture),
         )
         m.get(
             "https://my.tado.com/api/v2/homes/1/zones/6/state",

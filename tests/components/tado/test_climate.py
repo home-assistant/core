@@ -121,3 +121,24 @@ async def test_smartac_with_fanlevel_vertical_and_horizontal_swing(
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(item in state.attributes.items() for item in expected_attributes.items())
+
+
+async def test_smartac_with_fanlevel_off(
+    hass: HomeAssistant,
+) -> None:
+    """Test creation of smart ac with swing climate."""
+
+    await async_init_integration(hass)
+
+    state = hass.states.get("climate.air_conditioning_with_fanlevel_bis")
+    assert state.state == "off"
+
+    expected_attributes = {
+        "fan_mode": "auto",
+        "fan_modes": ["high", "medium", "auto", "low"],
+        "friendly_name": "Air Conditioning with fanlevel bis",
+        "hvac_action": "off",
+    }
+    # Only test for a subset of attributes in case
+    # HA changes the implementation and a new one appears
+    assert all(item in state.attributes.items() for item in expected_attributes.items())
