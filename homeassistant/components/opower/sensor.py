@@ -244,6 +244,11 @@ class OpowerSensor(CoordinatorEntity[OpowerCoordinator], SensorEntity):
         self._attr_device_info = device
         self.utility_account_id = utility_account_id
 
+        if description.device_class == SensorDeviceClass.MONETARY:
+            ha_currency = coordinator.hass.config.currency
+            if ha_currency:
+                self._attr_native_unit_of_measurement = ha_currency
+
     @property
     def native_value(self) -> StateType:
         """Return the state."""
