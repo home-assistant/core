@@ -177,6 +177,7 @@ class MatterValve(MatterEntity, ValveEntity):
         feature_map = int(
             self.get_matter_attribute_value(clusters.ValveConfigurationAndControl.Attributes.FeatureMap)
         )
+        
         self._feature_map = feature_map  
         
         # NOTE: the featuremap can dynamically change, so we need to update the
