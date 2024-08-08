@@ -1,0 +1,41 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Upload your Google Cloud service account JSON file that you can create at {url}.",
+        "data": {
+          "uploaded_key_file": "Upload service account JSON file"
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "Invalid service account info. Please re-create it and re-upload it."
+      }
+    },
+    "error": {
+      "invalid_file": "Invalid service account JSON file"
+    },
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "language": "Default language of the voice",
+          "gender": "Default gender of the voice",
+          "voice": "Default voice name (overrides language and gender)",
+          "encoding": "Default audio encoder",
+          "speed": "Default rate/speed of the voice",
+          "pitch": "Default pitch of the voice",
+          "gain": "Default volume gain (in dB) of the voice",
+          "profiles": "Default audio profiles",
+          "text_type": "Default text type"
+        }
+      }
+    }
+  },
+  "title": "Google Cloud"
+}

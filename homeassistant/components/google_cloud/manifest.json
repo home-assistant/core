@@ -1,8 +1,11 @@
 {
   "domain": "google_cloud",
   "name": "Google Cloud Platform",
-  "codeowners": ["@lufton"],
+  "codeowners": ["@lufton", "@tronikos"],
+  "config_flow": true,
+  "dependencies": ["file_upload"],
   "documentation": "https://www.home-assistant.io/integrations/google_cloud",
+  "integration_type": "service",
   "iot_class": "cloud_push",
   "requirements": ["google-cloud-texttospeech==2.16.3"]
 }

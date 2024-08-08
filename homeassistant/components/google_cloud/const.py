@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+DOMAIN = "google_cloud"
+TITLE = "Google Cloud"
+
+CONF_SERVICE_ACCOUNT_INFO = "service_account_info"
 CONF_KEY_FILE = "key_file"
 
 DEFAULT_LANG = "en-US"
