@@ -1,0 +1,8 @@
+calibrate:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: slide
+          domain: cover

@@ -1,0 +1,14 @@
+{
+  "services": {
+    "calibrate": {
+      "name": "Calibrate",
+      "description": "Calibrate a Slide.",
+      "fields": {
+        "entity_id": {
+          "description": "Entity id of the Slide cover to calibrate.",
+          "name": "Entity"
+        }
+      }
+    }
+  }
+}
