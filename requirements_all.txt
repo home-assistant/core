@@ -661,6 +661,9 @@ clearpasspy==1.0.2
 clx-sdk-xms==1.0.0
 
 # homeassistant.components.coinbase
+coinbase-advanced-py==1.2.2
+
+# homeassistant.components.coinbase
 coinbase==2.1.0
 
 # homeassistant.scripts.check_config
