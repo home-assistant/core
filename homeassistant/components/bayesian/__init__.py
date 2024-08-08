@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 from homeassistant.helpers.typing import ConfigType
 
+from .binary_sensor import PLATFORM_SCHEMA  # noqa: F401
 from .const import DOMAIN as BAYESIAN_DOMAIN
 
 DOMAIN = BAYESIAN_DOMAIN

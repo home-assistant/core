@@ -30,6 +30,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
+    SchemaFlowError,
     SchemaFlowFormStep,
     SchemaFlowMenuStep,
     SchemaFlowStep,
@@ -54,23 +55,15 @@ _LOGGER = logging.getLogger(__name__)
 class ObservationTypes(StrEnum):
     """StrEnum for all the different observation types."""
 
-    STATE = "state"
+    STATE = CONF_STATE
     NUMERIC_STATE = "numeric_state"
-    TEMPLATE = "template"
+    TEMPLATE = CONF_TEMPLATE
 
     @staticmethod
     def list() -> list[str]:
         """Return a list of the values."""
 
         return [c.value for c in ObservationTypes]
-
-
-async def _validate_user(  # TODO - do some actual validation
-    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
-) -> dict[str, Any]:
-    """Validate the threshold mode, and set limits to None if not set."""
-    user_input = _convert_percentages_to_fractions(user_input)
-    return {**user_input}
 
 
 OPTIONS_SCHEMA = vol.Schema(
@@ -156,7 +149,7 @@ STATE_SUBSCHEMA = vol.Schema(
 
 NUMERIC_STATE_SUBSCHEMA = vol.Schema(
     {
-        CONF_PLATFORM: "numeric_state",
+        CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
         vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
             selector.EntitySelectorConfig(
                 domain=[SENSOR_DOMAIN, INPUT_NUMBER_DOMAIN, NUMBER_DOMAIN]
@@ -211,6 +204,49 @@ class OptionsFlowSteps(StrEnum):
         return li
 
 
+async def _validate_user(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Validate the threshold mode, and set limits to None if not set."""
+    if user_input[CONF_PRIOR] == 0:
+        raise SchemaFlowError("prior_low_error")
+    if user_input[CONF_PRIOR] == 100:
+        raise SchemaFlowError("prior_high_error")
+    if user_input[CONF_PROBABILITY_THRESHOLD] == 0:
+        raise SchemaFlowError("threshold_low_error")
+    if user_input[CONF_PROBABILITY_THRESHOLD] == 100:
+        raise SchemaFlowError("threshold_high_error")
+    user_input = _convert_percentages_to_fractions(user_input)
+    return {**user_input}
+
+
+async def validate_observation_setup(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Validate observation input."""
+
+    if user_input[CONF_P_GIVEN_T] == user_input[CONF_P_GIVEN_F]:
+        raise SchemaFlowError("equal_probabilities")
+
+    if user_input[CONF_PLATFORM] == ObservationTypes.STATE:
+        pass
+    if user_input[CONF_PLATFORM] == ObservationTypes.NUMERIC_STATE:
+        pass
+    if user_input[CONF_PLATFORM] == ObservationTypes.TEMPLATE:
+        pass
+    # add_another is really just a variable for controlling the flow
+    add_another: bool = user_input.pop("add_another", False)
+
+    user_input = _convert_percentages_to_fractions(user_input)
+    # Standard behavior is to merge the result with the options.
+    # In this case, we want to add a sub-item so we update the options directly.
+    observations: list[dict[str, Any]] = handler.options.setdefault(
+        CONF_OBSERVATIONS, []
+    )
+    observations.append(user_input)
+    return {"add_another": True} if add_another else {}
+
+
 async def _choose_observation_step(
     user_input: dict[str, Any],
 ) -> ConfigFlowSteps | None:
@@ -230,23 +266,14 @@ def _convert_percentages_to_fractions(
     }
 
 
-async def validate_observation_setup(
-    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
-) -> dict[str, Any]:
-    """Validate observation input."""
-
-    # TODO validate based on observation type
-    # add_another is really just a variable for controlling the flow
-    add_another: bool = user_input.pop("add_another", False)
-
-    user_input = _convert_percentages_to_fractions(user_input)
-    # Standard behavior is to merge the result with the options.
-    # In this case, we want to add a sub-item so we update the options directly.
-    observations: list[dict[str, Any]] = handler.options.setdefault(
-        CONF_OBSERVATIONS, []
-    )
-    observations.append(user_input)
-    return {"add_another": True} if add_another else {}
+def _convert_fractions_to_percentages(
+    data: dict[str, str | float],
+) -> dict[str, str | float]:
+    """Convert fraction values in a dictionary to percentages."""
+    return {
+        key: (value * 100 if isinstance(value, (float)) else value)
+        for key, value in data.items()
+    }
 
 
 CONFIG_FLOW = {
@@ -278,6 +305,14 @@ CONFIG_FLOW = {
         suggested_values=None,
     ),
 }
+
+
+async def _get_base_suggested_values(
+    handler: SchemaCommonFlowHandler,
+) -> dict[str, Any]:
+    """Return suggested values for the sensor base options."""
+
+    return _convert_fractions_to_percentages(dict(handler.options))
 
 
 async def _get_edit_observation_suggested_values(
@@ -334,6 +369,8 @@ OPTIONS_FLOW: dict[str, SchemaFlowStep] = {
     ),
     str(OptionsFlowSteps.BASE_OPTIONS): SchemaFlowFormStep(
         OPTIONS_SCHEMA,
+        validate_user_input=_validate_user,
+        suggested_values=_get_base_suggested_values,
     ),
     str(OptionsFlowSteps.SELECT_EDIT_OBSERVATION): SchemaFlowFormStep(
         _get_select_observation_schema,
