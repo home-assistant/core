@@ -279,6 +279,7 @@ async def test_sleeping_rpc_device_online(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test sleeping RPC device online."""
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", device_sleep)
     entry = await init_integration(hass, 2, sleep_period=entry_sleep)
     assert "will resume when device is online" in caplog.text
@@ -297,6 +298,7 @@ async def test_sleeping_rpc_device_online_new_firmware(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test sleeping device Gen2 with firmware 1.0.0 or later."""
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
     entry = await init_integration(hass, 2, sleep_period=None)
     assert "will resume when device is online" in caplog.text
 

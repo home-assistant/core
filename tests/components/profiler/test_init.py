@@ -181,7 +181,7 @@ async def test_dump_log_object(
 
         def __repr__(self):
             if self.fail:
-                raise Exception("failed")  # pylint: disable=broad-exception-raised
+                raise Exception("failed")  # noqa: TRY002
             return "<DumpLogDummy success>"
 
     obj1 = DumpLogDummy(False)

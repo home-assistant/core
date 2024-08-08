@@ -214,8 +214,7 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
                 self._captcha_image = data["captchaImg"]
                 return self._async_form_auth_captcha(error)
 
-            #  pylint: disable=broad-exception-raised
-            raise Exception(data)
+            raise Exception(data)  # noqa: TRY002
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Error auth user: %s", err)
             return self._async_form_auth_user(ERROR_AUTH_USER)

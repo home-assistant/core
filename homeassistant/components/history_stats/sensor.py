@@ -26,6 +26,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import Template
@@ -111,7 +112,9 @@ async def async_setup_platform(
     await coordinator.async_refresh()
     if not coordinator.last_update_success:
         raise PlatformNotReady from coordinator.last_exception
-    async_add_entities([HistoryStatsSensor(coordinator, sensor_type, name, unique_id)])
+    async_add_entities(
+        [HistoryStatsSensor(hass, coordinator, sensor_type, name, unique_id, entity_id)]
+    )
 
 
 async def async_setup_entry(
@@ -123,8 +126,13 @@ async def async_setup_entry(
 
     sensor_type: str = entry.options[CONF_TYPE]
     coordinator = entry.runtime_data
+    entity_id: str = entry.options[CONF_ENTITY_ID]
     async_add_entities(
-        [HistoryStatsSensor(coordinator, sensor_type, entry.title, entry.entry_id)]
+        [
+            HistoryStatsSensor(
+                hass, coordinator, sensor_type, entry.title, entry.entry_id, entity_id
+            )
+        ]
     )
 
 
@@ -167,16 +175,22 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         coordinator: HistoryStatsUpdateCoordinator,
         sensor_type: str,
         name: str,
         unique_id: str | None,
+        source_entity_id: str,
     ) -> None:
         """Initialize the HistoryStats sensor."""
         super().__init__(coordinator, name)
         self._attr_native_unit_of_measurement = UNITS[sensor_type]
         self._type = sensor_type
         self._attr_unique_id = unique_id
+        self._attr_device_info = async_device_info_to_link_from_entity(
+            hass,
+            source_entity_id,
+        )
         self._process_update()
         if self._type == CONF_TYPE_TIME:
             self._attr_device_class = SensorDeviceClass.DURATION

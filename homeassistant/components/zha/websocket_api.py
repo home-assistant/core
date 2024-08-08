@@ -47,7 +47,7 @@ from zha.application.helpers import (
 )
 from zha.zigbee.cluster_handlers.const import CLUSTER_HANDLER_IAS_WD
 from zha.zigbee.device import Device
-from zha.zigbee.group import GroupMember
+from zha.zigbee.group import GroupMemberReference
 import zigpy.backups
 from zigpy.config import CONF_DEVICE
 from zigpy.config.validators import cv_boolean
@@ -259,9 +259,9 @@ class ClusterBinding(NamedTuple):
     endpoint_id: int
 
 
-def _cv_group_member(value: dict[str, Any]) -> GroupMember:
+def _cv_group_member(value: dict[str, Any]) -> GroupMemberReference:
     """Transform a group member."""
-    return GroupMember(
+    return GroupMemberReference(
         ieee=value[ATTR_IEEE],
         endpoint_id=value[ATTR_ENDPOINT_ID],
     )
@@ -519,7 +519,7 @@ async def websocket_add_group(
     zha_gateway = get_zha_gateway_proxy(hass)
     group_name: str = msg[GROUP_NAME]
     group_id: int | None = msg.get(GROUP_ID)
-    members: list[GroupMember] | None = msg.get(ATTR_MEMBERS)
+    members: list[GroupMemberReference] | None = msg.get(ATTR_MEMBERS)
     group = await zha_gateway.gateway.async_create_zigpy_group(
         group_name, members, group_id
     )
@@ -570,8 +570,9 @@ async def websocket_add_group_members(
 ) -> None:
     """Add members to a ZHA group."""
     zha_gateway = get_zha_gateway(hass)
+    zha_gateway_proxy = get_zha_gateway_proxy(hass)
     group_id: int = msg[GROUP_ID]
-    members: list[GroupMember] = msg[ATTR_MEMBERS]
+    members: list[GroupMemberReference] = msg[ATTR_MEMBERS]
 
     if not (zha_group := zha_gateway.groups.get(group_id)):
         connection.send_message(
@@ -582,8 +583,9 @@ async def websocket_add_group_members(
         return
 
     await zha_group.async_add_members(members)
-    ret_group = zha_group.group_info
-    connection.send_result(msg[ID], ret_group)
+    ret_group = zha_gateway_proxy.get_group_proxy(group_id)
+    assert ret_group
+    connection.send_result(msg[ID], ret_group.group_info)
 
 
 @websocket_api.require_admin
@@ -600,8 +602,9 @@ async def websocket_remove_group_members(
 ) -> None:
     """Remove members from a ZHA group."""
     zha_gateway = get_zha_gateway(hass)
+    zha_gateway_proxy = get_zha_gateway_proxy(hass)
     group_id: int = msg[GROUP_ID]
-    members: list[GroupMember] = msg[ATTR_MEMBERS]
+    members: list[GroupMemberReference] = msg[ATTR_MEMBERS]
 
     if not (zha_group := zha_gateway.groups.get(group_id)):
         connection.send_message(
@@ -612,8 +615,9 @@ async def websocket_remove_group_members(
         return
 
     await zha_group.async_remove_members(members)
-    ret_group = zha_group.group_info
-    connection.send_result(msg[ID], ret_group)
+    ret_group = zha_gateway_proxy.get_group_proxy(group_id)
+    assert ret_group
+    connection.send_result(msg[ID], ret_group.group_info)
 
 
 @websocket_api.require_admin
@@ -1307,12 +1311,8 @@ def async_load_api(hass: HomeAssistant) -> None:
         """Remove a node from the network."""
         zha_gateway = get_zha_gateway(hass)
         ieee: EUI64 = service.data[ATTR_IEEE]
-        zha_device: Device | None = zha_gateway.get_device(ieee)
-        if zha_device is not None and zha_device.is_active_coordinator:
-            _LOGGER.info("Removing the coordinator (%s) is not allowed", ieee)
-            return
         _LOGGER.info("Removing node %s", ieee)
-        await application_controller.remove(ieee)
+        await zha_gateway.async_remove_device(ieee)
 
     async_register_admin_service(
         hass, DOMAIN, SERVICE_REMOVE, remove, schema=SERVICE_SCHEMAS[IEEE_SERVICE]

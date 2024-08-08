@@ -99,7 +99,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
         state = self._state
         if state.missing_state or not math.isfinite(state.state):
             return None
-        if self._attr_device_class == SensorDeviceClass.TIMESTAMP:
+        if self._attr_device_class is SensorDeviceClass.TIMESTAMP:
             return dt_util.utc_from_timestamp(state.state)
         return f"{state.state:.{self._static_info.accuracy_decimals}f}"
 
