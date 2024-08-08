@@ -1,0 +1,13 @@
+{
+  "domain": "vemmio",
+  "name": "Vemmio",
+  "after_dependencies": ["zeroconf"],
+  "codeowners": ["@vemmio"],
+  "config_flow": true,
+  "dependencies": ["network"],
+  "documentation": "https://www.home-assistant.io/integrations/vemmio",
+  "iot_class": "local_push",
+  "loggers": ["vemmio_client"],
+  "requirements": ["vemmio-client==0.2.1"],
+  "zeroconf": ["_vemmio._tcp.local."]
+}

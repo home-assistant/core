@@ -619,6 +619,7 @@ FLOWS = {
         "vallox",
         "velbus",
         "velux",
+        "vemmio",
         "venstar",
         "vera",
         "verisure",
