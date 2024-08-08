@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 from sqlalchemy import create_engine, inspect
-from sqlalchemy.exc import InternalError, SQLAlchemyError
+from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from homeassistant.components import recorder
@@ -569,7 +569,9 @@ async def test_out_of_disk_space_while_rebuild_states_table(
         ),
         patch(
             "homeassistant.components.recorder.migration.DropConstraint",
-            side_effect=InternalError,
+            side_effect=OperationalError(
+                None, None, OSError("No space left on device")
+            ),
         ),
     ):
         async with (
