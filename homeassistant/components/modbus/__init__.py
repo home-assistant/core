@@ -23,6 +23,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import (
     CONF_ADDRESS,
+    CONF_WRITE_ADDRESS,
     CONF_BINARY_SENSORS,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
@@ -86,6 +87,7 @@ from .const import (
     CONF_HVAC_MODE_REGISTER,
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
+    CONF_HVAC_ONOFF_WRITE_REGISTER,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
     CONF_MAX_TEMP,
@@ -121,6 +123,7 @@ from .const import (
     CONF_SWING_MODE_SWING_VERT,
     CONF_SWING_MODE_VALUES,
     CONF_TARGET_TEMP,
+    CONF_TARGET_TEMP_WRITE,
     CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_VERIFY,
     CONF_VIRTUAL_COUNT,
@@ -157,6 +160,7 @@ BASE_COMPONENT_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_ADDRESS): cv.positive_int,
+        vol.Optional(CONF_WRITE_ADDRESS): cv.positive_int,
         vol.Exclusive(CONF_DEVICE_ADDRESS, "slave_addr"): cv.positive_int,
         vol.Exclusive(CONF_SLAVE, "slave_addr"): cv.positive_int,
         vol.Optional(
@@ -224,6 +228,7 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_VERIFY): vol.Maybe(
             {
                 vol.Optional(CONF_ADDRESS): cv.positive_int,
+                vol.Optional(CONF_WRITE_ADDRESS): cv.positive_int,
                 vol.Optional(CONF_INPUT_TYPE): vol.In(
                     [
                         CALL_TYPE_REGISTER_HOLDING,
@@ -247,16 +252,19 @@ CLIMATE_SCHEMA = vol.All(
     BASE_STRUCT_SCHEMA.extend(
         {
             vol.Required(CONF_TARGET_TEMP): hvac_fixedsize_reglist_validator,
+            vol.Optional(CONF_TARGET_TEMP_WRITE): hvac_fixedsize_reglist_validator,
             vol.Optional(CONF_TARGET_TEMP_WRITE_REGISTERS, default=False): cv.boolean,
             vol.Optional(CONF_MAX_TEMP, default=35): vol.Coerce(float),
             vol.Optional(CONF_MIN_TEMP, default=5): vol.Coerce(float),
             vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
             vol.Optional(CONF_HVAC_ONOFF_REGISTER): cv.positive_int,
+            vol.Optional(CONF_HVAC_ONOFF_WRITE_REGISTER): cv.positive_int,
             vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
             vol.Optional(CONF_HVAC_MODE_REGISTER): vol.Maybe(
                 {
                     CONF_ADDRESS: cv.positive_int,
+                    vol.Optional(CONF_WRITE_ADDRESS): cv.positive_int,
                     CONF_HVAC_MODE_VALUES: {
                         vol.Optional(CONF_HVAC_MODE_OFF): vol.Any(
                             cv.positive_int, [cv.positive_int]
@@ -287,6 +295,7 @@ CLIMATE_SCHEMA = vol.All(
                 vol.All(
                     {
                         vol.Required(CONF_ADDRESS): register_int_list_validator,
+                        vol.Optional(CONF_WRITE_ADDRESS): register_int_list_validator,
                         CONF_FAN_MODE_VALUES: {
                             vol.Optional(CONF_FAN_MODE_ON): cv.positive_int,
                             vol.Optional(CONF_FAN_MODE_OFF): cv.positive_int,
@@ -307,6 +316,7 @@ CLIMATE_SCHEMA = vol.All(
                 vol.All(
                     {
                         vol.Required(CONF_ADDRESS): register_int_list_validator,
+                        vol.Optional(CONF_WRITE_ADDRESS): register_int_list_validator,
                         CONF_SWING_MODE_VALUES: {
                             vol.Optional(CONF_SWING_MODE_SWING_ON): cv.positive_int,
                             vol.Optional(CONF_SWING_MODE_SWING_OFF): cv.positive_int,
