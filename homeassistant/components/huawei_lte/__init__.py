@@ -14,6 +14,7 @@ from xml.parsers.expat import ExpatError
 
 from huawei_lte_api.Client import Client
 from huawei_lte_api.Connection import Connection
+from huawei_lte_api.enums.sms import BoxTypeEnum
 from huawei_lte_api.exceptions import (
     LoginErrorInvalidCredentialsException,
     ResponseErrorException,
@@ -29,18 +30,30 @@ from homeassistant.const import (
     ATTR_HW_VERSION,
     ATTR_MODEL,
     ATTR_SW_VERSION,
+    CONF_ID,
     CONF_MAC,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_RECIPIENT,
+    CONF_SENDER,
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -58,12 +71,21 @@ from .const import (
     ADMIN_SERVICES,
     ALL_KEYS,
     ATTR_CONFIG_ENTRY_ID,
+    CONF_BOX_TYPE,
+    CONF_DATETIME,
     CONF_MANUFACTURER,
+    CONF_MAX_MESSAGES,
+    CONF_MESSAGE,
+    CONF_PREFER_UNREAD,
+    CONF_SCA,
     CONF_UNAUTHENTICATED_MODE,
     CONNECTION_TIMEOUT,
+    DEFAULT_BOX_TYPE,
     DEFAULT_DEVICE_NAME,
+    DEFAULT_MESSAGES_CHUNK,
     DEFAULT_MANUFACTURER,
     DEFAULT_NOTIFY_SERVICE_NAME,
+    DEFAULT_PREFER_UNREAD,
     DOMAIN,
     KEY_DEVICE_BASIC_INFORMATION,
     KEY_DEVICE_INFORMATION,
@@ -81,7 +103,11 @@ from .const import (
     KEY_WLAN_WIFI_FEATURE_SWITCH,
     KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH,
     NOTIFY_SUPPRESS_TIMEOUT,
+    SERVICE_DELETE_MESSAGE,
+    SERVICE_GET_MESSAGES,
+    SERVICE_READ_MESSAGE,
     SERVICE_RESUME_INTEGRATION,
+    SERVICE_SAVE_MESSAGE,
     SERVICE_SUSPEND_INTEGRATION,
     UPDATE_SIGNAL,
 )
@@ -91,14 +117,25 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
+VALIDATOR_PHONES = vol.All(cv.ensure_list, [cv.string], vol.Length(min=1))
+
+VALIDATOR_BOX_TYPE = vol.All(
+    vol.Any(
+        int,
+        vol.All(
+            cv.string,
+            lambda x: BoxTypeEnum[x.upper()],
+        ),
+    ),
+    vol.Coerce(BoxTypeEnum),
+)
+
 NOTIFY_SCHEMA = vol.Any(
     None,
     vol.Schema(
         {
             vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_RECIPIENT): vol.Any(
-                None, vol.All(cv.ensure_list, [cv.string])
-            ),
+            vol.Optional(CONF_RECIPIENT): vol.Any(None, VALIDATOR_PHONES),
         }
     ),
 )
@@ -123,6 +160,26 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_URL): cv.url})
+
+SERVICE_GET_MESSAGES_SCHEMA = SERVICE_SCHEMA.extend(
+    {
+        vol.Optional(CONF_MAX_MESSAGES): cv.positive_int,
+        vol.Optional(CONF_PREFER_UNREAD, default=DEFAULT_PREFER_UNREAD): cv.boolean,
+        vol.Optional(CONF_BOX_TYPE, default=DEFAULT_BOX_TYPE): VALIDATOR_BOX_TYPE,
+    }
+)
+
+SERVICE_SAVE_MESSAGE_SCHEMA = SERVICE_SCHEMA.extend(
+    {
+        vol.Required(CONF_SENDER): VALIDATOR_PHONES,
+        vol.Required(CONF_MESSAGE): cv.string,
+        vol.Optional(CONF_ID, default=-1): vol.All(int, vol.Range(min=-1)),
+        vol.Optional(CONF_SCA): vol.Any(None, cv.string),
+        vol.Optional(CONF_DATETIME): cv.datetime,
+    }
+)
+
+SERVICE_MESSAGE_SCHEMA = SERVICE_SCHEMA.extend({vol.Required(CONF_ID): cv.positive_int})
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -501,8 +558,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = HuaweiLteData(hass_config=config, routers={})
 
-    def service_handler(service: ServiceCall) -> None:
-        """Apply a service.
+    def router_resolver(service: ServiceCall) -> None:
+        """Resolve router for a service.
 
         We key this using the router URL instead of its unique id / serial number,
         because the latter is not available anywhere in the UI.
@@ -514,7 +571,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         elif not routers:
             _LOGGER.error("%s: no routers configured", service.service)
-            return
+            raise ServiceValidationError
         elif len(routers) == 1:
             router = next(iter(routers.values()))
         else:
@@ -523,11 +580,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 service.service,
                 sorted(router.url for router in routers.values()),
             )
-            return
+            raise ServiceValidationError
         if not router:
             _LOGGER.error("%s: router %s unavailable", service.service, url)
-            return
+            raise HomeAssistantError
+        return router
 
+    def admin_service_handler(service: ServiceCall) -> None:
+        """
+        Handle administrative service call.
+        """
+        router = router_resolver(service)
         if service.service == SERVICE_RESUME_INTEGRATION:
             # Login will be handled automatically on demand
             router.suspended = False
@@ -544,10 +607,99 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass,
             DOMAIN,
             service,
-            service_handler,
+            admin_service_handler,
             schema=SERVICE_SCHEMA,
         )
 
+    def message_retrieval_handler(service: ServiceCall) -> ServiceResponse:
+        """
+        Handle calls to retrieve SMS messages.
+        """
+        router = router_resolver(service)
+        if (limit := service.data.get(CONF_MAX_MESSAGES)) is None:
+            read_count = DEFAULT_MESSAGES_CHUNK
+        elif limit <= 0:
+            _LOGGER.error("%s: limit must be a positive number", service.service)
+            raise ServiceValidationError
+        else:
+            read_count = min(limit, DEFAULT_MESSAGES_CHUNK)
+        messages = router.client.sms.get_messages(
+            unread_preferred=service.data[CONF_PREFER_UNREAD],
+            read_count=read_count,
+            box_type=service.data[CONF_BOX_TYPE],
+        )
+        if limit is not None:
+            messages = map(lambda x: x[1], zip(range(limit), messages))
+        try:
+            return {"messages": [msg.to_dict() for msg in messages]}
+        except ResponseErrorException as ex:
+            _LOGGER.error("Could delete message %s: %s", sms_index, ex)
+            raise HomeAssistantError from ex
+        
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_MESSAGES,
+        message_retrieval_handler,
+        schema=SERVICE_GET_MESSAGES_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    def message_delete_handler(service: ServiceCall) -> None:
+        router = router_resolver(service)
+        sms_index = service.data[CONF_ID]
+        try:
+            resp = router.client.sms.delete_sms(sms_index)
+        except ResponseErrorException as ex:
+            _LOGGER.error("Could delete message %s: %s", sms_index, ex)
+            raise HomeAssistantError from ex
+        else:
+            _LOGGER.debug("Deleted message %s: %s", sms_index, resp)
+
+    def message_read_handler(service: ServiceCall) -> None:
+        router = router_resolver(service)
+        sms_index = service.data[CONF_ID]
+        try:
+            resp = router.client.sms.set_read(sms_index)
+        except ResponseErrorException as ex:
+            _LOGGER.error("Could not read message %s: %s", sms_index, ex)
+            raise HomeAssistantError from ex
+        else:
+            _LOGGER.debug("Read message %s: %s", sms_index, resp)
+
+    for service, handler in {
+        SERVICE_DELETE_MESSAGE: message_delete_handler,
+        SERVICE_READ_MESSAGE: message_read_handler,
+    }.items():
+        hass.services.async_register(
+            DOMAIN, service, handler, schema=SERVICE_MESSAGE_SCHEMA
+        )
+
+    def message_save_handler(service: ServiceCall) -> None:
+        router = router_resolver(service)
+        if not (message_dt := service.data.get(CONF_DATETIME)):
+            message_dt = datetime.now()
+        sms_index = service.data.get(CONF_INDEX, -1)
+        try:
+            resp = router.client.sms.save_sms(
+                phone_numbers=service.data[CONF_SENDER],
+                message=service.data[CONF_MESSAGE],
+                sms_index=sms_index,
+                sca=service.data.get(CONF_SCA),
+                from_date=message_dt,
+            )
+        except ResponseErrorException as ex:
+            _LOGGER.error("Could not save message %s: %s", sms_index, ex)
+            raise HomeAssistantError from ex
+        else:
+            _LOGGER.debug("Saved message %s: %s", sms_index, resp)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SAVE_MESSAGE,
+        message_retrieval_handler,
+        schema=SERVICE_SAVE_MESSAGE_SCHEMA,
+    )
+    
     return True
 
 
