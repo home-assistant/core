@@ -8,7 +8,10 @@ import logging
 from typing import Any
 from uuid import UUID
 
+import voluptuous as vol
+
 from homeassistant.components.binary_sensor import (
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -20,6 +23,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_NAME,
     CONF_PLATFORM,
+    CONF_STATE,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     STATE_UNAVAILABLE,
@@ -28,6 +32,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import ConditionError, TemplateError
 from homeassistant.helpers import condition
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     TrackTemplate,
@@ -40,11 +45,7 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import Template, result_as_boolean
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
-    DOMAIN,
-    PLATFORM_SCHEMA,  # noqa: F401
-    PLATFORMS,
-)
+from . import DOMAIN, PLATFORMS
 from .const import (
     ATTR_OBSERVATIONS,
     ATTR_OCCURRED_OBSERVATION_ENTITIES,
@@ -55,12 +56,67 @@ from .const import (
     CONF_P_GIVEN_T,
     CONF_PRIOR,
     CONF_PROBABILITY_THRESHOLD,
+    CONF_TEMPLATE,
     CONF_TO_STATE,
+    DEFAULT_NAME,
+    DEFAULT_PROBABILITY_THRESHOLD,
 )
 from .helpers import Observation
 from .issues import raise_mirrored_entries, raise_no_prob_given_false
 
 _LOGGER = logging.getLogger(__name__)
+
+
+NUMERIC_STATE_SCHEMA = vol.Schema(
+    {
+        CONF_PLATFORM: "numeric_state",
+        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Optional(CONF_ABOVE): vol.Coerce(float),
+        vol.Optional(CONF_BELOW): vol.Coerce(float),
+        vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
+        vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
+    },
+    required=True,
+)
+
+STATE_SCHEMA = vol.Schema(
+    {
+        CONF_PLATFORM: CONF_STATE,
+        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_TO_STATE): cv.string,
+        vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
+        vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
+    },
+    required=True,
+)
+
+TEMPLATE_SCHEMA = vol.Schema(
+    {
+        CONF_PLATFORM: CONF_TEMPLATE,
+        vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
+        vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
+    },
+    required=True,
+)
+
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_DEVICE_CLASS): cv.string,
+        vol.Required(CONF_OBSERVATIONS): vol.Schema(
+            vol.All(
+                cv.ensure_list,
+                [vol.Any(NUMERIC_STATE_SCHEMA, STATE_SCHEMA, TEMPLATE_SCHEMA)],
+            )
+        ),
+        vol.Required(CONF_PRIOR): vol.Coerce(float),
+        vol.Optional(
+            CONF_PROBABILITY_THRESHOLD, default=DEFAULT_PROBABILITY_THRESHOLD
+        ): vol.Coerce(float),
+    }
+)
 
 
 def update_probability(
