@@ -316,6 +316,22 @@ async def async_yaml_patch_helper(hass, filename):
         ),
         (
             {
+                "template_type": "number",
+                "name": "My template",
+                "state": "{{ 10 }}",
+                "min": "{{ 0 }}",
+                "max": "{{ 100 }}",
+                "step": "{{ 0.1 }}",
+            },
+            {
+                "state": "{{ 11 }}",
+                "min": "{{ 0 }}",
+                "max": "{{ 100 }}",
+                "step": "{{ 0.1 }}",
+            },
+        ),
+        (
+            {
                 "template_type": "select",
                 "name": "My template",
                 "state": "{{ 'on' }}",
