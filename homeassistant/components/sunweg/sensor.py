@@ -2,48 +2,23 @@
 
 from __future__ import annotations
 
-import logging
-from types import MappingProxyType
-from typing import Any
-
-from sunweg.api import APIHelper
-from sunweg.device import Inverter
-from sunweg.plant import Plant
+import datetime
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SunWEGData
-from .const import CONF_PLANT_ID, DEFAULT_PLANT_ID, DOMAIN, DeviceType
+from .const import DOMAIN, DeviceType
+from .coordinator import SunWEGDataUpdateCoordinator
 from .sensor_types.inverter import INVERTER_SENSOR_TYPES
 from .sensor_types.phase import PHASE_SENSOR_TYPES
 from .sensor_types.sensor_entity_description import SunWEGSensorEntityDescription
 from .sensor_types.string import STRING_SENSOR_TYPES
 from .sensor_types.total import TOTAL_SENSOR_TYPES
-
-_LOGGER = logging.getLogger(__name__)
-
-
-def get_device_list(
-    api: APIHelper, config: MappingProxyType[str, Any]
-) -> tuple[list[Inverter], int]:
-    """Retrieve the device list for the selected plant."""
-    plant_id = int(config[CONF_PLANT_ID])
-
-    if plant_id == DEFAULT_PLANT_ID:
-        plant_info: list[Plant] = api.listPlants()
-        plant_id = plant_info[0].id
-
-    devices: list[Inverter] = []
-    # Get a list of devices for specified plant to add sensors for.
-    for inverter in api.plant(plant_id).inverters:
-        api.complete_inverter(inverter)
-        devices.append(inverter)
-    return (devices, plant_id)
 
 
 async def async_setup_entry(
@@ -52,19 +27,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SunWEG sensor."""
-    name = config_entry.data[CONF_NAME]
-
-    probe: SunWEGData = hass.data[DOMAIN][config_entry.entry_id]
-
-    devices, plant_id = await hass.async_add_executor_job(
-        get_device_list, probe.api, config_entry.data
-    )
+    coordinator: SunWEGDataUpdateCoordinator = config_entry.runtime_data
 
     entities = [
-        SunWEGInverter(
-            probe,
-            name=f"{name} Total",
-            unique_id=f"{plant_id}-{description.key}",
+        SunWEGSensor(
+            name=f"{coordinator.plant_name} Total",
+            unique_id=f"{coordinator.plant_id}-{description.key}",
+            coordinator=coordinator,
             description=description,
             device_type=DeviceType.TOTAL,
         )
@@ -74,31 +43,31 @@ async def async_setup_entry(
     # Add sensors for each device in the specified plant.
     entities.extend(
         [
-            SunWEGInverter(
-                probe,
+            SunWEGSensor(
                 name=f"{device.name}",
                 unique_id=f"{device.sn}-{description.key}",
+                coordinator=coordinator,
                 description=description,
                 device_type=DeviceType.INVERTER,
                 inverter_id=device.id,
             )
-            for device in devices
+            for device in coordinator.data.inverters
             for description in INVERTER_SENSOR_TYPES
         ]
     )
 
     entities.extend(
         [
-            SunWEGInverter(
-                probe,
+            SunWEGSensor(
                 name=f"{device.name} {phase.name}",
                 unique_id=f"{device.sn}-{phase.name}-{description.key}",
+                coordinator=coordinator,
                 description=description,
                 inverter_id=device.id,
                 device_type=DeviceType.PHASE,
                 deep_name=phase.name,
             )
-            for device in devices
+            for device in coordinator.data.inverters
             for phase in device.phases
             for description in PHASE_SENSOR_TYPES
         ]
@@ -106,16 +75,16 @@ async def async_setup_entry(
 
     entities.extend(
         [
-            SunWEGInverter(
-                probe,
+            SunWEGSensor(
                 name=f"{device.name} {string.name}",
                 unique_id=f"{device.sn}-{string.name}-{description.key}",
+                coordinator=coordinator,
                 description=description,
                 inverter_id=device.id,
                 device_type=DeviceType.STRING,
                 deep_name=string.name,
             )
-            for device in devices
+            for device in coordinator.data.inverters
             for mppt in device.mppts
             for string in mppt.strings
             for description in STRING_SENSOR_TYPES
@@ -125,23 +94,23 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class SunWEGInverter(SensorEntity):
+class SunWEGSensor(CoordinatorEntity[SunWEGDataUpdateCoordinator], SensorEntity):
     """Representation of a SunWEG Sensor."""
 
     entity_description: SunWEGSensorEntityDescription
 
     def __init__(
         self,
-        probe: SunWEGData,
         name: str,
         unique_id: str,
+        coordinator: SunWEGDataUpdateCoordinator,
         description: SunWEGSensorEntityDescription,
         device_type: DeviceType,
         inverter_id: int = 0,
         deep_name: str | None = None,
     ) -> None:
         """Initialize a sensor."""
-        self.probe = probe
+        super().__init__(coordinator)
         self.entity_description = description
         self.device_type = device_type
         self.inverter_id = inverter_id
@@ -154,25 +123,44 @@ class SunWEGInverter(SensorEntity):
         )
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(probe.plant_id))},
+            identifiers={(DOMAIN, str(coordinator.plant_id))},
             manufacturer="SunWEG",
-            name=name,
+            name=coordinator.plant_name,
         )
 
-    def update(self) -> None:
-        """Get the latest data from the Sun WEG API and updates the state."""
-        self.probe.update()
-        (
-            self._attr_native_value,
-            self._attr_native_unit_of_measurement,
-        ) = self.probe.get_data(
-            api_variable_key=self.entity_description.api_variable_key,
-            api_variable_unit=self.entity_description.api_variable_unit,
-            deep_name=self.deep_name,
-            device_type=self.device_type,
-            inverter_id=self.inverter_id,
-            name=self.entity_description.name,
-            native_unit_of_measurement=self.native_unit_of_measurement,
-            never_resets=self.entity_description.never_resets,
-            previous_value_drop_threshold=self.entity_description.previous_value_drop_threshold,
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle data update."""
+        previous_value = self.native_value
+        value: StateType | datetime.datetime = self.coordinator.get_api_value(
+            self.entity_description.api_variable_key,
+            self.device_type,
+            self.inverter_id,
+            self.deep_name,
         )
+        previous_unit_of_measurement: str | None = self.native_unit_of_measurement
+        unit_of_measurement: str | None = (
+            str(
+                self.coordinator.get_api_value(
+                    self.entity_description.api_variable_unit,
+                    self.device_type,
+                    self.inverter_id,
+                    self.deep_name,
+                )
+            )
+            if self.entity_description.api_variable_unit is not None
+            else self.native_unit_of_measurement
+        )
+
+        # Never resets validation
+        if (
+            self.entity_description.never_resets
+            and isinstance(previous_value, float)
+            and (value is None or value == 0)
+        ):
+            value = previous_value
+            unit_of_measurement = previous_unit_of_measurement
+
+        self._attr_native_value = value
+        self._attr_native_unit_of_measurement = unit_of_measurement
+        super()._handle_coordinator_update()

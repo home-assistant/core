@@ -1,4 +1,12 @@
 {
+  "exceptions": {
+    "no_plants": {
+      "message": "No plants have been found on this account"
+    },
+    "plant_not_found": {
+      "message": "Plant {plant_id} not found"
+    }
+  },
   "config": {
     "abort": {
       "no_plants": "No plants have been found on this account",
