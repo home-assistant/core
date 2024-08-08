@@ -126,7 +126,7 @@ def mock_put_factory() -> Callable:
 async def setup_evohome(
     hass: HomeAssistant,
     test_config: dict[str, str] | None = None,
-    installation: str = "default",
+    install: str = "default",
 ) -> MagicMock:
     """Set up the evohome integration and return its client.
 
@@ -139,7 +139,7 @@ async def setup_evohome(
     with (
         patch("homeassistant.components.evohome.evo.EvohomeClient") as mock_client,
         patch("homeassistant.components.evohome.ev1.EvohomeClient", return_value=None),
-        patch("evohomeasync2.broker.Broker.get", mock_get_factory(installation)),
+        patch("evohomeasync2.broker.Broker.get", mock_get_factory(install)),
         patch("evohomeasync2.broker.Broker.put", mock_put_factory()),
     ):
         mock_client.side_effect = EvohomeClient

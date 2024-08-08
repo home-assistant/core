@@ -99,7 +99,7 @@ async def test_auth_tokens_null(
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_DATA_NULL[idx]}
 
-    mock_client = await setup_evohome(hass, TEST_CONFIG, installation="minimal")
+    mock_client = await setup_evohome(hass, TEST_CONFIG, install="minimal")
 
     # Confirm client was instantiated without tokens, as cache was empty...
     assert SZ_REFRESH_TOKEN not in mock_client.call_args.kwargs
@@ -126,7 +126,7 @@ async def test_auth_tokens_same(
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_DATA[idx]}
 
-    mock_client = await setup_evohome(hass, TEST_CONFIG, installation="minimal")
+    mock_client = await setup_evohome(hass, TEST_CONFIG, install="minimal")
 
     # Confirm client was instantiated with the cached tokens...
     assert mock_client.call_args.kwargs[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
@@ -158,7 +158,7 @@ async def test_auth_tokens_past(
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": test_data}
 
-    mock_client = await setup_evohome(hass, TEST_CONFIG, installation="minimal")
+    mock_client = await setup_evohome(hass, TEST_CONFIG, install="minimal")
 
     # Confirm client was instantiated with the cached tokens...
     assert mock_client.call_args.kwargs[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
@@ -188,7 +188,7 @@ async def test_auth_tokens_diff(
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_DATA[idx]}
 
     mock_client = await setup_evohome(
-        hass, TEST_CONFIG | {CONF_USERNAME: USERNAME_DIFF}, installation="minimal"
+        hass, TEST_CONFIG | {CONF_USERNAME: USERNAME_DIFF}, install="minimal"
     )
 
     # Confirm client was instantiated without tokens, as username was different...

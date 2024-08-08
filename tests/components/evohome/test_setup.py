@@ -105,7 +105,7 @@ class ExpectedResults:
 async def test_vendor_json(hass: HomeAssistant, install: str) -> None:
     """Test setup of a Honeywell TCC-compatible system."""
 
-    await setup_evohome(hass, installation=install)
+    await setup_evohome(hass, install=install)
 
     results = ExpectedResults(hass, expected_results_fixture(install))
 
