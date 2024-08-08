@@ -31,6 +31,31 @@ OPTIMISTIC_LOCK_CONFIG = {
     },
 }
 
+OPTIMISTIC_LOCK_CONFIG_WITH_OPEN = {
+    "platform": "template",
+    "lock": {
+        "service": "test.automation",
+        "data_template": {
+            "action": "lock",
+            "caller": "{{ this.entity_id }}",
+        },
+    },
+    "unlock": {
+        "service": "test.automation",
+        "data_template": {
+            "action": "unlock",
+            "caller": "{{ this.entity_id }}",
+        },
+    },
+    "open": {
+        "service": "test.automation",
+        "data_template": {
+            "action": "open",
+            "caller": "{{ this.entity_id }}",
+        },
+    },
+}
+
 OPTIMISTIC_CODED_LOCK_CONFIG = {
     "platform": "template",
     "lock": {
@@ -275,6 +300,37 @@ async def test_unlock_action(
 
     assert len(calls) == 1
     assert calls[0].data["action"] == "unlock"
+    assert calls[0].data["caller"] == "lock.template_lock"
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, lock.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            lock.DOMAIN: {
+                **OPTIMISTIC_LOCK_CONFIG_WITH_OPEN,
+                "value_template": "{{ states.switch.test_state.state }}",
+            }
+        },
+    ],
+)
+async def test_open_action(hass: HomeAssistant, start_ha, calls) -> None:
+    """Test open action."""
+    await setup.async_setup_component(hass, "switch", {})
+    hass.states.async_set("switch.test_state", STATE_ON)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lock.template_lock")
+    assert state.state == lock.STATE_LOCKED
+
+    await hass.services.async_call(
+        lock.DOMAIN, lock.SERVICE_OPEN, {ATTR_ENTITY_ID: "lock.template_lock"}
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data["action"] == "open"
     assert calls[0].data["caller"] == "lock.template_lock"
 
 
