@@ -6,7 +6,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import Any, Self, cast
+from typing import Any, Self, TypedDict, Unpack, cast
 
 import ciso8601
 from fnv_hash_fast import fnv1a_32
@@ -152,6 +152,20 @@ _MATCH_ALL_KEEP = {
     ATTR_UNIT_OF_MEASUREMENT,
     ATTR_FRIENDLY_NAME,
 }
+
+
+class DBStateArgs(TypedDict, total=False):
+    """Represent a state in the database."""
+
+    old_state: States
+    old_state_id: int
+    state: str | None
+    entity_id: str | None
+    states_meta_rel: StatesMeta
+    metadata_id: int
+    attributes: dict[str, Any] | None
+    state_attributes: StateAttributes
+    attributes_id: int
 
 
 class UnusedDateTime(DateTime):
@@ -498,7 +512,9 @@ class States(Base):
         return date_time.isoformat(sep=" ", timespec="seconds")
 
     @staticmethod
-    def from_event(event: Event[EventStateChangedData]) -> States:
+    def from_event(
+        event: Event[EventStateChangedData], **db_state_args: Unpack[DBStateArgs]
+    ) -> States:
         """Create object from a state_changed event."""
         state = event.data["new_state"]
         # None state means the state was removed from the state machine
@@ -519,23 +535,25 @@ class States(Base):
             else:
                 last_reported_ts = state.last_reported_timestamp
         context = event.context
-        return States(
-            state=state_value,
-            entity_id=event.data["entity_id"],
-            attributes=None,
-            context_id=None,
-            context_id_bin=ulid_to_bytes_or_none(context.id),
-            context_user_id=None,
-            context_user_id_bin=uuid_hex_to_bytes_or_none(context.user_id),
-            context_parent_id=None,
-            context_parent_id_bin=ulid_to_bytes_or_none(context.parent_id),
-            origin_idx=event.origin.idx,
-            last_updated=None,
-            last_changed=None,
-            last_updated_ts=last_updated_ts,
-            last_changed_ts=last_changed_ts,
-            last_reported_ts=last_reported_ts,
-        )
+        state_kw = {
+            "state": state_value,
+            "entity_id": event.data["entity_id"],
+            "attributes": None,
+            "context_id": None,
+            "context_id_bin": ulid_to_bytes_or_none(context.id),
+            "context_user_id": None,
+            "context_user_id_bin": uuid_hex_to_bytes_or_none(context.user_id),
+            "context_parent_id": None,
+            "context_parent_id_bin": ulid_to_bytes_or_none(context.parent_id),
+            "origin_idx": event.origin.idx,
+            "last_updated": None,
+            "last_changed": None,
+            "last_updated_ts": last_updated_ts,
+            "last_changed_ts": last_changed_ts,
+            "last_reported_ts": last_reported_ts,
+        }
+        state_kw.update(db_state_args)  # type: ignore[arg-type]
+        return States(**state_kw)
 
     def to_native(self, validate_entity_id: bool = True) -> State | None:
         """Convert to an HA state object."""
