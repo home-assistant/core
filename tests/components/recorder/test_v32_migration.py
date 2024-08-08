@@ -447,6 +447,7 @@ async def test_migrate_can_resume_ix_states_event_id_removed(
         await hass.async_stop()
 
 
+@pytest.mark.usefixtures("skip_by_db_engine")
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
 @pytest.mark.parametrize("enable_migrate_event_ids", [True])
 @pytest.mark.parametrize("persistent_database", [True])
@@ -622,6 +623,7 @@ async def test_out_of_disk_space_while_rebuild_states_table(
         await hass.async_stop()
 
 
+@pytest.mark.usefixtures("skip_by_db_engine")
 @pytest.mark.skip_on_db_engine(["sqlite"])
 @pytest.mark.parametrize("enable_migrate_event_ids", [True])
 @pytest.mark.parametrize("persistent_database", [True])
