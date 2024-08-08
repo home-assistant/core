@@ -74,11 +74,6 @@ class MatterValve(MatterEntity, ValveEntity):
             else None
         )
 
-    '''
-    async def async_stop_water_valve(self, **kwargs: Any) -> None:
-        """Stop the water valve movement."""
-        await self.send_device_command(clusters.ValveConfigurationAndControl.Commands.StopMotion())
-    '''
 
     async def async_open_water_valve(self, **kwargs: Any) -> None:
         """Open the water valve."""
