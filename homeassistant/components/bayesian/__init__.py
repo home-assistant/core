@@ -3,16 +3,12 @@
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 from homeassistant.helpers.typing import ConfigType
 
 from .binary_sensor import PLATFORM_SCHEMA  # noqa: F401
-from .const import DOMAIN as BAYESIAN_DOMAIN
-
-DOMAIN = BAYESIAN_DOMAIN
-PLATFORMS = [Platform.BINARY_SENSOR]
+from .const import DOMAIN, PLATFORMS  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)  # TODO delete-me
 

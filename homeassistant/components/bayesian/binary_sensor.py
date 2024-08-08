@@ -45,7 +45,6 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import Template, result_as_boolean
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, PLATFORMS
 from .const import (
     ATTR_OBSERVATIONS,
     ATTR_OCCURRED_OBSERVATION_ENTITIES,
@@ -60,6 +59,8 @@ from .const import (
     CONF_TO_STATE,
     DEFAULT_NAME,
     DEFAULT_PROBABILITY_THRESHOLD,
+    DOMAIN,
+    PLATFORMS,
 )
 from .helpers import Observation
 from .issues import raise_mirrored_entries, raise_no_prob_given_false
