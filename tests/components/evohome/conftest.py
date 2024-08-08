@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime, timedelta
+from http import HTTPMethod
 from typing import Any, Final
 from unittest.mock import MagicMock, patch
 
@@ -104,25 +105,21 @@ def mock_get_factory(install: str) -> Callable:
             if url.startswith("temperatureZone"):  # temperatureZone/{id}/schedule
                 return zone_schedule_fixture(install)
 
-        pytest.xfail(f"Unexpected URL: {url}")
+        pytest.fail(f"Unexpected request: {HTTPMethod.GET} {url}")
 
     return mock_get
 
 
-def mock_put_factory() -> Callable:
-    """Return a get method for a specified installation."""
+async def block_request(
+    self: Broker, method: HTTPMethod, url: str, **kwargs: Any
+) -> None:
+    """Fail if the code it attempts any actual I/O via aiohttp."""
 
-    async def mock_put(self: Broker, url: str, **kwargs: Any) -> None:
-        """Effect the action for a HTTP put of a given URL."""
-
-        if url == "userAccount":  # userAccount
-            return
-
-        pytest.xfail(f"Unexpected URL: {url}")
-
-    return mock_put
+    pytest.fail(f"Unexpected request: {method} {url}")
 
 
+@patch("evohomeasync2.broker.Broker._client", block_request)
+@patch("evohomeasync.broker.Broker._make_request", block_request)
 async def setup_evohome(
     hass: HomeAssistant,
     test_config: dict[str, str] | None = None,
@@ -140,7 +137,6 @@ async def setup_evohome(
         patch("homeassistant.components.evohome.evo.EvohomeClient") as mock_client,
         patch("homeassistant.components.evohome.ev1.EvohomeClient", return_value=None),
         patch("evohomeasync2.broker.Broker.get", mock_get_factory(install)),
-        patch("evohomeasync2.broker.Broker.put", mock_put_factory()),
     ):
         mock_client.side_effect = EvohomeClient
 
