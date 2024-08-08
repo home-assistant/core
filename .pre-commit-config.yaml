@@ -33,10 +33,11 @@ repos:
     rev: v1.35.1
     hooks:
       - id: yamllint
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.0.3
+  - repo: https://github.com/biomejs/pre-commit
+    rev: v0.4.0
     hooks:
-      - id: prettier
+      - id: biome-lint
+        additional_dependencies: ["@biomejs/biome@1.8.3"]
   - repo: https://github.com/cdce8p/python-typing-update
     rev: v0.6.0
     hooks:
