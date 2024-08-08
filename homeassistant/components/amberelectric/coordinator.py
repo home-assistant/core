@@ -19,6 +19,11 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import LOGGER
 
 
+def is_actual(interval: ActualInterval | CurrentInterval | ForecastInterval) -> bool:
+    """Return true if the supplied interval is an ActualInterval."""
+    return isinstance(interval, ActualInterval)
+
+
 def is_current(interval: ActualInterval | CurrentInterval | ForecastInterval) -> bool:
     """Return true if the supplied interval is a CurrentInterval."""
     return isinstance(interval, CurrentInterval)
@@ -89,15 +94,17 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
         result: dict[str, dict[str, Any]] = {
             "current": {},
             "descriptors": {},
+            "actuals": {},
             "forecasts": {},
             "grid": {},
         }
         try:
-            data = self._api.get_current_price(self.site_id, next=48)
+            data = self._api.get_current_price(self.site_id, previous=48, next=48)
         except ApiException as api_exception:
             raise UpdateFailed("Missing price data, skipping update") from api_exception
 
         current = [interval for interval in data if is_current(interval)]
+        actuals = [interval for interval in data if is_actual(interval)]
         forecasts = [interval for interval in data if is_forecast(interval)]
         general = [interval for interval in current if is_general(interval)]
 
@@ -106,6 +113,9 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
 
         result["current"]["general"] = general[0]
         result["descriptors"]["general"] = normalize_descriptor(general[0].descriptor)
+        result["actuals"]["general"] = [
+            interval for interval in actuals if is_general(interval)
+        ]
         result["forecasts"]["general"] = [
             interval for interval in forecasts if is_general(interval)
         ]
@@ -123,6 +133,9 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
             result["descriptors"]["controlled_load"] = normalize_descriptor(
                 controlled_load[0].descriptor
             )
+            result["actuals"]["controlled_load"] = [
+                interval for interval in actuals if is_controlled_load(interval)
+            ]
             result["forecasts"]["controlled_load"] = [
                 interval for interval in forecasts if is_controlled_load(interval)
             ]
@@ -133,6 +146,9 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
             result["descriptors"]["feed_in"] = normalize_descriptor(
                 feed_in[0].descriptor
             )
+            result["actuals"]["feed_in"] = [
+                interval for interval in actuals if is_feed_in(interval)
+            ]
             result["forecasts"]["feed_in"] = [
                 interval for interval in forecasts if is_feed_in(interval)
             ]
