@@ -26,8 +26,8 @@ from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
 ValveConfigurationAndControlFeature = clusters.ValveConfigurationAndControlFeature.Bitmaps.Feature
-TimeSyncBitmap = clusters.FanControl.Bitmaps.TimeSyncBitmap
-LevelBitmap = clusters.FanControl.Bitmaps.LevelBitmap
+TimeSyncBitmap = clusters.ValveConfigurationAndControl.Bitmaps.TimeSyncBitmap
+LevelBitmap = clusters.ValveConfigurationAndControl.Bitmaps.LevelBitmap
 
 # The MASK used for extracting bits 0 to 1 of the byte.
 OPERATIONAL_STATUS_MASK = 0b11
@@ -167,6 +167,33 @@ class MatterValve(MatterEntity, ValveEntity):
         if clusters.ValveConfigurationAndControl.Commands.Open.command_id in commands:
             supported_features |= ValveEntityFeature.SET_POSITION
         self._attr_supported_features = supported_features
+
+
+    @callback
+    def _calculate_features(
+        self,
+    ) -> None:
+        """Calculate features for HA Valve platform from Matter FeatureMap."""
+        feature_map = int(
+            self.get_matter_attribute_value(clusters.ValveConfigurationAndControl.Attributes.FeatureMap)
+        )
+        # NOTE: the featuremap can dynamically change, so we need to update the
+        # supported features if the featuremap changes.
+        # work out supported features and presets from matter featuremap
+        if self._feature_map == feature_map:
+            return
+        self._feature_map = feature_map
+        self._attr_supported_features = ValveEntityFeature(0)
+        if feature_map & ValveConfigurationAndControlFeature.kLevel:
+            self._attr_supported_features |= ValveEntityFeature.SET_POSITION
+        """
+        # TODO: add feature for TimeSync
+        if feature_map & ValveConfigurationAndControlFeature.TimeSync:
+            self._attr_supported_features |= ValveEntityFeature.TIMESYNC
+        """
+        self._attr_supported_features |= (
+            ValveEntityFeature.CLOSE | ValveEntityFeature.OPEN
+        )
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
