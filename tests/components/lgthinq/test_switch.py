@@ -13,7 +13,6 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, ServiceValidationError
-from tests.common import MockConfigEntry
 
 from .common import (
     get_mock_lg_device_for_type,
@@ -21,6 +20,8 @@ from .common import (
     mock_thinq_api_response,
 )
 from .const import DEHUMIDIFIER
+
+from tests.common import MockConfigEntry
 
 
 async def test_switch(

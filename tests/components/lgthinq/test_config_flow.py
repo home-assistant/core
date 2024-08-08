@@ -12,15 +12,9 @@ from homeassistant.components.lgthinq.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_COUNTRY,
-    CONF_NAME,
-    CONF_SOURCE,
-)
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_COUNTRY, CONF_NAME, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from tests.common import MockConfigEntry
 
 from .common import mock_thinq_api_response
 from .const import (
@@ -30,6 +24,8 @@ from .const import (
     THINQ_TEST_NAME,
     THINQ_TEST_PAT,
 )
+
+from tests.common import MockConfigEntry
 
 
 async def test_show_menu(hass: HomeAssistant) -> None:
@@ -75,9 +71,7 @@ async def test_thinq_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == SOURCE_REGION
 
-    with patch(
-        "homeassistant.components.lgthinq.config_flow.ThinQApi"
-    ) as mock:
+    with patch("homeassistant.components.lgthinq.config_flow.ThinQApi") as mock:
         thinq_api = mock.return_value
         thinq_api.async_get_device_list = AsyncMock(
             return_value=mock_thinq_api_response(status=200, body={})
@@ -102,9 +96,7 @@ async def test_thinq_flow(hass: HomeAssistant) -> None:
 
 async def test_thinq_flow_invalid_pat(hass: HomeAssistant) -> None:
     """Test that thinq flow should be aborted with an invalid PAT."""
-    with patch(
-        "homeassistant.components.lgthinq.config_flow.ThinQApi"
-    ) as mock:
+    with patch("homeassistant.components.lgthinq.config_flow.ThinQApi") as mock:
         thinq_api = mock.return_value
         thinq_api.async_get_device_list = AsyncMock(
             return_value=mock_thinq_api_response(status=400, error_code="1218")

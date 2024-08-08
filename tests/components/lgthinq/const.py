@@ -2,9 +2,6 @@
 
 from typing import Final
 
-from homeassistant.components.lgthinq.const import LIVE_TV_APP_ID
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-
 # A list of device type strings.
 AIR_CONDITIONER: Final[str] = "DEVICE_AIR_CONDITIONER"
 AIR_PURIFIER_FAN: Final[str] = "DEVICE_AIR_PURIFIER_FAN"
@@ -42,39 +39,6 @@ SOURCE_THINQ = "thinq"
 SOURCE_REGION = "region"
 
 # For testing thinq appliance.
-THINQ_TEST_PAT: Final[str] = (
-    "123abc4567de8f90g123h4ij56klmn789012p345rst6uvw789xy"
-)
+THINQ_TEST_PAT: Final[str] = "123abc4567de8f90g123h4ij56klmn789012p345rst6uvw789xy"
 THINQ_TEST_NAME: Final[str] = "Test ThinQ"
 THINQ_TEST_COUNTRY: Final[str] = "KR"
-
-# For testing webos TV.
-WEBOSTV_HOST: Final[str] = "192.168.1.1"
-WEBOSTV_NAME: Final[str] = "fake_webos"
-WEBOSTV_ENTITY_ID: Final[str] = f"{MP_DOMAIN}.{WEBOSTV_NAME}"
-WEBOSTV_CLIENT_KEY: Final[str] = "some-secret"
-
-WEBOSTV_CHANNEL_1: Final[dict] = {
-    "channelNumber": "1",
-    "channelName": "Channel 1",
-    "channelId": "ch1id",
-}
-WEBOSTV_CHANNEL_2: Final[dict] = {
-    "channelNumber": "20",
-    "channelName": "Channel Name 2",
-    "channelId": "ch2id",
-}
-WEBOSTV_MOCK_APPS: Final[dict] = {
-    LIVE_TV_APP_ID: {
-        "title": "Live TV",
-        "id": LIVE_TV_APP_ID,
-        "largeIcon": "large-icon",
-        "icon": "icon",
-    },
-}
-WEBOSTV_MOCK_INPUTS: Final[dict] = {
-    "in1": {"label": "Input01", "id": "in1", "appId": "app0"},
-    "in2": {"label": "Input02", "id": "in2", "appId": "app1"},
-}
-
-WEBOSTV_MULTI_SELECT_SOURCES: Final[list] = ["Input01", "Input02", "Live TV"]
