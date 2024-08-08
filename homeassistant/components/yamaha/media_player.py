@@ -238,19 +238,6 @@ class YamahaDeviceZone(MediaPlayerEntity):
             # the default name of the integration may not be changed
             # to avoid a breaking change.
             self._attr_unique_id = f"{self.zctrl.serial_number}_{self._zone}"
-            _LOGGER.debug(
-                "Receiver zone: %s zone %s uid %s",
-                self._name,
-                self._zone,
-                self._attr_unique_id,
-            )
-        else:
-            _LOGGER.info(
-                "Receiver zone: %s zone %s no uid %s",
-                self._name,
-                self._zone,
-                self._attr_unique_id,
-            )
 
     def update(self) -> None:
         """Get the latest details from the device."""
