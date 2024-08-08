@@ -14,5 +14,221 @@
       "name": "[%key:common::action::reload%]",
       "description": "Reloads bayesian sensors from the YAML-configuration."
     }
+  },
+  "options": {
+    "error": {
+      "prior_low_error": "[%key:component::bayesian::config::error::prior_low_error%]",
+      "prior_high_error": "[%key:component::bayesian::config::error::prior_high_error%]",
+      "threshold_low_error": "[%key:component::bayesian::config::error::threshold_low_error%]",
+      "threshold_high_error": "[%key:component::bayesian::config::error::threshold_high_error%]",
+      "equal_probabilities": "[%key:component::bayesian::config::error::equal_probabilities%]"
+    },
+    "step": {
+      "init": {
+        "menu_options": {
+          "base_options": "Modify sensor settings",
+          "observation_selector": "Add another entity or template for observation",
+          "select_edit_observation": "Edit an observed entity or template",
+          "remove_observation": "Remove an observed entity or template"
+        }
+      },
+      "base_options": {
+        "title": "Sensor Options",
+        "description": "These are the core options that affect the overall behaviour of the sensor.",
+        "data": {
+          "probability_threshold": "[%key:component::bayesian::config::step::user::data::probability_threshold%]",
+          "prior": "[%key:component::bayesian::config::step::user::data::prior%]",
+          "device_class": "[%key:component::bayesian::config::step::user::data::device_class%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "probability_threshold": "[%key:component::bayesian::config::step::user::data_description::probability_threshold%]",
+          "prior": "[%key:component::bayesian::config::step::user::data_description::prior%]"
+        }
+      },
+      "observation_selector": {
+        "title": "[%key:component::bayesian::config::step::observation_selector::title%]",
+        "description": "[%key:component::bayesian::config::step::observation_selector::description%]",
+        "menu_options": {
+          "state": "[%key:component::bayesian::config::step::observation_selector::menu_options::state%]",
+          "numeric_state": "[%key:component::bayesian::config::step::observation_selector::menu_options::numeric_state%]",
+          "template": "[%key:component::bayesian::config::step::observation_selector::menu_options::template%]"
+        }
+      },
+      "state": {
+        "title": "[%key:component::bayesian::config::step::state::title%]",
+        "description": "[%key:component::bayesian::config::step::state::description%]",
+        "data": {
+          "entity_id": "[%key:component::bayesian::config::step::state::data::entity_id%]",
+          "to_state": "[%key:component::bayesian::config::step::state::data::to_state%]",
+          "prob_given_true": "[%key:component::bayesian::config::step::state::data::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config::step::state::data::prob_given_false%]",
+          "add_another": "[%key:component::bayesian::config::step::state::data::add_another%]"
+        },
+        "data_description": {
+          "entity_id": "[%key:component::bayesian::config::step::state::data_description::entity_id%]",
+          "to_state": "[%key:component::bayesian::config::step::state::data_description::to_state%]",
+          "prob_given_true": "[%key:component::bayesian::config::step::state::data_description::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config::step::state::data_description::prob_given_false%]"
+        }
+      },
+      "numeric_state": {
+        "title": "[%key:component::bayesian::config::step::state::title%]",
+        "description": "[%key:component::bayesian::config::step::numeric_state::description%]",
+        "data": {
+          "entity_id": "[%key:component::bayesian::config::step::state::data::entity_id%]",
+          "above": "[%key:component::bayesian::config::step::numeric_state::data::above%]",
+          "below": "[%key:component::bayesian::config::step::numeric_state::data::below%]",
+          "prob_given_true": "[%key:component::bayesian::config::step::state::data::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config::step::state::data::prob_given_false%]",
+          "add_another": "[%key:component::bayesian::config::step::state::data::add_another%]"
+        },
+        "data_description": {
+          "entity_id": "[%key:component::bayesian::config::step::state::data_description::entity_id%]",
+          "above": "[%key:component::bayesian::config::step::numeric_state::data_description::above%]",
+          "below": "[%key:component::bayesian::config::step::numeric_state::data_description::below%]",
+          "prob_given_true": "[%key:component::bayesian::config::step::state::data_description::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config::step::state::data_description::prob_given_false%]"
+        }
+      },
+      "template": {
+        "title": "[%key:component::bayesian::config::step::state::title%]",
+        "description": "[%key:component::bayesian::config::step::template::description%]",
+        "data": {
+          "entity_id": "[%key:component::bayesian::config::step::state::data::entity_id%]",
+          "template": "[%key:component::bayesian::config::step::template::data::template%]",
+          "prob_given_true": "[%key:component::bayesian::config::step::state::data::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config::step::state::data::prob_given_false%]",
+          "add_another": "[%key:component::bayesian::config::step::state::data::add_another%]"
+        },
+        "data_description": {
+          "entity_id": "[%key:component::bayesian::config::step::state::data_description::entity_id%]",
+          "template": "[%key:component::bayesian::config::step::template::data_description::template%]",
+          "prob_given_true": "[%key:component::bayesian::config::step::state::data_description::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config::step::state::data_description::prob_given_false%]"
+        }
+      }
+    }
+  },
+  "config": {
+    "error": {
+      "prior_low_error": "A prior set to 0% means that it is impossible for the sensor to show 'on', use a low number like 0.1% instead",
+      "prior_high_error": "A prior set to 100% means that it is impossible for the sensor to show 'off', use a high number like 99.9% instead",
+      "threshold_low_error": "A threshold set to 0% means that the sensor will always be 'on', use a low number like 0.1% instead",
+      "threshold_high_error": "A threshold set to 100% means that the sensor will always be 'off', use a high number like 99.9% instead",
+      "equal_probabilities": "If Probability Given True and Probability Given False are equal, this observation can have no effect, and is therefore redundant"
+    },
+    "step": {
+      "user": {
+        "title": "Add a Bayesian Sensor",
+        "description": "Create a binary sensor which combines the state from multiple sensors.",
+        "data": {
+          "probability_threshold": "Probability Threshold",
+          "prior": "Prior",
+          "device_class": "Device Class",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "probability_threshold": "The probability above which the sensor will show as 'on'",
+          "prior": "The baseline probabilty the sensor should be on, if you knew nothing else about the state of the entities below"
+        }
+      },
+      "observation_selector": {
+        "title": "Add an observation",
+        "description": "One by one, add an observation that will inform the bayesian sensor. Each observation will update the proability of the Bayesian sensor if it is detected, or if its inverse is detected. If the state of the entity becomes `UNAVAILABLE` or `UNKOWN` it will be ignored. If more than one `state` or more than 1 `numeric_range` is configured for the same entity then inverse detections will be ignored.",
+        "menu_options": {
+          "state": "Observation from state sensor",
+          "numeric_state": "Observation from  from numeric range",
+          "template": "Observation from  from template"
+        }
+      },
+      "state": {
+        "title": "Add a Bayesian Sensor",
+        "description": "Add an observation which examines the state of an entity.",
+        "data": {
+          "entity_id": "Entity",
+          "to_state": "To state",
+          "prob_given_true": "Probability Given True",
+          "prob_given_false": "Probability Given False",
+          "add_another": "Add another observation?"
+        },
+        "data_description": {
+          "entity_id": "The entity of interest.",
+          "to_state": "The state of the sensor to be detected",
+          "prob_given_true": "The probability of detecting the above state when the Bayesian sensor should be on",
+          "prob_given_false": "The probability of *not* detecting the above state when the Bayesian sensor should be on"
+        }
+      },
+      "numeric_state": {
+        "title": "[%key:component::bayesian::config::step::state::title%]",
+        "description": "Add an observation which examines the value of a numeric entity.",
+        "data": {
+          "entity_id": "[%key:component::bayesian::config::step::state::data::entity_id%]",
+          "above": "Above",
+          "below": "Below",
+          "prob_given_true": "[%key:component::bayesian::config::step::state::data::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config::step::state::data::prob_given_false%]",
+          "add_another": "[%key:component::bayesian::config::step::state::data::add_another%]"
+        },
+        "data_description": {
+          "entity_id": "[%key:component::bayesian::config::step::state::data_description::entity_id%]",
+          "above": "Optional - the lower end of the numeric range. Values exactly matching this will not count",
+          "below": "Optional - the upper end of the numeric range. Values matching this will only count if more than one range is configured for the same entity.",
+          "prob_given_true": "[%key:component::bayesian::config::step::state::data_description::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config::step::state::data_description::prob_given_true%]"
+        }
+      },
+      "template": {
+        "title": "[%key:component::bayesian::config::step::state::title%]",
+        "description": "Add an observation with evaluates a template.",
+        "data": {
+          "entity_id": "[%key:component::bayesian::config::step::state::data::entity_id%]",
+          "template": "Template",
+          "prob_given_true": "[%key:component::bayesian::config::step::state::data::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config::step::state::data::prob_given_false%]",
+          "add_another": "[%key:component::bayesian::config::step::state::data::add_another%]"
+        },
+        "data_description": {
+          "entity_id": "[%key:component::bayesian::config::step::state::data_description::entity_id%]",
+          "template": "A template that evaluates to `True` will update the prior accordingly, A template that returns `False` will update the prior with inverse probabilities, a template that resolves `None` will be ignored.",
+          "prob_given_true": "[%key:component::bayesian::config::step::state::data_description::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config::step::state::data_description::prob_given_true%]"
+        }
+      }
+    }
+  },
+  "selector": {
+    "binary_sensor_device_class": {
+      "options": {
+        "battery": "[%key:component::binary_sensor::entity_component::battery::name%]",
+        "battery_charging": "[%key:component::binary_sensor::entity_component::battery_charging::name%]",
+        "carbon_monoxide": "[%key:component::binary_sensor::entity_component::carbon_monoxide::name%]",
+        "cold": "[%key:component::binary_sensor::entity_component::cold::name%]",
+        "connectivity": "[%key:component::binary_sensor::entity_component::connectivity::name%]",
+        "door": "[%key:component::binary_sensor::entity_component::door::name%]",
+        "garage_door": "[%key:component::binary_sensor::entity_component::garage_door::name%]",
+        "gas": "[%key:component::binary_sensor::entity_component::gas::name%]",
+        "heat": "[%key:component::binary_sensor::entity_component::heat::name%]",
+        "light": "[%key:component::binary_sensor::entity_component::light::name%]",
+        "lock": "[%key:component::binary_sensor::entity_component::lock::name%]",
+        "moisture": "[%key:component::binary_sensor::entity_component::moisture::name%]",
+        "motion": "[%key:component::binary_sensor::entity_component::motion::name%]",
+        "moving": "[%key:component::binary_sensor::entity_component::moving::name%]",
+        "occupancy": "[%key:component::binary_sensor::entity_component::occupancy::name%]",
+        "opening": "[%key:component::binary_sensor::entity_component::opening::name%]",
+        "plug": "[%key:component::binary_sensor::entity_component::plug::name%]",
+        "power": "[%key:component::binary_sensor::entity_component::power::name%]",
+        "presence": "[%key:component::binary_sensor::entity_component::presence::name%]",
+        "problem": "[%key:component::binary_sensor::entity_component::problem::name%]",
+        "running": "[%key:component::binary_sensor::entity_component::running::name%]",
+        "safety": "[%key:component::binary_sensor::entity_component::safety::name%]",
+        "smoke": "[%key:component::binary_sensor::entity_component::smoke::name%]",
+        "sound": "[%key:component::binary_sensor::entity_component::sound::name%]",
+        "tamper": "[%key:component::binary_sensor::entity_component::tamper::name%]",
+        "update": "[%key:component::binary_sensor::entity_component::update::name%]",
+        "vibration": "[%key:component::binary_sensor::entity_component::vibration::name%]",
+        "window": "[%key:component::binary_sensor::entity_component::window::name%]"
+      }
+    }
   }
 }

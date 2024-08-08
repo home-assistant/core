@@ -5,6 +5,7 @@ To update, run python3 -m script.hassfest
 
 FLOWS = {
     "helper": [
+        "bayesian",
         "derivative",
         "generic_hygrostat",
         "generic_thermostat",
