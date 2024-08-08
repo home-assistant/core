@@ -11,7 +11,7 @@ from matter_server.common.models import MatterSoftwareVersion, UpdateSource
 import pytest
 
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
@@ -22,7 +22,22 @@ from .common import (
     trigger_subscription_callback,
 )
 
-from tests.common import async_mock_restore_state_shutdown_restart
+from tests.common import (
+    async_mock_restore_state_shutdown_restart,
+    mock_restore_cache_with_extra_data,
+)
+
+TEST_SOFTWARE_VERSION = MatterSoftwareVersion(
+    vid=65521,
+    pid=32768,
+    software_version=2,
+    software_version_string="v2.0",
+    firmware_information="",
+    min_applicable_software_version=0,
+    max_applicable_software_version=1,
+    release_notes_url="http://home-assistant.io/non-existing-product",
+    update_source=UpdateSource.LOCAL,
+)
 
 
 def set_node_attribute_typed(
@@ -39,14 +54,14 @@ def set_node_attribute_typed(
 
 @pytest.fixture(name="check_node_update")
 async def check_node_update_fixture(matter_client: MagicMock) -> AsyncMock:
-    """Fixture for a flow sensor node."""
+    """Fixture to check for node updates."""
     matter_client.check_node_update = AsyncMock(return_value=None)
     return matter_client.check_node_update
 
 
 @pytest.fixture(name="update_node")
 async def update_node_fixture(matter_client: MagicMock) -> AsyncMock:
-    """Fixture for a flow sensor node."""
+    """Fixture to install update."""
     matter_client.update_node = AsyncMock(return_value=None)
     return matter_client.update_node
 
@@ -255,12 +270,11 @@ async def test_update_install_failure(
         )
 
 
-async def test_update_state_restore(
+async def test_update_state_save_and_restore(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     matter_client: MagicMock,
     check_node_update: AsyncMock,
-    update_node: AsyncMock,
     updateable_node: MatterNode,
 ) -> None:
     """Test latest update information is retained across reload/restart."""
@@ -271,18 +285,7 @@ async def test_update_state_restore(
 
     await async_setup_component(hass, "homeassistant", {})
 
-    software_version = MatterSoftwareVersion(
-        vid=65521,
-        pid=32768,
-        software_version=2,
-        software_version_string="v2.0",
-        firmware_information="",
-        min_applicable_software_version=0,
-        max_applicable_software_version=1,
-        release_notes_url="http://home-assistant.io/non-existing-product",
-        update_source=UpdateSource.LOCAL,
-    )
-    check_node_update.return_value = software_version
+    check_node_update.return_value = TEST_SOFTWARE_VERSION
 
     await hass.services.async_call(
         "homeassistant",
@@ -306,4 +309,72 @@ async def test_update_state_restore(
     state = hass_storage[RESTORE_STATE_KEY]["data"][0]["state"]
     assert state["entity_id"] == "update.mock_dimmable_light"
     extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
-    assert extra_data == {"software_update": software_version.as_dict()}
+
+    # Check that the extra data has the format we expect.
+    assert extra_data == {
+        "software_update": {
+            "software_update": {
+                "vid": 65521,
+                "pid": 32768,
+                "software_version": 2,
+                "software_version_string": "v2.0",
+                "firmware_information": "",
+                "min_applicable_software_version": 0,
+                "max_applicable_software_version": 1,
+                "release_notes_url": "http://home-assistant.io/non-existing-product",
+                "update_source": "local",
+            }
+        }
+    }
+
+
+async def test_update_state_restore(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    check_node_update: AsyncMock,
+    update_node: AsyncMock,
+) -> None:
+    """Test latest update information extra data is restored."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State(
+                    "update.mock_dimmable_light",
+                    STATE_ON,
+                    {
+                        "auto_update": False,
+                        "installed_version": "v1.0",
+                        "in_progress": False,
+                        "latest_version": "v2.0",
+                    },
+                ),
+                {"software_update": TEST_SOFTWARE_VERSION.as_dict()},
+            ),
+        ),
+    )
+    await setup_integration_with_node_fixture(hass, "dimmable-light", matter_client)
+
+    assert check_node_update.call_count == 0
+
+    state = hass.states.get("update.mock_dimmable_light")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes.get("latest_version") == "v2.0"
+
+    await hass.services.async_call(
+        "update",
+        "install",
+        {
+            ATTR_ENTITY_ID: "update.mock_dimmable_light",
+        },
+        blocking=True,
+    )
+
+    # Validate that the integer software version from the extra data is passed
+    # to the update_node call.
+    assert update_node.call_count == 1
+    assert (
+        update_node.call_args[1]["software_version"]
+        == TEST_SOFTWARE_VERSION.software_version
+    )
