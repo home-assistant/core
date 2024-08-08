@@ -822,7 +822,6 @@ ignore = [
 
     # temporarily disabled
     "RET503",
-    "RET501",
     "TRY301"
 ]
 
