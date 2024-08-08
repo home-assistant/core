@@ -52,6 +52,10 @@ class NextBusDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch data from NextBus."""
         self.logger.debug("Updating data from API. Routes: %s", str(self._route_stops))
 
+        def _find_result_for_route(results: list[dict[str, Any]], route_id: str):
+            """Find the matching predictions from a list of results."""
+            return next((r for r in results if r["route"]["id"] == route_id), None)
+
         def _update_data() -> dict:
             """Fetch data from NextBus."""
             self.logger.debug("Updating data from API (executor)")
@@ -66,7 +70,9 @@ class NextBusDataUpdateCoordinator(DataUpdateCoordinator):
                     raise UpdateFailed("Failed updating nextbus data", ex) from ex
 
                 if prediction_results:
-                    predictions[route_stop] = prediction_results[0]
+                    predictions[route_stop] = _find_result_for_route(
+                        prediction_results, route_stop.route_id
+                    )
             self._predictions = predictions
 
             return predictions
