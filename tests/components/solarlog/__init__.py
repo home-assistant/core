@@ -17,3 +17,11 @@ async def setup_platform(
     with patch("homeassistant.components.solarlog.PLATFORMS", platforms):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+
+
+def enabled_devices(key: int | None = None) -> bool | dict[int, bool]:
+    """Return enabled devices."""
+    data = {0: False, 1: False}
+    if key is None:
+        return data
+    return data.get(key)

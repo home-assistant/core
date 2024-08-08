@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from . import SolarlogConfigEntry
 
 
-class SolarlogData(update_coordinator.DataUpdateCoordinator):
+class SolarLogCoordinator(update_coordinator.DataUpdateCoordinator):
     """Get and update the latest data."""
 
     def __init__(self, hass: HomeAssistant, entry: SolarlogConfigEntry) -> None:
@@ -45,8 +45,14 @@ class SolarlogData(update_coordinator.DataUpdateCoordinator):
 
         extended_data = entry.data["extended_data"]
 
+        enabled_devices: dict[int, bool] = {}
+        if extended_data:
+            if entry.options.get("devices", {}) != {}:
+                for key, value in entry.options["devices"].items():
+                    enabled_devices |= {int(key): value}
+
         self.solarlog = SolarLogConnector(
-            self.host, extended_data, hass.config.time_zone
+            self.host, extended_data, hass.config.time_zone, enabled_devices
         )
 
     async def _async_update_data(self):
@@ -55,6 +61,7 @@ class SolarlogData(update_coordinator.DataUpdateCoordinator):
 
         try:
             data = await self.solarlog.update_data()
+            await self.solarlog.update_device_list()
         except SolarLogConnectionError as err:
             raise ConfigEntryNotReady(err) from err
         except SolarLogUpdateError as err:

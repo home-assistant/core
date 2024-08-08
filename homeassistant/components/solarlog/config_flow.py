@@ -8,12 +8,19 @@ from solarlog_cli.solarlog_connector import SolarLogConnector
 from solarlog_cli.solarlog_exceptions import SolarLogConnectionError, SolarLogError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
 
 from .const import DEFAULT_HOST, DEFAULT_NAME, DOMAIN
+from .coordinator import SolarLogCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +65,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
         except SolarLogConnectionError:
             self._errors = {CONF_HOST: "cannot_connect"}
             return False
-        except SolarLogError:
+        except SolarLogError:  # pylint: disable=broad-except
             self._errors = {CONF_HOST: "unknown"}
             return False
         finally:
@@ -144,4 +151,64 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
                     ): bool,
                 }
             ),
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
+        """Create the options flow."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(OptionsFlow):
+    """Handle an option flow for solarlog."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+        self._device_list: dict[int, dict[str, str]] = {}
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        errors = {}
+        devices: dict[int, bool] = {}
+
+        coordinator: SolarLogCoordinator = self.config_entry.runtime_data
+
+        if user_input:
+            for key in self._device_list:
+                devices |= {key: (str(key) in user_input["enabled_devices"])}
+
+            await coordinator.solarlog.set_enabled_devices(devices)
+
+            return self.async_create_entry(data={"devices": devices})
+
+        try:
+            self._device_list = await coordinator.solarlog.client.get_device_list()
+        except SolarLogConnectionError:
+            errors["base"] = "cannot_connect"
+        except Exception:  # noqa: BLE001
+            errors["base"] = "unknown"
+
+        if not self._device_list:
+            return self.async_abort(reason="no_devices")
+
+        device_list: dict[str, str] = {}
+        for key, value in self._device_list.items():
+            device_list |= {str(key): value["name"]}
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        "enabled_devices", default=list(device_list.keys())
+                    ): cv.multi_select(device_list)
+                }
+            ),
+            errors=errors,
         )

@@ -5,19 +5,20 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .coordinator import SolarlogData
+from .coordinator import SolarLogCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
-type SolarlogConfigEntry = ConfigEntry[SolarlogData]
+type SolarlogConfigEntry = ConfigEntry[SolarLogCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> bool:
     """Set up a config entry for solarlog."""
-    coordinator = SolarlogData(hass, entry)
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+    coordinator = SolarLogCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -72,3 +73,31 @@ async def async_migrate_entry(
     )
 
     return True
+
+
+async def update_listener(hass: HomeAssistant, entry: SolarlogConfigEntry) -> None:
+    """Handle options update."""
+
+    # remove devices that have been checked-off
+    coordinator: SolarLogCoordinator = entry.runtime_data
+
+    device_reg = dr.async_get(hass)
+
+    device_list = dr.async_entries_for_config_entry(device_reg, entry.entry_id)
+
+    for device_entry in device_list:
+        if device_entry.model == "Controller":
+            # Controller device cannot be removed
+            continue
+
+        for key in coordinator.solarlog.device_enabled():
+            if device_entry.name == coordinator.solarlog.device_name(key):
+                if not coordinator.solarlog.device_enabled(key):
+                    _LOGGER.debug(
+                        "Device %s removed",
+                        device_entry.name,
+                    )
+                    device_reg.async_remove_device(device_entry.id)
+
+    # Reload entry to update data
+    await hass.config_entries.async_reload(entry.entry_id)
