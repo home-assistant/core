@@ -18,10 +18,10 @@ AUTH_SERVER = AuthorizationServer(AUTHORIZE_URL, TOKEN_URL)
 
 
 class TeslaSystemImplementation(AuthImplementation):
-    """Tesla Fleet API Open Source Oauth2 implementation."""
+    """Tesla Fleet API open source Oauth2 implementation."""
 
     def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize local auth implementation."""
+        """Initialize open source Oauth2 implementation."""
 
         # Setup PKCE
         self.code_verifier = secrets.token_urlsafe(32)
@@ -57,12 +57,12 @@ class TeslaSystemImplementation(AuthImplementation):
 
 
 class TeslaUserImplementation(AuthImplementation):
-    """Tesla Fleet API Use Oauth2 implementation."""
+    """Tesla Fleet API user Oauth2 implementation."""
 
     def __init__(
         self, hass: HomeAssistant, auth_domain: str, credential: ClientCredential
     ) -> None:
-        """Initialize local auth implementation."""
+        """Initialize user Oauth2 implementation."""
 
         super().__init__(
             hass,
