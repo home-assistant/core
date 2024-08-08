@@ -7,6 +7,11 @@ import pytest
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.tts.media_source import (
+    MediaSourceOptions,
+    generate_media_source_id,
+    media_source_id_to_kwargs,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -195,3 +200,66 @@ async def test_resolving_errors(hass: HomeAssistant, setup: str) -> None:
             "media-source://tts/non-existing?message=bla&non_existing_option=bla",
             None,
         )
+
+
+@pytest.mark.parametrize(
+    ("setup", "result_engine"),
+    [
+        ("mock_setup", "test"),
+        ("mock_config_entry_setup", "tts.test"),
+    ],
+    indirect=["setup"],
+)
+async def test_generate_media_source_id_and_media_source_id_to_kwargs(
+    hass: HomeAssistant,
+    setup: str,
+    result_engine: str,
+) -> None:
+    """Test media_source_id and media_source_id_to_kwargs."""
+    kwargs: MediaSourceOptions = {
+        "engine": None,
+        "message": "hello",
+        "language": "en_US",
+        "options": {"age": 5},
+        "cache": True,
+    }
+    media_source_id = generate_media_source_id(hass, **kwargs)
+    assert media_source_id_to_kwargs(media_source_id) == {
+        "engine": result_engine,
+        "message": "hello",
+        "language": "en_US",
+        "options": {"age": "5"},
+        "cache": True,
+    }
+
+    kwargs = {
+        "engine": None,
+        "message": "hello",
+        "language": "en_US",
+        "options": {"age": [5, 6]},
+        "cache": True,
+    }
+    media_source_id = generate_media_source_id(hass, **kwargs)
+    assert media_source_id_to_kwargs(media_source_id) == {
+        "engine": result_engine,
+        "message": "hello",
+        "language": "en_US",
+        "options": {"age": [5, 6]},
+        "cache": True,
+    }
+
+    kwargs = {
+        "engine": None,
+        "message": "hello",
+        "language": "en_US",
+        "options": {"age": {"k1": [5, 6], "k2": "v2"}},
+        "cache": True,
+    }
+    media_source_id = generate_media_source_id(hass, **kwargs)
+    assert media_source_id_to_kwargs(media_source_id) == {
+        "engine": result_engine,
+        "message": "hello",
+        "language": "en_US",
+        "options": {"age": {"k1": [5, 6], "k2": "v2"}},
+        "cache": True,
+    }
