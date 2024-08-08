@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 
+from collections import deque
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
+from enum import Enum, auto
 import inspect
 import logging
 import math
-from collections import deque
-from dataclasses import dataclass
-from enum import Enum, auto
-from typing import Any, Awaitable, Callable
+from typing import Any
 
-from homeassistant.const import Platform
 from thinqconnect.const import PROPERTY_READABLE, PROPERTY_WRITABLE
 from thinqconnect.devices.connect_device import TYPE, UNIT, ConnectBaseDevice
 from thinqconnect.thinq_api import ThinQApiResponse
+
+from homeassistant.const import Platform
 
 from .const import POWER_ON, Profile
 from .device import LGDevice
@@ -22,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class Range:
-    """This class contains a range type of data."""
+    """Contains a range type of data."""
 
     def __init__(self, value: dict):
         """Initialize values."""
@@ -32,17 +34,17 @@ class Range:
 
     @property
     def max(self) -> int | float:
-        """Returns the maximum value."""
+        """Return the maximum value."""
         return self._max
 
     @property
     def min(self) -> int | float:
-        """Returns the minimum value."""
+        """Return the minimum value."""
         return self._min
 
     @min.setter
-    def min(self, value: int | float):
-        """Returns the minimum value."""
+    def min(self, value: float):
+        """Return the minimum value."""
         self._min = value
 
     @property
@@ -51,15 +53,13 @@ class Range:
         return self._step
 
     def validate(self, value: Any) -> bool:
-        """Checks if the given value is valid."""
-        if (isinstance(value, int) or isinstance(value, float)) and math.isclose(
-            value % self.step, 0
-        ):
+        """Check if the given value is valid."""
+        if (isinstance(value, (int, float))) and math.isclose(value % self.step, 0):
             return value <= self.max and value >= self.min
 
         return False
 
-    def clamp(self, value: int | float) -> int | float:
+    def clamp(self, value: float) -> int | float:
         """Force to clamp the value."""
         candidate: float = int(value // self.step) * self.step
         return max(min(candidate, self.max), self.min)
@@ -85,11 +85,11 @@ class Range:
     @staticmethod
     def range_to_options(profile: Profile) -> list[str]:
         """Create a range instance and then convert it to options."""
-        range = Range.create(profile)
-        return range.to_options() if range else []
+        value_range = Range.create(profile)
+        return value_range.to_options() if value_range else []
 
     def __str__(self) -> str:
-        """Returns a string representation."""
+        """Return a string representation."""
         return f"Range(max={self._max}, min={self._min}, step={self._step})"
 
 
@@ -286,8 +286,8 @@ class Property:
         """Returns the tag string."""
         if self.location:
             return f"[{self.device.name}][{self.location}][{self.key}]"
-        else:
-            return f"[{self.device.name}][{self.key}]"
+
+        return f"[{self.device.name}][{self.key}]"
 
     def add_child(self, child: Property) -> None:
         """Add a child property."""
@@ -305,7 +305,7 @@ class Property:
         self._unit_provider = unit_provider
 
     def get_featured_property(self, feature: PropertyFeature) -> Property | None:
-        """Returns the featured property from the map."""
+        """Return the featured property from the map."""
         return self._featured_map.get(feature)
 
     def _retrieve_getter_name(self) -> str:
@@ -341,13 +341,13 @@ class Property:
 
     def _retrieve_range(self) -> Range | None:
         """Retrieve a range type of data from the given profile."""
-        range = Range.create(self.profile)
-        if range and self.info.modify_minimum_range:
-            range.min = 0
+        value_range = Range.create(self.profile)
+        if value_range and self.info.modify_minimum_range:
+            value_range.min = 0
 
-        if range:
-            _LOGGER.debug("%s retrieve_range: %s", self.tag, range)
-            return range
+        if value_range:
+            _LOGGER.debug("%s retrieve_range: %s", self.tag, value_range)
+            return value_range
 
         if self.info.alt_range:
             return Range(self.info.alt_range)
@@ -365,15 +365,15 @@ class Property:
             _LOGGER.debug("%s retrieve_alt_options: %s", self.tag, options)
             return options
 
-        type: Any = self.profile.get(TYPE)
+        value_type: Any = self.profile.get(TYPE)
         value: Any = self.profile.get(PROPERTY_WRITABLE) or self.profile.get(
             PROPERTY_READABLE
         )
 
         options: list[str] = None
-        if type == "enum" and isinstance(value, list):
+        if value_type == "enum" and isinstance(value, list):
             options = list(value)
-        elif type == "boolean" and value is True:
+        elif value_type == "boolean" and value is True:
             options = [str(False), str(True)]
         else:
             return None
@@ -385,7 +385,8 @@ class Property:
         """Validate the given value."""
         if self.range:
             return self.range.validate(value)
-        elif self.options and isinstance(value, str):
+
+        if self.options and isinstance(value, str):
             return value in self.options
 
         return True
@@ -406,8 +407,8 @@ class Property:
         _LOGGER.debug("%s get_value: %s (%s)", self.tag, value, self._getter_name)
         return value
 
-    def get_value(self, key_for_dict_value: str = None) -> Any:
-        """Returns the value of property."""
+    def get_value(self, key_for_dict_value: str | None = None) -> Any:
+        """Return the value of property."""
         # Get the value first.
         value: Any = None
         if self.info.alt_get_method:
@@ -430,12 +431,12 @@ class Property:
         return value
 
     def get_value_as_bool(self) -> bool:
-        """Returns the value of property as boolean type."""
+        """Return the value of property as boolean type."""
         value: Any = self.get_value()
         if isinstance(value, str):
             return value == POWER_ON or value.lower() == "true"
-        else:
-            return bool(value)
+
+        return bool(value)
 
     async def _async_post_value(self, value: Any) -> ThinQApiResponse | None:
         """Post the value."""
@@ -458,13 +459,13 @@ class Property:
             _LOGGER.error(
                 "%s Failed to async_post_value: %s", self.tag, "not writable."
             )
-            self.device.handle_error("The control command is not supported.", "-1")
+            self.device.handle_error("The control command is not supported.", "0001")
             return None
 
         if inspect.isfunction(self.info.value_converter):
             value = self.info.value_converter(value)
 
-        result: ThinQApiResponse = None
+        result: ThinQApiResponse | None = None
         try:
             result = await self._async_post_value(value)
         except ValueError as e:
@@ -495,16 +496,16 @@ class Property:
         if result is not None:
             self.device.handle_api_response(result, handle_error=True)
         else:
-            self.device.handle_error("Not supported.", "-1")
+            self.device.handle_error("Not supported.", "0001")
 
         return result
 
     def __str__(self) -> str:
-        """Returns a string expression."""
+        """Return a string expression."""
         if self.location:
             return f"Property({self.device.name}:{self.location}:{self.key})"
-        else:
-            return f"Property({self.device.name}:{self.key})"
+
+        return f"Property({self.device.name}:{self.key})"
 
 
 class CombinedProperty(Property):
@@ -513,22 +514,12 @@ class CombinedProperty(Property):
     @property
     def readable(self) -> bool:
         """Returns ture if readable property, otherwise false."""
-        for child in self._children:
-            if not child.readable:
-                # All children must be readable.
-                return False
-
-        return True
+        return all(child.readable for child in self._children)
 
     @property
     def writable(self) -> bool:
         """Returns ture if writable property, otherwise false."""
-        for child in self._children:
-            if not child.writable:
-                # All children must be writable.
-                return False
-
-        return True
+        return all(child.writable for child in self._children)
 
     def _retrieve_range(self) -> Range | None:
         """Retrieve a range type of data from the given profile."""
@@ -542,15 +533,13 @@ class CombinedProperty(Property):
 
     def _get_value(self, key_for_dict_value: str) -> Any:
         """Get the value from the api and update unit internally."""
-        values: list[str] = []
-        for child in self._children:
-            values.append(child.get_value(self.key))
+        values: list[str] = [child.get_value(self.key) for child in self._children]
 
         _LOGGER.debug("%s get_value: %s", self.tag, values)
         return values
 
     def __str__(self) -> str:
-        """Returns a string expression."""
+        """Return a string expression."""
         children_names: list[str] = [child.key for child in self._children]
         return f"{super().__str__()} {children_names}"
 
@@ -618,11 +607,11 @@ class SelectiveProperty(Property):
         """Post the value."""
         if self._children:
             return await self._children[0].async_post_value(value)
-        else:
-            return await super()._async_post_value(value)
+
+        return await super()._async_post_value(value)
 
     def __str__(self) -> str:
-        """Returns a string expression."""
+        """Return a string expression."""
         children_names: list[str] = [child.key for child in self._children]
         return f"{super().__str__()} {children_names}"
 
@@ -637,7 +626,7 @@ PROPERTY_MODE_TYPE_MAP: dict[PropertyMode, type[Property]] = {
 def create_properties(
     device: LGDevice, info: PropertyInfo, platform: Platform
 ) -> list[Property] | None:
-    """A helper method to create properties."""
+    """Create properties."""
     try:
         profiles = device.get_profiles(info.key)
 
@@ -646,7 +635,7 @@ def create_properties(
         # contains location informations from the first child.
         if not profiles and info.children and len(info.children) > 0:
             child_profiles = device.get_profiles(info.children[0].key)
-            profiles = {location: None for location in child_profiles.keys()}
+            profiles = {location: None for location in child_profiles}
 
         if not profiles:
             raise RuntimeError(f"No profile. {info.key}")
@@ -667,7 +656,7 @@ def create_properties(
             device.name,
             ",".join(map(str, properties)),
         )
-        return properties
+
     except RuntimeError as e:
         _LOGGER.debug(
             "[%s] Failed to create properties: %s, %s",
@@ -677,6 +666,8 @@ def create_properties(
         )
         return None
 
+    return properties
+
 
 def fill_property_from_children(
     device: LGDevice,
@@ -685,6 +676,7 @@ def fill_property_from_children(
     property: Property,
     location: str,
 ) -> None:
+    """Fill property from children."""
     for child_info in info.children:
         child_profile = device.get_profile(location, child_info.key)
         if not validate_platform_creation(child_info, platform, child_profile):
@@ -713,17 +705,17 @@ def create_property(
 ) -> Property:
     """Create a property."""
     constructor = PROPERTY_MODE_TYPE_MAP.get(info.mode, Property)
-    property = constructor(device, info, profile=profile, location=location)
+    prop = constructor(device, info, profile=profile, location=location)
 
     # Try to create childeren properties.
     if info.children:
-        fill_property_from_children(device, info, platform, property, location)
+        fill_property_from_children(device, info, platform, prop, location)
 
     # Try to create an unit provider property.
     if info.unit_info:
         unit_profile = device.get_profile(location, info.unit_info.key)
         if unit_profile:
-            property.set_unit_provider(
+            prop.set_unit_provider(
                 Property(
                     device,
                     info.unit_info,
@@ -732,7 +724,7 @@ def create_property(
                 )
             )
 
-    return property
+    return prop
 
 
 def validate_platform_creation(
@@ -754,17 +746,10 @@ def validate_platform_creation(
     if not readable and not writable:
         return False
 
-    if (
-        platform == Platform.SELECT
-        or platform == Platform.NUMBER
-        or platform == Platform.SWITCH
-    ):
+    if platform in (Platform.SELECT, Platform.NUMBER, Platform.SWITCH):
         return writable
-    elif (
-        platform == Platform.SENSOR
-        or platform == Platform.BINARY_SENSOR
-        or platform == Platform.EVENT
-    ):
+
+    if platform in (Platform.SENSOR, Platform.BINARY_SENSOR, Platform.EVENT):
         return readable and not writable
 
     # It is hard to validate for complex type of platform, so pass it.

@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Coroutine
 import logging
-from typing import Any, Coroutine
+from typing import Any
 
 from aiohttp import ClientSession
+from thinqconnect.thinq_api import ThinQApi, ThinQApiResponse
+
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
-from thinqconnect.thinq_api import ThinQApi, ThinQApiResponse
 
 from .const import DOMAIN
 
@@ -45,7 +47,7 @@ class ThinQ:
         target: Coroutine[Any, Any, ThinQApiResponse],
         full_response: bool = False,
     ) -> Any:
-        """Common request and error handling."""
+        """Request common api and error handling."""
         result: ThinQApiResponse = await target
         return result if full_response else result.body
 

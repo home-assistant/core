@@ -1,19 +1,22 @@
-"""Config flow for LG ThinQ Connect."""
+"""Config flow for LG ThinQ."""
 
 from __future__ import annotations
 
 import asyncio
 import logging
-import uuid
 from typing import Any
 from urllib.parse import urlparse
+import uuid
 
-import pycountry
-import voluptuous as vol
 from aiowebostv import WebOsTvPairError
 from async_upnp_client.const import AddressTupleVXType
 from async_upnp_client.ssdp_listener import SsdpSearchListener
 from async_upnp_client.utils import CaseInsensitiveDict
+from nmap import PortScanner, PortScannerError
+import pycountry
+from thinqconnect.thinq_api import ThinQApi, ThinQApiResponse
+import voluptuous as vol
+
 from homeassistant.components import ssdp
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -30,6 +33,7 @@ from homeassistant.const import (
     CONF_PORT,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -38,8 +42,6 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
 )
-from nmap import PortScanner, PortScannerError
-from thinqconnect.thinq_api import ThinQApi, ThinQApiResponse
 
 from . import async_control_connect
 from .const import (
@@ -89,6 +91,7 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
         self._name: str = ""
         self._uuid: str | None = None
         self._entry: ConfigEntry | None = None
+        self._soundbar_host: str = ""
 
     def _get_default_country_code(self) -> str:
         """Get default country code based on Home Assistant config."""
@@ -101,7 +104,7 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _validate_and_create_entry(self) -> ConfigFlowResult:
         """Create an entry for the flow."""
-        connect_client_id: str = f"{CLIENT_PREFIX}-{str(uuid.uuid4())}"
+        connect_client_id: str = f"{CLIENT_PREFIX}-{uuid.uuid4()!s}"
 
         # validate PAT
         api = ThinQApi(
@@ -209,108 +212,114 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Create the options flow."""
-        if config_entry.data[CONF_ENTRY_TYPE] == CONF_ENTRY_TYPE_THINQ:
+        entry_type: str = config_entry.data.get(CONF_ENTRY_TYPE)
+        if entry_type in (CONF_ENTRY_TYPE_THINQ, CONF_ENTRY_TYPE_SOUNDBAR):
             return OptionsFlowHandler(config_entry)
-        elif config_entry.data[CONF_ENTRY_TYPE] == CONF_ENTRY_TYPE_SOUNDBAR:
-            return OptionsFlowHandler(config_entry)
-        elif config_entry.data[CONF_ENTRY_TYPE] == CONF_ENTRY_TYPE_WEBOSTV:
+
+        if entry_type == CONF_ENTRY_TYPE_WEBOSTV:
             return WebOsTvOptionsFlowHandler(config_entry)
+
+        raise ConfigEntryError("Invalid entry type: %s.", entry_type)
 
     ##### Soundbar #####
     async def async_step_soundbar(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Search Soundbar HOST IP using nmap"""
+        """Search a Soundbar host."""
         if user_input is not None:
             await self._async_soundbar_discover()
             return await self.async_step_soundbar_fill_data()
+
         return self.async_show_form(step_id="soundbar")
 
     # search local networks
-    async def _async_soundbar_discover(self):
+    async def _async_soundbar_discover(self) -> None:
+        """Discover a Soundbar host by port scanning."""
         self._soundbar_host = ""
 
-        hosts = "192.168.1.1/24"
-
+        hosts: str = "192.168.1.1/24"
         nmap_scanner = PortScanner()
-
         try:
             results = nmap_scanner.scan(
                 hosts=hosts,
                 ports=str(SOUNDBAR_PORT),
                 arguments="-PS --open -oJ",
             )
-        except PortScannerError as ex:
-            _LOGGER.error("Nmap scanning failed: %s", ex)
+            _LOGGER.warning("Port scanning results: %s", results)
+        except PortScannerError as e:
+            _LOGGER.error("Port scanning failed: %s", e)
+            return
 
-        _LOGGER.warning(f"results : {results}")
+        if not results:
+            _LOGGER.warning("No scan result.")
+            return
 
-        ip_list = []
-        if len(results) > 0 and len(results["scan"]) > 0:
-            for key, value in results["scan"].items():
-                _LOGGER.warning(key)
-                ip_list.append(key)
+        scan_result: dict = results.get("scan")
+        if scan_result:
+            ip_list = list(scan_result.keys())
+            _LOGGER.warning("A list of ip address: %s", ip_list)
+
             # we need to check real soundbar device here
             # but temporarily set _soundbar_host as the first ip in the list
             self._soundbar_host = ip_list[0]
-            _LOGGER.warning(f"_soundbar_host : {self._soundbar_host}")
-
-        _LOGGER.warning(f"ip_list size : {len(ip_list)}")
+            _LOGGER.warning("Set soundbar host: %s", self._soundbar_host)
 
     async def async_step_soundbar_fill_data(
         self, user_input: dict[str, Any] | None = None
-    ):
-        """Handle a flow initialized by the user."""
-
+    ) -> ConfigFlowResult:
+        """Step to fill Soundbar data."""
         if user_input is not None:
             return await self._async_soundbar_connect(user_input=user_input)
 
-        _data_schema = vol.Schema(
-            {
-                vol.Required(CONF_HOST, default=self._soundbar_host): cv.string,
-                vol.Optional(CONF_NAME, default=SOUNDBAR_DEFAULT_NAME): cv.string,
-            },
-            extra=vol.ALLOW_EXTRA,
-        )
         return self.async_show_form(
-            step_id="soundbar_fill_data", data_schema=_data_schema
+            step_id="soundbar_fill_data",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default=self._soundbar_host): cv.string,
+                    vol.Optional(CONF_NAME, default=SOUNDBAR_DEFAULT_NAME): cv.string,
+                },
+                extra=vol.ALLOW_EXTRA,
+            ),
         )
 
-    async def _async_soundbar_connect(self, user_input: dict[str, Any] | None = None):
-        _LOGGER.warning(f"start to connect. host : {user_input[CONF_HOST]}")
-        result = {"ret": None}
+    async def _async_soundbar_connect(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Try to connect Soundbar."""
+        host: str = user_input.get(CONF_HOST)
+        name: str = user_input.get(CONF_NAME)
+        _LOGGER.warning("Try to connect. host: %s", host)
 
+        # Try to create a client.
         soundbar_client = await self.hass.async_add_executor_job(
-            config_connect, user_input[CONF_HOST], SOUNDBAR_PORT
+            config_connect, host, SOUNDBAR_PORT
         )
         if soundbar_client is None:
-            result["error"] = "cannot_connect"
-        else:
-            self.hass.async_add_executor_job(soundbar_client.listen)
-            device_info = await self.hass.async_add_executor_job(
-                config_device, soundbar_client
-            )
+            _LOGGER.warning("Failed to create a Soundbar client.")
+            return {"ret": None, "error": "cannot_connect"}
 
-            if len(device_info) != 0:
-                info = {
-                    CONF_HOST: user_input[CONF_HOST],
-                    CONF_PORT: SOUNDBAR_PORT,
-                    CONF_NAME: user_input[CONF_NAME],
-                    CONF_SOUNDBAR_MODEL: device_info["name"],
-                    CONF_ENTRY_TYPE: CONF_ENTRY_TYPE_SOUNDBAR,
-                }
-                if "uuid" in device_info:
-                    unique_id = device_info["uuid"]
-                    await self.async_set_unique_id(unique_id)
-                    self._abort_if_unique_id_configured()
-                else:
-                    self._async_abort_entries_match(info)
-
-                result = self.async_create_entry(title=user_input[CONF_NAME], data=info)
+        # Try to get a device info.
+        self.hass.async_add_executor_job(soundbar_client.listen)
+        device_info = await self.hass.async_add_executor_job(
+            config_device, soundbar_client
+        )
+        if device_info:
+            data: dict[str, Any] = {
+                CONF_HOST: host,
+                CONF_PORT: SOUNDBAR_PORT,
+                CONF_NAME: name,
+                CONF_SOUNDBAR_MODEL: device_info.get("name"),
+                CONF_ENTRY_TYPE: CONF_ENTRY_TYPE_SOUNDBAR,
+            }
+            if "uuid" in device_info:
+                await self.async_set_unique_id(device_info.get("uuid"))
+                self._abort_if_unique_id_configured()
             else:
-                return self.async_abort(reason="no_device_info")
+                self._async_abort_entries_match(data)
 
-        return result
+            return self.async_create_entry(title=name, data=data)
+
+        return self.async_abort(reason="no_device_info")
 
     ##### webOS TV #####
 
@@ -337,7 +346,7 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
             """Search callback."""
             try:
                 if (
-                    WEBOS_SECOND_SCREEN_ST == headers.get("ST")
+                    headers.get("ST") == WEBOS_SECOND_SCREEN_ST
                     and self._ssdp_res_fut is not None
                     and not self._ssdp_res_fut.done()
                 ):
@@ -394,7 +403,7 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_webostv(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Search webOS TV HOST IP using SSDP"""
+        """Search webOS TV HOST IP using SSDP."""
         self._webostv_host = GUIDE_ENTER_TV_IP
         if user_input is not None:
             await self._async_search_webostv()
@@ -495,7 +504,7 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
 
 
 class OptionsFlowHandler(OptionsFlow):
-    """Handle a option flow"""
+    """Handle options flow."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
@@ -509,7 +518,7 @@ class OptionsFlowHandler(OptionsFlow):
 
 
 class WebOsTvOptionsFlowHandler(OptionsFlow):
-    """Handle a option flow"""
+    """Handle options flow for LG webOS TV."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
@@ -521,6 +530,7 @@ class WebOsTvOptionsFlowHandler(OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
+        """Step to initialize."""
         return await self.async_step_webostv(user_input)
 
     async def async_step_webostv(

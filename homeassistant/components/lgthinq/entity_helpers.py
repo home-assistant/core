@@ -1,12 +1,15 @@
-"""Make EntityDescription and mapping"""
+"""LG ThinQ entity descriptions and mapping table."""
 
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass
 from datetime import time
 from enum import StrEnum, unique
+import logging
 from typing import Any, Generic, TypeVar
+
+from thinqconnect.const import DeviceType
+from thinqconnect.thinq_api import ThinQApiResponse
 
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.components.button import ButtonEntityDescription
@@ -43,8 +46,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from thinqconnect.const import DeviceType
-from thinqconnect.thinq_api import ThinQApiResponse
 
 from .const import POWER_OFF, POWER_ON, Profile
 from .device import LGDevice
@@ -61,47 +62,55 @@ _LOGGER = logging.getLogger(__name__)
 
 
 # Lambda functions for entity operations.
-def VALIDATE_CREATION_READABLE(readable: bool, writable: bool) -> bool:
+def validate_creation_readable(readable: bool, writable: bool) -> bool:
+    """Allow to create enttiy if readable."""
     return readable
 
 
-def VALIDATE_CREATION_WRITABLE(readable: bool, writable: bool) -> bool:
+def validate_creation_writable(readable: bool, writable: bool) -> bool:
+    """Allow to create enttiy if writable."""
     return writable
 
 
-def VALIDATE_CREATION_READONLY(readable: bool, writable: bool) -> bool:
+def validate_creation_readonly(readable: bool, writable: bool) -> bool:
+    """Allow to create enttiy if only readable."""
     return readable and not writable
 
 
-def VALUE_TO_INT_CONVERTER(value: Any) -> int:
+def value_to_int_converter(value: Any) -> int:
+    """Convert the value to an integer."""
     return int(value)
 
 
-def VALUE_TO_STR_CONVERTER(value: Any) -> str:
+def value_to_str_converter(value: Any) -> str:
+    """Convert the value to a string."""
     return str(value)
 
 
-def VALUE_TO_POWER_STATE_CONVERTER(value: Any) -> str:
+def value_to_power_state_converter(value: Any) -> str:
+    """Convert the value to string that represents power state."""
     return POWER_ON if bool(value) else POWER_OFF
 
 
-def VALUE_TO_TIMER_STR_CONVERTER(value: Any) -> str:
+def value_to_timer_str_converter(value: Any) -> str:
+    """Convert the value to a timer string."""
     return f"{value:0>2}" if value is not None and value > 0 else "00"
 
 
-def VALUE_TO_TIME_TEXT_CONVERTER(value: Any) -> AbsoluteTime:
-    return (
-        AbsoluteTime.str_to_time(value) if value else AbsoluteTime(hour=-1, minute=-1)
-    )
+def value_to_time_text_converter(value: Any) -> AbsoluteTime:
+    """Convert the value to an AbsoluteTime instance."""
+    return AbsoluteTime.str_to_time(str(value))
 
 
 # HH:MM:SS
-def TIMER_COMBINED_SENSOR_FORMATTER(values: list[Any]) -> str:
-    return ":".join(map(VALUE_TO_TIMER_STR_CONVERTER, values))
+def timer_combined_sensor_formatter(values: list[Any]) -> str:
+    """Combine values and then convert it to a string for sensor. (type 1)."""
+    return ":".join(map(value_to_timer_str_converter, values))
 
 
 # HH:MM AM,PM
-def TIMER_COMBINED_2_SENSOR_FORMATTER(values: list[Any]) -> str:
+def timer_combined_2_sensor_formatter(values: list[Any]) -> str:
+    """Combine values and then convert it to a string for sensor. (type 2)."""
     return (
         time(values[0], values[1]).strftime("%I:%M %p")
         if values
@@ -113,7 +122,8 @@ def TIMER_COMBINED_2_SENSOR_FORMATTER(values: list[Any]) -> str:
     )
 
 
-def TIMER_COMBINED_TIME_FORMATTER(values: list[Any]) -> time | None:
+def timer_combined_time_formatter(values: list[Any]) -> time | None:
+    """Combine values and then convert it to a time instance."""
     return (
         time(values[0], values[1])
         if values
@@ -125,69 +135,85 @@ def TIMER_COMBINED_TIME_FORMATTER(values: list[Any]) -> time | None:
     )
 
 
-def TIMER_COMBINED_TEXT_FORMATTER(values: list[Any]) -> str | None:
+def timer_combined_text_formatter(values: list[Any]) -> str | None:
+    """Combine values and then convert it to a string for text."""
     return f"{values[0]:0>2}:{values[1]:0>2}" if values[0] and values[1] else None
 
 
-def TIMER_RELATIVE_HOUR_START_METHOD(
+def timer_relative_hour_start_method(
     property: Property, value: int
 ) -> ThinQApiResponse:
+    """Set a relative start timer with hour."""
     return property.api.set_relative_time_to_start(hour=value, minute=0)
 
 
-def TIMER_RELATIVE_HOUR_STOP_METHOD(property: Property, value: int) -> ThinQApiResponse:
+def timer_relative_hour_stop_method(property: Property, value: int) -> ThinQApiResponse:
+    """Set a relative stop timer with hour."""
     return property.api.set_relative_time_to_stop(hour=value, minute=0)
 
 
-def TIMER_RELATIVE_MINUTE_START_METHOD(
+def timer_relative_minute_start_method(
     property: Property, value: int
 ) -> ThinQApiResponse:
+    """Set a relative start timer with minute."""
     return property.api.set_relative_time_to_start(hour=0, minute=value)
 
 
-def TIMER_RELATIVE_MINUTE_STOP_METHOD(
+def timer_relative_minute_stop_method(
     property: Property, value: int
 ) -> ThinQApiResponse:
+    """Set a relative stop timer with minute."""
     return property.api.set_relative_time_to_stop(hour=0, minute=value)
 
 
-def TIMER_SLEEP_TIMER_RELATIVE_HOUR_STOP_METHOD(
+def timer_sleep_timer_relative_hour_stop_method(
     property: Property, value: int
 ) -> ThinQApiResponse:
+    """Set a relative stop sleep timer with hour."""
     return property.api.set_sleep_timer_relative_time_to_stop(hour=value, minute=0)
 
 
-def TIMER_SLEEP_TIMER_RELATIVE_MINUTE_STOP_METHOD(
+def timer_sleep_timer_relative_minute_stop_method(
     property: Property, value: int
 ) -> ThinQApiResponse:
+    """Set a relative stop sleep timer with minute."""
     return property.api.set_sleep_timer_relative_time_to_stop(hour=0, minute=value)
 
 
-def TIMER_ABSOLUTE_TIME_START_METHOD(
-    property: Property, value: int
+def timer_absolute_time_start_method(
+    property: Property, value: time
 ) -> ThinQApiResponse:
+    """Set an absolute start timer with time instance."""
     return property.api.set_absolute_time_to_start(hour=value.hour, minute=value.minute)
 
 
-def TIMER_ABSOLUTE_TIME_STOP_METHOD(property: Property, value: int) -> ThinQApiResponse:
+def timer_absolute_time_stop_method(
+    property: Property, value: time
+) -> ThinQApiResponse:
+    """Set an absolute stop timer with time instance."""
     return property.api.set_absolute_time_to_stop(hour=value.hour, minute=value.minute)
 
 
-def TIMER_ABSOLUTE_TEXT_START_METHOD(
-    property: Property, value: int
+def timer_absolute_text_start_method(
+    property: Property, value: time | AbsoluteTime
 ) -> ThinQApiResponse:
+    """Set an absolute start timer with time instance for text."""
     return property.api.set_absolute_time_to_start(
         hour=int(value.hour), minute=int(value.minute)
     )
 
 
-def TIMER_ABSOLUTE_TEXT_STOP_METHOD(property: Property, value: int) -> ThinQApiResponse:
+def timer_absolute_text_stop_method(
+    property: Property, value: time
+) -> ThinQApiResponse:
+    """Set an absolute stop timer with time instance for text."""
     return property.api.set_absolute_time_to_stop(
         hour=int(value.hour), minute=int(value.minute)
     )
 
 
-def RANGE_TO_OPTIONS_PROVIDER(profile: Profile) -> list[str]:
+def range_to_options_provider(profile: Profile) -> list[str]:
+    """Provide options list from the given profile."""
     return Range.range_to_options(profile)
 
 
@@ -200,18 +226,19 @@ ThinQEntityDescriptionT = TypeVar(
 
 @dataclass(kw_only=True)
 class AbsoluteTime:
-    """For absolute instead of time has min limit"""
+    """A class only holds absolute hour and minute."""
 
     hour: int
     minute: int
 
     @classmethod
     def str_to_time(cls, time_string: str):
-        h, f, m = time_string.partition(":")
+        """Create an instance from the given string."""
+        h, _f, m = time_string.partition(":")
         if h and m:
             return cls(hour=h, minute=m)
-        else:
-            return None
+
+        return cls(hour=-1, minute=-1)
 
 
 @dataclass(kw_only=True)
@@ -795,7 +822,7 @@ LIGHT_SENSOR_DESC: dict[Lamp, ThinQSensorEntityDescription] = {
                 PropertyInfo(key=Light.START_HOUR),
                 PropertyInfo(key=Light.START_MINUTE),
             ),
-            value_formatter=TIMER_COMBINED_2_SENSOR_FORMATTER,
+            value_formatter=timer_combined_2_sensor_formatter,
         ),
     ),
     Light.END_TIME: ThinQSensorEntityDescription(
@@ -810,7 +837,7 @@ LIGHT_SENSOR_DESC: dict[Lamp, ThinQSensorEntityDescription] = {
                 PropertyInfo(key=Light.END_HOUR),
                 PropertyInfo(key=Light.END_MINUTE),
             ),
-            value_formatter=TIMER_COMBINED_2_SENSOR_FORMATTER,
+            value_formatter=timer_combined_2_sensor_formatter,
         ),
     ),
 }
@@ -994,7 +1021,7 @@ OPERATION_SWITCH_DESC: dict[Operation, ThinQSwitchEntityDescription] = {
         translation_key="operation_power",
         property_info=PropertyInfo(
             key=Operation.AIR_FAN_OPERATION_MODE,
-            value_converter=VALUE_TO_POWER_STATE_CONVERTER,
+            value_converter=value_to_power_state_converter,
         ),
     ),
     Operation.AIR_PURIFIER_OPERATION_MODE: ThinQSwitchEntityDescription(
@@ -1004,7 +1031,7 @@ OPERATION_SWITCH_DESC: dict[Operation, ThinQSwitchEntityDescription] = {
         translation_key="operation_power",
         property_info=PropertyInfo(
             key=Operation.AIR_PURIFIER_OPERATION_MODE,
-            value_converter=VALUE_TO_POWER_STATE_CONVERTER,
+            value_converter=value_to_power_state_converter,
         ),
     ),
     Operation.BOILER_OPERATION_MODE: ThinQSwitchEntityDescription(
@@ -1014,7 +1041,7 @@ OPERATION_SWITCH_DESC: dict[Operation, ThinQSwitchEntityDescription] = {
         translation_key="operation_power",
         property_info=PropertyInfo(
             key=Operation.BOILER_OPERATION_MODE,
-            value_converter=VALUE_TO_POWER_STATE_CONVERTER,
+            value_converter=value_to_power_state_converter,
         ),
     ),
     Operation.DEHUMIDIFIER_OPERATION_MODE: ThinQSwitchEntityDescription(
@@ -1024,7 +1051,7 @@ OPERATION_SWITCH_DESC: dict[Operation, ThinQSwitchEntityDescription] = {
         translation_key="operation_power",
         property_info=PropertyInfo(
             key=Operation.DEHUMIDIFIER_OPERATION_MODE,
-            value_converter=VALUE_TO_POWER_STATE_CONVERTER,
+            value_converter=value_to_power_state_converter,
         ),
     ),
     Operation.HUMIDIFIER_OPERATION_MODE: ThinQSwitchEntityDescription(
@@ -1034,7 +1061,7 @@ OPERATION_SWITCH_DESC: dict[Operation, ThinQSwitchEntityDescription] = {
         translation_key="operation_power",
         property_info=PropertyInfo(
             key=Operation.HUMIDIFIER_OPERATION_MODE,
-            value_converter=VALUE_TO_POWER_STATE_CONVERTER,
+            value_converter=value_to_power_state_converter,
         ),
     ),
 }
@@ -1063,7 +1090,7 @@ POWER_SENSOR_DESC: dict[Power, ThinQSensorEntityDescription] = {
         translation_key=Power.POWER_LEVEL,
         property_info=PropertyInfo(
             key=Power.POWER_LEVEL,
-            alt_validate_creation=VALIDATE_CREATION_READABLE,
+            alt_validate_creation=validate_creation_readable,
         ),
     )
 }
@@ -1472,7 +1499,7 @@ TIMER_NUMBER_DESC: dict[Timer, ThinQNumberEntityDescription] = {
         translation_key=Timer.RELATIVE_HOUR_TO_START,
         property_info=PropertyInfo(
             key=Timer.RELATIVE_HOUR_TO_START,
-            alt_post_method=TIMER_RELATIVE_HOUR_START_METHOD,
+            alt_post_method=timer_relative_hour_start_method,
         ),
     ),
     Timer.RELATIVE_HOUR_TO_START_WM: ThinQNumberEntityDescription(
@@ -1484,7 +1511,7 @@ TIMER_NUMBER_DESC: dict[Timer, ThinQNumberEntityDescription] = {
         property_info=PropertyInfo(
             key=Timer.RELATIVE_HOUR_TO_START,
             modify_minimum_range=True,
-            alt_post_method=TIMER_RELATIVE_HOUR_START_METHOD,
+            alt_post_method=timer_relative_hour_start_method,
         ),
     ),
     Timer.RELATIVE_MINUTE_TO_START: ThinQNumberEntityDescription(
@@ -1495,7 +1522,7 @@ TIMER_NUMBER_DESC: dict[Timer, ThinQNumberEntityDescription] = {
         translation_key=Timer.RELATIVE_MINUTE_TO_START,
         property_info=PropertyInfo(
             key=Timer.RELATIVE_MINUTE_TO_START,
-            alt_post_method=TIMER_RELATIVE_MINUTE_START_METHOD,
+            alt_post_method=timer_relative_minute_start_method,
         ),
     ),
     Timer.RELATIVE_HOUR_TO_STOP: ThinQNumberEntityDescription(
@@ -1506,7 +1533,7 @@ TIMER_NUMBER_DESC: dict[Timer, ThinQNumberEntityDescription] = {
         translation_key=Timer.RELATIVE_HOUR_TO_STOP,
         property_info=PropertyInfo(
             key=Timer.RELATIVE_HOUR_TO_STOP,
-            alt_post_method=TIMER_RELATIVE_HOUR_STOP_METHOD,
+            alt_post_method=timer_relative_hour_stop_method,
         ),
     ),
     Timer.RELATIVE_HOUR_TO_STOP_WM: ThinQNumberEntityDescription(
@@ -1518,7 +1545,7 @@ TIMER_NUMBER_DESC: dict[Timer, ThinQNumberEntityDescription] = {
         property_info=PropertyInfo(
             key=Timer.RELATIVE_HOUR_TO_STOP,
             modify_minimum_range=True,
-            alt_post_method=TIMER_RELATIVE_HOUR_STOP_METHOD,
+            alt_post_method=timer_relative_hour_stop_method,
         ),
     ),
     Timer.RELATIVE_MINUTE_TO_STOP: ThinQNumberEntityDescription(
@@ -1529,7 +1556,7 @@ TIMER_NUMBER_DESC: dict[Timer, ThinQNumberEntityDescription] = {
         translation_key=Timer.RELATIVE_MINUTE_TO_STOP,
         property_info=PropertyInfo(
             key=Timer.RELATIVE_MINUTE_TO_STOP,
-            alt_post_method=TIMER_RELATIVE_MINUTE_STOP_METHOD,
+            alt_post_method=timer_relative_minute_stop_method,
         ),
     ),
     Timer.REMAIN_HOUR: ThinQNumberEntityDescription(
@@ -1554,7 +1581,7 @@ TIMER_NUMBER_DESC: dict[Timer, ThinQNumberEntityDescription] = {
         translation_key=Timer.SLEEP_TIMER_RELATIVE_HOUR_TO_STOP,
         property_info=PropertyInfo(
             key=Timer.SLEEP_TIMER_RELATIVE_HOUR_TO_STOP,
-            alt_post_method=TIMER_SLEEP_TIMER_RELATIVE_HOUR_STOP_METHOD,
+            alt_post_method=timer_sleep_timer_relative_hour_stop_method,
         ),
     ),
     Timer.SLEEP_TIMER_RELATIVE_MINUTE_TO_STOP: ThinQNumberEntityDescription(
@@ -1565,7 +1592,7 @@ TIMER_NUMBER_DESC: dict[Timer, ThinQNumberEntityDescription] = {
         translation_key=Timer.SLEEP_TIMER_RELATIVE_MINUTE_TO_STOP,
         property_info=PropertyInfo(
             key=Timer.SLEEP_TIMER_RELATIVE_MINUTE_TO_STOP,
-            alt_post_method=TIMER_SLEEP_TIMER_RELATIVE_MINUTE_STOP_METHOD,
+            alt_post_method=timer_sleep_timer_relative_minute_stop_method,
         ),
     ),
 }
@@ -1581,15 +1608,15 @@ TIMER_SENSOR_DESC: dict[Timer, ThinQSensorEntityDescription] = {
             children=(
                 PropertyInfo(
                     key=Timer.RELATIVE_HOUR_TO_START,
-                    alt_validate_creation=VALIDATE_CREATION_READABLE,
+                    alt_validate_creation=validate_creation_readable,
                 ),
                 PropertyInfo(
                     key=Timer.RELATIVE_MINUTE_TO_START,
-                    alt_validate_creation=VALIDATE_CREATION_READABLE,
+                    alt_validate_creation=validate_creation_readable,
                 ),
             ),
-            value_formatter=TIMER_COMBINED_SENSOR_FORMATTER,
-            alt_validate_creation=VALIDATE_CREATION_READABLE,
+            value_formatter=timer_combined_sensor_formatter,
+            alt_validate_creation=validate_creation_readable,
         ),
     ),
     Timer.RELATIVE_TO_START_WM: ThinQSensorEntityDescription(
@@ -1603,15 +1630,15 @@ TIMER_SENSOR_DESC: dict[Timer, ThinQSensorEntityDescription] = {
             children=(
                 PropertyInfo(
                     key=Timer.RELATIVE_HOUR_TO_START,
-                    alt_validate_creation=VALIDATE_CREATION_READABLE,
+                    alt_validate_creation=validate_creation_readable,
                 ),
                 PropertyInfo(
                     key=Timer.RELATIVE_MINUTE_TO_START,
-                    alt_validate_creation=VALIDATE_CREATION_READABLE,
+                    alt_validate_creation=validate_creation_readable,
                 ),
             ),
-            value_formatter=TIMER_COMBINED_SENSOR_FORMATTER,
-            alt_validate_creation=VALIDATE_CREATION_READABLE,
+            value_formatter=timer_combined_sensor_formatter,
+            alt_validate_creation=validate_creation_readable,
         ),
     ),
     Timer.RELATIVE_TO_STOP: ThinQSensorEntityDescription(
@@ -1625,15 +1652,15 @@ TIMER_SENSOR_DESC: dict[Timer, ThinQSensorEntityDescription] = {
             children=(
                 PropertyInfo(
                     key=Timer.RELATIVE_HOUR_TO_STOP,
-                    alt_validate_creation=VALIDATE_CREATION_READABLE,
+                    alt_validate_creation=validate_creation_readable,
                 ),
                 PropertyInfo(
                     key=Timer.RELATIVE_MINUTE_TO_STOP,
-                    alt_validate_creation=VALIDATE_CREATION_READABLE,
+                    alt_validate_creation=validate_creation_readable,
                 ),
             ),
-            value_formatter=TIMER_COMBINED_SENSOR_FORMATTER,
-            alt_validate_creation=VALIDATE_CREATION_READABLE,
+            value_formatter=timer_combined_sensor_formatter,
+            alt_validate_creation=validate_creation_readable,
         ),
     ),
     Timer.RELATIVE_TO_STOP_WM: ThinQSensorEntityDescription(
@@ -1647,15 +1674,15 @@ TIMER_SENSOR_DESC: dict[Timer, ThinQSensorEntityDescription] = {
             children=(
                 PropertyInfo(
                     key=Timer.RELATIVE_HOUR_TO_STOP,
-                    alt_validate_creation=VALIDATE_CREATION_READABLE,
+                    alt_validate_creation=validate_creation_readable,
                 ),
                 PropertyInfo(
                     key=Timer.RELATIVE_MINUTE_TO_STOP,
-                    alt_validate_creation=VALIDATE_CREATION_READABLE,
+                    alt_validate_creation=validate_creation_readable,
                 ),
             ),
-            value_formatter=TIMER_COMBINED_SENSOR_FORMATTER,
-            alt_validate_creation=VALIDATE_CREATION_READABLE,
+            value_formatter=timer_combined_sensor_formatter,
+            alt_validate_creation=validate_creation_readable,
         ),
     ),
     Timer.SLEEP_TIMER_RELATIVE_TO_STOP: ThinQSensorEntityDescription(
@@ -1669,15 +1696,15 @@ TIMER_SENSOR_DESC: dict[Timer, ThinQSensorEntityDescription] = {
             children=(
                 PropertyInfo(
                     key=Timer.SLEEP_TIMER_RELATIVE_HOUR_TO_STOP,
-                    alt_validate_creation=VALIDATE_CREATION_READABLE,
+                    alt_validate_creation=validate_creation_readable,
                 ),
                 PropertyInfo(
                     key=Timer.SLEEP_TIMER_RELATIVE_MINUTE_TO_STOP,
-                    alt_validate_creation=VALIDATE_CREATION_READABLE,
+                    alt_validate_creation=validate_creation_readable,
                 ),
             ),
-            value_formatter=TIMER_COMBINED_SENSOR_FORMATTER,
-            alt_validate_creation=VALIDATE_CREATION_READABLE,
+            value_formatter=timer_combined_sensor_formatter,
+            alt_validate_creation=validate_creation_readable,
         ),
     ),
     Timer.ABSOLUTE_TO_START: ThinQSensorEntityDescription(
@@ -1691,15 +1718,15 @@ TIMER_SENSOR_DESC: dict[Timer, ThinQSensorEntityDescription] = {
             children=(
                 PropertyInfo(
                     key=Timer.ABSOLUTE_HOUR_TO_START,
-                    alt_validate_creation=VALIDATE_CREATION_READABLE,
+                    alt_validate_creation=validate_creation_readable,
                 ),
                 PropertyInfo(
                     key=Timer.ABSOLUTE_MINUTE_TO_START,
-                    alt_validate_creation=VALIDATE_CREATION_READABLE,
+                    alt_validate_creation=validate_creation_readable,
                 ),
             ),
-            value_formatter=TIMER_COMBINED_2_SENSOR_FORMATTER,
-            alt_validate_creation=VALIDATE_CREATION_READABLE,
+            value_formatter=timer_combined_2_sensor_formatter,
+            alt_validate_creation=validate_creation_readable,
         ),
     ),
     Timer.ABSOLUTE_TO_STOP: ThinQSensorEntityDescription(
@@ -1713,15 +1740,15 @@ TIMER_SENSOR_DESC: dict[Timer, ThinQSensorEntityDescription] = {
             children=(
                 PropertyInfo(
                     key=Timer.ABSOLUTE_HOUR_TO_STOP,
-                    alt_validate_creation=VALIDATE_CREATION_READABLE,
+                    alt_validate_creation=validate_creation_readable,
                 ),
                 PropertyInfo(
                     key=Timer.ABSOLUTE_MINUTE_TO_STOP,
-                    alt_validate_creation=VALIDATE_CREATION_READABLE,
+                    alt_validate_creation=validate_creation_readable,
                 ),
             ),
-            value_formatter=TIMER_COMBINED_2_SENSOR_FORMATTER,
-            alt_validate_creation=VALIDATE_CREATION_READABLE,
+            value_formatter=timer_combined_2_sensor_formatter,
+            alt_validate_creation=validate_creation_readable,
         ),
     ),
     Timer.REMAIN: ThinQSensorEntityDescription(
@@ -1737,7 +1764,7 @@ TIMER_SENSOR_DESC: dict[Timer, ThinQSensorEntityDescription] = {
                 PropertyInfo(key=Timer.REMAIN_MINUTE),
                 PropertyInfo(key=Timer.REMAIN_SECOND),
             ),
-            value_formatter=TIMER_COMBINED_SENSOR_FORMATTER,
+            value_formatter=timer_combined_sensor_formatter,
         ),
     ),
     Timer.REMAIN_HM: ThinQSensorEntityDescription(
@@ -1751,15 +1778,15 @@ TIMER_SENSOR_DESC: dict[Timer, ThinQSensorEntityDescription] = {
             children=(
                 PropertyInfo(
                     key=Timer.REMAIN_HOUR,
-                    alt_validate_creation=VALIDATE_CREATION_READABLE,
+                    alt_validate_creation=validate_creation_readable,
                 ),
                 PropertyInfo(
                     key=Timer.REMAIN_MINUTE,
-                    alt_validate_creation=VALIDATE_CREATION_READABLE,
+                    alt_validate_creation=validate_creation_readable,
                 ),
             ),
-            value_formatter=TIMER_COMBINED_SENSOR_FORMATTER,
-            alt_validate_creation=VALIDATE_CREATION_READABLE,
+            value_formatter=timer_combined_sensor_formatter,
+            alt_validate_creation=validate_creation_readable,
         ),
     ),
     Timer.REMAIN_MS: ThinQSensorEntityDescription(
@@ -1774,7 +1801,7 @@ TIMER_SENSOR_DESC: dict[Timer, ThinQSensorEntityDescription] = {
                 PropertyInfo(key=Timer.REMAIN_MINUTE),
                 PropertyInfo(key=Timer.REMAIN_SECOND),
             ),
-            value_formatter=TIMER_COMBINED_SENSOR_FORMATTER,
+            value_formatter=timer_combined_sensor_formatter,
         ),
     ),
     Timer.TARGET: ThinQSensorEntityDescription(
@@ -1788,15 +1815,15 @@ TIMER_SENSOR_DESC: dict[Timer, ThinQSensorEntityDescription] = {
             children=(
                 PropertyInfo(
                     key=Timer.TARGET_HOUR,
-                    alt_validate_creation=VALIDATE_CREATION_READABLE,
+                    alt_validate_creation=validate_creation_readable,
                 ),
                 PropertyInfo(
                     key=Timer.TARGET_MINUTE,
-                    alt_validate_creation=VALIDATE_CREATION_READABLE,
+                    alt_validate_creation=validate_creation_readable,
                 ),
             ),
-            value_formatter=TIMER_COMBINED_SENSOR_FORMATTER,
-            alt_validate_creation=VALIDATE_CREATION_READABLE,
+            value_formatter=timer_combined_sensor_formatter,
+            alt_validate_creation=validate_creation_readable,
         ),
     ),
     Timer.RUNNING: ThinQSensorEntityDescription(
@@ -1811,7 +1838,7 @@ TIMER_SENSOR_DESC: dict[Timer, ThinQSensorEntityDescription] = {
                 PropertyInfo(key=Timer.RUNNING_HOUR),
                 PropertyInfo(key=Timer.RUNNING_MINUTE),
             ),
-            value_formatter=TIMER_COMBINED_SENSOR_FORMATTER,
+            value_formatter=timer_combined_sensor_formatter,
         ),
     ),
     Timer.TOTAL: ThinQSensorEntityDescription(
@@ -1826,7 +1853,7 @@ TIMER_SENSOR_DESC: dict[Timer, ThinQSensorEntityDescription] = {
                 PropertyInfo(key=Timer.TOTAL_HOUR),
                 PropertyInfo(key=Timer.TOTAL_MINUTE),
             ),
-            value_formatter=TIMER_COMBINED_SENSOR_FORMATTER,
+            value_formatter=timer_combined_sensor_formatter,
         ),
     ),
     Timer.ELASPED_DAY_STATE: ThinQSensorEntityDescription(
@@ -1857,8 +1884,8 @@ TIMER_TIME_DESC: dict[Timer, ThinQTimeEntityDescription] = {
                 PropertyInfo(key=Timer.ABSOLUTE_HOUR_TO_START),
                 PropertyInfo(key=Timer.ABSOLUTE_MINUTE_TO_START),
             ),
-            value_formatter=TIMER_COMBINED_TIME_FORMATTER,
-            alt_post_method=TIMER_ABSOLUTE_TIME_START_METHOD,
+            value_formatter=timer_combined_time_formatter,
+            alt_post_method=timer_absolute_time_start_method,
         ),
     ),
     Timer.ABSOLUTE_TO_STOP: ThinQTimeEntityDescription(
@@ -1873,8 +1900,8 @@ TIMER_TIME_DESC: dict[Timer, ThinQTimeEntityDescription] = {
                 PropertyInfo(key=Timer.ABSOLUTE_HOUR_TO_STOP),
                 PropertyInfo(key=Timer.ABSOLUTE_MINUTE_TO_STOP),
             ),
-            value_formatter=TIMER_COMBINED_TIME_FORMATTER,
-            alt_post_method=TIMER_ABSOLUTE_TIME_STOP_METHOD,
+            value_formatter=timer_combined_time_formatter,
+            alt_post_method=timer_absolute_time_stop_method,
         ),
     ),
     Timer.TARGET: ThinQTimeEntityDescription(
@@ -1889,8 +1916,8 @@ TIMER_TIME_DESC: dict[Timer, ThinQTimeEntityDescription] = {
                 PropertyInfo(key=Timer.TARGET_HOUR),
                 PropertyInfo(key=Timer.TARGET_MINUTE),
             ),
-            value_formatter=TIMER_COMBINED_TIME_FORMATTER,
-            alt_post_method=TIMER_ABSOLUTE_TIME_STOP_METHOD,
+            value_formatter=timer_combined_time_formatter,
+            alt_post_method=timer_absolute_time_stop_method,
         ),
     ),
     Timer.TIMER: ThinQTimeEntityDescription(
@@ -1905,8 +1932,8 @@ TIMER_TIME_DESC: dict[Timer, ThinQTimeEntityDescription] = {
                 PropertyInfo(key=Timer.TIMER_HOUR),
                 PropertyInfo(key=Timer.TIMER_MINUTE),
             ),
-            value_formatter=TIMER_COMBINED_TIME_FORMATTER,
-            alt_post_method=TIMER_ABSOLUTE_TIME_STOP_METHOD,
+            value_formatter=timer_combined_time_formatter,
+            alt_post_method=timer_absolute_time_stop_method,
         ),
     ),
 }
@@ -1923,10 +1950,10 @@ TIMER_TEXT_DESC: dict[Timer, ThinQTextEntityDescription] = {
                 PropertyInfo(key=Timer.ABSOLUTE_HOUR_TO_START),
                 PropertyInfo(key=Timer.ABSOLUTE_MINUTE_TO_START),
             ),
-            value_formatter=TIMER_COMBINED_TEXT_FORMATTER,
+            value_formatter=timer_combined_text_formatter,
             alt_text_hint="Input format 24-hour clock",
-            value_converter=VALUE_TO_TIME_TEXT_CONVERTER,
-            alt_post_method=TIMER_ABSOLUTE_TEXT_START_METHOD,
+            value_converter=value_to_time_text_converter,
+            alt_post_method=timer_absolute_text_start_method,
         ),
     ),
     Timer.ABSOLUTE_TO_STOP: ThinQTextEntityDescription(
@@ -1941,10 +1968,10 @@ TIMER_TEXT_DESC: dict[Timer, ThinQTextEntityDescription] = {
                 PropertyInfo(key=Timer.ABSOLUTE_HOUR_TO_STOP),
                 PropertyInfo(key=Timer.ABSOLUTE_MINUTE_TO_STOP),
             ),
-            value_formatter=TIMER_COMBINED_TEXT_FORMATTER,
+            value_formatter=timer_combined_text_formatter,
             alt_text_hint="Input format 24-hour clock",
-            value_converter=VALUE_TO_TIME_TEXT_CONVERTER,
-            alt_post_method=TIMER_ABSOLUTE_TEXT_STOP_METHOD,
+            value_converter=value_to_time_text_converter,
+            alt_post_method=timer_absolute_text_stop_method,
         ),
     ),
 }
@@ -2067,9 +2094,9 @@ AIRCONDITIONER_CLIMATE: tuple[ThinQClimateEntityDescription, ...] = (
                     children=(
                         PropertyInfo(
                             key=AirFlow.WIND_STEP,
-                            alt_options_provider=RANGE_TO_OPTIONS_PROVIDER,
-                            value_converter=VALUE_TO_INT_CONVERTER,
-                            value_formatter=VALUE_TO_STR_CONVERTER,
+                            alt_options_provider=range_to_options_provider,
+                            value_converter=value_to_int_converter,
+                            value_formatter=value_to_str_converter,
                         ),
                     ),
                 ),
@@ -2875,10 +2902,7 @@ class ThinQEntity(CoordinatorEntity, Generic[ThinQEntityDescriptionT]):
             location = self.property.location
             location_str = (
                 ""
-                if location is None
-                or location == "main"
-                or location == "oven"
-                or (device.sub_id is not None and device.sub_id == location)
+                if location is None or location in ("main", "oven", device.sub_id)
                 else f"{location} "
             )
             self._attr_translation_placeholders = {"location": location_str}
@@ -2898,67 +2922,67 @@ class ThinQEntity(CoordinatorEntity, Generic[ThinQEntityDescriptionT]):
 
     @property
     def device(self) -> LGDevice:
-        """Returns the connected device."""
+        """Return the connected device."""
         return self._device
 
     @property
     def property(self) -> Property:
-        """Returns the property of entity."""
+        """Return the property of entity."""
         return self._property
 
-    def get_property(self, feature: PropertyFeature = None) -> Property | None:
-        """Returns the property corresponding to the feature."""
+    def get_property(self, feature: PropertyFeature | None = None) -> Property | None:
+        """Return the property corresponding to the feature."""
         if feature is None:
             return self.property
-        else:
-            return self.property.get_featured_property(feature)
+
+        return self.property.get_featured_property(feature)
 
     def get_options(self, feature: PropertyFeature = None) -> list[str] | None:
-        """Returns the property options of entity."""
-        property = self.get_property(feature)
-        return property.options if property is not None else None
+        """Return the property options of entity."""
+        prop = self.get_property(feature)
+        return prop.options if prop is not None else None
 
     def get_range(self, feature: PropertyFeature = None) -> Range | None:
-        """Returns the property range of entity."""
-        property = self.get_property(feature)
-        return property.range if property is not None else None
+        """Return the property range of entity."""
+        prop = self.get_property(feature)
+        return prop.range if prop is not None else None
 
     def get_unit(self, feature: PropertyFeature = None) -> str | None:
-        """Returns the property unit of entity."""
-        property = self.get_property(feature)
-        return property.unit if property is not None else None
+        """Return the property unit of entity."""
+        prop = self.get_property(feature)
+        return prop.unit if prop is not None else None
 
     def get_value(self, feature: PropertyFeature = None) -> Any:
-        """Returns the property value of entity."""
-        property = self.get_property(feature)
-        return property.get_value() if property is not None else None
+        """Return the property value of entity."""
+        prop = self.get_property(feature)
+        return prop.get_value() if prop is not None else None
 
     def get_value_as_bool(self, feature: PropertyFeature = None) -> bool:
-        """Returns the property value of entity as bool."""
-        property = self.get_property(feature)
-        return property.get_value_as_bool() if property is not None else None
+        """Return the property value of entity as bool."""
+        prop = self.get_property(feature)
+        return prop.get_value_as_bool() if prop is not None else None
 
     async def async_post_value(
         self, value: Any, feature: PropertyFeature = None
     ) -> None:
         """Post the value of entity to server."""
-        property = self.get_property(feature)
-        if property is not None:
-            await property.async_post_value(value)
+        prop = self.get_property(feature)
+        if prop is not None:
+            await prop.async_post_value(value)
 
     def _get_unit_of_measurement(self, unit: str, fallback: str) -> str:
         """Convert ThinQ unit string to HA unit string."""
         return UNIT_CONVERSION_MAP.get(unit, fallback)
 
     def _update_status(self) -> None:
-        """
-        Update status itself.
+        """Update status itself.
+
         All inherited classes can update their own status in here.
         """
         if self.entity_description.translation_key is None:
-            location: str = self.property.location
+            location: str | None = self.property.location
             if location is not None:
-                name: str = self.entity_description.name
+                name: str | None = self.entity_description.name
                 if name is not None:
                     self._attr_name = f"{location} {name}"
                 else:
@@ -3011,8 +3035,8 @@ class ThinQEntity(CoordinatorEntity, Generic[ThinQEntityDescriptionT]):
                 if not properties:
                     continue
 
-                for property in properties:
-                    entities.append(cls(device, property, desc))
+                for prop in properties:
+                    entities.append(cls(device, prop, desc))
 
                     _LOGGER.debug(
                         "[%s] Add %s entity for [%s]",

@@ -22,7 +22,7 @@ async def async_setup_entry(
     entry: ThinqConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Setup entry for switch platform."""
+    """Set up an entry for switch platform."""
     _LOGGER.warning("Starting switch platform setup...")
     lge_devices: list[LGDevice] = entry.runtime_data.lge_devices
 

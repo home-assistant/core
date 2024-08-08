@@ -5,20 +5,19 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from thinqconnect.const import PROPERTY_READABLE, DeviceType
+from thinqconnect.devices.connect_device import ConnectBaseDevice, ConnectDeviceProfile
+from thinqconnect.thinq_api import ThinQApiResponse
+
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.device_registry import DeviceEntry, DeviceRegistry
 from homeassistant.helpers.device_registry import (
+    DeviceEntry,
+    DeviceRegistry,
     async_get as async_get_device_registry,
 )
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from thinqconnect.const import PROPERTY_READABLE, DeviceType
-from thinqconnect.devices.connect_device import (
-    ConnectBaseDevice,
-    ConnectDeviceProfile,
-)
-from thinqconnect.thinq_api import ThinQApiResponse
 
 from .const import (
     DEVICE_TYPE_API_MAP,
@@ -249,12 +248,12 @@ class LGDevice:
         return property_map
 
     def get_profile(self, location: str, name: str) -> Profile | None:
-        """Returns the profile for the given location and name."""
+        """Return the profile for the given location and name."""
         profile_map: ProfileMap = self.property_map.get(location)
         return profile_map.get(name) if profile_map else None
 
     def get_profiles(self, name: str) -> dict[str, Profile]:
-        """Returns the profile map with location as key for the given name."""
+        """Return the profile map with location as key for the given name."""
         return {
             location: profile_map.get(name)
             for location, profile_map in self.property_map.items()
@@ -305,8 +304,11 @@ class LGDevice:
             translation_placeholders = {
                 "state": (
                     message.split()[-1]
-                    if code == ErrorCode.COMMAND_NOT_SUPPORTED_IN_STATE
-                    or code == ErrorCode.COMMAND_NOT_SUPPORTED_IN_MODE
+                    if code
+                    in (
+                        ErrorCode.COMMAND_NOT_SUPPORTED_IN_STATE,
+                        ErrorCode.COMMAND_NOT_SUPPORTED_IN_MODE,
+                    )
                     else None
                 )
             }
@@ -352,7 +354,7 @@ class LGDevice:
         self.api.set_status(result)
         self._is_connected = True
 
-    def update_partial_status(self, response: dict[str, Any] = None) -> None:
+    def update_partial_status(self, response: dict[str, Any] | None = None) -> None:
         """Update device status from the given partial response data."""
         if response is None:
             _LOGGER.error("%s Failed to update status.", self.tag)
@@ -390,7 +392,7 @@ class LGDevice:
         self._noti_message = message
 
     def __str__(self) -> str:
-        """Returns a string expression."""
+        """Return a string expression."""
         return f"LGDevice:{self.name}(type={self.type}, id={self.id})"
 
 

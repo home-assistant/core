@@ -3,20 +3,22 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime
 import json
 import logging
-from datetime import datetime
 from typing import Any
+
+from thinqconnect.mqtt_client import ThinQMQTTClient
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntry, DeviceRegistry
 from homeassistant.helpers.device_registry import (
+    DeviceEntry,
+    DeviceRegistry,
     async_get as async_get_device_registry,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from thinqconnect.mqtt_client import ThinQMQTTClient
 
 from .const import (
     DEVICE_ALIAS_CHANGED_MESSAGE,
@@ -45,15 +47,16 @@ class ThinQMQTT:
         thinq: ThinQ,
         client_id: str,
     ):
-        self._hass = hass
-        self._entry = entry
-        self._thinq = thinq
-        self._client_id = client_id
+        """Initialize a mqtt."""
+        self._hass: HomeAssistant = hass
+        self._entry: ThinqConfigEntry = entry
+        self._thinq: ThinQ = thinq
+        self._client_id: str = client_id
         self._mqtt_client: ThinQMQTTClient | None = None
 
     @property
     def mqtt_client(self) -> ThinQMQTTClient:
-        """Returns the ThinQMQTTClient instance."""
+        """Return the client instance."""
         return self._mqtt_client
 
     async def async_refresh_subscribe(self, now: datetime | None = None) -> None:
@@ -149,7 +152,7 @@ class ThinQMQTT:
         error,
         **kwargs: dict,
     ) -> None:
-        """The MQTT connection is lost."""
+        """Handle the MQTT connection lost."""
         _LOGGER.error("Connection interrupted. error:=%s", error)
 
     def on_message_received(
@@ -161,7 +164,7 @@ class ThinQMQTT:
         retain: bool,
         **kwargs: dict,
     ) -> None:
-        """A message matching the topic is received."""
+        """Handle the received message that matching the topic."""
         try:
             received = json.loads(payload.decode())
         except ValueError:
@@ -333,6 +336,6 @@ class ThinQMQTT:
         )
 
     async def async_disconnect(self, event: Event | None = None) -> None:
-        """Unregister client and disconnects handlers"""
+        """Unregister client and disconnects handlers."""
         await self.async_end_subscribes()
         await self._mqtt_client.async_disconnect()

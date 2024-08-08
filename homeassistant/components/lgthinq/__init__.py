@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 from contextlib import suppress
+import logging
 from typing import Any
 
-import voluptuous as vol
 from aiowebostv import WebOsClient, WebOsTvPairError
+import voluptuous as vol
+
 from homeassistant.components import notify as hass_notify
 from homeassistant.const import (
     ATTR_COMMAND,
@@ -32,15 +33,14 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import discovery
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
     DeviceRegistry,
     async_entries_for_config_entry,
+    async_get as async_get_device_registry,
 )
-from homeassistant.helpers.device_registry import async_get as async_get_device_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
@@ -79,7 +79,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up from discovery or configuration.yaml"""
+    """Set up from discovery or configuration.yaml."""
     # hass.data only using for webostv's DATA_HASS_CONFIG and
     # another data using entry.runtime_data
     hass.data.setdefault(DOMAIN, {})
@@ -87,6 +87,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> bool:
+    """Set up an entry."""
     # init runtime_data
     entry.runtime_data = ThinqData(
         lge_device_map=None,
@@ -96,20 +97,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> boo
     )
     if entry.data.get(CONF_ENTRY_TYPE) == CONF_ENTRY_TYPE_THINQ:
         return await async_setup_entry_thinq(hass, entry)
-    elif entry.data.get(CONF_ENTRY_TYPE) == CONF_ENTRY_TYPE_SOUNDBAR:
+
+    if entry.data.get(CONF_ENTRY_TYPE) == CONF_ENTRY_TYPE_SOUNDBAR:
         return await async_setup_entry_soundbar(hass, entry)
-    elif entry.data.get(CONF_ENTRY_TYPE) == CONF_ENTRY_TYPE_WEBOSTV:
+
+    if entry.data.get(CONF_ENTRY_TYPE) == CONF_ENTRY_TYPE_WEBOSTV:
         return await async_setup_entry_webostv(hass, entry)
+
     return False
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> bool:
+    """Unload the entry."""
     if entry.data.get(CONF_ENTRY_TYPE) == CONF_ENTRY_TYPE_THINQ:
         return await async_unload_entry_thinq(hass, entry)
-    elif entry.data.get(CONF_ENTRY_TYPE) == CONF_ENTRY_TYPE_SOUNDBAR:
+
+    if entry.data.get(CONF_ENTRY_TYPE) == CONF_ENTRY_TYPE_SOUNDBAR:
         return await async_unload_entry_soundbar(hass, entry)
-    elif entry.data.get(CONF_ENTRY_TYPE) == CONF_ENTRY_TYPE_WEBOSTV:
+
+    if entry.data.get(CONF_ENTRY_TYPE) == CONF_ENTRY_TYPE_WEBOSTV:
         return await async_unload_entry_webostv(hass, entry)
+
     return False
 
 
@@ -147,12 +155,9 @@ async def async_setup_entry_thinq(hass: HomeAssistant, entry: ThinqConfigEntry) 
     device_registry: DeviceRegistry = async_get_device_registry(hass)
 
     # Setup and register devices.
-    try:
-        device_entry_map: dict[str, LGDevice] = await async_setup_devices(
-            hass, thinq, device_registry, entry.entry_id
-        )
-    except ConfigEntryError:
-        raise
+    device_entry_map: dict[str, LGDevice] = await async_setup_devices(
+        hass, thinq, device_registry, entry.entry_id
+    )
 
     lg_devices: list[LGDevice] = device_entry_map.values()
     # runtime_data for Thinq
@@ -171,7 +176,7 @@ async def async_setup_entry_thinq(hass: HomeAssistant, entry: ThinqConfigEntry) 
     )
     try:
         await thinq_mqtt.async_connect_and_subscribe()
-    except (asyncio.CancelledError, asyncio.TimeoutError) as ex:
+    except (TimeoutError, asyncio.CancelledError) as ex:
         raise ConfigEntryNotReady("Error during setup") from ex
 
     # runtime_data for Thinq
@@ -192,7 +197,7 @@ async def async_setup_devices(
     device_registry: DeviceRegistry,
     entry_id: str,
 ) -> dict[str, LGDevice]:
-    """Setup and register devices."""
+    """Set up and register devices."""
     _LOGGER.warning("async_setup_devices.")
 
     # Get a device list from the server.
@@ -288,7 +293,7 @@ async def _async_post_device_status(
 
 @callback
 def async_setup_hass_services(hass: HomeAssistant, entry: ThinqConfigEntry) -> None:
-    """Setup services."""
+    """Set up services."""
 
     async def async_handle_reload_device_list(call: ServiceCall) -> None:
         """Handle 'reload_device_list' service call."""
@@ -350,8 +355,8 @@ def async_setup_hass_services(hass: HomeAssistant, entry: ThinqConfigEntry) -> N
         call: ServiceCall,
     ) -> ServiceResponse:
         """Handle 'post_device_status' service call."""
-        device_id = call.data.get(ATTR_DEVICE_ID)
-        value = call.data.get(SERVICE_ATTR_VALUE)
+        device_id: str = call.data.get(ATTR_DEVICE_ID)
+        value: Any = call.data.get(SERVICE_ATTR_VALUE)
         device: LGDevice = None
         result: str | dict[str, Any] = None
 
@@ -402,9 +407,9 @@ def async_setup_hass_services(hass: HomeAssistant, entry: ThinqConfigEntry) -> N
 
 @callback
 def async_create_service_response(
-    device_id: str = None,
-    device: LGDevice = None,
-    result: str | dict[str, Any] = None,
+    device_id: str | None = None,
+    device: LGDevice | None = None,
+    result: str | dict[str, Any] | None = None,
 ) -> ServiceResponse:
     """Create a service response from the result of service call."""
     if result is None:
@@ -442,6 +447,7 @@ SOUNDBAR_PLATFORMS = [Platform.MEDIA_PLAYER]
 async def async_setup_entry_soundbar(
     hass: HomeAssistant, entry: ThinqConfigEntry
 ) -> bool:
+    """Seutp an entry for soundbar."""
     _LOGGER.warning("async_setup_entry_soundbar.")
 
     soundbar_client = await hass.async_add_executor_job(
@@ -461,8 +467,7 @@ async def async_unload_entry_soundbar(
     hass: HomeAssistant, entry: ThinqConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    result = await hass.config_entries.async_unload_platforms(entry, SOUNDBAR_PLATFORMS)
-    return result
+    return await hass.config_entries.async_unload_platforms(entry, SOUNDBAR_PLATFORMS)
 
 
 ##### webOS TV #####
@@ -492,7 +497,7 @@ SERVICE_TO_METHOD = {
 
 async def async_setup_webostv(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LG WebOS TV platform."""
-    _LOGGER.warning(f"async_setup> config : {config}")
+    _LOGGER.warning("async_setup_webostv. config: %s", config)
     hass.data[DOMAIN].setdefault(DATA_CONFIG_ENTRY_WEBOSTV, {})
     hass.data[DOMAIN][DATA_HASS_CONFIG] = config
 
@@ -502,9 +507,9 @@ async def async_setup_webostv(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry_webostv(
     hass: HomeAssistant, entry: ThinqConfigEntry
 ) -> bool:
+    """Set up LG WebOS TV platform config entry."""
     hass.data[DOMAIN].setdefault(DATA_CONFIG_ENTRY_WEBOSTV, {})
 
-    """Set the config entry up."""
     host = entry.data[CONF_HOST]
     key = entry.data[CONF_CLIENT_SECRET]
 

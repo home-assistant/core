@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from aiowebostv import WebOsClient, WebOsTvPairError
+
 from homeassistant.components.notify import ATTR_DATA, BaseNotificationService
 from homeassistant.const import ATTR_ICON
 from homeassistant.core import HomeAssistant

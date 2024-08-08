@@ -1,13 +1,14 @@
-# Base component constants
+"""Constants for LG ThinQ."""
+
+# Base component constants.
 import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import StrEnum
 from ipaddress import IPv4Address
-from typing import Any, Final, TypeAlias
+from typing import Any, Final
 
 from aiowebostv import WebOsTvCommandError
-from homeassistant.config_entries import ConfigEntry
 from thinqconnect import (
     AirConditionerDevice,
     AirPurifierDevice,
@@ -43,6 +44,8 @@ from thinqconnect import (
 from thinqconnect.devices.connect_device import ConnectBaseDevice
 from websockets.exceptions import ConnectionClosed, ConnectionClosedOK
 
+from homeassistant.config_entries import ConfigEntry
+
 DOMAIN = "lgthinq"
 DATA_HASS_CONFIG = "hass_config"
 
@@ -62,7 +65,7 @@ THINQ_PAT_URL: Final[str] = "https://connect-pat.lgthinq.com"
 ##### thinq #####
 # Error Code
 class ErrorCode(StrEnum):
-    """Error code of ThinQ Connect API"""
+    """Error codes of ThinQ Connect API."""
 
     INVALID_TOKEN = "1218"
     NOT_CONNECTED_DEVICE = "1222"
@@ -145,10 +148,10 @@ DEFAULT_TEMP_STEP: int = 1
 POWER_ON: Final[str] = "POWER_ON"
 POWER_OFF: Final[str] = "POWER_OFF"
 
-# TypeAlias
-Profile: TypeAlias = dict[str, Any]
-ProfileMap: TypeAlias = dict[str, Profile]
-PropertyMap: TypeAlias = dict[str, ProfileMap]
+# Type alias for profile and property .
+type Profile = dict[str, Any]
+type ProfileMap = dict[str, Profile]
+type PropertyMap = dict[str, ProfileMap]
 
 ##### Soundbar #####
 

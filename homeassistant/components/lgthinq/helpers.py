@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import logging
-
 from aiowebostv import WebOsClient
+
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from . import async_control_connect
@@ -19,8 +17,6 @@ from .const import (
     LIVE_TV_APP_ID,
     WEBOSTV_EXCEPTIONS,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -109,6 +105,7 @@ async def async_get_sources(host: str, key: str) -> list[str]:
 def get_conf_sources(
     config_entry: config_entries.ConfigEntry,
 ) -> list[str]:
+    """Get config sources from the entry."""
     conf_sources = config_entry.options.get(CONF_SOURCES, [])
     if not conf_sources:
         conf_sources = config_entry.data.get(CONF_SOURCES, [])
