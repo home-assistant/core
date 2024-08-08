@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import pyotgw.vars as gw_vars
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntityDescription,
+)
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     PERCENTAGE,
@@ -57,167 +62,275 @@ TRANSLATE_SOURCE = {
 
 SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION = 1
 
-BINARY_SENSOR_INFO: dict[str, list] = {
-    # [device_class, friendly_name format, [status source, ...]]
-    gw_vars.DATA_MASTER_CH_ENABLED: [
-        None,
-        "Thermostat Central Heating {}",
+
+@dataclass(frozen=True)
+class OpenThermEntityDescriptionMixin:
+    """Mixin for common opentherm_gw entity properties."""
+
+    friendly_name_format: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class OpenThermBinarySensorEntityDescription(
+    BinarySensorEntityDescription, OpenThermEntityDescriptionMixin
+):
+    """Describes opentherm_gw binary sensor entity."""
+
+
+BINARY_SENSOR_INFO: tuple[
+    tuple[list[str], OpenThermBinarySensorEntityDescription], ...
+] = (
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_MASTER_DHW_ENABLED: [
-        None,
-        "Thermostat Hot Water {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_MASTER_CH_ENABLED,
+            friendly_name_format="Thermostat Central Heating {}",
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_MASTER_COOLING_ENABLED: [
-        None,
-        "Thermostat Cooling {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_MASTER_DHW_ENABLED,
+            friendly_name_format="Thermostat Hot Water {}",
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_MASTER_OTC_ENABLED: [
-        None,
-        "Thermostat Outside Temperature Correction {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_MASTER_COOLING_ENABLED,
+            friendly_name_format="Thermostat Cooling {}",
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_MASTER_CH2_ENABLED: [
-        None,
-        "Thermostat Central Heating 2 {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_MASTER_OTC_ENABLED,
+            friendly_name_format="Thermostat Outside Temperature Correction {}",
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_FAULT_IND: [
-        BinarySensorDeviceClass.PROBLEM,
-        "Boiler Fault {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_MASTER_CH2_ENABLED,
+            friendly_name_format="Thermostat Central Heating 2 {}",
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_CH_ACTIVE: [
-        BinarySensorDeviceClass.HEAT,
-        "Boiler Central Heating {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_SLAVE_FAULT_IND,
+            friendly_name_format="Boiler Fault {}",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_DHW_ACTIVE: [
-        BinarySensorDeviceClass.HEAT,
-        "Boiler Hot Water {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_SLAVE_CH_ACTIVE,
+            friendly_name_format="Boiler Central Heating {}",
+            device_class=BinarySensorDeviceClass.HEAT,
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_FLAME_ON: [
-        BinarySensorDeviceClass.HEAT,
-        "Boiler Flame {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_SLAVE_DHW_ACTIVE,
+            friendly_name_format="Boiler Hot Water {}",
+            device_class=BinarySensorDeviceClass.HEAT,
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_COOLING_ACTIVE: [
-        BinarySensorDeviceClass.COLD,
-        "Boiler Cooling {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_SLAVE_FLAME_ON,
+            friendly_name_format="Boiler Flame {}",
+            device_class=BinarySensorDeviceClass.HEAT,
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_CH2_ACTIVE: [
-        BinarySensorDeviceClass.HEAT,
-        "Boiler Central Heating 2 {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_SLAVE_COOLING_ACTIVE,
+            friendly_name_format="Boiler Cooling {}",
+            device_class=BinarySensorDeviceClass.COLD,
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_DIAG_IND: [
-        BinarySensorDeviceClass.PROBLEM,
-        "Boiler Diagnostics {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_SLAVE_CH2_ACTIVE,
+            friendly_name_format="Boiler Central Heating 2 {}",
+            device_class=BinarySensorDeviceClass.HEAT,
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_DHW_PRESENT: [
-        None,
-        "Boiler Hot Water Present {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_SLAVE_DIAG_IND,
+            friendly_name_format="Boiler Diagnostics {}",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_CONTROL_TYPE: [
-        None,
-        "Boiler Control Type {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_SLAVE_DHW_PRESENT,
+            friendly_name_format="Boiler Hot Water Present {}",
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_COOLING_SUPPORTED: [
-        None,
-        "Boiler Cooling Support {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_SLAVE_CONTROL_TYPE,
+            friendly_name_format="Boiler Control Type {}",
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_DHW_CONFIG: [
-        None,
-        "Boiler Hot Water Configuration {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_SLAVE_COOLING_SUPPORTED,
+            friendly_name_format="Boiler Cooling Support {}",
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_MASTER_LOW_OFF_PUMP: [
-        None,
-        "Boiler Pump Commands Support {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_SLAVE_DHW_CONFIG,
+            friendly_name_format="Boiler Hot Water Configuration {}",
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_CH2_PRESENT: [
-        None,
-        "Boiler Central Heating 2 Present {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_SLAVE_MASTER_LOW_OFF_PUMP,
+            friendly_name_format="Boiler Pump Commands Support {}",
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_SERVICE_REQ: [
-        BinarySensorDeviceClass.PROBLEM,
-        "Boiler Service Required {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_SLAVE_CH2_PRESENT,
+            friendly_name_format="Boiler Central Heating 2 Present {}",
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_REMOTE_RESET: [
-        None,
-        "Boiler Remote Reset Support {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_SLAVE_SERVICE_REQ,
+            friendly_name_format="Boiler Service Required {}",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_LOW_WATER_PRESS: [
-        BinarySensorDeviceClass.PROBLEM,
-        "Boiler Low Water Pressure {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_SLAVE_REMOTE_RESET,
+            friendly_name_format="Boiler Remote Reset Support {}",
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_GAS_FAULT: [
-        BinarySensorDeviceClass.PROBLEM,
-        "Boiler Gas Fault {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_SLAVE_LOW_WATER_PRESS,
+            friendly_name_format="Boiler Low Water Pressure {}",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_AIR_PRESS_FAULT: [
-        BinarySensorDeviceClass.PROBLEM,
-        "Boiler Air Pressure Fault {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_SLAVE_GAS_FAULT,
+            friendly_name_format="Boiler Gas Fault {}",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_SLAVE_WATER_OVERTEMP: [
-        BinarySensorDeviceClass.PROBLEM,
-        "Boiler Water Overtemperature {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_SLAVE_AIR_PRESS_FAULT,
+            friendly_name_format="Boiler Air Pressure Fault {}",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_REMOTE_TRANSFER_DHW: [
-        None,
-        "Remote Hot Water Setpoint Transfer Support {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_SLAVE_WATER_OVERTEMP,
+            friendly_name_format="Boiler Water Overtemperature {}",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_REMOTE_TRANSFER_MAX_CH: [
-        None,
-        "Remote Maximum Central Heating Setpoint Write Support {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_REMOTE_TRANSFER_DHW,
+            friendly_name_format="Remote Hot Water Setpoint Transfer Support {}",
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_REMOTE_RW_DHW: [
-        None,
-        "Remote Hot Water Setpoint Write Support {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_REMOTE_TRANSFER_MAX_CH,
+            friendly_name_format="Remote Maximum Central Heating Setpoint Write Support {}",
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_REMOTE_RW_MAX_CH: [
-        None,
-        "Remote Central Heating Setpoint Write Support {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_REMOTE_RW_DHW,
+            friendly_name_format="Remote Hot Water Setpoint Write Support {}",
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_ROVRD_MAN_PRIO: [
-        None,
-        "Remote Override Manual Change Priority {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_REMOTE_RW_MAX_CH,
+            friendly_name_format="Remote Central Heating Setpoint Write Support {}",
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.DATA_ROVRD_AUTO_PRIO: [
-        None,
-        "Remote Override Program Change Priority {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_ROVRD_MAN_PRIO,
+            friendly_name_format="Remote Override Manual Change Priority {}",
+        ),
+    ),
+    (
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
-    ],
-    gw_vars.OTGW_GPIO_A_STATE: [None, "Gateway GPIO A {}", [gw_vars.OTGW]],
-    gw_vars.OTGW_GPIO_B_STATE: [None, "Gateway GPIO B {}", [gw_vars.OTGW]],
-    gw_vars.OTGW_IGNORE_TRANSITIONS: [
-        None,
-        "Gateway Ignore Transitions {}",
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.DATA_ROVRD_AUTO_PRIO,
+            friendly_name_format="Remote Override Program Change Priority {}",
+        ),
+    ),
+    (
         [gw_vars.OTGW],
-    ],
-    gw_vars.OTGW_OVRD_HB: [None, "Gateway Override High Byte {}", [gw_vars.OTGW]],
-}
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.OTGW_GPIO_A_STATE,
+            friendly_name_format="Gateway GPIO A {}",
+        ),
+    ),
+    (
+        [gw_vars.OTGW],
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.OTGW_GPIO_B_STATE,
+            friendly_name_format="Gateway GPIO B {}",
+        ),
+    ),
+    (
+        [gw_vars.OTGW],
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.OTGW_IGNORE_TRANSITIONS,
+            friendly_name_format="Gateway Ignore Transitions {}",
+        ),
+    ),
+    (
+        [gw_vars.OTGW],
+        OpenThermBinarySensorEntityDescription(
+            key=gw_vars.OTGW_OVRD_HB,
+            friendly_name_format="Gateway Override High Byte {}",
+        ),
+    ),
+)
 
 SENSOR_INFO: dict[str, list] = {
     # [device_class, unit, friendly_name, suggested_display_precision, [status source, ...]]
