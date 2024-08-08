@@ -563,6 +563,9 @@ cached_ipaddress==0.3.0
 caldav==1.3.9
 
 # homeassistant.components.coinbase
+coinbase-advanced-py==1.2.2
+
+# homeassistant.components.coinbase
 coinbase==2.1.0
 
 # homeassistant.scripts.check_config

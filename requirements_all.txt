@@ -661,6 +661,9 @@ clearpasspy==1.0.2
 clx-sdk-xms==1.0.0
 
 # homeassistant.components.coinbase
+coinbase-advanced-py==1.2.2
+
+# homeassistant.components.coinbase
 coinbase==2.1.0
 
 # homeassistant.scripts.check_config
@@ -1106,6 +1109,9 @@ homematicip==1.1.1
 
 # homeassistant.components.horizon
 horimote==0.4.1
+
+# homeassistant.components.dreo
+hscloud==1.0.3
 
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
