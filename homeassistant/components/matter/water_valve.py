@@ -140,7 +140,7 @@ class MatterValve(MatterEntity, ValveEntity):
             # A value of 0 percent SHALL indicate the fully closed position
             # A value of null SHALL indicate that the current state is not known
             current_valve_position = self.get_matter_attribute_value(
-                clusters..Attributes.CurrentLevel
+                clusters.Attributes.CurrentLevel
             )
             self._attr_current_valve_position = (
                 floor(current_valve_position / 100)
