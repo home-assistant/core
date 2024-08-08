@@ -156,11 +156,13 @@ class MatterValve(MatterEntity, ValveEntity):
             )
 
         # map matter type to HA deviceclass
+        """
         device_type: clusters.ValveConfigurationAndControl.Enums.Type = (
             self.get_matter_attribute_value(
                 clusters.ValveConfigurationAndControl.Attributes.Type
             )
         )
+        """
         # self._attr_device_class = TYPE_MAP.get(device_type, ValveDeviceClass.WATER)
         self._attr_device_class = ValveDeviceClass.WATER
 
