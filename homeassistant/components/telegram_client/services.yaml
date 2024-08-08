@@ -1,0 +1,190 @@
+# Describes the format for available Telegram client services
+
+send_messages:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_client
+    target_username:
+      example: me
+      selector:
+        text:
+          multiple: true
+    target_id:
+      selector:
+        text:
+          multiple: true
+    message:
+      example: This is the test message, sent from **Telegram client** for Home Assistant.
+      selector:
+        text:
+          multiline: true
+    reply_to:
+      selector:
+        number:
+          mode: box
+    parse_mode:
+      example: markdown
+      selector:
+        select:
+          options:
+            - html
+            - markdown
+    link_preview:
+      selector:
+        boolean:
+    file:
+      example: configuration.yaml
+      selector:
+        text:
+          multiple: true
+    force_document:
+      selector:
+        boolean:
+    clear_draft:
+      selector:
+        boolean:
+    keyboard:
+      selector:
+        object:
+    inline_keyboard:
+      example:
+        - - text: 😂
+            data: joy
+          - text: 🤣
+            data: rofl
+          - text: 😅
+            data: sweat
+        - - text: 😀
+            data: grinning
+          - text: 😃
+            data: smiley
+          - text: 😄
+            data: smile
+      selector:
+        object:
+    keyboard_resize:
+      selector:
+        boolean:
+    keyboard_single_use:
+      selector:
+        boolean:
+    silent:
+      selector:
+        boolean:
+    supports_streaming:
+      selector:
+        boolean:
+    schedule:
+      selector:
+        datetime:
+    comment_to:
+      selector:
+        number:
+          mode: box
+    nosound_video:
+      selector:
+        boolean:
+edit_message:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: telegram_client
+    target_username:
+      example: me
+      selector:
+        text:
+    target_id:
+      selector:
+        number:
+    message:
+      required: true
+      example: 100
+      selector:
+        number:
+          min: 0
+          step: 1
+          mode: box
+    text:
+      required: true
+      example: "**New** message text."
+      selector:
+        text:
+          multiline: true
+    parse_mode:
+      example: markdown
+      selector:
+        select:
+          options:
+            - html
+            - markdown
+    link_preview:
+      selector:
+        boolean:
+    file:
+      example: configuration.yaml
+      selector:
+        text:
+          multiple: true
+    force_document:
+      selector:
+        boolean:
+    keyboard:
+      selector:
+        object:
+    inline_keyboard:
+      example:
+        - - text: 😂
+            data: joy
+          - text: 🤣
+            data: rofl
+          - text: 😅
+            data: sweat
+        - - text: 😀
+            data: grinning
+          - text: 😃
+            data: smiley
+          - text: smile
+            data: 😄
+      selector:
+        object:
+    keyboard_resize:
+      selector:
+        boolean:
+    keyboard_single_use:
+      selector:
+        boolean:
+    supports_streaming:
+      selector:
+        boolean:
+    schedule:
+      selector:
+        datetime:
+delete_messages:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: telegram_client
+    target_username:
+      example: me
+      selector:
+        text:
+          multiple: true
+    target_id:
+      selector:
+        text:
+          multiple: true
+    message_ids:
+      required: true
+      example: 2
+      selector:
+        text:
+          multiple: true
+    revoke:
+      selector:
+        boolean:

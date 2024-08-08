@@ -1,0 +1,7 @@
+{
+  "services": {
+    "send_messages": "mdi:message-arrow-right",
+    "edit_message": "mdi:message-draw",
+    "delete_messages": "mdi:message-minus"
+  }
+}

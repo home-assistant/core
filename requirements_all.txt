@@ -121,6 +121,9 @@ SQLAlchemy==2.0.31
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
 
+# homeassistant.components.telegram_client
+Telethon==1.36.0
+
 # homeassistant.components.travisci
 TravisPy==0.3.5
 
