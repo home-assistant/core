@@ -87,8 +87,8 @@ class MatterValve(MatterEntity, ValveEntity):
             clusters.ValveConfigurationAndControl.Commands.Close()
         )
 
-    async def async_set_valve_position(self, **kwargs: Any) -> None:
-        """Set the water valve to a specific position."""
+    async def async_set_valve_position(self, position: int) -> None:
+        """Move the water valve to a specific position."""
         position = kwargs[ATTR_POSITION]
         await self.send_device_command(
             # A value of 100 percent SHALL indicate the fully open position
