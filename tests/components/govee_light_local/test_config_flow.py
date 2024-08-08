@@ -3,7 +3,7 @@
 from errno import EADDRINUSE
 from unittest.mock import AsyncMock, patch
 
-from govee_local_api import GoveeDevice
+from govee_local_api import GoveeController, GoveeDevice
 
 from homeassistant import config_entries
 from homeassistant.components.govee_light_local.const import DOMAIN
@@ -12,8 +12,10 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import DEFAULT_CAPABILITEIS
 
+from tests.typing import MockOf
 
-def _get_devices(mock_govee_api: AsyncMock) -> list[GoveeDevice]:
+
+def _get_devices(mock_govee_api: MockOf[GoveeController]) -> list[GoveeDevice]:
     return [
         GoveeDevice(
             controller=mock_govee_api,
@@ -26,7 +28,9 @@ def _get_devices(mock_govee_api: AsyncMock) -> list[GoveeDevice]:
 
 
 async def test_creating_entry_has_no_devices(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_govee_api: AsyncMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_govee_api: MockOf[GoveeController],
 ) -> None:
     """Test setting up Govee with no devices."""
 
@@ -61,7 +65,7 @@ async def test_creating_entry_has_no_devices(
 async def test_creating_entry_has_with_devices(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_govee_api: AsyncMock,
+    mock_govee_api: MockOf[GoveeController],
 ) -> None:
     """Test setting up Govee with devices."""
 
@@ -90,7 +94,7 @@ async def test_creating_entry_has_with_devices(
 async def test_creating_entry_errno(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_govee_api: AsyncMock,
+    mock_govee_api: MockOf[GoveeController],
 ) -> None:
     """Test setting up Govee with devices."""
 
