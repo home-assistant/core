@@ -8,12 +8,14 @@ from http import HTTPStatus
 import logging
 from typing import Any, Concatenate
 
+from dateutil import tz
 import requests
 from wallbox import Wallbox
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+import homeassistant.util.dt as dt_util
 
 from .const import (
     CHARGER_CURRENCY_KEY,
@@ -202,6 +204,56 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Set wallbox to pause or resume."""
         await self.hass.async_add_executor_job(self._pause_charger, pause)
         await self.async_request_refresh()
+
+    @_require_authentication
+    def _get_schedules(self) -> dict[str, Any]:
+        """Get wallbox schedules."""
+        schedules = self._wallbox.getChargerSchedules(self._station)
+        for schedule in schedules["schedules"]:
+            schedule["start"] = self._convert_to_local_time_str(schedule["start"])
+            schedule["stop"] = self._convert_to_local_time_str(schedule["stop"])
+        return dict(schedules)
+
+    async def async_get_schedules(self) -> dict[str, Any]:
+        """Get wallbox schedules."""
+        return await self.hass.async_add_executor_job(self._get_schedules)
+
+    @_require_authentication
+    def _set_schedules(self, data: dict[str, Any]) -> None:
+        """Set wallbox schedules."""
+        schedules = {"schedules": data["schedules"]}
+
+        # update charger id
+        for schedule in schedules["schedules"]:
+            schedule["chargerId"] = self._station
+
+        self._wallbox.setChargerSchedules(self._station, schedules)
+
+    async def async_set_schedules(self, data: dict[str, Any]) -> None:
+        """Set wallbox schedules."""
+        for schedule in data["schedules"]:
+            schedule["start"] = self._convert_to_utc_time_str(schedule["start"])
+            schedule["stop"] = self._convert_to_utc_time_str(schedule["stop"])
+
+        await self.hass.async_add_executor_job(self._set_schedules, data)
+
+    def _convert_to_local_time_str(self, wallbox_time_str: str) -> str:
+        return dt_util.as_local(
+            dt_util.now().replace(
+                hour=int(wallbox_time_str[0:2]),
+                minute=int(wallbox_time_str[2:4]),
+                second=0,
+                microsecond=0,
+                tzinfo=tz.UTC,
+            )
+        ).strftime("%H:%M")
+
+    def _convert_to_utc_time_str(self, local_time_str: str) -> str:
+        return dt_util.as_utc(
+            dt_util.now().replace(
+                hour=int(local_time_str[0:2]), minute=int(local_time_str[3:5])
+            )
+        ).strftime("%H%M")
 
 
 class InvalidAuth(HomeAssistantError):
