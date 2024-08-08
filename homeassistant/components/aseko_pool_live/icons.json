@@ -6,8 +6,17 @@
       }
     },
     "sensor": {
+      "electrolyzer": {
+        "default": "mdi:lightning-bolt"
+      },
       "free_chlorine": {
         "default": "mdi:flask"
+      },
+      "redox": {
+        "default": "mdi:test-tube"
+      },
+      "water_level": {
+        "default": "mdi:waves"
       },
       "water_temperature": {
         "default": "mdi:coolant-temperature"

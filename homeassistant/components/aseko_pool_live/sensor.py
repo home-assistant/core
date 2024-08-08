@@ -7,15 +7,60 @@ from aioaseko import Unit, Variable
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfElectricPotential, UnitOfLength, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import AsekoDataUpdateCoordinator
 from .entity import AsekoEntity
+
+CONCENTRATION_KILOGRAMS_PER_CUBIC_METER = "kg/m³"
+CONCENTRATION_MILLIGRAMS_PER_LITER = "mg/l"
+GRAMS_PER_HOUR = "g/hour"
+
+UNIT_SENSORS = {
+    "airTemp": SensorEntityDescription(
+        key="air_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    "waterTemp": SensorEntityDescription(
+        key="water_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    "ph": SensorEntityDescription(
+        key="ph",
+        device_class=SensorDeviceClass.PH,
+    ),
+    "rx": SensorEntityDescription(
+        key="redox",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+    ),
+    "electrodePower": SensorEntityDescription(
+        key="electrolyzer",
+        native_unit_of_measurement=GRAMS_PER_HOUR,
+    ),
+    "clf": SensorEntityDescription(
+        key="free_chlorine",
+        native_unit_of_measurement=CONCENTRATION_MILLIGRAMS_PER_LITER,
+    ),
+    "salinity": SensorEntityDescription(
+        key="salinity",
+        native_unit_of_measurement=CONCENTRATION_KILOGRAMS_PER_CUBIC_METER,
+    ),
+    "waterLevel": SensorEntityDescription(
+        key="water_level",
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.CENTIMETERS,
+    ),
+}
 
 
 async def async_setup_entry(
@@ -47,29 +92,15 @@ class VariableSensorEntity(AsekoEntity, SensorEntity):
         super().__init__(unit, coordinator)
         self._variable = variable
 
-        translation_key = {
-            "Air temp.": "air_temperature",
-            "Cl free": "free_chlorine",
-            "Water temp.": "water_temperature",
-        }.get(self._variable.name)
-        if translation_key is not None:
-            self._attr_translation_key = translation_key
+        entity_description = UNIT_SENSORS.get(self._variable.type)
+        if entity_description is not None:
+            self.entity_description = entity_description
+            self.translation_key = entity_description.key
         else:
             self._attr_name = self._variable.name
+            self._attr_native_unit_of_measurement = self._variable.unit
 
         self._attr_unique_id = f"{self._unit.serial_number}{self._variable.type}"
-        self._attr_native_unit_of_measurement = self._variable.unit
-
-        self._attr_icon = {
-            "rx": "mdi:test-tube",
-            "waterLevel": "mdi:waves",
-        }.get(self._variable.type)
-
-        self._attr_device_class = {
-            "airTemp": SensorDeviceClass.TEMPERATURE,
-            "waterTemp": SensorDeviceClass.TEMPERATURE,
-            "ph": SensorDeviceClass.PH,
-        }.get(self._variable.type)
 
     @property
     def native_value(self) -> int | None:

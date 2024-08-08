@@ -40,6 +40,18 @@
       "free_chlorine": {
         "name": "Free chlorine"
       },
+      "redox": {
+        "name": "Redox"
+      },
+      "salinity": {
+        "name": "Salinity"
+      },
+      "electrolyzer": {
+        "name": "Electrolyzer"
+      },
+      "water_level": {
+        "name": "Water level"
+      },
       "water_temperature": {
         "name": "Water temperature"
       }

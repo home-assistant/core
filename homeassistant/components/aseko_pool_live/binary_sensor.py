@@ -31,18 +31,15 @@ class AsekoBinarySensorEntityDescription(BinarySensorEntityDescription):
 UNIT_BINARY_SENSORS: tuple[AsekoBinarySensorEntityDescription, ...] = (
     AsekoBinarySensorEntityDescription(
         key="water_flow",
-        translation_key="water_flow",
         value_fn=lambda unit: unit.water_flow,
     ),
     AsekoBinarySensorEntityDescription(
         key="has_alarm",
-        translation_key="alarm",
         value_fn=lambda unit: unit.has_alarm,
         device_class=BinarySensorDeviceClass.SAFETY,
     ),
     AsekoBinarySensorEntityDescription(
         key="has_error",
-        translation_key="error",
         value_fn=lambda unit: unit.has_error,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
@@ -79,6 +76,7 @@ class AsekoUnitBinarySensorEntity(AsekoEntity, BinarySensorEntity):
         """Initialize the unit binary sensor."""
         super().__init__(unit, coordinator)
         self.entity_description = entity_description
+        self.translation_key = entity_description.key
         self._attr_unique_id = f"{self._unit.serial_number}_{entity_description.key}"
 
     @property
