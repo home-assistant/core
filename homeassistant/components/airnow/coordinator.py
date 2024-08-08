@@ -12,7 +12,6 @@ from pyairnow.errors import AirNowError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_API_AQI,
@@ -27,7 +26,6 @@ from .const import (
     ATTR_API_REPORT_DATE,
     ATTR_API_REPORT_HOUR,
     ATTR_API_REPORT_TZ,
-    ATTR_API_REPORT_TZINFO,
     ATTR_API_STATE,
     ATTR_API_STATION,
     ATTR_API_STATION_LATITUDE,
@@ -98,9 +96,7 @@ class AirNowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 # Copy Report Details
                 data[ATTR_API_REPORT_DATE] = obv[ATTR_API_REPORT_DATE]
                 data[ATTR_API_REPORT_HOUR] = obv[ATTR_API_REPORT_HOUR]
-                data[ATTR_API_REPORT_TZINFO] = await dt_util.async_get_time_zone(
-                    obv[ATTR_API_REPORT_TZ]
-                )
+                data[ATTR_API_REPORT_TZ] = obv[ATTR_API_REPORT_TZ]
 
                 # Copy Station Details
                 data[ATTR_API_STATE] = obv[ATTR_API_STATE]
