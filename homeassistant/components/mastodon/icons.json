@@ -1,13 +1,13 @@
 {
   "entity": {
     "sensor": {
-      "followers_count": {
+      "followers": {
         "default": "mdi:account-multiple"
       },
-      "following_count": {
+      "following": {
         "default": "mdi:account-multiple"
       },
-      "statuses_count": {
+      "statuses": {
         "default": "mdi:message-text"
       }
     }
