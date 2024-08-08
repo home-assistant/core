@@ -29,12 +29,12 @@ from .models import MatterDiscoverySchema
 OPERATIONAL_STATUS_MASK = 0b11
 
 # map Matter valve types to HA device class
-'''
+"""
 TYPE_MAP = {
     clusters.ValveConfigurationAndControl.Enums.Type.kWater: ValveDeviceClass.WATER, // TODO
     #clusters.ValveConfigurationAndControl.Enums.Type.kDrapery: ValveDeviceClass.GAS,
 }
-'''
+"""
 
 # ValveStateEnum
 class OperationalStatus(IntEnum):
@@ -73,6 +73,7 @@ class MatterValve(MatterEntity, ValveEntity):
             if self.current_valve_position is not None
             else None
         )
+
     '''
     async def async_stop_water_valve(self, **kwargs: Any) -> None:
         """Stop the water valve movement."""
@@ -81,11 +82,15 @@ class MatterValve(MatterEntity, ValveEntity):
 
     async def async_open_water_valve(self, **kwargs: Any) -> None:
         """Open the water valve."""
-        await self.send_device_command(clusters.ValveConfigurationAndControl.Commands.Open())
+        await self.send_device_command(
+            clusters.ValveConfigurationAndControl.Commands.Open()
+        )
 
     async def async_close_valve(self, **kwargs: Any) -> None:
         """Close the water valve."""
-        await self.send_device_command(clusters.ValveConfigurationAndControl.Commands.Close())
+        await self.send_device_command(
+            clusters.ValveConfigurationAndControl.Commands.Close()
+        )
 
     async def async_set_valve_position(self, **kwargs: Any) -> None:
         """Set the water valve to a specific position."""
@@ -94,7 +99,9 @@ class MatterValve(MatterEntity, ValveEntity):
             # A value of 100 percent SHALL indicate the fully open position
             # A value of 0 percent SHALL indicate the fully closed position
             # A value of null SHALL indicate that the current state is not known
-            clusters.ValveConfigurationAndControl.Commands.Open(position) # TargetLevel type="percent"
+            clusters.ValveConfigurationAndControl.Commands.Open(
+                position
+            )  # TargetLevel type="percent"
         )
 
     async def send_device_command(self, command: Any) -> None:
@@ -125,8 +132,8 @@ class MatterValve(MatterEntity, ValveEntity):
             # Valve is transitioning between closed and open positions or between levels
             case OperationalStatus.VALVE_IS_CURRENTLY_TRANSITIONING:
                 self._attr_is_opening = True
-                #self._attr_is_closing = False
-                #self._attr_is_transitioning = True --> Not implemented here: https://developers.home-assistant.io/docs/core/entity/valve
+                # self._attr_is_closing = False
+                # self._attr_is_transitioning = True --> Not implemented here: https://developers.home-assistant.io/docs/core/entity/valve
             case _:
                 self._attr_is_opening = False
                 self._attr_is_closing = False
@@ -134,12 +141,11 @@ class MatterValve(MatterEntity, ValveEntity):
         if self._entity_info.endpoint.has_attribute(
             None, clusters.ValveConfigurationAndControl.Attributes.CurrentLevel
         ):
-
             # A value of 100 percent SHALL indicate the fully open position
             # A value of 0 percent SHALL indicate the fully closed position
             # A value of null SHALL indicate that the current state is not known
             current_valve_position = self.get_matter_attribute_value(
-                clusters.ValveConfigurationAndControl.Attributes.CurrentLevel
+                clusters..Attributes.CurrentLevel
             )
             self._attr_current_valve_position = (
                 floor(current_valve_position / 100)
@@ -154,16 +160,15 @@ class MatterValve(MatterEntity, ValveEntity):
                 self.current_valve_position,
             )
 
-
         # map matter type to HA deviceclass
         device_type: clusters.ValveConfigurationAndControl.Enums.Type = (
-            self.get_matter_attribute_value(clusters.ValveConfigurationAndControl.Attributes.Type)
+            self.get_matter_attribute_value(
+                clusters.ValveConfigurationAndControl.Attributes.Type
+            )            
         )
         self._attr_device_class = TYPE_MAP.get(device_type, ValveDeviceClass.WATER)
 
-        supported_features = (
-            ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
-        )
+        supported_features = ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
         commands = self.get_matter_attribute_value(
             clusters.ValveConfigurationAndControl.Attributes.AcceptedCommandList
         )
