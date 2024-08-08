@@ -1,5 +1,6 @@
 {
   "services": {
-    "reload": "mdi:reload"
+    "reload": "mdi:reload",
+    "get_schedule": "mdi:calendar-export"
   }
 }
