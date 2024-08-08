@@ -28,14 +28,14 @@ class MockConfig(smart_home.AlexaConfig):
         "camera.test": {"display_categories": "CAMERA"},
     }
 
-    def __init__(self, hass):
+    def __init__(self, hass, locale=None):
         """Mock Alexa config."""
         super().__init__(
             hass,
             {
                 CONF_ENDPOINT: TEST_URL,
                 CONF_FILTER: entityfilter.FILTER_SCHEMA({}),
-                CONF_LOCALE: TEST_LOCALE,
+                CONF_LOCALE: locale or TEST_LOCALE,
             },
         )
         self._store = Mock(spec_set=config.AlexaConfigStore)
@@ -62,9 +62,9 @@ class MockConfig(smart_home.AlexaConfig):
         """Accept a grant."""
 
 
-def get_default_config(hass):
+def get_default_config(hass, locale=None):
     """Return a MockConfig instance."""
-    return MockConfig(hass)
+    return MockConfig(hass, locale)
 
 
 def get_new_request(namespace, name, endpoint=None):

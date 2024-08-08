@@ -83,6 +83,58 @@ async def test_discovery_remote(
     assert "Alexa.ModeController" in interfaces
 
 
+@pytest.mark.parametrize(
+    ("current_activity", "activity_list", "locale"),
+    [
+        ("TV", ["TV", "MUSIC", "DVD"], "de-DE"),
+        ("TV", ["TV"], "en-GB"),
+    ],
+)
+async def test_discovery_remote_locale(
+    hass: HomeAssistant, current_activity: str, activity_list: list[str], locale: str
+) -> None:
+    """Test discory for a remote entity's mode locale."""
+    request = get_new_request("Alexa.Discovery", "Discover")
+    # setup test device
+    hass.states.async_set(
+        "remote.test_locale",
+        "off",
+        {
+            "current_activity": current_activity,
+            "activity_list": activity_list,
+        },
+    )
+    msg = await smart_home.async_handle_message(
+        hass, get_default_config(hass, locale), request
+    )
+    assert "event" in msg
+    msg = msg["event"]
+    assert len(msg["payload"]["endpoints"]) == 1
+    endpoint = msg["payload"]["endpoints"][0]
+    assert endpoint["endpointId"] == "remote#test_locale"
+
+    mode_controller = [
+        capability
+        for capability in endpoint["capabilities"]
+        if capability["interface"] == "Alexa.ModeController"
+    ]
+    assert len(mode_controller) == 1
+
+    mode_values = [
+        mode["modeResources"]["friendlyNames"][0]["value"]
+        for mode in mode_controller[0]["configuration"]["supportedModes"]
+        if mode["modeResources"]["friendlyNames"][0]["@type"] == "text"
+    ]
+
+    for mode_value in mode_values:
+        # Ignore PRESET_MODE_NA
+        if mode_value["text"] == "-":
+            continue
+
+        assert mode_value["text"] in activity_list
+        assert mode_value["locale"] == locale
+
+
 @pytest.mark.parametrize("adjust", ["-5", "5", "-80"])
 async def test_api_adjust_brightness(hass: HomeAssistant, adjust: str) -> None:
     """Test api adjust brightness process."""
