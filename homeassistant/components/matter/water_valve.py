@@ -180,9 +180,9 @@ class MatterValve(MatterEntity, ValveEntity):
                 clusters.ValveConfigurationAndControl.Attributes.FeatureMap
             )
         )
-        
+
         self._feature_map = feature_map  
-        
+
         # NOTE: the featuremap can dynamically change, so we need to update the
         # supported features if the featuremap changes.
         # work out supported features and presets from matter featuremap
