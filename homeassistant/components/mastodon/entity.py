@@ -1,6 +1,6 @@
 """Base class for Mastodon entities."""
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -38,6 +38,7 @@ class MastodonEntity(CoordinatorEntity[MastodonCoordinator]):
             identifiers={(DOMAIN, unique_id)},
             manufacturer="Mastodon gGmbH",
             model=full_account_name,
+            entry_type=DeviceEntryType.SERVICE,
             sw_version=data.runtime_data.instance[INSTANCE_VERSION],
             name=name,
         )
