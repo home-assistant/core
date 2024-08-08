@@ -15,6 +15,9 @@ class LawnMowerActivity(StrEnum):
     MOWING = "mowing"
     """Device is mowing."""
 
+    RETURNING = "returning"
+    """Device is returning to dock."""
+
     DOCKED = "docked"
     """Device is docked."""
 
