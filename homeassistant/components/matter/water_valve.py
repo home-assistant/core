@@ -36,6 +36,7 @@ TYPE_MAP = {
 }
 """
 
+
 # ValveStateEnum
 class OperationalStatus(IntEnum):
     """Currently ongoing operations enumeration for water valve, as defined in the Matter spec."""
@@ -73,7 +74,6 @@ class MatterValve(MatterEntity, ValveEntity):
             if self.current_valve_position is not None
             else None
         )
-
 
     async def async_open_water_valve(self, **kwargs: Any) -> None:
         """Open the water valve."""
