@@ -24,7 +24,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
 from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.helpers import (
     config_validation as cv,
     discovery_flow,
@@ -159,6 +159,15 @@ async def async_setup_entry(
     )
 
     # Register entity services
+    async def async_call_query_helper(
+        entity: SqueezeBoxEntity, serviceCall: ServiceCall
+    ) -> dict:
+        return await entity.async_call_query(
+            serviceCall.data["command"],
+            serviceCall.data.get("parameters", []),
+            serviceCall.return_response,
+        )
+
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_CALL_METHOD,
@@ -178,7 +187,8 @@ async def async_setup_entry(
                 cv.ensure_list, vol.Length(min=1), [cv.string]
             ),
         },
-        "async_call_query",
+        async_call_query_helper,
+        supports_response=SupportsResponse.OPTIONAL,
     )
     platform.async_register_entity_service(
         SERVICE_SYNC,
@@ -530,7 +540,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             all_params.extend(parameters)
         await self._player.async_query(*all_params)
 
-    async def async_call_query(self, command, parameters=None):
+    async def async_call_query(self, command, parameters, response):
         """Call Squeezebox JSON/RPC method where we care about the result.
 
         Additional parameters are added to the command to form the list of
@@ -539,8 +549,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         all_params = [command]
         if parameters:
             all_params.extend(parameters)
-        self._query_result = await self._player.async_query(*all_params)
-        _LOGGER.debug("call_query got result %s", self._query_result)
+        query_result = await self._player.async_query(*all_params)
+        _LOGGER.debug("call_query got result %s", query_result)
+        if response:
+            return query_result
+        self._query_result = query_result
 
     async def async_join_players(self, group_members: list[str]) -> None:
         """Add other Squeezebox players to this player's sync group.
