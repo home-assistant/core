@@ -39,12 +39,24 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
             0,
             ["set_hvac_mode", "set_preset_mode"],
         ),
+        (
+            False,
+            const.ClimateEntityFeature.TARGET_TEMPERATURE,
+            0,
+            ["set_hvac_mode", "set_temperature"],
+        ),
         (True, 0, 0, ["set_hvac_mode"]),
         (
             True,
             0,
             const.ClimateEntityFeature.PRESET_MODE,
             ["set_hvac_mode", "set_preset_mode"],
+        ),
+        (
+            True,
+            0,
+            const.ClimateEntityFeature.TARGET_TEMPERATURE,
+            ["set_hvac_mode", "set_temperature"],
         ),
     ],
 )
@@ -330,6 +342,20 @@ async def test_action_legacy(
             ],
         ),
         (
+            False,
+            {const.ATTR_MIN_TEMP: 11, const.ATTR_MAX_TEMP: 31},
+            {},
+            "set_temperature",
+            [
+                {
+                    "name": "temperature",
+                    "valueMin": 11,
+                    "valueMax": 31,
+                    "required": True,
+                }
+            ],
+        ),
+        (
             True,
             {},
             {const.ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]},
@@ -354,6 +380,20 @@ async def test_action_legacy(
                     "options": [("home", "home"), ("away", "away")],
                     "required": True,
                     "type": "select",
+                }
+            ],
+        ),
+        (
+            True,
+            {},
+            {const.ATTR_MIN_TEMP: 11, const.ATTR_MAX_TEMP: 31},
+            "set_temperature",
+            [
+                {
+                    "name": "temperature",
+                    "valueMin": 11,
+                    "valueMax": 31,
+                    "required": True,
                 }
             ],
         ),
