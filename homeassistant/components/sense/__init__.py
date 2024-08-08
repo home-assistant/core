@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
+from functools import partial
 import logging
 from typing import Any
 
@@ -80,8 +81,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
 
     client_session = async_get_clientsession(hass)
 
-    gateway = ASyncSenseable(
-        api_timeout=timeout, wss_timeout=timeout, client_session=client_session
+    # Creating the AsyncSenseable object loads
+    # ssl certificates which does blocking IO
+    gateway = await hass.async_add_executor_job(
+        partial(
+            ASyncSenseable,
+            api_timeout=timeout,
+            wss_timeout=timeout,
+            client_session=client_session,
+        )
     )
     gateway.rate_limit = ACTIVE_UPDATE_RATE
 

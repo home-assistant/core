@@ -66,7 +66,6 @@ class DeconzFan(DeconzDevice[Light], FanEntity):
     def __init__(self, device: Light, hub: DeconzHub) -> None:
         """Set up fan."""
         super().__init__(device, hub)
-        _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
         if device.fan_speed in ORDERED_NAMED_FAN_SPEEDS:
             self._default_on_speed = device.fan_speed
 
@@ -96,7 +95,8 @@ class DeconzFan(DeconzDevice[Light], FanEntity):
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         if percentage == 0:
-            return await self.async_turn_off()
+            await self.async_turn_off()
+            return
         await self.hub.api.lights.lights.set_state(
             id=self._device.resource_id,
             fan_speed=percentage_to_ordered_list_item(

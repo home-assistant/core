@@ -43,9 +43,12 @@ async def test_pipeline(
     """Test that pipeline function is called from RTP protocol."""
     assert await async_setup_component(hass, "voip", {})
 
-    def is_speech(self, chunk):
+    def process_10ms(self, chunk):
         """Anything non-zero is speech."""
-        return sum(chunk) > 0
+        if sum(chunk) > 0:
+            return 1
+
+        return 0
 
     done = asyncio.Event()
 
@@ -98,8 +101,8 @@ async def test_pipeline(
 
     with (
         patch(
-            "homeassistant.components.assist_pipeline.vad.WebRtcVad.is_speech",
-            new=is_speech,
+            "pymicro_vad.MicroVad.Process10ms",
+            new=process_10ms,
         ),
         patch(
             "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
@@ -238,9 +241,12 @@ async def test_tts_timeout(
     """Test that TTS will time out based on its length."""
     assert await async_setup_component(hass, "voip", {})
 
-    def is_speech(self, chunk):
+    def process_10ms(self, chunk):
         """Anything non-zero is speech."""
-        return sum(chunk) > 0
+        if sum(chunk) > 0:
+            return 1
+
+        return 0
 
     done = asyncio.Event()
 
@@ -298,8 +304,8 @@ async def test_tts_timeout(
 
     with (
         patch(
-            "homeassistant.components.assist_pipeline.vad.WebRtcVad.is_speech",
-            new=is_speech,
+            "pymicro_vad.MicroVad.Process10ms",
+            new=process_10ms,
         ),
         patch(
             "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
@@ -361,9 +367,12 @@ async def test_tts_wrong_extension(
     """Test that TTS will only stream WAV audio."""
     assert await async_setup_component(hass, "voip", {})
 
-    def is_speech(self, chunk):
+    def process_10ms(self, chunk):
         """Anything non-zero is speech."""
-        return sum(chunk) > 0
+        if sum(chunk) > 0:
+            return 1
+
+        return 0
 
     done = asyncio.Event()
 
@@ -403,8 +412,8 @@ async def test_tts_wrong_extension(
 
     with (
         patch(
-            "homeassistant.components.assist_pipeline.vad.WebRtcVad.is_speech",
-            new=is_speech,
+            "pymicro_vad.MicroVad.Process10ms",
+            new=process_10ms,
         ),
         patch(
             "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
@@ -456,9 +465,12 @@ async def test_tts_wrong_wav_format(
     """Test that TTS will only stream WAV audio with a specific format."""
     assert await async_setup_component(hass, "voip", {})
 
-    def is_speech(self, chunk):
+    def process_10ms(self, chunk):
         """Anything non-zero is speech."""
-        return sum(chunk) > 0
+        if sum(chunk) > 0:
+            return 1
+
+        return 0
 
     done = asyncio.Event()
 
@@ -505,8 +517,8 @@ async def test_tts_wrong_wav_format(
 
     with (
         patch(
-            "homeassistant.components.assist_pipeline.vad.WebRtcVad.is_speech",
-            new=is_speech,
+            "pymicro_vad.MicroVad.Process10ms",
+            new=process_10ms,
         ),
         patch(
             "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
@@ -558,9 +570,12 @@ async def test_empty_tts_output(
     """Test that TTS will not stream when output is empty."""
     assert await async_setup_component(hass, "voip", {})
 
-    def is_speech(self, chunk):
+    def process_10ms(self, chunk):
         """Anything non-zero is speech."""
-        return sum(chunk) > 0
+        if sum(chunk) > 0:
+            return 1
+
+        return 0
 
     async def async_pipeline_from_audio_stream(*args, **kwargs):
         stt_stream = kwargs["stt_stream"]
@@ -591,8 +606,8 @@ async def test_empty_tts_output(
 
     with (
         patch(
-            "homeassistant.components.assist_pipeline.vad.WebRtcVad.is_speech",
-            new=is_speech,
+            "pymicro_vad.MicroVad.Process10ms",
+            new=process_10ms,
         ),
         patch(
             "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",

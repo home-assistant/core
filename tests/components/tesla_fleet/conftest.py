@@ -2,21 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from copy import deepcopy
 import time
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import jwt
 import pytest
 
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
-from homeassistant.components.tesla_fleet.application_credentials import CLIENT_ID
 from homeassistant.components.tesla_fleet.const import DOMAIN, SCOPES
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .const import LIVE_STATUS, PRODUCTS, SITE_INFO, VEHICLE_DATA, VEHICLE_ONLINE
 
@@ -71,19 +65,7 @@ def normal_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
 
 
 @pytest.fixture(autouse=True)
-async def setup_credentials(hass: HomeAssistant) -> None:
-    """Fixture to setup credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(CLIENT_ID, ""),
-        DOMAIN,
-    )
-
-
-@pytest.fixture(autouse=True)
-def mock_products():
+def mock_products() -> Generator[AsyncMock]:
     """Mock Tesla Fleet Api products method."""
     with patch(
         "homeassistant.components.tesla_fleet.TeslaFleetApi.products",
@@ -93,7 +75,7 @@ def mock_products():
 
 
 @pytest.fixture(autouse=True)
-def mock_vehicle_state():
+def mock_vehicle_state() -> Generator[AsyncMock]:
     """Mock Tesla Fleet API Vehicle Specific vehicle method."""
     with patch(
         "homeassistant.components.tesla_fleet.VehicleSpecific.vehicle",
@@ -103,7 +85,7 @@ def mock_vehicle_state():
 
 
 @pytest.fixture(autouse=True)
-def mock_vehicle_data():
+def mock_vehicle_data() -> Generator[AsyncMock]:
     """Mock Tesla Fleet API Vehicle Specific vehicle_data method."""
     with patch(
         "homeassistant.components.tesla_fleet.VehicleSpecific.vehicle_data",
@@ -113,7 +95,7 @@ def mock_vehicle_data():
 
 
 @pytest.fixture(autouse=True)
-def mock_wake_up():
+def mock_wake_up() -> Generator[AsyncMock]:
     """Mock Tesla Fleet API Vehicle Specific wake_up method."""
     with patch(
         "homeassistant.components.tesla_fleet.VehicleSpecific.wake_up",
@@ -123,7 +105,7 @@ def mock_wake_up():
 
 
 @pytest.fixture(autouse=True)
-def mock_live_status():
+def mock_live_status() -> Generator[AsyncMock]:
     """Mock Teslemetry Energy Specific live_status method."""
     with patch(
         "homeassistant.components.tesla_fleet.EnergySpecific.live_status",
@@ -133,7 +115,7 @@ def mock_live_status():
 
 
 @pytest.fixture(autouse=True)
-def mock_site_info():
+def mock_site_info() -> Generator[AsyncMock]:
     """Mock Teslemetry Energy Specific site_info method."""
     with patch(
         "homeassistant.components.tesla_fleet.EnergySpecific.site_info",

@@ -77,12 +77,14 @@ async def test_exception_handling(
     refresh_token = Mock()
     hass.data[DOMAIN] = {}
 
-    def get_extra_info(key: str) -> Any:
+    def get_extra_info(key: str) -> Any | None:
         if key == "sslcontext":
             return True
 
         if key == "peername":
             return ("127.0.0.42", 8123)
+
+        return None
 
     mocked_transport = Mock()
     mocked_transport.get_extra_info = get_extra_info
