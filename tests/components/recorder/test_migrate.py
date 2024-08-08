@@ -905,7 +905,7 @@ def test_drop_restore_foreign_key_constraints(recorder_db_url: str) -> None:
             for table, column in constraints_to_recreate
             for dropped_constraint in migration._drop_foreign_key_constraints(
                 session_maker, engine, table, column
-            )
+            )[1]
         ]
     assert dropped_constraints_1 == expected_dropped_constraints[db_engine]
 
@@ -917,7 +917,7 @@ def test_drop_restore_foreign_key_constraints(recorder_db_url: str) -> None:
             for table, column in constraints_to_recreate
             for dropped_constraint in migration._drop_foreign_key_constraints(
                 session_maker, engine, table, column
-            )
+            )[1]
         ]
     assert dropped_constraints_2 == []
 
@@ -936,7 +936,7 @@ def test_drop_restore_foreign_key_constraints(recorder_db_url: str) -> None:
             for table, column in constraints_to_recreate
             for dropped_constraint in migration._drop_foreign_key_constraints(
                 session_maker, engine, table, column
-            )
+            )[1]
         ]
     assert dropped_constraints_3 == expected_dropped_constraints[db_engine]
 
