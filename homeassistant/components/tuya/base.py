@@ -259,6 +259,7 @@ class TuyaEntity(Entity):
                 try:
                     return DPType(getattr(self.device, key)[dpcode].type)
                 except ValueError:
+                    LOGGER.warning(f"Device DPType fallback: {self.device.name}")
                     return TuyaEntity.determine_dptype(
                         getattr(self.device, key)[dpcode].type
                     )
