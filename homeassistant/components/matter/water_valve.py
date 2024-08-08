@@ -155,17 +155,7 @@ class MatterValve(MatterEntity, ValveEntity):
                 self.current_valve_position,
             )
 
-        # map matter type to HA deviceclass
-        """
-        device_type: clusters.ValveConfigurationAndControl.Enums.Type = (
-            self.get_matter_attribute_value(
-                clusters.ValveConfigurationAndControl.Attributes.Type
-            )
-        )
-        """
-        # self._attr_device_class = TYPE_MAP.get(device_type, ValveDeviceClass.WATER)
         self._attr_device_class = ValveDeviceClass.WATER
-
         supported_features = ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
         commands = self.get_matter_attribute_value(
             clusters.ValveConfigurationAndControl.Attributes.AcceptedCommandList
