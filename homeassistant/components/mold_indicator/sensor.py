@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
@@ -34,17 +35,19 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
+from .const import (
+    CONF_CALIBRATION_FACTOR,
+    CONF_INDOOR_HUMIDITY,
+    CONF_INDOOR_TEMP,
+    CONF_OUTDOOR_TEMP,
+    DEFAULT_NAME,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CRITICAL_TEMP = "estimated_critical_temp"
 ATTR_DEWPOINT = "dewpoint"
 
-CONF_CALIBRATION_FACTOR = "calibration_factor"
-CONF_INDOOR_HUMIDITY = "indoor_humidity_sensor"
-CONF_INDOOR_TEMP = "indoor_temp_sensor"
-CONF_OUTDOOR_TEMP = "outdoor_temp_sensor"
-
-DEFAULT_NAME = "Mold Indicator"
 
 MAGNUS_K2 = 17.62
 MAGNUS_K3 = 243.12
@@ -67,11 +70,38 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up MoldIndicator sensor."""
-    name = config.get(CONF_NAME, DEFAULT_NAME)
-    indoor_temp_sensor = config.get(CONF_INDOOR_TEMP)
-    outdoor_temp_sensor = config.get(CONF_OUTDOOR_TEMP)
-    indoor_humidity_sensor = config.get(CONF_INDOOR_HUMIDITY)
-    calib_factor = config.get(CONF_CALIBRATION_FACTOR)
+    name: str = config.get(CONF_NAME, DEFAULT_NAME)
+    indoor_temp_sensor: str = config[CONF_INDOOR_TEMP]
+    outdoor_temp_sensor: str = config[CONF_OUTDOOR_TEMP]
+    indoor_humidity_sensor: str = config[CONF_INDOOR_HUMIDITY]
+    calib_factor: float = config[CONF_CALIBRATION_FACTOR]
+
+    async_add_entities(
+        [
+            MoldIndicator(
+                name,
+                hass.config.units is METRIC_SYSTEM,
+                indoor_temp_sensor,
+                outdoor_temp_sensor,
+                indoor_humidity_sensor,
+                calib_factor,
+            )
+        ],
+        False,
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Mold indicator sensor entry."""
+    name: str = entry.options[CONF_NAME]
+    indoor_temp_sensor: str = entry.options[CONF_INDOOR_TEMP]
+    outdoor_temp_sensor: str = entry.options[CONF_OUTDOOR_TEMP]
+    indoor_humidity_sensor: str = entry.options[CONF_INDOOR_HUMIDITY]
+    calib_factor: float = entry.options[CONF_CALIBRATION_FACTOR]
 
     async_add_entities(
         [
@@ -95,13 +125,13 @@ class MoldIndicator(SensorEntity):
 
     def __init__(
         self,
-        name,
-        is_metric,
-        indoor_temp_sensor,
-        outdoor_temp_sensor,
-        indoor_humidity_sensor,
-        calib_factor,
-    ):
+        name: str,
+        is_metric: bool,
+        indoor_temp_sensor: str,
+        outdoor_temp_sensor: str,
+        indoor_humidity_sensor: str,
+        calib_factor: float,
+    ) -> None:
         """Initialize the sensor."""
         self._state = None
         self._name = name
@@ -117,11 +147,11 @@ class MoldIndicator(SensorEntity):
             self._outdoor_temp_sensor,
         }
 
-        self._dewpoint = None
-        self._indoor_temp = None
-        self._outdoor_temp = None
-        self._indoor_hum = None
-        self._crit_temp = None
+        self._dewpoint: float | None = None
+        self._indoor_temp: float | None = None
+        self._outdoor_temp: float | None = None
+        self._indoor_hum: float | None = None
+        self._crit_temp: float | None = None
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
