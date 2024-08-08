@@ -33,6 +33,7 @@ CONF_RETRY_COUNT = "max_retries"
 CONF_IGNORE_ATTRIBUTES = "ignore_attributes"
 CONF_PRECISION = "precision"
 CONF_SSL_CA_CERT = "ssl_ca_cert"
+CONF_OVERRIDE_EVENT_TIMESTAMP = "override_event_timestamp"
 
 CONF_QUERIES = "queries"
 CONF_QUERIES_FLUX = "queries_flux"
@@ -59,6 +60,7 @@ DEFAULT_RANGE_START = "-15m"
 DEFAULT_RANGE_STOP = "now()"
 DEFAULT_FUNCTION_FLUX = "|> limit(n: 1)"
 DEFAULT_MEASUREMENT_ATTR = "unit_of_measurement"
+DEFAULT_OVERRIDE_EVENT_TIMESTAMP = False
 
 INFLUX_CONF_MEASUREMENT = "measurement"
 INFLUX_CONF_TAGS = "tags"
@@ -151,4 +153,7 @@ COMPONENT_CONFIG_SCHEMA_CONNECTION = {
     vol.Inclusive(CONF_TOKEN, "v2_authentication"): cv.string,
     vol.Inclusive(CONF_ORG, "v2_authentication"): cv.string,
     vol.Optional(CONF_BUCKET, default=DEFAULT_BUCKET): cv.string,
+    vol.Optional(
+        CONF_OVERRIDE_EVENT_TIMESTAMP, default=DEFAULT_OVERRIDE_EVENT_TIMESTAMP
+    ): cv.boolean,
 }
