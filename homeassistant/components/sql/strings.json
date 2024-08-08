@@ -25,7 +25,7 @@
         "data_description": {
           "db_url": "Database URL, leave empty to use HA recorder database",
           "name": "Name that will be used for Config Entry and also the Sensor",
-          "query": "Query to run, needs to start with 'SELECT'",
+          "query": "Query to run, needs to start with 'SELECT'. Supports templates.",
           "column": "Column for returned query to present as state",
           "unit_of_measurement": "Unit of Measure (optional)",
           "value_template": "Value Template (optional)",

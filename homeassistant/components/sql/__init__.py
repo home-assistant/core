@@ -26,6 +26,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     CONF_PICTURE,
@@ -38,8 +39,13 @@ from .util import redact_credentials
 _LOGGER = logging.getLogger(__name__)
 
 
-def validate_sql_select(value: str) -> str:
+def validate_sql_select(input_query: Template | str) -> str:
     """Validate that value is a SQL SELECT query."""
+    if isinstance(input_query, Template):
+        value = input_query.async_render()
+    else:
+        value = input_query
+
     if len(query := sqlparse.parse(value.lstrip().lstrip(";"))) > 1:
         raise vol.Invalid("Multiple SQL queries are not supported")
     if len(query) == 0 or (query_type := query[0].get_type()) == "UNKNOWN":
@@ -54,7 +60,7 @@ QUERY_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_COLUMN_NAME): cv.string,
         vol.Required(CONF_NAME): cv.template,
-        vol.Required(CONF_QUERY): vol.All(cv.string, validate_sql_select),
+        vol.Required(CONF_QUERY): vol.All(cv.template, validate_sql_select),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_UNIQUE_ID): cv.string,

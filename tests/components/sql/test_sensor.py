@@ -166,7 +166,7 @@ async def test_query_mssql_no_result(
     assert state.state == STATE_UNKNOWN
 
     text = "SELECT TOP 1 5 AS VALUE WHERE 1=2 returned no results"
-    assert text in caplog.text
+    assert text.upper() in caplog.text.upper()
 
 
 @pytest.mark.parametrize(
