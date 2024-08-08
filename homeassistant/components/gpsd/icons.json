@@ -7,6 +7,15 @@
           "2d_fix": "mdi:crosshairs-gps",
           "3d_fix": "mdi:crosshairs-gps"
         }
+      },
+      "latitude": {
+        "default": "mdi:latitude"
+      },
+      "longitude": {
+        "default": "mdi:longitude"
+      },
+      "elevation": {
+        "default": "mdi:arrow-up-down"
       }
     }
   }
