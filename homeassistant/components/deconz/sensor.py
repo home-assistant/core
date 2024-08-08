@@ -117,6 +117,7 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         name_suffix="Filter Time Left",
         value_fn=lambda device: device.filter_life_time - device.filter_run_time,
         instance_check=AirPurifier,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DeconzSensorDescription[AirQuality](
         key="air_quality",

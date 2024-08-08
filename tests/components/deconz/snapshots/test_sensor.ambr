@@ -1548,7 +1548,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.ikea_starkvind_filter_time_left',
     'has_entity_name': False,
     'hidden_by': None,
