@@ -217,3 +217,99 @@ def test_entities_areas_area_true(hass: HomeAssistant) -> None:
     assert compiled("light.kitchen", "control") is True
     assert compiled("light.kitchen", "edit") is False
     assert compiled("switch.kitchen", "read") is False
+
+
+def test_entities_areas_area_true_without_device(hass: HomeAssistant) -> None:
+    """Test entity ID policy for areas with specific area."""
+    entity_registry = mock_registry(
+        hass,
+        {
+            "light.kitchen": RegistryEntry(
+                entity_id="light.kitchen",
+                unique_id="1234",
+                platform="test_platform",
+                device_id="mock-dev-id",
+                area_id="mock-area-id",
+            )
+        },
+    )
+    device_registry = mock_device_registry(hass)
+
+    policy = {"area_ids": {"mock-area-id": {"read": True, "control": True}}}
+    ENTITY_POLICY_SCHEMA(policy)
+    compiled = compile_entities(
+        policy, PermissionLookup(entity_registry, device_registry)
+    )
+    assert compiled("light.kitchen", "read") is True
+    assert compiled("light.kitchen", "control") is True
+    assert compiled("light.kitchen", "edit") is False
+    assert compiled("switch.kitchen", "read") is False
+
+
+def test_entities_labels_true() -> None:
+    """Test entity ID policy for labels."""
+    policy = {"label_ids": True}
+    ENTITY_POLICY_SCHEMA(policy)
+    compiled = compile_entities(policy, None)
+    assert compiled("light.kitchen", "read") is True
+
+
+def test_entities_labels_label_true(hass: HomeAssistant) -> None:
+    """Test entity ID policy for labels with specific label."""
+    entity_registry = mock_registry(
+        hass,
+        {
+            "light.kitchen": RegistryEntry(
+                entity_id="light.kitchen",
+                unique_id="1234",
+                platform="test_platform",
+                device_id="mock-dev-id",
+                area_id="mock-area-id",
+                labels={"mock-label-id"},
+            )
+        },
+    )
+    device_registry = mock_device_registry(hass)
+
+    policy = {"label_ids": {"mock-label-id": {"read": True, "control": True}}}
+    ENTITY_POLICY_SCHEMA(policy)
+    compiled = compile_entities(
+        policy, PermissionLookup(entity_registry, device_registry)
+    )
+    assert compiled("light.kitchen", "read") is True
+    assert compiled("light.kitchen", "control") is True
+    assert compiled("light.kitchen", "edit") is False
+    assert compiled("switch.kitchen", "read") is False
+
+
+def test_entities_labels_label_entity_multiple_labels(hass: HomeAssistant) -> None:
+    """Test entity ID policy for labels with specific label."""
+    entity_registry = mock_registry(
+        hass,
+        {
+            "light.kitchen": RegistryEntry(
+                entity_id="light.kitchen",
+                unique_id="1234",
+                platform="test_platform",
+                device_id="mock-dev-id",
+                area_id="mock-area-id",
+                labels={"mock-label-id", "mock-label-id-2"},
+            )
+        },
+    )
+    device_registry = mock_device_registry(hass)
+
+    policy = {
+        "label_ids": {
+            "mock-label-id": {"read": True},
+            "mock-label-id-2": {"control": True},
+        }
+    }
+    ENTITY_POLICY_SCHEMA(policy)
+    compiled = compile_entities(
+        policy, PermissionLookup(entity_registry, device_registry)
+    )
+    assert compiled("light.kitchen", "read") is True
+    assert compiled("light.kitchen", "control") is True
+    assert compiled("light.kitchen", "edit") is False
+    assert compiled("switch.kitchen", "read") is False
