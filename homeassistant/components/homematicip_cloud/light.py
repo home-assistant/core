@@ -14,12 +14,14 @@ from homematicip.aio.device import (
     AsyncPluggableDimmer,
     AsyncWiredDimmer3,
 )
-from homematicip.base.enums import RGBColorState
+from homematicip.base.enums import OpticalSignalBehaviour, RGBColorState
 from homematicip.base.functionalChannels import NotificationLightChannel
+from packaging.version import Version
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_NAME,
+    ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ColorMode,
@@ -46,15 +48,30 @@ async def async_setup_entry(
         if isinstance(device, AsyncBrandSwitchMeasuring):
             entities.append(HomematicipLightMeasuring(hap, device))
         elif isinstance(device, AsyncBrandSwitchNotificationLight):
+            device_version = Version(device.firmwareVersion)
             entities.append(HomematicipLight(hap, device))
-            entities.append(
-                HomematicipNotificationLight(hap, device, device.topLightChannelIndex)
-            )
-            entities.append(
-                HomematicipNotificationLight(
-                    hap, device, device.bottomLightChannelIndex
+            if device_version > Version("2.0.0"):
+                entities.append(
+                    HomematicipNotificationLightV2(
+                        hap, device, device.topLightChannelIndex, "Top"
+                    )
                 )
-            )
+                entities.append(
+                    HomematicipNotificationLightV2(
+                        hap, device, device.bottomLightChannelIndex, "Bottom"
+                    )
+                )
+            else:
+                entities.append(
+                    HomematicipNotificationLight(
+                        hap, device, device.topLightChannelIndex
+                    )
+                )
+                entities.append(
+                    HomematicipNotificationLight(
+                        hap, device, device.bottomLightChannelIndex
+                    )
+                )
         elif isinstance(device, (AsyncWiredDimmer3, AsyncDinRailDimmer3)):
             entities.extend(
                 HomematicipMultiDimmer(hap, device, channel=channel)
@@ -256,6 +273,108 @@ class HomematicipNotificationLight(HomematicipGenericEntity, LightEntity):
             onTime=0,
             rampTime=transition,
         )
+
+
+class HomematicipNotificationLightV2(HomematicipGenericEntity, LightEntity):
+    """Representation of HomematicIP Cloud notification light."""
+
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
+    _effect_list = [
+        OpticalSignalBehaviour.BILLOW_MIDDLE,
+        OpticalSignalBehaviour.BLINKING_MIDDLE,
+        OpticalSignalBehaviour.FLASH_MIDDLE,
+        OpticalSignalBehaviour.OFF,
+        OpticalSignalBehaviour.ON,
+    ]
+
+    def __init__(self, hap: HomematicipHAP, device, channel: int, post: str) -> None:
+        """Initialize the notification light entity."""
+        super().__init__(hap, device, post=post, channel=channel, is_multi_channel=True)
+
+        self._attr_supported_features |= LightEntityFeature.EFFECT
+        self._color_switcher: dict[str, tuple[float, float]] = {
+            RGBColorState.WHITE: (0.0, 0.0),
+            RGBColorState.RED: (0.0, 100.0),
+            RGBColorState.YELLOW: (60.0, 100.0),
+            RGBColorState.GREEN: (120.0, 100.0),
+            RGBColorState.TURQUOISE: (180.0, 100.0),
+            RGBColorState.BLUE: (240.0, 100.0),
+            RGBColorState.PURPLE: (300.0, 100.0),
+        }
+
+    @property
+    def _func_channel(self) -> NotificationLightChannel:
+        return self._device.functionalChannels[self._channel]
+
+    @property
+    def brightness(self) -> int:
+        """Return the brightness of this light between 0..255."""
+        return int((self._func_channel.dimLevel or 0.0) * 255)
+
+    @property
+    def hs_color(self) -> tuple[float, float]:
+        """Return the hue and saturation color value [float, float]."""
+        simple_rgb_color = self._func_channel.simpleRGBColorState
+        return self._color_switcher.get(simple_rgb_color, (0.0, 0.0))
+
+    @property
+    def effect_list(self) -> list[str] | None:
+        """Return the list of supported effects."""
+        return self._effect_list
+
+    @property
+    def effect(self) -> str | None:
+        """Return the current effect."""
+        return self._func_channel.opticalSignalBehaviour
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if light is on."""
+        return self._func_channel.on
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes of the notification light sensor."""
+        state_attr = super().extra_state_attributes
+
+        if self.is_on:
+            state_attr[ATTR_COLOR_NAME] = self._func_channel.simpleRGBColorState
+
+        return state_attr
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"{self.__class__.__name__}_{self._post}_{self._device.id}"
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the light on."""
+        # Use hs_color from kwargs,
+        # if not applicable use current hs_color.
+        hs_color = kwargs.get(ATTR_HS_COLOR, self.hs_color)
+        simple_rgb_color = _convert_color(hs_color)
+
+        # If no kwargs, use default value.
+        brightness = 255
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs[ATTR_BRIGHTNESS]
+
+        # Minimum brightness is 10, otherwise the led is disabled
+        brightness = max(10, brightness)
+        dim_level = round(brightness / 255.0, 2)
+
+        effect = self.effect
+        if ATTR_EFFECT in kwargs:
+            effect = kwargs[ATTR_EFFECT]
+
+        await self._func_channel.async_set_optical_signal(
+            opticalSignalBehaviour=effect, rgb=simple_rgb_color, dimLevel=dim_level
+        )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the light off."""
+        await self._func_channel.async_turn_off()
 
 
 def _convert_color(color: tuple) -> RGBColorState:
