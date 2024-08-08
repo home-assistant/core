@@ -2,17 +2,18 @@
 
 import asyncio
 from collections import OrderedDict
+from collections.abc import Generator
 import contextlib
 import copy
 import logging
 import os
+from pathlib import Path
 from typing import Any
 from unittest import mock
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from typing_extensions import Generator
 import voluptuous as vol
 from voluptuous import Invalid, MultipleInvalid
 import yaml
@@ -28,15 +29,15 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
+    CONF_PACKAGES,
     __version__,
 )
 from homeassistant.core import (
-    DOMAIN as HA_DOMAIN,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     ConfigSource,
     HomeAssistant,
-    HomeAssistantError,
 )
-from homeassistant.exceptions import ConfigValidationError
+from homeassistant.exceptions import ConfigValidationError, HomeAssistantError
 from homeassistant.helpers import (
     check_config,
     config_validation as cv,
@@ -412,11 +413,10 @@ async def test_ensure_config_exists_creates_config(hass: HomeAssistant) -> None:
 
 async def test_ensure_config_exists_uses_existing_config(hass: HomeAssistant) -> None:
     """Test that calling ensure_config_exists uses existing config."""
-    create_file(YAML_PATH)
+    await hass.async_add_executor_job(create_file, YAML_PATH)
     await config_util.async_ensure_config_exists(hass)
 
-    with open(YAML_PATH, encoding="utf8") as fp:
-        content = fp.read()
+    content = await hass.async_add_executor_job(Path(YAML_PATH).read_text)
 
     # File created with create_file are empty
     assert content == ""
@@ -424,12 +424,11 @@ async def test_ensure_config_exists_uses_existing_config(hass: HomeAssistant) ->
 
 async def test_ensure_existing_files_is_not_overwritten(hass: HomeAssistant) -> None:
     """Test that calling async_create_default_config does not overwrite existing files."""
-    create_file(SECRET_PATH)
+    await hass.async_add_executor_job(create_file, SECRET_PATH)
 
     await config_util.async_create_default_config(hass)
 
-    with open(SECRET_PATH, encoding="utf8") as fp:
-        content = fp.read()
+    content = await hass.async_add_executor_job(Path(SECRET_PATH).read_text)
 
     # File created with create_file are empty
     assert content == ""
@@ -490,9 +489,10 @@ def test_load_yaml_config_preserves_key_order() -> None:
         fp.write("hello: 2\n")
         fp.write("world: 1\n")
 
-    assert [("hello", 2), ("world", 1)] == list(
-        config_util.load_yaml_config_file(YAML_PATH).items()
-    )
+    assert list(config_util.load_yaml_config_file(YAML_PATH).items()) == [
+        ("hello", 2),
+        ("world", 1),
+    ]
 
 
 async def test_create_default_config_returns_none_if_write_error(
@@ -864,7 +864,6 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
             "external_url": "https://www.example.com",
             "internal_url": "http://example.local",
             "media_dirs": {"mymedia": "/usr"},
-            "legacy_templates": True,
             "debug": True,
             "currency": "EUR",
             "country": "SE",
@@ -886,7 +885,6 @@ async def test_loading_configuration(hass: HomeAssistant) -> None:
     assert "/usr" in hass.config.allowlist_external_dirs
     assert hass.config.media_dirs == {"mymedia": "/usr"}
     assert hass.config.config_source is ConfigSource.YAML
-    assert hass.config.legacy_templates is True
     assert hass.config.debug is True
     assert hass.config.currency == "EUR"
     assert hass.config.country == "SE"
@@ -1072,10 +1070,8 @@ async def test_check_ha_config_file_wrong(mock_check, hass: HomeAssistant) -> No
     "hass_config",
     [
         {
-            HA_DOMAIN: {
-                config_util.CONF_PACKAGES: {
-                    "pack_dict": {"input_boolean": {"ib1": None}}
-                }
+            HOMEASSISTANT_DOMAIN: {
+                CONF_PACKAGES: {"pack_dict": {"input_boolean": {"ib1": None}}}
             },
             "input_boolean": {"ib2": None},
             "light": {"platform": "test"},
@@ -1090,7 +1086,7 @@ async def test_async_hass_config_yaml_merge(
     conf = await config_util.async_hass_config_yaml(hass)
 
     assert merge_log_err.call_count == 0
-    assert conf[HA_DOMAIN].get(config_util.CONF_PACKAGES) is not None
+    assert conf[HOMEASSISTANT_DOMAIN].get(CONF_PACKAGES) is not None
     assert len(conf) == 3
     assert len(conf["input_boolean"]) == 2
     assert len(conf["light"]) == 1
@@ -1118,7 +1114,7 @@ async def test_merge(merge_log_err: MagicMock, hass: HomeAssistant) -> None:
         },
     }
     config = {
-        HA_DOMAIN: {config_util.CONF_PACKAGES: packages},
+        HOMEASSISTANT_DOMAIN: {CONF_PACKAGES: packages},
         "input_boolean": {"ib2": None},
         "light": {"platform": "test"},
         "automation": [],
@@ -1145,7 +1141,7 @@ async def test_merge_try_falsy(merge_log_err: MagicMock, hass: HomeAssistant) ->
         "pack_list2": {"light": OrderedDict()},
     }
     config = {
-        HA_DOMAIN: {config_util.CONF_PACKAGES: packages},
+        HOMEASSISTANT_DOMAIN: {CONF_PACKAGES: packages},
         "automation": {"do": "something"},
         "light": {"some": "light"},
     }
@@ -1168,7 +1164,7 @@ async def test_merge_new(merge_log_err: MagicMock, hass: HomeAssistant) -> None:
             "api": {},
         },
     }
-    config = {HA_DOMAIN: {config_util.CONF_PACKAGES: packages}}
+    config = {HOMEASSISTANT_DOMAIN: {CONF_PACKAGES: packages}}
     await config_util.merge_packages_config(hass, config, packages)
 
     assert merge_log_err.call_count == 0
@@ -1188,7 +1184,7 @@ async def test_merge_type_mismatch(
         "pack_2": {"light": {"ib1": None}},  # light gets merged - ensure_list
     }
     config = {
-        HA_DOMAIN: {config_util.CONF_PACKAGES: packages},
+        HOMEASSISTANT_DOMAIN: {CONF_PACKAGES: packages},
         "input_boolean": {"ib2": None},
         "input_select": [{"ib2": None}],
         "light": [{"platform": "two"}],
@@ -1206,13 +1202,13 @@ async def test_merge_once_only_keys(
 ) -> None:
     """Test if we have a merge for a comp that may occur only once. Keys."""
     packages = {"pack_2": {"api": None}}
-    config = {HA_DOMAIN: {config_util.CONF_PACKAGES: packages}, "api": None}
+    config = {HOMEASSISTANT_DOMAIN: {CONF_PACKAGES: packages}, "api": None}
     await config_util.merge_packages_config(hass, config, packages)
     assert config["api"] == OrderedDict()
 
     packages = {"pack_2": {"api": {"key_3": 3}}}
     config = {
-        HA_DOMAIN: {config_util.CONF_PACKAGES: packages},
+        HOMEASSISTANT_DOMAIN: {CONF_PACKAGES: packages},
         "api": {"key_1": 1, "key_2": 2},
     }
     await config_util.merge_packages_config(hass, config, packages)
@@ -1221,7 +1217,7 @@ async def test_merge_once_only_keys(
     # Duplicate keys error
     packages = {"pack_2": {"api": {"key": 2}}}
     config = {
-        HA_DOMAIN: {config_util.CONF_PACKAGES: packages},
+        HOMEASSISTANT_DOMAIN: {CONF_PACKAGES: packages},
         "api": {"key": 1},
     }
     await config_util.merge_packages_config(hass, config, packages)
@@ -1236,7 +1232,7 @@ async def test_merge_once_only_lists(hass: HomeAssistant) -> None:
         }
     }
     config = {
-        HA_DOMAIN: {config_util.CONF_PACKAGES: packages},
+        HOMEASSISTANT_DOMAIN: {CONF_PACKAGES: packages},
         "api": {"list_1": ["item_1"]},
     }
     await config_util.merge_packages_config(hass, config, packages)
@@ -1259,7 +1255,7 @@ async def test_merge_once_only_dictionaries(hass: HomeAssistant) -> None:
         }
     }
     config = {
-        HA_DOMAIN: {config_util.CONF_PACKAGES: packages},
+        HOMEASSISTANT_DOMAIN: {CONF_PACKAGES: packages},
         "api": {"dict_1": {"key_1": 1, "dict_1.1": {"key_1.1": 1.1}}},
     }
     await config_util.merge_packages_config(hass, config, packages)
@@ -1295,7 +1291,7 @@ async def test_merge_duplicate_keys(
     """Test if keys in dicts are duplicates."""
     packages = {"pack_1": {"input_select": {"ib1": None}}}
     config = {
-        HA_DOMAIN: {config_util.CONF_PACKAGES: packages},
+        HOMEASSISTANT_DOMAIN: {CONF_PACKAGES: packages},
         "input_select": {"ib1": 1},
     }
     await config_util.merge_packages_config(hass, config, packages)
@@ -1453,7 +1449,7 @@ async def test_merge_split_component_definition(hass: HomeAssistant) -> None:
         "pack_1": {"light one": {"l1": None}},
         "pack_2": {"light two": {"l2": None}, "light three": {"l3": None}},
     }
-    config = {HA_DOMAIN: {config_util.CONF_PACKAGES: packages}}
+    config = {HOMEASSISTANT_DOMAIN: {CONF_PACKAGES: packages}}
     await config_util.merge_packages_config(hass, config, packages)
 
     assert len(config) == 4
@@ -2044,32 +2040,6 @@ async def test_core_config_schema_no_country(
     assert issue
 
 
-@pytest.mark.parametrize(
-    ("config", "expected_issue"),
-    [
-        ({}, None),
-        ({"legacy_templates": True}, "legacy_templates_true"),
-        ({"legacy_templates": False}, "legacy_templates_false"),
-    ],
-)
-async def test_core_config_schema_legacy_template(
-    hass: HomeAssistant,
-    config: dict[str, Any],
-    expected_issue: str | None,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test legacy_template core config schema."""
-    await config_util.async_process_ha_core_config(hass, config)
-
-    for issue_id in ("legacy_templates_true", "legacy_templates_false"):
-        issue = issue_registry.async_get_issue("homeassistant", issue_id)
-        assert issue if issue_id == expected_issue else not issue
-
-    await config_util.async_process_ha_core_config(hass, {})
-    for issue_id in ("legacy_templates_true", "legacy_templates_false"):
-        assert not issue_registry.async_get_issue("homeassistant", issue_id)
-
-
 async def test_core_store_no_country(
     hass: HomeAssistant, hass_storage: dict[str, Any], issue_registry: ir.IssueRegistry
 ) -> None:
@@ -2368,7 +2338,7 @@ async def test_packages_schema_validation_error(
     ]
     assert error_records == snapshot
 
-    assert len(config[HA_DOMAIN][config_util.CONF_PACKAGES]) == 0
+    assert len(config[HOMEASSISTANT_DOMAIN][CONF_PACKAGES]) == 0
 
 
 def test_extract_domain_configs() -> None:
@@ -2511,3 +2481,30 @@ async def test_loading_platforms_gathers(hass: HomeAssistant) -> None:
         ("platform_int", "sensor"),
         ("platform_int2", "sensor"),
     ]
+
+
+async def test_configuration_legacy_template_is_removed(hass: HomeAssistant) -> None:
+    """Test loading core config onto hass object."""
+    await config_util.async_process_ha_core_config(
+        hass,
+        {
+            "latitude": 60,
+            "longitude": 50,
+            "elevation": 25,
+            "name": "Huis",
+            "unit_system": "imperial",
+            "time_zone": "America/New_York",
+            "allowlist_external_dirs": "/etc",
+            "external_url": "https://www.example.com",
+            "internal_url": "http://example.local",
+            "media_dirs": {"mymedia": "/usr"},
+            "legacy_templates": True,
+            "debug": True,
+            "currency": "EUR",
+            "country": "SE",
+            "language": "sv",
+            "radius": 150,
+        },
+    )
+
+    assert not getattr(hass.config, "legacy_templates")

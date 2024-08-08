@@ -10,7 +10,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfElectricPotential,
@@ -22,7 +21,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SolarlogData
+from . import SolarlogConfigEntry, SolarlogData
 from .const import DOMAIN
 
 
@@ -147,6 +146,13 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         value=lambda value: round(value / 1000, 3),
     ),
     SolarLogSensorEntityDescription(
+        key="self_consumption_year",
+        translation_key="self_consumption_year",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SolarLogSensorEntityDescription(
         key="total_power",
         translation_key="total_power",
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -194,10 +200,12 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SolarlogConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add solarlog entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         SolarlogSensor(coordinator, description) for description in SENSOR_TYPES
     )

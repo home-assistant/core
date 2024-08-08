@@ -1,12 +1,12 @@
 """Tests for the bluetooth component."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 from bleak_retry_connector import bleak_manager
 from dbus_fast.aio import message_bus
 import habluetooth.util as habluetooth_utils
 import pytest
-from typing_extensions import Generator
 
 
 @pytest.fixture(name="disable_bluez_manager_socket", autouse=True, scope="package")

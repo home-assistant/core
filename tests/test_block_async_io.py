@@ -5,6 +5,7 @@ import glob
 import importlib
 import os
 from pathlib import Path, PurePosixPath
+import ssl
 import time
 from typing import Any
 from unittest.mock import Mock, patch
@@ -44,7 +45,7 @@ async def test_protect_loop_debugger_sleep(caplog: pytest.LogCaptureFixture) -> 
             return_value=frames,
         ),
     ):
-        time.sleep(0)
+        time.sleep(0)  # noqa: ASYNC251
     assert "Detected blocking call inside the event loop" not in caplog.text
 
 
@@ -61,9 +62,7 @@ async def test_protect_loop_sleep() -> None:
         ]
     )
     with (
-        pytest.raises(
-            RuntimeError, match="Detected blocking call to sleep inside the event loop"
-        ),
+        pytest.raises(RuntimeError, match="Caught blocking call to sleep with args"),
         patch(
             "homeassistant.block_async_io.get_current_frame",
             return_value=frames,
@@ -73,7 +72,7 @@ async def test_protect_loop_sleep() -> None:
             return_value=frames,
         ),
     ):
-        time.sleep(0)
+        time.sleep(0)  # noqa: ASYNC251
 
 
 async def test_protect_loop_sleep_get_current_frame_raises() -> None:
@@ -89,9 +88,7 @@ async def test_protect_loop_sleep_get_current_frame_raises() -> None:
         ]
     )
     with (
-        pytest.raises(
-            RuntimeError, match="Detected blocking call to sleep inside the event loop"
-        ),
+        pytest.raises(RuntimeError, match="Caught blocking call to sleep with args"),
         patch(
             "homeassistant.block_async_io.get_current_frame",
             side_effect=ValueError,
@@ -101,7 +98,7 @@ async def test_protect_loop_sleep_get_current_frame_raises() -> None:
             return_value=frames,
         ),
     ):
-        time.sleep(0)
+        time.sleep(0)  # noqa: ASYNC251
 
 
 async def test_protect_loop_importlib_import_module_non_integration(
@@ -204,7 +201,8 @@ async def test_protect_loop_importlib_import_module_in_integration(
             importlib.import_module("not_loaded_module")
 
     assert (
-        "Detected blocking call to import_module inside the event loop by "
+        "Detected blocking call to import_module with args ('not_loaded_module',) "
+        "inside the event loop by "
         "integration 'hue' at homeassistant/components/hue/light.py, line 23"
     ) in caplog.text
 
@@ -214,7 +212,7 @@ async def test_protect_loop_open(caplog: pytest.LogCaptureFixture) -> None:
     block_async_io.enable()
     with (
         contextlib.suppress(FileNotFoundError),
-        open("/proc/does_not_exist", encoding="utf8"),
+        open("/proc/does_not_exist", encoding="utf8"),  # noqa: ASYNC230
     ):
         pass
     assert "Detected blocking call to open with args" not in caplog.text
@@ -226,7 +224,7 @@ async def test_protect_open(caplog: pytest.LogCaptureFixture) -> None:
         block_async_io.enable()
     with (
         contextlib.suppress(FileNotFoundError),
-        open("/config/data_not_exist", encoding="utf8"),
+        open("/config/data_not_exist", encoding="utf8"),  # noqa: ASYNC230
     ):
         pass
 
@@ -256,7 +254,7 @@ async def test_protect_open_path(path: Any, caplog: pytest.LogCaptureFixture) ->
     """Test opening a file by path in the event loop logs."""
     with patch.object(block_async_io, "_IN_TESTS", False):
         block_async_io.enable()
-    with contextlib.suppress(FileNotFoundError), open(path, encoding="utf8"):
+    with contextlib.suppress(FileNotFoundError), open(path, encoding="utf8"):  # noqa: ASYNC230
         pass
 
     assert "Detected blocking call to open with args" in caplog.text
@@ -333,13 +331,36 @@ async def test_protect_loop_walk(
     assert "Detected blocking call to walk with args" not in caplog.text
 
 
+async def test_protect_loop_load_default_certs(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test SSLContext.load_default_certs calls in the loop are logged."""
+    with patch.object(block_async_io, "_IN_TESTS", False):
+        block_async_io.enable()
+    context = ssl.create_default_context()
+    assert "Detected blocking call to load_default_certs" in caplog.text
+    assert context
+
+
+async def test_protect_loop_load_verify_locations(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test SSLContext.load_verify_locations calls in the loop are logged."""
+    with patch.object(block_async_io, "_IN_TESTS", False):
+        block_async_io.enable()
+    context = ssl.create_default_context()
+    with pytest.raises(OSError):
+        context.load_verify_locations("/dev/null")
+    assert "Detected blocking call to load_verify_locations" in caplog.text
+
+
 async def test_open_calls_ignored_in_tests(caplog: pytest.LogCaptureFixture) -> None:
     """Test opening a file in tests is ignored."""
     assert block_async_io._IN_TESTS
     block_async_io.enable()
     with (
         contextlib.suppress(FileNotFoundError),
-        open("/config/data_not_exist", encoding="utf8"),
+        open("/config/data_not_exist", encoding="utf8"),  # noqa: ASYNC230
     ):
         pass
 

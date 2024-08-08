@@ -4,7 +4,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.otp.const import DOMAIN
-from homeassistant.components.sensor.const import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.typing import ConfigType

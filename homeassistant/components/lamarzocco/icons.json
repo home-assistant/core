@@ -14,6 +14,12 @@
           "on": "mdi:cup-water",
           "off": "mdi:cup-off"
         }
+      },
+      "backflush_enabled": {
+        "default": "mdi:water-off",
+        "state": {
+          "on": "mdi:water"
+        }
       }
     },
     "button": {

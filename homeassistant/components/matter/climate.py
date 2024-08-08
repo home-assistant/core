@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import IntEnum
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
@@ -30,12 +30,6 @@ from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
-if TYPE_CHECKING:
-    from matter_server.client import MatterClient
-    from matter_server.client.models.node import MatterEndpoint
-
-    from .discovery import MatterEntityInfo
-
 TEMPERATURE_SCALING_FACTOR = 100
 HVAC_SYSTEM_MODE_MAP = {
     HVACMode.OFF: 0,
@@ -60,6 +54,7 @@ SUPPORT_DRY_MODE_DEVICES: set[tuple[int, int]] = {
     # In the list below specify tuples of (vendorid, productid) of devices that
     # support dry mode.
     (0x0001, 0x0108),
+    (0x0001, 0x010A),
     (0x1209, 0x8007),
 }
 
@@ -68,6 +63,7 @@ SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
     # In the list below specify tuples of (vendorid, productid) of devices that
     # support fan-only mode.
     (0x0001, 0x0108),
+    (0x0001, 0x010A),
     (0x1209, 0x8007),
 }
 
@@ -103,45 +99,8 @@ class MatterClimate(MatterEntity, ClimateEntity):
 
     _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
     _attr_hvac_mode: HVACMode = HVACMode.OFF
+    _feature_map: int | None = None
     _enable_turn_on_off_backwards_compatibility = False
-
-    def __init__(
-        self,
-        matter_client: MatterClient,
-        endpoint: MatterEndpoint,
-        entity_info: MatterEntityInfo,
-    ) -> None:
-        """Initialize the Matter climate entity."""
-        super().__init__(matter_client, endpoint, entity_info)
-        product_id = self._endpoint.node.device_info.productID
-        vendor_id = self._endpoint.node.device_info.vendorID
-
-        # set hvac_modes based on feature map
-        self._attr_hvac_modes: list[HVACMode] = [HVACMode.OFF]
-        feature_map = int(
-            self.get_matter_attribute_value(clusters.Thermostat.Attributes.FeatureMap)
-        )
-        self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_OFF
-        )
-        if feature_map & ThermostatFeature.kHeating:
-            self._attr_hvac_modes.append(HVACMode.HEAT)
-        if feature_map & ThermostatFeature.kCooling:
-            self._attr_hvac_modes.append(HVACMode.COOL)
-        if (vendor_id, product_id) in SUPPORT_DRY_MODE_DEVICES:
-            self._attr_hvac_modes.append(HVACMode.DRY)
-        if (vendor_id, product_id) in SUPPORT_FAN_MODE_DEVICES:
-            self._attr_hvac_modes.append(HVACMode.FAN_ONLY)
-        if feature_map & ThermostatFeature.kAutoMode:
-            self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
-            # only enable temperature_range feature if the device actually supports that
-
-            if (vendor_id, product_id) not in SINGLE_SETPOINT_DEVICES:
-                self._attr_supported_features |= (
-                    ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-                )
-        if any(mode for mode in self.hvac_modes if mode != HVACMode.OFF):
-            self._attr_supported_features |= ClimateEntityFeature.TURN_ON
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -222,9 +181,17 @@ class MatterClimate(MatterEntity, ClimateEntity):
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
+        self._calculate_features()
         self._attr_current_temperature = self._get_temperature_in_degrees(
             clusters.Thermostat.Attributes.LocalTemperature
         )
+        if self.get_matter_attribute_value(clusters.OnOff.Attributes.OnOff) is False:
+            # special case: the appliance has a dedicated Power switch on the OnOff cluster
+            # if the mains power is off - treat it as if the HVAC mode is off
+            self._attr_hvac_mode = HVACMode.OFF
+            self._attr_hvac_action = None
+            return
+
         # update hvac_mode from SystemMode
         system_mode_value = int(
             self.get_matter_attribute_value(clusters.Thermostat.Attributes.SystemMode)
@@ -265,19 +232,13 @@ class MatterClimate(MatterEntity, ClimateEntity):
                     self._attr_hvac_action = HVACAction.FAN
                 case _:
                     self._attr_hvac_action = HVACAction.OFF
-        # update target_temperature
-        if self._attr_hvac_mode == HVACMode.HEAT_COOL:
-            self._attr_target_temperature = None
-        elif self._attr_hvac_mode == HVACMode.COOL:
-            self._attr_target_temperature = self._get_temperature_in_degrees(
-                clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
-            )
-        else:
-            self._attr_target_temperature = self._get_temperature_in_degrees(
-                clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
-            )
         # update target temperature high/low
-        if self._attr_hvac_mode == HVACMode.HEAT_COOL:
+        supports_range = (
+            self._attr_supported_features
+            & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        )
+        if supports_range and self._attr_hvac_mode == HVACMode.HEAT_COOL:
+            self._attr_target_temperature = None
             self._attr_target_temperature_high = self._get_temperature_in_degrees(
                 clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
             )
@@ -287,6 +248,16 @@ class MatterClimate(MatterEntity, ClimateEntity):
         else:
             self._attr_target_temperature_high = None
             self._attr_target_temperature_low = None
+            # update target_temperature
+            if self._attr_hvac_mode == HVACMode.COOL:
+                self._attr_target_temperature = self._get_temperature_in_degrees(
+                    clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
+                )
+            else:
+                self._attr_target_temperature = self._get_temperature_in_degrees(
+                    clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
+                )
+
         # update min_temp
         if self._attr_hvac_mode == HVACMode.COOL:
             attribute = clusters.Thermostat.Attributes.AbsMinCoolSetpointLimit
@@ -306,6 +277,46 @@ class MatterClimate(MatterEntity, ClimateEntity):
         else:
             self._attr_max_temp = DEFAULT_MAX_TEMP
 
+    @callback
+    def _calculate_features(
+        self,
+    ) -> None:
+        """Calculate features for HA Thermostat platform from Matter FeatureMap."""
+        feature_map = int(
+            self.get_matter_attribute_value(clusters.Thermostat.Attributes.FeatureMap)
+        )
+        # NOTE: the featuremap can dynamically change, so we need to update the
+        # supported features if the featuremap changes.
+        # work out supported features and presets from matter featuremap
+        if self._feature_map == feature_map:
+            return
+        self._feature_map = feature_map
+        product_id = self._endpoint.node.device_info.productID
+        vendor_id = self._endpoint.node.device_info.vendorID
+        self._attr_hvac_modes: list[HVACMode] = [HVACMode.OFF]
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_OFF
+        )
+        if feature_map & ThermostatFeature.kHeating:
+            self._attr_hvac_modes.append(HVACMode.HEAT)
+        if feature_map & ThermostatFeature.kCooling:
+            self._attr_hvac_modes.append(HVACMode.COOL)
+        if (vendor_id, product_id) in SUPPORT_DRY_MODE_DEVICES:
+            self._attr_hvac_modes.append(HVACMode.DRY)
+        if (vendor_id, product_id) in SUPPORT_FAN_MODE_DEVICES:
+            self._attr_hvac_modes.append(HVACMode.FAN_ONLY)
+        if feature_map & ThermostatFeature.kAutoMode:
+            self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
+            # only enable temperature_range feature if the device actually supports that
+
+            if (vendor_id, product_id) not in SINGLE_SETPOINT_DEVICES:
+                self._attr_supported_features |= (
+                    ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+                )
+        if any(mode for mode in self.hvac_modes if mode != HVACMode.OFF):
+            self._attr_supported_features |= ClimateEntityFeature.TURN_ON
+
+    @callback
     def _get_temperature_in_degrees(
         self, attribute: type[clusters.ClusterAttributeDescriptor]
     ) -> float | None:
@@ -321,7 +332,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.CLIMATE,
         entity_description=ClimateEntityDescription(
             key="MatterThermostat",
-            name=None,
+            translation_key="thermostat",
         ),
         entity_class=MatterClimate,
         required_attributes=(clusters.Thermostat.Attributes.LocalTemperature,),
@@ -337,6 +348,7 @@ DISCOVERY_SCHEMAS = [
             clusters.Thermostat.Attributes.TemperatureSetpointHold,
             clusters.Thermostat.Attributes.UnoccupiedCoolingSetpoint,
             clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,
+            clusters.OnOff.Attributes.OnOff,
         ),
         device_type=(device_types.Thermostat, device_types.RoomAirConditioner),
     ),

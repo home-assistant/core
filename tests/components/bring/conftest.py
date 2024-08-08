@@ -1,9 +1,11 @@
 """Common fixtures for the Bring! tests."""
 
+from collections.abc import Generator
+from typing import cast
 from unittest.mock import AsyncMock, patch
 
+from bring_api.types import BringAuthResponse
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.bring import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -40,7 +42,7 @@ def mock_bring_client() -> Generator[AsyncMock]:
     ):
         client = mock_client.return_value
         client.uuid = UUID
-        client.login.return_value = {"name": "Bring"}
+        client.login.return_value = cast(BringAuthResponse, {"name": "Bring"})
         client.load_lists.return_value = {"lists": []}
         yield client
 

@@ -10,7 +10,6 @@ import voluptuous as vol
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    CONDUCTIVITY,
     CONF_SENSORS,
     LIGHT_LUX,
     PERCENTAGE,
@@ -18,6 +17,7 @@ from homeassistant.const import (
     STATE_PROBLEM,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfConductivity,
     UnitOfTemperature,
 )
 from homeassistant.core import (
@@ -148,7 +148,7 @@ class Plant(Entity):
             "max": CONF_MAX_MOISTURE,
         },
         READING_CONDUCTIVITY: {
-            ATTR_UNIT_OF_MEASUREMENT: CONDUCTIVITY,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfConductivity.MICROSIEMENS,
             "min": CONF_MIN_CONDUCTIVITY,
             "max": CONF_MAX_CONDUCTIVITY,
         },
@@ -268,6 +268,7 @@ class Plant(Entity):
             min_value = self._config[params["min"]]
             if value < min_value:
                 return f"{sensor_name} low"
+        return None
 
     def _check_max(self, sensor_name, value, params):
         """If configured, check the value against the defined maximum value."""

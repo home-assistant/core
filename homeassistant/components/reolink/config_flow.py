@@ -6,6 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from reolink_aio.api import ALLOWED_SPECIAL_CHARS
 from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
 import voluptuous as vol
 
@@ -29,7 +30,12 @@ from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import CONF_USE_HTTPS, DOMAIN
-from .exceptions import ReolinkException, ReolinkWebhookException, UserNotAdmin
+from .exceptions import (
+    PasswordIncompatible,
+    ReolinkException,
+    ReolinkWebhookException,
+    UserNotAdmin,
+)
 from .host import ReolinkHost
 from .util import is_connected
 
@@ -123,7 +129,10 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         """Dialog that informs the user that reauth is required."""
         if user_input is not None:
             return await self.async_step_user()
-        return self.async_show_form(step_id="reauth_confirm")
+        placeholders = {"name": self.context["title_placeholders"]["name"]}
+        return self.async_show_form(
+            step_id="reauth_confirm", description_placeholders=placeholders
+        )
 
     async def async_step_dhcp(
         self, discovery_info: dhcp.DhcpServiceInfo
@@ -203,8 +212,11 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors[CONF_USERNAME] = "not_admin"
                 placeholders["username"] = host.api.username
                 placeholders["userlevel"] = host.api.user_level
+            except PasswordIncompatible:
+                errors[CONF_PASSWORD] = "password_incompatible"
+                placeholders["special_chars"] = ALLOWED_SPECIAL_CHARS
             except CredentialsInvalidError:
-                errors[CONF_HOST] = "invalid_auth"
+                errors[CONF_PASSWORD] = "invalid_auth"
             except ApiError as err:
                 placeholders["error"] = str(err)
                 errors[CONF_HOST] = "api_error"
@@ -228,8 +240,9 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_PORT] = host.api.port
                 user_input[CONF_USE_HTTPS] = host.api.use_https
 
+                mac_address = format_mac(host.api.mac_address)
                 existing_entry = await self.async_set_unique_id(
-                    host.unique_id, raise_on_progress=False
+                    mac_address, raise_on_progress=False
                 )
                 if existing_entry and self._reauth:
                     if self.hass.config_entries.async_update_entry(

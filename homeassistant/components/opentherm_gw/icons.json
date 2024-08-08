@@ -10,6 +10,7 @@
     "set_led_mode": "mdi:led-on",
     "set_max_modulation": "mdi:thermometer-lines",
     "set_outside_temperature": "mdi:thermometer-lines",
-    "set_setback_temperature": "mdi:thermometer-lines"
+    "set_setback_temperature": "mdi:thermometer-lines",
+    "send_transparent_command": "mdi:console"
   }
 }

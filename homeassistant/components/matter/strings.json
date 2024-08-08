@@ -45,18 +45,46 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "water_leak": {
+        "name": "Water leak"
+      },
+      "water_freeze": {
+        "name": "Water freeze"
+      },
+      "rain": {
+        "name": "Rain"
+      }
+    },
+    "climate": {
+      "thermostat": {
+        "name": "Thermostat"
+      }
+    },
+    "cover": {
+      "cover": {
+        "name": "[%key:component::cover::title%]"
+      }
+    },
     "event": {
-      "push": {
+      "button": {
+        "name": "Button",
         "state_attributes": {
           "event_type": {
             "state": {
               "switch_latched": "Switch latched",
-              "initial_press": "Initial press",
-              "long_press": "Long press",
-              "short_release": "Short release",
-              "long_release": "Long release",
-              "multi_press_ongoing": "Multi press ongoing",
-              "multi_press_complete": "Multi press complete"
+              "initial_press": "Pressed",
+              "long_press": "Held down",
+              "short_release": "Released after being pressed",
+              "long_release": "Released after being held down",
+              "multi_press_1": "Pressed once",
+              "multi_press_2": "Pressed twice",
+              "multi_press_3": "Pressed 3 times",
+              "multi_press_4": "Pressed 4 times",
+              "multi_press_5": "Pressed 5 times",
+              "multi_press_6": "Pressed 6 times",
+              "multi_press_7": "Pressed 7 times",
+              "multi_press_8": "Pressed 8 times"
             }
           }
         }
@@ -64,6 +92,7 @@
     },
     "fan": {
       "fan": {
+        "name": "[%key:component::fan::title%]",
         "state_attributes": {
           "preset_mode": {
             "state": {
@@ -76,6 +105,38 @@
             }
           }
         }
+      }
+    },
+    "number": {
+      "on_level": {
+        "name": "On level"
+      },
+      "on_transition_time": {
+        "name": "On transition time"
+      },
+      "off_transition_time": {
+        "name": "Off transition time"
+      },
+      "on_off_transition_time": {
+        "name": "On/Off transition time"
+      }
+    },
+    "light": {
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
+    "lock": {
+      "lock": {
+        "name": "[%key:component::lock::title%]"
+      }
+    },
+    "select": {
+      "mode": {
+        "name": "Mode"
+      },
+      "startup_on_off": {
+        "name": "Power-on behavior on Startup"
       }
     },
     "sensor": {
@@ -99,7 +160,28 @@
       },
       "hepa_filter_condition": {
         "name": "Hepa filter condition"
+      },
+      "switch_current_position": {
+        "name": "Current switch position"
       }
+    },
+    "switch": {
+      "switch": {
+        "name": "[%key:component::switch::title%]"
+      },
+      "power": {
+        "name": "Power"
+      }
+    }
+  },
+  "issues": {
+    "server_version_version_too_old": {
+      "description": "The version of the Matter Server you are currently running is too old for this version of Home Assistant. Please update the Matter Server to the latest version to fix this issue.",
+      "title": "Newer version of Matter Server needed"
+    },
+    "server_version_version_too_new": {
+      "description": "The version of the Matter Server you are currently running is too new for this version of Home Assistant. Please update Home Assistant or downgrade the Matter Server to an older version to fix this issue.",
+      "title": "Older version of Matter Server needed"
     }
   },
   "services": {

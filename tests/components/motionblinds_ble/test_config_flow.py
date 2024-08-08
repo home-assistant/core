@@ -14,6 +14,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_ADDRESS, TEST_MAC, TEST_NAME
 
+from tests.common import MockConfigEntry
 from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 TEST_BLIND_TYPE = MotionBlindType.ROLLER.name.lower()
@@ -255,3 +256,34 @@ async def test_config_flow_bluetooth_success(hass: HomeAssistant) -> None:
         const.CONF_BLIND_TYPE: TEST_BLIND_TYPE,
     }
     assert result["options"] == {}
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test the options flow."""
+    entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id="0123456789",
+        data={
+            const.CONF_BLIND_TYPE: MotionBlindType.ROLLER,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            const.OPTION_PERMANENT_CONNECTION: True,
+            const.OPTION_DISCONNECT_TIME: 10,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY

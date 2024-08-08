@@ -2,3 +2,4 @@
 
 DOMAIN = "otp"
 DEFAULT_NAME = "OTP Sensor"
+CONF_NEW_TOKEN = "new_token"

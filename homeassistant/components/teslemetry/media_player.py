@@ -27,6 +27,8 @@ STATES = {
 VOLUME_MAX = 11.0
 VOLUME_STEP = 1.0 / 3
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

@@ -54,7 +54,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up climate device."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
-        return async_setup_rpc_entry(hass, config_entry, async_add_entities)
+        async_setup_rpc_entry(hass, config_entry, async_add_entities)
+        return
 
     coordinator = config_entry.runtime_data.block
     assert coordinator

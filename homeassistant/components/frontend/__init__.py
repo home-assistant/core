@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator
-from functools import lru_cache, partial
+from functools import cached_property, lru_cache, partial
 import logging
 import os
 import pathlib
@@ -189,7 +189,7 @@ MANIFEST_JSON = Manifest(
         ],
         "lang": "en-US",
         "name": "Home Assistant",
-        "short_name": "Assistant",
+        "short_name": "Home Assistant",
         "start_url": "/?homescreen=1",
         "id": "/?homescreen=1",
         "theme_color": DEFAULT_THEME_COLOR,
@@ -323,12 +323,16 @@ def async_register_built_in_panel(
 
 @bind_hass
 @callback
-def async_remove_panel(hass: HomeAssistant, frontend_url_path: str) -> None:
+def async_remove_panel(
+    hass: HomeAssistant, frontend_url_path: str, *, warn_if_unknown: bool = True
+) -> None:
     """Remove a built-in panel."""
     panel = hass.data.get(DATA_PANELS, {}).pop(frontend_url_path, None)
 
     if panel is None:
-        _LOGGER.warning("Removing unknown panel %s", frontend_url_path)
+        if warn_if_unknown:
+            _LOGGER.warning("Removing unknown panel %s", frontend_url_path)
+        return
 
     hass.bus.async_fire(EVENT_PANELS_UPDATED)
 
@@ -395,6 +399,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     for path, should_cache in (
         ("service_worker.js", False),
+        ("sw-modern.js", False),
+        ("sw-modern.js.map", False),
+        ("sw-legacy.js", False),
+        ("sw-legacy.js.map", False),
         ("robots.txt", False),
         ("onboarding.html", not is_dev),
         ("static", not is_dev),
@@ -581,12 +589,12 @@ class IndexView(web_urldispatcher.AbstractResource):
         self.hass = hass
         self._template_cache: jinja2.Template | None = None
 
-    @property
+    @cached_property
     def canonical(self) -> str:
         """Return resource's canonical path."""
         return "/"
 
-    @property
+    @cached_property
     def _route(self) -> web_urldispatcher.ResourceRoute:
         """Return the index route."""
         return web_urldispatcher.ResourceRoute("GET", self.get, self)

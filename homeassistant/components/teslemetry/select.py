@@ -22,6 +22,8 @@ LOW = "low"
 MEDIUM = "medium"
 HIGH = "high"
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class SeatHeaterDescription(SelectEntityDescription):

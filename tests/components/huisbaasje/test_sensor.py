@@ -59,7 +59,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
 
         # Assert data is loaded
         current_power = hass.states.get("sensor.current_power")
-        assert current_power.state == "1012.0"
+        assert current_power.state == "1011.66666666667"
         assert (
             current_power.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
         )
@@ -72,7 +72,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
 
         current_power_in = hass.states.get("sensor.current_power_in_peak")
-        assert current_power_in.state == "1012.0"
+        assert current_power_in.state == "1011.66666666667"
         assert (
             current_power_in.attributes.get(ATTR_DEVICE_CLASS)
             == SensorDeviceClass.POWER
@@ -134,7 +134,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         energy_consumption_peak_today = hass.states.get(
             "sensor.energy_consumption_peak_today"
         )
-        assert energy_consumption_peak_today.state == "2.67"
+        assert energy_consumption_peak_today.state == "2.669999453"
         assert (
             energy_consumption_peak_today.attributes.get(ATTR_DEVICE_CLASS)
             == SensorDeviceClass.ENERGY
@@ -151,7 +151,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         energy_consumption_off_peak_today = hass.states.get(
             "sensor.energy_consumption_off_peak_today"
         )
-        assert energy_consumption_off_peak_today.state == "0.627"
+        assert energy_consumption_off_peak_today.state == "0.626666416"
         assert (
             energy_consumption_off_peak_today.attributes.get(ATTR_DEVICE_CLASS)
             == SensorDeviceClass.ENERGY
@@ -168,7 +168,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         energy_production_peak_today = hass.states.get(
             "sensor.energy_production_peak_today"
         )
-        assert energy_production_peak_today.state == "1.512"
+        assert energy_production_peak_today.state == "1.51234"
         assert (
             energy_production_peak_today.attributes.get(ATTR_DEVICE_CLASS)
             == SensorDeviceClass.ENERGY
@@ -185,7 +185,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         energy_production_off_peak_today = hass.states.get(
             "sensor.energy_production_off_peak_today"
         )
-        assert energy_production_off_peak_today.state == "1.093"
+        assert energy_production_off_peak_today.state == "1.09281"
         assert (
             energy_production_off_peak_today.attributes.get(ATTR_DEVICE_CLASS)
             == SensorDeviceClass.ENERGY
@@ -200,7 +200,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
 
         energy_today = hass.states.get("sensor.energy_today")
-        assert energy_today.state == "3.3"
+        assert energy_today.state == "3.296665869"
         assert (
             energy_today.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
         )
@@ -211,7 +211,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
 
         energy_this_week = hass.states.get("sensor.energy_this_week")
-        assert energy_this_week.state == "17.5"
+        assert energy_this_week.state == "17.509996085"
         assert (
             energy_this_week.attributes.get(ATTR_DEVICE_CLASS)
             == SensorDeviceClass.ENERGY
@@ -225,7 +225,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
 
         energy_this_month = hass.states.get("sensor.energy_this_month")
-        assert energy_this_month.state == "103.3"
+        assert energy_this_month.state == "103.28830788"
         assert (
             energy_this_month.attributes.get(ATTR_DEVICE_CLASS)
             == SensorDeviceClass.ENERGY
@@ -239,7 +239,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
 
         energy_this_year = hass.states.get("sensor.energy_this_year")
-        assert energy_this_year.state == "673.0"
+        assert energy_this_year.state == "672.97811773"
         assert (
             energy_this_year.attributes.get(ATTR_DEVICE_CLASS)
             == SensorDeviceClass.ENERGY
@@ -264,7 +264,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
 
         gas_today = hass.states.get("sensor.gas_today")
-        assert gas_today.state == "1.1"
+        assert gas_today.state == "1.07"
         assert gas_today.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
         assert (
             gas_today.attributes.get(ATTR_STATE_CLASS)
@@ -276,7 +276,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
 
         gas_this_week = hass.states.get("sensor.gas_this_week")
-        assert gas_this_week.state == "5.6"
+        assert gas_this_week.state == "5.634224386"
         assert gas_this_week.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
         assert (
             gas_this_week.attributes.get(ATTR_STATE_CLASS)
@@ -288,7 +288,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
 
         gas_this_month = hass.states.get("sensor.gas_this_month")
-        assert gas_this_month.state == "39.1"
+        assert gas_this_month.state == "39.14"
         assert gas_this_month.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
         assert (
             gas_this_month.attributes.get(ATTR_STATE_CLASS)
@@ -300,7 +300,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
 
         gas_this_year = hass.states.get("sensor.gas_this_year")
-        assert gas_this_year.state == "116.7"
+        assert gas_this_year.state == "116.73"
         assert gas_this_year.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
         assert (
             gas_this_year.attributes.get(ATTR_STATE_CLASS)
@@ -349,13 +349,13 @@ async def test_setup_entry_absent_measurement(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         # Assert data is loaded
-        assert hass.states.get("sensor.current_power").state == "1012.0"
+        assert hass.states.get("sensor.current_power").state == "1011.66666666667"
         assert hass.states.get("sensor.current_power_in_peak").state == "unknown"
         assert hass.states.get("sensor.current_power_in_off_peak").state == "unknown"
         assert hass.states.get("sensor.current_power_out_peak").state == "unknown"
         assert hass.states.get("sensor.current_power_out_off_peak").state == "unknown"
         assert hass.states.get("sensor.current_gas").state == "unknown"
-        assert hass.states.get("sensor.energy_today").state == "3.3"
+        assert hass.states.get("sensor.energy_today").state == "3.296665869"
         assert (
             hass.states.get("sensor.energy_consumption_peak_today").state == "unknown"
         )

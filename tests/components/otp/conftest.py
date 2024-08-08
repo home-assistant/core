@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.otp.const import DOMAIN
-from homeassistant.components.sensor.const import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_NAME, CONF_PLATFORM, CONF_TOKEN
 from homeassistant.helpers.typing import ConfigType
 
@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.otp.async_setup_entry", return_value=True
@@ -23,7 +23,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_pyotp() -> Generator[MagicMock, None, None]:
+def mock_pyotp() -> Generator[MagicMock]:
     """Mock a pyotp."""
     with (
         patch(
@@ -33,7 +33,10 @@ def mock_pyotp() -> Generator[MagicMock, None, None]:
     ):
         mock_totp = MagicMock()
         mock_totp.now.return_value = 123456
+        mock_totp.verify.return_value = True
+        mock_totp.provisioning_uri.return_value = "otpauth://totp/Home%20Assistant:OTP%20Sensor?secret=2FX5FBSYRE6VEC2FSHBQCRKO2GNDVZ52&issuer=Home%20Assistant"
         mock_client.TOTP.return_value = mock_totp
+        mock_client.random_base32.return_value = "2FX5FBSYRE6VEC2FSHBQCRKO2GNDVZ52"
         yield mock_client
 
 
