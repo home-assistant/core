@@ -55,8 +55,8 @@
       "description": "Fetch a list of connections from the swiss public transport.",
       "fields": {
         "config_entry_id": {
-          "name": "Integration",
-          "description": "Swiss public transport integration to fetch connections for."
+          "name": "Instance",
+          "description": "Swiss public transport instance to fetch connections for."
         },
         "limit": {
           "name": "Limit",
@@ -78,8 +78,8 @@
     "not_loaded": {
       "message": "{target} is not loaded."
     },
-    "integration_not_found": {
-      "message": "Integration \"{target}\" not found in registry."
+    "config_entry_not_found": {
+      "message": "Swiss public transport integration instance \"{target}\" not found."
     }
   }
 }

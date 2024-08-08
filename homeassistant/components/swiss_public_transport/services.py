@@ -23,18 +23,18 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from .const import (
     ATTR_CONFIG_ENTRY_ID,
     ATTR_LIMIT,
+    CONNECTIONS_COUNT,
+    CONNECTIONS_MAX,
     DOMAIN,
-    SENSOR_CONNECTIONS_COUNT,
-    SENSOR_CONNECTIONS_MAX,
     SERVICE_FETCH_CONNECTIONS,
 )
 
 SERVICE_FETCH_CONNECTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Required(ATTR_LIMIT, default=SENSOR_CONNECTIONS_COUNT): NumberSelector(
+        vol.Required(ATTR_LIMIT, default=CONNECTIONS_COUNT): NumberSelector(
             NumberSelectorConfig(
-                min=0, max=SENSOR_CONNECTIONS_MAX, mode=NumberSelectorMode.BOX
+                min=0, max=CONNECTIONS_MAX, mode=NumberSelectorMode.BOX
             )
         ),
     }
@@ -48,8 +48,8 @@ def async_get_entry(
     if not (entry := hass.config_entries.async_get_entry(config_entry_id)):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
-            translation_key="integration_not_found",
-            translation_placeholders={"target": DOMAIN},
+            translation_key="config_entry_not_found",
+            translation_placeholders={"target": config_entry_id},
         )
     if entry.state is not ConfigEntryState.LOADED:
         raise ServiceValidationError(

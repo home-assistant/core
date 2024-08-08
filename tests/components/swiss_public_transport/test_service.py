@@ -16,8 +16,8 @@ from homeassistant.components.swiss_public_transport.const import (
     ATTR_LIMIT,
     CONF_DESTINATION,
     CONF_START,
+    CONNECTIONS_MAX,
     DOMAIN,
-    SENSOR_CONNECTIONS_MAX,
     SERVICE_FETCH_CONNECTIONS,
 )
 from homeassistant.components.swiss_public_transport.helper import unique_id_from_config
@@ -93,7 +93,7 @@ async def test_service_call_fetch_connections_success(
     [
         (-1, MOCK_DATA_STEP_BASE, pytest.raises(vol_er.MultipleInvalid), None),
         (
-            SENSOR_CONNECTIONS_MAX + 1,
+            CONNECTIONS_MAX + 1,
             MOCK_DATA_STEP_BASE,
             pytest.raises(vol_er.MultipleInvalid),
             None,
@@ -169,6 +169,8 @@ async def test_service_call_load_unload(
         entry_id=f"entry_{unique_id}",
     )
 
+    bad_entry_id = "bad_entry_id"
+
     with patch(
         "homeassistant.components.swiss_public_transport.OpendataTransport",
         return_value=AsyncMock(),
@@ -208,13 +210,13 @@ async def test_service_call_load_unload(
 
         with pytest.raises(
             ServiceValidationError,
-            match=f'Integration "{DOMAIN}" not found in registry',
+            match=f'Swiss public transport integration instance "{bad_entry_id}" not found',
         ):
             await hass.services.async_call(
                 domain=DOMAIN,
                 service=SERVICE_FETCH_CONNECTIONS,
                 service_data={
-                    ATTR_CONFIG_ENTRY_ID: "bad_entry_id",
+                    ATTR_CONFIG_ENTRY_ID: bad_entry_id,
                 },
                 blocking=True,
                 return_response=True,

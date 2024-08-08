@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
-from .const import DEFAULT_UPDATE_TIME, DOMAIN, SENSOR_CONNECTIONS_COUNT
+from .const import CONNECTIONS_COUNT, DEFAULT_UPDATE_TIME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +77,7 @@ class SwissPublicTransportDataUpdateCoordinator(
         return None
 
     async def _async_update_data(self) -> list[DataConnection]:
-        return await self.fetch_connections(limit=SENSOR_CONNECTIONS_COUNT)
+        return await self.fetch_connections(limit=CONNECTIONS_COUNT)
 
     async def fetch_connections(self, limit: int) -> list[DataConnection]:
         """Fetch connections using the opendata api."""
