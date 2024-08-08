@@ -15,7 +15,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import IntellifireDataUpdateCoordinator
+from . import IntelliFireDataUpdateCoordinator
 from .const import DEFAULT_THERMOSTAT_TEMP, DOMAIN, LOGGER
 from .entity import IntellifireEntity
 
@@ -30,7 +30,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Configure the fan entry.."""
-    coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: IntelliFireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     if coordinator.data.has_thermostat:
         async_add_entities(
@@ -62,14 +62,14 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
 
     def __init__(
         self,
-        coordinator: IntellifireDataUpdateCoordinator,
+        coordinator: IntelliFireDataUpdateCoordinator,
         description: ClimateEntityDescription,
     ) -> None:
         """Configure climate entry - and override last_temp if the thermostat is currently on."""
         super().__init__(coordinator, description)
 
         if coordinator.data.thermostat_on:
-            self.last_temp = coordinator.data.thermostat_setpoint_c
+            self.last_temp = int(coordinator.data.thermostat_setpoint_c)
 
     @property
     def hvac_mode(self) -> HVACMode:

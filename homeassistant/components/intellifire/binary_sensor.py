@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from intellifire4py import IntellifirePollData
+from intellifire4py.model import IntelliFirePollData
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -17,7 +17,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import IntellifireDataUpdateCoordinator
+from . import IntelliFireDataUpdateCoordinator
 from .const import DOMAIN
 from .entity import IntellifireEntity
 
@@ -26,7 +26,7 @@ from .entity import IntellifireEntity
 class IntellifireBinarySensorRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[IntellifirePollData], bool]
+    value_fn: Callable[[IntelliFirePollData], bool]
 
 
 @dataclass(frozen=True)
@@ -143,7 +143,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a IntelliFire On/Off Sensor."""
-    coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: IntelliFireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         IntellifireBinarySensor(coordinator=coordinator, description=description)
