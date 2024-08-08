@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 from sqlalchemy import create_engine, inspect
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import InternalError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from homeassistant.components import recorder
@@ -560,8 +560,8 @@ async def test_out_of_disk_space_while_rebuild_states_table(
     assert "ix_states_entity_id_last_updated_ts" in states_index_names
 
     # Simulate out of disk space while rebuilding the states table by
-    # - patching CreateTable to raise an exception for SQLite
-    # - patching DropConstraint to raise an exception for MySQL and PostgreSQL
+    # - patching CreateTable to raise SQLAlchemyError for SQLite
+    # - patching DropConstraint to raise InternalError for MySQL and PostgreSQL
     with (
         patch(
             "homeassistant.components.recorder.migration.CreateTable",
@@ -569,7 +569,7 @@ async def test_out_of_disk_space_while_rebuild_states_table(
         ),
         patch(
             "homeassistant.components.recorder.migration.DropConstraint",
-            side_effect=SQLAlchemyError,
+            side_effect=InternalError,
         ),
     ):
         async with (
