@@ -259,7 +259,9 @@ class TuyaEntity(Entity):
                 try:
                     return DPType(getattr(self.device, key)[dpcode].type)
                 except ValueError:
-                    return TuyaEntity.determine_dptype(getattr(self.device, key)[dpcode].type)
+                    return TuyaEntity.determine_dptype(
+                        getattr(self.device, key)[dpcode].type
+                    )
 
         return None
 
