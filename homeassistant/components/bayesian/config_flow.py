@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
 )
+from homeassistant.components.input_boolean import DOMAIN as INPUT_BOLEAN_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -64,10 +65,11 @@ class ObservationTypes(StrEnum):
         return [c.value for c in ObservationTypes]
 
 
-async def _validate_mode(  # TODO - do some actual validation
+async def _validate_user(  # TODO - do some actual validation
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Validate the threshold mode, and set limits to None if not set."""
+    user_input = _convert_percentages_to_fractions(user_input)
     return {**user_input}
 
 
@@ -140,7 +142,9 @@ STATE_SUBSCHEMA = vol.Schema(
     {
         vol.Required(CONF_PLATFORM): CONF_STATE,
         vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain=[SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN])
+            selector.EntitySelectorConfig(
+                domain=[SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN, INPUT_BOLEAN_DOMAIN]
+            )
         ),
         vol.Required(CONF_TO_STATE): selector.TextSelector(
             selector.TextSelectorConfig(
@@ -216,6 +220,16 @@ async def _choose_observation_step(
     return None
 
 
+def _convert_percentages_to_fractions(
+    data: dict[str, str | float | int],
+) -> dict[str, str | float]:
+    """Convert percentage values in a dictionary to fractions."""
+    return {
+        key: (value / 100 if isinstance(value, (int, float)) else value)
+        for key, value in data.items()
+    }
+
+
 async def validate_observation_setup(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
@@ -225,6 +239,7 @@ async def validate_observation_setup(
     # add_another is really just a variable for controlling the flow
     add_another: bool = user_input.pop("add_another", False)
 
+    user_input = _convert_percentages_to_fractions(user_input)
     # Standard behavior is to merge the result with the options.
     # In this case, we want to add a sub-item so we update the options directly.
     observations: list[dict[str, Any]] = handler.options.setdefault(
@@ -237,7 +252,7 @@ async def validate_observation_setup(
 CONFIG_FLOW = {
     str(ConfigFlowSteps.USER): SchemaFlowFormStep(
         CONFIG_SCHEMA,
-        validate_user_input=_validate_mode,
+        validate_user_input=_validate_user,
         next_step=ConfigFlowSteps.OBSERVATION_SELECTOR,
     ),
     str(ConfigFlowSteps.OBSERVATION_SELECTOR): SchemaFlowMenuStep(

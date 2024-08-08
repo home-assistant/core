@@ -80,7 +80,6 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Bayesian Binary sensor from a yaml config."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    _LOGGER.warning("Config YAML: %s ", config)  # TODO delete-me
     name: str = config[CONF_NAME]
     unique_id: str | None = config.get(CONF_UNIQUE_ID)
     observations: list[ConfigType] = config[CONF_OBSERVATIONS]
@@ -121,12 +120,6 @@ async def async_setup_entry(
     """Set up the Bayesian Binary sensor from a config entry."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     config = config_entry.options
-    _LOGGER.warning(
-        "Config Flow: %s with options %s with unique ID %s",
-        config_entry,
-        config,
-        config_entry.unique_id,
-    )  # TODO delete-me
     name: str = config[CONF_NAME]
     unique_id: str | None = config.get(CONF_UNIQUE_ID, config_entry.entry_id)
     observations: list[ConfigType] = config[CONF_OBSERVATIONS]
@@ -347,7 +340,7 @@ class BayesianBinarySensor(BinarySensorEntity):
                     1 - observation.prob_given_false,
                 )
                 continue
-            # observation.observed is None
+            # Entity exists but observation.observed is None
             if observation.entity_id is not None:
                 _LOGGER.debug(
                     (
