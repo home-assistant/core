@@ -25,7 +25,9 @@ from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
-ValveConfigurationAndControlFeature = clusters.ValveConfigurationAndControlFeature.Bitmaps.Feature
+ValveConfigurationAndControlFeature = (
+    clusters.ValveConfigurationAndControlFeature.Bitmaps.Feature
+)
 TimeSyncBitmap = clusters.ValveConfigurationAndControl.Bitmaps.TimeSyncBitmap
 LevelBitmap = clusters.ValveConfigurationAndControl.Bitmaps.LevelBitmap
 
@@ -168,14 +170,15 @@ class MatterValve(MatterEntity, ValveEntity):
             supported_features |= ValveEntityFeature.SET_POSITION
         self._attr_supported_features = supported_features
 
-
     @callback
     def _calculate_features(
         self,
     ) -> None:
         """Calculate features for HA Valve platform from Matter FeatureMap."""
         feature_map = int(
-            self.get_matter_attribute_value(clusters.ValveConfigurationAndControl.Attributes.FeatureMap)
+            self.get_matter_attribute_value(
+                clusters.ValveConfigurationAndControl.Attributes.FeatureMap
+            )
         )
         
         self._feature_map = feature_map  
