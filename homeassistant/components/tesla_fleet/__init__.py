@@ -13,6 +13,7 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
 )
 
+from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
@@ -26,7 +27,9 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN, LOGGER, MODELS
+from .application_credentials import TeslaOAuth2Implementation
+from .config_flow import OAuth2FlowHandler
+from .const import CLIENT_ID, DOMAIN, LOGGER, MODELS, NAME
 from .coordinator import (
     TeslaFleetEnergySiteInfoCoordinator,
     TeslaFleetEnergySiteLiveCoordinator,
@@ -50,6 +53,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
     token = jwt.decode(access_token, options={"verify_signature": False})
     scopes = token["scp"]
     region = token["ou_code"].lower()
+
+    OAuth2FlowHandler.async_register_implementation(
+        hass,
+        TeslaOAuth2Implementation(hass, DOMAIN, ClientCredential(CLIENT_ID, "", NAME)),
+    )
 
     implementation = await async_get_config_entry_implementation(hass, entry)
     oauth_session = OAuth2Session(hass, entry, implementation)
