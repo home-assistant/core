@@ -22,7 +22,8 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change_event,
@@ -35,9 +36,15 @@ import homeassistant.util.dt as dt_util
 _TIME_TRIGGER_SCHEMA = vol.Any(
     cv.time,
     vol.All(str, cv.entity_domain(["input_datetime", "sensor"])),
+    vol.All(str, cv.template),
     msg=(
-        "Expected HH:MM, HH:MM:SS or Entity ID with domain 'input_datetime' or 'sensor'"
+        "Expected HH:MM, HH:MM:SS, Entity ID with domain 'input_datetime' or 'sensor', or Limited Template"
     ),
+)
+
+_TIME_AT_SCHEMA = vol.Any(
+    cv.time,
+    vol.All(str, cv.entity_domain(["input_datetime", "sensor"])),
 )
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
@@ -171,6 +178,18 @@ async def async_attach_trigger(
     to_track: list[str] = []
 
     for at_time in config[CONF_AT]:
+        if isinstance(at_time, template.Template):
+            template.attach(hass, at_time)
+            render = template.render_complex(
+                at_time, trigger_info["variables"], limited=True
+            )
+            try:
+                at_time = _TIME_AT_SCHEMA(render)
+            except vol.Invalid as exc:
+                raise HomeAssistantError(
+                    "Expected HH:MM, HH:MM:SS or Entity ID with domain 'input_datetime' or 'sensor'"
+                ) from exc
+
         if isinstance(at_time, str):
             # entity
             to_track.append(at_time)
