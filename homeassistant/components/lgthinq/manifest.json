@@ -1,7 +1,7 @@
 {
   "domain": "lgthinq",
   "name": "LG ThinQ",
-  "codeowners": [],
+  "codeowners": [@LG-ThinQ-Integration],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/lgthinq/",
@@ -17,6 +17,5 @@
     {
       "st": "urn:lge-com:service:webos-second-screen:1"
     }
-  ],
-  "version": "1.0.2"
+  ]
 }
