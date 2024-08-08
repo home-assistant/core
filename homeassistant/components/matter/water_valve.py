@@ -127,11 +127,6 @@ class MatterValve(MatterEntity, ValveEntity):
                 self._attr_is_opening = True
                 #self._attr_is_closing = False
                 #self._attr_is_transitioning = True --> Not implemented here: https://developers.home-assistant.io/docs/core/entity/valve
-            '''
-            case OperationalStatus.VALVE_IS_CURRENTLY_CLOSING:
-                self._attr_is_opening = False
-                self._attr_is_closing = True
-            '''
             case _:
                 self._attr_is_opening = False
                 self._attr_is_closing = False
