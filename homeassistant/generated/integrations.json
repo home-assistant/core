@@ -297,6 +297,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "anglian_water": {
+      "name": "Anglian Water",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "anova": {
       "name": "Anova",
       "integration_type": "hub",

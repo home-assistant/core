@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "previous_consumption": {
+        "default": "mdi:water"
+      }
+    }
+  }
+}
