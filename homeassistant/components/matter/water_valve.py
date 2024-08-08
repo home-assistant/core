@@ -92,7 +92,7 @@ class MatterValve(MatterEntity, ValveEntity):
         position = kwargs[ATTR_POSITION]
         await self.send_device_command(
             # value needs to be inverted and is sent in 100ths
-            clusters.ValveConfigurationAndControl.Commands.GoToLiftPercentage((100 - position) * 100)
+            clusters.ValveConfigurationAndControl.Commands.Open(position) # TargetLevel type="percent"
         )
 
     async def send_device_command(self, command: Any) -> None:
