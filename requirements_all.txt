@@ -350,7 +350,7 @@ aioridwell==2024.01.0
 aioruckus==0.34
 
 # homeassistant.components.russound_rio
-aiorussound==2.2.0
+aiorussound==2.2.2
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -659,6 +659,9 @@ clearpasspy==1.0.2
 
 # homeassistant.components.sinch
 clx-sdk-xms==1.0.0
+
+# homeassistant.components.coinbase
+coinbase-advanced-py==1.2.2
 
 # homeassistant.components.coinbase
 coinbase==2.1.0
@@ -1096,7 +1099,7 @@ holidays==0.53
 home-assistant-frontend==20240806.1
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.7.29
+home-assistant-intents==2024.8.7
 
 # homeassistant.components.home_connect
 homeconnect==0.8.0
