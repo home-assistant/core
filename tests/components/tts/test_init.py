@@ -4,7 +4,7 @@ import asyncio
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -1389,8 +1389,33 @@ def test_resolve_engine(hass: HomeAssistant, setup: str, engine_id: str) -> None
     ):
         assert tts.async_resolve_engine(hass, None) is None
 
-    with patch.dict(hass.data[tts.DATA_TTS_MANAGER].providers, {"cloud": object()}):
-        assert tts.async_resolve_engine(hass, None) == "cloud"
+
+@pytest.mark.parametrize(
+    ("setup", "engine_id"),
+    [
+        ("mock_setup", "test"),
+        ("mock_config_entry_setup", "tts.test"),
+    ],
+    indirect=["setup"],
+)
+def test_resolve_engine_with_cloud(
+    hass: HomeAssistant, setup: str, engine_id: str
+) -> None:
+    """Test resolving engine."""
+    with patch.dict(
+        hass.data["tts"]._entities,
+        {
+            "tts.home_assistant_cloud": Mock(
+                entity_id="tts.home_assistant_cloud",
+                platform=Mock(platform_name="cloud"),
+            )
+        },
+    ):
+        assert tts.async_resolve_engine(hass, None) == "tts.home_assistant_cloud"
+        assert (
+            tts.async_resolve_engine(hass, "tts.home_assistant_cloud")
+            == "tts.home_assistant_cloud"
+        )
 
 
 @pytest.mark.parametrize(

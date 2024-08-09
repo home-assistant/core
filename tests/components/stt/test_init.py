@@ -3,7 +3,7 @@
 from collections.abc import AsyncIterable, Generator
 from http import HTTPStatus
 from pathlib import Path
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -494,6 +494,26 @@ async def test_default_engine_entity(
     await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
 
     assert async_default_engine(hass) == f"{DOMAIN}.{TEST_DOMAIN}"
+
+
+async def test_default_engine_with_cloud(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_provider_entity: MockProviderEntity,
+) -> None:
+    """Test async_default_engine."""
+    await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
+
+    with patch.dict(
+        hass.data["stt"]._entities,
+        {
+            "stt.home_assistant_cloud": Mock(
+                entity_id="stt.home_assistant_cloud",
+                platform=Mock(platform_name="cloud"),
+            )
+        },
+    ):
+        assert async_default_engine(hass) == "stt.home_assistant_cloud"
 
 
 @pytest.mark.parametrize("config_flow_test_domain", ["new_test"])
