@@ -1,0 +1,10 @@
+{
+  "title": "Test Title",
+  "message": "Test Message",
+  "data": {
+    "duration": 5,
+    "fontsize": "small",
+    "color": "indigo",
+    "transparency": "25%"
+  }
+}

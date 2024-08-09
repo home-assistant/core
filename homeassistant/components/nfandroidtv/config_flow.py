@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from notifications_android_tv.notifications import ConnectError, Notifications
+from notifications_android_tv import ConnectError, Notifications
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
