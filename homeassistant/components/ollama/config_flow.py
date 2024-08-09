@@ -38,12 +38,16 @@ from .const import (
     CONF_KEEP_ALIVE,
     CONF_MAX_HISTORY,
     CONF_MODEL,
+    CONF_NUM_CTX,
     CONF_PROMPT,
     DEFAULT_KEEP_ALIVE,
     DEFAULT_MAX_HISTORY,
     DEFAULT_MODEL,
+    DEFAULT_NUM_CTX,
     DEFAULT_TIMEOUT,
     DOMAIN,
+    MAX_NUM_CTX,
+    MIN_NUM_CTX,
     MODEL_NAMES,
 )
 
@@ -273,6 +277,14 @@ def ollama_config_option_schema(
         ): NumberSelector(
             NumberSelectorConfig(
                 min=-1, max=sys.maxsize, step=1, mode=NumberSelectorMode.BOX
+            )
+        ),
+        vol.Optional(
+            CONF_NUM_CTX,
+            description={"suggested_value": options.get(CONF_NUM_CTX, DEFAULT_NUM_CTX)},
+        ): NumberSelector(
+            NumberSelectorConfig(
+                min=MIN_NUM_CTX, max=MAX_NUM_CTX, step=1, mode=NumberSelectorMode.BOX
             )
         ),
     }
