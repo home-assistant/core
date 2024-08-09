@@ -117,7 +117,7 @@ async def block_request(
 def evo_config() -> dict[str, str]:
     "Return a default/minimal configuration."
     return {
-        CONF_USERNAME: "user@email.com",
+        CONF_USERNAME: "test_user@gmail.com",
         CONF_PASSWORD: "password",
     }
 
