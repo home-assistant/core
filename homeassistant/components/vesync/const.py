@@ -23,6 +23,7 @@ DEV_TYPE_TO_HA = {
     "Core300S": "fan",
     "Core400S": "fan",
     "Core600S": "fan",
+    "EverestAir": "fan",
     "Vital200S": "fan",
     "Vital100S": "fan",
     "ESD16": "walldimmer",
@@ -59,4 +60,9 @@ SKU_TO_BASE_DEVICE = {
     "LAP-V102S-AASR": "Vital100S",  # Alt ID Model Vital100S
     "LAP-V102S-WEU": "Vital100S",  # Alt ID Model Vital100S
     "LAP-V102S-WUK": "Vital100S",  # Alt ID Model Vital100S
+    "EverestAir": "EverestAir",
+    "LAP-EL551S-AUS": "EverestAir",  # Alt ID Model EverestAir
+    "LAP-EL551S-AEUR": "EverestAir",  # Alt ID Model EverestAir
+    "LAP-EL551S-WEU": "EverestAir",  # Alt ID Model EverestAir
+    "LAP-EL551S-WUS": "EverestAir",  # Alt ID Model EverestAir
 }
