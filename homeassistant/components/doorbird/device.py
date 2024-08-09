@@ -195,7 +195,7 @@ class ConfiguredDoorBird:
             title: str | None = data.get("title")
             if not title or not title.startswith("Home Assistant"):
                 continue
-            event = title.split("(")[1].strip(")")
+            event = title.partition("(")[2].strip(")")
             if input_type := favorite_input_type.get(identifier):
                 events.append(DoorbirdEvent(event, input_type))
             elif input_type := default_event_types.get(event):

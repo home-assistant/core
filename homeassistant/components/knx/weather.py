@@ -21,7 +21,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import KNXModule
 from .const import DATA_KNX_CONFIG, DOMAIN
-from .knx_entity import KnxEntity
+from .knx_entity import KnxYamlEntity
 from .schema import WeatherSchema
 
 
@@ -75,7 +75,7 @@ def _create_weather(xknx: XKNX, config: ConfigType) -> XknxWeather:
     )
 
 
-class KNXWeather(KnxEntity, WeatherEntity):
+class KNXWeather(KnxYamlEntity, WeatherEntity):
     """Representation of a KNX weather device."""
 
     _device: XknxWeather
