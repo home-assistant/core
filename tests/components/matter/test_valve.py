@@ -12,7 +12,6 @@ from .common import (
     setup_integration_with_node_fixture,
     trigger_subscription_callback,
 )
-from .common import setup_integration_with_node_fixture
 
 
 # This tests needs to be adjusted to remove lingering tasks
