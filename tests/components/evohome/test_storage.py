@@ -116,8 +116,8 @@ async def test_auth_tokens_null(
 
 @pytest.mark.parametrize("idx", TEST_DATA)
 async def test_auth_tokens_same(
-    hass: HomeAssistant, 
-    hass_storage: dict[str, Any], 
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
     evo_config: dict[str, str],
     idx: str,
 ) -> None:
@@ -145,8 +145,8 @@ async def test_auth_tokens_same(
 
 @pytest.mark.parametrize("idx", TEST_DATA)
 async def test_auth_tokens_past(
-    hass: HomeAssistant, 
-    hass_storage: dict[str, Any], 
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
     evo_config: dict[str, str],
     idx: str,
 ) -> None:
@@ -183,8 +183,8 @@ async def test_auth_tokens_past(
 
 @pytest.mark.parametrize("idx", TEST_DATA)
 async def test_auth_tokens_diff(
-    hass: HomeAssistant, 
-    hass_storage: dict[str, Any], 
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
     evo_config: dict[str, str],
     idx: str,
 ) -> None:
