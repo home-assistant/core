@@ -1,5 +1,6 @@
 """Support for Haus-Bus lights."""
 
+from abc import abstractmethod
 import colorsys
 from typing import Any, cast
 
@@ -83,9 +84,9 @@ class HausbusLight(HausbusEntity, LightEntity):
             return True
         return False
 
+    @abstractmethod
     def get_hardware_status(self) -> None:
         """Request status of a light channel from hardware."""
-        raise NotImplementedError
 
     def set_light_color(self, red: int, green: int, blue: int) -> None:
         """Set the color of a light channel."""
@@ -108,9 +109,7 @@ class HausbusLight(HausbusEntity, LightEntity):
 
     def light_turn_off(self) -> None:
         """Turn off a light channel."""
-        params = {
-            ATTR_ON_STATE: False,
-        }
+        params = {ATTR_ON_STATE: False}
         self.async_update_callback(**params)
 
     @staticmethod
@@ -164,22 +163,6 @@ class HausbusLight(HausbusEntity, LightEntity):
         if isinstance(data, (DimmerEvOff, ledEvOff, rgbDimmerEvOff)):
             channel.light_turn_off()
 
-    def turn_on(self, **kwargs: Any) -> None:
-        """Turn on action."""
-        raise NotImplementedError
-
-    def turn_off(self, **kwargs: Any) -> None:
-        """Turn off action."""
-        raise NotImplementedError
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on light."""
-        self.turn_on(**kwargs)
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off light."""
-        self.turn_off()
-
     @callback
     def async_update_callback(self, **kwargs: Any) -> None:
         """Light state push update."""
@@ -210,12 +193,12 @@ class HausbusDimmerLight(HausbusLight):
         self,
         instance_id: int,
         device: HausbusDevice,
-        channel: ABusFeature,
+        channel: Dimmer,
     ) -> None:
         """Set up light."""
         super().__init__(instance_id, device, channel)
 
-        self._channel = cast(Dimmer, channel)
+        self._channel = channel
         self._attr_supported_color_modes: set[ColorMode] = set()
         self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
         self._attr_color_mode = ColorMode.BRIGHTNESS
@@ -243,12 +226,12 @@ class HausbusRGBDimmerLight(HausbusLight):
         self,
         instance_id: int,
         device: HausbusDevice,
-        channel: ABusFeature,
+        channel: RGBDimmer,
     ) -> None:
         """Set up light."""
         super().__init__(instance_id, device, channel)
 
-        self._channel = cast(RGBDimmer, channel)
+        self._channel = channel
         self._attr_supported_color_modes: set[ColorMode] = set()
         self._attr_supported_color_modes.add(ColorMode.HS)
         self._attr_color_mode = ColorMode.HS
@@ -279,12 +262,12 @@ class HausbusLedLight(HausbusLight):
         self,
         instance_id: int,
         device: HausbusDevice,
-        channel: ABusFeature,
+        channel: Led,
     ) -> None:
         """Set up light."""
         super().__init__(instance_id, device, channel)
 
-        self._channel = cast(Led, channel)
+        self._channel = channel
         self._attr_supported_color_modes: set[ColorMode] = set()
         self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
         self._attr_color_mode = ColorMode.BRIGHTNESS
