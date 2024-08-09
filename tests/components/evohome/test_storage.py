@@ -8,7 +8,6 @@ from typing import Any, Final, NotRequired, TypedDict
 import pytest
 
 from homeassistant.components.evohome import (
-    CONF_PASSWORD,
     CONF_USERNAME,
     DOMAIN,
     STORAGE_KEY,
