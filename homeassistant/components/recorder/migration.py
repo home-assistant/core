@@ -669,18 +669,16 @@ def _drop_foreign_key_constraints(
 def _restore_foreign_key_constraints(
     session_maker: Callable[[], Session],
     engine: Engine,
-    dropped_constraints: list[tuple[str, str, ReflectedForeignKeyConstraint]],
+    foreign_columns: list[tuple[str, str, str | None, str | None]],
 ) -> None:
     """Restore foreign key constraints."""
-    for table, column, dropped_constraint in dropped_constraints:
+    for table, column, foreign_table, foreign_column in foreign_columns:
         constraints = Base.metadata.tables[table].foreign_key_constraints
         for constraint in constraints:
             if constraint.column_keys == [column]:
                 break
         else:
-            _LOGGER.info(
-                "Did not find a matching constraint for %s", dropped_constraint
-            )
+            _LOGGER.info("Did not find a matching constraint for %s.%s", table, column)
             continue
 
         # AddConstraint mutates the constraint passed to it, we need to
@@ -689,13 +687,56 @@ def _restore_foreign_key_constraints(
         create_rule = constraint._create_rule  # noqa: SLF001
         add_constraint = AddConstraint(constraint)  # type: ignore[no-untyped-call]
         constraint._create_rule = create_rule  # noqa: SLF001
+        try:
+            _add_constraint(session_maker, add_constraint, table)
+        except IntegrityError:
+            _LOGGER.exception(
+                (
+                    "Could not update foreign options in %s table, will delete "
+                    "violations and try again"
+                ),
+                table,
+            )
+            _delete_foreign_key_violations(
+                session_maker, table, column, foreign_table, foreign_column
+            )
+            _add_constraint(session_maker, add_constraint, table)
 
-        with session_scope(session=session_maker()) as session:
-            try:
-                connection = session.connection()
-                connection.execute(add_constraint)
-            except (InternalError, OperationalError):
-                _LOGGER.exception("Could not update foreign options in %s table", table)
+
+def _add_constraint(
+    session_maker: Callable[[], Session], add_constraint: AddConstraint, table: str
+) -> None:
+    """Add a foreign key constraint."""
+    with session_scope(session=session_maker()) as session:
+        try:
+            connection = session.connection()
+            connection.execute(add_constraint)
+        except (InternalError, OperationalError):
+            _LOGGER.exception("Could not update foreign options in %s table", table)
+
+
+def _delete_foreign_key_violations(
+    session_maker: Callable[[], Session],
+    table: str,
+    column: str,
+    foreign_table: str | None,
+    foreign_column: str | None,
+) -> None:
+    """Remove rows which violate the constraints."""
+    if foreign_table is None:
+        return
+    with session_scope(session=session_maker()) as session:
+        session.execute(
+            text(
+                f"DELETE FROM {table} "  # noqa: S608
+                "WHERE ("
+                f"  {table}.{column} IS NOT NULL AND"
+                "  NOT EXISTS"
+                "    (SELECT 1 "
+                f"     FROM  {foreign_table} "
+                f"     WHERE {foreign_table}.{foreign_column} = {table}.{column}));"
+            )
+        )
 
 
 @database_job_retry_wrapper("Apply migration update", 10)
@@ -1459,6 +1500,38 @@ class _SchemaVersion43Migrator(_SchemaVersionMigrator, target_version=43):
         )
 
 
+FOREIGN_COLUMNS = (
+    (
+        "events",
+        ("data_id", "event_type_id"),
+        (
+            ("data_id", "event_data", "data_id"),
+            ("event_type_id", "event_types", "event_type_id"),
+        ),
+    ),
+    (
+        "states",
+        ("event_id", "old_state_id", "attributes_id", "metadata_id"),
+        (
+            ("event_id", None, None),
+            ("old_state_id", "states", "state_id"),
+            ("attributes_id", "state_attributes", "attributes_id"),
+            ("metadata_id", "states_meta", "metadata_id"),
+        ),
+    ),
+    (
+        "statistics",
+        ("metadata_id",),
+        (("metadata_id", "statistics_meta", "id"),),
+    ),
+    (
+        "statistics_short_term",
+        ("metadata_id",),
+        (("metadata_id", "statistics_meta", "id"),),
+    ),
+)
+
+
 class _SchemaVersion44Migrator(_SchemaVersionMigrator, target_version=44):
     def _apply_update(self) -> None:
         """Version specific update method."""
@@ -1471,24 +1544,14 @@ class _SchemaVersion44Migrator(_SchemaVersionMigrator, target_version=44):
             else ""
         )
         # First drop foreign key constraints
-        foreign_columns = (
-            ("events", ("data_id", "event_type_id")),
-            ("states", ("event_id", "old_state_id", "attributes_id", "metadata_id")),
-            ("statistics", ("metadata_id",)),
-            ("statistics_short_term", ("metadata_id",)),
-        )
-        dropped_constraints = [
-            dropped_constraint
-            for table, columns in foreign_columns
-            for column in columns
-            for dropped_constraint in _drop_foreign_key_constraints(
-                self.session_maker, self.engine, table, column
-            )[1]
-        ]
-        _LOGGER.debug("Dropped foreign key constraints: %s", dropped_constraints)
+        for table, columns, _ in FOREIGN_COLUMNS:
+            for column in columns:
+                _drop_foreign_key_constraints(
+                    self.session_maker, self.engine, table, column
+                )
 
         # Then modify the constrained columns
-        for table, columns in foreign_columns:
+        for table, columns, _ in FOREIGN_COLUMNS:
             _modify_columns(
                 self.session_maker,
                 self.engine,
@@ -1518,9 +1581,24 @@ class _SchemaVersion44Migrator(_SchemaVersionMigrator, target_version=44):
                 table,
                 [f"{column} {BIG_INTEGER_SQL} {identity_sql}"],
             )
-        # Finally restore dropped constraints
+
+
+class _SchemaVersion45Migrator(_SchemaVersionMigrator, target_version=45):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        # We skip this step for SQLITE, it doesn't have differently sized integers
+        if self.engine.dialect.name == SupportedDialect.SQLITE:
+            return
+
+        # Restore constraints dropped in migration to schema version 44
         _restore_foreign_key_constraints(
-            self.session_maker, self.engine, dropped_constraints
+            self.session_maker,
+            self.engine,
+            [
+                (table, column, foreign_table, foreign_column)
+                for table, _, foreign_mappings in FOREIGN_COLUMNS
+                for column, foreign_table, foreign_column in foreign_mappings
+            ],
         )
 
 
