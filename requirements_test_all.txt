@@ -2345,7 +2345,7 @@ yalexs==6.4.3
 yeelight==0.7.14
 
 # homeassistant.components.yolink
-yolink-api==0.4.6
+yolink-api==0.4.7
 
 # homeassistant.components.youless
 youless-api==2.1.2
