@@ -1288,7 +1288,9 @@
   },
   {
     "button": {
-      "last_event": "short_release"
+      "button_report": {
+        "event": "short_release"
+      }
     },
     "id": "c658d3d8-a013-4b81-8ac6-78b248537e70",
     "id_v1": "/sensors/50",
@@ -1327,7 +1329,9 @@
   },
   {
     "button": {
-      "last_event": "short_release"
+      "button_report": {
+        "event": "short_release"
+      }
     },
     "id": "7f1ab9f6-cc2b-4b40-9011-65e2af153f75",
     "id_v1": "/sensors/10",
@@ -1366,7 +1370,9 @@
   },
   {
     "button": {
-      "last_event": "short_release"
+      "button_report": {
+        "event": "short_release"
+      }
     },
     "id": "31cffcda-efc2-401f-a152-e10db3eed232",
     "id_v1": "/sensors/5",
