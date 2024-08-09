@@ -208,14 +208,11 @@ DISVALVEY_SCHEMAS = [
         ),
         entity_class=MatterValve,
         required_attributes=(
-            clusters.ValveConfigurationAndControl.Attributes.OperationalStatus,
             clusters.ValveConfigurationAndControl.Attributes.OpenDuration,
             clusters.ValveConfigurationAndControl.Attributes.DefaultOpenDuration,
             clusters.ValveConfigurationAndControl.Attributes.RemainingDuration,
             clusters.ValveConfigurationAndControl.Attributes.CurrentState,
-            clusters.ValveConfigurationAndControl.Attributes.TargetState,
-            clusters.ValveConfigurationAndControl.Attributes.CurrentLevel,
-            clusters.ValveConfigurationAndControl.Attributes.TargetLevel,
-        ),
+            clusters.ValveConfigurationAndControl.Attributes.TargetState,   
+        ),      
     ),
 ]
