@@ -18,14 +18,14 @@ class MastodonEntity(CoordinatorEntity[MastodonCoordinator]):
     def __init__(
         self,
         coordinator: MastodonCoordinator,
-        description: EntityDescription,
+        entity_description: EntityDescription,
         data: MastodonConfigEntry,
     ) -> None:
         """Initialize Mastodon entity."""
         super().__init__(coordinator)
         unique_id = data.unique_id
         assert unique_id is not None
-        self._attr_unique_id = f"{unique_id}_{description.key}"
+        self._attr_unique_id = f"{unique_id}_{entity_description.key}"
 
         # Legacy yaml config default title is Mastodon, don't make name Mastodon Mastodon
         name = "Mastodon"
@@ -45,4 +45,4 @@ class MastodonEntity(CoordinatorEntity[MastodonCoordinator]):
             name=name,
         )
 
-        self.entity_description = description
+        self.entity_description = entity_description

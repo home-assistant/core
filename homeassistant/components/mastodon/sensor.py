@@ -21,7 +21,6 @@ from .const import (
     ACCOUNT_FOLLOWING_COUNT,
     ACCOUNT_STATUSES_COUNT,
 )
-from .coordinator import MastodonCoordinator
 from .entity import MastodonEntity
 
 
@@ -35,18 +34,21 @@ class MastodonSensorEntityDescription(SensorEntityDescription):
 ENTITY_DESCRIPTIONS = (
     MastodonSensorEntityDescription(
         key="followers",
+        translation_key="followers",
         native_unit_of_measurement="accounts",
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: data.get(ACCOUNT_FOLLOWERS_COUNT),
     ),
     MastodonSensorEntityDescription(
         key="following",
+        translation_key="following",
         native_unit_of_measurement="accounts",
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: data.get(ACCOUNT_FOLLOWING_COUNT),
     ),
     MastodonSensorEntityDescription(
         key="posts",
+        translation_key="posts",
         native_unit_of_measurement="posts",
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: data.get(ACCOUNT_STATUSES_COUNT),
@@ -76,17 +78,6 @@ class MastodonSensorEntity(MastodonEntity, SensorEntity):
     """A Mastodon sensor entity."""
 
     entity_description: MastodonSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: MastodonCoordinator,
-        entity_description: MastodonSensorEntityDescription,
-        data: MastodonConfigEntry,
-    ) -> None:
-        """Initialize the sensor class."""
-        super().__init__(coordinator, entity_description, data)
-        self.entity_description = entity_description
-        self._attr_translation_key = entity_description.key
 
     @property
     def native_value(self) -> StateType:
