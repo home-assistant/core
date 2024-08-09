@@ -259,10 +259,9 @@ class TuyaEntity(Entity):
                 try:
                     return DPType(getattr(self.device, key)[dpcode].type)
                 except ValueError:
-                    LOGGER.warning(f"Device DPType fallback: {self.device.name}")
-                    return TuyaEntity.determine_dptype(
-                        getattr(self.device, key)[dpcode].type
-                    )
+                    fixed_type = TuyaEntity.determine_dptype(getattr(self.device, key)[dpcode].type)
+                    LOGGER.warning(f"Device {self.device.name} (id: {self.device.id}) has returned a bad model dpId type for code {dpcode} : \"{getattr(self.device, key)[dpcode].type}\", it should have been \"{fixed_type}\". Please contact the Tuya Support about this")
+                    return fixed_type
 
         return None
 
