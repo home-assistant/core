@@ -26,7 +26,7 @@ from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
 ValveConfigurationAndControlFeature = (
-    clusters.ValveConfigurationAndControlFeature.Bitmaps.Feature
+    clusters.ValveConfigurationAndControl.Bitmaps.Feature
 )
 TimeSyncBitmap = clusters.ValveConfigurationAndControl.Bitmaps.TimeSyncBitmap
 LevelBitmap = clusters.ValveConfigurationAndControl.Bitmaps.LevelBitmap
