@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Copyright 2024 LG Electronics Inc.
+# SPDX-License-Identifier: LicenseRef-LGE-Proprietary
+
 """Support for LG ThinQ Connect API."""
 
 from __future__ import annotations

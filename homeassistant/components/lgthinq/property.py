@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Copyright 2024 LG Electronics Inc.
+# SPDX-License-Identifier: LicenseRef-LGE-Proprietary
+
 """Property in LG ThinQ device profile."""
 
 from __future__ import annotations
