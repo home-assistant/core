@@ -1500,6 +1500,38 @@ class _SchemaVersion43Migrator(_SchemaVersionMigrator, target_version=43):
         )
 
 
+FOREIGN_COLUMNS = (
+    (
+        "events",
+        ("data_id", "event_type_id"),
+        (
+            ("data_id", "event_data", "data_id"),
+            ("event_type_id", "event_types", "event_type_id"),
+        ),
+    ),
+    (
+        "states",
+        ("event_id", "old_state_id", "attributes_id", "metadata_id"),
+        (
+            ("event_id", None, None),
+            ("old_state_id", "states", "state_id"),
+            ("attributes_id", "state_attributes", "attributes_id"),
+            ("metadata_id", "states_meta", "metadata_id"),
+        ),
+    ),
+    (
+        "statistics",
+        ("metadata_id",),
+        (("metadata_id", "statistics_meta", "id"),),
+    ),
+    (
+        "statistics_short_term",
+        ("metadata_id",),
+        (("metadata_id", "statistics_meta", "id"),),
+    ),
+)
+
+
 class _SchemaVersion44Migrator(_SchemaVersionMigrator, target_version=44):
     def _apply_update(self) -> None:
         """Version specific update method."""
@@ -1512,44 +1544,14 @@ class _SchemaVersion44Migrator(_SchemaVersionMigrator, target_version=44):
             else ""
         )
         # First drop foreign key constraints
-        foreign_columns = (
-            (
-                "events",
-                ("data_id", "event_type_id"),
-                (
-                    ("data_id", "event_data", "data_id"),
-                    ("event_type_id", "event_types", "event_type_id"),
-                ),
-            ),
-            (
-                "states",
-                ("event_id", "old_state_id", "attributes_id", "metadata_id"),
-                (
-                    ("event_id", None, None),
-                    ("old_state_id", "states", "state_id"),
-                    ("attributes_id", "state_attributes", "attributes_id"),
-                    ("metadata_id", "states_meta", "metadata_id"),
-                ),
-            ),
-            (
-                "statistics",
-                ("metadata_id",),
-                (("metadata_id", "statistics_meta", "id"),),
-            ),
-            (
-                "statistics_short_term",
-                ("metadata_id",),
-                (("metadata_id", "statistics_meta", "id"),),
-            ),
-        )
-        for table, columns, _ in foreign_columns:
+        for table, columns, _ in FOREIGN_COLUMNS:
             for column in columns:
                 _drop_foreign_key_constraints(
                     self.session_maker, self.engine, table, column
                 )
 
         # Then modify the constrained columns
-        for table, columns, _ in foreign_columns:
+        for table, columns, _ in FOREIGN_COLUMNS:
             _modify_columns(
                 self.session_maker,
                 self.engine,
@@ -1580,13 +1582,21 @@ class _SchemaVersion44Migrator(_SchemaVersionMigrator, target_version=44):
                 [f"{column} {BIG_INTEGER_SQL} {identity_sql}"],
             )
 
-        # Finally restore dropped constraints
+
+class _SchemaVersion45Migrator(_SchemaVersionMigrator, target_version=45):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        # We skip this step for SQLITE, it doesn't have differently sized integers
+        if self.engine.dialect.name == SupportedDialect.SQLITE:
+            return
+
+        # Restore constraints dropped in migration to schema version 44
         _restore_foreign_key_constraints(
             self.session_maker,
             self.engine,
             [
                 (table, column, foreign_table, foreign_column)
-                for table, _, foreign_mappings in foreign_columns
+                for table, _, foreign_mappings in FOREIGN_COLUMNS
                 for column, foreign_table, foreign_column in foreign_mappings
             ],
         )
