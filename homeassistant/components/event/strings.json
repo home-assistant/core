@@ -21,5 +21,10 @@
     "motion": {
       "name": "Motion"
     }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "event": "{entity_name} {subtype}"
+    }
   }
 }
