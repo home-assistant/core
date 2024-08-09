@@ -243,8 +243,8 @@
     "power": {
       "name": "Power",
       "state": {
-        "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-        "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
       }
     },
     "presence": {
