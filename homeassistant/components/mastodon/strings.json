@@ -44,8 +44,8 @@
       "following": {
         "name": "Following"
       },
-      "statuses": {
-        "name": "Statuses"
+      "posts": {
+        "name": "Posts"
       }
     }
   }

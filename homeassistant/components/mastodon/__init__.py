@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
 from mastodon.Mastodon import Mastodon, MastodonError
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,13 +20,29 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
 
 from .const import CONF_BASE_URL, DOMAIN
-from .coordinator import MastodonConfigEntry, MastodonCoordinator, MastodonData
+from .coordinator import MastodonCoordinator
 from .utils import create_mastodon_client
 
 PLATFORMS: list[Platform] = [Platform.NOTIFY, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+@dataclass
+class MastodonData:
+    """Mastodon data type."""
+
+    client: Mastodon
+    instance: dict
+    account: dict
+    coordinator: MastodonCoordinator
+
+
+type MastodonConfigEntry = ConfigEntry[MastodonData]
+
+if TYPE_CHECKING:
+    from . import MastodonConfigEntry
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -> bool:
     """Set up Mastodon from a config entry."""
 
     try:

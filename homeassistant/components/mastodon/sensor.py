@@ -15,12 +15,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from . import MastodonConfigEntry
 from .const import (
     ACCOUNT_FOLLOWERS_COUNT,
     ACCOUNT_FOLLOWING_COUNT,
     ACCOUNT_STATUSES_COUNT,
 )
-from .coordinator import MastodonConfigEntry, MastodonCoordinator
+from .coordinator import MastodonCoordinator
 from .entity import MastodonEntity
 
 
@@ -45,7 +46,7 @@ ENTITY_DESCRIPTIONS = (
         value_fn=lambda data: data.get(ACCOUNT_FOLLOWING_COUNT),
     ),
     MastodonSensorEntityDescription(
-        key="statuses",
+        key="posts",
         native_unit_of_measurement="posts",
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: data.get(ACCOUNT_STATUSES_COUNT),
@@ -63,8 +64,8 @@ async def async_setup_entry(
 
     async_add_entities(
         MastodonSensorEntity(
-            entity_description=entity_description,
             coordinator=coordinator,
+            entity_description=entity_description,
             data=entry,
         )
         for entity_description in ENTITY_DESCRIPTIONS
@@ -72,7 +73,7 @@ async def async_setup_entry(
 
 
 class MastodonSensorEntity(MastodonEntity, SensorEntity):
-    """A sensor entity."""
+    """A Mastodon sensor entity."""
 
     entity_description: MastodonSensorEntityDescription
 

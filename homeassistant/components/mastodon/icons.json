@@ -7,7 +7,7 @@
       "following": {
         "default": "mdi:account-multiple"
       },
-      "statuses": {
+      "posts": {
         "default": "mdi:message-text"
       }
     }
