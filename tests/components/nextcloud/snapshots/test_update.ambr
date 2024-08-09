@@ -1,0 +1,37 @@
+# serializer version: 1
+# name: test_setup_entity_with_update[update.my_nc_url_local_none_attributes]
+  ReadOnlyDict({
+    'auto_update': False,
+    'entity_picture': 'https://brands.home-assistant.io/_/nextcloud/icon.png',
+    'friendly_name': 'my.nc_url.local None',
+    'in_progress': False,
+    'installed_version': '28.0.4.1',
+    'latest_version': '30.0.0.0',
+    'release_summary': None,
+    'release_url': 'https://nextcloud.com/changelog/#30-0-0',
+    'skipped_version': None,
+    'supported_features': <UpdateEntityFeature: 0>,
+    'title': None,
+  })
+# ---
+# name: test_setup_entity_with_update[update.my_nc_url_local_none_state]
+  'on'
+# ---
+# name: test_setup_entity_without_update[update.my_nc_url_local_none_attributes]
+  ReadOnlyDict({
+    'auto_update': False,
+    'entity_picture': 'https://brands.home-assistant.io/_/nextcloud/icon.png',
+    'friendly_name': 'my.nc_url.local None',
+    'in_progress': False,
+    'installed_version': '28.0.4.1',
+    'latest_version': '28.0.4.1',
+    'release_summary': None,
+    'release_url': 'https://nextcloud.com/changelog/#28-0-4',
+    'skipped_version': None,
+    'supported_features': <UpdateEntityFeature: 0>,
+    'title': None,
+  })
+# ---
+# name: test_setup_entity_without_update[update.my_nc_url_local_none_state]
+  'off'
+# ---

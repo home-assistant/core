@@ -32,12 +32,12 @@ class NextcloudUpdateSensor(NextcloudEntity, UpdateEntity):
     """Represents a Nextcloud update entity."""
 
     @property
-    def installed_version(self) -> str | None:
+    def installed_version(self) -> str:
         """Version installed and in use."""
-        return self.coordinator.data.get("system_version")
+        return self.coordinator.data["system_version"]
 
     @property
-    def latest_version(self) -> str | None:
+    def latest_version(self) -> str:
         """Latest version available for install."""
         return self.coordinator.data.get(
             "update_available_version", self.installed_version
@@ -46,7 +46,5 @@ class NextcloudUpdateSensor(NextcloudEntity, UpdateEntity):
     @property
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
-        if self.latest_version:
-            ver = "-".join(self.latest_version.split(".")[:3])
-            return f"https://nextcloud.com/changelog/#{ver}"
-        return None
+        ver = "-".join(self.latest_version.split(".")[:3])
+        return f"https://nextcloud.com/changelog/#{ver}"
