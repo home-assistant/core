@@ -16,7 +16,10 @@ import yaml
 from homeassistant import config as module_hass_config
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
-from homeassistant.components.mqtt.const import MQTT_CONNECTION_STATE
+from homeassistant.components.mqtt.const import (
+    MQTT_CONNECTION_STATE,
+    SUPPORTED_COMPONENTS,
+)
 from homeassistant.components.mqtt.mixins import MQTT_ATTRIBUTES_BLOCKED
 from homeassistant.components.mqtt.models import PublishPayloadType
 from homeassistant.config_entries import ConfigEntryState
@@ -75,9 +78,12 @@ type _StateDataType = list[tuple[_MqttMessageType, str | None, _AttributesType |
 def help_all_subscribe_calls(mqtt_client_mock: MqttMockPahoClient) -> list[Any]:
     """Test of a call."""
     all_calls = []
-    for calls in mqtt_client_mock.subscribe.mock_calls:
-        for call in calls[1]:
-            all_calls.extend(call)
+    for call_l1 in mqtt_client_mock.subscribe.mock_calls:
+        if isinstance(call_l1[1][0], list):
+            for call_l2 in call_l1[1]:
+                all_calls.extend(call_l2)
+        else:
+            all_calls.append(call_l1[1])
     return all_calls
 
 
@@ -1178,7 +1184,10 @@ async def help_test_entity_id_update_subscriptions(
 
     state = hass.states.get(f"{domain}.test")
     assert state is not None
-    assert mqtt_mock.async_subscribe.call_count == len(topics) + 2 + DISCOVERY_COUNT
+    assert (
+        mqtt_mock.async_subscribe.call_count
+        == len(topics) + 2 * len(SUPPORTED_COMPONENTS) + DISCOVERY_COUNT
+    )
     for topic in topics:
         mqtt_mock.async_subscribe.assert_any_call(
             topic, ANY, ANY, ANY, HassJobType.Callback

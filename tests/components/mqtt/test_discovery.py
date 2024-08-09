@@ -15,6 +15,7 @@ from homeassistant.components.mqtt.abbreviations import (
     ABBREVIATIONS,
     DEVICE_ABBREVIATIONS,
 )
+from homeassistant.components.mqtt.const import SUPPORTED_COMPONENTS
 from homeassistant.components.mqtt.discovery import (
     MQTT_DISCOVERY_DONE,
     MQTT_DISCOVERY_NEW,
@@ -73,13 +74,10 @@ async def test_subscribing_config_topic(
     discovery_topic = "homeassistant"
     await async_start(hass, discovery_topic, entry)
 
-    call_args1 = mqtt_mock.async_subscribe.mock_calls[0][1]
-    assert call_args1[2] == 0
-    call_args2 = mqtt_mock.async_subscribe.mock_calls[1][1]
-    assert call_args2[2] == 0
-    topics = [call_args1[0], call_args2[0]]
-    assert discovery_topic + "/+/+/config" in topics
-    assert discovery_topic + "/+/+/+/config" in topics
+    topics = [call[1][0] for call in mqtt_mock.async_subscribe.mock_calls]
+    for component in SUPPORTED_COMPONENTS:
+        assert f"{discovery_topic}/{component}/+/config" in topics
+        assert f"{discovery_topic}/{component}/+/+/config" in topics
 
 
 @pytest.mark.parametrize(
@@ -176,31 +174,6 @@ async def test_invalid_config(
     )
     await hass.async_block_till_done()
     assert "Error 'expected int for dictionary value @ data['qos']'" in caplog.text
-
-
-async def test_only_valid_components(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test for a valid component."""
-    await mqtt_mock_entry()
-    with patch(
-        "homeassistant.components.mqtt.discovery.async_dispatcher_send"
-    ) as mock_dispatcher_send:
-        invalid_component = "timer"
-
-        mock_dispatcher_send = AsyncMock(return_value=None)
-
-        async_fire_mqtt_message(
-            hass, f"homeassistant/{invalid_component}/bla/config", "{}"
-        )
-
-    await hass.async_block_till_done()
-
-    assert f"Integration {invalid_component} is not supported" in caplog.text
-
-    assert not mock_dispatcher_send.called
 
 
 async def test_correct_config_discovery(

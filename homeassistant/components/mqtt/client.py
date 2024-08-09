@@ -893,14 +893,35 @@ class MQTT:
         if not self._pending_subscriptions:
             return
 
-        subscriptions: dict[str, int] = self._pending_subscriptions
+        pending_subscriptions: dict[str, int] = self._pending_subscriptions
+        pending_wildcard_subscriptions = {
+            subscription.topic: pending_subscriptions.pop(subscription.topic)
+            for subscription in self._wildcard_subscriptions
+            if subscription.topic in pending_subscriptions
+        }
+        simple_subscription_list = list(pending_subscriptions.items())
+
         self._pending_subscriptions = {}
 
-        subscription_list = list(subscriptions.items())
         debug_enabled = _LOGGER.isEnabledFor(logging.DEBUG)
 
-        for chunk in chunked_or_all(subscription_list, MAX_SUBSCRIBES_PER_CALL):
+        for topic, qos in pending_wildcard_subscriptions.items():
+            result, mid = self._mqttc.subscribe(topic, qos)
+
+            if debug_enabled:
+                _LOGGER.debug(
+                    "Subscribing wildcard topic %s with qos %s, mid: %s",
+                    topic,
+                    qos,
+                    mid,
+                )
+
+            await self._async_wait_for_mid_or_raise(mid, result)
+
+        for chunk in chunked_or_all(simple_subscription_list, MAX_SUBSCRIBES_PER_CALL):
             chunk_list = list(chunk)
+            if not chunk_list:
+                continue
 
             result, mid = self._mqttc.subscribe(chunk_list)
 
@@ -908,9 +929,10 @@ class MQTT:
                 _LOGGER.debug(
                     "Subscribing with mid: %s to topics with qos: %s", mid, chunk_list
                 )
-            self._last_subscribe = time.monotonic()
 
             await self._async_wait_for_mid_or_raise(mid, result)
+
+        self._last_subscribe = time.monotonic()
 
     async def _async_perform_unsubscribes(self) -> None:
         """Perform pending MQTT client unsubscribes."""
