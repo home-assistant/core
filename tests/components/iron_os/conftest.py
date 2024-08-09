@@ -1,6 +1,7 @@
 """Fixtures for Pinecil tests."""
 
 from collections.abc import Generator
+import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from bleak.backends.device import BLEDevice
@@ -11,8 +12,9 @@ import pytest
 from homeassistant.components.iron_os import DOMAIN
 from homeassistant.const import CONF_ADDRESS
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 USER_INPUT = {CONF_ADDRESS: "c0:ff:ee:c0:ff:ee"}
 DEFAULT_NAME = "Pinecil-C0FFEEE"
@@ -105,6 +107,23 @@ def mock_ble_device() -> Generator[MagicMock]:
         ),
     ) as ble_device:
         yield ble_device
+
+
+@pytest.fixture(autouse=True)
+async def mock_github(
+    aioclient_mock: AiohttpClientMocker,
+) -> AiohttpClientMocker:
+    """Mock aiogithubapi."""
+
+    aioclient_mock.get(
+        "https://api.github.com/repos/Ralim/IronOS/releases/latest",
+        json={
+            **json.loads(load_fixture("releases_latest.json", DOMAIN)),
+        },
+        headers=json.loads(load_fixture("base_headers.json", DOMAIN)),
+    )
+
+    return aioclient_mock
 
 
 @pytest.fixture

@@ -231,6 +231,7 @@ aioesphomeapi==25.0.0
 aioflo==2021.11.0
 
 # homeassistant.components.github
+# homeassistant.components.iron_os
 aiogithubapi==23.11.0
 
 # homeassistant.components.guardian
