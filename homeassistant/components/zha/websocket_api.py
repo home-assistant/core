@@ -734,14 +734,13 @@ async def websocket_device_cluster_attributes(
     cluster_type: str = msg[ATTR_CLUSTER_TYPE]
     cluster_attributes: list[dict[str, Any]] = []
     zha_device = zha_gateway.get_device(ieee)
-    attributes = None
     if zha_device is not None:
-        attributes = zha_device.async_get_cluster_attributes(
-            endpoint_id, cluster_id, cluster_type
-        )
-        if attributes is not None:
-            for attr_id, attr in attributes.items():
-                cluster_attributes.append({ID: attr_id, ATTR_NAME: attr.name})
+        cluster = zha_device.async_get_cluster(endpoint_id, cluster_id, cluster_type)
+        cluster_attributes = [
+            {ID: attr_id, ATTR_NAME: attr.name}
+            for attr_id, attr in cluster.attributes.items()
+            if attr_id not in cluster.unsupported_attributes
+        ]
     _LOGGER.debug(
         "Requested attributes for: %s: %s, %s: '%s', %s: %s, %s: %s",
         ATTR_CLUSTER_ID,
