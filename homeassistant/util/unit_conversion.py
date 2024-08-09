@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import lru_cache
+from typing import Final
 
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
@@ -46,6 +47,10 @@ _MIN_TO_SEC = 60  # 1 min = 60 seconds
 _HRS_TO_MINUTES = 60  # 1 hr = 60 minutes
 _HRS_TO_SECS = _HRS_TO_MINUTES * _MIN_TO_SEC  # 1 hr = 60 minutes = 3600 seconds
 _DAYS_TO_SECS = 24 * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
+
+# Energy conversion constants
+_WH_TO_J: Final = 3600  # 1 Wh = 3600 J
+_CAL_TO_J: Final = 4.184  # 1 cal = 4.184 J
 
 # Mass conversion constants
 _POUND_TO_G = 453.59237
@@ -216,19 +221,19 @@ class EnergyConverter(BaseUnitConverter):
     UNIT_CLASS = "energy"
     NORMALIZED_UNIT = UnitOfEnergy.KILO_WATT_HOUR
     _UNIT_CONVERSION: dict[str | None, float] = {
-        UnitOfEnergy.WATT_HOUR: 1 * 1000,
+        UnitOfEnergy.JOULE: _WH_TO_J * 1e3,
+        UnitOfEnergy.KILO_JOULE: _WH_TO_J,
+        UnitOfEnergy.MEGA_JOULE: _WH_TO_J / 1e3,
+        UnitOfEnergy.GIGA_JOULE: _WH_TO_J / 1e6,
+        UnitOfEnergy.WATT_HOUR: 1e3,
         UnitOfEnergy.KILO_WATT_HOUR: 1,
-        UnitOfEnergy.MEGA_WATT_HOUR: 1 / 1000,
-        UnitOfEnergy.MEGA_JOULE: 3.6,
-        UnitOfEnergy.GIGA_JOULE: 3.6 / 1000,
+        UnitOfEnergy.MEGA_WATT_HOUR: 1 / 1e3,
+        UnitOfEnergy.CALORIE: _WH_TO_J / _CAL_TO_J * 1e3,
+        UnitOfEnergy.KILO_CALORIE: _WH_TO_J / _CAL_TO_J,
+        UnitOfEnergy.MEGA_CALORIE: _WH_TO_J / _CAL_TO_J / 1e3,
+        UnitOfEnergy.GIGA_CALORIE: _WH_TO_J / _CAL_TO_J / 1e6,
     }
-    VALID_UNITS = {
-        UnitOfEnergy.WATT_HOUR,
-        UnitOfEnergy.KILO_WATT_HOUR,
-        UnitOfEnergy.MEGA_WATT_HOUR,
-        UnitOfEnergy.MEGA_JOULE,
-        UnitOfEnergy.GIGA_JOULE,
-    }
+    VALID_UNITS = set(UnitOfEnergy)
 
 
 class InformationConverter(BaseUnitConverter):
