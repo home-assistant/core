@@ -23,6 +23,16 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_geniushub() -> Generator[AsyncMock]:
+    """Mock a GeniusHub."""
+    with patch(
+        "homeassistant.components.geniushub.GeniusHub",
+        autospec=True,
+    ) as mock_geniushub:
+        yield mock_geniushub
+
+
+@pytest.fixture
 def mock_geniushub_client() -> Generator[AsyncMock]:
     """Mock a GeniusHub client."""
     with patch(
