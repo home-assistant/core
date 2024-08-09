@@ -77,6 +77,7 @@ if TYPE_CHECKING:
     from .components.bluetooth import BluetoothServiceInfoBleak
     from .components.dhcp import DhcpServiceInfo
     from .components.hassio import HassioServiceInfo
+    from .components.location import LocationServiceInfo
     from .components.ssdp import SsdpServiceInfo
     from .components.usb import UsbServiceInfo
     from .components.zeroconf import ZeroconfServiceInfo
@@ -93,6 +94,7 @@ SOURCE_HASSIO = "hassio"
 SOURCE_HOMEKIT = "homekit"
 SOURCE_IMPORT = "import"
 SOURCE_INTEGRATION_DISCOVERY = "integration_discovery"
+SOURCE_LOCATION = "location"
 SOURCE_MQTT = "mqtt"
 SOURCE_SSDP = "ssdp"
 SOURCE_SYSTEM = "system"
@@ -176,6 +178,7 @@ DISCOVERY_SOURCES = {
     SOURCE_HOMEKIT,
     SOURCE_IMPORT,
     SOURCE_INTEGRATION_DISCOVERY,
+    SOURCE_LOCATION,
     SOURCE_MQTT,
     SOURCE_SSDP,
     SOURCE_UNIGNORE,
@@ -2577,6 +2580,12 @@ class ConfigFlow(ConfigEntryBaseFlow):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by Zeroconf discovery."""
+        return await self._async_step_discovery_without_unique_id()
+
+    async def async_step_location(
+        self, discovery_info: LocationServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by Location discovery."""
         return await self._async_step_discovery_without_unique_id()
 
     @callback
