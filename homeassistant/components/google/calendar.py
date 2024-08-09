@@ -8,7 +8,7 @@ from typing import Any, cast
 
 from gcal_sync.api import Range, SyncEventsRequest
 from gcal_sync.exceptions import ApiException
-from gcal_sync.model import AccessRole, DateOrDatetime, Event
+from gcal_sync.model import AccessRole, DateOrDatetime, Event, ResponseStatus
 from gcal_sync.store import ScopedCalendarStore
 from gcal_sync.sync import CalendarEventSyncManager
 
@@ -284,11 +284,18 @@ class GoogleCalendarEntity(
         (event, _) = self._event_with_offset()
         return event
 
+    def event_accepted(self, event: Event) -> bool:
+        """Return True if the event is accepted by self."""
+        return any(
+            attendee.is_self and attendee.response_status == ResponseStatus.ACCEPTED
+            for attendee in event.attendees
+        )
+
     def _event_filter(self, event: Event) -> bool:
-        """Return True if the event is visible."""
+        """Return True if the event is visible and accepted."""
         if self._ignore_availability:
-            return True
-        return event.transparency == OPAQUE
+            return self.event_accepted(event)
+        return event.transparency == OPAQUE and self.event_accepted(event)
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
