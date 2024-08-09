@@ -118,6 +118,11 @@ async def block_request(
     pytest.fail(f"Unexpected request: {method} {url}")
 
 
+@pytest.fixture
+def test_config() -> dict[str, str]:
+    return DEFAULT_TEST_CONFIG
+
+
 @patch("evohomeasync.broker.Broker._make_request", block_request)
 @patch("evohomeasync2.broker.Broker._client", block_request)
 async def setup_evohome(
@@ -129,9 +134,6 @@ async def setup_evohome(
 
     The class is mocked here to check the client was instantiated with the correct args.
     """
-
-    if test_config is None:
-        test_config = DEFAULT_TEST_CONFIG
 
     with (
         patch("homeassistant.components.evohome.evo.EvohomeClient") as mock_client,
