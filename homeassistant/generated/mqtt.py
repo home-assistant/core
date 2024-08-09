@@ -16,6 +16,9 @@ MQTT = {
     "fully_kiosk": [
         "fully/deviceInfo/+",
     ],
+    "pglab": [
+        "pglab/discovery/#",
+    ],
     "tasmota": [
         "tasmota/discovery/#",
     ],
