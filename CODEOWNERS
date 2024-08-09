@@ -349,8 +349,8 @@ build.json @home-assistant/supervisor
 /tests/components/dremel_3d_printer/ @tkdrob
 /homeassistant/components/drop_connect/ @ChandlerSystems @pfrazer
 /tests/components/drop_connect/ @ChandlerSystems @pfrazer
-/homeassistant/components/dsmr/ @Robbie1221 @frenck
-/tests/components/dsmr/ @Robbie1221 @frenck
+/homeassistant/components/dsmr/ @Robbie1221
+/tests/components/dsmr/ @Robbie1221
 /homeassistant/components/dsmr_reader/ @sorted-bits @glodenox @erwindouna
 /tests/components/dsmr_reader/ @sorted-bits @glodenox @erwindouna
 /homeassistant/components/duotecno/ @cereal2nd
@@ -433,6 +433,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/evil_genius_labs/ @balloob
 /tests/components/evil_genius_labs/ @balloob
 /homeassistant/components/evohome/ @zxdavb
+/tests/components/evohome/ @zxdavb
 /homeassistant/components/ezviz/ @RenierM26 @baqs
 /tests/components/ezviz/ @RenierM26 @baqs
 /homeassistant/components/faa_delays/ @ntilley905

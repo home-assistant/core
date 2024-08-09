@@ -16,6 +16,7 @@ from homeassistant.const import (
     ATTR_HW_VERSION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_MODEL_ID,
     ATTR_NAME,
     ATTR_SERIAL_NUMBER,
     ATTR_SUGGESTED_AREA,
@@ -25,6 +26,7 @@ from homeassistant.const import (
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
     CONF_MODEL,
+    CONF_MODEL_ID,
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
@@ -991,6 +993,9 @@ def device_info_from_specifications(
 
     if CONF_MODEL in specifications:
         info[ATTR_MODEL] = specifications[CONF_MODEL]
+
+    if CONF_MODEL_ID in specifications:
+        info[ATTR_MODEL_ID] = specifications[CONF_MODEL_ID]
 
     if CONF_NAME in specifications:
         info[ATTR_NAME] = specifications[CONF_NAME]

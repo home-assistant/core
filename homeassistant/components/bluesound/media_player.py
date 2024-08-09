@@ -255,7 +255,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         self._attr_unique_id = format_unique_id(sync_status.mac, port)
         # there should always be one player with the default port per mac
-        if port is DEFAULT_PORT:
+        if port == DEFAULT_PORT:
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, format_mac(sync_status.mac))},
                 connections={(CONNECTION_NETWORK_MAC, format_mac(sync_status.mac))},
