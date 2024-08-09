@@ -272,6 +272,12 @@ SSDP = {
             "st": "urn:schemas-upnp-org:device:ZonePlayer:1",
         },
     ],
+    "swidget": [
+        {
+            "manufacturer": "Swidget",
+            "st": "urn:swidget:pico:1",
+        },
+    ],
     "syncthru": [
         {
             "deviceType": "urn:schemas-upnp-org:device:Printer:1",
