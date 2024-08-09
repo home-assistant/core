@@ -143,7 +143,6 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
     # Or must have all of these thermostat capabilities
     thermostat_capabilities = [
         Capability.temperature_measurement,
-        Capability.thermostat_cooling_setpoint,
         Capability.thermostat_heating_setpoint,
         Capability.thermostat_mode,
     ]
