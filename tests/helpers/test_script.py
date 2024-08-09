@@ -911,7 +911,6 @@ async def test_cancel_delay(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize("action_type", ["template", "trigger"])
 async def test_wait_basic(hass: HomeAssistant, action_type) -> None:
     """Test wait actions."""
-    # foo
     wait_alias = "wait step"
     action = {"alias": wait_alias}
     if action_type == "template":
