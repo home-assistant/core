@@ -9,16 +9,15 @@ from evolutionhttp import BryantEvolutionLocalClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FILENAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from . import names
 from .const import CONF_SYSTEM_ZONE, DOMAIN
+from .coordinator import EvolutionCoordinator
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
-type BryantEvolutionLocalClients = dict[tuple[int, int], BryantEvolutionLocalClient]
-type BryantEvolutionConfigEntry = ConfigEntry[BryantEvolutionLocalClients]
+type BryantEvolutionConfigEntry = ConfigEntry[EvolutionCoordinator]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -61,18 +60,13 @@ async def async_setup_entry(
             name=f"System {sys_id}",
         )
 
-    # Create a client for every zone.
-    entry.runtime_data = {}
-    for sz in entry.data[CONF_SYSTEM_ZONE]:
-        try:
-            client = await BryantEvolutionLocalClient.get_client(
-                sz[0], sz[1], entry.data[CONF_FILENAME]
-            )
-            if not await _can_reach_device(client):
-                raise ConfigEntryNotReady
-            entry.runtime_data[tuple(sz)] = client
-        except FileNotFoundError as f:
-            raise ConfigEntryNotReady from f
+    coordinator = EvolutionCoordinator(
+        hass, entry.data[CONF_FILENAME], entry.data[CONF_SYSTEM_ZONE]
+    )
+    entry.runtime_data = coordinator
+
+    # Fetch initial data so we have data when entities subscribe.
+    await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
