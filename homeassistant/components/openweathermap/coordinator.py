@@ -17,7 +17,7 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     Forecast,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.helpers import sun
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -201,3 +201,11 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             return ATTR_CONDITION_CLEAR_NIGHT
 
         return CONDITION_MAP.get(weather_code)
+
+    async def zone_update(self, event: Event[EventStateChangedData]) -> None:
+        """Update latitude and longitude from event."""
+        if (to_state := event.data["new_state"]) is None:
+            return
+        self._latitude = to_state.attributes["latitude"]
+        self._longitude = to_state.attributes["longitude"]
+        await self.async_refresh()

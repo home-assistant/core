@@ -15,8 +15,10 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MODE,
     CONF_NAME,
+    CONF_ZONE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import CONFIG_FLOW_VERSION, OWM_MODE_V25, PLATFORMS
 from .coordinator import WeatherUpdateCoordinator
@@ -34,6 +36,7 @@ class OpenweathermapData:
 
     name: str
     coordinator: WeatherUpdateCoordinator
+    event_unsubscribe: CALLBACK_TYPE | None = None
 
 
 async def async_setup_entry(
@@ -42,8 +45,15 @@ async def async_setup_entry(
     """Set up OpenWeatherMap as config entry."""
     name = entry.data[CONF_NAME]
     api_key = entry.data[CONF_API_KEY]
-    latitude = entry.data.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = entry.data.get(CONF_LONGITUDE, hass.config.longitude)
+    zone = entry.data.get(CONF_ZONE)
+    if zone:
+        zone_state = hass.states.get(zone)
+        if zone_state:
+            latitude = zone_state.attributes.get("latitude")
+            longitude = zone_state.attributes.get("longitude")
+    else:
+        latitude = entry.data.get(CONF_LATITUDE, hass.config.latitude)
+        longitude = entry.data.get(CONF_LONGITUDE, hass.config.longitude)
     language = entry.options[CONF_LANGUAGE]
     mode = entry.options[CONF_MODE]
 
@@ -57,11 +67,19 @@ async def async_setup_entry(
         owm_client, latitude, longitude, hass
     )
 
+    event_unsubscribe = None
+    if zone:
+        event_unsubscribe = async_track_state_change_event(
+            hass, zone, weather_coordinator.zone_update
+        )
+
     await weather_coordinator.async_config_entry_first_refresh()
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
-    entry.runtime_data = OpenweathermapData(name, weather_coordinator)
+    entry.runtime_data = OpenweathermapData(
+        name, weather_coordinator, event_unsubscribe
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -101,4 +119,6 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: OpenweathermapConfigEntry
 ) -> bool:
     """Unload a config entry."""
+    if entry.runtime_data.event_unsubscribe is not None:
+        entry.runtime_data.event_unsubscribe()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

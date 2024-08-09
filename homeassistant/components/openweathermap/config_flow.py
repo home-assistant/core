@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import voluptuous as vol
 
+from homeassistant.components.zone import DOMAIN as DOMAIN_ZONE
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -17,9 +18,11 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MODE,
     CONF_NAME,
+    CONF_ZONE,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
 from .const import (
     CONFIG_FLOW_VERSION,
@@ -56,8 +59,12 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
             longitude = user_input[CONF_LONGITUDE]
             mode = user_input[CONF_MODE]
 
-            await self.async_set_unique_id(f"{latitude}-{longitude}")
-            self._abort_if_unique_id_configured()
+            if CONF_ZONE in user_input:
+                await self.async_set_unique_id(f"zone-{user_input[CONF_ZONE]}")
+                self._abort_if_unique_id_configured()
+            else:
+                await self.async_set_unique_id(f"{latitude}-{longitude}")
+                self._abort_if_unique_id_configured()
 
             errors, description_placeholders = await validate_api_key(
                 user_input[CONF_API_KEY], mode
@@ -79,6 +86,9 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Optional(
                     CONF_LONGITUDE, default=self.hass.config.longitude
                 ): cv.longitude,
+                vol.Optional(CONF_ZONE): EntitySelector(
+                    EntitySelectorConfig(domain=DOMAIN_ZONE)
+                ),
                 vol.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): vol.In(OWM_MODES),
                 vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(
                     LANGUAGES
