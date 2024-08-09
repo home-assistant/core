@@ -32,7 +32,7 @@ async def test_muted(
     state = hass.states.get(muted_id)
     assert state is not None
     assert state.state == STATE_ON
-    assert satellite.is_muted
+    assert satellite.is_microphone_muted
     assert satellite.device.is_muted
 
     # test restore
@@ -41,14 +41,14 @@ async def test_muted(
     state = hass.states.get(muted_id)
     assert state is not None
     assert state.state == STATE_ON
-    assert satellite.is_muted
+    assert satellite.is_microphone_muted
     assert satellite.device.is_muted
 
     # test mute from entity
-    await satellite.async_set_mute(False)
+    await satellite.async_set_microphone_mute(False)
 
     state = hass.states.get(muted_id)
     assert state is not None
     assert state.state == STATE_OFF
-    assert not satellite.is_muted
+    assert not satellite.is_microphone_muted
     assert not satellite.device.is_muted

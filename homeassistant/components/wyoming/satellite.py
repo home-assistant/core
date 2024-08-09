@@ -182,6 +182,10 @@ class WyomingSatellite(assist_satellite.AssistSatelliteEntity):
         finally:
             unregister_timer_handler()
 
+            if self._tts_timeout_task is not None:
+                self._tts_timeout_task.cancel()
+                self._tts_timeout_task = None
+
             # Ensure sensor is off (before stop)
             self.device.set_is_active(False)
 
@@ -690,8 +694,8 @@ class WyomingSatellite(assist_satellite.AssistSatelliteEntity):
             # Time out half a second second after response should have finished
             # playing in case the satellite doesn't tell us when it's done.
             wav_seconds = wav_file.getnframes() / sample_rate
-            self._tts_timeout_task = asyncio.create_task(
-                self._tts_timeout(wav_seconds + 0.5)
+            self._tts_timeout_task = self.config_entry.async_create_background_task(
+                self.hass, self._tts_timeout(wav_seconds + 0.5), "wyoming tts timeout"
             )
 
             timestamp = 0

@@ -3,13 +3,16 @@
 import asyncio
 from unittest.mock import patch
 
+from wyoming.audio import AudioFormat
 from wyoming.event import Event
 from wyoming.info import (
     AsrModel,
     AsrProgram,
     Attribution,
     Info,
+    MicProgram,
     Satellite,
+    SndProgram,
     TtsProgram,
     TtsVoice,
     TtsVoiceSpeaker,
@@ -95,7 +98,58 @@ SATELLITE_INFO = Info(
         attribution=TEST_ATTR,
         area="Office",
         version=None,
-    )
+        has_vad=True,
+        active_wake_words=["ok nabu"],
+        supports_trigger=True,
+    ),
+    wake=[
+        WakeProgram(
+            name="Test Wake Word",
+            description="Test Wake Word",
+            installed=True,
+            attribution=TEST_ATTR,
+            models=[
+                WakeModel(
+                    name="ok nabu",
+                    description="ok nabu",
+                    phrase="ok nabu",
+                    installed=True,
+                    attribution=TEST_ATTR,
+                    languages=["en-US"],
+                    version=None,
+                )
+            ],
+            version=None,
+        )
+    ],
+    mic=[
+        MicProgram(
+            name="Test Microphone",
+            description="Test Microphone",
+            installed=True,
+            attribution=TEST_ATTR,
+            mic_format=AudioFormat(
+                rate=16000,
+                width=2,
+                channels=1,
+            ),
+            version=None,
+        )
+    ],
+    snd=[
+        SndProgram(
+            name="Test Speaker",
+            description="Test Speaker",
+            installed=True,
+            attribution=TEST_ATTR,
+            snd_format=AudioFormat(
+                rate=16000,
+                width=2,
+                channels=1,
+            ),
+            version=None,
+        )
+    ],
 )
 EMPTY_INFO = Info()
 

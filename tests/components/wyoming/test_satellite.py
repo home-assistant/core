@@ -17,13 +17,17 @@ from wyoming.info import Info
 from wyoming.ping import Ping, Pong
 from wyoming.pipeline import PipelineStage, RunPipeline
 from wyoming.satellite import RunSatellite
+from wyoming.snd import Played
 from wyoming.timer import TimerCancelled, TimerFinished, TimerStarted, TimerUpdated
 from wyoming.tts import Synthesize
 from wyoming.vad import VoiceStarted, VoiceStopped
 from wyoming.wake import Detect, Detection
 
 from homeassistant.components import assist_pipeline, wyoming
-from homeassistant.components.assist_satellite import AssistSatelliteState
+from homeassistant.components.assist_satellite import (
+    AssistSatelliteEntityFeature,
+    AssistSatelliteState,
+)
 from homeassistant.components.wyoming import WyomingSatellite
 from homeassistant.components.wyoming.devices import SatelliteDevice
 from homeassistant.const import STATE_ON
@@ -65,8 +69,8 @@ def get_test_wav() -> bytes:
             wav_file.setsampwidth(2)
             wav_file.setnchannels(1)
 
-            # Single frame
-            wav_file.writeframes(b"123")
+            # One second
+            wav_file.writeframes(bytes(22050 * 2))
 
         return wav_io.getvalue()
 
@@ -261,6 +265,20 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
         ].satellite
         device = satellite.device
 
+        # Check supported features and config
+        assert satellite.supported_features is not None
+        assert satellite.supported_features & AssistSatelliteEntityFeature.AUDIO_INPUT
+        assert satellite.supported_features & AssistSatelliteEntityFeature.AUDIO_OUTPUT
+        assert satellite.supported_features & AssistSatelliteEntityFeature.WAKE_WORD
+        assert satellite.supported_features & AssistSatelliteEntityFeature.TRIGGER
+        assert (
+            satellite.supported_features
+            & AssistSatelliteEntityFeature.VOICE_ACTIVITY_DETECTION
+        )
+
+        config = await satellite.async_get_config()
+        assert config.active_wake_words == ["ok nabu"]
+
         async with asyncio.timeout(1):
             await mock_client.connect_event.wait()
             await mock_client.run_satellite_event.wait()
@@ -444,14 +462,15 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
         assert mock_client.tts_audio_chunk.rate == 22050
         assert mock_client.tts_audio_chunk.width == 2
         assert mock_client.tts_audio_chunk.channels == 1
-        assert mock_client.tts_audio_chunk.audio == b"123"
+        assert len(mock_client.tts_audio_chunk.audio) > 0
+
+        assert satellite.state == AssistSatelliteState.RESPONDING
 
         # Pipeline finished
         pipeline_event_callback(
             assist_pipeline.PipelineEvent(assist_pipeline.PipelineEventType.RUN_END)
         )
         assert not device.is_active
-        assert satellite.state == AssistSatelliteState.IDLE
 
         # The client should have received another ping by now
         async with asyncio.timeout(1):
@@ -1415,3 +1434,171 @@ async def test_satellite_conversation_id(hass: HomeAssistant) -> None:
         new_conversation_id = pipeline_kwargs.get("conversation_id")
         assert new_conversation_id
         assert new_conversation_id != conversation_id
+
+
+async def test_tts_timeout(hass: HomeAssistant) -> None:
+    """Test timeout after not receiving played event when TTS has finished."""
+    assert await async_setup_component(hass, assist_pipeline.DOMAIN, {})
+
+    events = [
+        RunPipeline(start_stage=PipelineStage.TTS, end_stage=PipelineStage.TTS).event(),
+    ]
+    pipeline_event = asyncio.Event()
+
+    def _async_pipeline_from_audio_stream(*args: Any, **kwargs: Any) -> None:
+        pipeline_event.set()
+
+    timeout_event = asyncio.Event()
+
+    async def _tts_timeout(self, timeout_seconds: float) -> None:
+        await timeout_event.wait()
+        self._tts_finished()
+
+    with (
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=SATELLITE_INFO,
+        ),
+        patch(
+            "homeassistant.components.wyoming.satellite.AsyncTcpClient",
+            SatelliteAsyncTcpClient(events),
+        ) as mock_client,
+        patch(
+            "homeassistant.components.wyoming.satellite.assist_pipeline.async_pipeline_from_audio_stream",
+            wraps=_async_pipeline_from_audio_stream,
+        ) as mock_run_pipeline,
+        patch(
+            "homeassistant.components.wyoming.satellite.tts.async_get_media_source_audio",
+            return_value=("wav", get_test_wav()),
+        ),
+        patch(
+            "homeassistant.components.wyoming.satellite.WyomingSatellite._tts_timeout",
+            _tts_timeout,
+        ),
+    ):
+        entry = await setup_config_entry(hass)
+        satellite: wyoming.WyomingSatellite = hass.data[wyoming.DOMAIN][
+            entry.entry_id
+        ].satellite
+
+        async with asyncio.timeout(1):
+            await pipeline_event.wait()
+            await mock_client.connect_event.wait()
+            await mock_client.run_satellite_event.wait()
+
+        mock_run_pipeline.assert_called_once()
+        event_callback = mock_run_pipeline.call_args.kwargs["event_callback"]
+
+        # Text-to-speech text
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                assist_pipeline.PipelineEventType.TTS_START,
+                {
+                    "tts_input": "test text to speak",
+                    "voice": "test voice",
+                },
+            )
+        )
+        async with asyncio.timeout(1):
+            await mock_client.synthesize_event.wait()
+
+        # Text-to-speech media
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                assist_pipeline.PipelineEventType.TTS_END,
+                {"tts_output": {"media_id": "test media id"}},
+            )
+        )
+
+        assert satellite.state == AssistSatelliteState.RESPONDING
+
+        # Fake a TTS timeout
+        timeout_event.set()
+
+        async with asyncio.timeout(1):
+            await satellite._tts_pipeline_result_ready.wait()
+
+        assert satellite.state == AssistSatelliteState.IDLE
+
+        # Stop the satellite
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+async def test_tts_played(hass: HomeAssistant) -> None:
+    """Test that played event ends TTS response."""
+    assert await async_setup_component(hass, assist_pipeline.DOMAIN, {})
+
+    events = [
+        RunPipeline(start_stage=PipelineStage.TTS, end_stage=PipelineStage.TTS).event(),
+    ]
+    pipeline_event = asyncio.Event()
+
+    def _async_pipeline_from_audio_stream(*args: Any, **kwargs: Any) -> None:
+        pipeline_event.set()
+
+    with (
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=SATELLITE_INFO,
+        ),
+        patch(
+            "homeassistant.components.wyoming.satellite.AsyncTcpClient",
+            SatelliteAsyncTcpClient(events),
+        ) as mock_client,
+        patch(
+            "homeassistant.components.wyoming.satellite.assist_pipeline.async_pipeline_from_audio_stream",
+            wraps=_async_pipeline_from_audio_stream,
+        ) as mock_run_pipeline,
+        patch(
+            "homeassistant.components.wyoming.satellite.tts.async_get_media_source_audio",
+            return_value=("wav", get_test_wav()),
+        ),
+    ):
+        entry = await setup_config_entry(hass)
+        satellite: wyoming.WyomingSatellite = hass.data[wyoming.DOMAIN][
+            entry.entry_id
+        ].satellite
+
+        async with asyncio.timeout(1):
+            await pipeline_event.wait()
+            await mock_client.connect_event.wait()
+            await mock_client.run_satellite_event.wait()
+
+        mock_run_pipeline.assert_called_once()
+        event_callback = mock_run_pipeline.call_args.kwargs["event_callback"]
+
+        # Text-to-speech text
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                assist_pipeline.PipelineEventType.TTS_START,
+                {
+                    "tts_input": "test text to speak",
+                    "voice": "test voice",
+                },
+            )
+        )
+        async with asyncio.timeout(1):
+            await mock_client.synthesize_event.wait()
+
+        # Text-to-speech media
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                assist_pipeline.PipelineEventType.TTS_END,
+                {"tts_output": {"media_id": "test media id"}},
+            )
+        )
+
+        assert satellite.state == AssistSatelliteState.RESPONDING
+
+        # Inject event to indicate that TTS is finished playing
+        mock_client.inject_event(Played().event())
+
+        async with asyncio.timeout(1):
+            await satellite._tts_pipeline_result_ready.wait()
+
+        assert satellite.state == AssistSatelliteState.IDLE
+
+        # Stop the satellite
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
