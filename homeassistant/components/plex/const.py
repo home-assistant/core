@@ -57,6 +57,7 @@ MANUAL_SETUP_STRING = "Configure Plex server manually"
 
 SERVICE_REFRESH_LIBRARY = "refresh_library"
 SERVICE_SCAN_CLIENTS = "scan_for_clients"
+SERVICE_GET_UNWATCHED_MEDIA = "get_unwatched_media"
 
 PLEX_URI_SCHEME = "plex://"
 
