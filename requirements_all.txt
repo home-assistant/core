@@ -2207,6 +2207,9 @@ pysmartthings==0.7.8
 # homeassistant.components.edl21
 pysml==0.0.12
 
+# homeassistant.components.smlight
+pysmlight==0.0.12
+
 # homeassistant.components.snmp
 pysnmp-lextudio==6.0.11
 
