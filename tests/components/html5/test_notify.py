@@ -88,7 +88,7 @@ async def test_get_service_with_no_json(hass: HomeAssistant) -> None:
     await async_setup_component(hass, "http", {})
     m = mock_open()
     with patch("homeassistant.util.json.open", m, create=True):
-        service = await html5.async_get_service(hass, VAPID_CONF)
+        service = await html5.async_get_service(hass, {}, VAPID_CONF)
 
     assert service is not None
 
@@ -103,7 +103,7 @@ async def test_dismissing_message(mock_wp, hass: HomeAssistant) -> None:
 
     m = mock_open(read_data=json.dumps(data))
     with patch("homeassistant.util.json.open", m, create=True):
-        service = await html5.async_get_service(hass, VAPID_CONF)
+        service = await html5.async_get_service(hass, {}, VAPID_CONF)
         service.hass = hass
 
     assert service is not None
@@ -132,7 +132,7 @@ async def test_sending_message(mock_wp, hass: HomeAssistant) -> None:
 
     m = mock_open(read_data=json.dumps(data))
     with patch("homeassistant.util.json.open", m, create=True):
-        service = await html5.async_get_service(hass, VAPID_CONF)
+        service = await html5.async_get_service(hass, {}, VAPID_CONF)
         service.hass = hass
 
     assert service is not None
@@ -163,7 +163,7 @@ async def test_fcm_key_include(mock_wp, hass: HomeAssistant) -> None:
 
     m = mock_open(read_data=json.dumps(data))
     with patch("homeassistant.util.json.open", m, create=True):
-        service = await html5.async_get_service(hass, VAPID_CONF)
+        service = await html5.async_get_service(hass, {}, VAPID_CONF)
         service.hass = hass
 
     assert service is not None
@@ -188,7 +188,7 @@ async def test_fcm_send_with_unknown_priority(mock_wp, hass: HomeAssistant) -> N
 
     m = mock_open(read_data=json.dumps(data))
     with patch("homeassistant.util.json.open", m, create=True):
-        service = await html5.async_get_service(hass, VAPID_CONF)
+        service = await html5.async_get_service(hass, {}, VAPID_CONF)
         service.hass = hass
 
     assert service is not None
@@ -213,7 +213,7 @@ async def test_fcm_no_targets(mock_wp, hass: HomeAssistant) -> None:
 
     m = mock_open(read_data=json.dumps(data))
     with patch("homeassistant.util.json.open", m, create=True):
-        service = await html5.async_get_service(hass, VAPID_CONF)
+        service = await html5.async_get_service(hass, {}, VAPID_CONF)
         service.hass = hass
 
     assert service is not None
@@ -238,7 +238,7 @@ async def test_fcm_additional_data(mock_wp, hass: HomeAssistant) -> None:
 
     m = mock_open(read_data=json.dumps(data))
     with patch("homeassistant.util.json.open", m, create=True):
-        service = await html5.async_get_service(hass, VAPID_CONF)
+        service = await html5.async_get_service(hass, {}, VAPID_CONF)
         service.hass = hass
 
     assert service is not None
@@ -473,7 +473,7 @@ async def test_callback_view_with_jwt(
         mock_wp().send().status_code = 201
         await hass.services.async_call(
             "notify",
-            "notify",
+            "html5",
             {"message": "Hello", "target": ["device"], "data": {"icon": "beer.png"}},
             blocking=True,
         )
@@ -510,7 +510,7 @@ async def test_send_fcm_without_targets(
         mock_wp().send().status_code = 201
         await hass.services.async_call(
             "notify",
-            "notify",
+            "html5",
             {"message": "Hello", "target": ["device"], "data": {"icon": "beer.png"}},
             blocking=True,
         )
@@ -535,7 +535,7 @@ async def test_send_fcm_expired(
         mock_wp().send().status_code = 410
         await hass.services.async_call(
             "notify",
-            "notify",
+            "html5",
             {"message": "Hello", "target": ["device"], "data": {"icon": "beer.png"}},
             blocking=True,
         )
@@ -560,7 +560,7 @@ async def test_send_fcm_expired_save_fails(
         mock_wp().send().status_code = 410
         await hass.services.async_call(
             "notify",
-            "notify",
+            "html5",
             {"message": "Hello", "target": ["device"], "data": {"icon": "beer.png"}},
             blocking=True,
         )
