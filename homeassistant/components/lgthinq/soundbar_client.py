@@ -18,12 +18,12 @@ from .const import CONFIG_DEVICE_TIMEOUT, CONNECT_DEVICE_TIMEOUT, SOUNDBAR_PORT
 _LOGGER = logging.getLogger(__name__)
 
 
-def config_connect(host: str, port: str = SOUNDBAR_PORT) -> SoundbarClient | None:
+def config_connect(host: str, port: int = SOUNDBAR_PORT) -> SoundbarClient | None:
     """Connect to the Soundbar using SoundbarClient."""
     try:
         return SoundbarClient(address=host, port=port)
     except ConnectionError:
-        _LOGGER.error("Connection timeout with server: %s:%s", host, port)
+        _LOGGER.error("Connection timeout with server: %s:%d", host, port)
     except OSError:
         _LOGGER.error("Cannot resolve hostname: %s", host)
 
