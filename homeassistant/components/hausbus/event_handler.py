@@ -7,7 +7,7 @@ from typing import Any
 from .entity import HausbusEntity
 
 
-class IEventHandler(ABC):
+class EventHandler(ABC):
     """Abstract base class for gateway event handling."""
 
     @abstractmethod
@@ -17,4 +17,3 @@ class IEventHandler(ABC):
         platform: str,
     ) -> None:
         """Register add device callbacks."""
-        raise NotImplementedError

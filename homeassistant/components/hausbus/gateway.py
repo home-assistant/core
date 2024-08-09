@@ -24,7 +24,7 @@ from homeassistant.core import HomeAssistant
 
 from .device import HausbusDevice
 from .entity import HausbusEntity
-from .event_handler import IEventHandler
+from .event_handler import EventHandler
 from .light import (
     Dimmer,
     HausbusDimmerLight,
@@ -36,7 +36,7 @@ from .light import (
 )
 
 
-class HausbusGateway(IBusDataListener, IEventHandler):  # type: ignore[misc]
+class HausbusGateway(IBusDataListener, EventHandler):  # type: ignore[misc]
     """Manages a single Haus-Bus gateway."""
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
@@ -53,7 +53,7 @@ class HausbusGateway(IBusDataListener, IEventHandler):  # type: ignore[misc]
         ] = {}
 
     def add_device(self, device_id: str, module: ModuleId) -> None:
-        """Add a new Haus-Bus Device to this gateways devices list."""
+        """Add a new Haus-Bus Device to this gateway's device list."""
         device = HausbusDevice(
             self.bridge_id,
             device_id,

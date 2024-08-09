@@ -49,7 +49,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Haus-Bus lights from a config entry."""
-    # gateway = cast(IEventHandler, hass.data[HAUSBUSDOMAIN][config_entry.entry_id])
     gateway = config_entry.runtime_data.gateway
 
     @callback
