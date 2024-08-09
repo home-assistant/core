@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 from mastodon.Mastodon import Mastodon, MastodonError
 
@@ -37,9 +36,6 @@ class MastodonData:
 
 
 type MastodonConfigEntry = ConfigEntry[MastodonData]
-
-if TYPE_CHECKING:
-    from . import MastodonConfigEntry
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -> bool:
