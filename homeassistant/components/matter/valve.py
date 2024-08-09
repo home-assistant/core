@@ -151,9 +151,6 @@ class MatterValve(MatterEntity, ValveEntity):
                 self.current_valve_position,
             )
 
-        commands = self.get_matter_attribute_value(
-            clusters.ValveConfigurationAndControl.Attributes.AcceptedCommandList
-        )
 
     @callback
     def _calculate_features(
