@@ -93,7 +93,7 @@ class MatterValve(MatterEntity, ValveEntity):
             # A value of 0 percent SHALL indicate the fully closed position
             # A value of null SHALL indicate that the current state is not known
             clusters.ValveConfigurationAndControl.Commands.Open(
-                position
+                target_valve_position
             )  # TargetLevel type="percent"
         )
 
