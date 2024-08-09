@@ -15,6 +15,7 @@ from homeassistant.config import async_log_schema_error, config_without_domain
 from homeassistant.const import CONF_BINARY_SENSORS, CONF_SENSORS, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.condition import async_validate_conditions_config
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_notify_setup_error
@@ -28,7 +29,7 @@ from . import (
     sensor as sensor_platform,
     weather as weather_platform,
 )
-from .const import CONF_ACTION, CONF_TRIGGER, DOMAIN
+from .const import CONF_ACTION, CONF_CONDITION, CONF_TRIGGER, DOMAIN
 
 PACKAGE_MERGE_HINT = "list"
 
@@ -36,6 +37,7 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_TRIGGER): cv.TRIGGER_SCHEMA,
+        vol.Optional(CONF_CONDITION): cv.CONDITIONS_SCHEMA,
         vol.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(NUMBER_DOMAIN): vol.All(
             cv.ensure_list, [number_platform.NUMBER_SCHEMA]
@@ -82,6 +84,11 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
             if CONF_TRIGGER in cfg:
                 cfg[CONF_TRIGGER] = await async_validate_trigger_config(
                     hass, cfg[CONF_TRIGGER]
+                )
+
+            if CONF_CONDITION in cfg:
+                cfg[CONF_CONDITION] = await async_validate_conditions_config(
+                    hass, cfg[CONF_CONDITION]
                 )
         except vol.Invalid as err:
             async_log_schema_error(err, DOMAIN, cfg, hass)
