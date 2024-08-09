@@ -1,11 +1,13 @@
 """The Smart Meter B Route integration."""
 
+from momonga import MomongaError, MomongaKeyError
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DOMAIN
 from .coordinator import BRouteUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -20,15 +22,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: BRouteConfigEntry) -> bo
     bid = entry.data[CONF_ID]
     password = entry.data[CONF_PASSWORD]
     hass.data.setdefault(DOMAIN, {})
-    coordinator = BRouteUpdateCoordinator(
-        hass, device, bid, password, update_interval=DEFAULT_SCAN_INTERVAL
-    )
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    coordinator = BRouteUpdateCoordinator(hass, device, bid, password)
     try:
-        await hass.async_add_executor_job(
-            coordinator.api.open,
-        )
-    except Exception as ex:
+        await coordinator.async_config_entry_first_refresh()
+        entry.runtime_data = coordinator
+    except MomongaError | MomongaKeyError as ex:
         raise ConfigEntryNotReady from ex
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

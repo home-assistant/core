@@ -17,5 +17,21 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "instantaneous_power": {
+        "name": "Instantaneous Power"
+      },
+      "total_consumption": {
+        "name": "Total Consumption"
+      },
+      "instantaneous_current_t_phase": {
+        "name": "Instantaneous Current T Phase"
+      },
+      "instantaneous_current_r_phase": {
+        "name": "Instantaneous Current R Phase"
+      }
+    }
   }
 }

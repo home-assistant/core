@@ -8,7 +8,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_PASSWORD
-from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, ENTRY_TITLE
 
@@ -25,13 +24,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 def validate_input(device: str, id: str, password: str) -> None:
     """Validate the user input allows us to connect."""
-    try:
-        with Momonga(dev=device, rbid=id, pwd=password):
-            pass
-    except MomongaSkScanFailure as error:
-        raise CannotConnect from error
-    except MomongaSkJoinFailure as error:
-        raise InvalidAuth from error
+    with Momonga(dev=device, rbid=id, pwd=password):
+        pass
 
 
 class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -52,24 +46,20 @@ class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_ID],
                     user_input[CONF_PASSWORD],
                 )
-            except CannotConnect:
+            except MomongaSkScanFailure:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
+            except MomongaSkJoinFailure:
                 errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                await self.async_set_unique_id(
+                    user_input[CONF_ID], raise_on_progress=False
+                )
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=ENTRY_TITLE, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
