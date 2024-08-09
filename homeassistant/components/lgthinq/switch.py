@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Copyright 2024 LG Electronics Inc.
+# SPDX-License-Identifier: LicenseRef-LGE-Proprietary
+
 """Support for switch entities."""
 
 from __future__ import annotations
@@ -38,7 +41,9 @@ async def async_setup_entry(
     )
 
 
-class ThinQSwitchEntity(ThinQEntity[ThinQSwitchEntityDescription], SwitchEntity):
+class ThinQSwitchEntity(
+    ThinQEntity[ThinQSwitchEntityDescription], SwitchEntity
+):
     """Represent a thinq switch platform."""
 
     target_platform = Platform.SWITCH

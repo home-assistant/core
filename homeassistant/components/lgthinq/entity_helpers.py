@@ -1,11 +1,14 @@
+# SPDX-FileCopyrightText: Copyright 2024 LG Electronics Inc.
+# SPDX-License-Identifier: LicenseRef-LGE-Proprietary
+
 """LG ThinQ entity descriptions and mapping table."""
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from datetime import time
 from enum import StrEnum, unique
-import logging
 from typing import Any, Generic, TypeVar
 
 from thinqconnect.const import DeviceType

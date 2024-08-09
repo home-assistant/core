@@ -1,11 +1,14 @@
+# SPDX-FileCopyrightText: Copyright 2024 LG Electronics Inc.
+# SPDX-License-Identifier: LicenseRef-LGE-Proprietary
+
 """Implements LG Soundbar client."""
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
-from queue import Empty, Queue
 import socket
+from collections.abc import Callable
+from queue import Empty, Queue
 from typing import Any
 
 from temescal import temescal
@@ -15,7 +18,9 @@ from .const import CONFIG_DEVICE_TIMEOUT, CONNECT_DEVICE_TIMEOUT, SOUNDBAR_PORT
 _LOGGER = logging.getLogger(__name__)
 
 
-def config_connect(host: str, port: str = SOUNDBAR_PORT) -> SoundbarClient | None:
+def config_connect(
+    host: str, port: str = SOUNDBAR_PORT
+) -> SoundbarClient | None:
     """Connect to the Soundbar using SoundbarClient."""
     try:
         return SoundbarClient(address=host, port=port)
@@ -42,7 +47,9 @@ def config_device(soundbar_client: SoundbarClient) -> dict[str, Any]:
             if msg == "PRODUCT_INFO" and uuid_q.empty() and "s_uuid" in data:
                 uuid_q.put(data.get("s_uuid"))
             elif (
-                msg == "SPK_LIST_VIEW_INFO" and name_q.empty() and "s_user_name" in data
+                msg == "SPK_LIST_VIEW_INFO"
+                and name_q.empty()
+                and "s_user_name" in data
             ):
                 name_q.put(data.get("s_user_name"))
 
@@ -78,7 +85,9 @@ class SoundbarClient(temescal):
         self.socket: socket.socket | None = None
         self.connect()
 
-    def set_callback(self, callback: Callable[[dict], None] | None = None) -> None:
+    def set_callback(
+        self, callback: Callable[[dict], None] | None = None
+    ) -> None:
         """Set a callback method."""
         self.callback = callback
 

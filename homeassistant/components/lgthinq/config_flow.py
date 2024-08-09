@@ -1,21 +1,24 @@
+# SPDX-FileCopyrightText: Copyright 2024 LG Electronics Inc.
+# SPDX-License-Identifier: LicenseRef-LGE-Proprietary
+
 """Config flow for LG ThinQ."""
 
 from __future__ import annotations
 
 import asyncio
 import logging
+import uuid
 from typing import Any
 from urllib.parse import urlparse
-import uuid
 
+import pycountry
+import voluptuous as vol
 from aiowebostv import WebOsTvPairError
 from async_upnp_client.const import AddressTupleVXType
 from async_upnp_client.ssdp_listener import SsdpSearchListener
 from async_upnp_client.utils import CaseInsensitiveDict
 from nmap import PortScanner, PortScannerError
-import pycountry
 from thinqconnect.thinq_api import ThinQApi, ThinQApiResponse
-import voluptuous as vol
 
 from homeassistant.components import ssdp
 from homeassistant.config_entries import (
@@ -72,7 +75,8 @@ from .soundbar_client import SOUNDBAR_PORT, config_connect, config_device
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_COUNTRIES = [
-    SelectOptionDict(value=x.alpha_2, label=x.name) for x in pycountry.countries
+    SelectOptionDict(value=x.alpha_2, label=x.name)
+    for x in pycountry.countries
 ]
 
 
@@ -160,7 +164,9 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
                 data_schema=vol.Schema(
                     {
                         vol.Required(CONF_ACCESS_TOKEN): cv.string,
-                        vol.Optional(CONF_NAME, default=THINQ_DEFAULT_NAME): cv.string,
+                        vol.Optional(
+                            CONF_NAME, default=THINQ_DEFAULT_NAME
+                        ): cv.string,
                     }
                 ),
                 errors=errors,
@@ -275,8 +281,12 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="soundbar_fill_data",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST, default=self._soundbar_host): cv.string,
-                    vol.Optional(CONF_NAME, default=SOUNDBAR_DEFAULT_NAME): cv.string,
+                    vol.Required(
+                        CONF_HOST, default=self._soundbar_host
+                    ): cv.string,
+                    vol.Optional(
+                        CONF_NAME, default=SOUNDBAR_DEFAULT_NAME
+                    ): cv.string,
                 },
                 extra=vol.ALLOW_EXTRA,
             ),
@@ -328,7 +338,9 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
             for ssdp_listener in self._ssdp_listeners:
                 ssdp_listener.async_search()
                 if ssdp.is_ipv4_address(ssdp_listener.source):
-                    ssdp_listener.async_search((str(IPV4_BROADCAST), ssdp.SSDP_PORT))
+                    ssdp_listener.async_search(
+                        (str(IPV4_BROADCAST), ssdp.SSDP_PORT)
+                    )
             try:
                 await asyncio.wait_for(self._ssdp_res_fut, timeout=SSDP_MX)
                 self._webostv_host = self._ssdp_res_fut.result()
@@ -478,7 +490,9 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
                 vol.Optional(
                     CONF_SOURCES,
                     description={"suggested_value": sources_list},
-                ): cv.multi_select({source: source for source in sources_list}),
+                ): cv.multi_select(
+                    {source: source for source in sources_list}
+                ),
             }
         )
 
@@ -557,7 +571,9 @@ class WebOsTvOptionsFlowHandler(OptionsFlow):
                 vol.Optional(
                     CONF_SOURCES,
                     description={"suggested_value": sources},
-                ): cv.multi_select({source: source for source in sources_list}),
+                ): cv.multi_select(
+                    {source: source for source in sources_list}
+                ),
             }
         )
 
