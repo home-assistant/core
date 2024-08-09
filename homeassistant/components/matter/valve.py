@@ -28,8 +28,6 @@ from .models import MatterDiscoverySchema
 ValveConfigurationAndControlFeature = (
     clusters.ValveConfigurationAndControl.Bitmaps.Feature
 )
-TimeSyncBitmap = clusters.ValveConfigurationAndControl.Bitmaps.TimeSyncBitmap
-LevelBitmap = clusters.ValveConfigurationAndControl.Bitmaps.LevelBitmap
 
 # The MASK used for extracting bits 0 to 1 of the byte.
 OPERATIONAL_STATUS_MASK = 0b11
