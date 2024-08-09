@@ -4,8 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from functools import partial
+from pathlib import Path
+import shutil
 
 from jaraco.abode.client import Client as Abode
+from jaraco.abode.config import paths as ABODE_CACHE_PATHS
 from jaraco.abode.exceptions import (
     AuthenticationException as AbodeAuthenticationException,
     Exception as AbodeException,
@@ -100,6 +103,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     try:
+
+        def _symlink_cache() -> None:
+            # the user_data property implicitly creates the local cache dir
+            local = ABODE_CACHE_PATHS.user_data
+            persist = Path(hass.config.path(local.stem)).absolute()
+
+            if not persist.exists():
+                shutil.copytree(local, persist)
+
+            if not local.is_symlink():
+                shutil.rmtree(local)
+                local.symlink_to(persist, target_is_directory=True)
+
+        await hass.async_add_executor_job(_symlink_cache)
         abode = await hass.async_add_executor_job(
             Abode, username, password, True, True, True
         )
