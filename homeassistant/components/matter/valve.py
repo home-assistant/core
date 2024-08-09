@@ -9,7 +9,7 @@ from typing import Any
 from chip.clusters import Objects as clusters
 
 from homeassistant.components.valve import (
-    # ATTR_POSITION,
+    ATTR_POSITION,
     ValveDeviceClass,
     ValveEntity,
     ValveEntityDescription,
@@ -84,8 +84,10 @@ class MatterValve(MatterEntity, ValveEntity):
             clusters.ValveConfigurationAndControl.Commands.Close()
         )
 
-    async def async_set_valve_position(self, position: int) -> None:
+    async def async_set_valve_position(self, **kwargs: Any) -> None:
         """Move the water valve to a specific position."""
+        target_valve_position: int | None = kwargs.get(ATTR_POSITION)
+        
         await self.send_device_command(
             # A value of 100 percent SHALL indicate the fully open position
             # A value of 0 percent SHALL indicate the fully closed position
@@ -123,8 +125,6 @@ class MatterValve(MatterEntity, ValveEntity):
             # Valve is transitioning between closed and open positions or between levels
             case OperationalStatus.VALVE_IS_CURRENTLY_TRANSITIONING:
                 self._attr_is_opening = True
-                # self._attr_is_closing = False
-                # self._attr_is_transitioning = True --> Not implemented here: https://developers.home-assistant.io/docs/core/entity/valve
             case _:
                 self._attr_is_opening = False
                 self._attr_is_closing = False
