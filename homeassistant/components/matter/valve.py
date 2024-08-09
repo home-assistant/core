@@ -152,13 +152,9 @@ class MatterValve(MatterEntity, ValveEntity):
             )
 
         self._attr_device_class = ValveDeviceClass.WATER
-        supported_features = ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
         commands = self.get_matter_attribute_value(
             clusters.ValveConfigurationAndControl.Attributes.AcceptedCommandList
         )
-        if clusters.ValveConfigurationAndControl.Commands.Open.command_id in commands:
-            supported_features |= ValveEntityFeature.SET_POSITION
-        self._attr_supported_features = supported_features
 
     @callback
     def _calculate_features(
