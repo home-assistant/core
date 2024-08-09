@@ -371,7 +371,7 @@ class QNAPMemorySensor(QNAPSensor):
             return used
 
         if self.entity_description.key == "memory_percent_used":
-            return used / total * 100
+            return round(used / total * 100, self.entity_description.suggested_display_precision)
 
         return None
 
@@ -530,7 +530,7 @@ class QNAPVolumeSensor(QNAPSensor):
             return used_gb
 
         if self.entity_description.key == "volume_percentage_used":
-            return used_gb / total_gb * 100
+            return round(used_gb / total_gb * 100, self.entity_description.suggested_display_precision )
 
         return None
 
