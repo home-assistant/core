@@ -584,6 +584,9 @@
     },
     "wake_up_timeout": {
       "message": "Timed out trying to wake up vehicle"
+    },
+    "missing_scope": {
+      "message": "Missing required scope: {scope}"
     }
   },
   "services": {
