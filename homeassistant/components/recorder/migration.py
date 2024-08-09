@@ -728,13 +728,13 @@ def _delete_foreign_key_violations(
     with session_scope(session=session_maker()) as session:
         session.execute(
             text(
-                f"DELETE FROM {table} "  # noqa: S608
+                f"DELETE FROM {table} t1"  # noqa: S608
                 "WHERE ("
-                f"  {table}.{column} IS NOT NULL AND"
+                f"  t1.{column} IS NOT NULL AND"
                 "  NOT EXISTS"
                 "    (SELECT 1 "
-                f"     FROM  {foreign_table} "
-                f"     WHERE {foreign_table}.{foreign_column} = {table}.{column}));"
+                f"     FROM  {foreign_table} t2"
+                f"     WHERE t2.{foreign_column} = t1.{column}));"
             )
         )
 
