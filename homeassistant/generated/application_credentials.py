@@ -23,6 +23,7 @@ APPLICATION_CREDENTIALS = [
     "neato",
     "nest",
     "netatmo",
+    "point",
     "senz",
     "spotify",
     "tesla_fleet",

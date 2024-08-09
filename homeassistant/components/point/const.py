@@ -12,3 +12,6 @@ SIGNAL_UPDATE_ENTITY = "point_update"
 SIGNAL_WEBHOOK = "point_webhook"
 
 POINT_DISCOVERY_NEW = "point_new_{}_{}"
+
+OAUTH2_AUTHORIZE = "https://api.minut.com/v8/oauth/authorize"
+OAUTH2_TOKEN = "https://api.minut.com/v8/oauth/token"
