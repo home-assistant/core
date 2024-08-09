@@ -166,3 +166,52 @@ def get_consumption_data(obj_uuid: str | None = None) -> dict[str, Any]:
             },
         ],
     }
+
+
+def extend_statistics(obj_uuid: str | None = None) -> dict[str, Any]:
+    """Extend statistics data with new values."""
+    stats = get_consumption_data(obj_uuid)
+
+    stats["costs"].insert(
+        0,
+        {
+            "date": {"month": 6, "year": 2024},
+            "costsByEnergyType": [
+                {
+                    "type": "heating",
+                    "value": 9000,
+                },
+                {
+                    "type": "warmwater",
+                    "value": 9000,
+                },
+                {
+                    "type": "water",
+                    "value": 9000,
+                },
+            ],
+        },
+    )
+    stats["consumptions"].insert(
+        0,
+        {
+            "date": {"month": 6, "year": 2024},
+            "readings": [
+                {
+                    "type": "heating",
+                    "value": "9000",
+                    "additionalValue": "9000,0",
+                },
+                {
+                    "type": "warmwater",
+                    "value": "9999,0",
+                    "additionalValue": "90000,0",
+                },
+                {
+                    "type": "water",
+                    "value": "9000,0",
+                },
+            ],
+        },
+    )
+    return stats
