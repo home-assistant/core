@@ -1002,7 +1002,6 @@ def test_restore_foreign_key_constraints_with_integrity_error(
     assert len(connection.execute.mock_calls) == 2
     session.execute.assert_called_once()
     assert session.execute.mock_calls[0][1][0].text == (
-        "DELETE FROM events WHERE (  events.data_id IS NOT NULL AND  NOT EXISTS    "
-        "(SELECT 1      FROM  event_data      WHERE event_data.data_id = "
-        "events.data_id));"
+        "DELETE FROM events t1 WHERE (  t1.data_id IS NOT NULL AND  NOT EXISTS    "
+        "(SELECT 1      FROM  event_data t2     WHERE t2.data_id = t1.data_id));"
     )
