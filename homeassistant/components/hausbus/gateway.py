@@ -43,7 +43,6 @@ class HausbusGateway(IBusDataListener, EventHandler):  # type: ignore[misc]
         """Initialize the system."""
         self.hass = hass
         self.config_entry = config_entry
-        self.bridge_id = "1"
         self.devices: dict[str, HausbusDevice] = {}
         self.channels: dict[str, dict[tuple[str, str], HausbusEntity]] = {}
         self.home_server = HomeServer()
@@ -55,7 +54,6 @@ class HausbusGateway(IBusDataListener, EventHandler):  # type: ignore[misc]
     def add_device(self, device_id: str, module: ModuleId) -> None:
         """Add a new Haus-Bus Device to this gateway's device list."""
         device = HausbusDevice(
-            self.bridge_id,
             device_id,
             module.getFirmwareId().getTemplateId()
             + " "

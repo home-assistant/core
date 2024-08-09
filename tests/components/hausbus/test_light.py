@@ -45,7 +45,7 @@ from .helpers import create_gateway, create_light_channel
 async def test_create_dimmer(hass: HomeAssistant) -> None:
     """Test creating a Dimmer channel."""
 
-    device = HausbusDevice("1", "1", "0", "0", EFirmwareId.ESP32)
+    device = HausbusDevice("1", "0", "0", EFirmwareId.ESP32)
     instance = Dimmer.create(1, 1)
     object_id = ObjectId(instance.getObjectId())  # = 0x00 01 17 01
     light = HausbusDimmerLight(
@@ -62,7 +62,7 @@ async def test_create_dimmer(hass: HomeAssistant) -> None:
 async def test_create_led(hass: HomeAssistant) -> None:
     """Test creating a LED channel."""
 
-    device = HausbusDevice("1", "1", "0", "0", EFirmwareId.ESP32)
+    device = HausbusDevice("1", "0", "0", EFirmwareId.ESP32)
     instance = Led.create(1, 1)
     object_id = ObjectId(instance.getObjectId())  # = 0x00 01 17 01
     light = HausbusLedLight(
@@ -79,7 +79,7 @@ async def test_create_led(hass: HomeAssistant) -> None:
 async def test_create_rgbdimmer(hass: HomeAssistant) -> None:
     """Test creating a RGB Dimmer channel."""
 
-    device = HausbusDevice("1", "1", "0", "0", EFirmwareId.ESP32)
+    device = HausbusDevice("1", "0", "0", EFirmwareId.ESP32)
     instance = RGBDimmer.create(1, 1)
     object_id = ObjectId(instance.getObjectId())  # = 0x00 01 17 01
     light = HausbusRGBDimmerLight(
@@ -111,7 +111,7 @@ async def test_is_light_channel(inputs, expected) -> None:
 
 async def test_get_dimmer_status() -> None:
     """Test dimmer get hardware status."""
-    device = HausbusDevice("1", "1", "0", "0", EFirmwareId.ESP32)
+    device = HausbusDevice("1", "0", "0", EFirmwareId.ESP32)
     instance = Dimmer.create(1, 1)
     object_id = ObjectId(instance.getObjectId())  # = 0x00 01 17 01
     light = HausbusDimmerLight(
@@ -130,7 +130,7 @@ async def test_get_dimmer_status() -> None:
 
 async def test_get_led_status() -> None:
     """Test led get hardware status."""
-    device = HausbusDevice("1", "1", "0", "0", EFirmwareId.ESP32)
+    device = HausbusDevice("1", "0", "0", EFirmwareId.ESP32)
     instance = Led.create(1, 1)
     object_id = ObjectId(instance.getObjectId())  # = 0x00 01 17 01
     light = HausbusLedLight(
@@ -149,7 +149,7 @@ async def test_get_led_status() -> None:
 
 async def test_get_rgbdimmer_status() -> None:
     """Test rgbdimmer get hardware status."""
-    device = HausbusDevice("1", "1", "0", "0", EFirmwareId.ESP32)
+    device = HausbusDevice("1", "0", "0", EFirmwareId.ESP32)
     instance = RGBDimmer.create(1, 1)
     object_id = ObjectId(instance.getObjectId())  # = 0x00 01 17 01
     light = HausbusRGBDimmerLight(

@@ -15,7 +15,6 @@ class HausbusDevice:
 
     def __init__(
         self,
-        bridge_id: str,
         device_id: str,
         sw_version: str,
         hw_version: str,
@@ -28,7 +27,6 @@ class HausbusDevice:
         self.name = f"Controller {self.device_id}"
         self.software_version = sw_version
         self.hardware_version = hw_version
-        self.bridge_id = bridge_id
         self.firmware_id = firmware_id
 
     @property
@@ -41,7 +39,6 @@ class HausbusDevice:
             name=self.name,
             sw_version=self.software_version,
             hw_version=self.hardware_version,
-            via_device=(DOMAIN, self.bridge_id),
         )
 
     def set_type(self, type_id: int) -> None:

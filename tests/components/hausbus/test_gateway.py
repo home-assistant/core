@@ -48,7 +48,6 @@ async def test_init(hass: HomeAssistant) -> None:
     # Assert the initial state of the gateway
     assert gateway.hass == hass
     assert gateway.config_entry == config_entry
-    assert gateway.bridge_id == "1"
     assert not gateway.devices
     assert not gateway.channels
     assert gateway.home_server == mock_home_server
@@ -151,9 +150,7 @@ async def test_get_channel(hass: HomeAssistant) -> None:
 async def test_create_generic_light_channel(hass: HomeAssistant) -> None:
     """Test creating a light channel that is not supported."""
     gateway = await create_gateway(hass)
-    device = HausbusDevice(
-        "bridge_id", "device_id", "sw_version", "hw_version", EFirmwareId.ESP32
-    )
+    device = HausbusDevice("device_id", "sw_version", "hw_version", EFirmwareId.ESP32)
     sender = 66051  # = 0x00 01 02 03, with class_id = 0x02 and instance_id = 0x03
     instance = ABusFeature(sender)
 

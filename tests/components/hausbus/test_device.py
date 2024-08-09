@@ -11,17 +11,13 @@ from homeassistant.components.hausbus.device import HausbusDevice
 
 async def test_device_id() -> None:
     """Test we can access device_id."""
-    device = HausbusDevice(
-        "bridge_id", "device_id", "sw_version", "hw_version", EFirmwareId.ESP32
-    )
+    device = HausbusDevice("device_id", "sw_version", "hw_version", EFirmwareId.ESP32)
     assert device.device_id == "device_id"
 
 
 async def test_device_info() -> None:
     """Test we can access device_info and it is filled according to the constructor."""
-    device = HausbusDevice(
-        "bridge_id", "device_id", "sw_version", "hw_version", EFirmwareId.ESP32
-    )
+    device = HausbusDevice("device_id", "sw_version", "hw_version", EFirmwareId.ESP32)
     device_info = device.device_info
     assert device_info is not None
     assert device_info.get("manufacturer") == "Haus-Bus.de"
@@ -30,7 +26,6 @@ async def test_device_info() -> None:
     assert device_info.get("sw_version") == "sw_version"
     assert device_info.get("hw_version") == "hw_version"
     assert device_info.get("identifiers") == {(DOMAIN, "device_id")}
-    assert device_info.get("via_device") == (DOMAIN, "bridge_id")
 
 
 @pytest.mark.parametrize(
@@ -123,8 +118,6 @@ async def test_device_info() -> None:
 )
 async def test_set_type(inputs, expected) -> None:
     """Test setting the type adjusts the model_id."""
-    device = HausbusDevice(
-        "bridge_id", "device_id", "sw_version", "hw_version", inputs["firmware"]
-    )
+    device = HausbusDevice("device_id", "sw_version", "hw_version", inputs["firmware"])
     device.set_type(inputs["type"])
     assert device.model_id == expected["model_id"]
