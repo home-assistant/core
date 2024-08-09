@@ -189,7 +189,7 @@ class MatterValve(MatterEntity, ValveEntity):
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
-DISVALVEY_SCHEMAS = [
+DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.VALVE,
         entity_description=ValveEntityDescription(
