@@ -125,6 +125,7 @@ class HMThermostat(HMDevice, ClimateEntity):
         for node in HM_HUMI_MAP:
             if node in self._data:
                 return self._data[node]
+        return None
 
     @property
     def current_temperature(self):
@@ -132,6 +133,7 @@ class HMThermostat(HMDevice, ClimateEntity):
         for node in HM_TEMP_MAP:
             if node in self._data:
                 return self._data[node]
+        return None
 
     @property
     def target_temperature(self):
@@ -140,8 +142,10 @@ class HMThermostat(HMDevice, ClimateEntity):
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            self._hmdevice.writeNodeData(self._state, float(temperature))
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+            return
+
+        self._hmdevice.writeNodeData(self._state, float(temperature))
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""

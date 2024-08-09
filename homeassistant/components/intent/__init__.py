@@ -16,6 +16,7 @@ from homeassistant.components.cover import (
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
+    CoverDeviceClass,
 )
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.lock import (
@@ -23,11 +24,14 @@ from homeassistant.components.lock import (
     SERVICE_LOCK,
     SERVICE_UNLOCK,
 )
+from homeassistant.components.media_player import MediaPlayerDeviceClass
+from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.components.valve import (
     DOMAIN as VALVE_DOMAIN,
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
     SERVICE_SET_VALVE_POSITION,
+    ValveDeviceClass,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -35,7 +39,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant, State
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.helpers import config_validation as cv, integration_platform, intent
 from homeassistant.helpers.typing import ConfigType
 
@@ -67,6 +71,13 @@ __all__ = [
     "DOMAIN",
 ]
 
+ONOFF_DEVICE_CLASSES = {
+    CoverDeviceClass,
+    ValveDeviceClass,
+    SwitchDeviceClass,
+    MediaPlayerDeviceClass,
+}
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Intent component."""
@@ -82,27 +93,30 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass,
         OnOffIntentHandler(
             intent.INTENT_TURN_ON,
-            HA_DOMAIN,
+            HOMEASSISTANT_DOMAIN,
             SERVICE_TURN_ON,
             description="Turns on/opens a device or entity",
+            device_classes=ONOFF_DEVICE_CLASSES,
         ),
     )
     intent.async_register(
         hass,
         OnOffIntentHandler(
             intent.INTENT_TURN_OFF,
-            HA_DOMAIN,
+            HOMEASSISTANT_DOMAIN,
             SERVICE_TURN_OFF,
             description="Turns off/closes a device or entity",
+            device_classes=ONOFF_DEVICE_CLASSES,
         ),
     )
     intent.async_register(
         hass,
         intent.ServiceIntentHandler(
             intent.INTENT_TOGGLE,
-            HA_DOMAIN,
+            HOMEASSISTANT_DOMAIN,
             SERVICE_TOGGLE,
             description="Toggles a device or entity",
+            device_classes=ONOFF_DEVICE_CLASSES,
         ),
     )
     intent.async_register(
@@ -358,6 +372,7 @@ class SetPositionIntentHandler(intent.DynamicServiceIntentHandler):
             },
             description="Sets the position of a device or entity",
             platforms={COVER_DOMAIN, VALVE_DOMAIN},
+            device_classes={CoverDeviceClass, ValveDeviceClass},
         )
 
     def get_domain_and_service(

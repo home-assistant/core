@@ -5,8 +5,8 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from bring_api.bring import Bring
-from bring_api.exceptions import (
+from bring_api import (
+    Bring,
     BringAuthException,
     BringParseException,
     BringRequestException,

@@ -8,6 +8,7 @@ from aioesphomeapi import (
     APIClient,
     EntityInfo,
     EntityState,
+    UpdateCommand,
     UpdateInfo,
     UpdateState,
     UserService,
@@ -15,6 +16,10 @@ from aioesphomeapi import (
 import pytest
 
 from homeassistant.components.esphome.dashboard import async_get_dashboard
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.update import (
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
@@ -459,7 +464,7 @@ async def test_generic_device_update_entity(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("update.test_myupdate")
+    state = hass.states.get("update.test_my_update")
     assert state is not None
     assert state.state == STATE_OFF
 
@@ -498,14 +503,14 @@ async def test_generic_device_update_entity_has_update(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("update.test_myupdate")
+    state = hass.states.get("update.test_my_update")
     assert state is not None
     assert state.state == STATE_ON
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
         SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.test_myupdate"},
+        {ATTR_ENTITY_ID: "update.test_my_update"},
         blocking=True,
     )
 
@@ -523,7 +528,16 @@ async def test_generic_device_update_entity_has_update(
         )
     )
 
-    state = hass.states.get("update.test_myupdate")
+    state = hass.states.get("update.test_my_update")
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes["in_progress"] == 50
+
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "update.test_my_update"},
+        blocking=True,
+    )
+
+    mock_client.update_command.assert_called_with(key=1, command=UpdateCommand.CHECK)
