@@ -180,13 +180,12 @@ class MatterValve(MatterEntity, ValveEntity):
             )
         )
 
-        self._feature_map = feature_map
-
         # NOTE: the featuremap can dynamically change, so we need to update the
         # supported features if the featuremap changes.
         # work out supported features and presets from matter featuremap
         if self._feature_map == feature_map:
             return
+        self._feature_map = feature_map
         self._attr_supported_features = ValveEntityFeature(0)
         if feature_map & ValveConfigurationAndControlFeature.kLevel:
             self._attr_supported_features |= ValveEntityFeature.SET_POSITION
