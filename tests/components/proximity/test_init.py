@@ -590,20 +590,6 @@ async def test_device_tracker_test1_nearest_after_test2_in_ignored_zone(
         1,
     )
 
-    # assert await async_setup_component(
-    #     hass,
-    #     DOMAIN,
-    #     {
-    #         "proximity": {
-    #             "home": {
-    #                 "ignored_zones": ["zone.work"],
-    #                 "devices": ["device_tracker.test1", "device_tracker.test2"],
-    #                 "zone": "home",
-    #             }
-    #         }
-    #     },
-    # )
-
     hass.states.async_set(
         "device_tracker.test1",
         "not_home",
