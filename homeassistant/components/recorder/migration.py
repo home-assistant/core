@@ -729,7 +729,7 @@ def _delete_foreign_key_violations(
         session.execute(
             text(
                 f"DELETE FROM {table} t1"  # noqa: S608
-                "WHERE ("
+                " WHERE ("
                 f"  t1.{column} IS NOT NULL AND"
                 "  NOT EXISTS"
                 "    (SELECT 1 "
