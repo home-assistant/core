@@ -57,7 +57,13 @@ def _lookup_area(
     """Look up entity permissions by area."""
     entity_entry = perm_lookup.entity_registry.async_get(entity_id)
 
-    if entity_entry is None or entity_entry.device_id is None:
+    if entity_entry is None:
+        return None
+
+    if entity_entry.area_id is not None:
+        return area_dict.get(entity_entry.area_id)
+
+    if entity_entry.device_id is None:
         return None
 
     device_entry = perm_lookup.device_registry.async_get(entity_entry.device_id)
