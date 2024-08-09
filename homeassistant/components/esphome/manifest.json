@@ -4,7 +4,7 @@
   "after_dependencies": ["zeroconf", "tag"],
   "codeowners": ["@OttoWinter", "@jesserockz", "@kbx81", "@bdraco"],
   "config_flow": true,
-  "dependencies": ["assist_pipeline", "bluetooth", "intent"],
+  "dependencies": ["assist_pipeline", "bluetooth", "intent", "ffmpeg", "http"],
   "dhcp": [
     {
       "registered_devices": true
