@@ -3,7 +3,12 @@
 from datetime import timedelta
 from unittest.mock import Mock, call
 
-from homeassistant.components.cover import ATTR_CURRENT_POSITION, ATTR_POSITION, DOMAIN
+from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
+    ATTR_POSITION,
+    DOMAIN,
+    STATE_OPEN,
+)
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -12,11 +17,17 @@ from homeassistant.const import (
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from . import FritzDeviceCoverMock, set_devices, setup_config_entry
+from . import (
+    FritzDeviceCoverMock,
+    FritzDeviceCoverUnknownPositionMock,
+    set_devices,
+    setup_config_entry,
+)
 from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
 from tests.common import async_fire_time_changed
@@ -33,7 +44,20 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
 
     state = hass.states.get(ENTITY_ID)
     assert state
+    assert state.state == STATE_OPEN
     assert state.attributes[ATTR_CURRENT_POSITION] == 100
+
+
+async def test_unknown_position(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test cover with unknown position."""
+    device = FritzDeviceCoverUnknownPositionMock()
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_open_cover(hass: HomeAssistant, fritz: Mock) -> None:

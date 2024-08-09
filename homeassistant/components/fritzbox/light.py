@@ -72,11 +72,8 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
         return self.data.level  # type: ignore [no-any-return]
 
     @property
-    def hs_color(self) -> tuple[float, float] | None:
+    def hs_color(self) -> tuple[float, float]:
         """Return the hs color value."""
-        if self.data.color_mode != COLOR_MODE:
-            return None
-
         hue = self.data.hue
         saturation = self.data.saturation
 
