@@ -90,12 +90,15 @@ class SchlageSwitch(SchlageEntity, SwitchEntity):
         self._attr_unique_id = f"{device_id}_{self.entity_description.key}"
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return True if the switch is on."""
+        if self._lock is None:
+            return None
         return self.entity_description.value_fn(self._lock)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
+        assert self._lock is not None
         await self.hass.async_add_executor_job(
             partial(self.entity_description.on_fn, self._lock)
         )
@@ -103,6 +106,7 @@ class SchlageSwitch(SchlageEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
+        assert self._lock is not None
         await self.hass.async_add_executor_job(
             partial(self.entity_description.off_fn, self._lock)
         )
