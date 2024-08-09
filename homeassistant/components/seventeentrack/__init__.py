@@ -1,5 +1,6 @@
 """The seventeentrack component."""
 
+import logging
 from typing import Final
 
 from pyseventeentrack import Client as SeventeenTrackClient
@@ -21,7 +22,7 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
-from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
+from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError, HomeAssistantError
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -39,9 +40,13 @@ from .const import (
     ATTR_TRACKING_INFO_LANGUAGE,
     ATTR_TRACKING_NUMBER,
     DOMAIN,
+    SERVICE_ADD_PACKAGE,
     SERVICE_GET_PACKAGES,
 )
 from .coordinator import SeventeenTrackCoordinator
+
+_LOGGER = logging.getLogger(__name__)
+
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -124,6 +129,62 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ]
         }
 
+    async def add_package(call: ServiceCall) -> ServiceResponse:
+        config_entry_id = call.data[ATTR_CONFIG_ENTRY_ID]
+        tracking_number = call.data[ATTR_TRACKING_NUMBER]
+        friendly_name = call.data.get(ATTR_INFO_TEXT, "")
+
+        if not (entry := hass.config_entries.async_get_entry(config_entry_id)):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_config_entry",
+                translation_placeholders={
+                    "config_entry_id": config_entry_id,
+                },
+            )
+        if entry.state != ConfigEntryState.LOADED:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unloaded_config_entry",
+                translation_placeholders={
+                    "config_entry_id": entry.title,
+                },
+            )
+
+        seventeen_coordinator: SeventeenTrackCoordinator = hass.data[DOMAIN][
+            config_entry_id
+        ]
+
+        try:
+            new_package = await seventeen_coordinator.client.profile.add_package(
+                tracking_number=tracking_number, friendly_name=friendly_name
+            )
+        except SeventeenTrackError as err:
+            raise HomeAssistantError(
+                f"Failed to add package {tracking_number}: {err}"
+            ) from err
+
+        return {
+            ATTR_DESTINATION_COUNTRY: new_package.destination_country,
+            ATTR_ORIGIN_COUNTRY: new_package.origin_country,
+            ATTR_PACKAGE_TYPE: new_package.package_type,
+            ATTR_TRACKING_INFO_LANGUAGE: new_package.tracking_info_language,
+            ATTR_TRACKING_NUMBER: new_package.tracking_number,
+            ATTR_LOCATION: new_package.location,
+            ATTR_STATUS: new_package.status,
+            ATTR_TIMESTAMP: new_package.timestamp,
+            ATTR_INFO_TEXT: new_package.info_text,
+            ATTR_FRIENDLY_NAME: new_package.friendly_name,
+        }
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_ADD_PACKAGE,
+        add_package,
+        schema=SERVICE_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_GET_PACKAGES,
@@ -131,6 +192,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
+
     return True
 
 
