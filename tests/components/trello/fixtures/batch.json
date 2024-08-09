@@ -1,0 +1,57 @@
+[
+  {
+    "200": {
+      "id": "3a634d47a4cb1e9a9886a2e3",
+      "name": "Goals"
+    }
+  },
+  {
+    "200": [
+      {
+        "id": "c46d44769cdac5020be265db",
+        "name": "To Do",
+        "cards": [
+          {
+            "id": "e091455385887f18fee685ab"
+          },
+          {
+            "id": "a48b45008848cc7998b4f3e0"
+          }
+        ]
+      },
+      {
+        "id": "07414c5aa9758dcb06022a73",
+        "name": "Done",
+        "cards": []
+      }
+    ]
+  },
+  {
+    "200": {
+      "id": "bea542e091bc1bfe5e780c8f",
+      "name": "Ideas"
+    }
+  },
+  {
+    "200": [
+      {
+        "id": "d40f454db7b6e3ea4892c9be",
+        "name": "Planned",
+        "cards": [
+          {
+            "id": "282344a3919cb5f3e0dbc5a4"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "200": {
+      "id": "0c6646739c3a12b1bf3dfd3a",
+      "name": "Empty board"
+    }
+  },
+  {
+    "200": []
+  }
+]

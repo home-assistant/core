@@ -1,0 +1,49 @@
+[
+  {
+    "200": {
+      "id": "3a634d47a4cb1e9a9886a2e3",
+      "name": "Goals"
+    }
+  },
+  {
+    "200": [
+      {
+        "id": "c46d44769cdac5020be265db",
+        "name": "To Do",
+        "cards": [
+          {
+            "id": "e091455385887f18fee685ab"
+          }
+        ]
+      },
+      {
+        "id": "07414c5aa9758dcb06022a73",
+        "name": "Done",
+        "cards": [
+          {
+            "id": "a48b45008848cc7998b4f3e0"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "NotFoundError",
+    "message": "The requested resource was not found.",
+    "statusCode": 404
+  },
+  {
+    "name": "NotFoundError",
+    "message": "The requested resource was not found.",
+    "statusCode": 404
+  },
+  {
+    "200": {
+      "id": "0c6646739c3a12b1bf3dfd3a",
+      "name": "Empty board"
+    }
+  },
+  {
+    "200": []
+  }
+]

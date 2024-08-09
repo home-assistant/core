@@ -890,6 +890,9 @@ ha-iotawattpy==0.1.2
 # homeassistant.components.philips_js
 ha-philipsjs==3.2.2
 
+# homeassistant.components.trello
+ha-py-trello==0.23.1
+
 # homeassistant.components.habitica
 habitipy==0.3.1
 
