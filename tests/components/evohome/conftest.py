@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonArrayType, JsonObjectType
 
-from .const import ACCESS_TOKEN, REFRESH_TOKEN
+from .const import ACCESS_TOKEN, REFRESH_TOKEN, USERNAME
 
 from tests.common import load_json_array_fixture, load_json_object_fixture
 
@@ -117,7 +117,7 @@ async def block_request(
 def evo_config() -> dict[str, str]:
     "Return a default/minimal configuration."
     return {
-        CONF_USERNAME: "test_user@gmail.com",
+        CONF_USERNAME: USERNAME,
         CONF_PASSWORD: "password",
     }
 
