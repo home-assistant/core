@@ -7,7 +7,7 @@ from importlib.metadata import version
 from typing import Any
 
 from zha.application.const import (
-    ATTR_ATTRIBUTE_NAME,
+    ATTR_ATTRIBUTE,
     ATTR_DEVICE_TYPE,
     ATTR_IEEE,
     ATTR_IN_CLUSTERS,
@@ -158,27 +158,13 @@ def get_endpoint_cluster_attr_data(zha_device: Device) -> dict:
 
 def get_cluster_attr_data(cluster: Cluster) -> dict:
     """Return cluster attribute data."""
-    unsupported_attributes = {}
-    for u_attr in cluster.unsupported_attributes:
-        try:
-            u_attr_def = cluster.find_attribute(u_attr)
-            unsupported_attributes[f"0x{u_attr_def.id:04x}"] = {
-                ATTR_ATTRIBUTE_NAME: u_attr_def.name
-            }
-        except KeyError:
-            if isinstance(u_attr, int):
-                unsupported_attributes[f"0x{u_attr:04x}"] = {}
-            else:
-                unsupported_attributes[u_attr] = {}
-
     return {
         ATTRIBUTES: {
             f"0x{attr_id:04x}": {
-                ATTR_ATTRIBUTE_NAME: attr_def.name,
-                ATTR_VALUE: attr_value,
+                ATTR_ATTRIBUTE: repr(attr_def),
+                ATTR_VALUE: cluster.get(attr_def.name),
             }
             for attr_id, attr_def in cluster.attributes.items()
-            if (attr_value := cluster.get(attr_def.name)) is not None
         },
-        UNSUPPORTED_ATTRIBUTES: unsupported_attributes,
+        UNSUPPORTED_ATTRIBUTES: cluster.unsupported_attributes,
     }
