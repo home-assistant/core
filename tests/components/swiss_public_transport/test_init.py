@@ -1,4 +1,4 @@
-"""Test the swiss_public_transport config flow."""
+"""Test the swiss_public_transport integration."""
 
 from unittest.mock import AsyncMock, patch
 
