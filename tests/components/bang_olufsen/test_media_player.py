@@ -30,6 +30,8 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
+    ATTR_SOUND_MODE,
+    ATTR_SOUND_MODE_LIST,
     MediaPlayerState,
     MediaType,
 )
@@ -40,12 +42,15 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
 from .const import (
+    TEST_ACTIVE_SOUND_MODE_NAME,
+    TEST_ACTIVE_SOUND_MODE_NAME_2,
     TEST_AUDIO_SOURCES,
     TEST_DEEZER_FLOW,
     TEST_DEEZER_INVALID_FLOW,
     TEST_DEEZER_PLAYLIST,
     TEST_DEEZER_TRACK,
     TEST_FALLBACK_SOURCES,
+    TEST_LISTENING_MODE_REF,
     TEST_MEDIA_PLAYER_ENTITY_ID,
     TEST_OVERLAY_INVALID_OFFSET_VOLUME_TTS,
     TEST_OVERLAY_OFFSET_VOLUME_TTS,
@@ -58,6 +63,8 @@ from .const import (
     TEST_RADIO_STATION,
     TEST_SEEK_POSITION_HOME_ASSISTANT_FORMAT,
     TEST_SERIAL_NUMBER,
+    TEST_SOUND_MODE_2,
+    TEST_SOUND_MODES,
     TEST_SOURCES,
     TEST_VIDEO_SOURCES,
     TEST_VOLUME,
@@ -92,12 +99,15 @@ async def test_initialization(
     states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
     assert states.attributes[ATTR_INPUT_SOURCE_LIST] == TEST_SOURCES
     assert states.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
+    assert states.attributes[ATTR_SOUND_MODE_LIST] == TEST_SOUND_MODES
 
     # Check API calls
     mock_mozart_client.get_softwareupdate_status.assert_called_once()
     mock_mozart_client.get_product_state.assert_called_once()
     mock_mozart_client.get_available_sources.assert_called_once()
     mock_mozart_client.get_remote_menu.assert_called_once()
+    mock_mozart_client.get_listening_mode_set.assert_called_once()
+    mock_mozart_client.get_active_listening_mode.assert_called_once()
 
 
 async def test_async_update_sources_audio_only(
@@ -647,6 +657,44 @@ async def test_async_select_source(
 
     assert mock_mozart_client.set_active_source.call_count == audio_source_call
     assert mock_mozart_client.post_remote_trigger.call_count == video_source_call
+
+
+async def test_async_select_sound_mode(
+    hass: HomeAssistant,
+    mock_mozart_client,
+    mock_config_entry,
+) -> None:
+    """Test async_select_sound_mode."""
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert states.attributes[ATTR_SOUND_MODE] == TEST_ACTIVE_SOUND_MODE_NAME
+
+    await hass.services.async_call(
+        "media_player",
+        "select_sound_mode",
+        {
+            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+            ATTR_SOUND_MODE: TEST_ACTIVE_SOUND_MODE_NAME_2,
+        },
+        blocking=True,
+    )
+
+    # Simulate WebSocket notification to change active sound mode
+    async_dispatcher_send(
+        hass,
+        f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.ACTIVE_LISTENING_MODE}",
+        TEST_LISTENING_MODE_REF,
+    )
+
+    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert states.attributes[ATTR_SOUND_MODE] == TEST_ACTIVE_SOUND_MODE_NAME_2
+
+    mock_mozart_client.activate_listening_mode.assert_called_once_with(
+        id=TEST_SOUND_MODE_2
+    )
 
 
 async def test_async_play_media_invalid_type(
