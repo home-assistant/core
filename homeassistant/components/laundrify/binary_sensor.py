@@ -44,7 +44,6 @@ class LaundrifyPowerPlug(
     _attr_device_class = BinarySensorDeviceClass.RUNNING
     _attr_unique_id: str
     _attr_has_entity_name = True
-    _attr_name = None
     _attr_translation_key = "wash_cycle"
 
     def __init__(
