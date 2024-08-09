@@ -158,7 +158,9 @@ class BatterySensor(MotionblindsBLEEntity, SensorEntity):
             state_class=SensorStateClass.MEASUREMENT,
             entity_category=EntityCategory.DIAGNOSTIC,
         )
-        super().__init__(device, entry, entity_description)
+        super().__init__(
+            device, entry, entity_description, unique_id_suffix=entity_description.key
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register device callbacks."""
