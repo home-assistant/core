@@ -427,5 +427,15 @@ class MqttData:
     tags: dict[str, dict[str, MQTTTagScanner]] = field(default_factory=dict)
 
 
+@dataclass(slots=True)
+class MqttComponentConfig:
+    """(component, object_id, node_id, discovery_payload)."""
+
+    component: str
+    object_id: str
+    node_id: str | None
+    discovery_payload: MQTTDiscoveryPayload
+
+
 DATA_MQTT: HassKey[MqttData] = HassKey("mqtt")
 DATA_MQTT_AVAILABLE: HassKey[asyncio.Future[bool]] = HassKey("mqtt_client_available")

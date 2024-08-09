@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -11,6 +13,7 @@ from homeassistant.const import (
     CONF_MODEL,
     CONF_MODEL_ID,
     CONF_NAME,
+    CONF_PLATFORM,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
@@ -25,20 +28,26 @@ from .const import (
     CONF_AVAILABILITY_MODE,
     CONF_AVAILABILITY_TEMPLATE,
     CONF_AVAILABILITY_TOPIC,
+    CONF_COMMAND_TOPIC,
+    CONF_COMPONENTS,
     CONF_CONFIGURATION_URL,
     CONF_CONNECTIONS,
     CONF_DEPRECATED_VIA_HUB,
     CONF_ENABLED_BY_DEFAULT,
+    CONF_ENCODING,
     CONF_HW_VERSION,
     CONF_IDENTIFIERS,
     CONF_JSON_ATTRS_TEMPLATE,
     CONF_JSON_ATTRS_TOPIC,
     CONF_MANUFACTURER,
+    CONF_MIGRATE_DISCOVERY,
     CONF_OBJECT_ID,
     CONF_ORIGIN,
     CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE,
+    CONF_QOS,
     CONF_SERIAL_NUMBER,
+    CONF_STATE_TOPIC,
     CONF_SUGGESTED_AREA,
     CONF_SUPPORT_URL,
     CONF_SW_VERSION,
@@ -46,8 +55,34 @@ from .const import (
     CONF_VIA_DEVICE,
     DEFAULT_PAYLOAD_AVAILABLE,
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
+    SUPPORTED_COMPONENTS,
 )
-from .util import valid_subscribe_topic
+from .util import valid_publish_topic, valid_qos_schema, valid_subscribe_topic
+
+_LOGGER = logging.getLogger(__name__)
+
+# Device discovery options that are also available at entity component level
+SHARED_OPTIONS = [
+    CONF_AVAILABILITY,
+    CONF_AVAILABILITY_MODE,
+    CONF_AVAILABILITY_TEMPLATE,
+    CONF_AVAILABILITY_TOPIC,
+    CONF_COMMAND_TOPIC,
+    CONF_MIGRATE_DISCOVERY,
+    CONF_PAYLOAD_AVAILABLE,
+    CONF_PAYLOAD_NOT_AVAILABLE,
+    CONF_STATE_TOPIC,
+]
+
+MQTT_ORIGIN_INFO_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required(CONF_NAME): cv.string,
+            vol.Optional(CONF_SW_VERSION): cv.string,
+            vol.Optional(CONF_SUPPORT_URL): cv.configuration_url,
+        }
+    ),
+)
 
 MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
     {
@@ -148,5 +183,23 @@ MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
         vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
         vol.Optional(CONF_OBJECT_ID): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_MIGRATE_DISCOVERY): cv.boolean,
+    }
+)
+
+COMPONENT_CONFIG_SCHEMA = vol.Schema(
+    {vol.Required(CONF_PLATFORM): vol.In(SUPPORTED_COMPONENTS)}
+).extend({}, extra=True)
+
+DEVICE_DISCOVERY_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
+    {
+        vol.Required(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+        vol.Required(CONF_COMPONENTS): vol.Schema({str: COMPONENT_CONFIG_SCHEMA}),
+        vol.Required(CONF_ORIGIN): MQTT_ORIGIN_INFO_SCHEMA,
+        vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
+        vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
+        vol.Optional(CONF_QOS): valid_qos_schema,
+        vol.Optional(CONF_ENCODING): cv.string,
+        vol.Optional(CONF_MIGRATE_DISCOVERY): True,
     }
 )

@@ -17,7 +17,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .const import ATTR_DISCOVERY_HASH, CONF_QOS, CONF_TOPIC
+from .const import ATTR_DISCOVERY_HASH, CONF_MIGRATE_DISCOVERY, CONF_QOS, CONF_TOPIC
 from .discovery import MQTTDiscoveryPayload
 from .mixins import (
     MqttDiscoveryDeviceUpdateMixin,
@@ -48,6 +48,7 @@ DISCOVERY_SCHEMA = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
         vol.Required(CONF_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_MIGRATE_DISCOVERY): cv.boolean,
     },
     extra=vol.REMOVE_EXTRA,
 )
