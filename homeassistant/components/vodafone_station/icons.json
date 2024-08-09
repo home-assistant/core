@@ -1,5 +1,10 @@
 {
   "entity": {
+    "button": {
+      "cleanup": {
+        "default": "mdi:broom"
+      }
+    },
     "device_tracker": {
       "device_tracker": {
         "default": "mdi:lan-disconnect",
