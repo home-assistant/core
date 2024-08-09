@@ -49,7 +49,7 @@
     },
     "call_query": {
       "name": "Call query",
-      "description": "Calls a custom Squeezebox JSONRPC API. Result will be stored in 'query_result' attribute of the Squeezebox entity.\n.",
+      "description": "Calls a custom Squeezebox JSONRPC API. Result will be stored in 'query_result' attribute of the Squeezebox entity if no result variable is given.\n.",
       "fields": {
         "command": {
           "name": "Command",
