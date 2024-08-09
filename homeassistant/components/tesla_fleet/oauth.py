@@ -11,14 +11,16 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import AUTHORIZE_URL, CLIENT_ID, DOMAIN, SCOPES, TOKEN_URL
 
-AUTH_SERVER = AuthorizationServer(AUTHORIZE_URL, TOKEN_URL)
 
-
-class TeslaSystemImplementation(AuthImplementation):
+class TeslaSystemImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
     """Tesla Fleet API open source Oauth2 implementation."""
+
+    code_verifier: str
+    code_challenge: str
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize open source Oauth2 implementation."""
@@ -32,9 +34,16 @@ class TeslaSystemImplementation(AuthImplementation):
         super().__init__(
             hass,
             DOMAIN,
-            ClientCredential(CLIENT_ID, "", "Built-in open source client ID"),
-            AUTH_SERVER,
+            CLIENT_ID,
+            "",
+            AUTHORIZE_URL,
+            TOKEN_URL,
         )
+
+    @property
+    def name(self) -> str:
+        """Name of the implementation."""
+        return "Built-in open source client ID"
 
     @property
     def extra_authorize_data(self) -> dict[str, Any]:
@@ -68,7 +77,7 @@ class TeslaUserImplementation(AuthImplementation):
             hass,
             auth_domain,
             credential,
-            AUTH_SERVER,
+            AuthorizationServer(AUTHORIZE_URL, TOKEN_URL),
         )
 
     @property
