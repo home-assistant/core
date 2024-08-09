@@ -7,6 +7,7 @@ import random
 from freezegun import freeze_time
 
 from homeassistant.components.derivative.const import DOMAIN
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import UnitOfPower, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -343,6 +344,31 @@ async def test_suffix(hass: HomeAssistant) -> None:
 
     # Testing a network speed sensor at 1000 bytes/s over 10s  = 10kbytes/s2
     assert round(float(state.state), config["sensor"]["round"]) == 0.0
+
+
+async def test_total_increasing_reset(hass: HomeAssistant) -> None:
+    """Test derivative sensor state with total_increasing sensor input."""
+    # When the input sensor is reset, the derivative sensor should not record a negative change.
+    times = [20, 30, 40]
+    values = [10, 30, 0]
+    config, entity_id = await _setup_sensor(hass, {"unit_time": UnitOfTime.SECONDS})
+
+    base = dt_util.utcnow()
+    with freeze_time(base) as freezer:
+        for time, value in zip(times, values, strict=False):
+            freezer.move_to(base + timedelta(seconds=time))
+            hass.states.async_set(
+                entity_id,
+                value,
+                {ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING},
+                force_update=True,
+            )
+            await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.power")
+    assert state is not None
+
+    assert round(float(state.state), config["sensor"]["round"]) == 2.00
 
 
 async def test_device_id(
