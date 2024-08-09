@@ -45,7 +45,7 @@ TYPE_MAP = {
 
 # ValveStateEnum
 class OperationalStatus(IntEnum):
-    """Currently ongoing operations enumeration for water valve, as defined in the Matter spec."""
+    """Currently ongoing operations enumeration for Matter water valve."""
 
     VALVE_IS_CURRENTLY_CLOSED = 0b00
     VALVE_IS_CURRENTLY_OPEN = 0b01
