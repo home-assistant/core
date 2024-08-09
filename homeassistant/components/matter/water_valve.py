@@ -65,6 +65,7 @@ async def async_setup_entry(
 class MatterValve(MatterEntity, ValveEntity):
     """Representation of a Matter Valve."""
 
+    _feature_map: int | None = None
     entity_description: ValveEntityDescription
 
     @property
