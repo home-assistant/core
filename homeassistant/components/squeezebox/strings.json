@@ -75,5 +75,15 @@
       "name": "Unsync",
       "description": "Removes this player from its sync group."
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "rescan": {
+        "name": "Library rescan"
+      },
+      "needsrestart": {
+        "name": "Needs restart"
+      }
+    }
   }
 }
