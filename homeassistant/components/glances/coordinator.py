@@ -45,13 +45,10 @@ class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except exceptions.GlancesApiError as err:
             raise UpdateFailed from err
         # Update computed values
-        up_duration: timedelta | None = (
-            parse_duration(data["uptime"]) if "uptime" in data else None
-        )
-        uptime: datetime | None = (
-            self.data["computed"]["uptime"] if up_duration and self.data else None
-        )
-        if up_duration:
+        uptime: datetime | None = None
+        up_duration: timedelta | None = None
+        if "uptime" in data and (up_duration := parse_duration(data["uptime"])):
+            uptime = self.data["computed"]["uptime"] if self.data else None
             # Update uptime if previous value is None or previous uptime is bigger than
             # new uptime (i.e. server restarted)
             if uptime is None or self.data["computed"]["uptime_duration"] > up_duration:
