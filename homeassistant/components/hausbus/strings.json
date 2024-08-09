@@ -9,6 +9,9 @@
         "description": "Device discovery timeout. Click Submit to try again."
       }
     },
+    "progress": {
+      "wait_for_device": "Searching for Haus-Bus devices..."
+    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }

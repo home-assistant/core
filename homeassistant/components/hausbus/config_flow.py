@@ -33,6 +33,11 @@ class ConfigFlow(IBusDataListener, config_entries.ConfigFlow, domain=DOMAIN):  #
         self.home_server = HomeServer()
         self.home_server.addBusEventListener(self)
 
+    def remove_bus_event_listeners(self) -> None:
+        """Cleanup after finishing the config flow."""
+        self.home_server.removeBusEventListener(self)
+        self.home_server.removeBusEventListener(self.home_server)
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -78,13 +83,13 @@ class ConfigFlow(IBusDataListener, config_entries.ConfigFlow, domain=DOMAIN):  #
         if user_input is not None:
             return await self.async_step_wait_for_device()
 
-        self._set_confirm_only()
         return self.async_show_form(step_id="search_timeout")
 
     async def async_step_search_complete(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Create a configuration entry for the hausbus devices."""
+        self.remove_bus_event_listeners()
         return self.async_create_entry(title="Haus-Bus", data={})
 
     async def _async_wait_for_device(self) -> None:

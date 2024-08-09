@@ -22,7 +22,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> b
     hass.data.setdefault(DOMAIN, {})
 
     gateway = HausbusGateway(hass, entry)
-    #    hass.data[DOMAIN][entry.entry_id] = gateway
     entry.runtime_data = HausbusConfig(gateway)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
