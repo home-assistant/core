@@ -29,7 +29,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_BASE_PATH, CONF_SERIAL, DOMAIN
+from .const import CONF_BASE_PATH, CONF_PROTO_LEGACY, CONF_SERIAL, DOMAIN, \
+    IPP_PROTO_VERSION_DEFAULT, IPP_PROTO_VERSION_LEGACY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +48,7 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
         tls=data[CONF_SSL],
         verify_ssl=data[CONF_VERIFY_SSL],
         session=session,
+        ipp_version=IPP_PROTO_VERSION_LEGACY if data[CONF_PROTO_LEGACY] else IPP_PROTO_VERSION_DEFAULT,
     )
 
     printer = await ipp.printer()
@@ -56,8 +58,6 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
 
 class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an IPP config flow."""
-
-    VERSION = 1
 
     def __init__(self) -> None:
         """Set up the instance."""
@@ -127,6 +127,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_BASE_PATH: f"/{base_path}",
                 CONF_NAME: name,
                 CONF_UUID: unique_id,
+                CONF_PROTO_LEGACY: False,
             }
         )
 
@@ -215,6 +216,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_BASE_PATH, default="/ipp/print"): str,
                     vol.Required(CONF_SSL, default=False): bool,
                     vol.Required(CONF_VERIFY_SSL, default=False): bool,
+                    vol.Required(CONF_PROTO_LEGACY, default=False): bool,
                 }
             ),
             errors=errors or {},
