@@ -57,7 +57,6 @@ class MatterValve(MatterEntity, ValveEntity):
 
     _feature_map: int | None = None
     entity_description: ValveEntityDescription
-    self._attr_device_class = ValveDeviceClass.WATER
 
     @property
     def is_closed(self) -> bool | None:
@@ -187,7 +186,9 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.VALVE,
         entity_description=ValveEntityDescription(
-            key="MatterValve", translation_key="valve"
+            key="MatterValve",
+            device_class=ValveDeviceClass.ValveDeviceClass.WATER,
+            translation_key="valve"
         ),
         entity_class=MatterValve,
         required_attributes=(
