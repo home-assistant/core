@@ -35,7 +35,7 @@ async def test_generic_datetime_entity(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("datetime.test_my_datetime")
+    state = hass.states.get("datetime.test_mydatetime")
     assert state is not None
     assert state.state == "2024-04-16T12:34:56+00:00"
 
@@ -43,7 +43,7 @@ async def test_generic_datetime_entity(
         DATETIME_DOMAIN,
         SERVICE_SET_VALUE,
         {
-            ATTR_ENTITY_ID: "datetime.test_my_datetime",
+            ATTR_ENTITY_ID: "datetime.test_mydatetime",
             ATTR_DATETIME: "2000-01-01T01:23:45+00:00",
         },
         blocking=True,
@@ -74,6 +74,6 @@ async def test_generic_datetime_missing_state(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("datetime.test_my_datetime")
+    state = hass.states.get("datetime.test_mydatetime")
     assert state is not None
     assert state.state == STATE_UNKNOWN
