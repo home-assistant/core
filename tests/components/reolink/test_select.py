@@ -122,6 +122,7 @@ async def test_chime_select(
     entity_id = f"{Platform.SELECT}.test_chime_visitor_ringtone"
     assert hass.states.is_state(entity_id, "pianokey")
 
+    # Test selecting chime ringtone option
     test_chime.set_tone = AsyncMock()
     await hass.services.async_call(
         SELECT_DOMAIN,
@@ -149,6 +150,7 @@ async def test_chime_select(
             blocking=True,
         )
 
+    # Test unavailable
     test_chime.event_info = {}
     async_fire_time_changed(
         hass, utcnow() + DEVICE_UPDATE_INTERVAL + timedelta(seconds=30)

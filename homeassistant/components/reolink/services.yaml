@@ -16,3 +16,29 @@ ptz_move:
           min: 1
           max: 64
           step: 1
+
+chime_play:
+  target:
+    device:
+      integration: reolink
+      model: "Reolink Chime"
+    entity:
+      integration: reolink
+      domain: select
+  fields:
+    ringtone:
+      required: true
+      selector:
+        select:
+          translation_key: ringtone
+          options:
+            - citybird
+            - originaltune
+            - pianokey
+            - loop
+            - attraction
+            - hophop
+            - goodday
+            - operetta
+            - moonlight
+            - waybackhome

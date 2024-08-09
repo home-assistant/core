@@ -86,6 +86,32 @@
           "description": "PTZ move speed."
         }
       }
+    },
+    "chime_play": {
+      "name": "Chime play",
+      "description": "Play a ringtone on a chime.",
+      "fields": {
+        "ringtone": {
+          "name": "Ringtone",
+          "description": "Ringtone to play."
+        }
+      }
+    }
+  },
+  "selector": {
+    "ringtone": {
+      "options": {
+        "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",
+        "originaltune": "[%key:component::reolink::entity::select::motion_tone::state::originaltune%]",
+        "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
+        "loop": "[%key:component::reolink::entity::select::motion_tone::state::loop%]",
+        "attraction": "[%key:component::reolink::entity::select::motion_tone::state::attraction%]",
+        "hophop": "[%key:component::reolink::entity::select::motion_tone::state::hophop%]",
+        "goodday": "[%key:component::reolink::entity::select::motion_tone::state::goodday%]",
+        "operetta": "[%key:component::reolink::entity::select::motion_tone::state::operetta%]",
+        "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
+        "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
+      }
     }
   },
   "entity": {
