@@ -33,15 +33,6 @@ async def test_device_info() -> None:
     assert device_info.get("via_device") == (DOMAIN, "bridge_id")
 
 
-async def test_missing_device_id() -> None:
-    """Test device_info is None, if device_id is missing."""
-    device = HausbusDevice(
-        "bridge_id", None, "sw_version", "hw_version", EFirmwareId.ESP32
-    )
-    device_info = device.device_info
-    assert device_info is None
-
-
 @pytest.mark.parametrize(
     ("inputs", "expected"),
     [

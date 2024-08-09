@@ -22,26 +22,18 @@ class HausbusDevice:
         firmware_id: EFirmwareId,
     ) -> None:
         """Set up Haus-Bus device."""
-        self._device_id = device_id
+        self.device_id = device_id
         self.manufacturer = "Haus-Bus.de"
         self.model_id = "Controller"
-        self.name = f"Controller {self._device_id}"
+        self.name = f"Controller {self.device_id}"
         self.software_version = sw_version
         self.hardware_version = hw_version
         self.bridge_id = bridge_id
         self.firmware_id = firmware_id
 
     @property
-    def device_id(self) -> str | None:
-        """Return a serial number for this device."""
-        return self._device_id
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
-        if self.device_id is None:
-            return None
-
         return DeviceInfo(
             identifiers={(DOMAIN, self.device_id)},
             manufacturer=self.manufacturer,
@@ -55,4 +47,4 @@ class HausbusDevice:
     def set_type(self, type_id: int) -> None:
         """Set device name and model_id according to device type."""
         self.model_id = HausBusDevice.get_device_type(self.firmware_id, type_id)
-        self.name = f"{self.model_id} {self._device_id}"
+        self.name = f"{self.model_id} {self.device_id}"
