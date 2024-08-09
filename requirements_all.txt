@@ -1392,6 +1392,9 @@ myuplink==0.6.0
 # homeassistant.components.nad
 nad-receiver==0.3.0
 
+# homeassistant.components.sipcall
+nanosip==0.0.7
+
 # homeassistant.components.keenetic_ndms2
 ndms2-client==0.1.2
 

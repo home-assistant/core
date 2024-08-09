@@ -1,0 +1,9 @@
+{
+  "domain": "sipcall",
+  "name": "SIP Call",
+  "codeowners": ["@philipp-fischer"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/sipcall",
+  "iot_class": "local_polling",
+  "requirements": ["nanosip==0.0.7"]
+}
