@@ -485,7 +485,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         try:
             cur_temp = float(state.state)
             if not math.isfinite(cur_temp):
-                raise ValueError(f"Sensor has illegal state {state.state}")
+                raise ValueError(f"Sensor has illegal state {state.state}")  # noqa: TRY301
             self._cur_temp = cur_temp
         except ValueError as ex:
             _LOGGER.error("Unable to update from sensor: %s", ex)

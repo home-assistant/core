@@ -42,7 +42,7 @@ class Tami4ConfigFlow(ConfigFlow, domain=DOMAIN):
                 if m := _PHONE_MATCHER.match(phone):
                     self.phone = f"+972{m.group('number')}"
                 else:
-                    raise InvalidPhoneNumber
+                    raise InvalidPhoneNumber  # noqa: TRY301
                 await self.hass.async_add_executor_job(
                     Tami4EdgeAPI.request_otp, self.phone
                 )

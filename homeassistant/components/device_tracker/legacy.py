@@ -350,7 +350,7 @@ class DeviceTrackerPlatform:
                         discovery_info,
                     )
                 else:
-                    raise HomeAssistantError("Invalid legacy device_tracker platform.")
+                    raise HomeAssistantError("Invalid legacy device_tracker platform.")  # noqa: TRY301
 
                 if scanner is not None:
                     async_setup_scanner_platform(

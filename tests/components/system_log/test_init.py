@@ -36,7 +36,7 @@ async def get_error_log(hass_ws_client):
 
 def _generate_and_log_exception(exception, log):
     try:
-        raise Exception(exception)  # noqa: TRY002
+        raise Exception(exception)  # noqa: TRY002, TRY301
     except Exception:
         _LOGGER.exception(log)
 
@@ -461,7 +461,7 @@ async def test__figure_out_source(hass: HomeAssistant) -> None:
     in a test because the test is not a component.
     """
     try:
-        raise ValueError("test")
+        raise ValueError("test")  # noqa: TRY301
     except ValueError as ex:
         exc_info = (type(ex), ex, ex.__traceback__)
     mock_record = MagicMock(
@@ -486,7 +486,7 @@ async def test__figure_out_source(hass: HomeAssistant) -> None:
 async def test_formatting_exception(hass: HomeAssistant) -> None:
     """Test that exceptions are formatted correctly."""
     try:
-        raise ValueError("test")
+        raise ValueError("test")  # noqa: TRY301
     except ValueError as ex:
         exc_info = (type(ex), ex, ex.__traceback__)
     mock_record = MagicMock(

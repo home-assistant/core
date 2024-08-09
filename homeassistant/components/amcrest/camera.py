@@ -499,7 +499,7 @@ class AmcrestCam(Camera):
                 await getattr(self, f"_async_set_{func}")(value)
                 new_value = await getattr(self, f"_async_get_{func}")()
                 if new_value != value:
-                    raise AmcrestCommandFailed
+                    raise AmcrestCommandFailed  # noqa: TRY301
             except (AmcrestError, AmcrestCommandFailed) as error:
                 if tries == 1:
                     log_update_error(_LOGGER, action, self.name, description, error)
