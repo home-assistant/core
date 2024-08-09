@@ -5,7 +5,11 @@ from unittest.mock import AsyncMock
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.seventeentrack import DOMAIN, SERVICE_GET_PACKAGES
+from homeassistant.components.seventeentrack import DOMAIN
+from homeassistant.components.seventeentrack.const import (
+    SERVICE_ARCHIVE_PACKAGE,
+    SERVICE_GET_PACKAGES,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -115,6 +119,29 @@ async def test_service_called_with_non_17track_device(
             blocking=True,
             return_response=True,
         )
+
+
+async def test_archive_package(
+    hass: HomeAssistant,
+    mock_seventeentrack: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Ensure service returns all packages when non provided."""
+    await _mock_packages(mock_seventeentrack)
+    await init_integration(hass, mock_config_entry)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ARCHIVE_PACKAGE,
+        {
+            "config_entry_id": mock_config_entry.entry_id,
+            "package_tracking_number": "123",
+        },
+        blocking=True,
+    )
+    mock_seventeentrack.return_value.profile.archive_package.assert_called_once_with(
+        "123"
+    )
 
 
 async def _mock_packages(mock_seventeentrack):

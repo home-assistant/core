@@ -28,6 +28,7 @@
     }
   },
   "services": {
-    "get_packages": "mdi:package"
+    "get_packages": "mdi:package",
+    "archive_package": "mdi:archive"
   }
 }
