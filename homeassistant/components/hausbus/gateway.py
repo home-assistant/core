@@ -14,6 +14,7 @@ from pyhausbus.de.hausbus.homeassistant.proxy.controller.data.ModuleId import Mo
 from pyhausbus.de.hausbus.homeassistant.proxy.controller.data.RemoteObjects import (
     RemoteObjects,
 )
+from pyhausbus.HausBusUtils import HOMESERVER_DEVICE_ID
 from pyhausbus.HomeServer import HomeServer
 from pyhausbus.IBusDataListener import IBusDataListener
 from pyhausbus.ObjectId import ObjectId
@@ -53,30 +54,29 @@ class HausbusGateway(IBusDataListener, EventHandler):  # type: ignore[misc]
 
     def add_device(self, device_id: str, module: ModuleId) -> None:
         """Add a new Haus-Bus Device to this gateway's device list."""
-        device = HausbusDevice(
-            device_id,
-            module.getFirmwareId().getTemplateId()
-            + " "
-            + str(module.getMajorRelease())
-            + "."
-            + str(module.getMinorRelease()),
-            module.getName(),
-            module.getFirmwareId(),
-        )
         if device_id not in self.devices:
-            self.devices[device_id] = device
+            self.devices[device_id] = HausbusDevice(
+                device_id,
+                module.getFirmwareId().getTemplateId()
+                + " "
+                + str(module.getMajorRelease())
+                + "."
+                + str(module.getMinorRelease()),
+                module.getName(),
+                module.getFirmwareId(),
+            )
         if device_id not in self.channels:
             self.channels[device_id] = {}
 
     def get_device(self, object_id: ObjectId) -> HausbusDevice | None:
         """Get the device referenced by ObjectId from the devices list."""
-        return self.devices.get(str(object_id.getDeviceId()), None)
+        return self.devices.get(str(object_id.getDeviceId()))
 
     def get_channel_list(
         self, object_id: ObjectId
     ) -> dict[tuple[str, str], HausbusEntity] | None:
         """Get the channel list of a device referenced by ObjectId."""
-        return self.channels.get(str(object_id.getDeviceId()), None)
+        return self.channels.get(str(object_id.getDeviceId()))
 
     def get_channel_id(self, object_id: ObjectId) -> tuple[str, str]:
         """Get the channel identifier from an ObjectId."""
@@ -87,7 +87,7 @@ class HausbusGateway(IBusDataListener, EventHandler):  # type: ignore[misc]
         channels = self.get_channel_list(object_id)
         if channels is not None:
             channel_id = self.get_channel_id(object_id)
-            return channels.get(channel_id, None)
+            return channels.get(channel_id)
         return None
 
     def create_light_entity(
@@ -115,7 +115,7 @@ class HausbusGateway(IBusDataListener, EventHandler):  # type: ignore[misc]
         return None
 
     def add_light_channel(self, instance: ABusFeature, object_id: ObjectId) -> None:
-        """Add a new Haus-Bus Light Channel to this gateways channel list."""
+        """Add a new Haus-Bus Light Channel to this gateway's channel list."""
 
         device = self.get_device(object_id)
         if device is not None:
@@ -144,7 +144,7 @@ class HausbusGateway(IBusDataListener, EventHandler):  # type: ignore[misc]
         object_id = ObjectId(busDataMessage.getSenderObjectId())
         data = busDataMessage.getData()
 
-        if object_id.getDeviceId() == 9998:
+        if object_id.getDeviceId() == HOMESERVER_DEVICE_ID:
             # ignore messages sent from this module
             return
 

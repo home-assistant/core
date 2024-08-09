@@ -8,6 +8,7 @@ from typing import Any
 
 from pyhausbus.BusDataMessage import BusDataMessage
 from pyhausbus.de.hausbus.homeassistant.proxy.controller.data.ModuleId import ModuleId
+from pyhausbus.HausBusUtils import HOMESERVER_DEVICE_ID
 from pyhausbus.HomeServer import HomeServer
 from pyhausbus.IBusDataListener import IBusDataListener
 from pyhausbus.ObjectId import ObjectId
@@ -109,7 +110,7 @@ class ConfigFlow(IBusDataListener, config_entries.ConfigFlow, domain=DOMAIN):  #
         object_id = ObjectId(busDataMessage.getSenderObjectId())
         data = busDataMessage.getData()
 
-        if object_id.getDeviceId() == 9998:
+        if object_id.getDeviceId() == HOMESERVER_DEVICE_ID:
             # ignore messages sent from this module
             return
 
