@@ -18,6 +18,7 @@ from .const import (
     ATTR_LATEST_VIDEO,
     ATTR_PUBLISHED_AT,
     ATTR_SUBSCRIBER_COUNT,
+    ATTR_TOTAL_VIEWS,
     ATTR_THUMBNAIL,
     ATTR_TITLE,
     ATTR_VIDEO_ID,
@@ -58,6 +59,15 @@ SENSOR_TYPES = [
         entity_picture_fn=lambda channel: channel[ATTR_ICON],
         attributes_fn=None,
     ),
+    YouTubeSensorEntityDescription(
+        key="views",
+        translation_key="views",
+        native_unit_of_measurement="views",
+        available_fn=lambda _: True,
+        value_fn=lambda channel: channel[ATTR_TOTAL_VIEWS],
+        entity_picture_fn=lambda channel: channel[ATTR_ICON],
+        attributes_fn=None,
+    )
 ]
 
 
