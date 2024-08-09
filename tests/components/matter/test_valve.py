@@ -1,17 +1,10 @@
 """Test Matter valve."""
 
-from math import floor
 from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
 import pytest
 
-from homeassistant.components.valve import (
-    STATE_CLOSED,
-    STATE_OPEN,
-    STATE_OPENING,
-    ValveEntityFeature,
-)
 from homeassistant.core import HomeAssistant
 
 from .common import (
@@ -19,7 +12,7 @@ from .common import (
     setup_integration_with_node_fixture,
     trigger_subscription_callback,
 )
-
+from .common import setup_integration_with_node_fixture
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
