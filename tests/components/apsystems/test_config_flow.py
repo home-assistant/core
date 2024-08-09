@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from homeassistant.components.apsystems.const import DOMAIN
+from homeassistant.components.apsystems.const import DOMAIN, MAX_OUTPUT
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -25,6 +25,7 @@ async def test_form_create_success(
     assert result["result"].unique_id == "MY_SERIAL_NUMBER"
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result["data"].get(CONF_IP_ADDRESS) == "127.0.0.1"
+    assert result["data"].get(MAX_OUTPUT) == 1000
 
 
 async def test_form_create_success_custom_port(
