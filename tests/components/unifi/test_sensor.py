@@ -1777,3 +1777,43 @@ async def test_device_with_no_temperature(
     )
 
     assert temperature_entity is None
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "board_rev": 2,
+                "device_id": "mock-id",
+                "ip": "10.0.1.1",
+                "mac": "10:00:00:00:01:01",
+                "last_seen": 1562600145,
+                "model": "US16P150",
+                "name": "mock-name",
+                "port_overrides": [],
+                "state": 1,
+                "type": "usw",
+                "version": "4.0.42.10433",
+                "temperatures": [
+                    {"name": "MEM", "type": "mem", "value": 66.0},
+                ],
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_device_with_no_matching_temperatures(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Verify that device temperature sensors is not created if there is no matching data."""
+
+    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
+
+    temperature_entity = entity_registry.async_get(
+        "sensor.device_device_cpu_temperature"
+    )
+
+    assert temperature_entity is None
