@@ -17,16 +17,28 @@ from zwave_js_server.const.command_class.lock import (
     OperationType,
 )
 from zwave_js_server.exceptions import BaseZwaveJSServerError
-from zwave_js_server.util.lock import clear_usercode, set_configuration, set_usercode
+from zwave_js_server.util.lock import (
+    clear_usercode,
+    get_usercode,
+    get_usercodes,
+    set_configuration,
+    set_usercode,
+)
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.json import JsonValueType
 
 from .const import (
     ATTR_AUTO_RELOCK_TIME,
@@ -39,6 +51,8 @@ from .const import (
     DOMAIN,
     LOGGER,
     SERVICE_CLEAR_LOCK_USERCODE,
+    SERVICE_GET_LOCK_USERCODE,
+    SERVICE_GET_LOCK_USERCODES,
     SERVICE_SET_LOCK_CONFIGURATION,
     SERVICE_SET_LOCK_USERCODE,
 )
@@ -85,6 +99,22 @@ async def async_setup_entry(
     )
 
     platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_GET_LOCK_USERCODE,
+        {
+            vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
+        },
+        "async_get_lock_usercode",
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_GET_LOCK_USERCODES,
+        {},
+        "async_get_lock_usercodes",
+        supports_response=SupportsResponse.ONLY,
+    )
 
     platform.async_register_entity_service(
         SERVICE_SET_LOCK_USERCODE,
@@ -160,6 +190,42 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         await self._set_lock_state(STATE_UNLOCKED)
+
+    async def async_get_lock_usercode(self, code_slot: int) -> ServiceResponse:
+        """Get the usercode at index X on the lock."""
+        try:
+            code_slot_obj = get_usercode(self.info.node, code_slot)
+        except BaseZwaveJSServerError as err:
+            raise HomeAssistantError(
+                f"Unable to get usercode for lock {self.entity_id} code_slot "
+                f"{code_slot}: {err}"
+            ) from err
+        LOGGER.debug(
+            "User code at slot %s on lock %s retrieved", code_slot, self.entity_id
+        )
+        usercode: str | None = code_slot_obj.get(ATTR_USERCODE)  # type: ignore[assignment]
+        return {"usercode": usercode}
+
+    async def async_get_lock_usercodes(self) -> ServiceResponse:
+        """Get a dictionary of code slots to usercodes for the lock.
+
+        Code slots without usercodes are ignored.
+        """
+        try:
+            code_slots = get_usercodes(self.info.node)
+        except BaseZwaveJSServerError as err:
+            raise HomeAssistantError(
+                f"Unable to get usercodes for lock {self.entity_id}: {err}"
+            ) from err
+        LOGGER.debug("User codes for lock %s retrieved", self.entity_id)
+        usercodes: dict[str, JsonValueType] = {
+            str(code_slot.get(ATTR_CODE_SLOT)): code_slot.get(ATTR_USERCODE)  # type: ignore[misc]
+            for code_slot in code_slots
+            if ATTR_CODE_SLOT in code_slot
+            and ATTR_USERCODE in code_slot
+            and code_slot.get(ATTR_USERCODE)
+        }
+        return {"usercodes": usercodes}
 
     async def async_set_lock_usercode(self, code_slot: int, usercode: str) -> None:
         """Set the usercode to index X on the lock."""

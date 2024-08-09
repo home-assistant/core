@@ -59,6 +59,8 @@
   "services": {
     "bulk_set_partial_config_parameters": "mdi:cogs",
     "clear_lock_usercode": "mdi:eraser",
+    "get_lock_usercode": "mdi:lock-percent-outline",
+    "get_lock_usercodes": "mdi:lock-percent",
     "invoke_cc_api": "mdi:api",
     "multicast_set_value": "mdi:list-box",
     "ping": "mdi:crosshairs-gps",

@@ -99,6 +99,8 @@ ATTR_PARTIAL_DICT_MATCH = "partial_dict_match"
 # service constants
 SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS = "bulk_set_partial_config_parameters"
 SERVICE_CLEAR_LOCK_USERCODE = "clear_lock_usercode"
+SERVICE_GET_LOCK_USERCODE = "get_lock_usercode"
+SERVICE_GET_LOCK_USERCODES = "get_lock_usercodes"
 SERVICE_INVOKE_CC_API = "invoke_cc_api"
 SERVICE_MULTICAST_SET_VALUE = "multicast_set_value"
 SERVICE_PING = "ping"

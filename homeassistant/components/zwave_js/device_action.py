@@ -44,6 +44,8 @@ from .const import (
     ATTR_WAIT_FOR_RESULT,
     DOMAIN,
     SERVICE_CLEAR_LOCK_USERCODE,
+    SERVICE_GET_LOCK_USERCODE,
+    SERVICE_GET_LOCK_USERCODES,
     SERVICE_PING,
     SERVICE_REFRESH_VALUE,
     SERVICE_RESET_METER,
@@ -60,6 +62,8 @@ from .helpers import async_get_node_from_device_id, get_value_state_schema
 
 ACTION_TYPES = {
     SERVICE_CLEAR_LOCK_USERCODE,
+    SERVICE_GET_LOCK_USERCODE,
+    SERVICE_GET_LOCK_USERCODES,
     SERVICE_PING,
     SERVICE_REFRESH_VALUE,
     SERVICE_RESET_METER,
@@ -73,6 +77,21 @@ CLEAR_LOCK_USERCODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
         vol.Required(CONF_TYPE): SERVICE_CLEAR_LOCK_USERCODE,
         vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
+    }
+)
+
+GET_LOCK_USERCODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
+    {
+        vol.Required(CONF_TYPE): SERVICE_GET_LOCK_USERCODE,
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
+    }
+)
+
+GET_LOCK_USERCODES_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
+    {
+        vol.Required(CONF_TYPE): SERVICE_GET_LOCK_USERCODES,
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
     }
 )
 
@@ -133,6 +152,8 @@ SET_VALUE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 
 _ACTION_SCHEMA = vol.Any(
     CLEAR_LOCK_USERCODE_SCHEMA,
+    GET_LOCK_USERCODE_SCHEMA,
+    GET_LOCK_USERCODES_SCHEMA,
     PING_SCHEMA,
     REFRESH_VALUE_SCHEMA,
     RESET_METER_SCHEMA,
@@ -205,6 +226,8 @@ async def async_get_actions(
         if entry.domain == LOCK_DOMAIN:
             actions.extend(
                 [
+                    {**entity_action, CONF_TYPE: SERVICE_GET_LOCK_USERCODE},
+                    {**entity_action, CONF_TYPE: SERVICE_GET_LOCK_USERCODES},
                     {**entity_action, CONF_TYPE: SERVICE_SET_LOCK_USERCODE},
                     {**entity_action, CONF_TYPE: SERVICE_CLEAR_LOCK_USERCODE},
                 ]
@@ -272,6 +295,8 @@ async def async_call_action_from_config(
     # Entity services (including refresh value which is a fake entity service) expect
     # just an entity ID
     if action_type in (
+        SERVICE_GET_LOCK_USERCODE,
+        SERVICE_GET_LOCK_USERCODES,
         SERVICE_REFRESH_VALUE,
         SERVICE_SET_LOCK_USERCODE,
         SERVICE_CLEAR_LOCK_USERCODE,
@@ -292,6 +317,15 @@ async def async_get_action_capabilities(
 
     # Add additional fields to the automation action UI
     if action_type == SERVICE_CLEAR_LOCK_USERCODE:
+        return {
+            "extra_fields": vol.Schema(
+                {
+                    vol.Required(ATTR_CODE_SLOT): cv.string,
+                }
+            )
+        }
+
+    if action_type == SERVICE_GET_LOCK_USERCODE:
         return {
             "extra_fields": vol.Schema(
                 {
