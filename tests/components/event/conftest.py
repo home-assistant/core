@@ -26,7 +26,9 @@ class MockEventEntity(MockEntity, EventEntity):
 
 
 @pytest.fixture
-async def mock_event_platform(hass: HomeAssistant) -> None:
+async def mock_event_platform(
+    hass: HomeAssistant, mock_event_entities: list[MockEventEntity]
+) -> None:
     """Mock the event entity platform."""
 
     async def async_setup_platform(
@@ -36,18 +38,22 @@ async def mock_event_platform(hass: HomeAssistant) -> None:
         discovery_info: DiscoveryInfoType | None = None,
     ) -> None:
         """Set up test event platform."""
-        async_add_entities(
-            [
-                MockEventEntity(
-                    name="doorbell",
-                    unique_id="unique_doorbell",
-                    event_types=["short_press", "long_press"],
-                ),
-            ]
-        )
+        async_add_entities(mock_event_entities)
 
     mock_platform(
         hass,
         f"{TEST_DOMAIN}.{DOMAIN}",
         MockPlatform(async_setup_platform=async_setup_platform),
     )
+
+
+@pytest.fixture
+def mock_event_entities() -> list[MockEventEntity]:
+    """Return mock binary sensors."""
+    return [
+        MockEventEntity(
+            name="doorbell",
+            unique_id="unique_doorbell",
+            event_types=["short_press", "long_press"],
+        ),
+    ]
