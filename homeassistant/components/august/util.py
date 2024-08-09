@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from functools import partial
-import socket
 
 import aiohttp
 from yalexs.activity import ACTION_DOORBELL_CALL_MISSED, Activity, ActivityType
@@ -26,14 +25,7 @@ def async_create_august_clientsession(hass: HomeAssistant) -> aiohttp.ClientSess
     # Create an aiohttp session instead of using the default one since the
     # default one is likely to trigger august's WAF if another integration
     # is also using Cloudflare
-    #
-    # The family is set to AF_INET because IPv6 keeps coming up as an issue
-    # see https://github.com/home-assistant/core/issues/97146
-    #
-    # When https://github.com/aio-libs/aiohttp/issues/4451 is implemented
-    # we can allow IPv6 again
-    #
-    return aiohttp_client.async_create_clientsession(hass, family=socket.AF_INET)
+    return aiohttp_client.async_create_clientsession(hass)
 
 
 def retrieve_time_based_activity(
