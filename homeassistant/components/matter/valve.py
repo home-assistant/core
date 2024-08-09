@@ -57,6 +57,7 @@ class MatterValve(MatterEntity, ValveEntity):
 
     _feature_map: int | None = None
     entity_description: ValveEntityDescription
+    self._attr_device_class = ValveDeviceClass.WATER
 
     @property
     def is_closed(self) -> bool | None:
@@ -151,7 +152,6 @@ class MatterValve(MatterEntity, ValveEntity):
                 self.current_valve_position,
             )
 
-        self._attr_device_class = ValveDeviceClass.WATER
         commands = self.get_matter_attribute_value(
             clusters.ValveConfigurationAndControl.Attributes.AcceptedCommandList
         )
