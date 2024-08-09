@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
 from typing import Any
 
@@ -129,11 +130,15 @@ def _discovery(config_info):
     else:
         _LOGGER.debug("Config Zones")
         zones = None
-        for recv in rxv.find():
-            if recv.ctrl_url == config_info.ctrl_url:
-                _LOGGER.debug("Config Zones Matched %s", config_info.ctrl_url)
-                zones = recv.zone_controllers()
-                break
+
+        # Fix for upstream issues in rxv.find() with some hardware.
+        with contextlib.suppress(AttributeError):
+            for recv in rxv.find():
+                if recv.ctrl_url == config_info.ctrl_url:
+                    _LOGGER.debug("Config Zones Matched %s", config_info.ctrl_url)
+                    zones = recv.zone_controllers()
+                    break
+
         if not zones:
             _LOGGER.debug("Config Zones Fallback")
             zones = rxv.RXV(config_info.ctrl_url, config_info.name).zone_controllers()
@@ -233,19 +238,6 @@ class YamahaDeviceZone(MediaPlayerEntity):
             # the default name of the integration may not be changed
             # to avoid a breaking change.
             self._attr_unique_id = f"{self.zctrl.serial_number}_{self._zone}"
-            _LOGGER.debug(
-                "Receiver zone: %s zone %s uid %s",
-                self._name,
-                self._zone,
-                self._attr_unique_id,
-            )
-        else:
-            _LOGGER.info(
-                "Receiver zone: %s zone %s no uid %s",
-                self._name,
-                self._zone,
-                self._attr_unique_id,
-            )
 
     def update(self) -> None:
         """Get the latest details from the device."""

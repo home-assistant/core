@@ -48,7 +48,12 @@ from homeassistant.components.gree.climate import (
     HVAC_MODES_REVERSE,
     GreeClimateEntity,
 )
-from homeassistant.components.gree.const import FAN_MEDIUM_HIGH, FAN_MEDIUM_LOW
+from homeassistant.components.gree.const import (
+    DISCOVERY_SCAN_INTERVAL,
+    FAN_MEDIUM_HIGH,
+    FAN_MEDIUM_LOW,
+    UPDATE_INTERVAL,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -61,19 +66,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-import homeassistant.util.dt as dt_util
 
 from .common import async_setup_gree, build_device_mock
 
 from tests.common import async_fire_time_changed
 
 ENTITY_ID = f"{DOMAIN}.fake_device_1"
-
-
-@pytest.fixture
-def mock_now():
-    """Fixture for dtutil.now."""
-    return dt_util.utcnow()
 
 
 async def test_discovery_called_once(hass: HomeAssistant, discovery, device) -> None:
@@ -104,7 +102,7 @@ async def test_discovery_setup(hass: HomeAssistant, discovery, device) -> None:
 
 
 async def test_discovery_setup_connection_error(
-    hass: HomeAssistant, discovery, device, mock_now
+    hass: HomeAssistant, discovery, device
 ) -> None:
     """Test gree integration is setup."""
     MockDevice1 = build_device_mock(
@@ -126,7 +124,7 @@ async def test_discovery_setup_connection_error(
 
 
 async def test_discovery_after_setup(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device, mock_now
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device
 ) -> None:
     """Test gree devices don't change after multiple discoveries."""
     MockDevice1 = build_device_mock(
@@ -142,8 +140,7 @@ async def test_discovery_after_setup(
     discovery.return_value.mock_devices = [MockDevice1, MockDevice2]
     device.side_effect = [MockDevice1, MockDevice2]
 
-    await async_setup_gree(hass)
-    await hass.async_block_till_done()
+    await async_setup_gree(hass)  # Update 1
 
     assert discovery.return_value.scan_count == 1
     assert len(hass.states.async_all(DOMAIN)) == 2
@@ -152,9 +149,8 @@ async def test_discovery_after_setup(
     discovery.return_value.mock_devices = [MockDevice1, MockDevice2]
     device.side_effect = [MockDevice1, MockDevice2]
 
-    next_update = mock_now + timedelta(minutes=6)
-    freezer.move_to(next_update)
-    async_fire_time_changed(hass, next_update)
+    freezer.tick(timedelta(seconds=DISCOVERY_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert discovery.return_value.scan_count == 2
@@ -162,7 +158,7 @@ async def test_discovery_after_setup(
 
 
 async def test_discovery_add_device_after_setup(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device, mock_now
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device
 ) -> None:
     """Test gree devices can be added after initial setup."""
     MockDevice1 = build_device_mock(
@@ -178,6 +174,8 @@ async def test_discovery_add_device_after_setup(
     discovery.return_value.mock_devices = [MockDevice1]
     device.side_effect = [MockDevice1]
 
+    await async_setup_gree(hass)  # Update 1
+
     await async_setup_gree(hass)
     await hass.async_block_till_done()
 
@@ -188,9 +186,8 @@ async def test_discovery_add_device_after_setup(
     discovery.return_value.mock_devices = [MockDevice2]
     device.side_effect = [MockDevice2]
 
-    next_update = mock_now + timedelta(minutes=6)
-    freezer.move_to(next_update)
-    async_fire_time_changed(hass, next_update)
+    freezer.tick(timedelta(seconds=DISCOVERY_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert discovery.return_value.scan_count == 2
@@ -198,7 +195,7 @@ async def test_discovery_add_device_after_setup(
 
 
 async def test_discovery_device_bind_after_setup(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device, mock_now
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device
 ) -> None:
     """Test gree devices can be added after a late device bind."""
     MockDevice1 = build_device_mock(
@@ -210,8 +207,7 @@ async def test_discovery_device_bind_after_setup(
     discovery.return_value.mock_devices = [MockDevice1]
     device.return_value = MockDevice1
 
-    await async_setup_gree(hass)
-    await hass.async_block_till_done()
+    await async_setup_gree(hass)  # Update 1
 
     assert len(hass.states.async_all(DOMAIN)) == 1
     state = hass.states.get(ENTITY_ID)
@@ -222,9 +218,8 @@ async def test_discovery_device_bind_after_setup(
     MockDevice1.bind.side_effect = None
     MockDevice1.update_state.side_effect = None
 
-    next_update = mock_now + timedelta(minutes=5)
-    freezer.move_to(next_update)
-    async_fire_time_changed(hass, next_update)
+    freezer.tick(timedelta(seconds=DISCOVERY_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -232,7 +227,7 @@ async def test_discovery_device_bind_after_setup(
 
 
 async def test_update_connection_failure(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, device, mock_now
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device
 ) -> None:
     """Testing update hvac connection failure exception."""
     device().update_state.side_effect = [
@@ -241,36 +236,32 @@ async def test_update_connection_failure(
         DeviceTimeoutError,
     ]
 
-    await async_setup_gree(hass)
+    await async_setup_gree(hass)  # Update 1
 
-    next_update = mock_now + timedelta(minutes=5)
-    freezer.move_to(next_update)
-    async_fire_time_changed(hass, next_update)
+    async def run_update():
+        freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
+        async_fire_time_changed(hass)
+
     await hass.async_block_till_done()
 
-    # First update to make the device available
+    # Update 2
+    await run_update()
     state = hass.states.get(ENTITY_ID)
     assert state.name == "fake-device-1"
     assert state.state != STATE_UNAVAILABLE
 
-    next_update = mock_now + timedelta(minutes=10)
-    freezer.move_to(next_update)
-    async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
+    # Update 3
+    await run_update()
 
-    next_update = mock_now + timedelta(minutes=15)
-    freezer.move_to(next_update)
-    async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
-
-    # Then two more update failures to make the device unavailable
+    # Update 4
+    await run_update()
     state = hass.states.get(ENTITY_ID)
     assert state.name == "fake-device-1"
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_update_connection_failure_recovery(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device, mock_now
+async def test_update_connection_send_failure_recovery(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device
 ) -> None:
     """Testing update hvac connection failure recovery."""
     device().update_state.side_effect = [
@@ -279,31 +270,27 @@ async def test_update_connection_failure_recovery(
         DEFAULT_MOCK,
     ]
 
-    await async_setup_gree(hass)
+    await async_setup_gree(hass)  # Update 1
 
-    # First update becomes unavailable
-    next_update = mock_now + timedelta(minutes=5)
-    freezer.move_to(next_update)
-    async_fire_time_changed(hass, next_update)
+    async def run_update():
+        freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
+        async_fire_time_changed(hass)
+
     await hass.async_block_till_done()
 
+    await run_update()  # Update 2
     state = hass.states.get(ENTITY_ID)
     assert state.name == "fake-device-1"
     assert state.state == STATE_UNAVAILABLE
 
-    # Second update restores the connection
-    next_update = mock_now + timedelta(minutes=10)
-    freezer.move_to(next_update)
-    async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
-
+    await run_update()  # Update 3
     state = hass.states.get(ENTITY_ID)
     assert state.name == "fake-device-1"
     assert state.state != STATE_UNAVAILABLE
 
 
 async def test_update_unhandled_exception(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device, mock_now
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device
 ) -> None:
     """Testing update hvac connection unhandled response exception."""
     device().update_state.side_effect = [DEFAULT_MOCK, Exception]
@@ -314,9 +301,8 @@ async def test_update_unhandled_exception(
     assert state.name == "fake-device-1"
     assert state.state != STATE_UNAVAILABLE
 
-    next_update = mock_now + timedelta(minutes=10)
-    freezer.move_to(next_update)
-    async_fire_time_changed(hass, next_update)
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -325,15 +311,13 @@ async def test_update_unhandled_exception(
 
 
 async def test_send_command_device_timeout(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device, mock_now
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device
 ) -> None:
     """Test for sending power on command to the device with a device timeout."""
     await async_setup_gree(hass)
 
-    # First update to make the device available
-    next_update = mock_now + timedelta(minutes=5)
-    freezer.move_to(next_update)
-    async_fire_time_changed(hass, next_update)
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -355,7 +339,40 @@ async def test_send_command_device_timeout(
     assert state.state != STATE_UNAVAILABLE
 
 
-async def test_send_power_on(hass: HomeAssistant, discovery, device, mock_now) -> None:
+async def test_unresponsive_device(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device
+) -> None:
+    """Test for unresponsive device."""
+    await async_setup_gree(hass)
+
+    async def run_update():
+        freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    # Update 2
+    await run_update()
+    state = hass.states.get(ENTITY_ID)
+    assert state.name == "fake-device-1"
+    assert state.state != STATE_UNAVAILABLE
+
+    # Update 3, 4, 5
+    await run_update()
+    await run_update()
+    await run_update()
+    state = hass.states.get(ENTITY_ID)
+    assert state.name == "fake-device-1"
+    assert state.state == STATE_UNAVAILABLE
+
+    # Receiving update from device will reset the state to available again
+    device().device_state_updated("test")
+    await run_update()
+    state = hass.states.get(ENTITY_ID)
+    assert state.name == "fake-device-1"
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_send_power_on(hass: HomeAssistant, discovery, device) -> None:
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
 
@@ -372,7 +389,7 @@ async def test_send_power_on(hass: HomeAssistant, discovery, device, mock_now) -
 
 
 async def test_send_power_off_device_timeout(
-    hass: HomeAssistant, discovery, device, mock_now
+    hass: HomeAssistant, discovery, device
 ) -> None:
     """Test for sending power off command to the device with a device timeout."""
     device().push_state_update.side_effect = DeviceTimeoutError
@@ -543,9 +560,7 @@ async def test_update_target_temperature(
 @pytest.mark.parametrize(
     "preset", [PRESET_AWAY, PRESET_ECO, PRESET_SLEEP, PRESET_BOOST, PRESET_NONE]
 )
-async def test_send_preset_mode(
-    hass: HomeAssistant, discovery, device, mock_now, preset
-) -> None:
+async def test_send_preset_mode(hass: HomeAssistant, discovery, device, preset) -> None:
     """Test for sending preset mode command to the device."""
     await async_setup_gree(hass)
 
@@ -561,9 +576,7 @@ async def test_send_preset_mode(
     assert state.attributes.get(ATTR_PRESET_MODE) == preset
 
 
-async def test_send_invalid_preset_mode(
-    hass: HomeAssistant, discovery, device, mock_now
-) -> None:
+async def test_send_invalid_preset_mode(hass: HomeAssistant, discovery, device) -> None:
     """Test for sending preset mode command to the device."""
     await async_setup_gree(hass)
 
@@ -584,7 +597,7 @@ async def test_send_invalid_preset_mode(
     "preset", [PRESET_AWAY, PRESET_ECO, PRESET_SLEEP, PRESET_BOOST, PRESET_NONE]
 )
 async def test_send_preset_mode_device_timeout(
-    hass: HomeAssistant, discovery, device, mock_now, preset
+    hass: HomeAssistant, discovery, device, preset
 ) -> None:
     """Test for sending preset mode command to the device with a device timeout."""
     device().push_state_update.side_effect = DeviceTimeoutError
@@ -607,7 +620,7 @@ async def test_send_preset_mode_device_timeout(
     "preset", [PRESET_AWAY, PRESET_ECO, PRESET_SLEEP, PRESET_BOOST, PRESET_NONE]
 )
 async def test_update_preset_mode(
-    hass: HomeAssistant, discovery, device, mock_now, preset
+    hass: HomeAssistant, discovery, device, preset
 ) -> None:
     """Test for updating preset mode from the device."""
     device().steady_heat = preset == PRESET_AWAY
@@ -634,7 +647,7 @@ async def test_update_preset_mode(
     ],
 )
 async def test_send_hvac_mode(
-    hass: HomeAssistant, discovery, device, mock_now, hvac_mode
+    hass: HomeAssistant, discovery, device, hvac_mode
 ) -> None:
     """Test for sending hvac mode command to the device."""
     await async_setup_gree(hass)
@@ -656,7 +669,7 @@ async def test_send_hvac_mode(
     [HVACMode.AUTO, HVACMode.COOL, HVACMode.DRY, HVACMode.FAN_ONLY, HVACMode.HEAT],
 )
 async def test_send_hvac_mode_device_timeout(
-    hass: HomeAssistant, discovery, device, mock_now, hvac_mode
+    hass: HomeAssistant, discovery, device, hvac_mode
 ) -> None:
     """Test for sending hvac mode command to the device with a device timeout."""
     device().push_state_update.side_effect = DeviceTimeoutError
@@ -687,7 +700,7 @@ async def test_send_hvac_mode_device_timeout(
     ],
 )
 async def test_update_hvac_mode(
-    hass: HomeAssistant, discovery, device, mock_now, hvac_mode
+    hass: HomeAssistant, discovery, device, hvac_mode
 ) -> None:
     """Test for updating hvac mode from the device."""
     device().power = hvac_mode != HVACMode.OFF
@@ -704,9 +717,7 @@ async def test_update_hvac_mode(
     "fan_mode",
     [FAN_AUTO, FAN_LOW, FAN_MEDIUM_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH],
 )
-async def test_send_fan_mode(
-    hass: HomeAssistant, discovery, device, mock_now, fan_mode
-) -> None:
+async def test_send_fan_mode(hass: HomeAssistant, discovery, device, fan_mode) -> None:
     """Test for sending fan mode command to the device."""
     await async_setup_gree(hass)
 
@@ -722,9 +733,7 @@ async def test_send_fan_mode(
     assert state.attributes.get(ATTR_FAN_MODE) == fan_mode
 
 
-async def test_send_invalid_fan_mode(
-    hass: HomeAssistant, discovery, device, mock_now
-) -> None:
+async def test_send_invalid_fan_mode(hass: HomeAssistant, discovery, device) -> None:
     """Test for sending fan mode command to the device."""
     await async_setup_gree(hass)
 
@@ -746,7 +755,7 @@ async def test_send_invalid_fan_mode(
     [FAN_AUTO, FAN_LOW, FAN_MEDIUM_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH],
 )
 async def test_send_fan_mode_device_timeout(
-    hass: HomeAssistant, discovery, device, mock_now, fan_mode
+    hass: HomeAssistant, discovery, device, fan_mode
 ) -> None:
     """Test for sending fan mode command to the device with a device timeout."""
     device().push_state_update.side_effect = DeviceTimeoutError
@@ -770,7 +779,7 @@ async def test_send_fan_mode_device_timeout(
     [FAN_AUTO, FAN_LOW, FAN_MEDIUM_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH],
 )
 async def test_update_fan_mode(
-    hass: HomeAssistant, discovery, device, mock_now, fan_mode
+    hass: HomeAssistant, discovery, device, fan_mode
 ) -> None:
     """Test for updating fan mode from the device."""
     device().fan_speed = FAN_MODES_REVERSE.get(fan_mode)
@@ -786,7 +795,7 @@ async def test_update_fan_mode(
     "swing_mode", [SWING_OFF, SWING_BOTH, SWING_VERTICAL, SWING_HORIZONTAL]
 )
 async def test_send_swing_mode(
-    hass: HomeAssistant, discovery, device, mock_now, swing_mode
+    hass: HomeAssistant, discovery, device, swing_mode
 ) -> None:
     """Test for sending swing mode command to the device."""
     await async_setup_gree(hass)
@@ -803,9 +812,7 @@ async def test_send_swing_mode(
     assert state.attributes.get(ATTR_SWING_MODE) == swing_mode
 
 
-async def test_send_invalid_swing_mode(
-    hass: HomeAssistant, discovery, device, mock_now
-) -> None:
+async def test_send_invalid_swing_mode(hass: HomeAssistant, discovery, device) -> None:
     """Test for sending swing mode command to the device."""
     await async_setup_gree(hass)
 
@@ -826,7 +833,7 @@ async def test_send_invalid_swing_mode(
     "swing_mode", [SWING_OFF, SWING_BOTH, SWING_VERTICAL, SWING_HORIZONTAL]
 )
 async def test_send_swing_mode_device_timeout(
-    hass: HomeAssistant, discovery, device, mock_now, swing_mode
+    hass: HomeAssistant, discovery, device, swing_mode
 ) -> None:
     """Test for sending swing mode command to the device with a device timeout."""
     device().push_state_update.side_effect = DeviceTimeoutError
@@ -849,7 +856,7 @@ async def test_send_swing_mode_device_timeout(
     "swing_mode", [SWING_OFF, SWING_BOTH, SWING_VERTICAL, SWING_HORIZONTAL]
 )
 async def test_update_swing_mode(
-    hass: HomeAssistant, discovery, device, mock_now, swing_mode
+    hass: HomeAssistant, discovery, device, swing_mode
 ) -> None:
     """Test for updating swing mode from the device."""
     device().horizontal_swing = (

@@ -5,6 +5,7 @@ import glob
 import importlib
 import os
 from pathlib import Path, PurePosixPath
+import ssl
 import time
 from typing import Any
 from unittest.mock import Mock, patch
@@ -328,6 +329,29 @@ async def test_protect_loop_walk(
     with contextlib.suppress(FileNotFoundError):
         await hass.async_add_executor_job(os.walk, "/path/that/does/not/exists")
     assert "Detected blocking call to walk with args" not in caplog.text
+
+
+async def test_protect_loop_load_default_certs(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test SSLContext.load_default_certs calls in the loop are logged."""
+    with patch.object(block_async_io, "_IN_TESTS", False):
+        block_async_io.enable()
+    context = ssl.create_default_context()
+    assert "Detected blocking call to load_default_certs" in caplog.text
+    assert context
+
+
+async def test_protect_loop_load_verify_locations(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test SSLContext.load_verify_locations calls in the loop are logged."""
+    with patch.object(block_async_io, "_IN_TESTS", False):
+        block_async_io.enable()
+    context = ssl.create_default_context()
+    with pytest.raises(OSError):
+        context.load_verify_locations("/dev/null")
+    assert "Detected blocking call to load_verify_locations" in caplog.text
 
 
 async def test_open_calls_ignored_in_tests(caplog: pytest.LogCaptureFixture) -> None:

@@ -632,7 +632,7 @@ def _update_states_table_with_foreign_key_options(
 
 def _drop_foreign_key_constraints(
     session_maker: Callable[[], Session], engine: Engine, table: str, column: str
-) -> list[tuple[str, str, ReflectedForeignKeyConstraint]]:
+) -> tuple[bool, list[tuple[str, str, ReflectedForeignKeyConstraint]]]:
     """Drop foreign key constraints for a table on specific columns."""
     inspector = sqlalchemy.inspect(engine)
     dropped_constraints = [
@@ -649,6 +649,7 @@ def _drop_foreign_key_constraints(
         if foreign_key["name"] and foreign_key["constrained_columns"] == [column]
     ]
 
+    fk_remove_ok = True
     for drop in drops:
         with session_scope(session=session_maker()) as session:
             try:
@@ -660,8 +661,9 @@ def _drop_foreign_key_constraints(
                     TABLE_STATES,
                     column,
                 )
+                fk_remove_ok = False
 
-    return dropped_constraints
+    return fk_remove_ok, dropped_constraints
 
 
 def _restore_foreign_key_constraints(
@@ -1481,7 +1483,7 @@ class _SchemaVersion44Migrator(_SchemaVersionMigrator, target_version=44):
             for column in columns
             for dropped_constraint in _drop_foreign_key_constraints(
                 self.session_maker, self.engine, table, column
-            )
+            )[1]
         ]
         _LOGGER.debug("Dropped foreign key constraints: %s", dropped_constraints)
 
@@ -1956,14 +1958,15 @@ def cleanup_legacy_states_event_ids(instance: Recorder) -> bool:
         if instance.dialect_name == SupportedDialect.SQLITE:
             # SQLite does not support dropping foreign key constraints
             # so we have to rebuild the table
-            rebuild_sqlite_table(session_maker, instance.engine, States)
+            fk_remove_ok = rebuild_sqlite_table(session_maker, instance.engine, States)
         else:
-            _drop_foreign_key_constraints(
+            fk_remove_ok, _ = _drop_foreign_key_constraints(
                 session_maker, instance.engine, TABLE_STATES, "event_id"
             )
-        _drop_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
-        instance.use_legacy_events_index = False
-        _mark_migration_done(session, EventIDPostMigration)
+        if fk_remove_ok:
+            _drop_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
+            instance.use_legacy_events_index = False
+            _mark_migration_done(session, EventIDPostMigration)
 
     return True
 
@@ -2419,6 +2422,7 @@ class EventIDPostMigration(BaseRunTimeMigration):
 
     migration_id = "event_id_post_migration"
     task = MigrationTask
+    migration_version = 2
 
     @staticmethod
     def migrate_data(instance: Recorder) -> bool:
@@ -2469,7 +2473,7 @@ def _mark_migration_done(
 
 def rebuild_sqlite_table(
     session_maker: Callable[[], Session], engine: Engine, table: type[Base]
-) -> None:
+) -> bool:
     """Rebuild an SQLite table.
 
     This must only be called after all migrations are complete
@@ -2524,8 +2528,10 @@ def rebuild_sqlite_table(
         # Swallow the exception since we do not want to ever raise
         # an integrity error as it would cause the database
         # to be discarded and recreated from scratch
+        return False
     else:
         _LOGGER.warning("Rebuilding SQLite table %s finished", orig_name)
+        return True
     finally:
         with session_scope(session=session_maker()) as session:
             # Step 12 - Re-enable foreign keys
