@@ -951,21 +951,7 @@ def test_restore_foreign_key_constraints_with_error(
     This is not supported on SQLite
     """
 
-    constraints_to_restore = [
-        (
-            "events",
-            "data_id",
-            {
-                "comment": None,
-                "constrained_columns": ["data_id"],
-                "name": "events_data_id_fkey",
-                "options": {},
-                "referred_columns": ["data_id"],
-                "referred_schema": None,
-                "referred_table": "event_data",
-            },
-        ),
-    ]
+    constraints_to_restore = [("events", "data_id")]
 
     connection = Mock()
     connection.execute = Mock(side_effect=InternalError(None, None, None))

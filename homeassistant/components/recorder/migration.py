@@ -15,7 +15,6 @@ from uuid import UUID
 import sqlalchemy
 from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text, update
 from sqlalchemy.engine import CursorResult, Engine
-from sqlalchemy.engine.interfaces import ReflectedForeignKeyConstraint
 from sqlalchemy.exc import (
     DatabaseError,
     IntegrityError,
@@ -632,14 +631,9 @@ def _update_states_table_with_foreign_key_options(
 
 def _drop_foreign_key_constraints(
     session_maker: Callable[[], Session], engine: Engine, table: str, column: str
-) -> tuple[bool, list[tuple[str, str, ReflectedForeignKeyConstraint]]]:
+) -> bool:
     """Drop foreign key constraints for a table on specific columns."""
     inspector = sqlalchemy.inspect(engine)
-    dropped_constraints = [
-        (table, column, foreign_key)
-        for foreign_key in inspector.get_foreign_keys(table)
-        if foreign_key["name"] and foreign_key["constrained_columns"] == [column]
-    ]
 
     ## Bind the ForeignKeyConstraints to the table
     tmp_table = Table(table, MetaData())
@@ -663,24 +657,22 @@ def _drop_foreign_key_constraints(
                 )
                 fk_remove_ok = False
 
-    return fk_remove_ok, dropped_constraints
+    return fk_remove_ok
 
 
 def _restore_foreign_key_constraints(
     session_maker: Callable[[], Session],
     engine: Engine,
-    dropped_constraints: list[tuple[str, str, ReflectedForeignKeyConstraint]],
+    foreign_columns: list[tuple[str, str]],
 ) -> None:
     """Restore foreign key constraints."""
-    for table, column, dropped_constraint in dropped_constraints:
+    for table, column in foreign_columns:
         constraints = Base.metadata.tables[table].foreign_key_constraints
         for constraint in constraints:
             if constraint.column_keys == [column]:
                 break
         else:
-            _LOGGER.info(
-                "Did not find a matching constraint for %s", dropped_constraint
-            )
+            _LOGGER.info("Did not find a matching constraint for %s.%s", table, column)
             continue
 
         # AddConstraint mutates the constraint passed to it, we need to
@@ -1472,23 +1464,43 @@ class _SchemaVersion44Migrator(_SchemaVersionMigrator, target_version=44):
         )
         # First drop foreign key constraints
         foreign_columns = (
-            ("events", ("data_id", "event_type_id")),
-            ("states", ("event_id", "old_state_id", "attributes_id", "metadata_id")),
-            ("statistics", ("metadata_id",)),
-            ("statistics_short_term", ("metadata_id",)),
+            (
+                "events",
+                ("data_id", "event_type_id"),
+                (
+                    ("data_id", "event_data", "data_id"),
+                    ("event_type_id", "event_types", "event_type_id"),
+                ),
+            ),
+            (
+                "states",
+                ("event_id", "old_state_id", "attributes_id", "metadata_id"),
+                (
+                    ("event_id", None, None),
+                    ("old_state_id", "states", "state_id"),
+                    ("attributes_id", "state_attributes", "attributes_id"),
+                    ("metadata_id", "states_meta", "metadata_id"),
+                ),
+            ),
+            (
+                "statistics",
+                ("metadata_id",),
+                (("metadata_id", "statistics_meta", "id"),),
+            ),
+            (
+                "statistics_short_term",
+                ("metadata_id",),
+                (("metadata_id", "statistics_meta", "id"),),
+            ),
         )
-        dropped_constraints = [
-            dropped_constraint
-            for table, columns in foreign_columns
-            for column in columns
-            for dropped_constraint in _drop_foreign_key_constraints(
-                self.session_maker, self.engine, table, column
-            )[1]
-        ]
-        _LOGGER.debug("Dropped foreign key constraints: %s", dropped_constraints)
+        for table, columns, _ in foreign_columns:
+            for column in columns:
+                _drop_foreign_key_constraints(
+                    self.session_maker, self.engine, table, column
+                )
 
         # Then modify the constrained columns
-        for table, columns in foreign_columns:
+        for table, columns, _ in foreign_columns:
             _modify_columns(
                 self.session_maker,
                 self.engine,
@@ -1518,9 +1530,32 @@ class _SchemaVersion44Migrator(_SchemaVersionMigrator, target_version=44):
                 table,
                 [f"{column} {BIG_INTEGER_SQL} {identity_sql}"],
             )
+
+        # Remove rows which violate the constraints
+        for table, _, foreign_mapping in foreign_columns:
+            for column, foreign_table, foreign_column in foreign_mapping:
+                if foreign_table is None:
+                    continue
+                with session_scope(session=self.session_maker()) as session:
+                    session.execute(
+                        text(
+                            f"DELETE FROM {table} "  # noqa: S608
+                            "WHERE  NOT EXISTS "
+                            "  (SELECT 1 "
+                            f"   FROM   {foreign_table} "
+                            f"   WHERE  {foreign_table}.{foreign_column} = {table}.{column});"
+                        )
+                    )
+
         # Finally restore dropped constraints
         _restore_foreign_key_constraints(
-            self.session_maker, self.engine, dropped_constraints
+            self.session_maker,
+            self.engine,
+            [
+                (table, column)
+                for table, columns, _ in foreign_columns
+                for column in columns
+            ],
         )
 
 
@@ -1960,7 +1995,7 @@ def cleanup_legacy_states_event_ids(instance: Recorder) -> bool:
             # so we have to rebuild the table
             fk_remove_ok = rebuild_sqlite_table(session_maker, instance.engine, States)
         else:
-            fk_remove_ok, _ = _drop_foreign_key_constraints(
+            fk_remove_ok = _drop_foreign_key_constraints(
                 session_maker, instance.engine, TABLE_STATES, "event_id"
             )
         if fk_remove_ok:
