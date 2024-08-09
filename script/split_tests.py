@@ -4,12 +4,88 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from math import ceil
 from pathlib import Path
 import subprocess
 import sys
 from typing import Final
+
+#
+# Test weights are the relative time it takes to run a test vs
+# the average test. The average test is 1.
+#
+# These tests are generally the slowest tests in the test suite.
+# Some of these tests have unmocked calls or other problems that
+# make them slow. Some of them are just very large.
+#
+# If they are sped up, the weights should be adjusted or removed.
+#
+TEST_WEIGHTS = {
+    "tests/test_circular_imports.py": 45,
+    "tests/test_bootstrap.py": 2,
+    "tests/components/assist_pipeline/test_websocket.py": 2.5,
+    "tests/components/assist_pipeline/test_init.py": 2.5,
+    "tests/components/aurora_abb_powerone/test_sensor.py": 2.5,
+    "tests/components/aurora_abb_powerone/test_init.py": 2.5,
+    "tests/components/bmw_connected_drive/test_diagnostics.py": 2,
+    "tests/components/calendar/test_trigger.py": 2,
+    "tests/components/color_extractor/test_service.py": 2,
+    "tests/components/comfoconnect/test_sensor.py": 2,
+    "tests/components/conversation/test_default_agent.py": 3,
+    "tests/components/conversation/test_init.py": 3.5,
+    "tests/components/default_config/test_init.py": 2,
+    "tests/components/dlna_dmr/test_init.py": 2,
+    "tests/components/dlna_dmr/test_media_player.py": 1.5,
+    "tests/components/ecovacs/test_event.py": 2,
+    "tests/components/esphome/test_diagnostics.py": 2,
+    "tests/components/esphome/test_select.py": 2,
+    "tests/components/fully_kiosk/test_sensor.py": 2,
+    "tests/components/history/test_websocket_api_schema_32.py": 2,
+    "tests/components/homekit_controller/test_button.py": 2,
+    "tests/components/homekit_controller/specific_devices/test_aqara_switch.py": 2,
+    "tests/components/hue/test_light_v2.py": 3,
+    "tests/components/husqvarna_automower/test_number.py": 2,
+    "tests/components/insteon/test_api_aldb.py": 3,
+    "tests/components/insteon/test_api_scenes.py": 4,
+    "tests/components/kaleidescape/test_sensor.py": 2,
+    "tests/components/jellyfin/test_diagnostics.py": 2,
+    "tests/components/jellyfin/test_media_source.py": 2,
+    "tests/components/jellyfin/test_media_player.py": 2,
+    "tests/components/lamarzocco/test_diagnostics.py": 2,
+    "tests/components/lamarzocco/test_number.py": 2,
+    "tests/components/lamarzocco/test_update.py": 2,
+    "tests/components/local_calendar/test_diagnostics.py": 2,
+    "tests/components/logbook/test_init.py": 2,
+    "tests/components/logbook/test_websocket_api.py": 2,
+    "tests/components/media_extractor/test_init.py": 2,
+    "tests/components/jvc_projector/test_remote.py": 2,
+    "tests/components/marytts/test_tts.py": 2,
+    "tests/components/profiler/test_init.py": 2,
+    "tests/components/rainforest_raven/test_coordinator.py": 4,
+    "tests/components/recorder/test_statistics_v23_migration.py": 2,
+    "tests/components/recorder/test_purge.py": 2,
+    "tests/components/recorder/test_purge_v32_schema.py": 2,
+    "tests/components/recorder/auto_repairs/statistics/test_duplicates.py": 2,
+    "tests/components/reolink/test_media_source.py": 2,
+    "tests/components/sensor/test_recorder_missing_stats.py": 3,
+    "tests/components/sensor/test_recorder.py": 2,
+    "tests/components/snooz/test_fan.py": 2,
+    "tests/components/stream/test_hls.py": 2,
+    "tests/components/stream/test_ll_hls.py": 3,
+    "tests/components/stream/test_recorder.py": 2,
+    "tests/components/thread/test_diagnostics.py": 2,
+    "tests/components/unifiprotect/test_camera.py": 2,
+    "tests/components/zha/test_cluster_handlers.py": 2,
+    "tests/components/zha/test_climate.py": 2,
+    "tests/components/zha/test_device_action.py": 2,
+    "tests/components/zha/test_discover.py": 3,
+    "tests/components/zha/test_gateway.py": 3,
+    "tests/components/zwave_js/test_services.py": 2,
+    "tests/components/zwave_js/test_siren.py": 2,
+    "tests/helpers/test_intent.py": 2,
+    "tests/util/test_executor.py": 2,
+}
 
 
 class Bucket:
@@ -20,12 +96,14 @@ class Bucket:
     ):
         """Initialize bucket."""
         self.total_tests = 0
+        self.total_weighted_tests = 0
         self._paths: list[str] = []
 
     def add(self, part: TestFolder | TestFile) -> None:
         """Add tests to bucket."""
         part.add_to_bucket()
         self.total_tests += part.total_tests
+        self.total_weighted_tests += part.total_weighted_tests
         self._paths.append(str(part.path))
 
     def get_paths_line(self) -> str:
@@ -44,19 +122,22 @@ class BucketHolder:
 
     def split_tests(self, test_folder: TestFolder) -> None:
         """Split tests into buckets."""
-        digits = len(str(test_folder.total_tests))
+        digits = len(str(test_folder.total_weighted_tests))
         sorted_tests = sorted(
-            test_folder.get_all_flatten(), reverse=True, key=lambda x: x.total_tests
+            test_folder.get_all_flatten(),
+            reverse=True,
+            key=lambda x: x.total_weighted_tests,
         )
         for tests in sorted_tests:
-            print(f"{tests.total_tests:>{digits}} tests in {tests.path}")
+            print(f"{tests.total_weighted_tests:>{digits}} tests in {tests.path}")
             if tests.added_to_bucket:
                 # Already added to bucket
                 continue
 
-            smallest_bucket = min(self._buckets, key=lambda x: x.total_tests)
+            smallest_bucket = min(self._buckets, key=lambda x: x.total_weighted_tests)
             if (
-                smallest_bucket.total_tests + tests.total_tests < self._tests_per_bucket
+                smallest_bucket.total_weighted_tests + tests.total_weighted_tests
+                < self._tests_per_bucket
             ) or isinstance(tests, TestFile):
                 smallest_bucket.add(tests)
 
@@ -64,21 +145,25 @@ class BucketHolder:
         if not test_folder.added_to_bucket:
             raise ValueError("Not all tests are added to a bucket")
 
-    def create_ouput_file(self) -> None:
+    def create_output_file(self) -> None:
         """Create output file."""
         with open("pytest_buckets.txt", "w") as file:
             for idx, bucket in enumerate(self._buckets):
-                print(f"Bucket {idx+1} has {bucket.total_tests} tests")
+                print(
+                    f"Bucket {idx+1} has {bucket.total_tests} tests"
+                    f" ({bucket.total_weighted_tests} weighted tests)"
+                )
                 file.write(bucket.get_paths_line())
 
 
-@dataclass
+@dataclass(slots=True)
 class TestFile:
     """Class represents a single test file and the number of tests it has."""
 
     total_tests: int
     path: Path
-    added_to_bucket: bool = field(default=False, init=False)
+    added_to_bucket: bool
+    total_weighted_tests: int
 
     def add_to_bucket(self) -> None:
         """Add test file to bucket."""
@@ -88,7 +173,7 @@ class TestFile:
 
     def __gt__(self, other: TestFile) -> bool:
         """Return if greater than."""
-        return self.total_tests > other.total_tests
+        return self.total_weighted_tests > other.total_weighted_tests
 
 
 class TestFolder:
@@ -103,6 +188,11 @@ class TestFolder:
     def total_tests(self) -> int:
         """Return total tests."""
         return sum([test.total_tests for test in self.children.values()])
+
+    @property
+    def total_weighted_tests(self) -> int:
+        """Return total weighted tests."""
+        return sum([test.total_weighted_tests for test in self.children.values()])
 
     @property
     def added_to_bucket(self) -> bool:
@@ -176,7 +266,9 @@ def collect_tests(path: Path) -> TestFolder:
             print(f"Unexpected line: {line}")
             sys.exit(1)
 
-        file = TestFile(int(total_tests), Path(file_path))
+        weight = TEST_WEIGHTS.get(file_path, 1)
+        total = int(total_tests)
+        file = TestFile(total, Path(file_path), False, total * weight)
         folder.add_test_file(file)
 
     return folder
@@ -209,16 +301,19 @@ def main() -> None:
 
     print("Collecting tests...")
     tests = collect_tests(arguments.path)
-    tests_per_bucket = ceil(tests.total_tests / arguments.bucket_count)
+    total_weighted_tests = tests.total_weighted_tests
+    total_tests = tests.total_tests
+    tests_per_bucket = ceil(total_weighted_tests / arguments.bucket_count)
 
     bucket_holder = BucketHolder(tests_per_bucket, arguments.bucket_count)
     print("Splitting tests...")
     bucket_holder.split_tests(tests)
 
-    print(f"Total tests: {tests.total_tests}")
+    print(f"Total tests: {total_tests}")
+    print(f"Total weighted tests: {total_weighted_tests}")
     print(f"Estimated tests per bucket: {tests_per_bucket}")
 
-    bucket_holder.create_ouput_file()
+    bucket_holder.create_output_file()
 
 
 if __name__ == "__main__":
