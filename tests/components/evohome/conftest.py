@@ -22,11 +22,6 @@ from .const import ACCESS_TOKEN, REFRESH_TOKEN
 
 from tests.common import load_json_array_fixture, load_json_object_fixture
 
-DEFAULT_TEST_CONFIG: Final = {
-    CONF_USERNAME: "username",
-    CONF_PASSWORD: "password",
-}
-
 
 def expected_results_fixture(install: str) -> JsonObjectType:
     """Load the expected results for an installation."""
@@ -120,7 +115,11 @@ async def block_request(
 
 @pytest.fixture
 def evo_config() -> dict[str, str]:
-    return DEFAULT_TEST_CONFIG
+    "Return a default/minimal configuration."
+    return {
+        CONF_USERNAME: "user@email.com",
+        CONF_PASSWORD: "password"
+    }
 
 
 @patch("evohomeasync.broker.Broker._make_request", block_request)
