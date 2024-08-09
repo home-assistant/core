@@ -52,7 +52,7 @@ pyserial==3.5
 python-slugify==8.0.4
 PyTurboJPEG==1.7.1
 pyudev==0.24.1
-PyYAML==6.0.1
+PyYAML==6.0.2
 requests==2.32.3
 SQLAlchemy==2.0.31
 typing-extensions>=4.12.2,<5.0

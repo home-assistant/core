@@ -57,7 +57,7 @@ dependencies    = [
     "pip>=21.3.1",
     "psutil-home-assistant==0.0.1",
     "python-slugify==8.0.4",
-    "PyYAML==6.0.1",
+    "PyYAML==6.0.2",
     "requests==2.32.3",
     "SQLAlchemy==2.0.31",
     "typing-extensions>=4.12.2,<5.0",
