@@ -5547,6 +5547,12 @@
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
     },
+    "smart_meter_b_route": {
+      "name": "Smart Meter B Route",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "smart_meter_texas": {
       "name": "Smart Meter Texas",
       "integration_type": "hub",
