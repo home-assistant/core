@@ -9,7 +9,7 @@ from collections.abc import Callable
 import logging
 from queue import Empty, Queue
 import socket
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from temescal import temescal
 
@@ -34,13 +34,18 @@ def config_device(soundbar_client: SoundbarClient) -> dict[str, Any]:
     """Get device information(name, uuid) through the soundbar client."""
     device_info = {}
 
+    if TYPE_CHECKING:
+        BaseQueue = Queue[str]
+    else:
+        BaseQueue = Queue
+
     try:
-        uuid_q = Queue(maxsize=1)
-        name_q = Queue(maxsize=1)
+        uuid_q: BaseQueue = BaseQueue(maxsize=1)
+        name_q: BaseQueue = BaseQueue(maxsize=1)
 
         def config_callback(response: dict[str, Any]) -> None:
-            msg: str = response.get("msg")
-            data: dict[str, Any] = response.get("data")
+            msg: str | None = response.get("msg")
+            data: dict[str, Any] | None = response.get("data")
 
             if msg == "PRODUCT_INFO" and uuid_q.empty() and "s_uuid" in data:
                 uuid_q.put(data.get("s_uuid"))
@@ -73,8 +78,8 @@ class SoundbarClient(temescal):
         callback: Callable[[dict], None] | None = None,
     ):
         """Initialize a Soundbar client."""
-        self.iv: str = b"'%^Ur7gy$~t+f)%@"
-        self.key: str = b"T^&*J%^7tr~4^%^&I(o%^!jIJ__+a0 k"
+        self.iv: bytes = b"'%^Ur7gy$~t+f)%@"
+        self.key: bytes = b"T^&*J%^7tr~4^%^&I(o%^!jIJ__+a0 k"
         self.address: str = address
         self.port: int = port
         self.callback: Callable[[dict], None] | None = callback
