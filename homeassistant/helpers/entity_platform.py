@@ -10,6 +10,8 @@ from functools import partial
 from logging import Logger, getLogger
 from typing import TYPE_CHECKING, Any, Protocol
 
+import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.const import (
     ATTR_RESTORED,
@@ -999,6 +1001,14 @@ class EntityPlatform:
 
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
+        # Do a sanity check to check this is a valid entity service schema
+        elif not isinstance(schema, (vol.All, vol.Any)) and any(
+            key not in schema.schema for key in cv.ENTITY_SERVICE_FIELDS
+        ):
+            raise HomeAssistantError(
+                "The schema does not have all of keys "
+                f"{", ".join(str(key) for key in cv.ENTITY_SERVICE_FIELDS)}"
+            )
 
         service_func: str | HassJob[..., Any]
         service_func = func if isinstance(func, str) else HassJob(func)

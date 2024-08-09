@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, PERCENTAGE, EntityCategory
 from homeassistant.core import (
@@ -1758,6 +1759,28 @@ async def test_register_entity_service_limited_to_matching_platforms(
             "response-key": "response-value-base_platform.entity2"
         },
     }
+
+
+async def test_register_entity_service_non_entity_service_schema(
+    hass: HomeAssistant,
+) -> None:
+    """Test attempting to register a service with an incomplete schema."""
+    entity_platform = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=(
+            "The schema does not have all of keys entity_id, device_id, area_id, "
+            "floor_id, label_id"
+        ),
+    ):
+        entity_platform.async_register_entity_service(
+            "hello",
+            vol.Schema({"some": str}),
+            Mock(),
+        )
 
 
 @pytest.mark.parametrize("update_before_add", [True, False])
