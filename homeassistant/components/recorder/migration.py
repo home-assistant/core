@@ -669,10 +669,10 @@ def _drop_foreign_key_constraints(
 def _restore_foreign_key_constraints(
     session_maker: Callable[[], Session],
     engine: Engine,
-    foreign_columns: list[tuple[str, str]],
+    foreign_columns: list[tuple[str, str, str | None, str | None]],
 ) -> None:
     """Restore foreign key constraints."""
-    for table, column in foreign_columns:
+    for table, column, foreign_table, foreign_column in foreign_columns:
         constraints = Base.metadata.tables[table].foreign_key_constraints
         for constraint in constraints:
             if constraint.column_keys == [column]:
@@ -687,13 +687,56 @@ def _restore_foreign_key_constraints(
         create_rule = constraint._create_rule  # noqa: SLF001
         add_constraint = AddConstraint(constraint)  # type: ignore[no-untyped-call]
         constraint._create_rule = create_rule  # noqa: SLF001
+        try:
+            _add_constraint(session_maker, add_constraint, table)
+        except IntegrityError:
+            _LOGGER.exception(
+                (
+                    "Could not update foreign options in %s table, will delete "
+                    "violations and try again"
+                ),
+                table,
+            )
+            _delete_foreign_key_violations(
+                session_maker, table, column, foreign_table, foreign_column
+            )
+            _add_constraint(session_maker, add_constraint, table)
 
-        with session_scope(session=session_maker()) as session:
-            try:
-                connection = session.connection()
-                connection.execute(add_constraint)
-            except (InternalError, OperationalError):
-                _LOGGER.exception("Could not update foreign options in %s table", table)
+
+def _add_constraint(
+    session_maker: Callable[[], Session], add_constraint: AddConstraint, table: str
+) -> None:
+    """Add a foreign key constraint."""
+    with session_scope(session=session_maker()) as session:
+        try:
+            connection = session.connection()
+            connection.execute(add_constraint)
+        except (InternalError, OperationalError):
+            _LOGGER.exception("Could not update foreign options in %s table", table)
+
+
+def _delete_foreign_key_violations(
+    session_maker: Callable[[], Session],
+    table: str,
+    column: str,
+    foreign_table: str | None,
+    foreign_column: str | None,
+) -> None:
+    """Remove rows which violate the constraints."""
+    if foreign_table is None:
+        return
+    with session_scope(session=session_maker()) as session:
+        session.execute(
+            text(
+                f"DELETE FROM {table} "  # noqa: S608
+                "WHERE ("
+                f"  {table}.{column} IS NOT NULL AND"
+                "  NOT EXISTS"
+                "    (SELECT 1 "
+                f"     FROM  {foreign_table} "
+                f"     WHERE {foreign_table}.{foreign_column} = {table}.{column}));"
+            )
+        )
 
 
 @database_job_retry_wrapper("Apply migration update", 10)
@@ -1537,32 +1580,14 @@ class _SchemaVersion44Migrator(_SchemaVersionMigrator, target_version=44):
                 [f"{column} {BIG_INTEGER_SQL} {identity_sql}"],
             )
 
-        # Remove rows which violate the constraints
-        for table, _, foreign_mapping in foreign_columns:
-            for column, foreign_table, foreign_column in foreign_mapping:
-                if foreign_table is None:
-                    continue
-                with session_scope(session=self.session_maker()) as session:
-                    session.execute(
-                        text(
-                            f"DELETE FROM {table} "  # noqa: S608
-                            "WHERE ("
-                            f"  {table}.{column} IS NOT NULL AND"
-                            "  NOT EXISTS"
-                            "    (SELECT 1 "
-                            f"     FROM  {foreign_table} "
-                            f"     WHERE {foreign_table}.{foreign_column} = {table}.{column}));"
-                        )
-                    )
-
         # Finally restore dropped constraints
         _restore_foreign_key_constraints(
             self.session_maker,
             self.engine,
             [
-                (table, column)
-                for table, columns, _ in foreign_columns
-                for column in columns
+                (table, column, foreign_table, foreign_column)
+                for table, _, foreign_mappings in foreign_columns
+                for column, foreign_table, foreign_column in foreign_mappings
             ],
         )
 
