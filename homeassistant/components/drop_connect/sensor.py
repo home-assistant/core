@@ -27,6 +27,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_DEVICE_TYPE,
+    DEV_ALERT,
     DEV_FILTER,
     DEV_HUB,
     DEV_LEAK_DETECTOR,
@@ -222,6 +223,7 @@ DEVICE_SENSORS: dict[str, list[str]] = {
     ],
     DEV_FILTER: [BATTERY, CURRENT_FLOW_RATE, CURRENT_SYSTEM_PRESSURE],
     DEV_LEAK_DETECTOR: [BATTERY, TEMPERATURE],
+    DEV_ALERT: [BATTERY, TEMPERATURE],
     DEV_PROTECTION_VALVE: [
         BATTERY,
         CURRENT_FLOW_RATE,
