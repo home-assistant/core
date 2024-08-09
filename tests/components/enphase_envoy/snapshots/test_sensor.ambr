@@ -328,6 +328,64 @@
     'state': '1970-01-01T00:00:01+00:00',
   })
 # ---
+# name: test_sensor[envoy_1p_metered][sensor.envoy_1234_balanced_net_power_consumption-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_balanced_net_power_consumption',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'balanced net power consumption',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'balanced_net_consumption',
+    'unique_id': '1234_balanced_net_consumption',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensor[envoy_1p_metered][sensor.envoy_1234_balanced_net_power_consumption-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy 1234 balanced net power consumption',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_balanced_net_power_consumption',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.341',
+  })
+# ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_current_net_power_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -783,6 +841,64 @@
     'state': '50.2',
   })
 # ---
+# name: test_sensor[envoy_1p_metered][sensor.envoy_1234_lifetime_balanced_net_energy_consumption-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_lifetime_balanced_net_energy_consumption',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Lifetime balanced net energy consumption',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lifetime_balanced_net_consumption',
+    'unique_id': '1234_lifetime_balanced_net_consumption',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensor[envoy_1p_metered][sensor.envoy_1234_lifetime_balanced_net_energy_consumption-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy 1234 Lifetime balanced net energy consumption',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_lifetime_balanced_net_energy_consumption',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4.321',
+  })
+# ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_lifetime_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1225,6 +1341,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'normal',
+  })
+# ---
+# name: test_sensor[envoy_1p_metered][sensor.envoy_1234_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Power',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'balanced_net_consumption',
+    'unique_id': '1234_balanced_net_consumption',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensor[envoy_1p_metered][sensor.envoy_1234_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy 1234 Power',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.341',
   })
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_voltage_net_consumption_ct-entry]
@@ -1766,6 +1940,238 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '525',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_balanced_net_power_consumption-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_balanced_net_power_consumption',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'balanced net power consumption',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'balanced_net_consumption',
+    'unique_id': '1234_balanced_net_consumption',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_balanced_net_power_consumption-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy 1234 balanced net power consumption',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_balanced_net_power_consumption',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.341',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_balanced_net_power_consumption_l1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_balanced_net_power_consumption_l1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'balanced net power consumption l1',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'balanced_net_consumption_phase',
+    'unique_id': '1234_balanced_net_consumption_l1',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_balanced_net_power_consumption_l1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy 1234 balanced net power consumption l1',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_balanced_net_power_consumption_l1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12.341',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_balanced_net_power_consumption_l2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_balanced_net_power_consumption_l2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'balanced net power consumption l2',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'balanced_net_consumption_phase',
+    'unique_id': '1234_balanced_net_consumption_l2',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_balanced_net_power_consumption_l2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy 1234 balanced net power consumption l2',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_balanced_net_power_consumption_l2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22.341',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_balanced_net_power_consumption_l3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_balanced_net_power_consumption_l3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'balanced net power consumption l3',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'balanced_net_consumption_phase',
+    'unique_id': '1234_balanced_net_consumption_l3',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_balanced_net_power_consumption_l3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy 1234 balanced net power consumption l3',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_balanced_net_power_consumption_l3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '32.341',
   })
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_battery-entry]
@@ -3916,6 +4322,238 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50.2',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_balanced_net_energy_consumption-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_lifetime_balanced_net_energy_consumption',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Lifetime balanced net energy consumption',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lifetime_balanced_net_consumption',
+    'unique_id': '1234_lifetime_balanced_net_consumption',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_balanced_net_energy_consumption-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy 1234 Lifetime balanced net energy consumption',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_lifetime_balanced_net_energy_consumption',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4.321',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Lifetime balanced net energy consumption l1',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lifetime_balanced_net_consumption_phase',
+    'unique_id': '1234_lifetime_balanced_net_consumption_l1',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy 1234 Lifetime balanced net energy consumption l1',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.321',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Lifetime balanced net energy consumption l2',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lifetime_balanced_net_consumption_phase',
+    'unique_id': '1234_lifetime_balanced_net_consumption_l2',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy 1234 Lifetime balanced net energy consumption l2',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.321',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Lifetime balanced net energy consumption l3',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lifetime_balanced_net_consumption_phase',
+    'unique_id': '1234_lifetime_balanced_net_consumption_l3',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy 1234 Lifetime balanced net energy consumption l3',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.321',
   })
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_lifetime_battery_energy_charged-entry]
@@ -6582,6 +7220,238 @@
     'state': 'normal',
   })
 # ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Power',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'balanced_net_consumption',
+    'unique_id': '1234_balanced_net_consumption',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy 1234 Power',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.341',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_power_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Power',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'balanced_net_consumption_phase',
+    'unique_id': '1234_balanced_net_consumption_l1',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy 1234 Power',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_power_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12.341',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_power_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Power',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'balanced_net_consumption_phase',
+    'unique_id': '1234_balanced_net_consumption_l2',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy 1234 Power',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_power_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22.341',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_4-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_power_4',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Power',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'balanced_net_consumption_phase',
+    'unique_id': '1234_balanced_net_consumption_l3',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_power_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy 1234 Power',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_power_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '32.341',
+  })
+# ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_reserve_battery_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -7242,6 +8112,238 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1970-01-01T00:00:01+00:00',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_balanced_net_power_consumption-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_balanced_net_power_consumption',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'balanced net power consumption',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'balanced_net_consumption',
+    'unique_id': '1234_balanced_net_consumption',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_balanced_net_power_consumption-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy 1234 balanced net power consumption',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_balanced_net_power_consumption',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.341',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_balanced_net_power_consumption_l1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_balanced_net_power_consumption_l1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'balanced net power consumption l1',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'balanced_net_consumption_phase',
+    'unique_id': '1234_balanced_net_consumption_l1',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_balanced_net_power_consumption_l1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy 1234 balanced net power consumption l1',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_balanced_net_power_consumption_l1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12.341',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_balanced_net_power_consumption_l2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_balanced_net_power_consumption_l2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'balanced net power consumption l2',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'balanced_net_consumption_phase',
+    'unique_id': '1234_balanced_net_consumption_l2',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_balanced_net_power_consumption_l2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy 1234 balanced net power consumption l2',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_balanced_net_power_consumption_l2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22.341',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_balanced_net_power_consumption_l3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_balanced_net_power_consumption_l3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'balanced net power consumption l3',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'balanced_net_consumption_phase',
+    'unique_id': '1234_balanced_net_consumption_l3',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_balanced_net_power_consumption_l3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy 1234 balanced net power consumption l3',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_balanced_net_power_consumption_l3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '32.341',
   })
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_current_net_power_consumption-entry]
@@ -9064,6 +10166,238 @@
     'state': '50.2',
   })
 # ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_balanced_net_energy_consumption-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_lifetime_balanced_net_energy_consumption',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Lifetime balanced net energy consumption',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lifetime_balanced_net_consumption',
+    'unique_id': '1234_lifetime_balanced_net_consumption',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_balanced_net_energy_consumption-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy 1234 Lifetime balanced net energy consumption',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_lifetime_balanced_net_energy_consumption',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4.321',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Lifetime balanced net energy consumption l1',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lifetime_balanced_net_consumption_phase',
+    'unique_id': '1234_lifetime_balanced_net_consumption_l1',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy 1234 Lifetime balanced net energy consumption l1',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.321',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Lifetime balanced net energy consumption l2',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lifetime_balanced_net_consumption_phase',
+    'unique_id': '1234_lifetime_balanced_net_consumption_l2',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy 1234 Lifetime balanced net energy consumption l2',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.321',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Lifetime balanced net energy consumption l3',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lifetime_balanced_net_consumption_phase',
+    'unique_id': '1234_lifetime_balanced_net_consumption_l3',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy 1234 Lifetime balanced net energy consumption l3',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_lifetime_balanced_net_energy_consumption_l3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.321',
+  })
+# ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -10840,6 +12174,238 @@
     'state': 'normal',
   })
 # ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Power',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'balanced_net_consumption',
+    'unique_id': '1234_balanced_net_consumption',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy 1234 Power',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.341',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_power_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Power',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'balanced_net_consumption_phase',
+    'unique_id': '1234_balanced_net_consumption_l1',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy 1234 Power',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_power_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12.341',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_power_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Power',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'balanced_net_consumption_phase',
+    'unique_id': '1234_balanced_net_consumption_l2',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy 1234 Power',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_power_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22.341',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_4-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_power_4',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Power',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'balanced_net_consumption_phase',
+    'unique_id': '1234_balanced_net_consumption_l3',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_power_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy 1234 Power',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_power_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '32.341',
+  })
+# ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_voltage_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -11172,6 +12738,64 @@
     'state': '1970-01-01T00:00:01+00:00',
   })
 # ---
+# name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_balanced_net_power_consumption-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_balanced_net_power_consumption',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'balanced net power consumption',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'balanced_net_consumption',
+    'unique_id': '1234_balanced_net_consumption',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_balanced_net_power_consumption-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy 1234 balanced net power consumption',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_balanced_net_power_consumption',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.341',
+  })
+# ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_current_power_production-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -11343,6 +12967,64 @@
     'state': '1.234',
   })
 # ---
+# name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_lifetime_balanced_net_energy_consumption-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_lifetime_balanced_net_energy_consumption',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Lifetime balanced net energy consumption',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lifetime_balanced_net_consumption',
+    'unique_id': '1234_lifetime_balanced_net_consumption',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_lifetime_balanced_net_energy_consumption-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Envoy 1234 Lifetime balanced net energy consumption',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_lifetime_balanced_net_energy_consumption',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4.321',
+  })
+# ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_lifetime_energy_production-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -11505,6 +13187,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'normal',
+  })
+# ---
+# name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Power',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'balanced_net_consumption',
+    'unique_id': '1234_balanced_net_consumption',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Envoy 1234 Power',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.341',
   })
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1-entry]
