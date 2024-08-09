@@ -10,7 +10,9 @@ from . import GeniusHubConfigEntry
 from .entity import GeniusDevice
 
 GH_STATE_ATTR = "outputOnOff"
-GH_TYPE = "Receiver"
+GH_TYPE_RECEIVER = "Receiver"
+GH_TYPE_SWITCH = "Smart Plug"
+GH_TYPE_ELECTRIC_SWITCH = "Electric Switch"
 
 
 async def async_setup_entry(
@@ -18,14 +20,26 @@ async def async_setup_entry(
     entry: GeniusHubConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Genius Hub binary sensor entities."""
-
+    """Set up the Genius Hub binary sensor entities. A binary sensor (Receiver, smart plug or electric switch) is only a binary sensor if it not alone in a zone."""
     broker = entry.runtime_data
 
     async_add_entities(
         GeniusBinarySensor(broker, d, GH_STATE_ATTR)
         for d in broker.client.device_objs
-        if GH_TYPE in d.data["type"]
+        if (
+            GH_TYPE_RECEIVER in d.data["type"]
+            or GH_TYPE_SWITCH in d.data["type"]
+            or GH_TYPE_ELECTRIC_SWITCH in d.data["type"]
+        )
+        and len(
+            list(
+                filter(
+                    lambda dev: dev.assigned_zone.name == d.assigned_zone.name,
+                    broker.client.device_objs,
+                )
+            )
+        )
+        > 1
     )
 
 
