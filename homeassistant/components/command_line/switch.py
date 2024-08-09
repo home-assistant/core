@@ -37,6 +37,8 @@ async def async_setup_platform(
 ) -> None:
     """Find and return switches controlled by shell commands."""
 
+    if not discovery_info:
+        return
     switches = []
     discovery_info = cast(DiscoveryInfoType, discovery_info)
     entities: dict[str, dict[str, Any]] = {
