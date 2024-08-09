@@ -22,10 +22,12 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import LcnEntity
 from .const import (
+    ADD_ENTITIES_CALLBACKS,
     CONF_DIMMABLE,
     CONF_DOMAIN_DATA,
     CONF_OUTPUT,
     CONF_TRANSITION,
+    DOMAIN,
     OUTPUT_PORTS,
 )
 from .helpers import DeviceConnectionType, InputType, get_device_connection
@@ -53,6 +55,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LCN light entities from a config entry."""
+    hass.data[DOMAIN][config_entry.entry_id][ADD_ENTITIES_CALLBACKS].update(
+        {DOMAIN_LIGHT: (async_add_entities, create_lcn_light_entity)}
+    )
 
     async_add_entities(
         create_lcn_light_entity(hass, entity_config, config_entry)
