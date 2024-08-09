@@ -65,6 +65,7 @@ BASE_PROMPT = (
 DEFAULT_INSTRUCTIONS_PROMPT = """You are a voice assistant for Home Assistant.
 Answer questions about the world truthfully.
 Answer in plain text. Keep it simple and to the point.
+User's language is: {{ llm_context.language }}
 """
 
 
