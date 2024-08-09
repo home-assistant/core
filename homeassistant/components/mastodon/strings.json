@@ -35,5 +35,18 @@
       "title": "YAML import failed with unknown error",
       "description": "Configuring {integration_title} using YAML is being removed but there was an unknown error while importing your existing configuration.\nPlease use the UI to configure Mastodon. Don't forget to delete the YAML configuration."
     }
+  },
+  "entity": {
+    "sensor": {
+      "followers": {
+        "name": "Followers"
+      },
+      "following": {
+        "name": "Following"
+      },
+      "posts": {
+        "name": "Posts"
+      }
+    }
   }
 }
