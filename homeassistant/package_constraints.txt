@@ -4,7 +4,7 @@ aiodhcpwatcher==1.0.2
 aiodiscover==2.1.0
 aiodns==3.2.0
 aiohttp-fast-zlib==0.1.1
-aiohttp==3.10.1
+aiohttp==3.10.2
 aiohttp_cors==0.7.0
 aiozoneinfo==0.2.1
 astral==2.2
@@ -31,14 +31,14 @@ habluetooth==3.1.3
 hass-nabucasa==0.81.1
 hassil==1.7.4
 home-assistant-bluetooth==1.12.2
-home-assistant-frontend==20240806.1
+home-assistant-frontend==20240809.0
 home-assistant-intents==2024.8.7
 httpx==0.27.0
 ifaddr==0.2.0
 Jinja2==3.1.4
 lru-dict==1.3.0
 mutagen==1.47.0
-orjson==3.10.6
+orjson==3.10.7
 packaging>=23.1
 paho-mqtt==1.6.1
 Pillow==10.4.0
@@ -52,7 +52,7 @@ pyserial==3.5
 python-slugify==8.0.4
 PyTurboJPEG==1.7.1
 pyudev==0.24.1
-PyYAML==6.0.1
+PyYAML==6.0.2
 requests==2.32.3
 SQLAlchemy==2.0.31
 typing-extensions>=4.12.2,<5.0

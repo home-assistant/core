@@ -356,7 +356,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.0
 
 # homeassistant.components.switcher_kis
-aioswitcher==3.4.3
+aioswitcher==4.0.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -561,6 +561,9 @@ cached_ipaddress==0.3.0
 
 # homeassistant.components.caldav
 caldav==1.3.9
+
+# homeassistant.components.homekit
+chacha20poly1305-reuseable==0.13.2
 
 # homeassistant.components.coinbase
 coinbase-advanced-py==1.2.2
@@ -922,7 +925,7 @@ hole==0.8.0
 holidays==0.53
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240806.1
+home-assistant-frontend==20240809.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.8.7
@@ -1123,13 +1126,13 @@ moat-ble==0.1.1
 moehlenhoff-alpha2==1.3.1
 
 # homeassistant.components.monzo
-monzopy==1.3.0
+monzopy==1.3.2
 
 # homeassistant.components.mopeka
 mopeka-iot-ble==0.8.0
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.23
+motionblinds==0.6.24
 
 # homeassistant.components.motionblinds_ble
 motionblindsble==0.1.0
@@ -1451,7 +1454,7 @@ pydexcom==0.2.3
 pydiscovergy==3.0.1
 
 # homeassistant.components.hydrawise
-pydrawise==2024.6.4
+pydrawise==2024.8.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
@@ -1553,7 +1556,7 @@ pyiss==1.0.1
 pyisy==3.1.14
 
 # homeassistant.components.jvc_projector
-pyjvcprojector==1.0.11
+pyjvcprojector==1.0.12
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.1
@@ -2220,7 +2223,7 @@ twitchAPI==4.2.1
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==5.4.0
+uiprotect==6.0.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2345,7 +2348,7 @@ yalexs==6.4.3
 yeelight==0.7.14
 
 # homeassistant.components.yolink
-yolink-api==0.4.6
+yolink-api==0.4.7
 
 # homeassistant.components.youless
 youless-api==2.1.2
@@ -2366,7 +2369,7 @@ zeroconf==0.132.2
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha==0.0.28
+zha==0.0.29
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.57.0

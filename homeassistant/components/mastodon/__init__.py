@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from mastodon.Mastodon import Mastodon, MastodonError
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,14 +19,30 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
 
 from .const import CONF_BASE_URL, DOMAIN
+from .coordinator import MastodonCoordinator
 from .utils import create_mastodon_client
 
+PLATFORMS: list[Platform] = [Platform.NOTIFY, Platform.SENSOR]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+@dataclass
+class MastodonData:
+    """Mastodon data type."""
+
+    client: Mastodon
+    instance: dict
+    account: dict
+    coordinator: MastodonCoordinator
+
+
+type MastodonConfigEntry = ConfigEntry[MastodonData]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -> bool:
     """Set up Mastodon from a config entry."""
 
     try:
-        client, _, _ = await hass.async_add_executor_job(
+        client, instance, account = await hass.async_add_executor_job(
             setup_mastodon,
             entry,
         )
@@ -34,6 +52,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     assert entry.unique_id
 
+    coordinator = MastodonCoordinator(hass, client)
+
+    await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = MastodonData(client, instance, account, coordinator)
+
     await discovery.async_load_platform(
         hass,
         Platform.NOTIFY,
@@ -42,7 +66,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         {},
     )
 
+    await hass.config_entries.async_forward_entry_setups(
+        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
+    )
+
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(
+        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
+    )
 
 
 def setup_mastodon(entry: ConfigEntry) -> tuple[Mastodon, dict, dict]:
