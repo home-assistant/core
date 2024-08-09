@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import (
     InvalidToken,
     SubscriptionRequired,
@@ -48,7 +48,10 @@ async def test_load_unload(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(("side_effect", "state"), ERRORS)
 async def test_init_error(
-    hass: HomeAssistant, mock_products, side_effect, state
+    hass: HomeAssistant,
+    mock_products: AsyncMock,
+    side_effect: TeslaFleetError,
+    state: ConfigEntryState,
 ) -> None:
     """Test init with errors."""
 
@@ -86,7 +89,7 @@ async def test_vehicle_refresh_asleep(
 
 
 async def test_vehicle_refresh_offline(
-    hass: HomeAssistant, mock_vehicle_data, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant, mock_vehicle_data: AsyncMock, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test coordinator refresh with an error."""
     entry = await setup_platform(hass, [Platform.CLIMATE])
@@ -103,7 +106,10 @@ async def test_vehicle_refresh_offline(
 
 @pytest.mark.parametrize(("side_effect", "state"), ERRORS)
 async def test_vehicle_refresh_error(
-    hass: HomeAssistant, mock_vehicle_data, side_effect, state
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    side_effect: TeslaFleetError,
+    state: ConfigEntryState,
 ) -> None:
     """Test coordinator refresh with an error."""
     mock_vehicle_data.side_effect = side_effect
@@ -112,7 +118,7 @@ async def test_vehicle_refresh_error(
 
 
 async def test_vehicle_sleep(
-    hass: HomeAssistant, mock_vehicle_data, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant, mock_vehicle_data: AsyncMock, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test coordinator refresh with an error."""
     await setup_platform(hass, [Platform.CLIMATE])
@@ -171,7 +177,10 @@ async def test_vehicle_sleep(
 # Test Energy Live Coordinator
 @pytest.mark.parametrize(("side_effect", "state"), ERRORS)
 async def test_energy_live_refresh_error(
-    hass: HomeAssistant, mock_live_status, side_effect, state
+    hass: HomeAssistant,
+    mock_live_status: AsyncMock,
+    side_effect: TeslaFleetError,
+    state: ConfigEntryState,
 ) -> None:
     """Test coordinator refresh with an error."""
     mock_live_status.side_effect = side_effect
@@ -182,7 +191,10 @@ async def test_energy_live_refresh_error(
 # Test Energy Site Coordinator
 @pytest.mark.parametrize(("side_effect", "state"), ERRORS)
 async def test_energy_site_refresh_error(
-    hass: HomeAssistant, mock_site_info, side_effect, state
+    hass: HomeAssistant,
+    mock_site_info: AsyncMock,
+    side_effect: TeslaFleetError,
+    state: ConfigEntryState,
 ) -> None:
     """Test coordinator refresh with an error."""
     mock_site_info.side_effect = side_effect

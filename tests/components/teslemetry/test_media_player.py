@@ -1,8 +1,8 @@
 """Test the Teslemetry media player platform."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import VehicleOffline
 
 from homeassistant.components.media_player import (
@@ -38,7 +38,7 @@ async def test_media_player_alt(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-    mock_vehicle_data,
+    mock_vehicle_data: AsyncMock,
 ) -> None:
     """Tests that the media player entities are correct."""
 
@@ -49,7 +49,7 @@ async def test_media_player_alt(
 
 async def test_media_player_offline(
     hass: HomeAssistant,
-    mock_vehicle_data,
+    mock_vehicle_data: AsyncMock,
 ) -> None:
     """Tests that the media player entities are correct when offline."""
 
@@ -63,7 +63,7 @@ async def test_media_player_noscope(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-    mock_metadata,
+    mock_metadata: AsyncMock,
 ) -> None:
     """Tests that the media player entities are correct without required scope."""
 

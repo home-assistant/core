@@ -1,9 +1,9 @@
 """Test the Teslemetry cover platform."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import VehicleOffline
 
 from homeassistant.components.cover import (
@@ -43,7 +43,7 @@ async def test_cover_alt(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-    mock_vehicle_data,
+    mock_vehicle_data: AsyncMock,
 ) -> None:
     """Tests that the cover entities are correct with alternate values."""
 
@@ -57,7 +57,7 @@ async def test_cover_noscope(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-    mock_metadata,
+    mock_metadata: AsyncMock,
 ) -> None:
     """Tests that the cover entities are correct without scopes."""
 
@@ -68,7 +68,7 @@ async def test_cover_noscope(
 
 async def test_cover_offline(
     hass: HomeAssistant,
-    mock_vehicle_data,
+    mock_vehicle_data: AsyncMock,
 ) -> None:
     """Tests that the cover entities are correct when offline."""
 

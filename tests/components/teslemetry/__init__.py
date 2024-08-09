@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.teslemetry.const import DOMAIN
 from homeassistant.const import Platform

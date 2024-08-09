@@ -53,7 +53,7 @@ class TeslemetryVehicleLockEntity(TeslemetryVehicleEntity, LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the doors."""
-        self.raise_for_scope()
+        self.raise_for_scope(Scope.VEHICLE_CMDS)
         await self.wake_up_if_asleep()
         await handle_vehicle_command(self.api.door_lock())
         self._attr_is_locked = True
@@ -61,7 +61,7 @@ class TeslemetryVehicleLockEntity(TeslemetryVehicleEntity, LockEntity):
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the doors."""
-        self.raise_for_scope()
+        self.raise_for_scope(Scope.VEHICLE_CMDS)
         await self.wake_up_if_asleep()
         await handle_vehicle_command(self.api.door_unlock())
         self._attr_is_locked = False
@@ -96,7 +96,7 @@ class TeslemetryCableLockEntity(TeslemetryVehicleEntity, LockEntity):
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock charge cable lock."""
-        self.raise_for_scope()
+        self.raise_for_scope(Scope.VEHICLE_CMDS)
         await self.wake_up_if_asleep()
         await handle_vehicle_command(self.api.charge_port_door_open())
         self._attr_is_locked = False
