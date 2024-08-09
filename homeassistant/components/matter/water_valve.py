@@ -9,7 +9,7 @@ from typing import Any
 from chip.clusters import Objects as clusters
 
 from homeassistant.components.valve import (
-    #ATTR_POSITION,
+    # ATTR_POSITION,
     ValveDeviceClass,
     ValveEntity,
     ValveEntityDescription,
