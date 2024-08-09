@@ -52,6 +52,7 @@ from .const import (
     EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
     INTEGRATION_PLATFORM_COMPILE_STATISTICS,
     INTEGRATION_PLATFORM_LIST_STATISTIC_IDS,
+    INTEGRATION_PLATFORM_UPDATE_STATISTICS_ISSUES,
     INTEGRATION_PLATFORM_VALIDATE_STATISTICS,
     SupportedDialect,
 )
@@ -586,6 +587,17 @@ def _compile_statistics(
             stats["stat"],
         ):
             new_short_term_stats.append(new_stat)
+
+    if start.minute == 50:
+        # Once every hour, update issues
+        for platform in instance.hass.data[DOMAIN].recorder_platforms.values():
+            if not (
+                platform_update_issues := getattr(
+                    platform, INTEGRATION_PLATFORM_UPDATE_STATISTICS_ISSUES, None
+                )
+            ):
+                continue
+            platform_update_issues(instance.hass, session)
 
     if start.minute == 55:
         # A full hour is ready, summarize it
