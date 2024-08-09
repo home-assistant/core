@@ -1,0 +1,24 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "id": "id",
+          "url": "Server Hostname",
+          "api_key": "API Key"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "url": "[%key:component::emoncms::config::step::user::data::url%]",
+          "api_key": "[%key:component::emoncms::config::step::user::data::api_key%]",
+          "include_only_feed_id": "choose feeds to include"
+        }
+      }
+    }
+  }
+}
