@@ -39,8 +39,7 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_hvac_mode = HVACMode.HEAT
-    _attr_hvac_modes = [HVACMode.HEAT]
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.COOL]
     _attr_preset_modes = list(PRESET_MODES)
     _enable_turn_on_off_backwards_compatibility = False
 
@@ -66,6 +65,11 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
         """Return the current temperature."""
         return self._channel.get_state()
 
+    @property
+    def hvac_mode(self) -> HVACMode:
+        """Return the current hvac mode based on cool_mode message."""
+        return HVACMode.COOL if self._channel.get_cool_mode() else HVACMode.HEAT
+
     @api_call
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
@@ -79,3 +83,10 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
         """Set the new preset mode."""
         await self._channel.set_preset(PRESET_MODES[preset_mode])
         self.async_write_ha_state()
+
+    @api_call
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set the new hvac mode."""
+        if hvac_mode not in self.hvac_mode:
+            await self._channel.set_mode(hvac_mode)
+            self.async_write_ha_state()
