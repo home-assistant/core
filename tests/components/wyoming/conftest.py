@@ -9,6 +9,7 @@ import pytest
 from homeassistant.components import stt
 from homeassistant.components.wyoming import DOMAIN
 from homeassistant.components.wyoming.devices import SatelliteDevice
+from homeassistant.components.wyoming.satellite import WyomingSatellite
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -161,8 +162,17 @@ async def init_satellite(hass: HomeAssistant, satellite_config_entry: ConfigEntr
 
 
 @pytest.fixture
-async def satellite_device(
+async def satellite(
     hass: HomeAssistant, init_satellite, satellite_config_entry: ConfigEntry
 ) -> SatelliteDevice:
+    """Get a satellite fixture."""
+    return hass.data[DOMAIN][satellite_config_entry.entry_id].satellite
+
+
+@pytest.fixture
+async def satellite_device(
+    hass: HomeAssistant,
+    satellite: WyomingSatellite,
+) -> SatelliteDevice:
     """Get a satellite device fixture."""
-    return hass.data[DOMAIN][satellite_config_entry.entry_id].satellite.device
+    return satellite.device

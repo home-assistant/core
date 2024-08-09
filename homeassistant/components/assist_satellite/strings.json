@@ -1,0 +1,67 @@
+{
+  "entity": {
+    "assist_satellite": {
+      "assist_satellite": {
+        "name": "Assist satellite",
+        "state": {
+          "idle": "Idle",
+          "listening": "Listening",
+          "responding": "Responding",
+          "processing": "Processing",
+          "muted": "Muted",
+          "unavailable": "Unavailable"
+        }
+      }
+    }
+  },
+  "services": {
+    "wait_wake": {
+      "name": "Wait for wake words",
+      "description": "Wait for one or more wake words to be spoken",
+      "fields": {
+        "wake_words": {
+          "name": "Wake words",
+          "description": "Names of wake words to wait for"
+        },
+        "announce_text": {
+          "name": "Announce text",
+          "description": "Text to speak before waiting for wake words"
+        }
+      }
+    },
+    "get_text": {
+      "name": "Get text response from satellite",
+      "description": "Records and transcribes a user response from a voice satellite",
+      "fields": {
+        "process": {
+          "name": "Process command",
+          "description": "Process the text of the voice command in Home Assistant"
+        },
+        "announce_text": {
+          "name": "announce_text",
+          "description": "Text to speak before recording user response"
+        }
+      }
+    },
+    "say_text": {
+      "name": "Say text",
+      "description": "Speak text from a voice satellite",
+      "fields": {
+        "announce_text": {
+          "name": "Announce text",
+          "description": "Text to speak"
+        }
+      }
+    },
+    "mute_microphone": {
+      "name": "Mute microphone",
+      "description": "Mute the microphone on the satellite",
+      "fields": {
+        "is_muted": {
+          "name": "Is muted",
+          "description": "Microphone is muted or unmuted"
+        }
+      }
+    }
+  }
+}

@@ -1,120 +1,52 @@
 """Base class for assist satellite entities."""
 
-from __future__ import annotations
-
-from abc import abstractmethod
-from collections.abc import AsyncIterable
-from dataclasses import dataclass
-from enum import IntFlag, StrEnum, auto
 import logging
 
-from homeassistant.components import stt
-from homeassistant.components.assist_pipeline.pipeline import PipelineStage
+import voluptuous as vol
+
+from homeassistant.components import assist_pipeline
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
+from .entity import AssistSatelliteEntity
+from .models import (
+    AssistSatelliteEntityFeature,
+    AssistSatelliteState,
+    PipelineRunConfig,
+    PipelineRunResult,
+    SatelliteCapabilities,
+    SatelliteConfig,
+)
+
+__all__ = [
+    "DOMAIN",
+    "AssistSatelliteEntityFeature",
+    "AssistSatelliteState",
+    "AssistSatelliteEntity",
+    "SatelliteConfig",
+    "SatelliteCapabilities",
+    "PipelineRunConfig",
+    "PipelineRunResult",
+]
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 
-@dataclass
-class SatelliteCapabilities:
-    """Capabilities of satellite"""
+ATTR_WAKE_WORDS = "wake_words"
+ATTR_PROCESS = "process"
+ATTR_ANNOUNCE_TEXT = "announce_text"
+ATTR_MUTED = "is_muted"
 
-    has_vad: bool
-    """True if on-device VAD is supported"""
-
-    wake_words: list[str]
-    """Available on-device wake words"""
-
-    max_active_wake_words: int | None
-    """Maximum number of active wake words"""
-
-    @property
-    def has_wake_word(self) -> bool:
-        """True when device can do on-device wake word detection"""
-        return bool(self.wake_words)
-
-
-@dataclass
-class SatelliteConfig:
-    """Configuration of satellite"""
-
-    active_wake_words: list[str]
-    """List of wake words that should be active (empty = streaming)"""
-
-    finished_speaking_seconds: float | None
-    """Seconds of silence before voice command is finished (on-device VAD only)"""
-
-
-@dataclass
-class PipelineRunConfig:
-    """Configuration for a satellite pipeline run"""
-
-    wake_word_names: list[str] | None
-    """Wake word names to listen for (start_stage = wake)."""
-
-    announce_text: str | None
-    """Text to announce using text-to-speech (start_stage = tts)"""
-
-    announce_url: str | None
-    """Media URL to announce (start_stage = tts)"""
-
-
-@dataclass
-class PipelineRunResult:
-    """Result of a pipeline run"""
-
-    detected_wake_word: str | None
-    """Name of detected wake word (None if timeout)"""
-
-    command_text: str | None
-    """Transcript of speech-to-text for voice command"""
-
-
-class AssistSatelliteEntityFeature(IntFlag):
-    """Supported features of the satellite entity."""
-
-    AUDIO_INPUT = auto()
-    """Satellite is capable of recording and streaming audio to Home Assistant."""
-
-    AUDIO_OUTPUT = auto()
-    """Satellite is capable of playing audio."""
-
-    WAKE_WORD = auto()
-    """Satellite is capable of on-device wake word detection."""
-
-    VOICE_ACTIVITY_DETECTION = auto()
-    """Satellite is capable of on-device VAD."""
-
-    TRIGGER = auto()
-    """Satellite supports remotely triggering pipelines."""
-
-
-class AssistSatelliteState(StrEnum):
-    """Valid states of an Assist satellite entity."""
-
-    IDLE = "idle"
-    """Device is waiting for the wake word."""
-
-    LISTENING = "listening"
-    """Device is streaming audio with the command to Home Assistant."""
-
-    PROCESSING = "processing"
-    """Device has stopped streaming audio and is waiting for Home Assistant to process the voice command."""
-
-    RESPONDING = "responding"
-    """Device is speaking the response."""
-
-    TIMER_RINGING = "timer_ringing"
-    """Device is notifying the user that a timer has elapsed."""
-
-    MUTED = "muted"
-    """Device is muted (in software or hardware)."""
+SERVICE_WAIT_WAKE = "wait_wake"
+SERVICE_GET_TEXT = "get_text"
+SERVICE_SAY_TEXT = "say_text"
+SERVICE_MUTE_MICROPHONE = "mute_microphone"
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -122,6 +54,50 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER, DOMAIN, hass
     )
     await component.async_setup(config)
+
+    component.async_register_entity_service(
+        name=SERVICE_WAIT_WAKE,
+        schema=cv.make_entity_service_schema(
+            {
+                vol.Required(ATTR_WAKE_WORDS): [cv.string],
+                vol.Optional(ATTR_ANNOUNCE_TEXT): cv.string,
+            }
+        ),
+        func=async_service_wait_wake,
+        required_features=[AssistSatelliteEntityFeature.TRIGGER],
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+
+    component.async_register_entity_service(
+        name=SERVICE_GET_TEXT,
+        schema=cv.make_entity_service_schema(
+            {
+                vol.Optional(ATTR_PROCESS): cv.boolean,
+                vol.Optional(ATTR_ANNOUNCE_TEXT): cv.string,
+            }
+        ),
+        func=async_service_get_text,
+        required_features=[AssistSatelliteEntityFeature.TRIGGER],
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+
+    component.async_register_entity_service(
+        name=SERVICE_SAY_TEXT,
+        schema=cv.make_entity_service_schema(
+            {vol.Required(ATTR_ANNOUNCE_TEXT): cv.string}
+        ),
+        func=async_service_say_text,
+        required_features=[AssistSatelliteEntityFeature.TRIGGER],
+        supports_response=SupportsResponse.NONE,
+    )
+
+    component.async_register_entity_service(
+        name=SERVICE_MUTE_MICROPHONE,
+        schema=cv.make_entity_service_schema({vol.Required(ATTR_MUTED): cv.boolean}),
+        func=async_service_mute_microphone,
+        required_features=[AssistSatelliteEntityFeature.AUDIO_INPUT],
+        supports_response=SupportsResponse.NONE,
+    )
 
     return True
 
@@ -138,64 +114,82 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-class AssistSatelliteEntity(entity.Entity):
-    _attr_state: AssistSatelliteState | None = None
-    _attr_supported_features: AssistSatelliteEntityFeature = (
-        AssistSatelliteEntityFeature(0)
+async def async_service_wait_wake(
+    entity: AssistSatelliteEntity, service_call: ServiceCall
+) -> str | None:
+    """Wait for one or more wake words to be spoken."""
+    if announce_text := service_call.data.get(ATTR_ANNOUNCE_TEXT):
+        # Announce first
+        await entity.async_run_pipeline_on_satellite(
+            start_stage=assist_pipeline.PipelineStage.TTS,
+            end_stage=assist_pipeline.PipelineStage.TTS,
+            run_config=PipelineRunConfig(announce_text=announce_text),
+        )
+
+    # Wait for wake word(s)
+    result = await entity.async_run_pipeline_on_satellite(
+        start_stage=assist_pipeline.PipelineStage.WAKE_WORD,
+        end_stage=assist_pipeline.PipelineStage.WAKE_WORD,
+        run_config=PipelineRunConfig(
+            wake_word_names=service_call.data.get(ATTR_WAKE_WORDS)
+        ),
     )
 
-    async def async_run_pipeline_on_satellite(
-        self,
-        start_stage: PipelineStage,
-        end_stage: PipelineStage,
-        run_config: PipelineRunConfig,
-    ) -> PipelineRunResult | None:
-        """Runs a pipeline on the satellite from start to end stage.
+    if (not service_call.return_response) or (result is None):
+        return None
 
-        Can be called from a service.
+    text = result.detected_wake_word or ""
+    return text.strip()
 
-        - announce when start/end = "tts"
-        - listen for wake word when start/end = "wake"
-        - listen for command when start/end = "stt" (no processing)
-        - listen for command when start = "stt", end = "tts" (with processing)
-        """
-        raise NotImplementedError
 
-    async def _async_accept_pipeline_from_satellite(
-        self, stt_stream: AsyncIterable[bytes], stt_metadata: stt.SpeechMetadata
-    ) -> PipelineRunResult | None:
-        """Called by the platform when the voice satellite detected a wake word and
-        wants to trigger an assist pipeline in Home Assistant.
-        """
-        raise NotImplementedError
+async def async_service_get_text(
+    entity: AssistSatelliteEntity, service_call: ServiceCall
+) -> str | None:
+    """Wait for a response from the user."""
+    if announce_text := service_call.data.get(ATTR_ANNOUNCE_TEXT):
+        # Announce first
+        await entity.async_run_pipeline_on_satellite(
+            start_stage=assist_pipeline.PipelineStage.TTS,
+            end_stage=assist_pipeline.PipelineStage.TTS,
+            run_config=PipelineRunConfig(announce_text=announce_text),
+        )
 
-    @property
-    def satellite_capabilities(self) -> SatelliteCapabilities:
-        """Get satellite capabilitites"""
-        raise NotImplementedError
+    if service_call.data.get(ATTR_PROCESS):
+        # Process the spoken text
+        end_stage = assist_pipeline.PipelineStage.TTS
+    else:
+        # Just return the spoken text
+        end_stage = assist_pipeline.PipelineStage.STT
 
-    async def async_get_config(self) -> SatelliteConfig:
-        """Get satellite configuration"""
-        raise NotImplementedError
+    # Wait for response
+    result = await entity.async_run_pipeline_on_satellite(
+        start_stage=assist_pipeline.PipelineStage.STT,
+        end_stage=end_stage,
+        run_config=PipelineRunConfig(),
+    )
 
-    async def async_set_config(self, config: SatelliteConfig) -> None:
-        """Set satellite configuration"""
-        raise NotImplementedError
+    if (not service_call.return_response) or (result is None):
+        return None
 
-    @abstractmethod
-    async def _async_config_updated(self) -> None:
-        """Callback called when the device config is updated.
+    text = result.command_text or ""
+    return text.strip()
 
-        Platforms need to make sure that the device has this configuration.
-        """
-        raise NotImplementedError
 
-    @property
-    def is_muted(self) -> bool:
-        """Return if the satellite is muted."""
-        raise NotImplementedError
+async def async_service_say_text(
+    entity: AssistSatelliteEntity, service_call: ServiceCall
+) -> None:
+    """Speak text on a satellite."""
+    await entity.async_run_pipeline_on_satellite(
+        start_stage=assist_pipeline.PipelineStage.TTS,
+        end_stage=assist_pipeline.PipelineStage.TTS,
+        run_config=PipelineRunConfig(
+            announce_text=service_call.data[ATTR_ANNOUNCE_TEXT]
+        ),
+    )
 
-    @abstractmethod
-    async def async_set_mute(self, mute: bool) -> None:
-        """Mute or unmute the satellite."""
-        raise NotImplementedError
+
+async def async_service_mute_microphone(
+    entity: AssistSatelliteEntity, service_call: ServiceCall
+) -> None:
+    """Mutes or unmutes the microphone on the satellite."""
+    await entity.async_set_microphone_mute(service_call.data[ATTR_MUTED])

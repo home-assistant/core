@@ -1,0 +1,13 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:comment-processing-outline"
+    }
+  },
+  "services": {
+    "wait_wake": "mdi:microphone-message",
+    "get_text": "mdi:comment-text-outline",
+    "say_text": "mdi:speaker-message",
+    "mute_microphone": "mdi:volume-mute"
+  }
+}

@@ -1,0 +1,58 @@
+wait_wake:
+  target:
+    entity:
+      domain: assist_satellite
+      supported_features:
+        - assist_satellite.AssistSatelliteEntityFeature.TRIGGER
+  fields:
+    wake_words:
+      required: true
+      example: "ok nabu"
+      selector:
+        text:
+          multiple: true
+    announce_text:
+      required: false
+      example: "Please say ok nabu."
+      selector:
+        text:
+get_text:
+  target:
+    entity:
+      domain: assist_satellite
+      supported_features:
+        - assist_satellite.AssistSatelliteEntityFeature.TRIGGER
+  fields:
+    process:
+      required: false
+      selector:
+        boolean:
+    announce_text:
+      required: false
+      example: "What would you like for dinner?"
+      selector:
+        text:
+say_text:
+  target:
+    entity:
+      domain: assist_satellite
+      supported_features:
+        - assist_satellite.AssistSatelliteEntityFeature.TRIGGER
+  fields:
+    announce_text:
+      required: true
+      example: "Dinner is ready!"
+      selector:
+        text:
+mute_microphone:
+  target:
+    entity:
+      domain: assist_satellite
+      supported_features:
+        - assist_satellite.AssistSatelliteEntityFeature.AUDIO_INPUT
+  fields:
+    is_muted:
+      required: true
+      default: true
+      selector:
+        boolean:

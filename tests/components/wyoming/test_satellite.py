@@ -23,6 +23,8 @@ from wyoming.vad import VoiceStarted, VoiceStopped
 from wyoming.wake import Detect, Detection
 
 from homeassistant.components import assist_pipeline, wyoming
+from homeassistant.components.assist_satellite import AssistSatelliteState
+from homeassistant.components.wyoming import WyomingSatellite
 from homeassistant.components.wyoming.devices import SatelliteDevice
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, State
@@ -254,13 +256,16 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
         patch("homeassistant.components.wyoming.satellite._PING_SEND_DELAY", 0),
     ):
         entry = await setup_config_entry(hass)
-        device: SatelliteDevice = hass.data[wyoming.DOMAIN][
+        satellite: WyomingSatellite = hass.data[wyoming.DOMAIN][
             entry.entry_id
-        ].satellite.device
+        ].satellite
+        device = satellite.device
 
         async with asyncio.timeout(1):
             await mock_client.connect_event.wait()
             await mock_client.run_satellite_event.wait()
+
+        assert satellite.state == AssistSatelliteState.IDLE
 
         async with asyncio.timeout(1):
             await run_pipeline_called.wait()
@@ -330,6 +335,7 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
                 {"metadata": {"language": "en"}},
             )
         )
+        assert satellite.state == AssistSatelliteState.LISTENING
         async with asyncio.timeout(1):
             await mock_client.transcribe_event.wait()
 
@@ -381,6 +387,28 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
         assert mock_client.transcript is not None
         assert mock_client.transcript.text == "test transcript"
 
+        # Intent recognition
+        pipeline_event_callback(
+            assist_pipeline.PipelineEvent(
+                assist_pipeline.PipelineEventType.INTENT_START,
+                {
+                    "engine": "test",
+                    "language": "en",
+                    "intent_input": "test transcript",
+                    "conversation_id": None,
+                    "device_id": None,
+                },
+            )
+        )
+        assert satellite.state == AssistSatelliteState.PROCESSING
+
+        pipeline_event_callback(
+            assist_pipeline.PipelineEvent(
+                assist_pipeline.PipelineEventType.INTENT_END,
+                {"intent_output": {}},
+            )
+        )
+
         # Text-to-speech text
         pipeline_event_callback(
             assist_pipeline.PipelineEvent(
@@ -423,6 +451,7 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
             assist_pipeline.PipelineEvent(assist_pipeline.PipelineEventType.RUN_END)
         )
         assert not device.is_active
+        assert satellite.state == AssistSatelliteState.IDLE
 
         # The client should have received another ping by now
         async with asyncio.timeout(1):

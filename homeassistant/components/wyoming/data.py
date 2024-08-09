@@ -47,6 +47,18 @@ class WyomingService:
             or ((self.info.satellite is not None) and self.info.satellite.installed)
         )
 
+    def has_mic(self) -> bool:
+        """Return True if an audio input service is installed."""
+        return any(mic for mic in self.info.mic if mic.installed)
+
+    def has_snd(self) -> bool:
+        """Return True if an audio output service is installed."""
+        return any(snd for snd in self.info.snd if snd.installed)
+
+    def has_wake(self) -> bool:
+        """Return True if local wake word detection service is installed."""
+        return any(wake for wake in self.info.wake if wake.installed)
+
     def get_name(self) -> str | None:
         """Return name of first installed usable service."""
 
