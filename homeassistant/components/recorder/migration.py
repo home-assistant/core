@@ -15,6 +15,7 @@ from uuid import UUID
 import sqlalchemy
 from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text, update
 from sqlalchemy.engine import CursorResult, Engine
+from sqlalchemy.engine.interfaces import ReflectedForeignKeyConstraint
 from sqlalchemy.exc import (
     DatabaseError,
     IntegrityError,
@@ -631,9 +632,14 @@ def _update_states_table_with_foreign_key_options(
 
 def _drop_foreign_key_constraints(
     session_maker: Callable[[], Session], engine: Engine, table: str, column: str
-) -> bool:
+) -> tuple[bool, list[tuple[str, str, ReflectedForeignKeyConstraint]]]:
     """Drop foreign key constraints for a table on specific columns."""
     inspector = sqlalchemy.inspect(engine)
+    dropped_constraints = [
+        (table, column, foreign_key)
+        for foreign_key in inspector.get_foreign_keys(table)
+        if foreign_key["name"] and foreign_key["constrained_columns"] == [column]
+    ]
 
     ## Bind the ForeignKeyConstraints to the table
     tmp_table = Table(table, MetaData())
@@ -657,7 +663,7 @@ def _drop_foreign_key_constraints(
                 )
                 fk_remove_ok = False
 
-    return fk_remove_ok
+    return fk_remove_ok, dropped_constraints
 
 
 def _restore_foreign_key_constraints(
@@ -1540,10 +1546,12 @@ class _SchemaVersion44Migrator(_SchemaVersionMigrator, target_version=44):
                     session.execute(
                         text(
                             f"DELETE FROM {table} "  # noqa: S608
-                            "WHERE  NOT EXISTS "
-                            "  (SELECT 1 "
-                            f"   FROM   {foreign_table} "
-                            f"   WHERE  {foreign_table}.{foreign_column} = {table}.{column});"
+                            "WHERE ("
+                            f"  {table}.{column} IS NOT NULL AND"
+                            "  NOT EXISTS"
+                            "    (SELECT 1 "
+                            f"     FROM  {foreign_table} "
+                            f"     WHERE {foreign_table}.{foreign_column} = {table}.{column}));"
                         )
                     )
 
@@ -1995,7 +2003,7 @@ def cleanup_legacy_states_event_ids(instance: Recorder) -> bool:
             # so we have to rebuild the table
             fk_remove_ok = rebuild_sqlite_table(session_maker, instance.engine, States)
         else:
-            fk_remove_ok = _drop_foreign_key_constraints(
+            fk_remove_ok, _ = _drop_foreign_key_constraints(
                 session_maker, instance.engine, TABLE_STATES, "event_id"
             )
         if fk_remove_ok:

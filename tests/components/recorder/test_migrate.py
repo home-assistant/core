@@ -925,7 +925,7 @@ def test_drop_restore_foreign_key_constraints(recorder_db_url: str) -> None:
     with Session(engine) as session:
         session_maker = Mock(return_value=session)
         migration._restore_foreign_key_constraints(
-            session_maker, engine, dropped_constraints_1
+            session_maker, engine, constraints_to_recreate
         )
 
     # Check we do find the constrained columns again (they are restored)
