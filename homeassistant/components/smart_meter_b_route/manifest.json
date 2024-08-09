@@ -1,0 +1,10 @@
+{
+  "domain": "smart_meter_b_route",
+  "name": "Smart Meter B Route",
+  "codeowners": ["@SeraphicRav"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/smart_meter_b_route",
+  "iot_class": "local_polling",
+  "loggers": ["momonga"],
+  "requirements": ["momonga==0.1.1"]
+}

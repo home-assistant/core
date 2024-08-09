@@ -403,6 +403,7 @@ homeassistant.components.siren.*
 homeassistant.components.skybell.*
 homeassistant.components.slack.*
 homeassistant.components.sleepiq.*
+homeassistant.components.smart_meter_b_route.*
 homeassistant.components.smhi.*
 homeassistant.components.snooz.*
 homeassistant.components.sonarr.*
