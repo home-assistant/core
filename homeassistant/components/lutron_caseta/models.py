@@ -14,16 +14,17 @@ from homeassistant.helpers.device_registry import DeviceInfo
 type LutronCasetaConfigEntry = ConfigEntry[LutronCasetaData]
 
 
-@dataclass
+@dataclass(slots=True)
 class LutronCasetaData:
     """Data for the lutron_caseta integration."""
 
     bridge: Smartbridge
     bridge_device: dict[str, Any]
     keypad_data: LutronKeypadData
+    button_devices: list[LutronCasetaButtonDevice]
 
 
-@dataclass
+@dataclass(slots=True)
 class LutronKeypadData:
     """Data for the lutron_caseta integration keypads."""
 
@@ -32,6 +33,33 @@ class LutronKeypadData:
     buttons: dict[int, LutronButton]
     button_names_to_leap: dict[int, dict[str, int]]
     trigger_schemas: dict[int, vol.Schema]
+
+
+@dataclass(slots=True)
+class LutronCasetaButtonDevice:
+    """A lutron_caseta button device."""
+
+    button_id: int
+    device: dict
+    button_key: str | None
+    button_name: str
+    full_name: str
+    user_defined_name: bool
+    parent_device_info: DeviceInfo
+
+
+class LutronCasetaButtonActionData(TypedDict):
+    """A lutron_caseta button event data."""
+
+    serial: str
+    type: str
+    button_number: int | None
+    leap_button_number: int
+    device_name: str
+    device_id: str
+    area_name: str
+    button_type: str
+    action: str
 
 
 class LutronKeypad(TypedDict):
