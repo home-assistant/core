@@ -95,7 +95,6 @@ class MatterValve(MatterEntity, ValveEntity):
 
     async def async_set_valve_position(self, position: int) -> None:
         """Move the water valve to a specific position."""
-        position = kwargs[ATTR_POSITION]
         await self.send_device_command(
             # A value of 100 percent SHALL indicate the fully open position
             # A value of 0 percent SHALL indicate the fully closed position
