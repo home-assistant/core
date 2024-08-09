@@ -1,4 +1,4 @@
-"""Application Credentials platform the Tesla Fleet integration."""
+"""Provide oauth implementations for the Tesla Fleet integration."""
 
 import base64
 import hashlib
