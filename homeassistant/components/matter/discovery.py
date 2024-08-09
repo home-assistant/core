@@ -24,7 +24,7 @@ from .select import DISCOVERY_SCHEMAS as SELECT_SCHEMAS
 from .sensor import DISCOVERY_SCHEMAS as SENSOR_SCHEMAS
 from .switch import DISCOVERY_SCHEMAS as SWITCH_SCHEMAS
 from .update import DISCOVERY_SCHEMAS as UPDATE_SCHEMAS
-from .water_valve import DISCOVERY_SCHEMAS as SWITCH_SCHEMAS
+from .valve import DISCOVERY_SCHEMAS as SWITCH_SCHEMAS
 
 DISCOVERY_SCHEMAS: dict[Platform, list[MatterDiscoverySchema]] = {
     Platform.BINARY_SENSOR: BINARY_SENSOR_SCHEMAS,
