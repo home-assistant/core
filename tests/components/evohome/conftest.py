@@ -119,7 +119,7 @@ async def block_request(
 
 
 @pytest.fixture
-def test_config() -> dict[str, str]:
+def evo_config() -> dict[str, str]:
     return DEFAULT_TEST_CONFIG
 
 
