@@ -219,7 +219,7 @@ async def test_climate_offline(
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
 
-async def test_invalid_error(hass: HomeAssistant) -> None:
+async def test_invalid_error(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Tests service error is handled."""
 
     await setup_platform(hass, platforms=[Platform.CLIMATE])
@@ -239,10 +239,7 @@ async def test_invalid_error(hass: HomeAssistant) -> None:
             blocking=True,
         )
     mock_on.assert_called_once()
-    assert (
-        str(error.value)
-        == "Teslemetry command failed, The data request or command is unknown."
-    )
+    assert str(error.value) == snapshot(name="error")
 
 
 @pytest.mark.parametrize("response", COMMAND_ERRORS)
@@ -291,10 +288,11 @@ async def test_ignored_error(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_asleep_or_offline(
     hass: HomeAssistant,
-    mock_vehicle_data,
-    mock_wake_up,
-    mock_vehicle,
+    mock_vehicle_data: AsyncMock,
+    mock_wake_up: AsyncMock,
+    mock_vehicle: AsyncMock,
     freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Tests asleep is handled."""
 
@@ -320,7 +318,7 @@ async def test_asleep_or_offline(
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-    assert str(error.value) == "The data request or command is unknown."
+    assert str(error.value) == snapshot(name="InvalidCommand")
     mock_wake_up.assert_called_once()
 
     mock_wake_up.side_effect = None
@@ -339,7 +337,7 @@ async def test_asleep_or_offline(
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-    assert str(error.value) == "Could not wake up vehicle"
+    assert str(error.value) == snapshot(name="HomeAssistantError")
     mock_wake_up.assert_called_once()
     mock_vehicle.assert_called()
 
