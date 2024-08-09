@@ -748,7 +748,7 @@ def test_rebuild_sqlite_states_table(recorder_db_url: str) -> None:
         session.add(States(state="on"))
         session.commit()
 
-    migration.rebuild_sqlite_table(session_maker, engine, States)
+    assert migration.rebuild_sqlite_table(session_maker, engine, States) is True
 
     with session_scope(session=session_maker()) as session:
         assert session.query(States).count() == 1
@@ -776,13 +776,13 @@ def test_rebuild_sqlite_states_table_missing_fails(
         session.connection().execute(text("DROP TABLE states"))
         session.commit()
 
-    migration.rebuild_sqlite_table(session_maker, engine, States)
+    assert migration.rebuild_sqlite_table(session_maker, engine, States) is False
     assert "Error recreating SQLite table states" in caplog.text
     caplog.clear()
 
     # Now rebuild the events table to make sure the database did not
     # get corrupted
-    migration.rebuild_sqlite_table(session_maker, engine, Events)
+    assert migration.rebuild_sqlite_table(session_maker, engine, Events) is True
 
     with session_scope(session=session_maker()) as session:
         assert session.query(Events).count() == 1
@@ -812,7 +812,7 @@ def test_rebuild_sqlite_states_table_extra_columns(
             text("ALTER TABLE states ADD COLUMN extra_column TEXT")
         )
 
-    migration.rebuild_sqlite_table(session_maker, engine, States)
+    assert migration.rebuild_sqlite_table(session_maker, engine, States) is True
     assert "Error recreating SQLite table states" not in caplog.text
 
     with session_scope(session=session_maker()) as session:
@@ -905,7 +905,7 @@ def test_drop_restore_foreign_key_constraints(recorder_db_url: str) -> None:
             for table, column in constraints_to_recreate
             for dropped_constraint in migration._drop_foreign_key_constraints(
                 session_maker, engine, table, column
-            )
+            )[1]
         ]
     assert dropped_constraints_1 == expected_dropped_constraints[db_engine]
 
@@ -917,7 +917,7 @@ def test_drop_restore_foreign_key_constraints(recorder_db_url: str) -> None:
             for table, column in constraints_to_recreate
             for dropped_constraint in migration._drop_foreign_key_constraints(
                 session_maker, engine, table, column
-            )
+            )[1]
         ]
     assert dropped_constraints_2 == []
 
@@ -936,7 +936,7 @@ def test_drop_restore_foreign_key_constraints(recorder_db_url: str) -> None:
             for table, column in constraints_to_recreate
             for dropped_constraint in migration._drop_foreign_key_constraints(
                 session_maker, engine, table, column
-            )
+            )[1]
         ]
     assert dropped_constraints_3 == expected_dropped_constraints[db_engine]
 
