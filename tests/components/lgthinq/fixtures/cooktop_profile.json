@@ -1,0 +1,307 @@
+{
+  "extensionProperty": {
+    "operation": {
+      "operationMode": {
+        "mode": [
+          "w"
+        ],
+        "type": "enum",
+        "value": {
+          "w": [
+            "POWER_OFF"
+          ]
+        }
+      }
+    }
+  },
+  "property": [
+    {
+      "cookingZone": {
+        "currentState": {
+          "mode": [
+            "r"
+          ],
+          "type": "enum",
+          "value": {
+            "r": [
+              "INITIAL",
+              "COOK",
+              "PAUSE",
+              "LOCK"
+            ]
+          }
+        }
+      },
+      "location": {
+        "locationName": "LEFT_FRONT"
+      },
+      "power": {
+        "powerLevel": {
+          "mode": [
+            "r",
+            "w"
+          ],
+          "type": "range",
+          "value": {
+            "r": {
+              "max": 11,
+              "min": 0,
+              "step": 1
+            },
+            "w": {
+              "max": 11,
+              "min": 0,
+              "step": 1
+            }
+          }
+        }
+      },
+      "remoteControlEnable": {
+        "remoteControlEnabled": {
+          "mode": [
+            "r"
+          ],
+          "type": "boolean",
+          "value": {
+            "r": [
+              false,
+              true
+            ]
+          }
+        }
+      },
+      "timer": {
+        "remainHour": {
+          "mode": [
+            "r",
+            "w"
+          ],
+          "type": "range",
+          "value": {
+            "r": {
+              "max": 11,
+              "min": 0,
+              "step": 1
+            },
+            "w": {
+              "max": 11,
+              "min": 0,
+              "step": 1
+            }
+          }
+        },
+        "remainMinute": {
+          "mode": [
+            "r",
+            "w"
+          ],
+          "type": "range",
+          "value": {
+            "r": {
+              "max": 59,
+              "min": 0,
+              "step": 1
+            },
+            "w": {
+              "max": 59,
+              "min": 0,
+              "step": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "cookingZone": {
+        "currentState": {
+          "mode": [
+            "r"
+          ],
+          "type": "enum",
+          "value": {
+            "r": [
+              "INITIAL",
+              "COOK",
+              "PAUSE",
+              "LOCK"
+            ]
+          }
+        }
+      },
+      "location": {
+        "locationName": "RIGHT_FRONT"
+      },
+      "power": {
+        "powerLevel": {
+          "mode": [
+            "r",
+            "w"
+          ],
+          "type": "range",
+          "value": {
+            "r": {
+              "max": 11,
+              "min": 0,
+              "step": 1
+            },
+            "w": {
+              "max": 11,
+              "min": 0,
+              "step": 1
+            }
+          }
+        }
+      },
+      "remoteControlEnable": {
+        "remoteControlEnabled": {
+          "mode": [
+            "r"
+          ],
+          "type": "boolean",
+          "value": {
+            "r": [
+              false,
+              true
+            ]
+          }
+        }
+      },
+      "timer": {
+        "remainHour": {
+          "mode": [
+            "r",
+            "w"
+          ],
+          "type": "range",
+          "value": {
+            "r": {
+              "max": 11,
+              "min": 0,
+              "step": 1
+            },
+            "w": {
+              "max": 11,
+              "min": 0,
+              "step": 1
+            }
+          }
+        },
+        "remainMinute": {
+          "mode": [
+            "r",
+            "w"
+          ],
+          "type": "range",
+          "value": {
+            "r": {
+              "max": 59,
+              "min": 0,
+              "step": 1
+            },
+            "w": {
+              "max": 59,
+              "min": 0,
+              "step": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "cookingZone": {
+        "currentState": {
+          "mode": [
+            "r"
+          ],
+          "type": "enum",
+          "value": {
+            "r": [
+              "INITIAL",
+              "COOK",
+              "PAUSE",
+              "LOCK"
+            ]
+          }
+        }
+      },
+      "location": {
+        "locationName": "LEFT_REAR"
+      },
+      "power": {
+        "powerLevel": {
+          "mode": [
+            "r",
+            "w"
+          ],
+          "type": "range",
+          "value": {
+            "r": {
+              "max": 11,
+              "min": 0,
+              "step": 1
+            },
+            "w": {
+              "max": 11,
+              "min": 0,
+              "step": 1
+            }
+          }
+        }
+      },
+      "remoteControlEnable": {
+        "remoteControlEnabled": {
+          "mode": [
+            "r"
+          ],
+          "type": "boolean",
+          "value": {
+            "r": [
+              false,
+              true
+            ]
+          }
+        }
+      },
+      "timer": {
+        "remainHour": {
+          "mode": [
+            "r",
+            "w"
+          ],
+          "type": "range",
+          "value": {
+            "r": {
+              "max": 11,
+              "min": 0,
+              "step": 1
+            },
+            "w": {
+              "max": 11,
+              "min": 0,
+              "step": 1
+            }
+          }
+        },
+        "remainMinute": {
+          "mode": [
+            "r",
+            "w"
+          ],
+          "type": "range",
+          "value": {
+            "r": {
+              "max": 59,
+              "min": 0,
+              "step": 1
+            },
+            "w": {
+              "max": 59,
+              "min": 0,
+              "step": 1
+            }
+          }
+        }
+      }
+    }
+  ]
+}

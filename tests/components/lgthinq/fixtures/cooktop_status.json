@@ -1,0 +1,56 @@
+[
+  {
+    "cookingZone": {
+      "currentState": "INITIAL"
+    },
+    "location": {
+      "locationName": "LEFT_FRONT"
+    },
+    "power": {
+      "powerLevel": 0
+    },
+    "remoteControlEnable": {
+      "remoteControlEnabled": false
+    },
+    "timer": {
+      "remainHour": 0,
+      "remainMinute": 0
+    }
+  },
+  {
+    "cookingZone": {
+      "currentState": "INITIAL"
+    },
+    "location": {
+      "locationName": "RIGHT_FRONT"
+    },
+    "power": {
+      "powerLevel": 0
+    },
+    "remoteControlEnable": {
+      "remoteControlEnabled": false
+    },
+    "timer": {
+      "remainHour": 0,
+      "remainMinute": 0
+    }
+  },
+  {
+    "cookingZone": {
+      "currentState": "INITIAL"
+    },
+    "location": {
+      "locationName": "LEFT_REAR"
+    },
+    "power": {
+      "powerLevel": 0
+    },
+    "remoteControlEnable": {
+      "remoteControlEnabled": false
+    },
+    "timer": {
+      "remainHour": 0,
+      "remainMinute": 0
+    }
+  }
+]

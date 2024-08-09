@@ -1,0 +1,278 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured.",
+            "already_in_progress": "Configuration flow is already in progress",
+            "error_pairing": "Connected to LG webOS TV but not paired",
+            "no_device_info" : "Cant not get device info from the device.",
+            "1218" : "The token is not valid.",
+            "1304" : "The service terms are not accepted.",
+            "1306" : "The number of API calls has been exceeded.",
+            "1307" : "The country is not supported.",
+            "1314" : "The number of API calls has been exceeded."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect, please turn on your TV or check ip address"
+        },
+        "step": {
+            "user": {
+                "title": "Add LG Item",
+                "description": "Which item do you want to add?",
+                "data": {
+                    "entry_type": "Item Type"
+                },
+                "data_description": {
+                    "entry_type": "Item to add"
+                },
+                "menu_options": {
+                    "thinq": "Appliance",
+                    "webostv": "webOS TV",
+                    "soundbar": "Soundbar"
+                }
+            },
+            "thinq": {
+                "title": "Connect to ThinQ",
+                "description": "Please enter a ThinQ [PAT(Personal Access Token)]({pat_url}) created with your LG ThinQ account.",
+                "data": {
+                    "access_token": "Personal Access Token",
+                    "name": "Entry Name"
+                }
+            },
+            "region": {
+                "title": "Choose the region",
+                "data": {
+                    "country": "Country",
+                    "language": "Language"
+                }
+            },
+            "soundbar": {
+                "title": "Soundbar Search",
+                "description": "Click the **SUBMIT** button to start the search.\n\nPlease check the Wi-Fi connection staus of the **Soundbar**."
+            },
+            "soundbar_fill_data": {
+                "title": "Connect to Soundbar",
+                "description": "Input **IP address** of the LG Soundbar.\n\nYou can figure out the IP address through **LG Soundbar Application** on mobile",
+                "data": {
+                    "host": "IP Address",
+                    "name": "Device Name"
+                }
+            },
+            "webostv": {
+                "title": "webOS TV Search",
+                "description": "Click the **SUBMIT** button to start the search.\n\nPlease check the Wi-Fi connection staus of the **webOS TV**."
+            },
+            "webostv_fill_data": {
+                "title": "Connect to webOS TV",
+                "description": "Input **IP address** of the LG webOS TV.\n\nYou can figure out the IP address through the **Settings** of the webOS TV.",
+                "data": {
+                  "host": "IP Address",
+                  "name": "Device Name"
+                }
+            },
+            "pairing": {
+                "title": "Connect to webOS TV",
+                "description": "Click **SUBMIT** and accept the **pairing request on your TV**.\n\n![Image](/static/images/config_webos.png)"
+            },
+            "select_sources": {
+                "data": {
+                    "sources": "Sources list"
+                },
+                "title": "Select enabled sources",
+                "description": "You can select again via option."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "webostv.turn_on": "Device is requested to turn on"
+        }
+    },
+    "options": {
+        "abort": {
+            "not_supported": "Options Flow is not supported."
+        },
+        "error": {
+            "cannot_retrieve": "Unable to retrieve the list of sources. Make sure device is switched on"
+        },
+        "step": {
+            "webostv": {
+                "title": "Options for webOS Smart TV",
+                "description": "Select enabled sources",
+                "data": {
+                    "sources": "Sources list"
+                }
+            }
+        }
+    },
+    "services": {
+        "reload_device_list": {
+            "name": "Reload device list",
+            "description": "Reload LG ThinQ device list."
+        },
+        "refresh_device_status": {
+            "name": "Refresh device status",
+            "description": "Refresh status of LG ThinQ device.",
+            "fields": {
+            "device_id": {
+                "name": "Device ID",
+                "description": "The target device id."
+            }
+          }
+        },
+        "get_device_profile": {
+            "name": "Get device profile",
+            "description": "Get profile of LG ThinQ device from the server.",
+            "fields": {
+                "device_id": {
+                    "name": "Device ID",
+                    "description": "The target device id."
+                }
+            }
+        },
+        "get_device_status": {
+            "name": "Get device status",
+            "description": "Get status of LG ThinQ device from the server.",
+            "fields": {
+                "device_id": {
+                    "name": "Device ID",
+                    "description": "The target device id."
+                }
+            }
+        },
+        "post_device_status": {
+            "name": "Post device status",
+            "description": "Post status of LG ThinQ device to the server.",
+            "fields": {
+                "device_id": {
+                    "name": "Device ID",
+                    "description": "The target device id."
+                },
+                "value": {
+                    "name": "Value",
+                    "description": "Value to post."
+                }
+            }
+        },
+        "button": {
+            "description": "Sends a button press command.",
+            "fields": {
+                "button": {
+                    "description": "Name of the button to press.  Known possible values are LEFT, RIGHT, DOWN, UP, HOME, MENU, BACK, ENTER, DASH, INFO, ASTERISK, CC, EXIT, MUTE, RED, GREEN, BLUE, YELLOW, VOLUMEUP, VOLUMEDOWN, CHANNELUP, CHANNELDOWN, PLAY, PAUSE, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9.",
+                    "name": "Button"
+                },
+                "entity_id": {
+                    "description": "Name(s) of the webOS TV entities where to run the API method.",
+                    "name": "Entity"
+                }
+            },
+            "name": "Button"
+        },
+        "command": {
+            "description": "Sends a command.",
+            "fields": {
+                "command": {
+                    "description": "Endpoint of the command.",
+                    "name": "Command"
+                },
+                "entity_id": {
+                    "description": "Name(s) of the webOS TV entities where to run the API method.",
+                    "name": "Entity"
+                },
+                "payload": {
+                    "description": "An optional payload to provide to the endpoint in the format of key value pair(s).",
+                    "name": "Payload"
+                }
+            },
+            "name": "Command"
+        },
+        "select_sound_output": {
+            "description": "Sends the TV the command to change sound output.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name(s) of the webOS TV entities to change sound output on.",
+                    "name": "Entity"
+                },
+                "sound_output": {
+                    "description": "Name of the sound output to switch to.",
+                    "name": "Sound output"
+                }
+            },
+            "name": "Select sound output"
+        }
+    },
+    "entity": {
+        "switch": {
+            "operation_power": {
+                "name": "Power"
+            }
+        }
+    },
+    "exceptions": {        
+        "0000": {
+            "message": "Undefined error."
+        },
+        "0001" : {
+            "message": "The control command is not supported."
+        },
+        "1218": {
+            "message": "The token is not valid."
+        },
+        "1222": {
+            "message": "The device is not connected."
+        },
+        "1304": {
+            "message": "The service terms are not accepted."
+        },
+        "1306": {
+            "message": "The number of API calls has been exceeded."
+        },
+        "1307": {
+            "message": "The country is not supported."
+        },
+        "1309": {
+            "message": "The user does NOT have permission on the API call."
+        },
+        "1314": {
+            "message": "The number of User API calls has been exceeded."
+        },
+        "2201": {
+            "message": "The feature is not supported."
+        },
+        "2205": {
+            "message": "The device status data is not transmitted normally or the transmitted data is not parsed normally."
+        },
+        "2207": {
+            "message": "The control command is not valid."
+        },
+        "2208": {
+            "message": "Failed to control the device."
+        },
+        "2209": {
+            "message": "The response from the device is being delayed."
+        },
+        "2210": {
+            "message": "Retry the request."
+        },
+        "2211": {
+            "message": "Timeout occured."
+        },
+        "2214": {
+            "message": "Failed to request."
+        },
+        "2301": {
+            "message": "The control command cannot be processed because the device is remote off."
+        },
+        "2302": {
+            "message": "In the {state}, the control command is not supported."
+        },
+        "2303": {
+            "message": "The control command cannot be processed because the device is in an error state."
+        },
+        "2304": {
+            "message": "The control command cannot be processed because the device is powered off."
+        },
+        "2305": {
+            "message": "In the {state}, the control command is not supported."
+        }
+    }
+}

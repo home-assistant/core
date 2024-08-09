@@ -1,0 +1,21 @@
+{
+  "domain": "lgthinq",
+  "name": "LG ThinQ",
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/lgthinq/",
+  "iot_class": "cloud_push",
+  "loggers": ["nmap"],
+  "requirements": [    
+    "aiowebostv==0.4.2",
+    "pycountry==23.12.11",
+    "temescal==0.5",
+    "thinqconnect==0.9.2"
+  ],
+  "ssdp": [
+    {
+      "st": "urn:lge-com:service:webos-second-screen:1"
+    }
+  ]
+}

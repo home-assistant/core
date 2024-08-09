@@ -1,0 +1,21 @@
+[
+  {
+    "runState": {
+      "currentState": "RUNNING"
+    },
+    "location": {
+      "locationName": "MAIN"
+    },
+    "remoteControlEnable": {
+      "remoteControlEnabled": true
+    },
+    "timer": {
+      "remainHour": 0,
+      "remainMinute": 0,
+      "relativeHourToStart": 1,
+      "relativeMinuteToStart": 0,
+      "totalHour": 0,
+      "totalMinute": 0
+    }
+  }
+]

@@ -1,0 +1,12 @@
+{
+  "services": {
+    "reload_device_list": "mdi:reload",
+    "refresh_device_status": "mdi:sync",
+    "get_device_profile": "mdi:download-box",
+    "get_device_status": "mdi:download",
+    "post_device_status": "mdi:upload",
+    "button": "mdi:button-pointer",
+    "command": "mdi:console",
+    "select_sound_output": "mdi:volume-source"
+  }
+}

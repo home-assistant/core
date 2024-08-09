@@ -3216,6 +3216,12 @@
         }
       }
     },
+    "lgthinq": {
+      "name": "LG ThinQ",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "lidarr": {
       "name": "Lidarr",
       "integration_type": "service",
