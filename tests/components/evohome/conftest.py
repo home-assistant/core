@@ -122,7 +122,7 @@ async def block_request(
 @patch("evohomeasync2.broker.Broker._client", block_request)
 async def setup_evohome(
     hass: HomeAssistant,
-    test_config: dict[str, str] | None = None,
+    test_config: dict[str, str],
     install: str = "default",
 ) -> MagicMock:
     """Set up the evohome integration and return its client.
