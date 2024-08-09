@@ -151,7 +151,6 @@ class MatterValve(MatterEntity, ValveEntity):
                 self.current_valve_position,
             )
 
-
     @callback
     def _calculate_features(
         self,
