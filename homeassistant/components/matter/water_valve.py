@@ -191,9 +191,6 @@ class MatterValve(MatterEntity, ValveEntity):
         if feature_map & ValveConfigurationAndControlFeature.kLevel:
             self._attr_supported_features |= ValveEntityFeature.SET_POSITION
 
-        # TODO: add feature for TimeSync
-        # if feature_map & ValveConfigurationAndControlFeature.TimeSync:
-        #    self._attr_supported_features |= ValveEntityFeature.TIMESYNC
         self._attr_supported_features |= (
             ValveEntityFeature.CLOSE | ValveEntityFeature.OPEN
         )
