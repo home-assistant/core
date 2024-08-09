@@ -16,12 +16,14 @@ from homeassistant.components.http.ban import (
     IP_BANS_FILE,
     KEY_BAN_MANAGER,
     KEY_FAILED_LOGIN_ATTEMPTS,
+    IpBanManager,
     process_success_login,
     setup_bans,
 )
+from homeassistant.components.http.const import DOMAIN
 from homeassistant.components.http.view import request_handler_factory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_get_persistent_notifications
@@ -423,3 +425,78 @@ async def test_single_ban_file_entry(
         await manager.async_add_ban(remote_ip)
 
     assert m_open.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("ip_addrs", "to_remove"),
+    [
+        (["200.201.202.204", "200.201.202.205"], "200.201.202.205"),
+        (
+            ["2001:db8::ff00:42:8329", "2001:db8::ff00:42:8330"],
+            "2001:db8::ff00:42:8329",
+        ),
+    ],
+)
+async def test_unban_service_success(
+    hass: HomeAssistant, ip_addrs: list[str], to_remove: str
+) -> None:
+    """Test that unban service works."""
+    app = web.Application()
+    app["hass"] = hass
+    setup_bans(hass, app, 2)
+
+    m_open = mock_open()
+    with patch("homeassistant.components.http.ban.open", m_open, create=True):
+        manager: IpBanManager = app[KEY_BAN_MANAGER]
+        for ip_addr in ip_addrs:
+            await manager.async_add_ban(ip_address(ip_addr))
+
+        assert len(manager.ip_bans_lookup) == 2
+        await hass.services.async_call(
+            DOMAIN,
+            "unban_ip",
+            {
+                "ip_address": to_remove,
+            },
+            blocking=True,
+        )
+        assert len(manager.ip_bans_lookup) == 1
+
+
+@pytest.mark.parametrize(
+    ("ip_addr", "expected_error", "match"),
+    [
+        (
+            "200.201.202.204",
+            ServiceValidationError,
+            r"^IP address 200.201.202.204 is not banned$",
+        ),
+        (
+            "invalid_ip",
+            ServiceValidationError,
+            r"^invalid_ip is not a valid IP address$",
+        ),
+    ],
+    ids=["not_banned", "invalid_ip"],
+)
+async def test_unban_service_errors(
+    hass: HomeAssistant, ip_addr: str, expected_error: Exception, match: str
+) -> None:
+    """Test that unban service handles errors correctly."""
+    app = web.Application()
+    app["hass"] = hass
+    setup_bans(hass, app, 2)
+
+    m_open = mock_open()
+    with (
+        patch("homeassistant.components.http.ban.open", m_open, create=True),
+        pytest.raises(expected_error, match=match),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "unban_ip",
+            {
+                "ip_address": ip_addr,
+            },
+            blocking=True,
+        )

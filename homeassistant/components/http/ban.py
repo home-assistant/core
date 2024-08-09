@@ -24,12 +24,13 @@ from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util, yaml
+from homeassistant.util.network import is_ip_address
 
-from .const import KEY_HASS
+from .const import DOMAIN, KEY_HASS
 from .view import HomeAssistantView
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -50,6 +51,9 @@ SCHEMA_IP_BAN_ENTRY: Final = vol.Schema(
     {vol.Optional("banned_at"): vol.Any(None, cv.datetime)}
 )
 
+SERVICE_SCHEMA_UNBAN_IP: Final = vol.Schema({vol.Required("ip_address"): cv.string})
+SERVICE_UNBAN_IP: Final = "unban_ip"
+
 
 @callback
 def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> None:
@@ -64,6 +68,35 @@ def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> N
         await app[KEY_BAN_MANAGER].async_load()
 
     app.on_startup.append(ban_startup)
+
+    async def async_unban_service_handler(service: ServiceCall) -> None:
+        """Handle unban service call."""
+        if not is_ip_address(service.data["ip_address"]):
+            raise ServiceValidationError(
+                f"{service.data['ip_address']} is not a valid IP address",
+                translation_domain=DOMAIN,
+                translation_key="invalid_ip_address",
+                translation_placeholders={"ip_address": service.data["ip_address"]},
+            )
+
+        try:
+            await app[KEY_BAN_MANAGER].async_remove_ban(
+                ip_address(service.data["ip_address"])
+            )
+        except ValueError as err:
+            raise ServiceValidationError(
+                f"IP address {service.data['ip_address']} is not banned",
+                translation_domain=DOMAIN,
+                translation_key="ip_not_banned",
+                translation_placeholders={"ip_address": service.data["ip_address"]},
+            ) from err
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_UNBAN_IP,
+        async_unban_service_handler,
+        schema=SERVICE_SCHEMA_UNBAN_IP,
+    )
 
 
 @middleware
@@ -249,8 +282,28 @@ class IpBanManager:
             # Write in a single write call to avoid interleaved writes
             out.write("\n" + yaml.dump(ip_))
 
+    def _write_bans(self, ip_bans: dict[IPv4Address | IPv6Address, IpBan]) -> None:
+        """Write IP bans to config file."""
+        to_write = {
+            str(ip_ban.ip_address): {ATTR_BANNED_AT: ip_ban.banned_at.isoformat()}
+            for ip_ban in ip_bans.values()
+        }
+
+        with open(self.path, "r+", encoding="utf8") as out:
+            out.seek(0)
+            out.truncate()
+            out.write("\n" + yaml.dump(to_write))
+
     async def async_add_ban(self, remote_addr: IPv4Address | IPv6Address) -> None:
         """Add a new IP address to the banned list."""
         if remote_addr not in self.ip_bans_lookup:
             new_ban = self.ip_bans_lookup[remote_addr] = IpBan(remote_addr)
             await self.hass.async_add_executor_job(self._add_ban, new_ban)
+
+    async def async_remove_ban(self, remote_addr: IPv4Address | IPv6Address) -> None:
+        """Remove an IP address from the banned list."""
+        if remote_addr not in self.ip_bans_lookup:
+            raise ValueError(f"IP address {remote_addr} is not banned")
+
+        self.ip_bans_lookup.pop(remote_addr)
+        await self.hass.async_add_executor_job(self._write_bans, self.ip_bans_lookup)
