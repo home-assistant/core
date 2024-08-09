@@ -102,10 +102,14 @@ class ExpectedResults:
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
-async def test_vendor_json(hass: HomeAssistant, install: str) -> None:
+async def test_vendor_json(
+    hass: HomeAssistant,
+    evo_config: dict[str, str],
+    install: str,
+) -> None:
     """Test setup of a Honeywell TCC-compatible system."""
 
-    await setup_evohome(hass, install=install)
+    await setup_evohome(hass, evo_config, install=install)
 
     results = ExpectedResults(hass, expected_results_fixture(install))
 
