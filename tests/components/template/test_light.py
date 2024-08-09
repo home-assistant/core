@@ -711,12 +711,12 @@ async def test_level_template(
     ("expected_temp", "temperature_template", "expected_color_mode"),
     [
         (500, "{{500}}", ColorMode.COLOR_TEMP),
-        (None, "{{501}}", ColorMode.COLOR_TEMP),
-        (None, "{{x - 12}}", ColorMode.COLOR_TEMP),
-        (None, "None", ColorMode.COLOR_TEMP),
-        (None, "{{ none }}", ColorMode.COLOR_TEMP),
-        (None, "", ColorMode.COLOR_TEMP),
-        (None, "{{ 'one' }}", ColorMode.COLOR_TEMP),
+        (None, "{{501}}", ColorMode.UNKNOWN),
+        (None, "{{x - 12}}", ColorMode.UNKNOWN),
+        (None, "None", ColorMode.UNKNOWN),
+        (None, "{{ none }}", ColorMode.UNKNOWN),
+        (None, "", ColorMode.UNKNOWN),
+        (None, "{{ 'one' }}", ColorMode.UNKNOWN),
     ],
 )
 async def test_temperature_template(
@@ -1093,13 +1093,13 @@ async def test_rgbww_color_action_no_template(
     [
         ((360, 100), "{{(360, 100)}}", ColorMode.HS),
         ((359.9, 99.9), "{{(359.9, 99.9)}}", ColorMode.HS),
-        (None, "{{(361, 100)}}", ColorMode.HS),
-        (None, "{{(360, 101)}}", ColorMode.HS),
-        (None, "[{{(360)}},{{null}}]", ColorMode.HS),
-        (None, "{{x - 12}}", ColorMode.HS),
-        (None, "", ColorMode.HS),
-        (None, "{{ none }}", ColorMode.HS),
-        (None, "{{('one','two')}}", ColorMode.HS),
+        (None, "{{(361, 100)}}", ColorMode.UNKNOWN),
+        (None, "{{(360, 101)}}", ColorMode.UNKNOWN),
+        (None, "[{{(360)}},{{null}}]", ColorMode.UNKNOWN),
+        (None, "{{x - 12}}", ColorMode.UNKNOWN),
+        (None, "", ColorMode.UNKNOWN),
+        (None, "{{ none }}", ColorMode.UNKNOWN),
+        (None, "{{('one','two')}}", ColorMode.UNKNOWN),
     ],
 )
 async def test_legacy_color_template(
@@ -1133,13 +1133,13 @@ async def test_legacy_color_template(
         ((360, 100), "{{(360, 100)}}", ColorMode.HS),
         ((360, 100), "(360, 100)", ColorMode.HS),
         ((359.9, 99.9), "{{(359.9, 99.9)}}", ColorMode.HS),
-        (None, "{{(361, 100)}}", ColorMode.HS),
-        (None, "{{(360, 101)}}", ColorMode.HS),
-        (None, "[{{(360)}},{{null}}]", ColorMode.HS),
-        (None, "{{x - 12}}", ColorMode.HS),
-        (None, "", ColorMode.HS),
-        (None, "{{ none }}", ColorMode.HS),
-        (None, "{{('one','two')}}", ColorMode.HS),
+        (None, "{{(361, 100)}}", ColorMode.UNKNOWN),
+        (None, "{{(360, 101)}}", ColorMode.UNKNOWN),
+        (None, "[{{(360)}},{{null}}]", ColorMode.UNKNOWN),
+        (None, "{{x - 12}}", ColorMode.UNKNOWN),
+        (None, "", ColorMode.UNKNOWN),
+        (None, "{{ none }}", ColorMode.UNKNOWN),
+        (None, "{{('one','two')}}", ColorMode.UNKNOWN),
     ],
 )
 async def test_hs_template(
@@ -1174,13 +1174,13 @@ async def test_hs_template(
         ((160, 78, 192), "{{[160, 78, 192]}}", ColorMode.RGB),
         ((160, 78, 192), "(160, 78, 192)", ColorMode.RGB),
         ((159, 77, 191), "{{(159.9, 77.9, 191.9)}}", ColorMode.RGB),
-        (None, "{{(256, 100, 100)}}", ColorMode.RGB),
-        (None, "{{(100, 256, 100)}}", ColorMode.RGB),
-        (None, "{{(100, 100, 256)}}", ColorMode.RGB),
-        (None, "{{x - 12}}", ColorMode.RGB),
-        (None, "", ColorMode.RGB),
-        (None, "{{ none }}", ColorMode.RGB),
-        (None, "{{('one','two','tree')}}", ColorMode.RGB),
+        (None, "{{(256, 100, 100)}}", ColorMode.UNKNOWN),
+        (None, "{{(100, 256, 100)}}", ColorMode.UNKNOWN),
+        (None, "{{(100, 100, 256)}}", ColorMode.UNKNOWN),
+        (None, "{{x - 12}}", ColorMode.UNKNOWN),
+        (None, "", ColorMode.UNKNOWN),
+        (None, "{{ none }}", ColorMode.UNKNOWN),
+        (None, "{{('one','two','tree')}}", ColorMode.UNKNOWN),
     ],
 )
 async def test_rgb_template(
@@ -1215,14 +1215,14 @@ async def test_rgb_template(
         ((160, 78, 192, 25), "{{[160, 78, 192, 25]}}", ColorMode.RGBW),
         ((160, 78, 192, 25), "(160, 78, 192, 25)", ColorMode.RGBW),
         ((159, 77, 191, 24), "{{(159.9, 77.9, 191.9, 24.9)}}", ColorMode.RGBW),
-        (None, "{{(256, 100, 100, 100)}}", ColorMode.RGBW),
-        (None, "{{(100, 256, 100, 100)}}", ColorMode.RGBW),
-        (None, "{{(100, 100, 256, 100)}}", ColorMode.RGBW),
-        (None, "{{(100, 100, 100, 256)}}", ColorMode.RGBW),
-        (None, "{{x - 12}}", ColorMode.RGBW),
-        (None, "", ColorMode.RGBW),
-        (None, "{{ none }}", ColorMode.RGBW),
-        (None, "{{('one','two','tree','four')}}", ColorMode.RGBW),
+        (None, "{{(256, 100, 100, 100)}}", ColorMode.UNKNOWN),
+        (None, "{{(100, 256, 100, 100)}}", ColorMode.UNKNOWN),
+        (None, "{{(100, 100, 256, 100)}}", ColorMode.UNKNOWN),
+        (None, "{{(100, 100, 100, 256)}}", ColorMode.UNKNOWN),
+        (None, "{{x - 12}}", ColorMode.UNKNOWN),
+        (None, "", ColorMode.UNKNOWN),
+        (None, "{{ none }}", ColorMode.UNKNOWN),
+        (None, "{{('one','two','tree','four')}}", ColorMode.UNKNOWN),
     ],
 )
 async def test_rgbw_template(
@@ -1261,15 +1261,15 @@ async def test_rgbw_template(
             "{{(159.9, 77.9, 191.9, 24.9, 54.9)}}",
             ColorMode.RGBWW,
         ),
-        (None, "{{(256, 100, 100, 100, 100)}}", ColorMode.RGBWW),
-        (None, "{{(100, 256, 100, 100, 100)}}", ColorMode.RGBWW),
-        (None, "{{(100, 100, 256, 100, 100)}}", ColorMode.RGBWW),
-        (None, "{{(100, 100, 100, 256, 100)}}", ColorMode.RGBWW),
-        (None, "{{(100, 100, 100, 100, 256)}}", ColorMode.RGBWW),
-        (None, "{{x - 12}}", ColorMode.RGBWW),
-        (None, "", ColorMode.RGBWW),
-        (None, "{{ none }}", ColorMode.RGBWW),
-        (None, "{{('one','two','tree','four','five')}}", ColorMode.RGBWW),
+        (None, "{{(256, 100, 100, 100, 100)}}", ColorMode.UNKNOWN),
+        (None, "{{(100, 256, 100, 100, 100)}}", ColorMode.UNKNOWN),
+        (None, "{{(100, 100, 256, 100, 100)}}", ColorMode.UNKNOWN),
+        (None, "{{(100, 100, 100, 256, 100)}}", ColorMode.UNKNOWN),
+        (None, "{{(100, 100, 100, 100, 256)}}", ColorMode.UNKNOWN),
+        (None, "{{x - 12}}", ColorMode.UNKNOWN),
+        (None, "", ColorMode.UNKNOWN),
+        (None, "{{ none }}", ColorMode.UNKNOWN),
+        (None, "{{('one','two','tree','four','five')}}", ColorMode.UNKNOWN),
     ],
 )
 async def test_rgbww_template(
@@ -1542,6 +1542,77 @@ async def test_all_colors_mode_no_template(
         ColorMode.RGB,
         ColorMode.RGBW,
         ColorMode.RGBWW,
+    ]
+    assert state.attributes["supported_features"] == 0
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "light_config",
+    [
+        {
+            "test_template_light": {
+                **OPTIMISTIC_ON_OFF_LIGHT_CONFIG,
+                "value_template": "{{1 == 1}}",
+                "temperature_template": "{% if is_state('light.test_state', 'on') %}200{% else %}None{% endif %}",
+                "hs_template": "{% if is_state('light.test_state', 'on') %}(27.001, 19.243){% else %}(40, 50){% endif %}",
+                "set_hs": {
+                    "service": "test.automation",
+                    "data_template": {
+                        "entity_id": "test.test_state",
+                        "h": "{{h}}",
+                        "s": "{{s}}",
+                    },
+                },
+                "set_temperature": {
+                    "service": "test.automation",
+                    "data_template": {
+                        "entity_id": "test.test_state",
+                        "color_temp": "{{color_temp}}",
+                    },
+                },
+            }
+        },
+    ],
+)
+async def test_color_mode_not_optimistic_template(
+    hass: HomeAssistant, setup_light, calls
+) -> None:
+    """Test setting color and color temperature with not optimistic template."""
+    hass.states.async_set("light.test_state", STATE_OFF)
+    await hass.async_block_till_done()
+    state = hass.states.get("light.test_template_light")
+    assert state.attributes["color_mode"] == ColorMode.HS
+    assert state.attributes["color_temp"] is None
+    assert state.attributes["hs_color"] == (40, 50)
+    assert state.attributes["supported_color_modes"] == [
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
+    ]
+    assert state.attributes["supported_features"] == 0
+
+    hass.states.async_set("light.test_state", STATE_ON)
+    await hass.async_block_till_done()
+    state = hass.states.get("light.test_template_light")
+    assert state.attributes["color_mode"] == ColorMode.COLOR_TEMP
+    assert state.attributes["color_temp"] == 200
+    assert "hs_color" in state.attributes  # Color temp represented as hs_color
+    assert state.attributes["supported_color_modes"] == [
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
+    ]
+    assert state.attributes["supported_features"] == 0
+
+    # Make sure transition from COLOR_TEMP to HS works
+    hass.states.async_set("light.test_state", STATE_OFF)
+    await hass.async_block_till_done()
+    state = hass.states.get("light.test_template_light")
+    assert state.attributes["color_mode"] == ColorMode.HS
+    assert state.attributes["color_temp"] is None
+    assert state.attributes["hs_color"] == (40, 50)
+    assert state.attributes["supported_color_modes"] == [
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
     ]
     assert state.attributes["supported_features"] == 0
 

@@ -121,7 +121,7 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-async def _async_create_entities(hass, config):
+async def _async_create_entities(hass: HomeAssistant, config):
     """Create the Template Lights."""
     lights = []
 
@@ -158,11 +158,11 @@ class LightTemplate(TemplateEntity, LightEntity):
 
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         object_id,
         config,
         unique_id,
-    ):
+    ) -> None:
         """Initialize the light."""
         super().__init__(
             hass, config=config, fallback_name=object_id, unique_id=unique_id
@@ -170,7 +170,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id, hass=hass
         )
-        friendly_name = self._attr_name
+        friendly_name = self._attr_name or self.entity_id
         self._template = config.get(CONF_VALUE_TEMPLATE)
         self._on_script = Script(hass, config[CONF_ON_ACTION], friendly_name, DOMAIN)
         self._off_script = Script(hass, config[CONF_OFF_ACTION], friendly_name, DOMAIN)
@@ -313,12 +313,12 @@ class LightTemplate(TemplateEntity, LightEntity):
         return self._effect_list
 
     @property
-    def color_mode(self):
+    def color_mode(self) -> ColorMode | None:
         """Return current color mode."""
         return self._color_mode
 
     @property
-    def supported_color_modes(self):
+    def supported_color_modes(self) -> set[ColorMode] | None:
         """Flag supported color modes."""
         return self._supported_color_modes
 
@@ -364,7 +364,6 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._temperature_template,
                 None,
                 self._update_temperature,
-                none_on_template_error=True,
             )
         if self._color_template:
             self.add_template_attribute(
@@ -372,7 +371,6 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._color_template,
                 None,
                 self._update_hs,
-                none_on_template_error=True,
             )
         if self._hs_template:
             self.add_template_attribute(
@@ -380,7 +378,6 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._hs_template,
                 None,
                 self._update_hs,
-                none_on_template_error=True,
             )
         if self._rgb_template:
             self.add_template_attribute(
@@ -388,7 +385,6 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._rgb_template,
                 None,
                 self._update_rgb,
-                none_on_template_error=True,
             )
         if self._rgbw_template:
             self.add_template_attribute(
@@ -396,7 +392,6 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._rgbw_template,
                 None,
                 self._update_rgbw,
-                none_on_template_error=True,
             )
         if self._rgbww_template:
             self.add_template_attribute(
@@ -404,7 +399,6 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._rgbww_template,
                 None,
                 self._update_rgbww,
-                none_on_template_error=True,
             )
         if self._effect_list_template:
             self.add_template_attribute(
@@ -554,7 +548,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             )
         elif ATTR_EFFECT in kwargs and self._effect_script:
             effect = kwargs[ATTR_EFFECT]
-            if effect not in self._effect_list:
+            if not self._effect_list or effect not in self._effect_list:
                 _LOGGER.error(
                     "Received invalid effect: %s for entity %s. Expected one of: %s",
                     effect,
@@ -709,7 +703,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             self._effect = None
             return
 
-        if effect not in self._effect_list:
+        if not self._effect_list or effect not in self._effect_list:
             _LOGGER.error(
                 "Received invalid effect: %s for entity %s. Expected one of: %s",
                 effect,
@@ -752,214 +746,206 @@ class LightTemplate(TemplateEntity, LightEntity):
     def _update_temperature(self, render):
         """Update the temperature from the template."""
         try:
-            if render in (None, "None", ""):
+            if isinstance(render, TemplateError) or render in (None, "None", ""):
                 self._temperature = None
-                return
-            temperature = int(render)
-            if self.min_mireds <= temperature <= self.max_mireds:
-                self._temperature = temperature
             else:
-                _LOGGER.error(
-                    (
-                        "Received invalid color temperature : %s for entity %s."
-                        " Expected: %s-%s"
-                    ),
-                    temperature,
-                    self.entity_id,
-                    self.min_mireds,
-                    self.max_mireds,
-                )
-                self._temperature = None
+                temperature = int(render)
+                if self.min_mireds <= temperature <= self.max_mireds:
+                    self._temperature = temperature
+                else:
+                    _LOGGER.error(
+                        (
+                            "Received invalid color temperature : %s for entity %s."
+                            " Expected: %s-%s"
+                        ),
+                        temperature,
+                        self.entity_id,
+                        self.min_mireds,
+                        self.max_mireds,
+                    )
+                    self._temperature = None
         except ValueError:
             _LOGGER.exception(
                 "Template must supply an integer temperature within the range for"
                 " this light, or 'None'"
             )
             self._temperature = None
-        self._color_mode = ColorMode.COLOR_TEMP
+        self._update_color_mode()
 
     @callback
     def _update_hs(self, render):
         """Update the color from the template."""
-        if render is None:
-            self._hs_color = None
-            return
-
-        h_str = s_str = None
-        if isinstance(render, str):
-            if render in ("None", ""):
-                self._hs_color = None
-                return
-            h_str, s_str = map(
-                float, render.replace("(", "").replace(")", "").split(",", 1)
-            )
-        elif isinstance(render, (list, tuple)) and len(render) == 2:
-            h_str, s_str = render
-
-        if (
-            h_str is not None
-            and s_str is not None
-            and isinstance(h_str, (int, float))
-            and isinstance(s_str, (int, float))
-            and 0 <= h_str <= 360
-            and 0 <= s_str <= 100
-        ):
-            self._hs_color = (h_str, s_str)
-        elif h_str is not None and s_str is not None:
-            _LOGGER.error(
-                (
-                    "Received invalid hs_color : (%s, %s) for entity %s. Expected:"
-                    " (0-360, 0-100)"
-                ),
-                h_str,
-                s_str,
-                self.entity_id,
-            )
+        if isinstance(render, TemplateError) or render in (None, "None", ""):
             self._hs_color = None
         else:
-            _LOGGER.error(
-                "Received invalid hs_color : (%s) for entity %s", render, self.entity_id
-            )
-            self._hs_color = None
-        self._color_mode = ColorMode.HS
+            h_str = s_str = None
+            if isinstance(render, str):
+                h_str, s_str = map(
+                    float, render.replace("(", "").replace(")", "").split(",", 1)
+                )
+            elif isinstance(render, (list, tuple)) and len(render) == 2:
+                h_str, s_str = render
+
+            if (
+                h_str is not None
+                and s_str is not None
+                and isinstance(h_str, (int, float))
+                and isinstance(s_str, (int, float))
+                and 0 <= h_str <= 360
+                and 0 <= s_str <= 100
+            ):
+                self._hs_color = (h_str, s_str)
+            elif h_str is not None and s_str is not None:
+                _LOGGER.error(
+                    (
+                        "Received invalid hs_color : (%s, %s) for entity %s. Expected:"
+                        " (0-360, 0-100)"
+                    ),
+                    h_str,
+                    s_str,
+                    self.entity_id,
+                )
+                self._hs_color = None
+            else:
+                _LOGGER.error(
+                    "Received invalid hs_color : (%s) for entity %s",
+                    render,
+                    self.entity_id,
+                )
+                self._hs_color = None
+        self._update_color_mode()
 
     @callback
     def _update_rgb(self, render):
         """Update the color from the template."""
-        if render is None:
-            self._rgb_color = None
-            return
-
-        r_int = g_int = b_int = None
-        if isinstance(render, str):
-            if render in ("None", ""):
-                self._rgb_color = None
-                return
-            cleanup_char = ["(", ")", "[", "]", " "]
-            for char in cleanup_char:
-                render = render.replace(char, "")
-            r_int, g_int, b_int = map(int, render.split(",", 3))
-        elif isinstance(render, (list, tuple)) and len(render) == 3:
-            r_int, g_int, b_int = render
-
-        if all(
-            value is not None and isinstance(value, (int, float)) and 0 <= value <= 255
-            for value in (r_int, g_int, b_int)
-        ):
-            self._rgb_color = (r_int, g_int, b_int)
-        elif any(
-            isinstance(value, (int, float)) and not 0 <= value <= 255
-            for value in (r_int, g_int, b_int)
-        ):
-            _LOGGER.error(
-                "Received invalid rgb_color : (%s, %s, %s) for entity %s. Expected: (0-255, 0-255, 0-255)",
-                r_int,
-                g_int,
-                b_int,
-                self.entity_id,
-            )
+        if isinstance(render, TemplateError) or render in (None, "None", ""):
             self._rgb_color = None
         else:
-            _LOGGER.error(
-                "Received invalid rgb_color : (%s) for entity %s",
-                render,
-                self.entity_id,
-            )
-            self._rgb_color = None
-        self._color_mode = ColorMode.RGB
+            r_int = g_int = b_int = None
+            if isinstance(render, str):
+                cleanup_char = ["(", ")", "[", "]", " "]
+                for char in cleanup_char:
+                    render = render.replace(char, "")
+                r_int, g_int, b_int = map(int, render.split(",", 3))
+            elif isinstance(render, (list, tuple)) and len(render) == 3:
+                r_int, g_int, b_int = render
+
+            if all(
+                value is not None
+                and isinstance(value, (int, float))
+                and 0 <= value <= 255
+                for value in (r_int, g_int, b_int)
+            ):
+                self._rgb_color = (r_int, g_int, b_int)
+            elif any(
+                isinstance(value, (int, float)) and not 0 <= value <= 255
+                for value in (r_int, g_int, b_int)
+            ):
+                _LOGGER.error(
+                    "Received invalid rgb_color : (%s, %s, %s) for entity %s. Expected: (0-255, 0-255, 0-255)",
+                    r_int,
+                    g_int,
+                    b_int,
+                    self.entity_id,
+                )
+                self._rgb_color = None
+            else:
+                _LOGGER.error(
+                    "Received invalid rgb_color : (%s) for entity %s",
+                    render,
+                    self.entity_id,
+                )
+                self._rgb_color = None
+        self._update_color_mode()
 
     @callback
     def _update_rgbw(self, render):
         """Update the color from the template."""
-        if render is None:
-            self._rgbw_color = None
-            return
-
-        r_int = g_int = b_int = w_int = None
-        if isinstance(render, str):
-            if render in ("None", ""):
-                self._rgb_color = None
-                return
-            cleanup_char = ["(", ")", "[", "]", " "]
-            for char in cleanup_char:
-                render = render.replace(char, "")
-            r_int, g_int, b_int, w_int = map(int, render.split(",", 4))
-        elif isinstance(render, (list, tuple)) and len(render) == 4:
-            r_int, g_int, b_int, w_int = render
-
-        if all(
-            value is not None and isinstance(value, (int, float)) and 0 <= value <= 255
-            for value in (r_int, g_int, b_int, w_int)
-        ):
-            self._rgbw_color = (r_int, g_int, b_int, w_int)
-        elif any(
-            isinstance(value, (int, float)) and not 0 <= value <= 255
-            for value in (r_int, g_int, b_int, w_int)
-        ):
-            _LOGGER.error(
-                "Received invalid rgb_color : (%s, %s, %s, %s) for entity %s. Expected: (0-255, 0-255, 0-255, 0-255)",
-                r_int,
-                g_int,
-                b_int,
-                w_int,
-                self.entity_id,
-            )
+        if isinstance(render, TemplateError) or render in (None, "None", ""):
             self._rgbw_color = None
         else:
-            _LOGGER.error(
-                "Received invalid rgb_color : (%s) for entity %s",
-                render,
-                self.entity_id,
-            )
-            self._rgbw_color = None
-        self._color_mode = ColorMode.RGBW
+            r_int = g_int = b_int = w_int = None
+            if isinstance(render, str):
+                cleanup_char = ["(", ")", "[", "]", " "]
+                for char in cleanup_char:
+                    render = render.replace(char, "")
+                r_int, g_int, b_int, w_int = map(int, render.split(",", 4))
+            elif isinstance(render, (list, tuple)) and len(render) == 4:
+                r_int, g_int, b_int, w_int = render
+
+            if all(
+                value is not None
+                and isinstance(value, (int, float))
+                and 0 <= value <= 255
+                for value in (r_int, g_int, b_int, w_int)
+            ):
+                self._rgbw_color = (r_int, g_int, b_int, w_int)
+            elif any(
+                isinstance(value, (int, float)) and not 0 <= value <= 255
+                for value in (r_int, g_int, b_int, w_int)
+            ):
+                _LOGGER.error(
+                    "Received invalid rgb_color : (%s, %s, %s, %s) for entity %s. Expected: (0-255, 0-255, 0-255, 0-255)",
+                    r_int,
+                    g_int,
+                    b_int,
+                    w_int,
+                    self.entity_id,
+                )
+                self._rgbw_color = None
+            else:
+                _LOGGER.error(
+                    "Received invalid rgb_color : (%s) for entity %s",
+                    render,
+                    self.entity_id,
+                )
+                self._rgbw_color = None
+        self._update_color_mode()
 
     @callback
     def _update_rgbww(self, render):
         """Update the color from the template."""
-        if render is None:
-            self._rgbww_color = None
-            return
-
-        r_int = g_int = b_int = cw_int = ww_int = None
-        if isinstance(render, str):
-            if render in ("None", ""):
-                self._rgb_color = None
-                return
-            cleanup_char = ["(", ")", "[", "]", " "]
-            for char in cleanup_char:
-                render = render.replace(char, "")
-            r_int, g_int, b_int, cw_int, ww_int = map(int, render.split(",", 5))
-        elif isinstance(render, (list, tuple)) and len(render) == 5:
-            r_int, g_int, b_int, cw_int, ww_int = render
-
-        if all(
-            value is not None and isinstance(value, (int, float)) and 0 <= value <= 255
-            for value in (r_int, g_int, b_int, cw_int, ww_int)
-        ):
-            self._rgbww_color = (r_int, g_int, b_int, cw_int, ww_int)
-        elif any(
-            isinstance(value, (int, float)) and not 0 <= value <= 255
-            for value in (r_int, g_int, b_int, cw_int, ww_int)
-        ):
-            _LOGGER.error(
-                "Received invalid rgb_color : (%s, %s, %s, %s, %s) for entity %s. Expected: (0-255, 0-255, 0-255, 0-255)",
-                r_int,
-                g_int,
-                b_int,
-                cw_int,
-                ww_int,
-                self.entity_id,
-            )
+        if isinstance(render, TemplateError) or render in (None, "None", ""):
             self._rgbww_color = None
         else:
-            _LOGGER.error(
-                "Received invalid rgb_color : (%s) for entity %s",
-                render,
-                self.entity_id,
-            )
-            self._rgbww_color = None
-        self._color_mode = ColorMode.RGBWW
+            r_int = g_int = b_int = cw_int = ww_int = None
+            if isinstance(render, str):
+                cleanup_char = ["(", ")", "[", "]", " "]
+                for char in cleanup_char:
+                    render = render.replace(char, "")
+                r_int, g_int, b_int, cw_int, ww_int = map(int, render.split(",", 5))
+            elif isinstance(render, (list, tuple)) and len(render) == 5:
+                r_int, g_int, b_int, cw_int, ww_int = render
+
+            if all(
+                value is not None
+                and isinstance(value, (int, float))
+                and 0 <= value <= 255
+                for value in (r_int, g_int, b_int, cw_int, ww_int)
+            ):
+                self._rgbww_color = (r_int, g_int, b_int, cw_int, ww_int)
+            elif any(
+                isinstance(value, (int, float)) and not 0 <= value <= 255
+                for value in (r_int, g_int, b_int, cw_int, ww_int)
+            ):
+                _LOGGER.error(
+                    "Received invalid rgb_color : (%s, %s, %s, %s, %s) for entity %s. Expected: (0-255, 0-255, 0-255, 0-255)",
+                    r_int,
+                    g_int,
+                    b_int,
+                    cw_int,
+                    ww_int,
+                    self.entity_id,
+                )
+                self._rgbww_color = None
+            else:
+                _LOGGER.error(
+                    "Received invalid rgb_color : (%s) for entity %s",
+                    render,
+                    self.entity_id,
+                )
+                self._rgbww_color = None
+        self._update_color_mode()
 
     @callback
     def _update_max_mireds(self, render):
@@ -1002,3 +988,18 @@ class LightTemplate(TemplateEntity, LightEntity):
         self._supports_transition = bool(render)
         if self._supports_transition:
             self._attr_supported_features |= LightEntityFeature.TRANSITION
+
+    def _update_color_mode(self) -> None:
+        """Update the color mode based on the current values."""
+        if self._temperature is not None:
+            self._color_mode = ColorMode.COLOR_TEMP
+        elif self._hs_color is not None:
+            self._color_mode = ColorMode.HS
+        elif self._rgbww_color is not None:
+            self._color_mode = ColorMode.RGBWW
+        elif self._rgbw_color is not None:
+            self._color_mode = ColorMode.RGBW
+        elif self._rgb_color is not None:
+            self._color_mode = ColorMode.RGB
+        else:
+            self._color_mode = ColorMode.UNKNOWN
