@@ -107,6 +107,7 @@ class RestData:
                 timeout=self._timeout,
                 follow_redirects=True,
             )
+            response.encoding = self._encoding
             self.data = response.text
             self.headers = response.headers
         except httpx.TimeoutException as ex:
