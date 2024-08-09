@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPMethod
-from typing import Any, Final
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from aiohttp import ClientSession
