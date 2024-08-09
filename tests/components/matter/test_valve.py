@@ -26,7 +26,7 @@ from .common import (
 @pytest.mark.parametrize(
     ("fixture", "entity_id"),
     [
-        ("valve_full", "cover.mock_valve"),
+        ("valve_full", "valve.mock_valve"),
     ],
 )
 async def test_valve(
@@ -60,9 +60,8 @@ async def test_valve(
     )
     matter_client.send_device_command.reset_mock()
 
-
     await hass.services.async_call(
-        "cover",
+        "valve",
         "open_valve",
         {
             "entity_id": entity_id,
