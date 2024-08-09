@@ -1275,7 +1275,7 @@ BASE_ENTITY_SCHEMA = _make_entity_service_schema({}, vol.PREVENT_EXTRA)
 
 
 def make_entity_service_schema(
-    schema: dict, *, extra: int = vol.PREVENT_EXTRA
+    schema: dict | None, *, extra: int = vol.PREVENT_EXTRA
 ) -> vol.Schema:
     """Create an entity service schema."""
     if not schema and extra == vol.PREVENT_EXTRA:
@@ -1283,7 +1283,7 @@ def make_entity_service_schema(
         # the base schema and avoid compiling a new schema which is the case
         # for ~50% of services.
         return BASE_ENTITY_SCHEMA
-    return _make_entity_service_schema(schema, extra)
+    return _make_entity_service_schema(schema or {}, extra)
 
 
 SCRIPT_CONVERSATION_RESPONSE_SCHEMA = vol.Any(template, None)
