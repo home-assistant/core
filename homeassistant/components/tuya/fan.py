@@ -248,7 +248,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
     def percentage(self) -> int | None:
         """Return the current speed."""
         if self._speed is not None:
-            if (value := self.device.status.get(self._speed.dpcode)) is None:
+            if (value := float(self.device.status.get(self._speed.dpcode))) is None:
                 return None
             return int(self._speed.remap_value_to(value, 1, 100))
 

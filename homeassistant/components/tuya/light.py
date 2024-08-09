@@ -657,7 +657,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         if not self._brightness:
             return None
 
-        brightness = self.device.status.get(self._brightness.dpcode)
+        brightness = float(self.device.status.get(self._brightness.dpcode))
         if brightness is None:
             return None
 
@@ -669,9 +669,17 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         if (
             self._brightness_max is not None
             and self._brightness_min is not None
-            and (brightness_max := self.device.status.get(self._brightness_max.dpcode))
+            and (
+                brightness_max := float(
+                    self.device.status.get(self._brightness_max.dpcode)
+                )
+            )
             is not None
-            and (brightness_min := self.device.status.get(self._brightness_min.dpcode))
+            and (
+                brightness_min := float(
+                    self.device.status.get(self._brightness_min.dpcode)
+                )
+            )
             is not None
         ):
             # Remap values onto our scale
@@ -693,7 +701,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         if not self._color_temp:
             return None
 
-        temperature = self.device.status.get(self._color_temp.dpcode)
+        temperature = float(self.device.status.get(self._color_temp.dpcode))
         if temperature is None:
             return None
 
