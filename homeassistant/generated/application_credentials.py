@@ -27,6 +27,7 @@ APPLICATION_CREDENTIALS = [
     "spotify",
     "tesla_fleet",
     "twitch",
+    "weheat",
     "withings",
     "xbox",
     "yolink",

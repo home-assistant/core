@@ -643,6 +643,7 @@ FLOWS = {
         "weatherkit",
         "webmin",
         "webostv",
+        "weheat",
         "wemo",
         "whirlpool",
         "whois",
