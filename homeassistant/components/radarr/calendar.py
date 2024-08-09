@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import cast
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant, callback
@@ -40,8 +41,8 @@ class RadarrCalendarEntity(RadarrEntity, CalendarEntity):
             return None
         return CalendarEvent(
             summary=self.coordinator.event.summary,
-            start=self.coordinator.event.start,
-            end=self.coordinator.event.end,
+            start=cast(datetime, self.coordinator.event.start).date(),
+            end=cast(datetime, self.coordinator.event.end).date(),
             description=self.coordinator.event.description,
         )
 
@@ -50,7 +51,16 @@ class RadarrCalendarEntity(RadarrEntity, CalendarEntity):
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[RadarrEvent]:
         """Get all events in a specific time frame."""
-        return await self.coordinator.async_get_events(start_date, end_date)
+        return [
+            RadarrEvent(
+                summary=e.summary,
+                start=cast(datetime, e.start).date(),
+                end=cast(datetime, e.end).date(),
+                description=e.description,
+                release_type=e.release_type,
+            )
+            for e in await self.coordinator.async_get_events(start_date, end_date)
+        ]
 
     @callback
     def async_write_ha_state(self) -> None:
