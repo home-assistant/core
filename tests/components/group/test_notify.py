@@ -122,7 +122,7 @@ async def test_send_message_with_data(hass: HomeAssistant, tmp_path: Path) -> No
             "services": [
                 {"service": "test_service1"},
                 {
-                    "service": "test_service2",
+                    "action": "test_service2",
                     "data": {
                         "target": "unnamed device",
                         "data": {"test": "message", "default": "default"},
@@ -219,7 +219,7 @@ async def test_reload_notify(hass: HomeAssistant, tmp_path: Path) -> None:
             {
                 "name": "group_notify",
                 "platform": "group",
-                "services": [{"service": "test_service1"}],
+                "services": [{"action": "test_service1"}],
             }
         ],
     )
