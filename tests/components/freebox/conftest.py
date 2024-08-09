@@ -17,6 +17,7 @@ from .const import (
     DATA_HOME_SET_VALUE,
     DATA_LAN_GET_HOSTS_LIST,
     DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE,
+    DATA_LAN_GET_HOSTS_WIFIGUEST_LIST,
     DATA_STORAGE_GET_DISKS,
     DATA_STORAGE_GET_RAIDS,
     DATA_SYSTEM_GET_CONFIG,
@@ -77,8 +78,15 @@ def mock_router(mock_device_registry_devices):
         instance = service_mock.return_value
         instance.open = AsyncMock()
         instance.system.get_config = AsyncMock(return_value=DATA_SYSTEM_GET_CONFIG)
+
         # device_tracker
-        instance.lan.get_hosts_list = AsyncMock(return_value=DATA_LAN_GET_HOSTS_LIST)
+        def get_hosts_list(interface):
+            if interface == "pub":
+                return DATA_LAN_GET_HOSTS_LIST
+            elif interface == "wifiguest":
+                return DATA_LAN_GET_HOSTS_WIFIGUEST_LIST
+
+        instance.lan.get_hosts_list = AsyncMock(side_effect=get_hosts_list)
         # sensor
         instance.call.get_calls_log = AsyncMock(return_value=DATA_CALL_GET_CALLS_LOG)
         instance.storage.get_disks = AsyncMock(return_value=DATA_STORAGE_GET_DISKS)

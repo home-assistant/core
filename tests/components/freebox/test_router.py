@@ -35,7 +35,9 @@ async def test_get_hosts_list_if_supported(
     assert supports_hosts is True
     # List must not be empty; but it's content depends on how many unit tests are executed...
     assert fbx_devices
+    assert len(fbx_devices) == 5
     assert "d633d0c8-958c-43cc-e807-d881b076924b" in str(fbx_devices)
+    assert "iPhone-r0ro" in str(fbx_devices)
 
 
 async def test_get_hosts_list_if_supported_bridge(
