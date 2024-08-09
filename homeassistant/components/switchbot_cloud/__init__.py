@@ -8,11 +8,12 @@ from switchbot_api import CannotConnect, Device, InvalidAuth, Remote, SwitchBotA
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, SupportsResponse, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 from .coordinator import SwitchBotCoordinator
+from .services import make_list_devices, make_send_command_service
 
 _LOGGER = getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
@@ -22,9 +23,11 @@ PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
 class SwitchbotDevices:
     """Switchbot devices data."""
 
-    climates: list[Remote] = field(default_factory=list)
-    switches: list[Device | Remote] = field(default_factory=list)
-    sensors: list[Device] = field(default_factory=list)
+    climates: list[tuple[Remote, SwitchBotCoordinator]] = field(default_factory=list)
+    switches: list[tuple[Device | Remote, SwitchBotCoordinator]] = field(
+        default_factory=list
+    )
+    sensors: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
 
 
 @dataclass
@@ -109,6 +112,18 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     await gather(
         *[coordinator.async_refresh() for coordinator in coordinators_by_id.values()]
     )
+
+    list_devices_service = make_list_devices(api)
+    hass.services.async_register(
+        DOMAIN,
+        "list_devices",
+        list_devices_service,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    send_command_service = make_send_command_service(api)
+    hass.services.async_register(DOMAIN, "send_command", send_command_service)
+
     return True
 
 

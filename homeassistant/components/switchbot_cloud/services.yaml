@@ -1,0 +1,27 @@
+send_command:
+  fields:
+    unique_id:
+      example: 483FDA000000 or 01-202001010000-00000000
+      required: true
+      selector:
+        text:
+    command_type:
+      example: command
+      required: true
+      selector:
+        select:
+          options:
+            - command
+            - customize
+      default: command
+    command:
+      example: turnOn
+      required: true
+      selector:
+        text:
+    parameter:
+      example: default
+      required: false
+      default: default
+      selector:
+        text:
