@@ -267,7 +267,7 @@ aiolivisi==0.0.19
 aiolookin==1.0.0
 
 # homeassistant.components.lyric
-aiolyric==1.1.0
+aiolyric==2.0.1
 
 # homeassistant.components.mealie
 aiomealie==0.8.0
