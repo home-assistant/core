@@ -1,7 +1,7 @@
 {
   "domain": "lgthinq",
   "name": "LG ThinQ",
-  "codeowners": [],
+  "codeowners": [@LG-ThinQ-Integration],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/lgthinq/",
