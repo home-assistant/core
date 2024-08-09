@@ -214,8 +214,6 @@ DISVALVEY_SCHEMAS = [
             clusters.ValveConfigurationAndControl.Attributes.RemainingDuration,
             clusters.ValveConfigurationAndControl.Attributes.CurrentState,
             clusters.ValveConfigurationAndControl.Attributes.TargetState,
-        ),
-        absent_attributes=(
             clusters.ValveConfigurationAndControl.Attributes.CurrentLevel,
             clusters.ValveConfigurationAndControl.Attributes.TargetLevel,
         ),
