@@ -40,6 +40,13 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "is_recording": {
+        "name": "Recording"
+      }
+    }
+  },
   "issues": {
     "deprecated_yaml_import_issue_unknown": {
       "title": "The Enigma2 YAML configuration import failed",
