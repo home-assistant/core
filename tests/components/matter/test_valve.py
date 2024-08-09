@@ -14,6 +14,7 @@ from .common import (
 )
 from .common import setup_integration_with_node_fixture
 
+
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
