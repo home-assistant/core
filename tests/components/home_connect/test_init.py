@@ -9,6 +9,7 @@ import pytest
 from requests import HTTPError
 import requests_mock
 
+from homeassistant.components.home_connect import SCAN_INTERVAL
 from homeassistant.components.home_connect.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -155,14 +156,14 @@ async def test_update_throttle(
     # First re-load after 1 minute is not blocked.
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     assert config_entry.state == ConfigEntryState.NOT_LOADED
-    freezer.tick(60)
+    freezer.tick(SCAN_INTERVAL.seconds + 0.1)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     assert get_appliances.call_count == get_appliances_call_count + 1
 
     # Second re-load is blocked by Throttle.
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     assert config_entry.state == ConfigEntryState.NOT_LOADED
-    freezer.tick(59)
+    freezer.tick(SCAN_INTERVAL.seconds - 0.1)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     assert get_appliances.call_count == get_appliances_call_count + 1
 
