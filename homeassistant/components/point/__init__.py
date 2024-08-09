@@ -95,7 +95,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass,
         HOMEASSISTANT_DOMAIN,
         f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2024.8.0",
+        breaks_in_ha_version="2025.3.0",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=IssueSeverity.WARNING,
@@ -106,11 +106,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         },
     )
 
-    await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=conf,
-    )
+    hass.async_create_task(
+          hass.config_entries.flow.async_init(
+              DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+          )
+      )
 
     return True
 
@@ -165,7 +165,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PointConfigEntry) -> boo
 
     await async_setup_webhook(hass, entry, pointSession)
     # Entries are added in the client.update() function.
-    # await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -177,7 +176,7 @@ async def async_setup_webhook(
     if CONF_WEBHOOK_ID not in entry.data:
         webhook_id = webhook.async_generate_id()
         webhook_url = webhook.async_generate_url(hass, webhook_id)
-        _LOGGER.warning("Registering new webhook at: %s", webhook_url)
+        _LOGGER.debug("Registering new webhook at: %s", webhook_url)
 
         hass.config_entries.async_update_entry(
             entry,
