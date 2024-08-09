@@ -1667,9 +1667,6 @@ py-sucks==0.9.10
 # homeassistant.components.synology_dsm
 py-synologydsm-api==2.4.4
 
-# homeassistant.components.zabbix
-py-zabbix==1.1.7
-
 # homeassistant.components.atome
 pyAtome==0.1.1
 
@@ -2975,6 +2972,9 @@ youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
 yt-dlp==2024.08.06
+
+# homeassistant.components.zabbix
+zabbix_utils==2.0.0
 
 # homeassistant.components.zamg
 zamg==0.3.6

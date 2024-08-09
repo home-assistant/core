@@ -1,0 +1,90 @@
+{
+  "config": {
+    "abort": {
+      "configuration_yaml_used": "Zabbix integration configured via configuration.yaml. Remove it first in order to use config via UI.",
+      "already_configured": "Zabbix integration with exact same parameters is already configured."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect. {error}",
+      "api_or_sender": "Either 'Use Zabbix API' or 'Use Zabbix sender' must be choosen",
+      "invalid_auth": "Invalid authentication. {error}",
+      "unknown": "Unexpected error",
+      "token_length_invalid": "Token must be 64 characters long",
+      "no_permission_read": "Please, make sure Zabbix user have sufficient prevelegies to read Template and Host data. {error}",
+      "no_permission_write": "Please, make sure Zabbix user have sufficient prevelegies to create Template and Host for receiving HomeAssistant enities states. Otherwise create it manually. {error}",
+      "need_hostids": "If using 'individual', must specify hostids"
+    },
+    "flow_title": "Zabbix Server integration configuration",
+    "step": {
+      "user": {
+        "data": {
+          "url": "URL",
+          "use_zabbix_api": "Use Zabbix API for receiving zabbix data as sensor info? \nOtherwise only entities state changes will be sent to HOST:PORT part from provided URL.",
+          "use_zabbix_sender": "Use Zabbix sender interface to send Home Assistant entities state changes? \nOtherwise only Zabbix activer triggers count will be pulled in HA as sensors."
+        },
+        "description": "Enter URL of the Zabbix Server (same host used for API and Sender)",
+        "title": "Zabbix Server URL"
+      },
+      "token_or_userpass": {
+        "data": {
+          "use_token": "Use token"
+        },
+        "description": "Use token for authorization and authentication for Zabbix API?",
+        "title": "Zabbix Server authentication method"
+      },
+      "token": {
+        "data": {
+          "token": "Zabbix API Token"
+        },
+        "description": "API token defined in Zabbix UI for the User with the permissions to get data from Zabbix server.",
+        "title": "Zabbix Server authentication with token"
+      },
+      "userpass": {
+        "data": {
+          "username": "Zabbix username",
+          "password": "Zabbix password"
+        },
+        "description": "Valid username/password for Zabbix UI User with the permissions to get data from Zabbix server.",
+        "title": "Zabbix Server authentication with username and password"
+      },
+      "publish_states_host": {
+        "data": {
+          "publish_states_host": "hostname",
+          "skip_creation_publish_states_host": "Skip creation of hostname in Zabbix (already created manually)"
+        },
+        "description": "Host name to be used in Zabbix server to publish Home Assistant entities state changes. {message}",
+        "title": "Host name to publish state changes."
+      },
+      "publish_states_host_no_api": {
+        "data": {
+          "publish_states_host": "hostname"
+        },
+        "description": "Host name to be used in Zabbix server to publish Home Assistant entities state changes. \nHost need to be created in Zabbix manually with the linked Template as described in documentation",
+        "title": "Host name to publish state changes."
+      },
+      "include_exclude_filter": {
+        "data": {
+          "include_entities": "Included entity ids",
+          "include_entity_globs": "Included entities patterns",
+          "include_domains": "Included domains",
+          "exclude_entities": "Excluded entity ids",
+          "exclude_entity_globs": "Excluded entities patterns",
+          "exclude_domains": "Excluded domains"
+        },
+        "description": "Configure which entities should be included or excluded from being published to Zabbix. \nBy default, no entity will be excluded.",
+        "title": "Publish filter configuration."
+      },
+      "sensor_filter": {
+        "data": {
+          "use_sensor": "Use sensors?",
+          "name": "Name for the Sensor",
+          "hostids": "List of Zabbix hosts",
+          "individual": "Show individual sensors per host",
+          "add_another_sensor": "Add another sensor?"
+        },
+        "description": "Sensor #{number} configuration to monitor the count of active triggers for hosts in Zabbix",
+        "title": "Sensor for Zabbix #{number}."
+      }
+    }
+  }
+}

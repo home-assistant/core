@@ -668,6 +668,7 @@ FLOWS = {
         "yolink",
         "youless",
         "youtube",
+        "zabbix",
         "zamg",
         "zerproc",
         "zeversolar",
