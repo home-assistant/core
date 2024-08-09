@@ -1,17 +1,14 @@
-# SPDX-FileCopyrightText: Copyright 2024 LG Electronics Inc.
-# SPDX-License-Identifier: LicenseRef-LGE-Proprietary
-
 """Property in LG ThinQ device profile."""
 
 from __future__ import annotations
 
-import inspect
-import logging
-import math
 from collections import deque
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from enum import Enum, auto
+import inspect
+import logging
+import math
 from typing import Any
 
 from thinqconnect.const import PROPERTY_READABLE, PROPERTY_WRITABLE
@@ -57,9 +54,7 @@ class Range:
 
     def validate(self, value: Any) -> bool:
         """Check if the given value is valid."""
-        if (isinstance(value, (int, float))) and math.isclose(
-            value % self.step, 0
-        ):
+        if (isinstance(value, (int, float))) and math.isclose(value % self.step, 0):
             return value <= self.max and value >= self.min
 
         return False
@@ -84,9 +79,7 @@ class Range:
     @classmethod
     def create(cls, profile: Profile) -> Range:
         """Create a range instance."""
-        value: Any = profile.get(PROPERTY_WRITABLE) or profile.get(
-            PROPERTY_READABLE
-        )
+        value: Any = profile.get(PROPERTY_WRITABLE) or profile.get(PROPERTY_READABLE)
         return cls(value) if isinstance(value, dict) else None
 
     @staticmethod
@@ -191,9 +184,9 @@ class PropertyInfo:
 
     # Optional, if an alternative post method is needed. The arguments
     # of this method must be property itself and value.
-    alt_post_method: (
-        Callable[[Property, Any], Awaitable[ThinQApiResponse]] | None
-    ) = None
+    alt_post_method: Callable[[Property, Any], Awaitable[ThinQApiResponse]] | None = (
+        None
+    )
 
     # Optional, if an alternative validate creation method is needed.
     # The arguments of this method must be readable and writable flags
@@ -214,9 +207,7 @@ class Property:
     ) -> None:
         """Initialize a property."""
         self._device: LGDevice = device
-        self._api: ConnectBaseDevice = (
-            device.api.get_sub_device(location) or device.api
-        )
+        self._api: ConnectBaseDevice = device.api.get_sub_device(location) or device.api
         self._info: PropertyInfo = info
         self._profile: Profile = profile or {}
         self._location: str | None = location
@@ -224,9 +215,7 @@ class Property:
         self._featured_map: dict[PropertyFeature, Property] = {}
         self._getter_name: str | None = self._retrieve_getter_name()
         self._setter_name: str | None = self._retrieve_setter_name()
-        self._setter: Callable[[Any], Awaitable] | None = (
-            self._retrieve_setter()
-        )
+        self._setter: Callable[[Any], Awaitable] | None = self._retrieve_setter()
         self._unit: str | None = self._retrieve_unit()
         self._unit_provider: Property | None = None
         self._range: Range | None = self._retrieve_range()
@@ -315,9 +304,7 @@ class Property:
         """Set an unit provider."""
         self._unit_provider = unit_provider
 
-    def get_featured_property(
-        self, feature: PropertyFeature
-    ) -> Property | None:
+    def get_featured_property(self, feature: PropertyFeature) -> Property | None:
         """Return the featured property from the map."""
         return self._featured_map.get(feature)
 
@@ -344,9 +331,7 @@ class Property:
         if isinstance(unit, dict):
             unit = unit.get("value")
             if isinstance(unit, dict):
-                unit = unit.get(PROPERTY_WRITABLE) or unit.get(
-                    PROPERTY_READABLE
-                )
+                unit = unit.get(PROPERTY_WRITABLE) or unit.get(PROPERTY_READABLE)
 
         if isinstance(unit, str):
             _LOGGER.debug("%s _retrieve_unit: %s", self.tag, unit)
@@ -419,9 +404,7 @@ class Property:
         elif self._unit_provider:
             self._unit = self._unit_provider.get_value()
 
-        _LOGGER.debug(
-            "%s get_value: %s (%s)", self.tag, value, self._getter_name
-        )
+        _LOGGER.debug("%s get_value: %s (%s)", self.tag, value, self._getter_name)
         return value
 
     def get_value(self, key_for_dict_value: str | None = None) -> Any:
@@ -430,9 +413,7 @@ class Property:
         value: Any = None
         if self.info.alt_get_method:
             value = self.info.alt_get_method(self)
-            _LOGGER.debug(
-                "%s get_value: %s (%s)", self.tag, value, "alt_get_method"
-            )
+            _LOGGER.debug("%s get_value: %s (%s)", self.tag, value, "alt_get_method")
         else:
             value = self._get_value(key_for_dict_value)
 
@@ -478,9 +459,7 @@ class Property:
             _LOGGER.error(
                 "%s Failed to async_post_value: %s", self.tag, "not writable."
             )
-            self.device.handle_error(
-                "The control command is not supported.", "0001"
-            )
+            self.device.handle_error("The control command is not supported.", "0001")
             return None
 
         if inspect.isfunction(self.info.value_converter):
@@ -554,9 +533,7 @@ class CombinedProperty(Property):
 
     def _get_value(self, key_for_dict_value: str) -> Any:
         """Get the value from the api and update unit internally."""
-        values: list[str] = [
-            child.get_value(self.key) for child in self._children
-        ]
+        values: list[str] = [child.get_value(self.key) for child in self._children]
 
         _LOGGER.debug("%s get_value: %s", self.tag, values)
         return values
@@ -672,9 +649,7 @@ def create_properties(
 
         # Filter out invalid properties.
         # A property must have its own profile or at least one child.
-        properties = list(
-            filter(lambda p: p.profile or p.has_child, properties)
-        )
+        properties = list(filter(lambda p: p.profile or p.has_child, properties))
 
         _LOGGER.debug(
             "[%s] Creating properties: [%s]",

@@ -1,12 +1,9 @@
-# SPDX-FileCopyrightText: Copyright 2024 LG Electronics Inc.
-# SPDX-License-Identifier: LicenseRef-LGE-Proprietary
-
 """Support for LG ThinQ Connect API."""
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Coroutine
+import logging
 from typing import Any
 
 from aiohttp import ClientSession
@@ -72,9 +69,7 @@ class ThinQ:
             translation_key=result.error_code,
         )
 
-    async def async_get_device_profile(
-        self, device_id: str
-    ) -> dict[str, Any] | None:
+    async def async_get_device_profile(self, device_id: str) -> dict[str, Any] | None:
         """Get the device profile for the given device id."""
         _LOGGER.debug("async_get_device_profile. device_id=%s", device_id)
 
@@ -83,9 +78,7 @@ class ThinQ:
             self._api.async_get_device_profile(device_id=device_id)
         )
 
-    async def async_get_device_status(
-        self, device_id: str
-    ) -> ThinQApiResponse:
+    async def async_get_device_status(self, device_id: str) -> ThinQApiResponse:
         """Get the device status for the given device id."""
         _LOGGER.debug("async_get_device_status. device_id=%s", device_id)
 
@@ -105,9 +98,7 @@ class ThinQ:
 
         # POST /devices/{device-id}
         return await self._async_request(
-            self._api.async_post_device_control(
-                device_id=device_id, payload=body
-            ),
+            self._api.async_post_device_control(device_id=device_id, payload=body),
             full_response=True,
         )
 
@@ -158,9 +149,7 @@ class ThinQ:
         # Get /push
         return await self._async_request(self._api.async_get_push_list())
 
-    async def async_post_push_subscribe(
-        self, device_id: str
-    ) -> dict[str, Any] | None:
+    async def async_post_push_subscribe(self, device_id: str) -> dict[str, Any] | None:
         """Subscribe the push for the given device id."""
         _LOGGER.debug("async_post_push_subscribe. device_id=%s", device_id)
 
@@ -202,9 +191,7 @@ class ThinQ:
         self, device_id: str
     ) -> dict[str, Any] | None:
         """Unsubscribe the event for the given device id."""
-        _LOGGER.warning(
-            "async_delete_event_subscribe. device_id=%s", device_id
-        )
+        _LOGGER.warning("async_delete_event_subscribe. device_id=%s", device_id)
 
         # DELETE /event/{device_id}/unsubscribe
         return await self._async_request(
@@ -216,9 +203,7 @@ class ThinQ:
         _LOGGER.warning("async_post_push_devices_subscribe.")
 
         # POST /homes/push
-        return await self._async_request(
-            self._api.async_post_push_devices_subscribe()
-        )
+        return await self._async_request(self._api.async_post_push_devices_subscribe())
 
     async def async_delete_push_devices_subscribe(
         self,

@@ -1,15 +1,10 @@
-# SPDX-FileCopyrightText: Copyright 2024 LG Electronics Inc.
-# SPDX-License-Identifier: LicenseRef-LGE-Proprietary
-
 """Provides device automations for control of LG webOS Smart TV."""
 
 from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.device_automation import (
-    DEVICE_TRIGGER_BASE_SCHEMA,
-)
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -25,8 +20,10 @@ from .helpers import (
     async_get_client_by_device_entry,
     async_get_device_entry_by_device_id,
 )
-from .triggers.turn_on import PLATFORM_TYPE as TURN_ON_PLATFORM_TYPE
-from .triggers.turn_on import async_get_turn_on_trigger
+from .triggers.turn_on import (
+    PLATFORM_TYPE as TURN_ON_PLATFORM_TYPE,
+    async_get_turn_on_trigger,
+)
 
 TRIGGER_TYPES = {TURN_ON_PLATFORM_TYPE}
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(

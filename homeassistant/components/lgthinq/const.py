@@ -1,6 +1,3 @@
-# SPDX-FileCopyrightText: Copyright 2024 LG Electronics Inc.
-# SPDX-License-Identifier: LicenseRef-LGE-Proprietary
-
 """Constants for LG ThinQ."""
 
 # Base component constants.

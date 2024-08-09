@@ -1,17 +1,14 @@
-# SPDX-FileCopyrightText: Copyright 2024 LG Electronics Inc.
-# SPDX-License-Identifier: LicenseRef-LGE-Proprietary
-
 """Support for LG ThinQ Connect device."""
 
 from __future__ import annotations
 
 import asyncio
-import logging
 from contextlib import suppress
+import logging
 from typing import Any
 
-import voluptuous as vol
 from aiowebostv import WebOsClient, WebOsTvPairError
+import voluptuous as vol
 
 from homeassistant.components import notify as hass_notify
 from homeassistant.const import (
@@ -36,15 +33,12 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import discovery
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
     DeviceRegistry,
     async_entries_for_config_entry,
-)
-from homeassistant.helpers.device_registry import (
     async_get as async_get_device_registry,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -92,9 +86,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return await async_setup_webostv(hass, config)
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ThinqConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> bool:
     """Set up an entry."""
     # init runtime_data
     entry.runtime_data = ThinqData(
@@ -115,9 +107,7 @@ async def async_setup_entry(
     return False
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: ThinqConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> bool:
     """Unload the entry."""
     if entry.data.get(CONF_ENTRY_TYPE) == CONF_ENTRY_TYPE_THINQ:
         return await async_unload_entry_thinq(hass, entry)
@@ -141,9 +131,7 @@ SERVICE_GET_DEVICE_PROFILE_SCHEMA = vol.Schema(
     {vol.Required(ATTR_DEVICE_ID): cv.string}
 )
 
-SERVICE_GET_DEVICE_STATUS_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_DEVICE_ID): cv.string}
-)
+SERVICE_GET_DEVICE_STATUS_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_ID): cv.string})
 
 SERVICE_POST_DEVICE_STATUS_SCHEMA = vol.Schema(
     {
@@ -153,9 +141,7 @@ SERVICE_POST_DEVICE_STATUS_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_entry_thinq(
-    hass: HomeAssistant, entry: ThinqConfigEntry
-) -> bool:
+async def async_setup_entry_thinq(hass: HomeAssistant, entry: ThinqConfigEntry) -> bool:
     """Initialize LG ThinQ Connect."""
     _LOGGER.warning("async_setup_entry.")
 
@@ -179,9 +165,7 @@ async def async_setup_entry_thinq(
     entry.runtime_data.lge_devices = lg_devices
 
     # Set up all platforms for this device/entry.
-    await hass.config_entries.async_forward_entry_setups(
-        entry, THINQ_PLATFORMS
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, THINQ_PLATFORMS)
 
     # Setup connect-client and subscribe.
     thinq_mqtt = ThinQMQTT(
@@ -258,9 +242,7 @@ def async_cleanup_device_registry(
     entry_id: str,
 ) -> None:
     """Clean up device registry."""
-    new_device_unique_ids: list[str] = [
-        device.unique_id for device in lg_devices
-    ]
+    new_device_unique_ids: list[str] = [device.unique_id for device in lg_devices]
     existing_entries: list[DeviceEntry] = async_entries_for_config_entry(
         device_registry, entry_id
     )
@@ -270,18 +252,14 @@ def async_cleanup_device_registry(
         old_unique_id = next(iter(old_entry.identifiers))[1]
         if old_unique_id not in new_device_unique_ids:
             device_registry.async_remove_device(old_entry.id)
-            _LOGGER.warning(
-                "Remove device_registry. device_id=%s", old_entry.id
-            )
+            _LOGGER.warning("Remove device_registry. device_id=%s", old_entry.id)
 
 
 async def _async_get_device_profile(
     entry: ThinqConfigEntry, device_id: str
 ) -> dict[str, Any] | None:
     if device_id is not None:
-        device_entry_map: dict[str, LGDevice] = (
-            entry.runtime_data.lge_device_map
-        )
+        device_entry_map: dict[str, LGDevice] = entry.runtime_data.lge_device_map
     if device_entry_map:
         device = device_entry_map.get(device_id)
         if device is not None:
@@ -293,9 +271,7 @@ async def _async_get_device_status(
     entry: ThinqConfigEntry, device_id: str
 ) -> dict[str, Any] | None:
     if device_id is not None:
-        device_entry_map: dict[str, LGDevice] = (
-            entry.runtime_data.lge_device_map
-        )
+        device_entry_map: dict[str, LGDevice] = entry.runtime_data.lge_device_map
         if device_entry_map:
             device = device_entry_map.get(device_id)
             if device is not None:
@@ -307,9 +283,7 @@ async def _async_post_device_status(
     entry: ThinqConfigEntry, device_id: str, value: Any
 ) -> dict[str, Any] | None:
     if device_id is not None:
-        device_entry_map: dict[str, LGDevice] = (
-            entry.runtime_data.lge_device_map
-        )
+        device_entry_map: dict[str, LGDevice] = entry.runtime_data.lge_device_map
         if device_entry_map:
             device = device_entry_map.get(device_id)
             if device is not None:
@@ -318,9 +292,7 @@ async def _async_post_device_status(
 
 
 @callback
-def async_setup_hass_services(
-    hass: HomeAssistant, entry: ThinqConfigEntry
-) -> None:
+def async_setup_hass_services(hass: HomeAssistant, entry: ThinqConfigEntry) -> None:
     """Set up services."""
 
     async def async_handle_reload_device_list(call: ServiceCall) -> None:
@@ -331,13 +303,9 @@ def async_setup_hass_services(
     async def async_handle_refresh_device_status(call: ServiceCall) -> None:
         """Handle 'refresh_device_status' service call."""
         device_id = call.data.get(ATTR_DEVICE_ID)
-        _LOGGER.debug(
-            "async_handle_refresh_device_status. device_id=%s", device_id
-        )
+        _LOGGER.debug("async_handle_refresh_device_status. device_id=%s", device_id)
 
-        device_entry_map: dict[str, LGDevice] = (
-            entry.runtime_data.lge_device_map
-        )
+        device_entry_map: dict[str, LGDevice] = entry.runtime_data.lge_device_map
         if device_entry_map:
             if device_id is None:
                 # If device_id is not specified, refresh for all devices.
@@ -359,9 +327,7 @@ def async_setup_hass_services(
         device: LGDevice = None
         result: str | dict[str, Any] = None
 
-        _LOGGER.debug(
-            "async_handle_get_device_profile. device_id=%s", device_id
-        )
+        _LOGGER.debug("async_handle_get_device_profile. device_id=%s", device_id)
 
         result = await _async_get_device_profile(entry, device_id)
 
@@ -377,9 +343,7 @@ def async_setup_hass_services(
         device: LGDevice = None
         result: str | dict[str, Any] = None
 
-        _LOGGER.debug(
-            "async_handle_get_device_status. device_id=%s", device_id
-        )
+        _LOGGER.debug("async_handle_get_device_status. device_id=%s", device_id)
 
         result = await _async_get_device_status(entry, device_id)
 
@@ -458,9 +422,7 @@ def async_create_service_response(
 
     return {
         ATTR_DEVICE_ID: device_id,
-        SERVICE_ATTR_DEVICE_INFO: (
-            device.device_info if device is not None else None
-        ),
+        SERVICE_ATTR_DEVICE_INFO: (device.device_info if device is not None else None),
         SERVICE_ATTR_RESULT: result,
     }
 
@@ -474,9 +436,7 @@ async def async_unload_entry_thinq(
     if thinq_mqtt:
         await thinq_mqtt.async_disconnect()
 
-    return await hass.config_entries.async_unload_platforms(
-        entry, THINQ_PLATFORMS
-    )
+    return await hass.config_entries.async_unload_platforms(entry, THINQ_PLATFORMS)
 
 
 ##### Soundbar #####
@@ -499,9 +459,7 @@ async def async_setup_entry_soundbar(
     hass.async_add_executor_job(soundbar_client.listen)
     # runtime_data for soundbar
     entry.runtime_data.soundbar_client = soundbar_client
-    await hass.config_entries.async_forward_entry_setups(
-        entry, SOUNDBAR_PLATFORMS
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, SOUNDBAR_PLATFORMS)
     return True
 
 
@@ -509,9 +467,7 @@ async def async_unload_entry_soundbar(
     hass: HomeAssistant, entry: ThinqConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(
-        entry, SOUNDBAR_PLATFORMS
-    )
+    return await hass.config_entries.async_unload_platforms(entry, SOUNDBAR_PLATFORMS)
 
 
 ##### webOS TV #####
@@ -527,9 +483,7 @@ COMMAND_SCHEMA = CALL_SCHEMA.extend(
     {vol.Required(ATTR_COMMAND): cv.string, vol.Optional(ATTR_PAYLOAD): dict}
 )
 
-SOUND_OUTPUT_SCHEMA = CALL_SCHEMA.extend(
-    {vol.Required(ATTR_SOUND_OUTPUT): cv.string}
-)
+SOUND_OUTPUT_SCHEMA = CALL_SCHEMA.extend({vol.Required(ATTR_SOUND_OUTPUT): cv.string})
 
 SERVICE_TO_METHOD = {
     SERVICE_BUTTON: {"method": "async_button", "schema": BUTTON_SCHEMA},
@@ -584,9 +538,7 @@ async def async_setup_entry_webostv(
         )
 
     hass.data[DOMAIN][DATA_CONFIG_ENTRY_WEBOSTV][entry.entry_id] = client
-    await hass.config_entries.async_forward_entry_setups(
-        entry, WEBOS_PLATFORMS
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, WEBOS_PLATFORMS)
 
     # set up notify platform, no entry support for notify component yet,
     # have to use discovery to load platform.
@@ -617,9 +569,7 @@ async def async_setup_entry_webostv(
     return True
 
 
-async def async_update_options(
-    hass: HomeAssistant, entry: ThinqConfigEntry
-) -> None:
+async def async_update_options(hass: HomeAssistant, entry: ThinqConfigEntry) -> None:
     """Update options."""
     await hass.config_entries.async_reload(entry.entry_id)
 
@@ -653,14 +603,10 @@ async def async_unload_entry_webostv(
     hass: HomeAssistant, entry: ThinqConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        entry, WEBOS_PLATFORMS
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, WEBOS_PLATFORMS)
 
     if unload_ok:
-        client = hass.data[DOMAIN][DATA_CONFIG_ENTRY_WEBOSTV].pop(
-            entry.entry_id
-        )
+        client = hass.data[DOMAIN][DATA_CONFIG_ENTRY_WEBOSTV].pop(entry.entry_id)
         await hass_notify.async_reload(hass, DOMAIN)
         client.clear_state_update_callbacks()
         await client.disconnect()

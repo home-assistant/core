@@ -1,6 +1,3 @@
-# SPDX-FileCopyrightText: Copyright 2024 LG Electronics Inc.
-# SPDX-License-Identifier: LicenseRef-LGE-Proprietary
-
 """Diagnostics support for LG webOS Smart TV."""
 
 from __future__ import annotations
@@ -31,9 +28,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    client: WebOsClient = hass.data[DOMAIN][DATA_CONFIG_ENTRY_WEBOSTV][
-        entry.entry_id
-    ]
+    client: WebOsClient = hass.data[DOMAIN][DATA_CONFIG_ENTRY_WEBOSTV][entry.entry_id]
 
     client_data = {
         "is_registered": client.is_registered(),

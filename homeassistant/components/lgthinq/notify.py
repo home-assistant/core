@@ -1,6 +1,3 @@
-# SPDX-FileCopyrightText: Copyright 2024 LG Electronics Inc.
-# SPDX-License-Identifier: LicenseRef-LGE-Proprietary
-
 """Support for LG WebOS TV notification service."""
 
 from __future__ import annotations
@@ -49,9 +46,7 @@ class LgWebOSNotificationService(BaseNotificationService):
         """Initialize the service."""
         self._client = client
 
-    async def async_send_message(
-        self, message: str = "", **kwargs: Any
-    ) -> None:
+    async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to the tv."""
         try:
             if not self._client.is_connected():

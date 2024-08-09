@@ -1,6 +1,3 @@
-# SPDX-FileCopyrightText: Copyright 2024 LG Electronics Inc.
-# SPDX-License-Identifier: LicenseRef-LGE-Proprietary
-
 """Implements LG ThinQ device."""
 
 from __future__ import annotations
@@ -9,16 +6,14 @@ import logging
 from typing import Any
 
 from thinqconnect.const import PROPERTY_READABLE, DeviceType
-from thinqconnect.devices.connect_device import (
-    ConnectBaseDevice,
-    ConnectDeviceProfile,
-)
+from thinqconnect.devices.connect_device import ConnectBaseDevice, ConnectDeviceProfile
 from thinqconnect.thinq_api import ThinQApiResponse
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.device_registry import DeviceEntry, DeviceRegistry
 from homeassistant.helpers.device_registry import (
+    DeviceEntry,
+    DeviceRegistry,
     async_get as async_get_device_registry,
 )
 from homeassistant.helpers.entity import DeviceInfo
@@ -74,9 +69,7 @@ class LGDevice:
         self._api: ConnectBaseDevice = api.get_sub_device(sub_id) or api
 
         # Create property map form the given api instance.
-        self._property_map: PropertyMap = self._retrieve_profiles(
-            self.api.profiles
-        )
+        self._property_map: PropertyMap = self._retrieve_profiles(self.api.profiles)
 
         # A notification message is stored in this device instance instead of
         # the api instance.
@@ -176,9 +169,7 @@ class LGDevice:
                     try:
                         property_map[None][prop] = profiles.get_property(prop)
                     except AttributeError as e:
-                        _LOGGER.error(
-                            "%s Failed to get property. %s", self.tag, e
-                        )
+                        _LOGGER.error("%s Failed to get property. %s", self.tag, e)
                         continue
 
     def _fill_property_map_from_sub_profile(
@@ -192,13 +183,9 @@ class LGDevice:
             for prop in property_list:
                 try:
                     if location in property_map:
-                        property_map[location][prop] = (
-                            sub_profile.get_property(prop)
-                        )
+                        property_map[location][prop] = sub_profile.get_property(prop)
                     else:
-                        property_map[location] = {
-                            prop: sub_profile.get_property(prop)
-                        }
+                        property_map[location] = {prop: sub_profile.get_property(prop)}
 
                 except AttributeError as e:
                     _LOGGER.error("%s Failed to get property. %s", self.tag, e)
@@ -221,9 +208,7 @@ class LGDevice:
                         PROPERTY_READABLE: sub_profile.errors,
                     }
 
-    def _retrieve_profiles(
-        self, profiles: ConnectDeviceProfile
-    ) -> PropertyMap:
+    def _retrieve_profiles(self, profiles: ConnectDeviceProfile) -> PropertyMap:
         """Create profile map form the given api instance."""
         # The structure of the profile map is as follows:
         #
@@ -277,9 +262,7 @@ class LGDevice:
 
     async def async_get_device_profile(self) -> dict[str, Any] | None:
         """Get the device profile from the server."""
-        result: dict[str, Any] = await self._thinq.async_get_device_profile(
-            self.id
-        )
+        result: dict[str, Any] = await self._thinq.async_get_device_profile(self.id)
         profile: dict[str, Any] = (
             result.get(self.sub_id) if self.sub_id and result else result
         )
@@ -289,9 +272,7 @@ class LGDevice:
 
     async def async_get_device_status(self) -> dict[str, Any] | None:
         """Get the device status from the server."""
-        result: ThinQApiResponse = await self._thinq.async_get_device_status(
-            self.id
-        )
+        result: ThinQApiResponse = await self._thinq.async_get_device_status(self.id)
         return self.handle_api_response(result)
 
     async def async_post_device_status(
@@ -373,17 +354,13 @@ class LGDevice:
         self.api.set_status(result)
         self._is_connected = True
 
-    def update_partial_status(
-        self, response: dict[str, Any] | None = None
-    ) -> None:
+    def update_partial_status(self, response: dict[str, Any] | None = None) -> None:
         """Update device status from the given partial response data."""
         if response is None:
             _LOGGER.error("%s Failed to update status.", self.tag)
             return
 
-        status: dict[str, Any] = (
-            response.get(self.sub_id) if self.sub_id else response
-        )
+        status: dict[str, Any] = response.get(self.sub_id) if self.sub_id else response
         _LOGGER.debug("%s Update status: %s", self.tag, status)
 
         # Partial response into the device api.
@@ -396,15 +373,11 @@ class LGDevice:
             if self.sub_id:
                 alias = f"{alias} {self.sub_id}"
 
-            _LOGGER.debug(
-                "%s Device alias has been changed: %s", self.tag, alias
-            )
+            _LOGGER.debug("%s Device alias has been changed: %s", self.tag, alias)
             self._name = alias
 
             # Update device registry.
-            device_registry: DeviceRegistry = async_get_device_registry(
-                self.hass
-            )
+            device_registry: DeviceRegistry = async_get_device_registry(self.hass)
             device_entry: DeviceEntry = device_registry.async_get_device(
                 identifiers={(DOMAIN, self._unique_id)}
             )
@@ -415,9 +388,7 @@ class LGDevice:
 
     def handle_notification_message(self, message: str) -> None:
         """Handle the notification message."""
-        _LOGGER.debug(
-            "%s Received notification message: %s", self.tag, message
-        )
+        _LOGGER.debug("%s Received notification message: %s", self.tag, message)
         self._noti_message = message
 
     def __str__(self) -> str:

@@ -1,6 +1,3 @@
-# SPDX-FileCopyrightText: Copyright 2024 LG Electronics Inc.
-# SPDX-License-Identifier: LicenseRef-LGE-Proprietary
-
 """webOS Smart TV trigger dispatcher."""
 
 from __future__ import annotations
@@ -49,6 +46,4 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Attach trigger of specified platform."""
     platform = _get_trigger_platform(config)
-    return await platform.async_attach_trigger(
-        hass, config, action, trigger_info
-    )
+    return await platform.async_attach_trigger(hass, config, action, trigger_info)
