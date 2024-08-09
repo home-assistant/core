@@ -234,3 +234,10 @@ CONF_READING = "reading"
 ATTR_MESSAGE = "message"
 
 WATER_HEATER_FALLBACK_REPAIR = "water_heater_fallback"
+
+TADO_SWING_SETTING = "swings"
+TADO_FANSPEED_SETTING = "fanSpeeds"
+
+TADO_FANLEVEL_SETTING = "fanLevel"
+TADO_VERTICAL_SWING_SETTING = "verticalSwing"
+TADO_HORIZONTAL_SWING_SETTING = "horizontalSwing"
