@@ -15,7 +15,7 @@ from .common import setup_integration_with_node_fixture
 @pytest.mark.parametrize(
     ("fixture", "entity_id"),
     [
-        ("valve_full", "valve.mock_valve"),
+        ("valve", "valve.mock_valve"),
     ],
 )
 async def test_valve(
