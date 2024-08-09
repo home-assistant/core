@@ -16,6 +16,7 @@ from yarl import URL
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import (
+    DOMAIN,
     Event,
     HomeAssistant,
     ReleaseChannel,
@@ -77,6 +78,7 @@ class DeviceEntryDisabler(StrEnum):
     """What disabled a device entry."""
 
     CONFIG_ENTRY = "config_entry"
+    DUPLICATE = "duplicate"
     INTEGRATION = "integration"
     USER = "user"
 
@@ -553,12 +555,36 @@ class DeviceRegistryItems[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)](
         for identifier in old_entry.identifiers:
             del self._identifiers[identifier]
 
+    def get_entries(
+        self,
+        identifiers: set[tuple[str, str]] | None,
+        connections: set[tuple[str, str]] | None,
+    ) -> set[str]:
+        """Get all matching entry ids from identifiers or connections."""
+        entries = set()
+        if identifiers:
+            entries = {
+                self._identifiers[identifier].id
+                for identifier in identifiers
+                if identifier in self._identifiers
+            }
+        if not connections:
+            return entries
+        return entries | {
+            self._connections[connection].id
+            for connection in _normalize_connections(connections)
+            if connection in self._connections
+        }
+
     def get_entry(
         self,
         identifiers: set[tuple[str, str]] | None,
         connections: set[tuple[str, str]] | None,
     ) -> _EntryTypeT | None:
-        """Get entry from identifiers or connections."""
+        """Get the first matching entry from identifiers or connections.
+
+        Identifiers are tried first, then connections.
+        """
         if identifiers:
             for identifier in identifiers:
                 if identifier in self._identifiers:
@@ -789,9 +815,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         else:
             connections = _normalize_connections(connections)
 
-        device = self.async_get_device(identifiers=identifiers, connections=connections)
+        device_ids = self.devices.get_entries(identifiers, connections)
 
-        if device is None:
+        if len(device_ids) > 1:
+            device = self._merge_devices(device_ids)
+        elif not device_ids:
             deleted_device = self._async_get_deleted_device(identifiers, connections)
             if deleted_device is None:
                 device = DeviceEntry(is_new=True)
@@ -804,6 +832,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             # If creating a new device, default to the config entry name
             if device_info_type == "primary" and (not name or name is UNDEFINED):
                 name = config_entry.title
+        else:
+            device = self.devices[next(iter(device_ids))]
 
         if default_manufacturer is not UNDEFINED and device.manufacturer is None:
             manufacturer = default_manufacturer
@@ -831,7 +861,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             )
             entry_type = DeviceEntryType(entry_type)
 
-        device = self.async_update_device(
+        updated_device = self.async_update_device(
             device.id,
             allow_collisions=True,
             add_config_entry_id=config_entry_id,
@@ -855,8 +885,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         # This is safe because _async_update_device will always return a device
         # in this use case.
-        assert device
-        return device
+        assert updated_device
+        return updated_device
 
     @callback
     def async_update_device(  # noqa: C901
@@ -1158,6 +1188,62 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         )
         self.async_schedule_save()
 
+    @callback
+    def _merge_devices(self, device_ids: set[str]) -> DeviceEntry:
+        # Pick a device to be the main device. For now, we just pick the first
+        # device in the set
+        main_device = self.devices[next(iter(device_ids))]
+
+        merged_config_entries = set()
+        merged_connections = set()
+        merged_identifiers = set()
+
+        # Disable other devices, and clear their connections and identifiers
+        for device_id in device_ids:
+            device = self.devices[device_id]
+            merged_config_entries |= device.config_entries
+            merged_connections |= device.connections
+            merged_identifiers |= device.identifiers
+
+            if device.id == main_device.id:
+                continue
+
+            self.async_update_device(
+                device.id,
+                disabled_by=DeviceEntryDisabler.DUPLICATE,
+                new_connections=set(),
+                new_identifiers={(DOMAIN, device.id)},
+            )
+
+        self.async_update_device(
+            main_device.id,
+            new_connections=merged_connections,
+            new_identifiers=merged_identifiers,
+        )
+        for config_entry_id in merged_config_entries:
+            self.async_update_device(
+                main_device.id,
+                add_config_entry_id=config_entry_id,
+            )
+
+        return main_device
+
+    @callback
+    def _find_collision(self) -> set[str] | None:
+        for device in self.devices.values():
+            for identifier in device.identifiers:
+                if len(device_ids := self.devices.get_entries({identifier}, None)) > 1:
+                    return device_ids
+            for connection in device.connections:
+                if len(device_ids := self.devices.get_entries({connection}, None)) > 1:
+                    return device_ids
+        return None
+
+    @callback
+    def _merge_collisions(self) -> None:
+        while collision := self._find_collision():
+            self._merge_devices(collision)
+
     async def async_load(self) -> None:
         """Load the device registry."""
         async_setup_cleanup(self.hass, self)
@@ -1222,6 +1308,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self.devices = devices
         self.deleted_devices = deleted_devices
         self._device_data = devices.data
+        self._merge_collisions()
 
     @callback
     def _data_to_save(self) -> dict[str, Any]:
