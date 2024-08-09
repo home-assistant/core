@@ -21,6 +21,7 @@ class SchlageEntity(CoordinatorEntity[SchlageDataUpdateCoordinator]):
         super().__init__(coordinator=coordinator)
         self.device_id = device_id
         self._attr_unique_id = device_id
+        assert self._lock is not None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
             name=self._lock.name,
@@ -30,17 +31,19 @@ class SchlageEntity(CoordinatorEntity[SchlageDataUpdateCoordinator]):
         )
 
     @property
-    def _lock_data(self) -> LockData:
+    def _lock_data(self) -> LockData | None:
         """Fetch the LockData from our coordinator."""
-        return self.coordinator.data.locks[self.device_id]
+        return self.coordinator.data.locks.get(self.device_id, None)
 
     @property
-    def _lock(self) -> Lock:
+    def _lock(self) -> Lock | None:
         """Fetch the Schlage lock from our coordinator."""
+        if self._lock_data is None:
+            return None
         return self._lock_data.lock
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
         # When is_locked is None the lock is unavailable.
-        return super().available and self._lock.is_locked is not None
+        return super().available and getattr(self._lock, "is_locked", None) is not None

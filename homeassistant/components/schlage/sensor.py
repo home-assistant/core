@@ -64,5 +64,6 @@ class SchlageBatterySensor(SchlageEntity, SensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_native_value = getattr(self._lock, self.entity_description.key)
+        if self._lock is not None:
+            self._attr_native_value = getattr(self._lock, self.entity_description.key)
         return super()._handle_coordinator_update()
