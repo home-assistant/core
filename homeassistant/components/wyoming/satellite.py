@@ -82,7 +82,6 @@ class WyomingSatellite(assist_satellite.AssistSatelliteEntity):
         self._is_pipeline_running = False
         self._pipeline_ended_event = asyncio.Event()
         self._audio_queue: asyncio.Queue[bytes | None] = asyncio.Queue()
-        self._pipeline_id: str | None = None
         self._muted_changed_event = asyncio.Event()
 
         # Results of a remotely triggered pipeline
@@ -138,7 +137,7 @@ class WyomingSatellite(assist_satellite.AssistSatelliteEntity):
             )
 
         self._assist_satellite_config = assist_satellite.SatelliteConfig(
-            active_wake_words=[], finished_speaking_seconds=None
+            active_wake_words=self.service.info.satellite.active_wake_words or []
         )
         self._assist_satellite_capabilities = assist_satellite.SatelliteCapabilities(
             wake_words=[],
@@ -378,6 +377,21 @@ class WyomingSatellite(assist_satellite.AssistSatelliteEntity):
                 elif Info.is_type(client_event.type):
                     client_info = Info.from_event(client_event)
                     _LOGGER.debug("Updated client info: %s", client_info)
+
+                    # Update capabilities
+                    wake_words: list[str] = []
+                    for wake_service in client_info.wake:
+                        if not wake_service.installed:
+                            continue
+
+                        wake_words = [
+                            wake_model.name for wake_model in wake_service.models
+                        ]
+
+                    self._assist_satellite_capabilities.wake_words = wake_words
+
+                    # Sync config
+                    await self._async_config_updated()
                 elif Detection.is_type(client_event.type):
                     detection = Detection.from_event(client_event)
                     wake_word_phrase = detection.name
@@ -389,6 +403,9 @@ class WyomingSatellite(assist_satellite.AssistSatelliteEntity):
                     if (client_info is not None) and (client_info.wake is not None):
                         found_phrase = False
                         for wake_service in client_info.wake:
+                            if not wake_service.installed:
+                                continue
+
                             for wake_model in wake_service.models:
                                 if wake_model.name == detection.name:
                                     wake_word_phrase = (
@@ -436,11 +453,26 @@ class WyomingSatellite(assist_satellite.AssistSatelliteEntity):
         if end_stage is None:
             raise ValueError(f"Invalid end stage: {end_stage}")
 
-        pipeline_id = pipeline_select.get_chosen_pipeline(
-            self.hass,
-            DOMAIN,
-            self.device.satellite_id,
-        )
+        pipeline_id: str | None = self._assist_satellite_config.default_pipeline
+        if wake_word_phrase and (
+            wake_word_pipeline_id
+            := self._assist_satellite_config.wake_word_pipeline.get(wake_word_phrase)
+        ):
+            pipeline_id = wake_word_pipeline_id
+            _LOGGER.debug(
+                "Using pipeline %s for wake word: %s",
+                pipeline_id,
+                wake_word_pipeline_id,
+            )
+
+        if not pipeline_id:
+            # Use select entity
+            pipeline_id = pipeline_select.get_chosen_pipeline(
+                self.hass,
+                DOMAIN,
+                self.device.satellite_id,
+            )
+
         pipeline = assist_pipeline.async_get_pipeline(self.hass, pipeline_id)
         assert pipeline is not None
 
@@ -778,6 +810,16 @@ class WyomingSatellite(assist_satellite.AssistSatelliteEntity):
 
         Platforms need to make sure that the device has this configuration.
         """
+        if (
+            self._attr_supported_features
+            & assist_satellite.AssistSatelliteEntityFeature.WAKE_WORD
+        ) and (self._client is not None):
+            # Update on-device wake words
+            await self._client.write_event(
+                Detect(names=self._assist_satellite_config.active_wake_words).event()
+            )
+
+        _LOGGER.debug("Config updated: %s", self._assist_satellite_config)
 
     @property
     def is_microphone_muted(self) -> bool:

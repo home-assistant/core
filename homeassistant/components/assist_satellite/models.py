@@ -1,6 +1,6 @@
 """Models for assist satellite."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import IntFlag, StrEnum, auto
 
 from homeassistant.const import STATE_UNAVAILABLE
@@ -11,7 +11,7 @@ class SatelliteCapabilities:
     """Capabilities of satellite."""
 
     wake_words: list[str]
-    """Available on-device wake words."""
+    """Available wake words."""
 
     max_active_wake_words: int | None = None
     """Maximum number of active wake words."""
@@ -22,10 +22,22 @@ class SatelliteConfig:
     """Configuration of satellite."""
 
     active_wake_words: list[str]
-    """List of wake words that should be active (empty = streaming)."""
+    """List of wake words that are actively being listened for."""
 
-    finished_speaking_seconds: float | None = None
-    """Seconds of silence before voice command is finished (on-device VAD only)."""
+    wake_word_entity_id: str | None = None
+    """Entity id of streaming wake word provider (None = on-device)."""
+
+    default_pipeline: str | None = None
+    """Pipeline id to use by default (None = preferred)."""
+
+    wake_word_pipeline: dict[str, str] = field(default_factory=dict)
+    """Mapping between wake words and pipeline ids.
+
+    If a wake word is not present, then use default_pipeline_id.
+    """
+
+    finished_speaking_seconds: float = 1.0
+    """Seconds of silence before voice command is finished."""
 
 
 @dataclass
@@ -36,7 +48,7 @@ class PipelineRunConfig:
     """Wake word names to listen for (start_stage = wake)."""
 
     announce_text: str | None = None
-    """Text to announce using text-to-speech (start_stage = tts)."""
+    """Text to announce using text-to-speech (start_stage = wake, stt, or tts)."""
 
 
 @dataclass
