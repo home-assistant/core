@@ -123,6 +123,10 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "service_uuid": "98bd0001-0b0e-421a-84e5-ddbf75dc6de4",
     },
     {
+        "domain": "godice",
+        "local_name": "GoDice*",
+    },
+    {
         "connectable": False,
         "domain": "govee_ble",
         "local_name": "Govee*",
