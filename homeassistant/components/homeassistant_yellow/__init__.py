@@ -11,9 +11,10 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
 from homeassistant.config_entries import SOURCE_HARDWARE, ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
-from homeassistant.helpers import discovery_flow
+from homeassistant.helpers import discovery_flow, issue_registry as ir
 
-from .const import RADIO_DEVICE, ZHA_HW_DISCOVERY_DATA
+from .const import DOMAIN, ISSUE_CM4_UNSEATED, RADIO_DEVICE, ZHA_HW_DISCOVERY_DATA
+from .helpers import async_validate_hardware_consistent
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -32,6 +33,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Not running on a Home Assistant Yellow, Home Assistant may have been migrated
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
         return False
+
+    if not await async_validate_hardware_consistent(hass):
+        ir.async_create_issue(
+            hass,
+            domain=DOMAIN,
+            issue_id=ISSUE_CM4_UNSEATED,
+            is_fixable=False,
+            learn_more_url="https://yellow.home-assistant.io/guides/remove-cm4/",
+            severity=ir.IssueSeverity.ERROR,
+            translation_key=ISSUE_CM4_UNSEATED,
+        )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, ISSUE_CM4_UNSEATED)
 
     try:
         await check_multi_pan_addon(hass)

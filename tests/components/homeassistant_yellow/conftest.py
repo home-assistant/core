@@ -153,3 +153,13 @@ def start_addon_fixture():
         "homeassistant.components.hassio.addon_manager.async_start_addon"
     ) as start_addon:
         yield start_addon
+
+
+@pytest.fixture(autouse=True)
+def mock_async_validate_hardware_consistent() -> Generator[None]:
+    """Mock validate hardware state."""
+    with patch(
+        "homeassistant.components.homeassistant_yellow.async_validate_hardware_consistent",
+        return_value=True,
+    ):
+        yield

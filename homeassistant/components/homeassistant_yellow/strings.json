@@ -99,5 +99,11 @@
       "install_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::install_addon%]",
       "start_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::start_addon%]"
     }
+  },
+  "issues": {
+    "cm4_unseated": {
+      "title": "Raspberry Pi Compute Module is not firmly installed",
+      "description": "Your Raspberry Pi Compute Module does not appear to be plugged in all the way and some pins are disconnected. Carefully disassemble the Yellow and securely click the Compute Module into place."
+    }
   }
 }
