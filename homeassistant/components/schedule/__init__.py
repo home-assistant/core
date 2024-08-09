@@ -39,6 +39,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ATTR_NEXT_EVENT,
     CONF_ALL_DAYS,
+    CONF_DATA,
     CONF_FROM,
     CONF_TO,
     DOMAIN,
@@ -109,9 +110,14 @@ BASE_SCHEMA: VolDictType = {
     vol.Optional(CONF_ICON): cv.icon,
 }
 
+# Extra data that the user can set on each time range
+CUSTOM_DATA_VALUE = vol.Or(bool, str, int, float)
+CUSTOM_DATA_SCHEMA = vol.Or(vol.Schema({str: CUSTOM_DATA_VALUE}), CUSTOM_DATA_VALUE)
+
 TIME_RANGE_SCHEMA: VolDictType = {
     vol.Required(CONF_FROM): cv.time,
     vol.Required(CONF_TO): deserialize_to_time,
+    vol.Optional(CONF_DATA): CUSTOM_DATA_SCHEMA,
 }
 
 # Serialize time in validated config
@@ -119,6 +125,7 @@ STORAGE_TIME_RANGE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_FROM): vol.Coerce(str),
         vol.Required(CONF_TO): serialize_to_time,
+        vol.Optional(CONF_DATA): CUSTOM_DATA_SCHEMA,
     }
 )
 
@@ -152,7 +159,7 @@ ENTITY_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up an input select."""
+    """Set up a schedule."""
     component = EntityComponent[Schedule](LOGGER, DOMAIN, hass)
 
     id_manager = IDManager()
@@ -235,7 +242,7 @@ class Schedule(CollectionEntity):
     """Schedule entity."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {ATTR_EDITABLE, ATTR_NEXT_EVENT}
+        {ATTR_EDITABLE, ATTR_NEXT_EVENT, CONF_DATA}
     )
 
     _attr_has_entity_name = True
@@ -252,6 +259,13 @@ class Schedule(CollectionEntity):
         self._attr_icon = self._config.get(CONF_ICON)
         self._attr_name = self._config[CONF_NAME]
         self._attr_unique_id = self._config[CONF_ID]
+
+        # The "data" attribute is always excluded from the recorder, but
+        # also exclude any custom attributes that may be present on time ranges.
+        self._unrecorded_attributes = self.all_custom_data_keys()
+        self._Entity__combined_unrecorded_attributes = (
+            self._entity_component_unrecorded_attributes | self._unrecorded_attributes
+        )
 
     @classmethod
     def from_storage(cls, config: ConfigType) -> Schedule:
@@ -300,9 +314,11 @@ class Schedule(CollectionEntity):
             # Note that any time in the day is treated as smaller than time.max.
             if now.time() < time_range[CONF_TO] or time_range[CONF_TO] == time.max:
                 self._attr_state = STATE_ON
+                current_data = time_range.get(CONF_DATA)
                 break
         else:
             self._attr_state = STATE_OFF
+            current_data = None
 
         # Find next event in the schedule, loop over each day (starting with
         # the current day) until the next event has been found.
@@ -344,6 +360,14 @@ class Schedule(CollectionEntity):
         self._attr_extra_state_attributes = {
             ATTR_NEXT_EVENT: next_event,
         }
+
+        if isinstance(current_data, dict):
+            # Add each key/value pair in the data to the entity's state attributes
+            self._attr_extra_state_attributes.update(current_data)
+        elif current_data is not None:
+            # Expose the data as a single state attribute
+            self._attr_extra_state_attributes[CONF_DATA] = current_data
+
         self.async_write_ha_state()
 
         if next_event:
@@ -352,3 +376,23 @@ class Schedule(CollectionEntity):
                 self._update,
                 next_event,
             )
+
+    def all_custom_data_keys(self) -> frozenset[str]:
+        """Return the set of all currently used custom data attribute keys."""
+        data_keys = set()
+
+        for weekday in WEEKDAY_TO_CONF.values():
+            if not (weekday_config := self._config.get(weekday)):
+                continue  # this weekday is not configured
+
+            for time_range in weekday_config:
+                time_range_custom_data = time_range.get(CONF_DATA)
+
+                if not time_range_custom_data or not isinstance(
+                    time_range_custom_data, dict
+                ):
+                    continue  # this time range has no custom data, or it is a single value
+
+                data_keys.update(time_range_custom_data.keys())
+
+        return frozenset(data_keys)
