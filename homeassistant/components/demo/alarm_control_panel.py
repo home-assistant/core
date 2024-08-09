@@ -30,9 +30,10 @@ async def async_setup_entry(
     """Set up the Demo config entry."""
     async_add_entities(
         [
-            DemoAlarm(  # type:ignore[no-untyped-call]
+            DemoAlarm(
                 hass,
                 "Security",
+                "demo_alarm_control_panel",
                 "1234",
                 None,
                 True,
@@ -78,5 +79,3 @@ async def async_setup_entry(
 
 class DemoAlarm(ManualAlarm):
     """Demo Alarm Control Panel."""
-
-    _attr_unique_id = "demo_alarm_control_panel"

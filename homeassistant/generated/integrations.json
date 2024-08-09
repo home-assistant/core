@@ -3449,12 +3449,6 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
-    "manual": {
-      "name": "Manual Alarm Control Panel",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "calculated"
-    },
     "marantz": {
       "name": "Marantz",
       "integration_type": "virtual",
@@ -7217,6 +7211,12 @@
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "manual": {
+      "name": "Manual Alarm Control Panel",
+      "integration_type": "helper",
+      "config_flow": false,
+      "iot_class": "calculated"
     },
     "min_max": {
       "integration_type": "helper",
