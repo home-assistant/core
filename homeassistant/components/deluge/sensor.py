@@ -18,14 +18,25 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import DelugeConfigEntry, DelugeEntity
-from .const import CURRENT_STATUS, DATA_KEYS, DOWNLOAD_SPEED, UPLOAD_SPEED
+from .const import (
+    CURRENT_STATUS,
+    DHT_DOWNLOAD_RATE,
+    DHT_UPLOAD_RATE,
+    DOWNLOAD_SPEED,
+    UPLOAD_SPEED,
+    DelugeGetSessionStatusKeys,
+)
 from .coordinator import DelugeDataUpdateCoordinator
 
 
 def get_state(data: dict[str, float], key: str) -> str | float:
     """Get current download/upload state."""
-    upload = data[DATA_KEYS[0]] - data[DATA_KEYS[2]]
-    download = data[DATA_KEYS[1]] - data[DATA_KEYS[3]]
+    upload = data[DelugeGetSessionStatusKeys.UPLOAD_RATE.value]
+    download = data[DelugeGetSessionStatusKeys.DOWNLOAD_RATE.value]
+    protocol_upload = data[DelugeGetSessionStatusKeys.DHT_UPLOAD_RATE.value]
+    protocol_download = data[DelugeGetSessionStatusKeys.DHT_DOWNLOAD_RATE.value]
+
+    # if key is CURRENT_STATUS, we just return whether we are uploading / downloading / idle
     if key == CURRENT_STATUS:
         if upload > 0 and download > 0:
             return "seeding_and_downloading"
@@ -34,7 +45,20 @@ def get_state(data: dict[str, float], key: str) -> str | float:
         if upload == 0 and download > 0:
             return "downloading"
         return STATE_IDLE
-    kb_spd = float(upload if key == UPLOAD_SPEED else download) / 1024
+
+    # if not, return the transfer rate for the given key
+    rate = 0.0
+    if key == DOWNLOAD_SPEED:
+        rate = download
+    elif key == UPLOAD_SPEED:
+        rate = upload
+    elif key == DHT_DOWNLOAD_RATE:
+        rate = protocol_download
+    else:
+        rate = protocol_upload
+
+    # convert to KiB/s and round
+    kb_spd = rate / 1024
     return round(kb_spd, 2 if kb_spd < 0.1 else 1)
 
 
@@ -55,7 +79,7 @@ SENSOR_TYPES: tuple[DelugeSensorEntityDescription, ...] = (
     ),
     DelugeSensorEntityDescription(
         key=DOWNLOAD_SPEED,
-        translation_key="download_speed",
+        translation_key=DOWNLOAD_SPEED,
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
@@ -63,11 +87,27 @@ SENSOR_TYPES: tuple[DelugeSensorEntityDescription, ...] = (
     ),
     DelugeSensorEntityDescription(
         key=UPLOAD_SPEED,
-        translation_key="upload_speed",
+        translation_key=UPLOAD_SPEED,
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: get_state(data, UPLOAD_SPEED),
+    ),
+    DelugeSensorEntityDescription(
+        key=DHT_UPLOAD_RATE,
+        translation_key=DHT_UPLOAD_RATE,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: get_state(data, DHT_UPLOAD_RATE),
+    ),
+    DelugeSensorEntityDescription(
+        key=DHT_DOWNLOAD_RATE,
+        translation_key=DHT_DOWNLOAD_RATE,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: get_state(data, DHT_DOWNLOAD_RATE),
     ),
 )
 

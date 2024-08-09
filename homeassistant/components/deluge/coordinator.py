@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DATA_KEYS, LOGGER
+from .const import LOGGER, DelugeGetSessionStatusKeys
 
 if TYPE_CHECKING:
     from . import DelugeConfigEntry
@@ -46,7 +46,7 @@ class DelugeDataUpdateCoordinator(
             _data = await self.hass.async_add_executor_job(
                 self.api.call,
                 "core.get_session_status",
-                DATA_KEYS,
+                [iter_member.value for iter_member in list(DelugeGetSessionStatusKeys)],
             )
             data[Platform.SENSOR] = {k.decode(): v for k, v in _data.items()}
             data[Platform.SWITCH] = await self.hass.async_add_executor_job(
