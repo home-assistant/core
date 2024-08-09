@@ -29,14 +29,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> b
     _LOGGER.debug("start searching devices")
 
     # search devices after adding all callbacks to the gateway object
-    gateway.home_server.searchDevices()
+    hass.async_add_executor_job(gateway.home_server.searchDevices)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> bool:
     """Unload a config entry."""
-    # gateway = cast(HausbusGateway, hass.data[DOMAIN][entry.entry_id])
     gateway = entry.runtime_data.gateway
     gateway.home_server.removeBusEventListener(gateway)
 
