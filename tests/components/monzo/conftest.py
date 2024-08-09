@@ -10,6 +10,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
+from homeassistant.components.monzo import MonzoData
 from homeassistant.components.monzo.api import AuthenticatedMonzoAPI
 from homeassistant.components.monzo.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -47,6 +48,15 @@ TITLE = "jake"
 USER_ID = 12345
 
 
+class MonzoMockConfigEntry(MockConfigEntry):
+    """Mock config entry with Monzo runtime_data."""
+
+    def __init__(self, *args, **kwargs) -> None:
+        """Initialise MonzoMockConfigEntry."""
+        self.runtime_data: MonzoData = None
+        super().__init__(*args, **kwargs)
+
+
 @pytest.fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""
@@ -65,9 +75,9 @@ def mock_expires_at() -> int:
 
 
 @pytest.fixture
-def polling_config_entry(expires_at: int) -> MockConfigEntry:
+def polling_config_entry(expires_at: int) -> MonzoMockConfigEntry:
     """Create Monzo entry in Home Assistant."""
-    return MockConfigEntry(
+    entry = MonzoMockConfigEntry(
         domain=DOMAIN,
         title=TITLE,
         unique_id=str(USER_ID),
@@ -84,6 +94,8 @@ def polling_config_entry(expires_at: int) -> MockConfigEntry:
             "profile": TITLE,
         },
     )
+    entry.runtime_data = None
+    return entry
 
 
 @pytest.fixture(name="basic_monzo")
