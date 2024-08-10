@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import datetime as dt
 from datetime import timedelta
 import logging
 from typing import Any, Concatenate
@@ -209,6 +210,13 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
         ):
             return None
         return self.currently_playing["progress_ms"] / 1000
+
+    @property
+    def media_position_updated_at(self) -> dt.datetime | None:
+        """When was the position of the current playing media valid."""
+        if not self.currently_playing:
+            return None
+        return self.coordinator.data.position_updated_at
 
     @property
     def media_image_url(self) -> str | None:
