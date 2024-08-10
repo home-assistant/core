@@ -125,6 +125,11 @@ DEFAULT_MAX_HUMIDITY = 99
 
 CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE, ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH]
 
+# Can be removed in 2025.1 after deprecation period of the new feature flags
+CHECK_TURN_ON_OFF_FEATURE_FLAG = (
+    ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+)
+
 SET_TEMPERATURE_SCHEMA = vol.All(
     cv.has_at_least_one_key(
         ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW
@@ -378,14 +383,11 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return
 
         supported_features = self.supported_features
-        if supported_features & (
-            ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
-        ):
+        if supported_features & CHECK_TURN_ON_OFF_FEATURE_FLAG:
             # The entity supports both turn_on and turn_off, the backwards compatibility
             # checks are not needed
             return
 
-        supported_features = self.supported_features
         if not supported_features & ClimateEntityFeature.TURN_OFF and (
             type(self).async_turn_off is not ClimateEntity.async_turn_off
             or type(self).turn_off is not ClimateEntity.turn_off
@@ -912,12 +914,37 @@ async def async_service_temperature_set(
     """Handle set temperature service."""
     hass = entity.hass
     kwargs = {}
+    min_temp = entity.min_temp
+    max_temp = entity.max_temp
+    temp_unit = entity.temperature_unit
 
     for value, temp in service_call.data.items():
         if value in CONVERTIBLE_ATTRIBUTE:
-            kwargs[value] = TemperatureConverter.convert(
-                temp, hass.config.units.temperature_unit, entity.temperature_unit
+            kwargs[value] = check_temp = TemperatureConverter.convert(
+                temp, hass.config.units.temperature_unit, temp_unit
             )
+
+            _LOGGER.debug(
+                "Check valid temperature %d %s (%d %s) in range %d %s - %d %s",
+                check_temp,
+                entity.temperature_unit,
+                temp,
+                hass.config.units.temperature_unit,
+                min_temp,
+                temp_unit,
+                max_temp,
+                temp_unit,
+            )
+            if check_temp < min_temp or check_temp > max_temp:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="temp_out_of_range",
+                    translation_placeholders={
+                        "check_temp": str(check_temp),
+                        "min_temp": str(min_temp),
+                        "max_temp": str(max_temp),
+                    },
+                )
         else:
             kwargs[value] = temp
 

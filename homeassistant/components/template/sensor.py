@@ -88,7 +88,6 @@ SENSOR_SCHEMA = vol.All(
         {
             vol.Required(CONF_STATE): cv.template,
             vol.Optional(ATTR_LAST_RESET): cv.template,
-            vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
         }
     )
     .extend(TEMPLATE_SENSOR_BASE_SCHEMA.schema)
@@ -96,6 +95,15 @@ SENSOR_SCHEMA = vol.All(
     validate_last_reset,
 )
 
+
+SENSOR_CONFIG_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required(CONF_STATE): cv.template,
+            vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
+        }
+    ).extend(TEMPLATE_SENSOR_BASE_SCHEMA.schema),
+)
 
 LEGACY_SENSOR_SCHEMA = vol.All(
     cv.deprecated(ATTR_ENTITY_ID),
@@ -230,7 +238,7 @@ async def async_setup_entry(
     """Initialize config entry."""
     _options = dict(config_entry.options)
     _options.pop("template_type")
-    validated_config = SENSOR_SCHEMA(_options)
+    validated_config = SENSOR_CONFIG_SCHEMA(_options)
     async_add_entities([SensorTemplate(hass, validated_config, config_entry.entry_id)])
 
 
@@ -239,7 +247,7 @@ def async_create_preview_sensor(
     hass: HomeAssistant, name: str, config: dict[str, Any]
 ) -> SensorTemplate:
     """Create a preview sensor."""
-    validated_config = SENSOR_SCHEMA(config | {CONF_NAME: name})
+    validated_config = SENSOR_CONFIG_SCHEMA(config | {CONF_NAME: name})
     return SensorTemplate(hass, validated_config, None)
 
 

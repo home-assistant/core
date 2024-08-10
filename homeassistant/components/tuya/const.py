@@ -258,6 +258,7 @@ class DPCode(StrEnum):
     PRESENCE_STATE = "presence_state"
     PRESSURE_STATE = "pressure_state"
     PRESSURE_VALUE = "pressure_value"
+    PUMP = "pump"
     PUMP_RESET = "pump_reset"  # Water pump reset
     OXYGEN = "oxygen"  # Oxygen bar
     RECORD_MODE = "record_mode"
