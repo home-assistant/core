@@ -15,7 +15,6 @@ class AirGradientEntity(Entity):
 
     def __init__(self, serial_number: str) -> None:
         """Initialize airgradient entity."""
-        super().__init__()
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial_number)},
         )
