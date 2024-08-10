@@ -9,6 +9,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -24,6 +25,7 @@ SENSORS: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key=STATUS_SENSOR_NEEDSRESTART,
         device_class=BinarySensorDeviceClass.UPDATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
