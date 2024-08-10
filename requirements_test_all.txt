@@ -631,7 +631,7 @@ devolo-home-control-api==0.18.3
 devolo-plc-api==1.4.1
 
 # homeassistant.components.chacon_dio
-dio-chacon-wifi-api==1.1.0
+dio-chacon-wifi-api==1.2.0
 
 # homeassistant.components.directv
 directv==0.4.0
@@ -1661,7 +1661,7 @@ pyoctoprintapi==0.1.12
 pyopenuv==2023.02.0
 
 # homeassistant.components.openweathermap
-pyopenweathermap==0.0.9
+pyopenweathermap==0.1.1
 
 # homeassistant.components.opnsense
 pyopnsense==0.4.0
@@ -1813,7 +1813,7 @@ python-fullykiosk==0.0.14
 python-homeassistant-analytics==0.7.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v6.1.1
+python-homewizard-energy==v6.2.0
 
 # homeassistant.components.izone
 python-izone==1.2.9
@@ -2369,7 +2369,7 @@ zeroconf==0.132.2
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha==0.0.29
+zha==0.0.30
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.57.0
