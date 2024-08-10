@@ -14,7 +14,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
 
-class WeheatOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
+class WeheatOAuth2Implementation(LocalOAuth2Implementation):
     """Weheat variant of LocalOAuth2Implementation to support a keycloak specific error message."""
 
     async def _token_request(self, data: dict) -> dict:

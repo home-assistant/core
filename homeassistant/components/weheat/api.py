@@ -16,7 +16,7 @@ class AsyncConfigEntryAuth(AbstractAuth):
     def __init__(
         self,
         websession: ClientSession,
-        oauth_session: config_entry_oauth2_flow.OAuth2Session,
+        oauth_session: OAuth2Session,
     ) -> None:
         """Initialize Weheat auth."""
         super().__init__(websession, host=API_URL)

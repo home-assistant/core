@@ -13,7 +13,7 @@ from .coordinator import WeheatDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-type WeheatConfigEntry = ConfigEntry[api.AsyncConfigEntryAuth]
+type WeheatConfigEntry = ConfigEntry[AsyncConfigEntryAuth]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bool:
@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bo
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
     entry.runtime_data = api.AsyncConfigEntryAuth(
-        aiohttp_client.async_get_clientsession(hass), session
+        async_get_clientsession(hass), session
     )
 
     hass.data.setdefault(DOMAIN, {})

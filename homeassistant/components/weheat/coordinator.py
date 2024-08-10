@@ -21,7 +21,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import API_URL, DOMAIN, LOGGER, UPDATE_INTERVAL
 
 
-class WeheatDataUpdateCoordinator(DataUpdateCoordinator):
+class WeheatDataUpdateCoordinator(DataUpdateCoordinator[..]):
     """A custom coordinator for the Weheat heatpump integration."""
 
     def __init__(
