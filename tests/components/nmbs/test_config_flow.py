@@ -38,7 +38,7 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.MENU
         assert result["menu_options"] == {"connection", "liveboard"}
-        assert result["step_id"] == "choose"
+        assert result["step_id"] == "user"
 
 
 async def test_step_liveboard_no_data(hass: HomeAssistant) -> None:

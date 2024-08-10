@@ -11,26 +11,30 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_NAME,
+    CONF_PLATFORM,
     CONF_SHOW_ON_MAP,
     CONF_TYPE,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from .const import (
+from .const import (  # noqa: F401
     CONF_EXCLUDE_VIAS,
     CONF_STATION_FROM,
     CONF_STATION_LIVE,
     CONF_STATION_TO,
+    DOMAIN,
+    PLATFORMS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,13 +81,53 @@ def get_ride_duration(departure_time, arrival_time, delay=0):
     return duration_time + get_delay_in_minutes(delay)
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the NMBS sensor with iRail API."""
+
+    if config[CONF_PLATFORM] == DOMAIN:
+        if CONF_SHOW_ON_MAP not in config:
+            config[CONF_SHOW_ON_MAP] = False
+        if CONF_EXCLUDE_VIAS not in config:
+            config[CONF_EXCLUDE_VIAS] = False
+
+        config[CONF_TYPE] = "connection"
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=config,
+            )
+        )
+        if CONF_STATION_LIVE in config:
+            liveboard = config.copy()
+            liveboard[CONF_TYPE] = "liveboard"
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": SOURCE_IMPORT},
+                    data=liveboard,
+                )
+            )
+
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2025.3.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "NMBS",
+        },
+    )
 
 
 async def async_setup_entry(
@@ -95,7 +139,7 @@ async def async_setup_entry(
     api_client = iRail()
 
     nmbs_type = config_entry.data[CONF_TYPE]
-    name = config_entry.data[CONF_NAME]
+    name = config_entry.data.get(CONF_NAME, None)
     show_on_map = config_entry.data[CONF_SHOW_ON_MAP]
 
     if nmbs_type == "connection":
@@ -238,7 +282,7 @@ class NMBSSensor(SensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        if self._name == "":
+        if self._name is None:
             return f"NMBS ({self._station_from} to {self._station_to})"
         return self._name
 

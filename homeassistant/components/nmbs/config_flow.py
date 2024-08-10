@@ -28,11 +28,6 @@ from .const import (
 class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
     """NMBS config flow."""
 
-    # The schema version of the entries that it creates
-    # Home Assistant will call your migrate method if the version changes
-    VERSION = 1
-    MINOR_VERSION = 1
-
     def __init__(self) -> None:
         """Initialize."""
         self.api_client = iRail()
@@ -57,14 +52,8 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
 
-        return await self.async_step_choose()
-
-    async def async_step_choose(
-        self, _: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the step to choose what to setup."""
         return self.async_show_menu(
-            step_id="choose", menu_options={"liveboard", "connection"}
+            step_id="user", menu_options={"liveboard", "connection"}
         )
 
     async def async_step_liveboard(
@@ -90,7 +79,6 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="liveboard",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_NAME, default=""): str,
                     vol.Required(CONF_STATION_LIVE): SelectSelector(
                         SelectSelectorConfig(
                             options=await self._fetch_stations_choices(),
@@ -131,7 +119,6 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="connection",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_NAME, default=""): str,
                     vol.Required(CONF_STATION_FROM): SelectSelector(
                         SelectSelectorConfig(
                             options=choices,

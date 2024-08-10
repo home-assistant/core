@@ -5,21 +5,19 @@
     "step": {
       "liveboard": {
         "data": {
-          "name": "Name",
           "station_live": "Station",
           "show_on_map": "Show the station on the map"
         }
       },
       "connection": {
         "data": {
-          "name": "Name",
           "station_from": "Station where the connection departs",
           "station_to": "Station where the connection arrives",
           "exclude_vias": "Exclude connections with transfers",
           "show_on_map": "Show the station on the map"
         }
       },
-      "choose": {
+      "user": {
         "menu_options": {
           "liveboard": "Liveboard at a station",
           "connection": "Connection between 2 stations"
