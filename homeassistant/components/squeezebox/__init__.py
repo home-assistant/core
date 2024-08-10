@@ -18,7 +18,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceEntryType,
+    format_mac,
+)
 
 from .const import (
     CONF_HTTPS,
@@ -104,7 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
         manufacturer=MANUFACTURER,
         model=SERVER_MODEL,
         sw_version=version,
-        serial_number=lms.uuid,
+        entry_type=DeviceEntryType.SERVICE,
         connections=mac_connect,
     )
     _LOGGER.debug("LMS Device %s", device)
