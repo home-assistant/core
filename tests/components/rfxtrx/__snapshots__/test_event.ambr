@@ -1,4 +1,19 @@
 # serializer version: 1
+# name: test_control_event.2
+          ...
+# ---
+# name: test_control_event.3
+      ...
+  +     'Command': 'On',
+  +     'Rssi numeric': 5,
+        ...
+  -     'event_type': None,
+  +     'event_type': 'on',
+          ...
+  -   'state': 'unknown',
+  +   'state': '2021-01-09T12:00:00.000+00:00',
+    ...
+# ---
 # name: test_control_event[1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -48,6 +63,19 @@
     'last_updated': <ANY>,
     'state': 'unknown',
   })
+# ---
+# name: test_status_event.1
+      ...
+  +     'Battery numeric': 9,
+  +     'Rssi numeric': 8,
+  +     'Sensor Status': 'Normal',
+        ...
+  -     'event_type': None,
+  +     'event_type': 'normal',
+          ...
+  -   'state': 'unknown',
+  +   'state': '2021-01-09T12:00:00.000+00:00',
+    ...
 # ---
 # name: test_status_event[1]
   StateSnapshot({
