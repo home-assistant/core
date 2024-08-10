@@ -1,4 +1,4 @@
-"""Test for the switchbot_cloud lock"""
+"""Test for the switchbot_cloud lock."""
 
 from unittest.mock import patch
 
@@ -22,6 +22,7 @@ from . import configure_integration
 
 
 async def test_lock(hass: HomeAssistant, mock_list_devices, mock_get_status) -> None:
+    """Test locking and unlocking."""
     mock_list_devices.return_value = [
         Device(
             deviceId="lock-id-1",
