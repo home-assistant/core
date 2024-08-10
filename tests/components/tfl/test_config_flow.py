@@ -209,7 +209,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.tfl.config_flow.validate_app_key",
+        "homeassistant.components.tfl.config_flow.call_tfl_api",
         side_effect=InvalidAuth,
     ):
         user_form_error_result = await hass.config_entries.flow.async_configure(
@@ -230,7 +230,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.tfl.config_flow.validate_app_key",
+        "homeassistant.components.tfl.config_flow.call_tfl_api",
         side_effect=CannotConnect,
     ):
         user_form_error_result = await hass.config_entries.flow.async_configure(
@@ -259,7 +259,7 @@ async def test_options_flow_init(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
-    assert {} == result["errors"]
+    assert result["errors"] == {}
     assert len(result["data_schema"].schema) == 1
     for key, value in result["data_schema"].schema.items():
         assert isinstance(key, vol.Marker)
@@ -435,7 +435,7 @@ async def test_async_step_reconfigure_is_unsuccessful_with_auth_failure(
     invalid_api_key = "invalid_api_key"
     user_input = {CONF_API_APP_KEY: invalid_api_key}
     with patch(
-        "homeassistant.components.tfl.config_flow.validate_app_key",
+        "homeassistant.components.tfl.config_flow.call_tfl_api",
         side_effect=InvalidAuth,
     ):
         reconfigure_form_inv_auth = await hass.config_entries.flow.async_configure(

@@ -27,10 +27,11 @@ async def test_async_update_success(hass: HomeAssistant) -> None:
     with patch.object(sensor, "hass", new=hass):
         await sensor.async_update()
 
+    sensor_next = sensor._attr_native_value
     sensor_next_3 = sensor._attr_extra_state_attributes[ATTR_NEXT_THREE_ARRIVALS]
     sensor_all = sensor._attr_extra_state_attributes[ATTR_NEXT_ARRIVALS]
 
-    assert sensor._attr_native_value == MOCK_DATA_SENSOR_ARRIVALS[0]
+    assert sensor_next == str(MOCK_DATA_SENSOR_ARRIVALS[0])
     assert sensor_next_3 == MOCK_DATA_SENSOR_ARRIVALS[:3]
     assert sensor_all == MOCK_DATA_SENSOR_ARRIVALS
     assert sensor.available is True

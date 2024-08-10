@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 import logging
 from typing import Any
 from urllib.error import HTTPError
@@ -45,20 +46,42 @@ OPTIONS_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_app_key(hass: HomeAssistant, app_key: str) -> None:
+@dataclass
+class ValidationResult:
+    """Define a validation result."""
+
+    errors: dict[str, str] = field(default_factory=dict)
+    description_placeholders: dict[str, str] = field(default_factory=dict)
+
+
+async def validate_app_key(hass: HomeAssistant, app_key: str) -> ValidationResult:
     """Validate the user input for app_key."""
 
+    errors: dict[str, str] = {}
+
     _LOGGER.debug("Validating app_key")
-    stop_point_api = stopPoint(app_key)
-    # Make a random, cheap, call to the API to validate the app_key
-    categories = await call_tfl_api(hass, stop_point_api.getCategories)
-    _LOGGER.debug("Validating app_key, got categories=%s", categories)
+    try:
+        stop_point_api = stopPoint(app_key)
+        # Make a random, cheap, call to the API to validate the app_key
+        categories = await call_tfl_api(hass, stop_point_api.getCategories)
+        _LOGGER.debug("Validating app_key, got categories=%s", categories)
+    except CannotConnect:
+        errors["base"] = "cannot_connect"
+    except InvalidAuth:
+        errors["base"] = "invalid_auth"
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Unexpected exception")
+        errors["base"] = "unknown"
+
+    return ValidationResult(errors)
 
 
 async def validate_stop_point(
     hass: HomeAssistant, app_key: str, stop_point: str
-) -> None:
+) -> ValidationResult:
     """Validate the user input for stop point."""
+    errors: dict[str, str] = {}
+    description_placeholders: dict[str, str] = {}
 
     _LOGGER.debug("Validating stop_point=%s", stop_point)
 
@@ -71,40 +94,36 @@ async def validate_stop_point(
         _LOGGER.debug("Got for stop_point=%s, arrivals=%s", stop_point, arrivals)
     except HTTPError as exception:
         if exception.code == 404:
-            raise ValueError from exception
+            errors["base"] = "invalid_stop_point"
+            description_placeholders["stop_point"] = stop_point
+        else:
+            errors["base"] = "unknown"
+    except CannotConnect:
+        errors["base"] = "cannot_connect"
+    except InvalidAuth:
+        errors["base"] = "invalid_auth"
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Unexpected exception")
+        errors["base"] = "unknown"
 
-        raise
+    return ValidationResult(errors, description_placeholders)
 
 
 async def validate_stop_points(
     hass: HomeAssistant, app_key: str, stop_points: list[str]
-) -> tuple[dict[str, str], dict[str, str]]:
+) -> ValidationResult:
     """Validate the stop points."""
-    errors: dict[str, str] = {}
-    description_placeholders: dict[str, str] = {}
+
     for stop_point in stop_points:
-        try:
-            await validate_stop_point(
-                hass,
-                app_key,
-                stop_point,
-            )
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-            break
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-            break
-        except ValueError:
-            errors["base"] = "invalid_stop_point"
-            description_placeholders["stop_point"] = stop_point
-            break
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
+        validation_result = await validate_stop_point(
+            hass,
+            app_key,
+            stop_point,
+        )
+        if validation_result.errors:
             break
 
-    return errors, description_placeholders
+    return validation_result
 
 
 class TfLConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -118,40 +137,36 @@ class TfLConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors: dict[str, str] = {}
+        validation_result = ValidationResult()
         if user_input is not None:
-            try:
-                await validate_app_key(self.hass, user_input[CONF_API_APP_KEY])
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            validation_result = await validate_app_key(
+                self.hass, user_input[CONF_API_APP_KEY]
+            )
+
+            if not validation_result.errors:
                 # Input is valid, set data
                 self.data = user_input
                 self.options[CONF_STOP_POINTS] = []
                 return await self.async_step_stop_point()
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=validation_result.errors,
         )
 
     async def async_step_stop_point(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the stop point step."""
-        errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {}
+        validation_result = ValidationResult()
         if user_input is not None:
             app_key = self.data[CONF_API_APP_KEY]
-            errors, description_placeholders = await validate_stop_points(
+            validation_result = await validate_stop_points(
                 self.hass, app_key, user_input[CONF_STOP_POINTS]
             )
 
-            if not errors:
+            if not validation_result.errors:
                 # User input is valid, save the stop point
                 self.options[CONF_STOP_POINTS].extend(user_input[CONF_STOP_POINTS])
 
@@ -163,31 +178,24 @@ class TfLConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="stop_point",
             data_schema=STEP_STOP_POINTS_DATA_SCHEMA,
-            errors=errors,
-            description_placeholders=description_placeholders,
+            errors=validation_result.errors,
+            description_placeholders=validation_result.description_placeholders,
         )
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Reconfigure step allows the app key to be updated."""
-        errors: dict[str, str] = {}
+        validation_result = ValidationResult()
         config_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
         assert config_entry is not None
         if user_input is not None:
             app_key = user_input.get(CONF_API_APP_KEY, "")
-            try:
-                await validate_app_key(self.hass, app_key)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            validation_result = await validate_app_key(self.hass, app_key)
+
+            if not validation_result.errors:
                 # Input is valid, set data
                 self.data[CONF_API_APP_KEY] = app_key
                 self.hass.config_entries.async_update_entry(
@@ -198,9 +206,10 @@ class TfLConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                RECONFIGURE_DATA_SCHEMA, config_entry.data
+                RECONFIGURE_DATA_SCHEMA,
+                config_entry.data if user_input is None else user_input,
             ),
-            errors=errors,
+            errors=validation_result.errors,
         )
 
     @staticmethod
@@ -223,19 +232,18 @@ class OptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options for the TfL component."""
-        errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {}
+        validation_result = ValidationResult()
 
         api_key = self.config_entry.data[CONF_API_APP_KEY]
 
         if user_input is not None:
             # Validate the stop points
-            errors, description_placeholders = await validate_stop_points(
+            validation_result = await validate_stop_points(
                 self.hass,
                 api_key,
                 user_input[CONF_STOP_POINTS],
             )
-            if not errors:
+            if not validation_result.errors:
                 data: dict[str, Any] = {}
                 data[CONF_STOP_POINTS] = user_input[CONF_STOP_POINTS]
 
@@ -251,8 +259,8 @@ class OptionsFlowHandler(OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                OPTIONS_DATA_SCHEMA, config
+                OPTIONS_DATA_SCHEMA, config if user_input is None else user_input
             ),
-            errors=errors,
-            description_placeholders=description_placeholders,
+            errors=validation_result.errors,
+            description_placeholders=validation_result.description_placeholders,
         )
