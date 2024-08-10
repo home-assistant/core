@@ -732,13 +732,15 @@ def _delete_foreign_key_violations(
             # MariaDB 11.6 and is not supported by MySQL. Those engines
             # instead support the from `DELETE t1 from table AS t1` which
             # is not supported by PostgreSQL and undocumented for MariaDB.
+            # The subquery (SELECT {foreign_column} from {foreign_table}) is
+            # to be compatible with old MySQL versions.
             text(
                 f"DELETE FROM {table}"  # noqa: S608
                 " WHERE ("
                 f" {table}.{column} IS NOT NULL AND"
                 "  NOT EXISTS"
                 "    (SELECT 1 "
-                f"     FROM  {foreign_table} AS t2"
+                f"     FROM  (SELECT {foreign_column} from {foreign_table}) AS t2"
                 f"     WHERE t2.{foreign_column} = {table}.{column}));"
             )
         )
