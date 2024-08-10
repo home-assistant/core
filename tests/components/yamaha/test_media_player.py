@@ -89,18 +89,15 @@ async def test_setup_host(hass: HomeAssistant, device, device2, main_zone) -> No
 async def test_setup_find_errors(hass: HomeAssistant, device, main_zone) -> None:
     """Test set up integration encountering an Error."""
 
-    with patch("rxv.find", side_effect=AttributeError):
-        assert await async_setup_component(hass, MP_DOMAIN, CONFIG)
-        await hass.async_block_till_done()
+    for i in [AttributeError, UnicodeDecodeError]:
+        with patch("rxv.find", side_effect=i):
+            assert await async_setup_component(hass, MP_DOMAIN, CONFIG)
+            await hass.async_block_till_done()
 
-    with patch("rxv.find", side_effect=UnicodeDecodeError):
-        assert await async_setup_component(hass, MP_DOMAIN, CONFIG)
-        await hass.async_block_till_done()
+            state = hass.states.get("media_player.yamaha_receiver_main_zone")
 
-    state = hass.states.get("media_player.yamaha_receiver_main_zone")
-
-    assert state is not None
-    assert state.state == "off"
+            assert state is not None
+            assert state.state == "off"
 
 
 async def test_setup_no_host(hass: HomeAssistant, device, main_zone) -> None:
