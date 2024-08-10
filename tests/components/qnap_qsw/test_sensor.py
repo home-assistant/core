@@ -421,7 +421,7 @@ async def test_cleanup_deprecated_uptime_seconds(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test cleanup of the Uptime seconds sensor entity."""
-    original_id = "sensor.qsw_m408_4c_uptime"
+    original_id = "sensor.qsw_m408_4c_uptime_seconds"
     domain = Platform.SENSOR
 
     config_entry = init_config_entry(hass)

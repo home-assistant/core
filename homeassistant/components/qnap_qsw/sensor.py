@@ -359,7 +359,9 @@ async def async_setup_entry(
     entity_reg = er.async_get(hass)
     reg_entities = er.async_entries_for_config_entry(entity_reg, entry.entry_id)
     for entity in reg_entities:
-        if entity.domain == "sensor" and entity.unique_id.endswith("_uptime"):
+        if entity.domain == "sensor" and entity.unique_id.endswith(
+            ("_uptime", "_uptime_seconds")
+        ):
             entity_id = entity.entity_id
 
             if entity.disabled:
