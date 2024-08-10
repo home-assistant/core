@@ -16,7 +16,7 @@ repos:
           - --skip="./.*,*.csv,*.json,*.ambr"
           - --quiet-level=2
         exclude_types: [csv, json, html]
-        exclude: ^tests/fixtures/|homeassistant/generated/|tests/components/.*/snapshots/
+        exclude: ^tests/fixtures/|homeassistant/generated/|tests/components/.*/__snapshots__/
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
