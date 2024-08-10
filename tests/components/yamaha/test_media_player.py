@@ -94,7 +94,9 @@ async def test_setup_host(hass: HomeAssistant, device, device2, main_zone) -> No
         (UnicodeDecodeError("", b"", 1, 0, ""), "Unicode_Decode_error"),
     ],
 )
-async def test_setup_find_errors(hass: HomeAssistant, device, main_zone, error, method) -> None:
+async def test_setup_find_errors(
+    hass: HomeAssistant, device, main_zone, error, method
+) -> None:
     """Test set up integration encountering an Error."""
 
     with patch("rxv.find", side_effect=error):
