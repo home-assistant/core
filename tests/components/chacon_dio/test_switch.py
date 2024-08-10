@@ -129,4 +129,4 @@ async def test_no_switch_found(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert not hass.states.get(SWITCH_ENTITY_ID)
+    assert not hass.states.async_entity_ids(SWITCH_DOMAIN)
