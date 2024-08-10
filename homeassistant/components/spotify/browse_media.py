@@ -19,8 +19,8 @@ from homeassistant.components.media_player import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 
+from . import SpotifyData
 from .const import DOMAIN, MEDIA_PLAYER_PREFIX, MEDIA_TYPE_SHOW, PLAYABLE_MEDIA_TYPES
-from .models import HomeAssistantSpotifyData
 from .util import fetch_image_url
 
 BROWSE_LIMIT = 48
@@ -176,7 +176,7 @@ async def async_browse_media(
     if (
         parsed_url.host is None
         or (entry := hass.config_entries.async_get_entry(parsed_url.host)) is None
-        or not isinstance(entry.runtime_data, HomeAssistantSpotifyData)
+        or not isinstance(entry.runtime_data, SpotifyData)
     ):
         raise BrowseError("Invalid Spotify account specified")
     media_content_id = parsed_url.name
@@ -184,9 +184,9 @@ async def async_browse_media(
 
     result = await async_browse_media_internal(
         hass,
-        info.client,
+        info.coordinator.client,
         info.session,
-        info.current_user,
+        info.coordinator.current_user,
         media_content_type,
         media_content_id,
         can_play_artist=can_play_artist,
