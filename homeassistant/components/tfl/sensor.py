@@ -13,6 +13,7 @@ from tflwrapper import stopPoint
 from homeassistant.components.sensor import (  # ENTITY_ID_FORMAT,; PLATFORM_SCHEMA,
     SensorEntity,
 )
+from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -136,11 +137,14 @@ class StopPointSensor(SensorEntity):
                 arrival_next = arrivals[0]
                 arrivals_next_3 = arrivals[:3]
 
-                # Due to 255 character limit, the value of the sensor is the next arrival and
+                # Value of the sensor is the seconds to the next arrival and
                 # the next 3 and full list are provided as attributes
-                self._attr_native_value = str(arrival_next)
+                self._attr_native_value = arrival_next["time_to_station"]
+                self._attr_native_unit_of_measurement = UnitOfTime.SECONDS
                 attributes[ATTR_NEXT_THREE_ARRIVALS] = arrivals_next_3
                 attributes[ATTR_NEXT_ARRIVALS] = arrivals
+            else:
+                self._attr_native_value = 0
 
             self._attr_extra_state_attributes = attributes
             self._attr_available = True
