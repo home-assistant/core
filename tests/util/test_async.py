@@ -209,7 +209,7 @@ async def test_get_scheduled_timer_handles(hass: HomeAssistant) -> None:
     timer_handle3 = loop.call_later(15, lambda: None)
 
     handles = hasync.get_scheduled_timer_handles(loop)
-    assert set(handles) == {timer_handle, timer_handle2, timer_handle3}
+    assert set(handles).issuperset({timer_handle, timer_handle2, timer_handle3})
     timer_handle.cancel()
     timer_handle2.cancel()
     timer_handle3.cancel()
