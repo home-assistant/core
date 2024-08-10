@@ -171,7 +171,7 @@ async def async_setup_entry(
         for entry in entries:
             entity_registry.async_remove(entry.entity_id)
     else:
-        entities: list[AbstractOpenWeatherMapSensor] = [
+        async_add_entities(
             OpenWeatherMapSensor(
                 name,
                 f"{config_entry.unique_id}-{description.key}",
@@ -179,8 +179,7 @@ async def async_setup_entry(
                 weather_coordinator,
             )
             for description in WEATHER_SENSOR_TYPES
-        ]
-        async_add_entities(entities)
+        )
 
 
 class AbstractOpenWeatherMapSensor(SensorEntity):
