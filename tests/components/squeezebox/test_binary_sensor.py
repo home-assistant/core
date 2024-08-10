@@ -32,4 +32,4 @@ async def test_binary_sensor(
     state = hass.states.get("binary_sensor.fakelib_library_rescan")
 
     assert state is not None
-    assert state.state == 'on'
+    assert state.state == "on"
