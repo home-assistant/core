@@ -90,6 +90,7 @@ async def test_setup_host(hass: HomeAssistant, device, device2, main_zone) -> No
     ("error", "method"),
     [
         (AttributeError, "Attribute_error"),
+        (ValueError, "value_error"),
         (UnicodeDecodeError("", b"", 1, 0, ""), "Unicode_Decode_error"),
     ],
 )

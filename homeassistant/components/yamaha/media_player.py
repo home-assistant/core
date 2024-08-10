@@ -132,7 +132,7 @@ def _discovery(config_info):
         zones = None
 
         # Fix for upstream issues in rxv.find() with some hardware.
-        with contextlib.suppress(AttributeError, UnicodeDecodeError):
+        with contextlib.suppress(AttributeError, UnicodeDecodeError, ValueError):
             for recv in rxv.find():
                 if recv.ctrl_url == config_info.ctrl_url:
                     _LOGGER.debug("Config Zones Matched %s", config_info.ctrl_url)
