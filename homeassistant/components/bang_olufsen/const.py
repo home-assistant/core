@@ -10,27 +10,17 @@ from mozart_api.models import Source, SourceArray, SourceTypeEnum
 from homeassistant.components.media_player import MediaPlayerState, MediaType
 
 
-class BangOlufsenSource(StrEnum):
-    """Enum used for associating device source ids with friendly names. May not include all sources."""
+class BangOlufsenSource:
+    """Class used for associating device source ids with friendly names. May not include all sources."""
 
-    URI_STREAMER = "Audio Streamer"
-    BLUETOOTH = "Bluetooth"
-    AIR_PLAY = "AirPlay"
-    CHROMECAST = "Chromecast built-in"
-    SPOTIFY = "Spotify Connect"
-    GENERATOR = "Tone Generator"
-    LINE_IN = "Line-In"
-    SPDIF = "Optical"
-    NET_RADIO = "B&O Radio"
-    LOCAL = "Local"
-    DLNA = "DLNA"
-    QPLAY = "QPlay"
-    WPL = "Wireless Powerlink"
-    PL = "Powerlink"
-    TV = "TV"
-    DEEZER = "Deezer"
-    BEOLINK = "Networklink"
-    TIDAL_CONNECT = "Tidal Connect"
+    URI_STREAMER: Final[Source] = Source(name="Audio Streamer", id="uriStreamer")
+    BLUETOOTH: Final[Source] = Source(name="Bluetooth", id="bluetooth")
+    CHROMECAST: Final[Source] = Source(name="Chromecast built-in", id="chromeCast")
+    LINE_IN: Final[Source] = Source(name="Line-In", id="lineIn")
+    SPDIF: Final[Source] = Source(name="Optical", id="spdif")
+    NET_RADIO: Final[Source] = Source(name="B&O Radio", id="netRadio")
+    DEEZER: Final[Source] = Source(name="Deezer", id="deezer")
+    TIDAL: Final[Source] = Source(name="Tidal", id="tidal")
 
 
 BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
@@ -78,20 +68,20 @@ class BangOlufsenModel(StrEnum):
 class WebsocketNotification(StrEnum):
     """Enum for WebSocket notification types."""
 
-    PLAYBACK_ERROR: Final[str] = "playback_error"
-    PLAYBACK_METADATA: Final[str] = "playback_metadata"
-    PLAYBACK_PROGRESS: Final[str] = "playback_progress"
-    PLAYBACK_SOURCE: Final[str] = "playback_source"
-    PLAYBACK_STATE: Final[str] = "playback_state"
-    SOFTWARE_UPDATE_STATE: Final[str] = "software_update_state"
-    SOURCE_CHANGE: Final[str] = "source_change"
-    VOLUME: Final[str] = "volume"
+    PLAYBACK_ERROR = "playback_error"
+    PLAYBACK_METADATA = "playback_metadata"
+    PLAYBACK_PROGRESS = "playback_progress"
+    PLAYBACK_SOURCE = "playback_source"
+    PLAYBACK_STATE = "playback_state"
+    SOFTWARE_UPDATE_STATE = "software_update_state"
+    SOURCE_CHANGE = "source_change"
+    VOLUME = "volume"
 
     # Sub-notifications
-    NOTIFICATION: Final[str] = "notification"
-    REMOTE_MENU_CHANGED: Final[str] = "remoteMenuChanged"
+    NOTIFICATION = "notification"
+    REMOTE_MENU_CHANGED = "remoteMenuChanged"
 
-    ALL: Final[str] = "all"
+    ALL = "all"
 
 
 DOMAIN: Final[str] = "bang_olufsen"

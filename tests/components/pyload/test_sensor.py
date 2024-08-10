@@ -157,3 +157,25 @@ async def test_deprecated_yaml(
     assert issue_registry.async_get_issue(
         domain=HOMEASSISTANT_DOMAIN, issue_id=f"deprecated_yaml_{DOMAIN}"
     )
+
+
+async def test_pyload_pre_0_5_0(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_pyloadapi: AsyncMock,
+) -> None:
+    """Test setup of the pyload sensor platform."""
+    mock_pyloadapi.get_status.return_value = {
+        "pause": False,
+        "active": 1,
+        "queue": 6,
+        "total": 37,
+        "speed": 5405963.0,
+        "download": True,
+        "reconnect": False,
+    }
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED

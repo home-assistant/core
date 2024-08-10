@@ -10,10 +10,10 @@ import traceback
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import system_log
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.setup import async_setup_component
 
 from tests.common import async_capture_events
 from tests.typing import WebSocketGenerator
@@ -36,7 +36,7 @@ async def get_error_log(hass_ws_client):
 
 def _generate_and_log_exception(exception, log):
     try:
-        raise Exception(exception)  # pylint: disable=broad-exception-raised
+        raise Exception(exception)  # noqa: TRY002
     except Exception:
         _LOGGER.exception(log)
 

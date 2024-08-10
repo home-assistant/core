@@ -1,7 +1,7 @@
 """Tests for the for the BMW Connected Drive integration."""
 
 from bimmer_connected.const import (
-    REMOTE_SERVICE_BASE_URL,
+    REMOTE_SERVICE_V4_BASE_URL,
     VEHICLE_CHARGING_BASE_URL,
     VEHICLE_POI_URL,
 )
@@ -71,11 +71,11 @@ def check_remote_service_call(
         first_remote_service_call: respx.models.Call = next(
             c
             for c in router.calls
-            if c.request.url.path.startswith(REMOTE_SERVICE_BASE_URL)
+            if c.request.url.path.startswith(REMOTE_SERVICE_V4_BASE_URL)
             or c.request.url.path.startswith(
                 VEHICLE_CHARGING_BASE_URL.replace("/{vin}", "")
             )
-            or c.request.url.path == VEHICLE_POI_URL
+            or c.request.url.path.endswith(VEHICLE_POI_URL.rsplit("/", maxsplit=1)[-1])
         )
         assert (
             first_remote_service_call.request.url.path.endswith(remote_service) is True
