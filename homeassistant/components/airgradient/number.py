@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import AirGradientConfigEntry
 from .const import DOMAIN
 from .coordinator import AirGradientConfigCoordinator
-from .entity import AirGradientEntity
+from .entity import AirGradientCoordinatedEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -100,7 +100,7 @@ async def async_setup_entry(
     _async_check_entities()
 
 
-class AirGradientNumber(AirGradientEntity, NumberEntity):
+class AirGradientNumber(AirGradientCoordinatedEntity, NumberEntity):
     """Defines an AirGradient number entity."""
 
     entity_description: AirGradientNumberEntityDescription

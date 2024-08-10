@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import AirGradientConfigEntry
 from .const import DOMAIN, PM_STANDARD, PM_STANDARD_REVERSE
 from .coordinator import AirGradientConfigCoordinator
-from .entity import AirGradientEntity
+from .entity import AirGradientCoordinatedEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -197,7 +197,7 @@ async def async_setup_entry(
     _async_check_entities()
 
 
-class AirGradientSelect(AirGradientEntity, SelectEntity):
+class AirGradientSelect(AirGradientCoordinatedEntity, SelectEntity):
     """Defines an AirGradient select entity."""
 
     entity_description: AirGradientSelectEntityDescription
