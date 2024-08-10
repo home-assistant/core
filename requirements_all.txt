@@ -651,9 +651,6 @@ cached_ipaddress==0.3.0
 # homeassistant.components.caldav
 caldav==1.3.9
 
-# homeassistant.components.homekit
-chacha20poly1305-reuseable==0.13.2
-
 # homeassistant.components.cisco_mobility_express
 ciscomobilityexpress==0.3.9
 
