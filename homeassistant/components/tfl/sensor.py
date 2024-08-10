@@ -86,7 +86,11 @@ async def async_setup_entry(
 
 
 class StopPointSensor(SensorEntity):
-    """Representation of a TfL StopPoint as a Sensor."""
+    """Representation of a TfL StopPoint as a Sensor.
+
+    The Sensor does not use a DataUpdateCoordinator because
+    TfL doesn't have an API to query multiple stops in a single call. There's a 1:1 mapping between a sensor and an API call.
+    """
 
     _attr_attribution = "Powered by TfL Open Data"
     _attr_icon = "mdi:bus"
