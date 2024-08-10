@@ -32,7 +32,7 @@ async def test_generic_event_entity(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("event.test_myevent")
+    state = hass.states.get("event.test_my_event")
     assert state is not None
     assert state.state == "2024-04-24T00:00:00.000+00:00"
     assert state.attributes["event_type"] == "type1"

@@ -257,7 +257,12 @@ async def test_async_show_setup_msg(hass: HomeAssistant, hk_driver) -> None:
             hass, entry.entry_id, "bridge_name", pincode, "X-HM://0"
         )
         await hass.async_block_till_done()
-    entry_data: HomeKitEntryData = hass.data[DOMAIN][entry.entry_id]
+
+    # New tests should not access runtime data.
+    # Do not use this pattern for new tests.
+    entry_data: HomeKitEntryData = hass.config_entries.async_get_entry(
+        entry.entry_id
+    ).runtime_data
     assert entry_data.pairing_qr_secret
     assert entry_data.pairing_qr
 

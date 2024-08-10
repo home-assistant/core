@@ -4,6 +4,7 @@ from unittest.mock import DEFAULT, patch
 
 from screenlogicpy import ScreenLogicGateway
 from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -56,4 +57,4 @@ async def test_diagnostics(
             hass, hass_client, mock_config_entry
         )
 
-    assert diag == snapshot
+    assert diag == snapshot(exclude=props("created_at", "modified_at"))

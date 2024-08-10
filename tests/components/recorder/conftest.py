@@ -1,11 +1,12 @@
 """Fixtures for the recorder component tests."""
 
+from collections.abc import AsyncGenerator, Generator
 from dataclasses import dataclass
+from functools import partial
 import threading
 from unittest.mock import Mock, patch
 
 import pytest
-from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import db_schema
@@ -69,15 +70,16 @@ async def instrument_migration(
 ) -> AsyncGenerator[InstrumentedMigration]:
     """Instrument recorder migration."""
 
-    real_migrate_schema = recorder.migration.migrate_schema
+    real_migrate_schema_live = recorder.migration.migrate_schema_live
+    real_migrate_schema_non_live = recorder.migration.migrate_schema_non_live
     real_apply_update = recorder.migration._apply_update
 
-    def _instrument_migrate_schema(*args):
+    def _instrument_migrate_schema(real_func, *args):
         """Control migration progress and check results."""
         instrumented_migration.migration_started.set()
 
         try:
-            real_migrate_schema(*args)
+            migration_result = real_func(*args)
         except Exception:
             instrumented_migration.migration_done.set()
             raise
@@ -92,6 +94,7 @@ async def instrument_migration(
             )
             instrumented_migration.migration_version = res.schema_version
         instrumented_migration.migration_done.set()
+        return migration_result
 
     def _instrument_apply_update(*args):
         """Control migration progress."""
@@ -100,8 +103,12 @@ async def instrument_migration(
 
     with (
         patch(
-            "homeassistant.components.recorder.migration.migrate_schema",
-            wraps=_instrument_migrate_schema,
+            "homeassistant.components.recorder.migration.migrate_schema_live",
+            wraps=partial(_instrument_migrate_schema, real_migrate_schema_live),
+        ),
+        patch(
+            "homeassistant.components.recorder.migration.migrate_schema_non_live",
+            wraps=partial(_instrument_migrate_schema, real_migrate_schema_non_live),
         ),
         patch(
             "homeassistant.components.recorder.migration._apply_update",

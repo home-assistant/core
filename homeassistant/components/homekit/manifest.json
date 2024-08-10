@@ -10,6 +10,7 @@
   "loggers": ["pyhap"],
   "requirements": [
     "HAP-python==4.9.1",
+    "chacha20poly1305-reuseable==0.13.2",
     "fnv-hash-fast==0.5.0",
     "PyQRCode==1.2.1",
     "base36==0.1.1"

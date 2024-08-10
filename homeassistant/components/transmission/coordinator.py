@@ -55,12 +55,12 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
     @property
     def limit(self) -> int:
         """Return limit."""
-        return self.config_entry.data.get(CONF_LIMIT, DEFAULT_LIMIT)
+        return self.config_entry.options.get(CONF_LIMIT, DEFAULT_LIMIT)
 
     @property
     def order(self) -> str:
         """Return order."""
-        return self.config_entry.data.get(CONF_ORDER, DEFAULT_ORDER)
+        return self.config_entry.options.get(CONF_ORDER, DEFAULT_ORDER)
 
     async def _async_update_data(self) -> SessionStats:
         """Update transmission data."""
