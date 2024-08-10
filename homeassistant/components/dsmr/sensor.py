@@ -431,39 +431,42 @@ def rename_old_gas_to_mbus(
 ) -> None:
     """Rename old gas sensor to mbus variant."""
     dev_reg = dr.async_get(hass)
-    device_entry_v1 = dev_reg.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
-    if device_entry_v1 is not None:
-        device_id = device_entry_v1.id
+    for dev_id in (mbus_device_id, entry.entry_id):
+        device_entry_v1 = dev_reg.async_get_device(identifiers={(DOMAIN, dev_id)})
+        if device_entry_v1 is not None:
+            device_id = device_entry_v1.id
 
-        ent_reg = er.async_get(hass)
-        entries = er.async_entries_for_device(ent_reg, device_id)
+            ent_reg = er.async_get(hass)
+            entries = er.async_entries_for_device(ent_reg, device_id)
 
-        for entity in entries:
-            if entity.unique_id.endswith("belgium_5min_gas_meter_reading"):
-                try:
-                    ent_reg.async_update_entity(
-                        entity.entity_id,
-                        new_unique_id=mbus_device_id,
-                        device_id=mbus_device_id,
-                    )
-                except ValueError:
-                    LOGGER.debug(
-                        "Skip migration of %s because it already exists",
-                        entity.entity_id,
-                    )
-                else:
-                    LOGGER.debug(
-                        "Migrated entity %s from unique id %s to %s",
-                        entity.entity_id,
-                        entity.unique_id,
-                        mbus_device_id,
-                    )
-        # Cleanup old device
-        dev_entities = er.async_entries_for_device(
-            ent_reg, device_id, include_disabled_entities=True
-        )
-        if not dev_entities:
-            dev_reg.async_remove_device(device_id)
+            for entity in entries:
+                if entity.unique_id.endswith(
+                    "belgium_5min_gas_meter_reading"
+                ) or entity.unique_id.endswith("hourly_gas_meter_reading"):
+                    try:
+                        ent_reg.async_update_entity(
+                            entity.entity_id,
+                            new_unique_id=mbus_device_id,
+                            device_id=mbus_device_id,
+                        )
+                    except ValueError:
+                        LOGGER.debug(
+                            "Skip migration of %s because it already exists",
+                            entity.entity_id,
+                        )
+                    else:
+                        LOGGER.debug(
+                            "Migrated entity %s from unique id %s to %s",
+                            entity.entity_id,
+                            entity.unique_id,
+                            mbus_device_id,
+                        )
+            # Cleanup old device
+            dev_entities = er.async_entries_for_device(
+                ent_reg, device_id, include_disabled_entities=True
+            )
+            if not dev_entities:
+                dev_reg.async_remove_device(device_id)
 
 
 def is_supported_description(
