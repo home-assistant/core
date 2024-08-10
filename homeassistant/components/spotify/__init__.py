@@ -45,6 +45,8 @@ type SpotifyConfigEntry = ConfigEntry[SpotifyData]
 
 @dataclass
 class SpotifyData:
+    """Class to hold Spotify data."""
+
     coordinator: SpotifyCoordinator
     session: OAuth2Session
     devices: DataUpdateCoordinator[list[dict[str, Any]]]
@@ -96,9 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> b
     )
     await device_coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = SpotifyData(
-        coordinator=coordinator, session=session, devices=device_coordinator
-    )
+    entry.runtime_data = SpotifyData(coordinator, session, device_coordinator)
 
     if not set(session.token["scope"].split(" ")).issuperset(SPOTIFY_SCOPES):
         raise ConfigEntryAuthFailed
