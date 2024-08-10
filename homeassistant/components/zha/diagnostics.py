@@ -166,5 +166,7 @@ def get_cluster_attr_data(cluster: Cluster) -> dict:
             }
             for attr_id, attr_def in cluster.attributes.items()
         },
-        UNSUPPORTED_ATTRIBUTES: cluster.unsupported_attributes,
+        UNSUPPORTED_ATTRIBUTES: sorted(
+            cluster.unsupported_attributes, key=lambda v: (isinstance(v, str), v)
+        ),
     }
