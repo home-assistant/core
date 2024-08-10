@@ -30,6 +30,3 @@ class AirGradientCoordinatedEntity(
         """Initialize airgradient entity."""
         AirGradientEntity.__init__(self, coordinator.serial_number)
         CoordinatorEntity.__init__(self, coordinator)
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.serial_number)},
-        )
