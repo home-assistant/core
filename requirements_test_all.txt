@@ -332,7 +332,7 @@ aioridwell==2024.01.0
 aioruckus==0.34
 
 # homeassistant.components.russound_rio
-aiorussound==2.2.0
+aiorussound==2.2.2
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -392,7 +392,7 @@ aiowithings==3.0.2
 aioymaps==1.2.5
 
 # homeassistant.components.airgradient
-airgradient==0.7.1
+airgradient==0.8.0
 
 # homeassistant.components.airly
 airly==1.1.0
@@ -563,6 +563,9 @@ cached_ipaddress==0.3.0
 caldav==1.3.9
 
 # homeassistant.components.coinbase
+coinbase-advanced-py==1.2.2
+
+# homeassistant.components.coinbase
 coinbase==2.1.0
 
 # homeassistant.scripts.check_config
@@ -625,7 +628,7 @@ devolo-home-control-api==0.18.3
 devolo-plc-api==1.4.1
 
 # homeassistant.components.chacon_dio
-dio-chacon-wifi-api==1.1.0
+dio-chacon-wifi-api==1.2.0
 
 # homeassistant.components.directv
 directv==0.4.0
@@ -916,7 +919,7 @@ hole==0.8.0
 holidays==0.53
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240806.1
+home-assistant-frontend==20240809.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.8.7
@@ -1117,7 +1120,7 @@ moat-ble==0.1.1
 moehlenhoff-alpha2==1.3.1
 
 # homeassistant.components.monzo
-monzopy==1.3.0
+monzopy==1.3.2
 
 # homeassistant.components.mopeka
 mopeka-iot-ble==0.8.0
@@ -1433,7 +1436,7 @@ pycoolmasternet-async==0.1.5
 pycsspeechtts==1.0.8
 
 # homeassistant.components.daikin
-pydaikin==2.13.1
+pydaikin==2.13.2
 
 # homeassistant.components.deconz
 pydeconz==116
@@ -1547,7 +1550,7 @@ pyiss==1.0.1
 pyisy==3.1.14
 
 # homeassistant.components.jvc_projector
-pyjvcprojector==1.0.11
+pyjvcprojector==1.0.12
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.1
@@ -1652,7 +1655,7 @@ pyoctoprintapi==0.1.12
 pyopenuv==2023.02.0
 
 # homeassistant.components.openweathermap
-pyopenweathermap==0.0.9
+pyopenweathermap==0.1.1
 
 # homeassistant.components.opnsense
 pyopnsense==0.4.0
@@ -1804,7 +1807,7 @@ python-fullykiosk==0.0.14
 python-homeassistant-analytics==0.7.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v6.1.1
+python-homewizard-energy==v6.2.0
 
 # homeassistant.components.izone
 python-izone==1.2.9
@@ -2339,7 +2342,7 @@ yalexs==6.4.3
 yeelight==0.7.14
 
 # homeassistant.components.yolink
-yolink-api==0.4.6
+yolink-api==0.4.7
 
 # homeassistant.components.youless
 youless-api==2.1.2
@@ -2360,7 +2363,7 @@ zeroconf==0.132.2
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha==0.0.28
+zha==0.0.30
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.57.0
