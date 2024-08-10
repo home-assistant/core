@@ -50,6 +50,7 @@ from tests.components.recorder.common import (
     async_recorder_block_till_done,
     async_wait_recording_done,
     do_adhoc_statistics,
+    get_start_time,
     statistics_during_period,
 )
 from tests.typing import (
@@ -194,7 +195,7 @@ async def test_compile_hourly_statistics(
     max,
 ) -> None:
     """Test compiling hourly statistics."""
-    zero = dt_util.utcnow()
+    zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
@@ -278,7 +279,7 @@ async def test_compile_hourly_statistics_with_some_same_last_updated(
 
     If the last updated value is the same we will have a zero duration.
     """
-    zero = dt_util.utcnow()
+    zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
@@ -392,7 +393,7 @@ async def test_compile_hourly_statistics_with_all_same_last_updated(
 
     If the last updated value is the same we will have a zero duration.
     """
-    zero = dt_util.utcnow()
+    zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
@@ -498,7 +499,7 @@ async def test_compile_hourly_statistics_only_state_is_and_end_of_period(
     max,
 ) -> None:
     """Test compiling hourly statistics when the only state at end of period."""
-    zero = dt_util.utcnow()
+    zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
@@ -592,7 +593,7 @@ async def test_compile_hourly_statistics_purged_state_changes(
     unit_class,
 ) -> None:
     """Test compiling hourly statistics."""
-    zero = dt_util.utcnow()
+    zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
@@ -663,7 +664,7 @@ async def test_compile_hourly_statistics_wrong_unit(
     attributes,
 ) -> None:
     """Test compiling hourly statistics for sensor with unit not matching device class."""
-    zero = dt_util.utcnow()
+    zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
@@ -887,7 +888,7 @@ async def test_compile_hourly_sum_statistics_amount(
     factor,
 ) -> None:
     """Test compiling hourly statistics."""
-    period0 = dt_util.utcnow()
+    period0 = get_start_time(dt_util.utcnow())
     period0_end = period1 = period0 + timedelta(minutes=5)
     period1_end = period2 = period0 + timedelta(minutes=10)
     period2_end = period0 + timedelta(minutes=15)
@@ -1071,7 +1072,7 @@ async def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
     factor,
 ) -> None:
     """Test compiling hourly statistics."""
-    zero = dt_util.utcnow()
+    zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
@@ -1194,7 +1195,7 @@ async def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
     factor,
 ) -> None:
     """Test compiling hourly statistics."""
-    zero = dt_util.utcnow()
+    zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
@@ -1294,7 +1295,7 @@ async def test_compile_hourly_sum_statistics_nan_inf_state(
     factor,
 ) -> None:
     """Test compiling hourly statistics with nan and inf states."""
-    zero = dt_util.utcnow()
+    zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
@@ -1429,7 +1430,7 @@ async def test_compile_hourly_sum_statistics_negative_state(
     offset,
 ) -> None:
     """Test compiling hourly statistics with negative states."""
-    zero = dt_util.utcnow()
+    zero = get_start_time(dt_util.utcnow())
     hass.data.pop(loader.DATA_CUSTOM_COMPONENTS)
 
     mocksensor = MockSensor(name="custom_sensor")
@@ -1437,10 +1438,11 @@ async def test_compile_hourly_sum_statistics_negative_state(
     setup_test_component_platform(hass, DOMAIN, [mocksensor], built_in=False)
 
     await async_setup_component(hass, "homeassistant", {})
-    await async_setup_component(
-        hass, "sensor", {"sensor": [{"platform": "demo"}, {"platform": "test"}]}
-    )
-    await hass.async_block_till_done()
+    with freeze_time(zero) as freezer:
+        await async_setup_component(
+            hass, "sensor", {"sensor": [{"platform": "demo"}, {"platform": "test"}]}
+        )
+        await hass.async_block_till_done()
     attributes = {
         "device_class": device_class,
         "state_class": state_class,
@@ -1541,7 +1543,7 @@ async def test_compile_hourly_sum_statistics_total_no_reset(
     factor,
 ) -> None:
     """Test compiling hourly statistics."""
-    period0 = dt_util.utcnow()
+    period0 = get_start_time(dt_util.utcnow())
     period0_end = period1 = period0 + timedelta(minutes=5)
     period1_end = period2 = period0 + timedelta(minutes=10)
     period2_end = period0 + timedelta(minutes=15)
@@ -1654,7 +1656,7 @@ async def test_compile_hourly_sum_statistics_total_increasing(
     factor,
 ) -> None:
     """Test compiling hourly statistics."""
-    period0 = dt_util.utcnow()
+    period0 = get_start_time(dt_util.utcnow())
     period0_end = period1 = period0 + timedelta(minutes=5)
     period1_end = period2 = period0 + timedelta(minutes=10)
     period2_end = period0 + timedelta(minutes=15)
@@ -1767,7 +1769,7 @@ async def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     factor,
 ) -> None:
     """Test small dips in sensor readings do not trigger a reset."""
-    period0 = dt_util.utcnow()
+    period0 = get_start_time(dt_util.utcnow())
     period0_end = period1 = period0 + timedelta(minutes=5)
     period1_end = period2 = period0 + timedelta(minutes=10)
     period2_end = period0 + timedelta(minutes=15)
@@ -1869,7 +1871,7 @@ async def test_compile_hourly_energy_statistics_unsupported(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test compiling hourly statistics."""
-    period0 = dt_util.utcnow()
+    period0 = get_start_time(dt_util.utcnow())
     period0_end = period1 = period0 + timedelta(minutes=5)
     period1_end = period2 = period0 + timedelta(minutes=10)
     period2_end = period0 + timedelta(minutes=15)
@@ -1973,7 +1975,7 @@ async def test_compile_hourly_energy_statistics_multiple(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test compiling multiple hourly statistics."""
-    period0 = dt_util.utcnow()
+    period0 = get_start_time(dt_util.utcnow())
     period0_end = period1 = period0 + timedelta(minutes=5)
     period1_end = period2 = period0 + timedelta(minutes=10)
     period2_end = period0 + timedelta(minutes=15)
@@ -2187,7 +2189,7 @@ async def test_compile_hourly_statistics_unchanged(
     value,
 ) -> None:
     """Test compiling hourly statistics, with no changes during the hour."""
-    zero = dt_util.utcnow()
+    zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
@@ -2230,7 +2232,7 @@ async def test_compile_hourly_statistics_partially_unavailable(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test compiling hourly statistics, with the sensor being partially unavailable."""
-    zero = dt_util.utcnow()
+    zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
@@ -2299,7 +2301,7 @@ async def test_compile_hourly_statistics_unavailable(
     sensor.test1 is unavailable and should not have statistics generated
     sensor.test2 should have statistics generated
     """
-    zero = dt_util.utcnow()
+    zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
@@ -2346,7 +2348,7 @@ async def test_compile_hourly_statistics_fails(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test compiling hourly statistics throws."""
-    zero = dt_util.utcnow()
+    zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
@@ -2464,30 +2466,29 @@ async def test_list_statistic_ids(
 
 
 @pytest.mark.parametrize(
-    "_attributes",
+    "energy_attributes",
     [{**ENERGY_SENSOR_ATTRIBUTES, "last_reset": 0}, TEMPERATURE_SENSOR_ATTRIBUTES],
 )
 async def test_list_statistic_ids_unsupported(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    _attributes,
+    energy_attributes: dict[str, Any],
 ) -> None:
     """Test listing future statistic ids for unsupported sensor."""
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
-    attributes = dict(_attributes)
+    attributes = dict(energy_attributes)
     hass.states.async_set("sensor.test1", 0, attributes=attributes)
     if "last_reset" in attributes:
         attributes.pop("unit_of_measurement")
         hass.states.async_set("last_reset.test2", 0, attributes=attributes)
-    attributes = dict(_attributes)
+    attributes = dict(energy_attributes)
     if "unit_of_measurement" in attributes:
         attributes["unit_of_measurement"] = "invalid"
         hass.states.async_set("sensor.test3", 0, attributes=attributes)
         attributes.pop("unit_of_measurement")
         hass.states.async_set("sensor.test4", 0, attributes=attributes)
-    attributes = dict(_attributes)
+    attributes = dict(energy_attributes)
     attributes["state_class"] = "invalid"
     hass.states.async_set("sensor.test5", 0, attributes=attributes)
     attributes.pop("state_class")
@@ -2523,7 +2524,7 @@ async def test_compile_hourly_statistics_changing_units_1(
 
     This tests the case where the recorder cannot convert between the units.
     """
-    zero = dt_util.utcnow()
+    zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
@@ -2652,7 +2653,7 @@ async def test_compile_hourly_statistics_changing_units_2(
     This tests the behaviour when the sensor units are note supported by any unit
     converter.
     """
-    zero = dt_util.utcnow()
+    zero = get_start_time(dt_util.utcnow()) - timedelta(seconds=30 * 5)
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
@@ -2731,7 +2732,7 @@ async def test_compile_hourly_statistics_changing_units_3(
     This tests the behaviour when the sensor units are note supported by any unit
     converter.
     """
-    zero = dt_util.utcnow()
+    zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
@@ -2852,7 +2853,7 @@ async def test_compile_hourly_statistics_convert_units_1(
 
     This tests the case where the recorder can convert between the units.
     """
-    zero = dt_util.utcnow()
+    zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
@@ -3011,7 +3012,7 @@ async def test_compile_hourly_statistics_equivalent_units_1(
     max,
 ) -> None:
     """Test compiling hourly statistics where units change from one hour to the next."""
-    zero = dt_util.utcnow()
+    zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
@@ -3136,7 +3137,7 @@ async def test_compile_hourly_statistics_equivalent_units_2(
     max,
 ) -> None:
     """Test compiling hourly statistics where units change during an hour."""
-    zero = dt_util.utcnow()
+    zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
@@ -3160,7 +3161,7 @@ async def test_compile_hourly_statistics_equivalent_units_2(
     )
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
-    do_adhoc_statistics(hass, start=zero + timedelta(seconds=30 * 5))
+    do_adhoc_statistics(hass, start=zero + timedelta(seconds=30 * 10))
     await async_wait_recording_done(hass)
     assert "The unit of sensor.test1 is changing" not in caplog.text
     assert "and matches the unit of already compiled statistics" not in caplog.text
@@ -3182,9 +3183,9 @@ async def test_compile_hourly_statistics_equivalent_units_2(
         "sensor.test1": [
             {
                 "start": process_timestamp(
-                    zero + timedelta(seconds=30 * 5)
+                    zero + timedelta(seconds=30 * 10)
                 ).timestamp(),
-                "end": process_timestamp(zero + timedelta(seconds=30 * 15)).timestamp(),
+                "end": process_timestamp(zero + timedelta(seconds=30 * 20)).timestamp(),
                 "mean": pytest.approx(mean),
                 "min": pytest.approx(min),
                 "max": pytest.approx(max),
@@ -3229,7 +3230,7 @@ async def test_compile_hourly_statistics_changing_device_class_1(
 
     Device class is ignored, meaning changing device class should not influence the statistics.
     """
-    zero = dt_util.utcnow()
+    zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
@@ -3440,7 +3441,7 @@ async def test_compile_hourly_statistics_changing_device_class_2(
 
     Device class is ignored, meaning changing device class should not influence the statistics.
     """
-    zero = dt_util.utcnow()
+    zero = get_start_time(dt_util.utcnow())
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
@@ -3578,7 +3579,7 @@ async def test_compile_hourly_statistics_changing_state_class(
     max,
 ) -> None:
     """Test compiling hourly statistics where state class changes."""
-    period0 = dt_util.utcnow()
+    period0 = get_start_time(dt_util.utcnow())
     period0_end = period1 = period0 + timedelta(minutes=5)
     period1_end = period0 + timedelta(minutes=10)
     await async_setup_component(hass, "sensor", {})
@@ -4148,7 +4149,7 @@ async def async_record_states(
     one = zero + timedelta(seconds=1 * 5)
     two = one + timedelta(seconds=10 * 5)
     three = two + timedelta(seconds=40 * 5)
-    four = three + timedelta(seconds=10 * 5)
+    four = three + timedelta(seconds=9 * 5)
 
     states = {entity_id: []}
     freezer.move_to(one)
@@ -4210,7 +4211,7 @@ async def test_validate_unit_change_convertible(
     The test also asserts that the sensor's device class is ignored.
     """
 
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
 
     hass.config.units = units
     await async_setup_component(hass, "sensor", {})
@@ -4222,14 +4223,20 @@ async def test_validate_unit_change_convertible(
 
     # No statistics, unit in state matching device class - empty response
     hass.states.async_set(
-        "sensor.test", 10, attributes={**attributes, "unit_of_measurement": unit}
+        "sensor.test",
+        10,
+        attributes={**attributes, "unit_of_measurement": unit},
+        timestamp=now.timestamp(),
     )
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
     # No statistics, unit in state not matching device class - empty response
     hass.states.async_set(
-        "sensor.test", 11, attributes={**attributes, "unit_of_measurement": "dogs"}
+        "sensor.test",
+        11,
+        attributes={**attributes, "unit_of_measurement": "dogs"},
+        timestamp=now.timestamp(),
     )
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
@@ -4238,7 +4245,10 @@ async def test_validate_unit_change_convertible(
     await async_recorder_block_till_done(hass)
     do_adhoc_statistics(hass, start=now)
     hass.states.async_set(
-        "sensor.test", 12, attributes={**attributes, "unit_of_measurement": "dogs"}
+        "sensor.test",
+        12,
+        attributes={**attributes, "unit_of_measurement": "dogs"},
+        timestamp=now.timestamp(),
     )
     await async_recorder_block_till_done(hass)
     expected = {
@@ -4258,7 +4268,10 @@ async def test_validate_unit_change_convertible(
 
     # Valid state - empty response
     hass.states.async_set(
-        "sensor.test", 13, attributes={**attributes, "unit_of_measurement": unit}
+        "sensor.test",
+        13,
+        attributes={**attributes, "unit_of_measurement": unit},
+        timestamp=now.timestamp(),
     )
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
@@ -4270,7 +4283,10 @@ async def test_validate_unit_change_convertible(
 
     # Valid state in compatible unit - empty response
     hass.states.async_set(
-        "sensor.test", 13, attributes={**attributes, "unit_of_measurement": unit2}
+        "sensor.test",
+        13,
+        attributes={**attributes, "unit_of_measurement": unit2},
+        timestamp=now.timestamp(),
     )
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
@@ -4309,7 +4325,7 @@ async def test_validate_statistics_unit_ignore_device_class(
 
     The test asserts that the sensor's device class is ignored.
     """
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
 
     hass.config.units = units
     await async_setup_component(hass, "sensor", {})
@@ -4321,7 +4337,9 @@ async def test_validate_statistics_unit_ignore_device_class(
 
     # No statistics, no device class - empty response
     initial_attributes = {"state_class": "measurement", "unit_of_measurement": "dogs"}
-    hass.states.async_set("sensor.test", 10, attributes=initial_attributes)
+    hass.states.async_set(
+        "sensor.test", 10, attributes=initial_attributes, timestamp=now.timestamp()
+    )
     await hass.async_block_till_done()
     await assert_validation_result(client, {})
 
@@ -4329,7 +4347,10 @@ async def test_validate_statistics_unit_ignore_device_class(
     do_adhoc_statistics(hass, start=now)
     await async_recorder_block_till_done(hass)
     hass.states.async_set(
-        "sensor.test", 12, attributes={**attributes, "unit_of_measurement": "dogs"}
+        "sensor.test",
+        12,
+        attributes={**attributes, "unit_of_measurement": "dogs"},
+        timestamp=now.timestamp(),
     )
     await hass.async_block_till_done()
     await assert_validation_result(client, {})
@@ -4389,7 +4410,7 @@ async def test_validate_statistics_unit_change_no_device_class(
     attributes = dict(attributes)
     attributes.pop("device_class")
 
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
 
     hass.config.units = units
     await async_setup_component(hass, "sensor", {})
@@ -4401,14 +4422,20 @@ async def test_validate_statistics_unit_change_no_device_class(
 
     # No statistics, sensor state set - empty response
     hass.states.async_set(
-        "sensor.test", 10, attributes={**attributes, "unit_of_measurement": unit}
+        "sensor.test",
+        10,
+        attributes={**attributes, "unit_of_measurement": unit},
+        timestamp=now.timestamp(),
     )
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
 
     # No statistics, sensor state set to an incompatible unit - empty response
     hass.states.async_set(
-        "sensor.test", 11, attributes={**attributes, "unit_of_measurement": "dogs"}
+        "sensor.test",
+        11,
+        attributes={**attributes, "unit_of_measurement": "dogs"},
+        timestamp=now.timestamp(),
     )
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
@@ -4417,7 +4444,10 @@ async def test_validate_statistics_unit_change_no_device_class(
     await async_recorder_block_till_done(hass)
     do_adhoc_statistics(hass, start=now)
     hass.states.async_set(
-        "sensor.test", 12, attributes={**attributes, "unit_of_measurement": "dogs"}
+        "sensor.test",
+        12,
+        attributes={**attributes, "unit_of_measurement": "dogs"},
+        timestamp=now.timestamp(),
     )
     await async_recorder_block_till_done(hass)
     expected = {
@@ -4437,7 +4467,10 @@ async def test_validate_statistics_unit_change_no_device_class(
 
     # Valid state - empty response
     hass.states.async_set(
-        "sensor.test", 13, attributes={**attributes, "unit_of_measurement": unit}
+        "sensor.test",
+        13,
+        attributes={**attributes, "unit_of_measurement": unit},
+        timestamp=now.timestamp(),
     )
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
@@ -4449,7 +4482,10 @@ async def test_validate_statistics_unit_change_no_device_class(
 
     # Valid state in compatible unit - empty response
     hass.states.async_set(
-        "sensor.test", 13, attributes={**attributes, "unit_of_measurement": unit2}
+        "sensor.test",
+        13,
+        attributes={**attributes, "unit_of_measurement": unit2},
+        timestamp=now.timestamp(),
     )
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
@@ -4486,7 +4522,7 @@ async def test_validate_statistics_unsupported_state_class(
     unit,
 ) -> None:
     """Test validate_statistics."""
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
 
     hass.config.units = units
     await async_setup_component(hass, "sensor", {})
@@ -4497,7 +4533,9 @@ async def test_validate_statistics_unsupported_state_class(
     await assert_validation_result(client, {})
 
     # No statistics, valid state - empty response
-    hass.states.async_set("sensor.test", 10, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", 10, attributes=attributes, timestamp=now.timestamp()
+    )
     await hass.async_block_till_done()
     await assert_validation_result(client, {})
 
@@ -4509,7 +4547,9 @@ async def test_validate_statistics_unsupported_state_class(
     # State update with invalid state class, expect error
     _attributes = dict(attributes)
     _attributes.pop("state_class")
-    hass.states.async_set("sensor.test", 12, attributes=_attributes)
+    hass.states.async_set(
+        "sensor.test", 12, attributes=_attributes, timestamp=now.timestamp()
+    )
     await hass.async_block_till_done()
     expected = {
         "sensor.test": [
@@ -4539,7 +4579,7 @@ async def test_validate_statistics_sensor_no_longer_recorded(
     unit,
 ) -> None:
     """Test validate_statistics."""
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
 
     hass.config.units = units
     await async_setup_component(hass, "sensor", {})
@@ -4550,7 +4590,9 @@ async def test_validate_statistics_sensor_no_longer_recorded(
     await assert_validation_result(client, {})
 
     # No statistics, valid state - empty response
-    hass.states.async_set("sensor.test", 10, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", 10, attributes=attributes, timestamp=now.timestamp()
+    )
     await hass.async_block_till_done()
     await assert_validation_result(client, {})
 
@@ -4591,7 +4633,7 @@ async def test_validate_statistics_sensor_not_recorded(
     unit,
 ) -> None:
     """Test validate_statistics."""
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
 
     hass.config.units = units
     await async_setup_component(hass, "sensor", {})
@@ -4616,7 +4658,9 @@ async def test_validate_statistics_sensor_not_recorded(
         "entity_filter",
         return_value=False,
     ):
-        hass.states.async_set("sensor.test", 10, attributes=attributes)
+        hass.states.async_set(
+            "sensor.test", 10, attributes=attributes, timestamp=now.timestamp()
+        )
         await hass.async_block_till_done()
         await assert_validation_result(client, expected)
 
@@ -4640,7 +4684,7 @@ async def test_validate_statistics_sensor_removed(
     unit,
 ) -> None:
     """Test validate_statistics."""
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
 
     hass.config.units = units
     await async_setup_component(hass, "sensor", {})
@@ -4651,7 +4695,9 @@ async def test_validate_statistics_sensor_removed(
     await assert_validation_result(client, {})
 
     # No statistics, valid state - empty response
-    hass.states.async_set("sensor.test", 10, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", 10, attributes=attributes, timestamp=now.timestamp()
+    )
     await hass.async_block_till_done()
     await assert_validation_result(client, {})
 
@@ -4688,7 +4734,7 @@ async def test_validate_statistics_unit_change_no_conversion(
     unit2,
 ) -> None:
     """Test validate_statistics."""
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
 
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
@@ -4699,13 +4745,19 @@ async def test_validate_statistics_unit_change_no_conversion(
 
     # No statistics, original unit - empty response
     hass.states.async_set(
-        "sensor.test", 10, attributes={**attributes, "unit_of_measurement": unit1}
+        "sensor.test",
+        10,
+        attributes={**attributes, "unit_of_measurement": unit1},
+        timestamp=now.timestamp(),
     )
     await assert_validation_result(client, {})
 
     # No statistics, changed unit - empty response
     hass.states.async_set(
-        "sensor.test", 11, attributes={**attributes, "unit_of_measurement": unit2}
+        "sensor.test",
+        11,
+        attributes={**attributes, "unit_of_measurement": unit2},
+        timestamp=now.timestamp(),
     )
     await assert_validation_result(client, {})
 
@@ -4717,7 +4769,10 @@ async def test_validate_statistics_unit_change_no_conversion(
 
     # No statistics, original unit - empty response
     hass.states.async_set(
-        "sensor.test", 12, attributes={**attributes, "unit_of_measurement": unit1}
+        "sensor.test",
+        12,
+        attributes={**attributes, "unit_of_measurement": unit1},
+        timestamp=now.timestamp(),
     )
     await assert_validation_result(client, {})
 
@@ -4732,7 +4787,10 @@ async def test_validate_statistics_unit_change_no_conversion(
 
     # Change unit - expect error
     hass.states.async_set(
-        "sensor.test", 13, attributes={**attributes, "unit_of_measurement": unit2}
+        "sensor.test",
+        13,
+        attributes={**attributes, "unit_of_measurement": unit2},
+        timestamp=now.timestamp(),
     )
     await async_recorder_block_till_done(hass)
     expected = {
@@ -4752,7 +4810,10 @@ async def test_validate_statistics_unit_change_no_conversion(
 
     # Original unit - empty response
     hass.states.async_set(
-        "sensor.test", 14, attributes={**attributes, "unit_of_measurement": unit1}
+        "sensor.test",
+        14,
+        attributes={**attributes, "unit_of_measurement": unit1},
+        timestamp=now.timestamp(),
     )
     await async_recorder_block_till_done(hass)
     await assert_validation_result(client, {})
@@ -4796,7 +4857,7 @@ async def test_validate_statistics_unit_change_equivalent_units(
     This tests no validation issue is created when a sensor's unit changes to an
     equivalent unit.
     """
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
 
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
@@ -4807,7 +4868,10 @@ async def test_validate_statistics_unit_change_equivalent_units(
 
     # No statistics, original unit - empty response
     hass.states.async_set(
-        "sensor.test", 10, attributes={**attributes, "unit_of_measurement": unit1}
+        "sensor.test",
+        10,
+        attributes={**attributes, "unit_of_measurement": unit1},
+        timestamp=now.timestamp(),
     )
     await assert_validation_result(client, {})
 
@@ -4821,7 +4885,10 @@ async def test_validate_statistics_unit_change_equivalent_units(
 
     # Units changed to an equivalent unit - empty response
     hass.states.async_set(
-        "sensor.test", 12, attributes={**attributes, "unit_of_measurement": unit2}
+        "sensor.test",
+        12,
+        attributes={**attributes, "unit_of_measurement": unit2},
+        timestamp=now.timestamp() + 1,
     )
     await assert_validation_result(client, {})
 
@@ -4854,7 +4921,7 @@ async def test_validate_statistics_unit_change_equivalent_units_2(
     This tests a validation issue is created when a sensor's unit changes to an
     equivalent unit which is not known to the unit converters.
     """
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
 
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
@@ -4865,7 +4932,10 @@ async def test_validate_statistics_unit_change_equivalent_units_2(
 
     # No statistics, original unit - empty response
     hass.states.async_set(
-        "sensor.test", 10, attributes={**attributes, "unit_of_measurement": unit1}
+        "sensor.test",
+        10,
+        attributes={**attributes, "unit_of_measurement": unit1},
+        timestamp=now.timestamp(),
     )
     await assert_validation_result(client, {})
 
@@ -4879,7 +4949,10 @@ async def test_validate_statistics_unit_change_equivalent_units_2(
 
     # Units changed to an equivalent unit which is not known by the unit converters
     hass.states.async_set(
-        "sensor.test", 12, attributes={**attributes, "unit_of_measurement": unit2}
+        "sensor.test",
+        12,
+        attributes={**attributes, "unit_of_measurement": unit2},
+        timestamp=now.timestamp(),
     )
     expected = {
         "sensor.test": [
@@ -5045,7 +5118,7 @@ async def async_record_states_partially_unavailable(hass, zero, entity_id, attri
     one = zero + timedelta(seconds=1 * 5)
     two = one + timedelta(seconds=15 * 5)
     three = two + timedelta(seconds=30 * 5)
-    four = three + timedelta(seconds=15 * 5)
+    four = three + timedelta(seconds=14 * 5)
 
     states = {entity_id: []}
     with freeze_time(one) as freezer:

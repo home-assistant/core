@@ -8,6 +8,7 @@ from typing import Any
 from aioesphomeapi import (
     DeviceInfo as ESPHomeDeviceInfo,
     EntityInfo,
+    UpdateCommand,
     UpdateInfo,
     UpdateState,
 )
@@ -260,8 +261,14 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
         return self._state.title
 
     @convert_api_error_ha_error
+    async def async_update(self) -> None:
+        """Command device to check for update."""
+        if self.available:
+            self._client.update_command(key=self._key, command=UpdateCommand.CHECK)
+
+    @convert_api_error_ha_error
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
-        """Update the current value."""
-        self._client.update_command(key=self._key, install=True)
+        """Command device to install update."""
+        self._client.update_command(key=self._key, command=UpdateCommand.INSTALL)
