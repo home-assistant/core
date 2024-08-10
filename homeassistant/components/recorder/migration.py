@@ -727,14 +727,19 @@ def _delete_foreign_key_violations(
         return
     with session_scope(session=session_maker()) as session:
         session.execute(
+            # We don't use an alias for the table we're deleting from,
+            # support of the form `DELETE FROM table AS t1` was added in
+            # MariaDB 11.6 and is not supported by MySQL. Those engines
+            # instead support the from `DELETE t1 from table AS t1` which
+            # is not supported by PostgreSQL and undocumented for MariaDB.
             text(
-                f"DELETE FROM {table} t1"  # noqa: S608
+                f"DELETE FROM {table}"  # noqa: S608
                 " WHERE ("
-                f"  t1.{column} IS NOT NULL AND"
+                f" {table}.{column} IS NOT NULL AND"
                 "  NOT EXISTS"
                 "    (SELECT 1 "
-                f"     FROM  {foreign_table} t2"
-                f"     WHERE t2.{foreign_column} = t1.{column}));"
+                f"     FROM  {foreign_table} AS t2"
+                f"     WHERE t2.{foreign_column} = {table}.{column}));"
             )
         )
 

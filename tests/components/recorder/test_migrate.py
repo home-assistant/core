@@ -10,7 +10,6 @@ import pytest
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import (
     DatabaseError,
-    IntegrityError,
     InternalError,
     OperationalError,
     ProgrammingError,
@@ -970,7 +969,10 @@ def test_restore_foreign_key_constraints_with_error(
     assert "Could not update foreign options in events table" in caplog.text
 
 
+@pytest.mark.skip_on_db_engine(["sqlite"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 def test_restore_foreign_key_constraints_with_integrity_error(
+    recorder_db_url: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test we can drop and then restore foreign keys.
@@ -978,30 +980,51 @@ def test_restore_foreign_key_constraints_with_integrity_error(
     This is not supported on SQLite
     """
 
-    constraints_to_restore = [("events", "data_id", "event_data", "data_id")]
-
-    connection = Mock()
-    connection.execute = Mock(side_effect=[IntegrityError(None, None, None), None])
-    session = Mock()
-    session.connection = Mock(return_value=connection)
-    session.execute = Mock()
-    instance = Mock()
-    instance.get_session = Mock(return_value=session)
-    engine = Mock()
-
-    session_maker = Mock(return_value=session)
-    migration._restore_foreign_key_constraints(
-        session_maker, engine, constraints_to_restore
+    constraints = (
+        ("events", "data_id", "event_data", "data_id", Events),
+        ("states", "old_state_id", "states", "state_id", States),
     )
+
+    engine = create_engine(recorder_db_url)
+    db_schema.Base.metadata.create_all(engine)
+
+    # Drop constraints
+    with Session(engine) as session:
+        session_maker = Mock(return_value=session)
+        for table, column, _, _, _ in constraints:
+            migration._drop_foreign_key_constraints(
+                session_maker, engine, table, column
+            )
+
+    # Add a row violating the constraints
+    with Session(engine) as session:
+        for _, column, _, _, table_class in constraints:
+            session.add(table_class(**{column: 123}))
+            session.add(table_class())
+            session.commit()
+
+    # Check we could insert both rows
+    with Session(engine) as session:
+        for _, _, _, _, table_class in constraints:
+            assert session.query(table_class).count() == 2
+
+    # Restore constraints
+    to_restore = [
+        (table, column, foreign_table, foreign_column)
+        for table, column, foreign_table, foreign_column, _ in constraints
+    ]
+    with Session(engine) as session:
+        session_maker = Mock(return_value=session)
+        migration._restore_foreign_key_constraints(session_maker, engine, to_restore)
+
+    # Check the violating row has been deleted
+    with Session(engine) as session:
+        for _, _, _, _, table_class in constraints:
+            assert session.query(table_class).count() == 1
+
+    engine.dispose()
 
     assert (
         "Could not update foreign options in events table, "
         "will delete violations and try again"
     ) in caplog.text
-
-    assert len(connection.execute.mock_calls) == 2
-    session.execute.assert_called_once()
-    assert session.execute.mock_calls[0][1][0].text == (
-        "DELETE FROM events t1 WHERE (  t1.data_id IS NOT NULL AND  NOT EXISTS    "
-        "(SELECT 1      FROM  event_data t2     WHERE t2.data_id = t1.data_id));"
-    )
