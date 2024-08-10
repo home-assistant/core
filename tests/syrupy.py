@@ -5,13 +5,11 @@ from __future__ import annotations
 from contextlib import suppress
 import dataclasses
 from enum import IntFlag
-from pathlib import Path
 from typing import Any
 
 import attr
 import attrs
 from syrupy.extensions.amber import AmberDataSerializer, AmberSnapshotExtension
-from syrupy.location import PyTestLocation
 from syrupy.types import PropertyFilter, PropertyMatcher, PropertyPath, SerializableData
 import voluptuous as vol
 import voluptuous_serialize
@@ -231,15 +229,3 @@ class HomeAssistantSnapshotExtension(AmberSnapshotExtension):
     """
 
     serializer_class: type[AmberDataSerializer] = HomeAssistantSnapshotSerializer
-
-    @classmethod
-    def dirname(cls, *, test_location: PyTestLocation) -> str:
-        """Return the directory for the snapshot files.
-
-        Syrupy, by default, uses the `__snapshosts__` directory in the same
-        folder as the test file. For Home Assistant, this is changed to just
-        `snapshots` in the same folder as the test file, to match our `fixtures`
-        folder structure.
-        """
-        test_dir = Path(test_location.filepath).parent
-        return str(test_dir.joinpath("snapshots"))
