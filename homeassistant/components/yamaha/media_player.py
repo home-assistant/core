@@ -170,7 +170,7 @@ async def async_setup_platform(
 
     entities = []
     for zctrl in zone_ctrls:
-        _LOGGER.debug("Receiver zone: %s", zctrl.zone)
+        _LOGGER.debug("Receiver zone: %s serial %s", zctrl.zone, zctrl.serial_number)
         if config_info.zone_ignore and zctrl.zone in config_info.zone_ignore:
             _LOGGER.debug("Ignore receiver zone: %s %s", config_info.name, zctrl.zone)
             continue
@@ -238,19 +238,6 @@ class YamahaDeviceZone(MediaPlayerEntity):
             # the default name of the integration may not be changed
             # to avoid a breaking change.
             self._attr_unique_id = f"{self.zctrl.serial_number}_{self._zone}"
-            _LOGGER.debug(
-                "Receiver zone: %s zone %s uid %s",
-                self._name,
-                self._zone,
-                self._attr_unique_id,
-            )
-        else:
-            _LOGGER.warning(
-                "Receiver zone: %s zone %s no uid %s",
-                self._name,
-                self._zone,
-                self._attr_unique_id,
-            )
 
     def update(self) -> None:
         """Get the latest details from the device."""
