@@ -77,6 +77,20 @@ async def test_options_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
+            CONF_NAME: DEFAULT_NAME,
+            CONF_ENTITY_ID: "binary_sensor.test_monitored",
+            CONF_STATE: ["on"],
+            CONF_TYPE: "count",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["step_id"] == "options"
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_END: "{{ utcnow() }}",
             CONF_DURATION: {"hours": 8, "minutes": 0, "seconds": 0, "days": 20},
         },

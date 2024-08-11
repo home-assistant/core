@@ -86,7 +86,11 @@ CONFIG_FLOW = {
 }
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(
-        DATA_SCHEMA_OPTIONS,
+        DATA_SCHEMA_SETUP,
+        next_step="options",
+    ),
+    "options": SchemaFlowFormStep(
+        schema=DATA_SCHEMA_OPTIONS,
         validate_user_input=validate_options,
     ),
 }
