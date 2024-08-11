@@ -57,6 +57,7 @@ def get_circuit_number(id: str | None) -> int:
 
 
 def validate_token(username: str, token: str) -> bool:
+    """Validate token by specifing username and token."""
     # should call tools.validate_token(username, token)
     # and return true or false
     # not working because:

@@ -55,12 +55,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> 
             device.token_needed,
         )
         token = ""  # Temp
-        if device.token_needed == True:
+        if device.token_needed:
             _LOGGER.info("Found a Switcher device that needs a token")
             token = "enter_token"  # Temp
             username = "enter_email"  # Temp
             token_is_valid = validate_token(username, token)
-            if token_is_valid == True:
+            if token_is_valid:
                 _LOGGER.info("Token is valid")
             else:
                 _LOGGER.info("Token is invalid")
