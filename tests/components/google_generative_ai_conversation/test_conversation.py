@@ -211,7 +211,7 @@ async def test_function_call(
             name="test_tool",
             args={
                 "param1": ["test_value", "param1\\'s value"],
-                "param2": "param2\\'s value",
+                "param2": 2.7,
             },
         )
 
@@ -255,7 +255,7 @@ async def test_function_call(
             tool_name="test_tool",
             tool_args={
                 "param1": ["test_value", "param1's value"],
-                "param2": "param2's value",
+                "param2": 2.7,
             },
         ),
         llm.LLMContext(
