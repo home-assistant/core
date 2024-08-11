@@ -3,19 +3,16 @@
 import logging
 from typing import cast
 
-from aioautomower.exceptions import ApiException
 from aioautomower.model import HeadlightModes
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import AutomowerControlEntity
+from .entity import AutomowerControlEntity, handle_sending_exception
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,10 +26,12 @@ HEADLIGHT_MODES: list = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AutomowerConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up select platform."""
-    coordinator: AutomowerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         AutomowerSelectEntity(mower_id, coordinator)
         for mower_id in coordinator.data
@@ -63,13 +62,9 @@ class AutomowerSelectEntity(AutomowerControlEntity, SelectEntity):
             HeadlightModes, self.mower_attributes.settings.headlight.mode
         ).lower()
 
+    @handle_sending_exception()
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        try:
-            await self.coordinator.api.commands.set_headlight_mode(
-                self.mower_id, cast(HeadlightModes, option.upper())
-            )
-        except ApiException as exception:
-            raise HomeAssistantError(
-                f"Command couldn't be sent to the command queue: {exception}"
-            ) from exception
+        await self.coordinator.api.commands.set_headlight_mode(
+            self.mower_id, cast(HeadlightModes, option.upper())
+        )

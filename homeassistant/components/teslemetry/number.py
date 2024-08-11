@@ -23,7 +23,10 @@ from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import TeslemetryConfigEntry
 from .entity import TeslemetryEnergyInfoEntity, TeslemetryVehicleEntity
+from .helpers import handle_command, handle_vehicle_command
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -163,7 +166,7 @@ class TeslemetryVehicleNumberEntity(TeslemetryVehicleEntity, NumberEntity):
         value = int(value)
         self.raise_for_scope()
         await self.wake_up_if_asleep()
-        await self.handle_command(self.entity_description.func(self.api, value))
+        await handle_vehicle_command(self.entity_description.func(self.api, value))
         self._attr_native_value = value
         self.async_write_ha_state()
 
@@ -198,6 +201,6 @@ class TeslemetryEnergyInfoNumberSensorEntity(TeslemetryEnergyInfoEntity, NumberE
         """Set new value."""
         value = int(value)
         self.raise_for_scope()
-        await self.handle_command(self.entity_description.func(self.api, value))
+        await handle_command(self.entity_description.func(self.api, value))
         self._attr_native_value = value
         self.async_write_ha_state()

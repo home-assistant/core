@@ -9,10 +9,11 @@ from typing import Any
 from google.oauth2.credentials import Credentials
 from gspread import Client, GSpreadException
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 
+from . import GoogleSheetsConfigEntry
 from .const import DEFAULT_ACCESS, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ class OAuth2FlowHandler(
 
     DOMAIN = DOMAIN
 
-    reauth_entry: ConfigEntry | None = None
+    reauth_entry: GoogleSheetsConfigEntry | None = None
 
     @property
     def logger(self) -> logging.Logger:

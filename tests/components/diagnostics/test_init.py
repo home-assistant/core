@@ -5,9 +5,9 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import async_get
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
@@ -19,7 +19,7 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
-async def mock_diagnostics_integration(hass):
+async def mock_diagnostics_integration(hass: HomeAssistant) -> None:
     """Mock a diagnostics integration."""
     hass.config.components.add("fake_integration")
     mock_platform(
@@ -82,7 +82,9 @@ async def test_websocket(
 
 @pytest.mark.usefixtures("enable_custom_integrations")
 async def test_download_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test download diagnostics."""
     config_entry = MockConfigEntry(domain="fake_integration")
@@ -178,8 +180,7 @@ async def test_download_diagnostics(
         "data": {"config_entry": "info"},
     }
 
-    dev_reg = async_get(hass)
-    device = dev_reg.async_get_or_create(
+    device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id, identifiers={("test", "test")}
     )
 

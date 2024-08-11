@@ -19,7 +19,10 @@ class AsekoEntity(CoordinatorEntity[AsekoDataUpdateCoordinator]):
         super().__init__(coordinator)
         self._unit = unit
 
-        self._device_model = f"ASIN AQUA {self._unit.type}"
+        if self._unit.type == "Remote":
+            self._device_model = "ASIN Pool"
+        else:
+            self._device_model = f"ASIN AQUA {self._unit.type}"
         self._device_name = self._unit.name if self._unit.name else self._device_model
 
         self._attr_device_info = DeviceInfo(

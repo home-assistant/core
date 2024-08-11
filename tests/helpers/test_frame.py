@@ -32,10 +32,10 @@ async def test_get_integration_logger(
     assert logger.name == "homeassistant.components.hue"
 
 
-async def test_extract_frame_resolve_module(
-    hass: HomeAssistant, enable_custom_integrations
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_extract_frame_resolve_module(hass: HomeAssistant) -> None:
     """Test extracting the current frame from integration context."""
+    # pylint: disable-next=import-outside-toplevel
     from custom_components.test_integration_frame import call_get_integration_frame
 
     integration_frame = call_get_integration_frame()
@@ -49,10 +49,10 @@ async def test_extract_frame_resolve_module(
     )
 
 
-async def test_get_integration_logger_resolve_module(
-    hass: HomeAssistant, enable_custom_integrations
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_get_integration_logger_resolve_module(hass: HomeAssistant) -> None:
     """Test getting the logger from integration context."""
+    # pylint: disable-next=import-outside-toplevel
     from custom_components.test_integration_frame import call_get_integration_logger
 
     logger = call_get_integration_logger(__name__)

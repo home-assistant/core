@@ -1979,7 +1979,7 @@ async def test_cover_position(
             "friendly_name": "Test cover range",
             "device_class": "blind",
             "supported_features": supported_features,
-            "position": position,
+            "current_position": position,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -2296,7 +2296,7 @@ async def test_cover_position_range(
             "friendly_name": "Test cover range",
             "device_class": "blind",
             "supported_features": 7,
-            "position": 30,
+            "current_position": 30,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -4658,7 +4658,7 @@ async def test_cover_semantics_position_and_tilt(hass: HomeAssistant) -> None:
             "friendly_name": "Test cover semantics",
             "device_class": "blind",
             "supported_features": 255,
-            "position": 30,
+            "current_position": 30,
             "tilt_position": 30,
         },
     )
@@ -5643,6 +5643,6 @@ async def test_alexa_config(
     with patch.object(test_config, "_auth", AsyncMock()):
         test_config._auth.async_invalidate_access_token = MagicMock()
         test_config.async_invalidate_access_token()
-        assert len(test_config._auth.async_invalidate_access_token.mock_calls)
+        assert len(test_config._auth.async_invalidate_access_token.mock_calls) == 1
         await test_config.async_accept_grant("grant_code")
         test_config._auth.async_do_auth.assert_called_once_with("grant_code")

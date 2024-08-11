@@ -4,8 +4,10 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from lmcloud import LMCloud as LaMarzoccoClient
+from lmcloud.client_cloud import LaMarzoccoCloudClient
+from lmcloud.client_local import LaMarzoccoLocalClient
 from lmcloud.exceptions import AuthFail, RequestNotSuccessful
+from lmcloud.models import LaMarzoccoDeviceInfo
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import BluetoothServiceInfo
@@ -19,12 +21,15 @@ from homeassistant.config_entries import (
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_TOKEN,
     CONF_USERNAME,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -32,7 +37,9 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_MACHINE, CONF_USE_BLUETOOTH, DOMAIN
+from .const import CONF_USE_BLUETOOTH, DOMAIN
+
+CONF_MACHINE = "machine"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,12 +47,14 @@ _LOGGER = logging.getLogger(__name__)
 class LmConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for La Marzocco."""
 
+    VERSION = 2
+
     def __init__(self) -> None:
         """Initialize the config flow."""
 
         self.reauth_entry: ConfigEntry | None = None
         self._config: dict[str, Any] = {}
-        self._machines: list[tuple[str, str]] = []
+        self._fleet: dict[str, LaMarzoccoDeviceInfo] = {}
         self._discovered: dict[str, str] = {}
 
     async def async_step_user(
@@ -65,9 +74,12 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 **self._discovered,
             }
 
-            lm = LaMarzoccoClient()
+            cloud_client = LaMarzoccoCloudClient(
+                username=data[CONF_USERNAME],
+                password=data[CONF_PASSWORD],
+            )
             try:
-                self._machines = await lm.get_all_machines(data)
+                self._fleet = await cloud_client.get_customer_fleet()
             except AuthFail:
                 _LOGGER.debug("Server rejected login credentials")
                 errors["base"] = "invalid_auth"
@@ -75,7 +87,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("Error connecting to server: %s", exc)
                 errors["base"] = "cannot_connect"
             else:
-                if not self._machines:
+                if not self._fleet:
                     errors["base"] = "no_machines"
 
             if not errors:
@@ -88,8 +100,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                     return self.async_abort(reason="reauth_successful")
                 if self._discovered:
-                    serials = [machine[0] for machine in self._machines]
-                    if self._discovered[CONF_MACHINE] not in serials:
+                    if self._discovered[CONF_MACHINE] not in self._fleet:
                         errors["base"] = "machine_not_found"
                     else:
                         self._config = data
@@ -128,28 +139,36 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 serial_number = self._discovered[CONF_MACHINE]
 
+            selected_device = self._fleet[serial_number]
+
             # validate local connection if host is provided
             if user_input.get(CONF_HOST):
-                lm = LaMarzoccoClient()
-                if not await lm.check_local_connection(
-                    credentials=self._config,
+                if not await LaMarzoccoLocalClient.validate_connection(
+                    client=get_async_client(self.hass),
                     host=user_input[CONF_HOST],
-                    serial=serial_number,
+                    token=selected_device.communication_key,
                 ):
                     errors[CONF_HOST] = "cannot_connect"
+                else:
+                    self._config[CONF_HOST] = user_input[CONF_HOST]
 
             if not errors:
                 return self.async_create_entry(
-                    title=serial_number,
-                    data=self._config | user_input,
+                    title=selected_device.name,
+                    data={
+                        **self._config,
+                        CONF_NAME: selected_device.name,
+                        CONF_MODEL: selected_device.model,
+                        CONF_TOKEN: selected_device.communication_key,
+                    },
                 )
 
         machine_options = [
             SelectOptionDict(
-                value=serial_number,
-                label=f"{model_name} ({serial_number})",
+                value=device.serial_number,
+                label=f"{device.model} ({device.serial_number})",
             )
-            for serial_number, model_name in self._machines
+            for device in self._fleet.values()
         ]
 
         machine_selection_schema = vol.Schema(

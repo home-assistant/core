@@ -1,11 +1,14 @@
 """Creates the sensor entities for the mower."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 import logging
+from typing import TYPE_CHECKING, Any
+from zoneinfo import ZoneInfo
 
 from aioautomower.model import MowerAttributes, MowerModes, RestrictedReasons
+from aioautomower.utils import naive_to_aware
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,17 +16,19 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfLength, UnitOfTime
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_WORK_AREA_ID_ASSIGNMENT = "work_area_id_assignment"
 
 ERROR_KEY_LIST = [
     "no_error",
@@ -184,12 +189,51 @@ RESTRICTED_REASONS: list = [
     RestrictedReasons.WEEK_SCHEDULE.lower(),
 ]
 
+STATE_NO_WORK_AREA_ACTIVE = "no_work_area_active"
+
+
+@callback
+def _get_work_area_names(data: MowerAttributes) -> list[str]:
+    """Return a list with all work area names."""
+    if TYPE_CHECKING:
+        # Sensor does not get created if it is None
+        assert data.work_areas is not None
+    work_area_list = [
+        data.work_areas[work_area_id].name for work_area_id in data.work_areas
+    ]
+    work_area_list.append(STATE_NO_WORK_AREA_ACTIVE)
+    return work_area_list
+
+
+@callback
+def _get_current_work_area_name(data: MowerAttributes) -> str:
+    """Return the name of the current work area."""
+    if data.mower.work_area_id is None:
+        return STATE_NO_WORK_AREA_ACTIVE
+    if TYPE_CHECKING:
+        # Sensor does not get created if values are None
+        assert data.work_areas is not None
+    return data.work_areas[data.mower.work_area_id].name
+
+
+@callback
+def _get_current_work_area_dict(data: MowerAttributes) -> Mapping[str, Any]:
+    """Return the name of the current work area."""
+    if TYPE_CHECKING:
+        # Sensor does not get created if it is None
+        assert data.work_areas is not None
+    return {ATTR_WORK_AREA_ID_ASSIGNMENT: data.work_area_dict}
+
 
 @dataclass(frozen=True, kw_only=True)
 class AutomowerSensorEntityDescription(SensorEntityDescription):
     """Describes Automower sensor entity."""
 
     exists_fn: Callable[[MowerAttributes], bool] = lambda _: True
+    extra_state_attributes_fn: Callable[[MowerAttributes], Mapping[str, Any] | None] = (
+        lambda _: None
+    )
+    option_fn: Callable[[MowerAttributes], list[str] | None] = lambda _: None
     value_fn: Callable[[MowerAttributes], StateType | datetime]
 
 
@@ -205,7 +249,7 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         key="mode",
         translation_key="mode",
         device_class=SensorDeviceClass.ENUM,
-        options=[option.lower() for option in list(MowerModes)],
+        option_fn=lambda data: [option.lower() for option in list(MowerModes)],
         value_fn=(
             lambda data: data.mower.mode.lower()
             if data.mower.mode != MowerModes.UNKNOWN
@@ -297,32 +341,46 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         key="next_start_timestamp",
         translation_key="next_start_timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data.planner.next_start_datetime,
+        value_fn=lambda data: naive_to_aware(
+            data.planner.next_start_datetime_naive,
+            ZoneInfo(str(dt_util.DEFAULT_TIME_ZONE)),
+        ),
     ),
     AutomowerSensorEntityDescription(
         key="error",
         translation_key="error",
         device_class=SensorDeviceClass.ENUM,
+        option_fn=lambda data: ERROR_KEY_LIST,
         value_fn=lambda data: (
             "no_error" if data.mower.error_key is None else data.mower.error_key
         ),
-        options=ERROR_KEY_LIST,
     ),
     AutomowerSensorEntityDescription(
         key="restricted_reason",
         translation_key="restricted_reason",
         device_class=SensorDeviceClass.ENUM,
-        options=RESTRICTED_REASONS,
+        option_fn=lambda data: RESTRICTED_REASONS,
         value_fn=lambda data: data.planner.restricted_reason.lower(),
+    ),
+    AutomowerSensorEntityDescription(
+        key="work_area",
+        translation_key="work_area",
+        device_class=SensorDeviceClass.ENUM,
+        exists_fn=lambda data: data.capabilities.work_areas,
+        extra_state_attributes_fn=_get_current_work_area_dict,
+        option_fn=_get_work_area_names,
+        value_fn=_get_current_work_area_name,
     ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AutomowerConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensor platform."""
-    coordinator: AutomowerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         AutomowerSensorEntity(mower_id, coordinator, description)
         for mower_id in coordinator.data
@@ -335,6 +393,7 @@ class AutomowerSensorEntity(AutomowerBaseEntity, SensorEntity):
     """Defining the Automower Sensors with AutomowerSensorEntityDescription."""
 
     entity_description: AutomowerSensorEntityDescription
+    _unrecorded_attributes = frozenset({ATTR_WORK_AREA_ID_ASSIGNMENT})
 
     def __init__(
         self,
@@ -351,3 +410,13 @@ class AutomowerSensorEntity(AutomowerBaseEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.mower_attributes)
+
+    @property
+    def options(self) -> list[str] | None:
+        """Return the option of the sensor."""
+        return self.entity_description.option_fn(self.mower_attributes)
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return the state attributes."""
+        return self.entity_description.extra_state_attributes_fn(self.mower_attributes)

@@ -243,7 +243,7 @@ def _get_file_mock(file_path):
     """Convert file to BytesIO for testing due to PIL UnidentifiedImageError."""
     _file = None
 
-    with open(file_path) as file_handler:
+    with open(file_path, encoding="utf8") as file_handler:
         _file = io.BytesIO(file_handler.read())
 
     _file.name = "color_extractor.jpg"

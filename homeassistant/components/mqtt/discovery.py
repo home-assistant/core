@@ -73,7 +73,7 @@ class MQTTDiscoveryPayload(dict[str, Any]):
 
 def clear_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]) -> None:
     """Clear entry from already discovered list."""
-    hass.data[DATA_MQTT].discovery_already_discovered.remove(discovery_hash)
+    hass.data[DATA_MQTT].discovery_already_discovered.discard(discovery_hash)
 
 
 def set_discovery_hash(hass: HomeAssistant, discovery_hash: tuple[str, str]) -> None:
@@ -211,7 +211,7 @@ async def async_start(  # noqa: C901
         async with platform_setup_lock.setdefault(component, asyncio.Lock()):
             if component not in mqtt_data.platforms_loaded:
                 await async_forward_entry_setup_and_setup_discovery(
-                    hass, config_entry, {component}, late=True
+                    hass, config_entry, {component}
                 )
         _async_add_component(discovery_payload)
 

@@ -1,12 +1,14 @@
 """Support for Wyoming satellite services."""
 
 import asyncio
+from collections.abc import AsyncGenerator
 import io
 import logging
+import time
 from typing import Final
+from uuid import uuid4
 import wave
 
-from typing_extensions import AsyncGenerator
 from wyoming.asr import Transcribe, Transcript
 from wyoming.audio import AudioChunk, AudioChunkConverter, AudioStart, AudioStop
 from wyoming.client import AsyncTcpClient
@@ -23,6 +25,7 @@ from wyoming.wake import Detect, Detection
 
 from homeassistant.components import assist_pipeline, intent, stt, tts
 from homeassistant.components.assist_pipeline import select as pipeline_select
+from homeassistant.components.assist_pipeline.vad import VadSensitivity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant, callback
 
@@ -38,6 +41,7 @@ _RESTART_SECONDS: Final = 3
 _PING_TIMEOUT: Final = 5
 _PING_SEND_DELAY: Final = 2
 _PIPELINE_FINISH_TIMEOUT: Final = 1
+_CONVERSATION_TIMEOUT_SEC: Final = 5 * 60  # 5 minutes
 
 # Wyoming stage -> Assist stage
 _STAGES: dict[PipelineStage, assist_pipeline.PipelineStage] = {
@@ -72,6 +76,9 @@ class WyomingSatellite:
         self._audio_queue: asyncio.Queue[bytes | None] = asyncio.Queue()
         self._pipeline_id: str | None = None
         self._muted_changed_event = asyncio.Event()
+
+        self._conversation_id: str | None = None
+        self._conversation_id_time: float | None = None
 
         self.device.set_is_muted_listener(self._muted_changed)
         self.device.set_pipeline_listener(self._pipeline_changed)
@@ -365,6 +372,19 @@ class WyomingSatellite:
             start_stage,
             end_stage,
         )
+
+        # Reset conversation id, if necessary
+        if (self._conversation_id_time is None) or (
+            (time.monotonic() - self._conversation_id_time) > _CONVERSATION_TIMEOUT_SEC
+        ):
+            self._conversation_id = None
+
+        if self._conversation_id is None:
+            self._conversation_id = str(uuid4())
+
+        # Update timeout
+        self._conversation_id_time = time.monotonic()
+
         self._is_pipeline_running = True
         self._pipeline_ended_event.clear()
         self.config_entry.async_create_background_task(
@@ -390,9 +410,13 @@ class WyomingSatellite:
                     noise_suppression_level=self.device.noise_suppression_level,
                     auto_gain_dbfs=self.device.auto_gain,
                     volume_multiplier=self.device.volume_multiplier,
+                    silence_seconds=VadSensitivity.to_seconds(
+                        self.device.vad_sensitivity
+                    ),
                 ),
                 device_id=self.device.device_id,
                 wake_word_phrase=wake_word_phrase,
+                conversation_id=self._conversation_id,
             ),
             name="wyoming satellite pipeline",
         )

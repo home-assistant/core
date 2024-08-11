@@ -1,9 +1,9 @@
 """Provide common mystrom fixtures and mocks."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.mystrom.const import DOMAIN
 from homeassistant.const import CONF_HOST

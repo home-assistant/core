@@ -7,8 +7,8 @@ import socket
 from unittest.mock import patch
 
 import pytest
-from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
-from pyunifiprotect.data import NVR, Bootstrap, CloudAccount
+from uiprotect import NotAuthorized, NvrError, ProtectApiClient
+from uiprotect.data import NVR, Bootstrap, CloudAccount
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp, ssdp

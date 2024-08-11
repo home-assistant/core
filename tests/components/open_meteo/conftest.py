@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 from open_meteo import Forecast
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.open_meteo.const import DOMAIN
 from homeassistant.const import CONF_ZONE

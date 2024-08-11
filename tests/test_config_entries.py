@@ -3,16 +3,17 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Generator
 from datetime import timedelta
 from functools import cached_property
 import logging
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
+from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from typing_extensions import Generator
 
 from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.components import dhcp
@@ -22,7 +23,12 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN, CoreState, HomeAssistant, callback
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    CoreState,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.data_entry_flow import BaseServiceInfo, FlowResult, FlowResultType
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -35,6 +41,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
+from homeassistant.util.async_ import create_eager_task
 import homeassistant.util.dt as dt_util
 
 from .common import (
@@ -44,12 +51,12 @@ from .common import (
     MockPlatform,
     async_capture_events,
     async_fire_time_changed,
+    async_get_persistent_notifications,
+    flush_store,
     mock_config_flow,
     mock_integration,
     mock_platform,
 )
-
-from tests.common import async_get_persistent_notifications
 
 
 @pytest.fixture(autouse=True)
@@ -526,13 +533,13 @@ async def test_remove_entry_cancels_reauth(
     assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
 
     issue_id = f"config_entry_reauth_test_{entry.entry_id}"
-    assert issue_registry.async_get_issue(HA_DOMAIN, issue_id)
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
 
     await manager.async_remove(entry.entry_id)
 
     flows = hass.config_entries.flow.async_progress_by_handler("test")
     assert len(flows) == 0
-    assert not issue_registry.async_get_issue(HA_DOMAIN, issue_id)
+    assert not issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
 
 
 async def test_remove_entry_handles_callback_error(
@@ -577,7 +584,7 @@ async def test_remove_entry_raises(
 
     async def mock_unload_entry(hass, entry):
         """Mock unload entry function."""
-        raise Exception("BROKEN")
+        raise Exception("BROKEN")  # noqa: TRY002
 
     mock_integration(hass, MockModule("comp", async_unload_entry=mock_unload_entry))
 
@@ -907,6 +914,7 @@ async def test_saving_and_loading(
         assert orig.as_dict() == loaded.as_dict()
 
 
+@freeze_time("2024-02-14 12:00:00")
 async def test_as_dict(snapshot: SnapshotAssertion) -> None:
     """Test ConfigEntry.as_dict."""
 
@@ -972,7 +980,7 @@ async def test_forward_entry_sets_up_component(hass: HomeAssistant) -> None:
     )
 
     with patch.object(integration, "async_get_platforms") as mock_async_get_platforms:
-        await hass.config_entries.async_late_forward_entry_setups(entry, ["forwarded"])
+        await hass.config_entries.async_forward_entry_setups(entry, ["forwarded"])
 
     mock_async_get_platforms.assert_called_once_with(["forwarded"])
     assert len(mock_original_setup_entry.mock_calls) == 0
@@ -1002,7 +1010,7 @@ async def test_forward_entry_does_not_setup_entry_if_setup_fails(
     )
 
     with patch.object(integration, "async_get_platforms"):
-        await hass.config_entries.async_late_forward_entry_setups(entry, ["forwarded"])
+        await hass.config_entries.async_forward_entry_setups(entry, ["forwarded"])
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 0
 
@@ -1029,23 +1037,7 @@ async def test_async_forward_entry_setup_deprecated(
         ),
     )
 
-    with patch.object(integration, "async_get_platforms"):
-        await hass.config_entries.async_forward_entry_setup(entry, "forwarded")
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 0
     entry_id = entry.entry_id
-    assert (
-        "Detected code that calls async_forward_entry_setup after the entry "
-        "for integration, original with title: Mock Title and entry_id: "
-        f"{entry_id}, has been set up, without holding the setup lock that "
-        "prevents the config entry from being set up multiple times. "
-        "Instead await hass.config_entries.async_forward_entry_setup "
-        "during setup of the config entry or call "
-        "hass.config_entries.async_late_forward_entry_setups "
-        "in a tracked task. This will stop working in Home Assistant "
-        "2025.1. Please report this issue."
-    ) in caplog.text
-
     caplog.clear()
     with patch.object(integration, "async_get_platforms"):
         async with entry.setup_lock:
@@ -1205,14 +1197,14 @@ async def test_reauth_issue(
 
     assert len(issue_registry.issues) == 1
     issue_id = f"config_entry_reauth_test_{entry.entry_id}"
-    issue = issue_registry.async_get_issue(HA_DOMAIN, issue_id)
+    issue = issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
     assert issue == ir.IssueEntry(
         active=True,
         breaks_in_ha_version=None,
         created=ANY,
         data={"flow_id": flows[0]["flow_id"]},
         dismissed_version=None,
-        domain=HA_DOMAIN,
+        domain=HOMEASSISTANT_DOMAIN,
         is_fixable=False,
         is_persistent=False,
         issue_domain="test",
@@ -1262,8 +1254,11 @@ async def test_loading_default_config(hass: HomeAssistant) -> None:
     assert len(manager.async_entries()) == 0
 
 
-async def test_updating_entry_data(manager: config_entries.ConfigEntries) -> None:
+async def test_updating_entry_data(
+    manager: config_entries.ConfigEntries, freezer: FrozenDateTimeFactory
+) -> None:
     """Test that we can update an entry data."""
+    created = dt_util.utcnow()
     entry = MockConfigEntry(
         domain="test",
         data={"first": True},
@@ -1271,17 +1266,32 @@ async def test_updating_entry_data(manager: config_entries.ConfigEntries) -> Non
     )
     entry.add_to_manager(manager)
 
+    assert len(manager.async_entries()) == 1
+    assert manager.async_entries()[0] == entry
+    assert entry.created_at == created
+    assert entry.modified_at == created
+
+    freezer.tick()
+
     assert manager.async_update_entry(entry) is False
     assert entry.data == {"first": True}
+    assert entry.modified_at == created
+    assert manager.async_entries()[0].modified_at == created
+
+    freezer.tick()
+    modified = dt_util.utcnow()
 
     assert manager.async_update_entry(entry, data={"second": True}) is True
     assert entry.data == {"second": True}
+    assert entry.modified_at == modified
+    assert manager.async_entries()[0].modified_at == modified
 
 
 async def test_updating_entry_system_options(
-    manager: config_entries.ConfigEntries,
+    manager: config_entries.ConfigEntries, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test that we can update an entry data."""
+    created = dt_util.utcnow()
     entry = MockConfigEntry(
         domain="test",
         data={"first": True},
@@ -1292,6 +1302,11 @@ async def test_updating_entry_system_options(
 
     assert entry.pref_disable_new_entities is True
     assert entry.pref_disable_polling is False
+    assert entry.created_at == created
+    assert entry.modified_at == created
+
+    freezer.tick()
+    modified = dt_util.utcnow()
 
     manager.async_update_entry(
         entry, pref_disable_new_entities=False, pref_disable_polling=True
@@ -1299,6 +1314,8 @@ async def test_updating_entry_system_options(
 
     assert entry.pref_disable_new_entities is False
     assert entry.pref_disable_polling is True
+    assert entry.created_at == created
+    assert entry.modified_at == modified
 
 
 async def test_update_entry_options_and_trigger_listener(
@@ -1726,16 +1743,23 @@ async def test_entry_unload_succeed(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test that we can unload an entry."""
+    unloads_called = []
+
+    async def verify_runtime_data(*args):
+        """Verify runtime data."""
+        assert entry.runtime_data == 2
+        unloads_called.append(args)
+        return True
+
     entry = MockConfigEntry(domain="comp", state=config_entries.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
+    entry.async_on_unload(verify_runtime_data)
     entry.runtime_data = 2
 
-    async_unload_entry = AsyncMock(return_value=True)
-
-    mock_integration(hass, MockModule("comp", async_unload_entry=async_unload_entry))
+    mock_integration(hass, MockModule("comp", async_unload_entry=verify_runtime_data))
 
     assert await manager.async_unload(entry.entry_id)
-    assert len(async_unload_entry.mock_calls) == 1
+    assert len(unloads_called) == 2
     assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
     assert not hasattr(entry, "runtime_data")
 
@@ -4873,7 +4897,7 @@ async def test_preview_not_supported(
 
         VERSION = 1
 
-        async def async_step_user(self, data):
+        async def async_step_user(self, user_input):
             """Mock Reauth."""
             return self.async_show_form(step_id="user_confirm")
 
@@ -5107,7 +5131,7 @@ async def test_hashable_non_string_unique_id(
             {
                 "type": data_entry_flow.FlowResultType.ABORT,
                 "reason": "single_instance_allowed",
-                "translation_domain": HA_DOMAIN,
+                "translation_domain": HOMEASSISTANT_DOMAIN,
             },
         ),
     ],
@@ -5305,7 +5329,7 @@ async def test_avoid_adding_second_config_entry_on_single_config_entry(
         )
         assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "single_instance_allowed"
-        assert result["translation_domain"] == HA_DOMAIN
+        assert result["translation_domain"] == HOMEASSISTANT_DOMAIN
 
 
 async def test_in_progress_get_canceled_when_entry_is_created(
@@ -5547,77 +5571,7 @@ async def test_raise_wrong_exception_in_forwarded_platform(
     )
 
 
-async def test_non_awaited_async_forward_entry_setups(
-    hass: HomeAssistant,
-    manager: config_entries.ConfigEntries,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test async_forward_entry_setups not being awaited."""
-
-    async def mock_setup_entry(
-        hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
-        """Mock setting up entry."""
-        # Call async_forward_entry_setups without awaiting it
-        # This is not allowed and will raise a warning
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setups(entry, ["light"])
-        )
-        return True
-
-    async def mock_unload_entry(
-        hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
-        """Mock unloading an entry."""
-        result = await hass.config_entries.async_unload_platforms(entry, ["light"])
-        assert result
-        return result
-
-    mock_remove_entry = AsyncMock(return_value=None)
-
-    async def mock_setup_entry_platform(
-        hass: HomeAssistant,
-        entry: config_entries.ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Mock setting up platform."""
-        await asyncio.sleep(0)
-
-    mock_integration(
-        hass,
-        MockModule(
-            "test",
-            async_setup_entry=mock_setup_entry,
-            async_unload_entry=mock_unload_entry,
-            async_remove_entry=mock_remove_entry,
-        ),
-    )
-    mock_platform(
-        hass, "test.light", MockPlatform(async_setup_entry=mock_setup_entry_platform)
-    )
-    mock_platform(hass, "test.config_flow", None)
-
-    entry = MockConfigEntry(domain="test", entry_id="test2")
-    entry.add_to_manager(manager)
-
-    # Setup entry
-    await manager.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert (
-        "Detected code that calls async_forward_entry_setup after the "
-        "entry for integration, test with title: Mock Title and entry_id:"
-        " test2, has been set up, without holding the setup lock that "
-        "prevents the config entry from being set up multiple times. "
-        "Instead await hass.config_entries.async_forward_entry_setup "
-        "during setup of the config entry or call "
-        "hass.config_entries.async_late_forward_entry_setups "
-        "in a tracked task. This will stop working in Home Assistant"
-        " 2025.1. Please report this issue."
-    ) in caplog.text
-
-
-async def test_config_entry_unloaded_during_platform_setup(
+async def test_config_entry_unloaded_during_platform_setups(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
     caplog: pytest.LogCaptureFixture,
@@ -5630,12 +5584,12 @@ async def test_config_entry_unloaded_during_platform_setup(
     ) -> bool:
         """Mock setting up entry."""
 
-        # Call async_late_forward_entry_setups in a non-tracked task
+        # Call async_forward_entry_setups in a non-tracked task
         # so we can unload the config entry during the setup
         def _late_setup():
             nonlocal task
             task = asyncio.create_task(
-                hass.config_entries.async_late_forward_entry_setups(entry, ["light"])
+                hass.config_entries.async_forward_entry_setups(entry, ["light"])
             )
 
         hass.loop.call_soon(_late_setup)
@@ -5685,7 +5639,364 @@ async def test_config_entry_unloaded_during_platform_setup(
     del task
 
     assert (
-        "OperationNotAllowed: The config entry Mock Title (test) with "
-        "entry_id test2 cannot forward setup for ['light'] because it is "
-        "not loaded in the ConfigEntryState.NOT_LOADED state"
+        "OperationNotAllowed: The config entry 'Mock Title' (test) with "
+        "entry_id 'test2' cannot forward setup for ['light'] because it is "
+        "in state ConfigEntryState.NOT_LOADED, but needs to be in the "
+        "ConfigEntryState.LOADED state"
     ) in caplog.text
+
+
+async def test_non_awaited_async_forward_entry_setups(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test async_forward_entry_setups not being awaited."""
+    forward_event = asyncio.Event()
+    task: asyncio.Task | None = None
+
+    async def mock_setup_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Mock setting up entry."""
+        # Call async_forward_entry_setups without awaiting it
+        # This is not allowed and will raise a warning
+        nonlocal task
+        task = create_eager_task(
+            hass.config_entries.async_forward_entry_setups(entry, ["light"])
+        )
+        return True
+
+    async def mock_unload_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Mock unloading an entry."""
+        result = await hass.config_entries.async_unload_platforms(entry, ["light"])
+        assert result
+        return result
+
+    mock_remove_entry = AsyncMock(return_value=None)
+
+    async def mock_setup_entry_platform(
+        hass: HomeAssistant,
+        entry: config_entries.ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Mock setting up platform."""
+        await forward_event.wait()
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=mock_setup_entry,
+            async_unload_entry=mock_unload_entry,
+            async_remove_entry=mock_remove_entry,
+        ),
+    )
+    mock_platform(
+        hass, "test.light", MockPlatform(async_setup_entry=mock_setup_entry_platform)
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    entry = MockConfigEntry(domain="test", entry_id="test2")
+    entry.add_to_manager(manager)
+
+    # Setup entry
+    await manager.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    forward_event.set()
+    await hass.async_block_till_done()
+    await task
+
+    assert (
+        "Detected code that calls async_forward_entry_setups for integration "
+        "test with title: Mock Title and entry_id: test2, during setup without "
+        "awaiting async_forward_entry_setups, which can cause the setup lock "
+        "to be released before the setup is done. This will stop working in "
+        "Home Assistant 2025.1. Please report this issue."
+    ) in caplog.text
+
+
+async def test_non_awaited_async_forward_entry_setup(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test async_forward_entry_setup not being awaited."""
+    forward_event = asyncio.Event()
+    task: asyncio.Task | None = None
+
+    async def mock_setup_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Mock setting up entry."""
+        # Call async_forward_entry_setup without awaiting it
+        # This is not allowed and will raise a warning
+        nonlocal task
+        task = create_eager_task(
+            hass.config_entries.async_forward_entry_setup(entry, "light")
+        )
+        return True
+
+    async def mock_unload_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Mock unloading an entry."""
+        result = await hass.config_entries.async_unload_platforms(entry, ["light"])
+        assert result
+        return result
+
+    mock_remove_entry = AsyncMock(return_value=None)
+
+    async def mock_setup_entry_platform(
+        hass: HomeAssistant,
+        entry: config_entries.ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Mock setting up platform."""
+        await forward_event.wait()
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=mock_setup_entry,
+            async_unload_entry=mock_unload_entry,
+            async_remove_entry=mock_remove_entry,
+        ),
+    )
+    mock_platform(
+        hass, "test.light", MockPlatform(async_setup_entry=mock_setup_entry_platform)
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    entry = MockConfigEntry(domain="test", entry_id="test2")
+    entry.add_to_manager(manager)
+
+    # Setup entry
+    await manager.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    forward_event.set()
+    await hass.async_block_till_done()
+    await task
+
+    assert (
+        "Detected code that calls async_forward_entry_setup for integration "
+        "test with title: Mock Title and entry_id: test2, during setup without "
+        "awaiting async_forward_entry_setup, which can cause the setup lock "
+        "to be released before the setup is done. This will stop working in "
+        "Home Assistant 2025.1. Please report this issue."
+    ) in caplog.text
+
+
+async def test_config_entry_unloaded_during_platform_setup(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test async_forward_entry_setup not being awaited."""
+    task = None
+
+    async def mock_setup_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Mock setting up entry."""
+
+        # Call async_forward_entry_setup in a non-tracked task
+        # so we can unload the config entry during the setup
+        def _late_setup():
+            nonlocal task
+            task = asyncio.create_task(
+                hass.config_entries.async_forward_entry_setup(entry, "light")
+            )
+
+        hass.loop.call_soon(_late_setup)
+        return True
+
+    async def mock_unload_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Mock unloading an entry."""
+        result = await hass.config_entries.async_unload_platforms(entry, ["light"])
+        assert result
+        return result
+
+    mock_remove_entry = AsyncMock(return_value=None)
+
+    async def mock_setup_entry_platform(
+        hass: HomeAssistant,
+        entry: config_entries.ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Mock setting up platform."""
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=mock_setup_entry,
+            async_unload_entry=mock_unload_entry,
+            async_remove_entry=mock_remove_entry,
+        ),
+    )
+    mock_platform(
+        hass, "test.light", MockPlatform(async_setup_entry=mock_setup_entry_platform)
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    entry = MockConfigEntry(domain="test", entry_id="test2")
+    entry.add_to_manager(manager)
+
+    # Setup entry
+    await manager.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await manager.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    del task
+
+    assert (
+        "OperationNotAllowed: The config entry 'Mock Title' (test) with "
+        "entry_id 'test2' cannot forward setup for light because it is "
+        "in state ConfigEntryState.NOT_LOADED, but needs to be in the "
+        "ConfigEntryState.LOADED state"
+    ) in caplog.text
+
+
+async def test_config_entry_late_platform_setup(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test async_forward_entry_setup not being awaited."""
+    task = None
+
+    async def mock_setup_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Mock setting up entry."""
+
+        # Call async_forward_entry_setup in a non-tracked task
+        # so we can unload the config entry during the setup
+        def _late_setup():
+            nonlocal task
+            task = asyncio.create_task(
+                hass.config_entries.async_forward_entry_setup(entry, "light")
+            )
+
+        hass.loop.call_soon(_late_setup)
+        return True
+
+    async def mock_unload_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Mock unloading an entry."""
+        result = await hass.config_entries.async_unload_platforms(entry, ["light"])
+        assert result
+        return result
+
+    mock_remove_entry = AsyncMock(return_value=None)
+
+    async def mock_setup_entry_platform(
+        hass: HomeAssistant,
+        entry: config_entries.ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Mock setting up platform."""
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=mock_setup_entry,
+            async_unload_entry=mock_unload_entry,
+            async_remove_entry=mock_remove_entry,
+        ),
+    )
+    mock_platform(
+        hass, "test.light", MockPlatform(async_setup_entry=mock_setup_entry_platform)
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    entry = MockConfigEntry(domain="test", entry_id="test2")
+    entry.add_to_manager(manager)
+
+    # Setup entry
+    await manager.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await task
+    await hass.async_block_till_done()
+
+    assert (
+        "OperationNotAllowed: The config entry Mock Title (test) with "
+        "entry_id test2 cannot forward setup for light because it is "
+        "not loaded in the ConfigEntryState.NOT_LOADED state"
+    ) not in caplog.text
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_from_1_2(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test migration from version 1.2."""
+    hass_storage[config_entries.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 2,
+        "data": {
+            "entries": [
+                {
+                    "data": {},
+                    "disabled_by": None,
+                    "domain": "sun",
+                    "entry_id": "0a8bd02d0d58c7debf5daf7941c9afe2",
+                    "minor_version": 1,
+                    "options": {},
+                    "pref_disable_new_entities": False,
+                    "pref_disable_polling": False,
+                    "source": "import",
+                    "title": "Sun",
+                    "unique_id": None,
+                    "version": 1,
+                },
+            ]
+        },
+    }
+
+    manager = config_entries.ConfigEntries(hass, {})
+    await manager.async_initialize()
+
+    # Test data was loaded
+    entries = manager.async_entries()
+    assert len(entries) == 1
+
+    # Check we store migrated data
+    await flush_store(manager._store)
+    assert hass_storage[config_entries.STORAGE_KEY] == {
+        "version": config_entries.STORAGE_VERSION,
+        "minor_version": config_entries.STORAGE_VERSION_MINOR,
+        "key": config_entries.STORAGE_KEY,
+        "data": {
+            "entries": [
+                {
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "data": {},
+                    "disabled_by": None,
+                    "domain": "sun",
+                    "entry_id": "0a8bd02d0d58c7debf5daf7941c9afe2",
+                    "minor_version": 1,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "options": {},
+                    "pref_disable_new_entities": False,
+                    "pref_disable_polling": False,
+                    "source": "import",
+                    "title": "Sun",
+                    "unique_id": None,
+                    "version": 1,
+                },
+            ]
+        },
+    }

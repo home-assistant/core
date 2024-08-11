@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from contextlib import contextmanager
 from unittest.mock import patch
 
@@ -27,7 +28,7 @@ from . import _get_manager, generate_advertisement_data, generate_ble_device
 
 
 @contextmanager
-def mock_shutdown(manager: HomeAssistantBluetoothManager) -> None:
+def mock_shutdown(manager: HomeAssistantBluetoothManager) -> Iterator[None]:
     """Mock shutdown of the HomeAssistantBluetoothManager."""
     manager.shutdown = True
     yield
@@ -72,7 +73,7 @@ class FakeScanner(BaseHaRemoteScanner):
 class BaseFakeBleakClient:
     """Base class for fake bleak clients."""
 
-    def __init__(self, address_or_ble_device: BLEDevice | str, **kwargs):
+    def __init__(self, address_or_ble_device: BLEDevice | str, **kwargs) -> None:
         """Initialize the fake bleak client."""
         self._device_path = "/dev/test"
         self._device = address_or_ble_device

@@ -1,12 +1,12 @@
 """Test config flow."""
 
+from collections.abc import Generator
 from ipaddress import IPv4Address, ip_address
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 
 from pyatv import exceptions
 from pyatv.const import PairingRequirement, Protocol
 import pytest
-from typing_extensions import Generator
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf

@@ -1,8 +1,9 @@
 """The tests for Valve."""
 
+from collections.abc import Generator
+
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from typing_extensions import Generator
 
 from homeassistant.components.valve import (
     DOMAIN,
@@ -131,7 +132,7 @@ def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
 
 
 @pytest.fixture
-def mock_config_entry(hass) -> tuple[MockConfigEntry, list[ValveEntity]]:
+def mock_config_entry(hass: HomeAssistant) -> tuple[MockConfigEntry, list[ValveEntity]]:
     """Mock a config entry which sets up a couple of valve entities."""
     entities = [
         MockBinaryValveEntity(

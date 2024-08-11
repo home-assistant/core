@@ -1,7 +1,7 @@
 """Configuration for Sonos tests."""
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from copy import copy
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -17,6 +17,7 @@ from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.const import CONF_HOSTS
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture, load_json_value_fixture
 
@@ -205,6 +206,7 @@ class SoCoMockFactory:
         my_speaker_info["uid"] = mock_soco.uid
         mock_soco.get_speaker_info = Mock(return_value=my_speaker_info)
         mock_soco.add_to_queue = Mock(return_value=10)
+        mock_soco.add_uri_to_queue = Mock(return_value=10)
 
         mock_soco.avTransport = SonosMockService("AVTransport", ip_address)
         mock_soco.renderingControl = SonosMockService("RenderingControl", ip_address)
@@ -236,6 +238,17 @@ def patch_gethostbyname(host: str) -> str:
     return host
 
 
+@pytest.fixture(name="soco_sharelink")
+def soco_sharelink():
+    """Fixture to mock soco.plugins.sharelink.ShareLinkPlugin."""
+    with patch("homeassistant.components.sonos.speaker.ShareLinkPlugin") as mock_share:
+        mock_instance = MagicMock()
+        mock_instance.is_share_link.return_value = True
+        mock_instance.add_share_link_to_queue.return_value = 10
+        mock_share.return_value = mock_instance
+        yield mock_instance
+
+
 @pytest.fixture(name="soco_factory")
 def soco_factory(
     music_library, speaker_info, current_track_info_empty, battery_info, alarm_clock
@@ -259,7 +272,7 @@ def soco_fixture(soco_factory):
 
 
 @pytest.fixture(autouse=True)
-async def silent_ssdp_scanner(hass):
+def silent_ssdp_scanner() -> Generator[None]:
     """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
     with (
         patch("homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"),
@@ -323,7 +336,7 @@ class MockMusicServiceItem:
         parent_id: str,
         item_class: str,
         album_art_uri: None | str = None,
-    ):
+    ) -> None:
         """Initialize the mock item."""
         self.title = title
         self.item_id = item_id
@@ -441,6 +454,7 @@ def mock_get_music_library_information(
                 "object.container.album.musicAlbum",
             )
         ]
+    return []
 
 
 @pytest.fixture(name="music_library_browse_categories")
@@ -467,6 +481,7 @@ def music_library_fixture(
 def alarm_clock_fixture():
     """Create alarmClock fixture."""
     alarm_clock = SonosMockService("AlarmClock")
+    # pylint: disable-next=attribute-defined-outside-init
     alarm_clock.ListAlarms = Mock()
     alarm_clock.ListAlarms.return_value = {
         "CurrentAlarmListVersion": "RINCON_test:14",
@@ -484,6 +499,7 @@ def alarm_clock_fixture():
 def alarm_clock_fixture_extended():
     """Create alarmClock fixture."""
     alarm_clock = SonosMockService("AlarmClock")
+    # pylint: disable-next=attribute-defined-outside-init
     alarm_clock.ListAlarms = Mock()
     alarm_clock.ListAlarms.return_value = {
         "CurrentAlarmListVersion": "RINCON_test:15",
@@ -646,3 +662,26 @@ def zgs_event_fixture(hass: HomeAssistant, soco: SoCo, zgs_discovery: str):
         await hass.async_block_till_done(wait_background_tasks=True)
 
     return _wrapper
+
+
+@pytest.fixture(name="sonos_setup_two_speakers")
+async def sonos_setup_two_speakers(
+    hass: HomeAssistant, soco_factory: SoCoMockFactory
+) -> list[MockSoCo]:
+    """Set up home assistant with two Sonos Speakers."""
+    soco_lr = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
+    soco_br = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "media_player": {
+                    "interface_addr": "127.0.0.1",
+                    "hosts": ["10.10.10.1", "10.10.10.2"],
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    return [soco_lr, soco_br]

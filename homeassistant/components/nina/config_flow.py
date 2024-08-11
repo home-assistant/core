@@ -17,6 +17,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     _LOGGER,
@@ -137,14 +138,16 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
 
             errors["base"] = "no_selection"
 
+        regions_schema: VolDictType = {
+            vol.Optional(region): cv.multi_select(self.regions[region])
+            for region in CONST_REGIONS
+        }
+
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    **{
-                        vol.Optional(region): cv.multi_select(self.regions[region])
-                        for region in CONST_REGIONS
-                    },
+                    **regions_schema,
                     vol.Required(CONF_MESSAGE_SLOTS, default=5): vol.All(
                         int, vol.Range(min=1, max=20)
                     ),

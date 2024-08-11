@@ -1,5 +1,6 @@
 """Provide common Renault fixtures."""
 
+from collections.abc import Generator, Iterator
 import contextlib
 from types import MappingProxyType
 from typing import Any
@@ -8,7 +9,6 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from renault_api.kamereon import exceptions, schemas
 from renault_api.renault_account import RenaultAccount
-from typing_extensions import Generator
 
 from homeassistant.components.renault.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntry
@@ -200,7 +200,7 @@ def patch_fixtures_with_no_data():
 
 
 @contextlib.contextmanager
-def _patch_fixtures_with_side_effect(side_effect: Any):
+def _patch_fixtures_with_side_effect(side_effect: Any) -> Iterator[None]:
     """Mock fixtures."""
     with (
         patch(

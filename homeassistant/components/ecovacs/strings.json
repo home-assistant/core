@@ -65,7 +65,7 @@
         "name": "Reset unit care lifespan"
       },
       "reset_lifespan_side_brush": {
-        "name": "Reset side brushes lifespan"
+        "name": "Reset side brush lifespan"
       }
     },
     "event": {
@@ -90,6 +90,9 @@
     "number": {
       "clean_count": {
         "name": "Clean count"
+      },
+      "cut_direction": {
+        "name": "Cut direction"
       },
       "volume": {
         "name": "Volume"
@@ -116,8 +119,11 @@
       "lifespan_lens_brush": {
         "name": "Lens brush lifespan"
       },
+      "lifespan_main_brush": {
+        "name": "[%key:component::ecovacs::entity::sensor::lifespan_brush::name%]"
+      },
       "lifespan_side_brush": {
-        "name": "Side brushes lifespan"
+        "name": "Side brush lifespan"
       },
       "lifespan_unit_care": {
         "name": "Unit care lifespan"
@@ -228,7 +234,7 @@
       "message": "Params are required for the command: {command}"
     },
     "vacuum_raw_get_positions_not_supported": {
-      "message": "Getting the positions of the charges and the device itself is not supported"
+      "message": "Getting the positions of the chargers and the device itself is not supported"
     }
   },
   "issues": {

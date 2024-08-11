@@ -52,7 +52,7 @@ async def test_setup_loads_platforms(hass: HomeAssistant) -> None:
     mock_integration(hass, MockModule("test_component", setup=component_setup))
     # mock the dependencies
     mock_integration(hass, MockModule("mod2", dependencies=["test_component"]))
-    mock_platform(hass, "mod2.test_domain", MockPlatform(platform_setup))
+    mock_platform(hass, "mod2.test_domain", MockPlatform(setup_platform=platform_setup))
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -71,8 +71,12 @@ async def test_setup_recovers_when_setup_raises(hass: HomeAssistant) -> None:
     platform1_setup = Mock(side_effect=Exception("Broken"))
     platform2_setup = Mock(return_value=None)
 
-    mock_platform(hass, "mod1.test_domain", MockPlatform(platform1_setup))
-    mock_platform(hass, "mod2.test_domain", MockPlatform(platform2_setup))
+    mock_platform(
+        hass, "mod1.test_domain", MockPlatform(setup_platform=platform1_setup)
+    )
+    mock_platform(
+        hass, "mod2.test_domain", MockPlatform(setup_platform=platform2_setup)
+    )
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -113,7 +117,7 @@ async def test_setup_does_discovery(
     await hass.async_block_till_done()
 
     assert mock_setup.called
-    assert ("platform_test", {}, {"msg": "discovery_info"}) == mock_setup.call_args[0]
+    assert mock_setup.call_args[0] == ("platform_test", {}, {"msg": "discovery_info"})
 
 
 async def test_set_scan_interval_via_config(hass: HomeAssistant) -> None:
@@ -128,7 +132,9 @@ async def test_set_scan_interval_via_config(hass: HomeAssistant) -> None:
         """Test the platform setup."""
         add_entities([MockEntity(should_poll=True)])
 
-    mock_platform(hass, "platform.test_domain", MockPlatform(platform_setup))
+    mock_platform(
+        hass, "platform.test_domain", MockPlatform(setup_platform=platform_setup)
+    )
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -154,7 +160,7 @@ async def test_set_entity_namespace_via_config(hass: HomeAssistant) -> None:
         """Test the platform setup."""
         add_entities([MockEntity(name="beer"), MockEntity(name=None)])
 
-    platform = MockPlatform(platform_setup)
+    platform = MockPlatform(setup_platform=platform_setup)
 
     mock_platform(hass, "platform.test_domain", platform)
 
@@ -185,9 +191,9 @@ async def test_extract_from_service_available_device(hass: HomeAssistant) -> Non
 
     call_1 = ServiceCall("test", "service", data={"entity_id": ENTITY_MATCH_ALL})
 
-    assert ["test_domain.test_1", "test_domain.test_3"] == sorted(
+    assert sorted(
         ent.entity_id for ent in (await component.async_extract_from_service(call_1))
-    )
+    ) == ["test_domain.test_1", "test_domain.test_3"]
 
     call_2 = ServiceCall(
         "test",
@@ -195,16 +201,18 @@ async def test_extract_from_service_available_device(hass: HomeAssistant) -> Non
         data={"entity_id": ["test_domain.test_3", "test_domain.test_4"]},
     )
 
-    assert ["test_domain.test_3"] == sorted(
+    assert sorted(
         ent.entity_id for ent in (await component.async_extract_from_service(call_2))
-    )
+    ) == ["test_domain.test_3"]
 
 
 async def test_platform_not_ready(hass: HomeAssistant) -> None:
     """Test that we retry when platform not ready."""
     platform1_setup = Mock(side_effect=[PlatformNotReady, PlatformNotReady, None])
     mock_integration(hass, MockModule("mod1"))
-    mock_platform(hass, "mod1.test_domain", MockPlatform(platform1_setup))
+    mock_platform(
+        hass, "mod1.test_domain", MockPlatform(setup_platform=platform1_setup)
+    )
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -280,9 +288,9 @@ async def test_extract_from_service_filter_out_non_existing_entities(
         {"entity_id": ["test_domain.test_2", "test_domain.non_exist"]},
     )
 
-    assert ["test_domain.test_2"] == [
+    assert [
         ent.entity_id for ent in await component.async_extract_from_service(call)
-    ]
+    ] == ["test_domain.test_2"]
 
 
 async def test_extract_from_service_no_group_expand(hass: HomeAssistant) -> None:
@@ -459,8 +467,11 @@ async def test_extract_all_omit_entity_id(
 
     call = ServiceCall("test", "service")
 
-    assert [] == sorted(
-        ent.entity_id for ent in await component.async_extract_from_service(call)
+    assert (
+        sorted(
+            ent.entity_id for ent in await component.async_extract_from_service(call)
+        )
+        == []
     )
 
 
@@ -476,9 +487,9 @@ async def test_extract_all_use_match_all(
 
     call = ServiceCall("test", "service", {"entity_id": "all"})
 
-    assert ["test_domain.test_1", "test_domain.test_2"] == sorted(
+    assert sorted(
         ent.entity_id for ent in await component.async_extract_from_service(call)
-    )
+    ) == ["test_domain.test_1", "test_domain.test_2"]
     assert (
         "Not passing an entity ID to a service to target all entities is deprecated"
     ) not in caplog.text
@@ -678,7 +689,9 @@ async def test_platforms_shutdown_on_stop(hass: HomeAssistant) -> None:
     """Test that we shutdown platforms on stop."""
     platform1_setup = Mock(side_effect=[PlatformNotReady, PlatformNotReady, None])
     mock_integration(hass, MockModule("mod1"))
-    mock_platform(hass, "mod1.test_domain", MockPlatform(platform1_setup))
+    mock_platform(
+        hass, "mod1.test_domain", MockPlatform(setup_platform=platform1_setup)
+    )
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 

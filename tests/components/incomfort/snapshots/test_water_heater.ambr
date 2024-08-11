@@ -25,12 +25,12 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:thermometer-lines',
+    'original_icon': None,
     'original_name': None,
     'platform': 'incomfort',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'boiler',
     'unique_id': 'c0ffeec0ffee',
     'unit_of_measurement': None,
   })
@@ -39,10 +39,9 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 35.3,
-      'display_code': 126,
+      'display_code': <DisplayCode.STANDBY: 126>,
       'display_text': 'standby',
       'friendly_name': 'Boiler',
-      'icon': 'mdi:thermometer-lines',
       'is_burning': False,
       'max_temp': 80.0,
       'min_temp': 30.0,

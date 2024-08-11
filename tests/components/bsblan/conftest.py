@@ -1,10 +1,10 @@
 """Fixtures for BSBLAN integration tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from bsblan import Device, Info, State
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -48,11 +48,11 @@ def mock_bsblan() -> Generator[MagicMock]:
         patch("homeassistant.components.bsblan.config_flow.BSBLAN", new=bsblan_mock),
     ):
         bsblan = bsblan_mock.return_value
-        bsblan.info.return_value = Info.parse_raw(load_fixture("info.json", DOMAIN))
-        bsblan.device.return_value = Device.parse_raw(
+        bsblan.info.return_value = Info.from_json(load_fixture("info.json", DOMAIN))
+        bsblan.device.return_value = Device.from_json(
             load_fixture("device.json", DOMAIN)
         )
-        bsblan.state.return_value = State.parse_raw(load_fixture("state.json", DOMAIN))
+        bsblan.state.return_value = State.from_json(load_fixture("state.json", DOMAIN))
         yield bsblan
 
 

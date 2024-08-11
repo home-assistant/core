@@ -3,6 +3,7 @@
 import json
 from unittest.mock import patch
 
+from laundrify_aio import LaundrifyAPI, LaundrifyDevice
 import pytest
 
 from .const import VALID_ACCESS_TOKEN, VALID_ACCOUNT_ID
@@ -49,7 +50,10 @@ def laundrify_api_fixture(laundrify_exchange_code, laundrify_validate_token):
         ),
         patch(
             "laundrify_aio.LaundrifyAPI.get_machines",
-            return_value=json.loads(load_fixture("laundrify/machines.json")),
+            return_value=[
+                LaundrifyDevice(machine, LaundrifyAPI)
+                for machine in json.loads(load_fixture("laundrify/machines.json"))
+            ],
         ) as get_machines_mock,
     ):
         yield get_machines_mock

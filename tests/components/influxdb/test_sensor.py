@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from dataclasses import dataclass
 from datetime import timedelta
 from http import HTTPStatus
@@ -10,7 +11,6 @@ from unittest.mock import MagicMock, patch
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from influxdb_client.rest import ApiException
 import pytest
-from typing_extensions import Generator
 from voluptuous import Invalid
 
 from homeassistant.components import sensor
@@ -111,7 +111,7 @@ def _make_v1_resultset(*args):
 
 def _make_v1_databases_resultset():
     """Create a mock V1 'show databases' resultset."""
-    for name in [DEFAULT_DATABASE, "db2"]:
+    for name in (DEFAULT_DATABASE, "db2"):
         yield {"name": name}
 
 
@@ -129,7 +129,7 @@ def _make_v2_resultset(*args):
 
 def _make_v2_buckets_resultset():
     """Create a mock V2 'buckets()' resultset."""
-    records = [Record({"name": name}) for name in [DEFAULT_BUCKET, "bucket2"]]
+    records = [Record({"name": name}) for name in (DEFAULT_BUCKET, "bucket2")]
 
     return [Table(records)]
 

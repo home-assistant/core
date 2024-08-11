@@ -16,8 +16,9 @@ from homeassistant.components.aquacell.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
+from . import setup_integration
+
 from tests.common import MockConfigEntry
-from tests.components.aquacell import setup_integration
 
 
 async def test_load_unload_entry(

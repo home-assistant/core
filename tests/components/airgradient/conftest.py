@@ -1,10 +1,10 @@
 """AirGradient tests configuration."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 from airgradient import Config, Measures
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.airgradient.const import DOMAIN
 from homeassistant.const import CONF_HOST
@@ -39,7 +39,7 @@ def mock_airgradient_client() -> Generator[AsyncMock]:
         client = mock_client.return_value
         client.host = "10.0.0.131"
         client.get_current_measures.return_value = Measures.from_json(
-            load_fixture("current_measures.json", DOMAIN)
+            load_fixture("current_measures_indoor.json", DOMAIN)
         )
         client.get_config.return_value = Config.from_json(
             load_fixture("get_config_local.json", DOMAIN)
@@ -47,10 +47,21 @@ def mock_airgradient_client() -> Generator[AsyncMock]:
         yield client
 
 
+@pytest.fixture(params=["indoor", "outdoor"])
+def airgradient_devices(
+    mock_airgradient_client: AsyncMock, request: pytest.FixtureRequest
+) -> Generator[AsyncMock]:
+    """Return a list of AirGradient devices."""
+    mock_airgradient_client.get_current_measures.return_value = Measures.from_json(
+        load_fixture(f"current_measures_{request.param}.json", DOMAIN)
+    )
+    return mock_airgradient_client
+
+
 @pytest.fixture
 def mock_new_airgradient_client(
     mock_airgradient_client: AsyncMock,
-) -> Generator[AsyncMock]:
+) -> AsyncMock:
     """Mock a new AirGradient client."""
     mock_airgradient_client.get_config.return_value = Config.from_json(
         load_fixture("get_config.json", DOMAIN)
@@ -61,7 +72,7 @@ def mock_new_airgradient_client(
 @pytest.fixture
 def mock_cloud_airgradient_client(
     mock_airgradient_client: AsyncMock,
-) -> Generator[AsyncMock]:
+) -> AsyncMock:
     """Mock a cloud AirGradient client."""
     mock_airgradient_client.get_config.return_value = Config.from_json(
         load_fixture("get_config_cloud.json", DOMAIN)

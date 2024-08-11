@@ -47,7 +47,7 @@ from tests.typing import MqttMockHAClient
 
 
 @pytest.fixture(autouse=True)
-def only_sensor_platform() -> Generator[[], None]:
+def only_sensor_platform() -> Generator[None]:
     """Only setup the DROP sensor platform."""
     with patch("homeassistant.components.drop_connect.PLATFORMS", [Platform.SENSOR]):
         yield

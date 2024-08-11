@@ -35,11 +35,11 @@ async def async_set_temperature(
     """Set new target temperature."""
     kwargs = {
         key: value
-        for key, value in [
+        for key, value in (
             (ATTR_TEMPERATURE, temperature),
             (ATTR_ENTITY_ID, entity_id),
             (ATTR_OPERATION_MODE, operation_mode),
-        ]
+        )
         if value is not None
     }
     _LOGGER.debug("set_temperature start data=%s", kwargs)

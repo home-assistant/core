@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import uint
 from chip.clusters.Types import Nullable, NullValue
+from matter_server.client.models import device_types
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -76,17 +77,6 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
         entity_description=MatterBinarySensorEntityDescription(
-            key="ContactSensor",
-            device_class=BinarySensorDeviceClass.DOOR,
-            # value is inverted on matter to what we expect
-            measurement_to_ha=lambda x: not x,
-        ),
-        entity_class=MatterBinarySensor,
-        required_attributes=(clusters.BooleanState.Attributes.StateValue,),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.BINARY_SENSOR,
-        entity_description=MatterBinarySensorEntityDescription(
             key="OccupancySensor",
             device_class=BinarySensorDeviceClass.OCCUPANCY,
             # The first bit = if occupied
@@ -108,5 +98,67 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(clusters.PowerSource.Attributes.BatChargeLevel,),
         # only add binary battery sensor if a regular percentage based is not available
         absent_attributes=(clusters.PowerSource.Attributes.BatPercentRemaining,),
+    ),
+    # BooleanState sensors (tied to device type)
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="ContactSensor",
+            device_class=BinarySensorDeviceClass.DOOR,
+            # value is inverted on matter to what we expect
+            measurement_to_ha=lambda x: not x,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.BooleanState.Attributes.StateValue,),
+        device_type=(device_types.ContactSensor,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="WaterLeakDetector",
+            translation_key="water_leak",
+            device_class=BinarySensorDeviceClass.MOISTURE,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.BooleanState.Attributes.StateValue,),
+        device_type=(device_types.WaterLeakDetector,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="WaterFreezeDetector",
+            translation_key="water_freeze",
+            device_class=BinarySensorDeviceClass.COLD,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.BooleanState.Attributes.StateValue,),
+        device_type=(device_types.WaterFreezeDetector,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="RainSensor",
+            translation_key="rain",
+            device_class=BinarySensorDeviceClass.MOISTURE,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.BooleanState.Attributes.StateValue,),
+        device_type=(device_types.RainSensor,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="LockDoorStateSensor",
+            device_class=BinarySensorDeviceClass.DOOR,
+            # pylint: disable=unnecessary-lambda
+            measurement_to_ha=lambda x: {
+                clusters.DoorLock.Enums.DoorStateEnum.kDoorOpen: True,
+                clusters.DoorLock.Enums.DoorStateEnum.kDoorJammed: True,
+                clusters.DoorLock.Enums.DoorStateEnum.kDoorForcedOpen: True,
+                clusters.DoorLock.Enums.DoorStateEnum.kDoorClosed: False,
+            }.get(x),
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.DoorLock.Attributes.DoorState,),
     ),
 ]
