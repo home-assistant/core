@@ -688,7 +688,7 @@ def _restore_foreign_key_constraints(
         add_constraint = AddConstraint(constraint)  # type: ignore[no-untyped-call]
         constraint._create_rule = create_rule  # noqa: SLF001
         try:
-            _add_constraint(session_maker, add_constraint, table)
+            _add_constraint(session_maker, add_constraint, table, column)
         except IntegrityError:
             _LOGGER.exception(
                 (
@@ -700,13 +700,23 @@ def _restore_foreign_key_constraints(
             _delete_foreign_key_violations(
                 session_maker, table, column, foreign_table, foreign_column
             )
-            _add_constraint(session_maker, add_constraint, table)
+            _add_constraint(session_maker, add_constraint, table, column)
 
 
 def _add_constraint(
-    session_maker: Callable[[], Session], add_constraint: AddConstraint, table: str
+    session_maker: Callable[[], Session],
+    add_constraint: AddConstraint,
+    table: str,
+    column: str,
 ) -> None:
     """Add a foreign key constraint."""
+    _LOGGER.warning(
+        "Adding foreign key constraint to %s.%s. "
+        "Note: this can take several minutes on large databases and slow "
+        "machines. Please be patient!",
+        table,
+        column,
+    )
     with session_scope(session=session_maker()) as session:
         try:
             connection = session.connection()
@@ -725,6 +735,17 @@ def _delete_foreign_key_violations(
     """Remove rows which violate the constraints."""
     if foreign_table is None:
         return
+
+    _LOGGER.warning(
+        "Rows in table %s where %s references non existing %s.%s will be %s. "
+        "Note: this can take several minutes on large databases and slow "
+        "machines. Please be patient!",
+        table,
+        column,
+        foreign_table,
+        foreign_column,
+        "set to NULL" if table == foreign_table else "deleted",
+    )
 
     if table == foreign_table:
         # In case of a foreign reference to the same table, we set invalid
