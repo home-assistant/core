@@ -26,6 +26,37 @@ async def test_lock_device_registry(
     assert device.manufacturer == "Schlage"
 
 
+async def test_lock_attributes(
+    hass: HomeAssistant,
+    mock_added_config_entry: ConfigEntry,
+    mock_schlage: Mock,
+    mock_lock: Mock,
+) -> None:
+    """Test lock attributes."""
+    lock = hass.states.get("lock.vault_door")
+    assert lock is not None
+    assert lock.state == "unlocked"
+    assert lock.attributes["changed_by"] == "thumbturn"
+
+    mock_lock.is_locked = False
+    mock_lock.is_jammed = True
+    # Make the coordinator refresh data.
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=31))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    lock = hass.states.get("lock.vault_door")
+    assert lock is not None
+    assert lock.state == "jammed"
+
+    mock_schlage.locks.return_value = []
+    # Make the coordinator refresh data.
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=31))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    lock = hass.states.get("lock.vault_door")
+    assert lock is not None
+    assert lock.state == "unavailable"
+    assert "changed_by" not in lock.attributes
+
+
 async def test_lock_services(
     hass: HomeAssistant, mock_lock: Mock, mock_added_config_entry: ConfigEntry
 ) -> None:

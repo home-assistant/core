@@ -75,4 +75,5 @@ class SchlageBinarySensor(SchlageEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary_sensor is on."""
+        assert self._lock_data is not None
         return self.entity_description.value_fn(self._lock_data)

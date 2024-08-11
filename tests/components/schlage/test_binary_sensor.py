@@ -14,7 +14,10 @@ from tests.common import async_fire_time_changed
 
 
 async def test_keypad_disabled_binary_sensor(
-    hass: HomeAssistant, mock_lock: Mock, mock_added_config_entry: ConfigEntry
+    hass: HomeAssistant,
+    mock_schlage: Mock,
+    mock_lock: Mock,
+    mock_added_config_entry: ConfigEntry,
 ) -> None:
     """Test the keypad_disabled binary_sensor."""
     mock_lock.keypad_disabled.reset_mock()
@@ -31,9 +34,20 @@ async def test_keypad_disabled_binary_sensor(
 
     mock_lock.keypad_disabled.assert_called_once_with([])
 
+    mock_schlage.locks.return_value = []
+    # Make the coordinator refresh data.
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=31))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    keypad = hass.states.get("binary_sensor.vault_door_keypad_disabled")
+    assert keypad is not None
+    assert keypad.state == "unavailable"
+
 
 async def test_keypad_disabled_binary_sensor_use_previous_logs_on_failure(
-    hass: HomeAssistant, mock_lock: Mock, mock_added_config_entry: ConfigEntry
+    hass: HomeAssistant,
+    mock_schlage: Mock,
+    mock_lock: Mock,
+    mock_added_config_entry: ConfigEntry,
 ) -> None:
     """Test the keypad_disabled binary_sensor."""
     mock_lock.keypad_disabled.reset_mock()
