@@ -31,6 +31,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import unit_conversion
 from homeassistant.util.unit_conversion import (
+    AreaConverter,
     BaseUnitConverter,
     ConductivityConverter,
     DataRateConverter,
@@ -59,6 +60,7 @@ INVALID_SYMBOL = "bob"
 _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
     converter: sorted(converter.VALID_UNITS, key=lambda x: (x is None, x))
     for converter in (
+	AreaConverter,
         ConductivityConverter,
         DataRateConverter,
         DistanceConverter,
