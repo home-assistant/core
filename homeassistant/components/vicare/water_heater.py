@@ -119,7 +119,6 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
         self._current_mode = None
         self._attr_translation_key = translation_key
 
-
     def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
         try:
