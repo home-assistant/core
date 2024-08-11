@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from pysnmp.hlapi import Integer32
+from pysnmp.proto.rfc1902 import Integer32
 import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
