@@ -1665,7 +1665,7 @@ py-schluter==0.1.7
 py-sucks==0.9.10
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.4.4
+py-synologydsm-api==2.5.0
 
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
