@@ -108,19 +108,19 @@ class BryantEvolutionClimate(CoordinatorEntity[EvolutionCoordinator], ClimateEnt
     def _set_attrs_from_coordinator(self) -> None:
         # Propagate some parameters that are really system-level, not zone-level,
         # but that the climate entity needs.
-        self._attr_fan_mode = self.coordinator.read_fan_mode(self.system_id)
-        self._attr_hvac_mode = self.coordinator.read_hvac_mode(self.system_id)
+        self._attr_fan_mode = self.coordinator.data.read_fan_mode(self.system_id)
+        self._attr_hvac_mode = self.coordinator.data.read_hvac_mode(self.system_id)
 
         # Read the zone-level parameters.
-        self._attr_current_temperature = self.coordinator.read_current_temperature(
+        self._attr_current_temperature = self.coordinator.data.read_current_temperature(
             self.system_id, self.zone_id
         )
         (
             self._attr_target_temperature,
             self._attr_target_temperature_low,
             self._attr_target_temperature_high,
-        ) = self.coordinator.read_target_temperatures(self.system_id, self.zone_id)
-        self._attr_hvac_action = self.coordinator.read_hvac_action(
+        ) = self.coordinator.data.read_target_temperatures(self.system_id, self.zone_id)
+        self._attr_hvac_action = self.coordinator.data.read_hvac_action(
             self.system_id, self.zone_id
         )
 
