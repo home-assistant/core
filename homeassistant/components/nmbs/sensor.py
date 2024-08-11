@@ -180,11 +180,11 @@ class NMBSLiveBoard(SensorEntity):
     @property
     def name(self):
         """Return the sensor default name."""
-        return f"NMBS Live ({self._station})"
+        return f"Trains in {self._station}"
 
     @property
     def unique_id(self):
-        """Return a unique ID."""
+        """Return the unique ID."""
         if self._station_from is not None and self._station_to is not None:
             unique_id = f"{self._station}_{self._station_from}_{self._station_to}"
         else:
@@ -273,17 +273,17 @@ class NMBSSensor(SensorEntity):
         self._state = None
 
     @property
-    def unique_id(self):
-        """Return a unique ID."""
+    def unique_id(self) -> str:
+        """Return the unique ID."""
         unique_id = f"{self._station_from}_{self._station_to}"
 
         return f"nmbs_connection_{unique_id}"
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         if self._name is None:
-            return f"NMBS ({self._station_from} to {self._station_to})"
+            return f"Train from {self._station_from} to {self._station_to}"
         return self._name
 
     @property
@@ -307,7 +307,7 @@ class NMBSSensor(SensorEntity):
         canceled = int(self._attrs["departure"]["canceled"])
 
         attrs = {
-            "destination": self._station_to,
+            "destination": self._attrs["departure"]["station"],
             "direction": self._attrs["departure"]["direction"]["name"],
             "platform_arriving": self._attrs["arrival"]["platform"],
             "platform_departing": self._attrs["departure"]["platform"],

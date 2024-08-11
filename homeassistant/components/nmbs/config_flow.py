@@ -6,7 +6,7 @@ from pyrail import iRail
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_NAME, CONF_TYPE
+from homeassistant.const import CONF_TYPE
 from homeassistant.helpers.selector import (
     BooleanSelector,
     SelectOptionDict,
@@ -36,15 +36,18 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _fetch_stations_choices(self):
         """Fetch the stations."""
 
-        if self.stations is None:
-            self.stations = await self.hass.async_add_executor_job(
+        if "stations" not in self.hass.data[DOMAIN]:
+            stations = await self.hass.async_add_executor_job(
                 self.api_client.get_stations
             )
+            self.hass.data[DOMAIN]["stations"] = stations["station"]
+        self.stations = self.hass.data[DOMAIN]["stations"]
+
         return [
             SelectOptionDict(
                 value=station["standardname"], label=station["standardname"]
             )
-            for station in self.stations["station"]
+            for station in self.stations
         ]
 
     async def async_step_user(
@@ -67,9 +70,7 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             user_input[CONF_TYPE] = "liveboard"
-            config_entry_name = user_input.get(CONF_NAME, "")
-            if config_entry_name == "":
-                config_entry_name = f"{user_input[CONF_STATION_LIVE]}"
+            config_entry_name = f"{user_input[CONF_STATION_LIVE]}"
             return self.async_create_entry(
                 title=config_entry_name,
                 data=user_input,
@@ -104,11 +105,7 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             user_input[CONF_TYPE] = "connection"
-            config_entry_name = user_input.get(CONF_NAME, "")
-            if config_entry_name == "":
-                config_entry_name = (
-                    f"{user_input[CONF_STATION_FROM]}-{user_input[CONF_STATION_TO]}"
-                )
+            config_entry_name = f"Train from {user_input[CONF_STATION_FROM]} to {user_input[CONF_STATION_TO]}"
             return self.async_create_entry(
                 title=config_entry_name,
                 data=user_input,
