@@ -1795,7 +1795,7 @@ python-MotionMount==2.0.0
 python-awair==0.2.4
 
 # homeassistant.components.bsblan
-python-bsblan==0.5.19
+python-bsblan==0.6.1
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.2.18
