@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
+    UnitOfArea,
     UnitOfDataRate,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -27,6 +28,17 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
+
+# Area constants to square meters
+_CM2_TO_M2 = 1e-4  # 1 cm² = 0.0001 m²
+_MM2_TO_M2 = 1e-6  # 1 mm² = 0.000001 m²
+_KM2_TO_M2 = 1e6  # 1 km² = 1,000,000 m²
+_IN2_TO_M2 = 0.00064516  # 1 in² = 0.00064516 m²
+_FT2_TO_M2 = 0.092903  # 1 ft² = 0.092903 m²
+_YD2_TO_M2 = 0.836127  # 1 yd² = 0.836127 m²
+_MI2_TO_M2 = 2.59e6  # 1 mi² = 2,590,000 m²
+_ACRE_TO_M2 = 4046.86  # 1 acre = 4,046.86 m²
+_HECTARE_TO_M2 = 10000  # 1 hectare = 10,000 m²
 
 # Distance conversion constants
 _MM_TO_M = 0.001  # 1 mm = 0.001 m
@@ -140,6 +152,37 @@ class DataRateConverter(BaseUnitConverter):
         UnitOfDataRate.GIBIBYTES_PER_SECOND: 1 / 2**33,
     }
     VALID_UNITS = set(UnitOfDataRate)
+
+
+class AreaConverter(BaseUnitConverter):
+    """Utility to convert area values."""
+
+    UNIT_CLASS = "area"
+    NORMALIZED_UNIT = UnitOfArea.SQUARE_METERS
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfArea.SQUARE_METERS: 1,
+        UnitOfArea.SQUARE_CENTIMETERS: 1 / _CM2_TO_M2,
+        UnitOfArea.SQUARE_MILLIMETERS: 1 / _MM2_TO_M2,
+        UnitOfArea.SQUARE_KILOMETERS: 1 / _KM2_TO_M2,
+        UnitOfArea.SQUARE_INCHES: 1 / _IN2_TO_M2,
+        UnitOfArea.SQUARE_FEET: 1 / _FT2_TO_M2,
+        UnitOfArea.SQUARE_YARDS: 1 / _YD2_TO_M2,
+        UnitOfArea.SQUARE_MILES: 1 / _MI2_TO_M2,
+        UnitOfArea.ACRES: 1 / _ACRE_TO_M2,
+        UnitOfArea.HECTARES: 1 / _HECTARE_TO_M2,
+    }
+    VALID_UNITS = {
+        UnitOfArea.SQUARE_METERS,
+        UnitOfArea.SQUARE_CENTIMETERS,
+        UnitOfArea.SQUARE_MILLIMETERS,
+        UnitOfArea.SQUARE_KILOMETERS,
+        UnitOfArea.SQUARE_INCHES,
+        UnitOfArea.SQUARE_FEET,
+        UnitOfArea.SQUARE_YARDS,
+        UnitOfArea.SQUARE_MILES,
+        UnitOfArea.ACRES,
+        UnitOfArea.HECTARES,
+    }
 
 
 class DistanceConverter(BaseUnitConverter):
