@@ -43,7 +43,7 @@ async def test_user_setup(
         assert mock_bridge.is_running is False
         assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["title"] == "Switcher"
-        assert result2["result"].data == {}
+        assert result2["result"].data == {"username": None, "token": None}
 
         await hass.async_block_till_done()
 

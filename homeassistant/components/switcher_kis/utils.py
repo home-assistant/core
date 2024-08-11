@@ -17,7 +17,7 @@ from .const import DISCOVERY_TIME_SEC, COVER1_ID, COVER2_ID
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_has_devices(hass: HomeAssistant) -> bool:
+async def async_discover_devices() -> dict[str, SwitcherBase]:
     """Discover Switcher devices."""
     _LOGGER.debug("Starting discovery")
     discovered_devices = {}
@@ -36,7 +36,7 @@ async def async_has_devices(hass: HomeAssistant) -> bool:
     await bridge.stop()
 
     _LOGGER.debug("Finished discovery, discovered devices: %s", len(discovered_devices))
-    return len(discovered_devices) > 0
+    return discovered_devices
 
 
 @singleton.singleton("switcher_breeze_remote_manager")

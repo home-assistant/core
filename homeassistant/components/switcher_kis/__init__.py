@@ -12,7 +12,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN
+from .const import CONF_USERNAME, CONF_TOKEN, DOMAIN
 from .coordinator import SwitcherDataUpdateCoordinator
 from .utils import validate_token
 
@@ -54,18 +54,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> 
             device.device_type.hex_rep,
             device.token_needed,
         )
-        token = ""  # Temp
+
         if device.token_needed:
             _LOGGER.info("Found a Switcher device that needs a token")
-            token = "enter_token"  # Temp
-            username = "enter_email"  # Temp
-            token_is_valid = validate_token(username, token)
-            if token_is_valid:
-                _LOGGER.info("Token is valid")
-            else:
-                _LOGGER.info("Token is invalid")
+            if not entry.data.get(CONF_TOKEN):
+                entry.async_start_reauth(hass)
+                return
 
-        coordinator = SwitcherDataUpdateCoordinator(hass, entry, device, token)
+        coordinator = SwitcherDataUpdateCoordinator(hass, entry, device)
         coordinator.async_setup()
         coordinators[device.device_id] = coordinator
 
