@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from homeassistant.auth import InvalidAuthError
-from homeassistant.components.dlna_dms.dms import DeviceConnectionError
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-
+from collections.abc import Mapping
 from typing import Any
 
-from .const import DOMAIN, DATA_DISCOVERY, CONF_USERNAME, CONF_TOKEN
-from .utils import async_discover_devices, validate_token
 import voluptuous as vol
+
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+
+from .const import CONF_TOKEN, CONF_USERNAME, DATA_DISCOVERY, DOMAIN
+from .utils import async_discover_devices
 
 
 class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -56,7 +56,9 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_reauth(self, user_input: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, user_input: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()

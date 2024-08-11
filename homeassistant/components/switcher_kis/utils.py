@@ -7,12 +7,11 @@ import logging
 
 from aioswitcher.api.remotes import SwitcherBreezeRemoteManager
 from aioswitcher.bridge import SwitcherBase, SwitcherBridge
-from aioswitcher.device.tools import validate_token as vt
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import singleton
 
-from .const import DISCOVERY_TIME_SEC, COVER1_ID, COVER2_ID
+from .const import COVER1_ID, COVER2_ID, DISCOVERY_TIME_SEC
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +56,7 @@ def get_circuit_number(id: str | None) -> int:
 
 
 def validate_token(username: str, token: str) -> bool:
-    """Validate token by specifing username and token."""
+    """Validate token by specifying username and token."""
     # should call tools.validate_token(username, token)
     # and return true or false
     # not working because:

@@ -12,9 +12,8 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_USERNAME, CONF_TOKEN, DOMAIN
+from .const import CONF_TOKEN, DOMAIN
 from .coordinator import SwitcherDataUpdateCoordinator
-from .utils import validate_token
 
 PLATFORMS = [
     Platform.BUTTON,

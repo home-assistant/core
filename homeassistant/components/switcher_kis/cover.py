@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Union, cast
+from typing import Any, cast
 
 from aioswitcher.api import SwitcherBaseResponse, SwitcherType2Api
 from aioswitcher.device import DeviceCategory, ShutterDirection, SwitcherShutter
@@ -23,9 +23,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .utils import get_circuit_number
-from .const import COVER1_ID, COVER2_ID, SIGNAL_DEVICE_ADD
+from .const import COVER1_ID, SIGNAL_DEVICE_ADD
 from .coordinator import SwitcherDataUpdateCoordinator
+from .utils import get_circuit_number
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,7 +74,7 @@ class SwitcherCoverEntity(
     def __init__(
         self,
         coordinator: SwitcherDataUpdateCoordinator,
-        cover_id: Union[str, None] = None,
+        cover_id: str | None = None,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
