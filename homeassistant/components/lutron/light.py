@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import logging
 from typing import Any
 
 from pylutron import Output
@@ -19,12 +18,9 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 
 from . import DOMAIN, LutronData
 from .entity import LutronDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -68,24 +64,8 @@ class LutronLight(LutronDevice, LightEntity):
     _prev_brightness: int | None = None
     _attr_name = None
 
-    def __init__(self, area_name, lutron_device, controller) -> None:
-        """Initialize the light."""
-        super().__init__(area_name, lutron_device, controller)
-        self._is_fan = lutron_device.type == "CEILING_FAN_TYPE"
-
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        if self._is_fan:
-            create_issue(
-                self.hass,
-                DOMAIN,
-                "deprecated_light_fan_on",
-                breaks_in_ha_version="2024.8.0",
-                is_fixable=True,
-                is_persistent=True,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_light_fan_on",
-            )
         if flash := kwargs.get(ATTR_FLASH):
             self._lutron_device.flash(0.5 if flash == "short" else 1.5)
         else:
@@ -103,17 +83,6 @@ class LutronLight(LutronDevice, LightEntity):
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        if self._is_fan:
-            create_issue(
-                self.hass,
-                DOMAIN,
-                "deprecated_light_fan_off",
-                breaks_in_ha_version="2024.8.0",
-                is_fixable=True,
-                is_persistent=True,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_light_fan_off",
-            )
         args = {"new_level": 0}
         if ATTR_TRANSITION in kwargs:
             args["fade_time_seconds"] = kwargs[ATTR_TRANSITION]
