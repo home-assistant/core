@@ -17,7 +17,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     data: HomeAssistantBSBLANData = hass.data[DOMAIN][entry.entry_id]
     return {
-        "info": data.info.dict(),
-        "device": data.device.dict(),
-        "state": data.coordinator.data.dict(),
+        "info": data.info.to_dict(),
+        "device": data.device.to_dict(),
+        "state": data.coordinator.data.to_dict(),
     }
