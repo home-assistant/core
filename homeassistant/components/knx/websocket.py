@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Final
 
 import knx_frontend as knx_panel
 import voluptuous as vol
+from xknx.telegram import Telegram
 from xknxproject.exceptions import XknxProjectException
 
 from homeassistant.components import panel_custom, websocket_api
@@ -13,6 +14,7 @@ from homeassistant.components.http import StaticPathConfig
 from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.ulid import ulid_now
 
@@ -28,7 +30,7 @@ from .storage.entity_store_validation import (
     EntityStoreValidationSuccess,
     validate_entity_data,
 )
-from .telegrams import TelegramDict
+from .telegrams import SIGNAL_KNX_TELEGRAM, TelegramDict
 
 if TYPE_CHECKING:
     from . import KNXModule
@@ -152,6 +154,7 @@ async def ws_project_file_process(
     knx: KNXModule = hass.data[DOMAIN]
     try:
         await knx.project.process_project_file(
+            xknx=knx.xknx,
             file_id=msg["file_id"],
             password=msg["password"],
         )
@@ -220,19 +223,19 @@ def ws_subscribe_telegram(
     msg: dict,
 ) -> None:
     """Subscribe to incoming and outgoing KNX telegrams."""
-    knx: KNXModule = hass.data[DOMAIN]
 
     @callback
-    def forward_telegram(telegram: TelegramDict) -> None:
+    def forward_telegram(_telegram: Telegram, telegram_dict: TelegramDict) -> None:
         """Forward telegram to websocket subscription."""
         connection.send_event(
             msg["id"],
-            telegram,
+            telegram_dict,
         )
 
-    connection.subscriptions[msg["id"]] = knx.telegrams.async_listen_telegram(
-        action=forward_telegram,
-        name="KNX GroupMonitor subscription",
+    connection.subscriptions[msg["id"]] = async_dispatcher_connect(
+        hass,
+        signal=SIGNAL_KNX_TELEGRAM,
+        target=forward_telegram,
     )
     connection.send_result(msg["id"])
 

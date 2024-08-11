@@ -1280,6 +1280,7 @@ async def test_master_state_with_template(hass: HomeAssistant) -> None:
     context = Context()
     hass.states.async_set("input_boolean.test", STATE_ON, context=context)
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert hass.states.get("media_player.tv").state == STATE_OFF
     assert events[0].context == context

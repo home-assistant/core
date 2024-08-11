@@ -145,7 +145,13 @@
     },
     "update_entity": {
       "name": "Update entity",
-      "description": "Forces one or more entities to update its data."
+      "description": "Forces one or more entities to update its data.",
+      "fields": {
+        "entity_id": {
+          "name": "Entities to update",
+          "description": "List of entities to force update."
+        }
+      }
     },
     "reload_custom_templates": {
       "name": "Reload custom Jinja2 templates",

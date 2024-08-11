@@ -15,6 +15,7 @@ from .util import (
     GET_INSTALLATION_MOCK,
     GET_INSTALLATIONS_MOCK,
     WS_ID,
+    mock_get_device_config,
     mock_get_device_status,
     mock_get_webserver,
 )
@@ -28,6 +29,10 @@ async def test_form(hass: HomeAssistant) -> None:
             "homeassistant.components.airzone_cloud.async_setup_entry",
             return_value=True,
         ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_device_config",
+            side_effect=mock_get_device_config,
+        ),
         patch(
             "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_device_status",
             side_effect=mock_get_device_status,
@@ -98,6 +103,10 @@ async def test_installations_list_error(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.airzone_cloud.async_setup_entry",
             return_value=True,
+        ),
+        patch(
+            "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_device_config",
+            side_effect=mock_get_device_config,
         ),
         patch(
             "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_device_status",

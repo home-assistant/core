@@ -81,7 +81,7 @@ class AcerSwitch(SwitchEntity):
         write_timeout: int,
     ) -> None:
         """Init of the Acer projector."""
-        self.ser = serial.Serial(
+        self.serial = serial.Serial(
             port=serial_port, timeout=timeout, write_timeout=write_timeout
         )
         self._serial_port = serial_port
@@ -99,16 +99,16 @@ class AcerSwitch(SwitchEntity):
         # was disconnected during runtime.
         # This way the projector can be reconnected and will still work
         try:
-            if not self.ser.is_open:
-                self.ser.open()
-            self.ser.write(msg.encode("utf-8"))
+            if not self.serial.is_open:
+                self.serial.open()
+            self.serial.write(msg.encode("utf-8"))
             # Size is an experience value there is no real limit.
             # AFAIK there is no limit and no end character so we will usually
             # need to wait for timeout
-            ret = self.ser.read_until(size=20).decode("utf-8")
+            ret = self.serial.read_until(size=20).decode("utf-8")
         except serial.SerialException:
             _LOGGER.error("Problem communicating with %s", self._serial_port)
-        self.ser.close()
+        self.serial.close()
         return ret
 
     def _write_read_format(self, msg: str) -> str:

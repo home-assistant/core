@@ -766,7 +766,7 @@ async def test_service_climate_swing_update(
     ("temperature", "result", "do_config"),
     [
         (
-            35,
+            31,
             [0x00],
             {
                 CONF_CLIMATES: [
@@ -781,7 +781,7 @@ async def test_service_climate_swing_update(
             },
         ),
         (
-            36,
+            32,
             [0x00, 0x00],
             {
                 CONF_CLIMATES: [
@@ -796,7 +796,7 @@ async def test_service_climate_swing_update(
             },
         ),
         (
-            37.5,
+            33.5,
             [0x00, 0x00],
             {
                 CONF_CLIMATES: [
@@ -811,7 +811,7 @@ async def test_service_climate_swing_update(
             },
         ),
         (
-            "39",
+            "34",
             [0x00, 0x00, 0x00, 0x00],
             {
                 CONF_CLIMATES: [

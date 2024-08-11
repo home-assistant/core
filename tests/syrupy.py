@@ -137,7 +137,8 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
     @classmethod
     def _serializable_config_entry(cls, data: ConfigEntry) -> SerializableData:
         """Prepare a Home Assistant config entry for serialization."""
-        return ConfigEntrySnapshot(data.as_dict() | {"entry_id": ANY})
+        entry = ConfigEntrySnapshot(data.as_dict() | {"entry_id": ANY})
+        return cls._remove_created_and_modified_at(entry)
 
     @classmethod
     def _serializable_device_registry_entry(
@@ -181,7 +182,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             }
         )
         serialized.pop("categories")
-        return serialized
+        return cls._remove_created_and_modified_at(serialized)
 
     @classmethod
     def _serializable_flow_result(cls, data: FlowResult) -> SerializableData:
