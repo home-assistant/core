@@ -162,9 +162,9 @@ TADO_MODE_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
 HEATING_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
     key="heating",
     translation_key="heating",
-    state_fn=lambda data: data.activity_data_points["heatingPower"]["percentage"],
+    state_fn=lambda data: data.activity_data_points.heating_power.percentage,
     attributes_fn=lambda data: {
-        "time": data.activity_data_points["heatingPower"]["timestamp"]
+        "time": data.activity_data_points.heating_power.timestamp
     },
     native_unit_of_measurement=PERCENTAGE,
     state_class=SensorStateClass.MEASUREMENT,
@@ -173,10 +173,8 @@ AC_ENTITY_DESCRIPTION = TadoSensorEntityDescription(
     key="ac",
     translation_key="ac",
     name="AC",
-    state_fn=lambda data: data.activity_data_points["ac_power"]["value"],
-    attributes_fn=lambda data: {
-        "time": data.activity_data_points["ac_power"]["timestamp"]
-    },
+    state_fn=lambda data: data.activity_data_points.ac_power.value,
+    attributes_fn=lambda data: {"time": data.activity_data_points.ac_power.timestamp},
 )
 
 ZONE_SENSORS = {

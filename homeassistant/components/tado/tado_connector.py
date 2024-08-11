@@ -62,19 +62,21 @@ class TadoConnector:
 
     async def setup(self):
         """Connect to Tado and fetch the zones."""
-        async with Tado(
+        self.tado = Tado(
             username=self._username,
             password=self._password,
             session=async_get_clientsession(self.hass),
-        ) as self.tado:
-            # Load zones and devices
-            self.zones = await self.tado.get_zones()
-            self.devices = await self.tado.get_devices()
-            tado_home_data = await self.tado.get_me()
+        )
+        await self.tado.login()
 
-            tado_home = tado_home_data.homes[0]
-            self.home_id = tado_home.id
-            self.home_name = tado_home.name
+        # Load zones and devices
+        self.zones = await self.tado.get_zones()
+        self.devices = await self.tado.get_devices()
+        tado_home_data = await self.tado.get_me()
+
+        tado_home = tado_home_data.homes[0]
+        self.home_id = tado_home.id
+        self.home_name = tado_home.name
 
     async def get_mobile_devices(self):
         """Return the Tado mobile devices."""
@@ -83,15 +85,11 @@ class TadoConnector:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def update(self):
         """Update the registered zones."""
-        async with Tado(
-            username=self._username,
-            password=self._password,
-            session=async_get_clientsession(self.hass),
-        ) as self.tado:
-            await self.update_devices()
-            await self.update_mobile_devices()
-            await self.update_zones()
-            await self.update_home()
+
+        await self.update_devices()
+        await self.update_mobile_devices()
+        await self.update_zones()
+        await self.update_home()
 
     async def update_mobile_devices(self) -> None:
         """Update the mobile devices."""
@@ -158,8 +156,10 @@ class TadoConnector:
                     INSIDE_TEMPERATURE_MEASUREMENT
                     in device.characteristics.capabilities
                 ):
-                    tmp_device[TEMP_OFFSET] = await self.tado.get_device_info(
-                        device.short_serial_no, TEMP_OFFSET
+                    tmp_device[TEMP_OFFSET] = vars(
+                        await self.tado.get_device_info(
+                            device.short_serial_no, TEMP_OFFSET
+                        )
                     )
             except RuntimeError:
                 _LOGGER.error(
@@ -199,10 +199,7 @@ class TadoConnector:
         """Update the internal data from Tado."""
         _LOGGER.debug("Updating zone %s", zone_id)
         try:
-            # Tado's get zone state seems deprecated
-            # TODO: fix this either in the library or do it here
-            data = await self.tado.get_zone_states()
-            data = data[0].zone_states[str(zone_id)]
+            data = await self.tado.get_zone_state(zone_id)
         except RuntimeError:
             _LOGGER.error("Unable to connect to Tado while updating zone %s", zone_id)
             return

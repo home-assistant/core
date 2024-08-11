@@ -1,7 +1,7 @@
 """Constant values for the Tado component."""
 
 # TODO: this needs to be put in the library
-from python_tado_async.const import (
+from tadoasync.const import (
     CONST_HVAC_COOL,
     CONST_HVAC_DRY,
     CONST_HVAC_FAN,

@@ -99,12 +99,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
     await tadoconnector.update()
 
     # Poll for updates in the background
+    # TODO: add an async update for generic updates
     update_track = async_track_time_interval(
         hass,
         lambda now: tadoconnector.update(),
         SCAN_INTERVAL,
     )
 
+    # TODO: add an async update for mobile devices
     update_mobile_devices = async_track_time_interval(
         hass,
         lambda now: tadoconnector.update_mobile_devices(),

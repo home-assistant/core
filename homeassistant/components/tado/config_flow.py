@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 import requests.exceptions
+import tadoasync
 from tadoasync import Tado
 import voluptuous as vol
 
@@ -135,7 +136,7 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except python_tado_async.exceptions.TadoAuthenticationError:
+            except tadoasync.exceptions.TadoAuthenticationError:
                 errors["base"] = "invalid_auth"
             except NoHomes:
                 errors["base"] = "no_homes"
