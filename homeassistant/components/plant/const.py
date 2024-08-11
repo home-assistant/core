@@ -30,6 +30,7 @@ DEFAULT_CHECK_DAYS = 3
 
 ATTR_PROBLEM = "problem"
 ATTR_SENSORS = "sensors"
+CONF_PICTURE = "picture"
 PROBLEM_NONE = "none"
 ATTR_MAX_BRIGHTNESS_HISTORY = "max_brightness"
 

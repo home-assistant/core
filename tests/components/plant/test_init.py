@@ -42,6 +42,7 @@ GOOD_CONFIG = {
     "min_conductivity": 500,
     "min_temperature": 15,
     "min_brightness": 500,
+    "picture": "/pic_path",
 }
 
 

@@ -50,6 +50,7 @@ from .const import (
     CONF_MIN_CONDUCTIVITY,
     CONF_MIN_MOISTURE,
     CONF_MIN_TEMPERATURE,
+    CONF_PICTURE,
     DEFAULT_CHECK_DAYS,
     DEFAULT_MAX_CONDUCTIVITY,
     DEFAULT_MAX_MOISTURE,
@@ -103,6 +104,7 @@ PLANT_SCHEMA = vol.Schema(
         vol.Optional(CONF_MIN_BRIGHTNESS): cv.positive_int,
         vol.Optional(CONF_MAX_BRIGHTNESS): cv.positive_int,
         vol.Optional(CONF_CHECK_DAYS, default=DEFAULT_CHECK_DAYS): cv.positive_int,
+        vol.Optional(CONF_PICTURE): cv.string,
     }
 )
 
@@ -181,6 +183,9 @@ class Plant(Entity):
         if CONF_CHECK_DAYS in self._config:
             self._conf_check_days = self._config[CONF_CHECK_DAYS]
         self._brightness_history = DailyHistory(self._conf_check_days)
+        self._attr_entity_picture = None
+        if CONF_PICTURE in self._config:
+            self._attr_entity_picture = self._config[CONF_PICTURE]
 
     @callback
     def _state_changed_event(self, event: Event[EventStateChangedData]) -> None:
