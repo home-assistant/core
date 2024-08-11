@@ -71,6 +71,8 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
     """A Trafikverket Data Update Coordinator."""
 
     config_entry: TVTrainConfigEntry
+    from_station: StationInfoModel
+    to_station: StationInfoModel
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Trafikverket coordinator."""
@@ -83,8 +85,6 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
         self._train_api = TrafikverketTrain(
             async_get_clientsession(hass), self.config_entry.data[CONF_API_KEY]
         )
-        self.from_station: StationInfoModel | None = None
-        self.to_station: StationInfoModel | None = None
         self._time: time | None = dt_util.parse_time(self.config_entry.data[CONF_TIME])
         self._weekdays: list[str] = self.config_entry.data[CONF_WEEKDAY]
         self._filter_product: str | None = self.config_entry.options.get(
@@ -110,8 +110,6 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
 
     async def _async_update_data(self) -> TrainData:
         """Fetch data from Trafikverket."""
-        if TYPE_CHECKING:
-            assert self.from_station and self.to_station
 
         when = dt_util.now()
         state: TrainStopModel | None = None
