@@ -15,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -62,7 +60,6 @@ class WolButton(ButtonEntity):
         self._attr_unique_id = dr.format_mac(mac_address)
         self._attr_device_info = dr.DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, self._attr_unique_id)},
-            identifiers={(DOMAIN, self._attr_unique_id)},
             default_manufacturer="Wake on LAN",
             default_name=name,
         )
