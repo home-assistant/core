@@ -499,7 +499,7 @@ async def test_options_flow(
 
     with (
         patch(
-            "homeassistant.components.trafikverket_train.TrafikverketTrain.async_get_train_station",
+            "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_train_station",
         ),
         patch(
             "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_next_train_stops",
