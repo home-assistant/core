@@ -1,0 +1,20 @@
+{
+  "entity": {
+    "device_tracker": {
+      "vessel": {
+        "default": "mdi:ferry"
+      }
+    },
+    "sensor": {
+      "course": {
+        "default": "mdi:compass"
+      },
+      "heading": {
+        "default": "mdi:angle-acute"
+      },
+      "status": {
+        "default": "mdi:check-decagram"
+      }
+    }
+  }
+}
