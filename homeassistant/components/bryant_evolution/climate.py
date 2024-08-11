@@ -40,6 +40,9 @@ async def async_setup_entry(
         system_id = sz[0]
         zone_id = sz[1]
         climate = BryantEvolutionClimate(
+            await BryantEvolutionLocalClient.get_client(
+                system_id, zone_id, config_entry.data[CONF_FILENAME]
+            ),
             config_entry.runtime_data,  # coordinator
             system_id,
             zone_id,
@@ -79,6 +82,7 @@ class BryantEvolutionClimate(CoordinatorEntity[EvolutionCoordinator], ClimateEnt
 
     def __init__(
         self,
+        client: BryantEvolutionLocalClient,
         coordinator: EvolutionCoordinator,
         system_id: int,
         zone_id: int,
@@ -87,6 +91,7 @@ class BryantEvolutionClimate(CoordinatorEntity[EvolutionCoordinator], ClimateEnt
     ) -> None:
         """Initialize an entity from parts."""
         super().__init__(coordinator)
+        self._client = client
         self.system_id = system_id
         self.zone_id = zone_id
         self.tty = tty
@@ -119,12 +124,6 @@ class BryantEvolutionClimate(CoordinatorEntity[EvolutionCoordinator], ClimateEnt
             self.system_id, self.zone_id
         )
 
-    async def _client(self) -> BryantEvolutionLocalClient:
-        """Return a client to control our (system, zone)."""
-        return await BryantEvolutionLocalClient.get_client(
-            self.system_id, self.zone_id, self.tty
-        )
-
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -135,8 +134,7 @@ class BryantEvolutionClimate(CoordinatorEntity[EvolutionCoordinator], ClimateEnt
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.HEAT_COOL:
             hvac_mode = HVACMode.AUTO
-        client = await self._client()
-        if not await client.set_hvac_mode(hvac_mode):
+        if not await self._client.set_hvac_mode(hvac_mode):
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="failed_to_set_hvac_mode"
             )
@@ -146,10 +144,9 @@ class BryantEvolutionClimate(CoordinatorEntity[EvolutionCoordinator], ClimateEnt
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        client = await self._client()
         if kwargs.get("target_temp_high"):
             temp = int(kwargs["target_temp_high"])
-            if not await client.set_cooling_setpoint(temp):
+            if not await self._client.set_cooling_setpoint(temp):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN, translation_key="failed_to_set_clsp"
                 )
@@ -157,7 +154,7 @@ class BryantEvolutionClimate(CoordinatorEntity[EvolutionCoordinator], ClimateEnt
 
         if kwargs.get("target_temp_low"):
             temp = int(kwargs["target_temp_low"])
-            if not await client.set_heating_setpoint(temp):
+            if not await self._client.set_heating_setpoint(temp):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN, translation_key="failed_to_set_htsp"
                 )
@@ -166,9 +163,9 @@ class BryantEvolutionClimate(CoordinatorEntity[EvolutionCoordinator], ClimateEnt
         if kwargs.get("temperature"):
             temp = int(kwargs["temperature"])
             fn = (
-                client.set_heating_setpoint
+                self._client.set_heating_setpoint
                 if self.hvac_mode == HVACMode.HEAT
-                else client.set_cooling_setpoint
+                else self._client.set_cooling_setpoint
             )
             if not await fn(temp):
                 raise HomeAssistantError(
@@ -183,8 +180,7 @@ class BryantEvolutionClimate(CoordinatorEntity[EvolutionCoordinator], ClimateEnt
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        client = await self._client()
-        if not await client.set_fan_mode(fan_mode):
+        if not await self._client.set_fan_mode(fan_mode):
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="failed_to_set_fan_mode"
             )
