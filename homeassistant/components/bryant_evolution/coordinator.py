@@ -1,5 +1,6 @@
 """DataUpdateCoordinator for the bryant_evolution module."""
 
+from collections import defaultdict
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -119,15 +120,9 @@ class EvolutionState:
 
 
 async def _read_evolution_state(
-    system_zones: list[tuple[int, int]], tty: str
+    system_to_zones: dict[int, list[int]], tty: str
 ) -> EvolutionState:
     """Read the state of the given systems and zones from the device at tty."""
-
-    # Convert the input list of (system_id, zone_id) to a dict[system_id, list[zone_id]]
-    system_to_zones: dict[int, list[int]] = {}
-    for system_id, zone_id in system_zones:
-        system_to_zones.setdefault(system_id, []).append(zone_id)
-
     # Read each system's state.
     system_states: dict[int, _SystemState] = {}
     for sys_id, zone_ids in system_to_zones.items():
@@ -183,9 +178,11 @@ class EvolutionCoordinator(DataUpdateCoordinator[EvolutionState]):
             name=f"Bryant Evolution at {tty}",
             update_interval=timedelta(minutes=1),
             update_method=lambda: _read_evolution_state(
-                self.system_zone_tuples, self.tty
+                self._system_to_zones, self.tty
             ),
             always_update=False,
         )
-        self.system_zone_tuples = system_zones
+        self._system_to_zones: defaultdict[int, list[int]] = defaultdict(list)
+        for system_id, zone_id in system_zones:
+            self._system_to_zones[system_id].append(zone_id)
         self.tty = tty

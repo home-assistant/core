@@ -92,9 +92,9 @@ class BryantEvolutionClimate(CoordinatorEntity[EvolutionCoordinator], ClimateEnt
         """Initialize an entity from parts."""
         super().__init__(coordinator)
         self._client = client
-        self.system_id = system_id
-        self.zone_id = zone_id
-        self.tty = tty
+        self._system_id = system_id
+        self._zone_id = zone_id
+        self._tty = tty
         self._attr_name = None
         self._attr_unique_id = names.zone_entity_uid(sam_uid, system_id, zone_id)
         self._attr_device_info = DeviceInfo(
@@ -108,20 +108,22 @@ class BryantEvolutionClimate(CoordinatorEntity[EvolutionCoordinator], ClimateEnt
     def _set_attrs_from_coordinator(self) -> None:
         # Propagate some parameters that are really system-level, not zone-level,
         # but that the climate entity needs.
-        self._attr_fan_mode = self.coordinator.data.read_fan_mode(self.system_id)
-        self._attr_hvac_mode = self.coordinator.data.read_hvac_mode(self.system_id)
+        self._attr_fan_mode = self.coordinator.data.read_fan_mode(self._system_id)
+        self._attr_hvac_mode = self.coordinator.data.read_hvac_mode(self._system_id)
 
         # Read the zone-level parameters.
         self._attr_current_temperature = self.coordinator.data.read_current_temperature(
-            self.system_id, self.zone_id
+            self._system_id, self._zone_id
         )
         (
             self._attr_target_temperature,
             self._attr_target_temperature_low,
             self._attr_target_temperature_high,
-        ) = self.coordinator.data.read_target_temperatures(self.system_id, self.zone_id)
+        ) = self.coordinator.data.read_target_temperatures(
+            self._system_id, self._zone_id
+        )
         self._attr_hvac_action = self.coordinator.data.read_hvac_action(
-            self.system_id, self.zone_id
+            self._system_id, self._zone_id
         )
 
     @callback
