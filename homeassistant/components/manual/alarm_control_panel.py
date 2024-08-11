@@ -422,10 +422,10 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         await super().async_added_to_hass()
         if state := await self.async_get_last_state():
             self._state_ts = state.last_updated
-            if get_state := state.attributes.get(ATTR_NEXT_STATE):
+            if next_state := state.attributes.get(ATTR_NEXT_STATE):
                 # If in arming or pending state we record the transition,
                 # not the current state
-                self._state = get_state
+                self._state = next_state
             else:
                 self._state = state.state
 
