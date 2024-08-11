@@ -620,7 +620,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.ILLUMINANCE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.IRRADIANCE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.MOISTURE: {SensorStateClass.MEASUREMENT},
-    SensorDeviceClass.MONETARY: {SensorStateClass.MEASUREMENT, SensorStateClass.TOTAL},
+    SensorDeviceClass.MONETARY: {SensorStateClass.TOTAL},
     SensorDeviceClass.NITROGEN_DIOXIDE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.NITROGEN_MONOXIDE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.NITROUS_OXIDE: {SensorStateClass.MEASUREMENT},
