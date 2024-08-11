@@ -87,16 +87,14 @@ async def test_setup_host(hass: HomeAssistant, device, device2, main_zone) -> No
 
 
 @pytest.mark.parametrize(
-    ("error", "method"),
+    ("error"),
     [
-        (AttributeError, "Attribute_error"),
-        (ValueError, "value_error"),
-        (UnicodeDecodeError("", b"", 1, 0, ""), "Unicode_Decode_error"),
+        AttributeError,
+        ValueError,
+        UnicodeDecodeError("", b"", 1, 0, ""),
     ],
 )
-async def test_setup_find_errors(
-    hass: HomeAssistant, device, main_zone, error, method
-) -> None:
+async def test_setup_find_errors(hass: HomeAssistant, device, main_zone, error) -> None:
     """Test set up integration encountering an Error."""
 
     with patch("rxv.find", side_effect=error):
