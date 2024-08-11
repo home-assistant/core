@@ -8,6 +8,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
+    PLATFORM_SCHEMA as ALARM_CONTROL_PANEL_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
     CodeFormat,
@@ -119,49 +120,51 @@ def _state_schema(state: str) -> vol.Schema:
 
 PLATFORM_SCHEMA = vol.Schema(
     vol.All(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Exclusive(CONF_CODE, "code validation"): cv.string,
-            vol.Exclusive(CONF_CODE_TEMPLATE, "code validation"): cv.template,
-            vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
-            vol.Optional(CONF_DELAY_TIME, default=DEFAULT_DELAY_TIME): vol.All(
-                cv.time_period, cv.positive_timedelta
-            ),
-            vol.Optional(CONF_ARMING_TIME, default=DEFAULT_ARMING_TIME): vol.All(
-                cv.time_period, cv.positive_timedelta
-            ),
-            vol.Optional(CONF_TRIGGER_TIME, default=DEFAULT_TRIGGER_TIME): vol.All(
-                cv.time_period, cv.positive_timedelta
-            ),
-            vol.Optional(
-                CONF_DISARM_AFTER_TRIGGER, default=DEFAULT_DISARM_AFTER_TRIGGER
-            ): cv.boolean,
-            vol.Optional(CONF_ARMING_STATES, default=SUPPORTED_ARMING_STATES): vol.All(
-                cv.ensure_list, [vol.In(SUPPORTED_ARMING_STATES)]
-            ),
-            vol.Optional(STATE_ALARM_ARMED_AWAY, default={}): _state_schema(
-                STATE_ALARM_ARMED_AWAY
-            ),
-            vol.Optional(STATE_ALARM_ARMED_HOME, default={}): _state_schema(
-                STATE_ALARM_ARMED_HOME
-            ),
-            vol.Optional(STATE_ALARM_ARMED_NIGHT, default={}): _state_schema(
-                STATE_ALARM_ARMED_NIGHT
-            ),
-            vol.Optional(STATE_ALARM_ARMED_VACATION, default={}): _state_schema(
-                STATE_ALARM_ARMED_VACATION
-            ),
-            vol.Optional(STATE_ALARM_ARMED_CUSTOM_BYPASS, default={}): _state_schema(
-                STATE_ALARM_ARMED_CUSTOM_BYPASS
-            ),
-            vol.Optional(STATE_ALARM_DISARMED, default={}): _state_schema(
-                STATE_ALARM_DISARMED
-            ),
-            vol.Optional(STATE_ALARM_TRIGGERED, default={}): _state_schema(
-                STATE_ALARM_TRIGGERED
-            ),
-        },
+        ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
+            {
+                vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
+                vol.Optional(CONF_UNIQUE_ID): cv.string,
+                vol.Exclusive(CONF_CODE, "code validation"): cv.string,
+                vol.Exclusive(CONF_CODE_TEMPLATE, "code validation"): cv.template,
+                vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
+                vol.Optional(CONF_DELAY_TIME, default=DEFAULT_DELAY_TIME): vol.All(
+                    cv.time_period, cv.positive_timedelta
+                ),
+                vol.Optional(CONF_ARMING_TIME, default=DEFAULT_ARMING_TIME): vol.All(
+                    cv.time_period, cv.positive_timedelta
+                ),
+                vol.Optional(CONF_TRIGGER_TIME, default=DEFAULT_TRIGGER_TIME): vol.All(
+                    cv.time_period, cv.positive_timedelta
+                ),
+                vol.Optional(
+                    CONF_DISARM_AFTER_TRIGGER, default=DEFAULT_DISARM_AFTER_TRIGGER
+                ): cv.boolean,
+                vol.Optional(
+                    CONF_ARMING_STATES, default=SUPPORTED_ARMING_STATES
+                ): vol.All(cv.ensure_list, [vol.In(SUPPORTED_ARMING_STATES)]),
+                vol.Optional(STATE_ALARM_ARMED_AWAY, default={}): _state_schema(
+                    STATE_ALARM_ARMED_AWAY
+                ),
+                vol.Optional(STATE_ALARM_ARMED_HOME, default={}): _state_schema(
+                    STATE_ALARM_ARMED_HOME
+                ),
+                vol.Optional(STATE_ALARM_ARMED_NIGHT, default={}): _state_schema(
+                    STATE_ALARM_ARMED_NIGHT
+                ),
+                vol.Optional(STATE_ALARM_ARMED_VACATION, default={}): _state_schema(
+                    STATE_ALARM_ARMED_VACATION
+                ),
+                vol.Optional(
+                    STATE_ALARM_ARMED_CUSTOM_BYPASS, default={}
+                ): _state_schema(STATE_ALARM_ARMED_CUSTOM_BYPASS),
+                vol.Optional(STATE_ALARM_DISARMED, default={}): _state_schema(
+                    STATE_ALARM_DISARMED
+                ),
+                vol.Optional(STATE_ALARM_TRIGGERED, default={}): _state_schema(
+                    STATE_ALARM_TRIGGERED
+                ),
+            },
+        ),
         _state_validator,
     )
 )
