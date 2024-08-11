@@ -4,11 +4,13 @@
   "bluetooth": [
     {
       "local_name": "Luba-*",
-      "service_uuid": "0000ffff-0000-1000-8000-00805f9b34fb"
+      "service_uuid": "0000ffff-0000-1000-8000-00805f9b34fb",
+      "connectable": true
     },
     {
       "local_name": "Yuka-*",
-      "service_uuid": "0000ffff-0000-1000-8000-00805f9b34fb"
+      "service_uuid": "0000ffff-0000-1000-8000-00805f9b34fb",
+      "connectable": true
     }
   ],
   "codeowners": ["@mikey0000"],
@@ -16,6 +18,6 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/mammotion",
   "integration_type": "device",
-  "iot_class": "local_polling",
-  "requirements": ["pyluba==0.0.12"]
+  "iot_class": "local_push",
+  "requirements": ["pyluba==0.0.13"]
 }

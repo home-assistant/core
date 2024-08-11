@@ -513,11 +513,13 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "LD-0003",
     },
     {
+	"connectable": True,
         "domain": "mammotion",
         "local_name": "Luba-*",
         "service_uuid": "0000ffff-0000-1000-8000-00805f9b34fb",
     },
     {
+        "connectable": True,
         "domain": "mammotion",
         "local_name": "Yuka-*",
         "service_uuid": "0000ffff-0000-1000-8000-00805f9b34fb",
