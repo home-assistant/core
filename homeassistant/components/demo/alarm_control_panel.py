@@ -33,7 +33,6 @@ async def async_setup_entry(
             ManualAlarm(
                 hass,
                 "Security",
-                "demo_alarm_control_panel",
                 "1234",
                 None,
                 True,

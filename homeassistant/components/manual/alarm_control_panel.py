@@ -20,7 +20,6 @@ from homeassistant.const import (
     CONF_DISARM_AFTER_TRIGGER,
     CONF_NAME,
     CONF_TRIGGER_TIME,
-    CONF_UNIQUE_ID,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
@@ -181,7 +180,6 @@ async def async_setup_platform(
             ManualAlarm(
                 hass,
                 config[CONF_NAME],
-                config.get(CONF_UNIQUE_ID),
                 config.get(CONF_CODE),
                 config.get(CONF_CODE_TEMPLATE),
                 config[CONF_CODE_ARM_REQUIRED],
@@ -208,7 +206,6 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         self,
         hass: HomeAssistant,
         name: str,
-        unique_id: str | None,
         code: str | None,
         code_template: Template | None,
         code_arm_required: bool,
@@ -219,7 +216,6 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         self._state = STATE_ALARM_DISARMED
         self._hass = hass
         self._attr_name = name
-        self._attr_unique_id = unique_id
         if code_template:
             self._code = code_template
         else:
