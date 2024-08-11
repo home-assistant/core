@@ -69,7 +69,7 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     ATTR_ICON: channel.snippet.thumbnails.get_highest_quality().url,
                     ATTR_LATEST_VIDEO: latest_video,
                     ATTR_SUBSCRIBER_COUNT: channel.statistics.subscriber_count,
-                    ATTR_TOTAL_VIEWS: channel.statistics.view_count
+                    ATTR_TOTAL_VIEWS: channel.statistics.view_count,
                 }
         except UnauthorizedError as err:
             raise ConfigEntryAuthFailed from err

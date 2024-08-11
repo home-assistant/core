@@ -67,7 +67,7 @@ SENSOR_TYPES = [
         value_fn=lambda channel: channel[ATTR_TOTAL_VIEWS],
         entity_picture_fn=lambda channel: channel[ATTR_ICON],
         attributes_fn=None,
-    )
+    ),
 ]
 
 
