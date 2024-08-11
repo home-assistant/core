@@ -121,7 +121,7 @@ async def test_template_variables(
     ("tool_args", "expected_tool_args"),
     [
         ({"param1": "test_value"}, {"param1": "test_value"}),
-        ({"param1": 2}, {"param1": 2}),
+        ({"param2": 2}, {"param2": 2}),
         (
             {"param1": "test_value", "floor": ""},
             {"param1": "test_value"},  # Omit empty arguments
@@ -153,7 +153,8 @@ async def test_function_call(
     mock_tool.name = "test_tool"
     mock_tool.description = "Test function"
     mock_tool.parameters = vol.Schema(
-        {vol.Optional("param1", description="Test parameters"): str}
+        {vol.Optional("param1", description="Test parameters"): str},
+        extra=vol.ALLOW_EXTRA,
     )
     mock_tool.async_call.return_value = "Test response"
 
