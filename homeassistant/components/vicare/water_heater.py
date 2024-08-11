@@ -119,6 +119,7 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
         self._current_mode = None
         self._attr_translation_key = translation_key
 
+
     def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
         try:
@@ -130,6 +131,16 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attr_target_temperature = (
                     self._api.getDomesticHotWaterDesiredTemperature()
+                )
+
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._attr_target_temperature_low = (
+                    self._api.getDomesticHotWaterMinTemperature()
+                )
+
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._attr_target_temperature_high = (
+                    self._api.getDomesticHotWaterMaxTemperature()
                 )
 
             with suppress(PyViCareNotSupportedFeatureError):
