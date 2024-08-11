@@ -7,7 +7,7 @@ from typing import Any
 from py_nextbus import NextBusClient
 from py_nextbus.client import NextBusFormatError, NextBusHTTPError
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -51,6 +51,10 @@ class NextBusDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from NextBus."""
         self.logger.debug("Updating data from API. Routes: %s", str(self._route_stops))
+
+        if self.hass.state is not CoreState.running:
+            self.logger.debug("hass.state is %s, skipping update", self.hass.state)
+            return {}
 
         def _update_data() -> dict:
             """Fetch data from NextBus."""
