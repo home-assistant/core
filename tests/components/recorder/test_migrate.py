@@ -996,17 +996,19 @@ def test_restore_foreign_key_constraints_with_integrity_error(
                 session_maker, engine, table, column
             )
 
-    # Add a row violating the constraints
+    # Add rows violating the constraints
     with Session(engine) as session:
         for _, column, _, _, table_class in constraints:
             session.add(table_class(**{column: 123}))
             session.add(table_class())
-            session.commit()
+        # Insert a States row referencing the row with an invalid foreign reference
+        session.add(States(old_state_id=1))
+        session.commit()
 
-    # Check we could insert both rows
+    # Check we could insert the rows
     with Session(engine) as session:
-        for _, _, _, _, table_class in constraints:
-            assert session.query(table_class).count() == 2
+        assert session.query(Events).count() == 2
+        assert session.query(States).count() == 3
 
     # Restore constraints
     to_restore = [
@@ -1017,10 +1019,10 @@ def test_restore_foreign_key_constraints_with_integrity_error(
         session_maker = Mock(return_value=session)
         migration._restore_foreign_key_constraints(session_maker, engine, to_restore)
 
-    # Check the violating row has been deleted
+    # Check the violating row has been deleted from the Events table
     with Session(engine) as session:
-        for _, _, _, _, table_class in constraints:
-            assert session.query(table_class).count() == 1
+        assert session.query(Events).count() == 1
+        assert session.query(States).count() == 3
 
     engine.dispose()
 

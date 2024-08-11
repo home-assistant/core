@@ -725,6 +725,30 @@ def _delete_foreign_key_violations(
     """Remove rows which violate the constraints."""
     if foreign_table is None:
         return
+
+    if table == foreign_table:
+        # In case of a foreign reference to the same table, we set invalid
+        # references to NULL instead of deleting as deleting rows may
+        # cause additional invalid references to be created. This is to handle
+        # old_state_id referencing a missing state.
+        with session_scope(session=session_maker()) as session:
+            # The subquery (SELECT {foreign_column} from {foreign_table}) is
+            # to be compatible with old MySQL versions which do not allow
+            # referencing the table being updated in the WHERE clause.
+            session.execute(
+                text(
+                    f"UPDATE {table} "  # noqa: S608
+                    f"SET {column} = NULL"
+                    " WHERE ("
+                    f" {table}.{column} IS NOT NULL AND"
+                    "  NOT EXISTS"
+                    "  (SELECT 1 "
+                    f"   FROM  (SELECT {foreign_column} from {foreign_table}) AS t2"
+                    f"   WHERE t2.{foreign_column} = {table}.{column}));"
+                )
+            )
+        return
+
     with session_scope(session=session_maker()) as session:
         session.execute(
             # We don't use an alias for the table we're deleting from,
@@ -732,15 +756,13 @@ def _delete_foreign_key_violations(
             # MariaDB 11.6 and is not supported by MySQL. Those engines
             # instead support the from `DELETE t1 from table AS t1` which
             # is not supported by PostgreSQL and undocumented for MariaDB.
-            # The subquery (SELECT {foreign_column} from {foreign_table}) is
-            # to be compatible with old MySQL versions.
             text(
                 f"DELETE FROM {table}"  # noqa: S608
                 " WHERE ("
                 f" {table}.{column} IS NOT NULL AND"
                 "  NOT EXISTS"
                 "    (SELECT 1 "
-                f"     FROM  (SELECT {foreign_column} from {foreign_table}) AS t2"
+                f"     FROM {foreign_table} AS t2"
                 f"     WHERE t2.{foreign_column} = {table}.{column}));"
             )
         )
