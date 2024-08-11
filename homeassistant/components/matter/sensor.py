@@ -462,4 +462,16 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(clusters.Switch.Attributes.CurrentPosition,),
         allow_multi=True,  # also used for event entity
     ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EveWeatherPressure",
+            device_class=SensorDeviceClass.PRESSURE,
+            native_unit_of_measurement=UnitOfPressure.HPA,
+            suggested_display_precision=0,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(EveCluster.Attributes.Pressure),
+    ),
 ]
