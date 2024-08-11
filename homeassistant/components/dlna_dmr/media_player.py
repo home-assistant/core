@@ -7,7 +7,7 @@ from collections.abc import Awaitable, Callable, Coroutine, Sequence
 import contextlib
 from datetime import datetime, timedelta
 import functools
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from async_upnp_client.client import UpnpService, UpnpStateVariable
 from async_upnp_client.const import NotificationSubType
@@ -52,11 +52,6 @@ from .data import EventListenAddr, get_domain_data
 
 PARALLEL_UPDATES = 0
 
-_DlnaDmrEntityT = TypeVar("_DlnaDmrEntityT", bound="DlnaDmrEntity")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
-
-
 _TRANSPORT_STATE_TO_MEDIA_PLAYER_STATE = {
     TransportState.PLAYING: MediaPlayerState.PLAYING,
     TransportState.TRANSITIONING: MediaPlayerState.PLAYING,
@@ -68,7 +63,7 @@ _TRANSPORT_STATE_TO_MEDIA_PLAYER_STATE = {
 }
 
 
-def catch_request_errors(
+def catch_request_errors[_DlnaDmrEntityT: DlnaDmrEntity, **_P, _R](
     func: Callable[Concatenate[_DlnaDmrEntityT, _P], Awaitable[_R]],
 ) -> Callable[Concatenate[_DlnaDmrEntityT, _P], Coroutine[Any, Any, _R | None]]:
     """Catch UpnpError errors."""
@@ -530,8 +525,12 @@ class DlnaDmrEntity(MediaPlayerEntity):
                     TransportState.PAUSED_PLAYBACK,
                 ):
                     force_refresh = True
+                    break
 
-        self.async_schedule_update_ha_state(force_refresh)
+        if force_refresh:
+            self.async_schedule_update_ha_state(force_refresh)
+        else:
+            self.async_write_ha_state()
 
     @property
     def available(self) -> bool:

@@ -12,7 +12,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .const import DOMAIN, LOGGER, PLATFORMS
 from .coordinator import PlugwiseDataUpdateCoordinator
 
-PlugwiseConfigEntry = ConfigEntry[PlugwiseDataUpdateCoordinator]
+type PlugwiseConfigEntry = ConfigEntry[PlugwiseDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) -> bool:

@@ -1,13 +1,14 @@
 """The sensor tests for the Airzone Cloud platform."""
 
+import pytest
+
 from homeassistant.core import HomeAssistant
 
 from .util import async_init_integration
 
 
-async def test_airzone_create_sensors(
-    hass: HomeAssistant, entity_registry_enabled_by_default: None
-) -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_airzone_create_sensors(hass: HomeAssistant) -> None:
     """Test creation of sensors."""
 
     await async_init_integration(hass)
@@ -20,8 +21,11 @@ async def test_airzone_create_sensors(
     assert state.state == "20.0"
 
     # WebServers
-    state = hass.states.get("sensor.webserver_11_22_33_44_55_66_signal_strength")
-    assert state.state == "-56"
+    state = hass.states.get("sensor.webserver_11_22_33_44_55_66_cpu_usage")
+    assert state.state == "32"
+
+    state = hass.states.get("sensor.webserver_11_22_33_44_55_66_free_memory")
+    assert state.state == "42616"
 
     state = hass.states.get("sensor.webserver_11_22_33_44_55_67_signal_strength")
     assert state.state == "-77"
@@ -29,6 +33,9 @@ async def test_airzone_create_sensors(
     # Zones
     state = hass.states.get("sensor.dormitorio_air_quality_index")
     assert state.state == "1"
+
+    state = hass.states.get("sensor.dormitorio_battery")
+    assert state.state == "54"
 
     state = hass.states.get("sensor.dormitorio_pm1")
     assert state.state == "3"
@@ -38,6 +45,9 @@ async def test_airzone_create_sensors(
 
     state = hass.states.get("sensor.dormitorio_pm10")
     assert state.state == "3"
+
+    state = hass.states.get("sensor.dormitorio_signal_percentage")
+    assert state.state == "76"
 
     state = hass.states.get("sensor.dormitorio_temperature")
     assert state.state == "25.0"

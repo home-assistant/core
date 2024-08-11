@@ -58,7 +58,7 @@ def async_get_client_by_device_entry(
     for config_entry_id in device.config_entries:
         entry = hass.config_entries.async_get_entry(config_entry_id)
         if entry and entry.domain == DOMAIN and entry.state is ConfigEntryState.LOADED:
-            return entry.runtime_data
+            return entry.runtime_data.bridge
 
     raise ValueError(
         f"Device {device.id} is not from an existing {DOMAIN} config entry"

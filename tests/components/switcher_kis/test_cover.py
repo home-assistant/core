@@ -31,7 +31,9 @@ ENTITY_ID = f"{COVER_DOMAIN}.{slugify(DEVICE.name)}"
 
 
 @pytest.mark.parametrize("mock_bridge", [[DEVICE]], indirect=True)
-async def test_cover(hass: HomeAssistant, mock_bridge, mock_api, monkeypatch) -> None:
+async def test_cover(
+    hass: HomeAssistant, mock_bridge, mock_api, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test cover services."""
     await init_integration(hass)
     assert mock_bridge
@@ -103,7 +105,7 @@ async def test_cover(hass: HomeAssistant, mock_bridge, mock_api, monkeypatch) ->
 
     # Test stop
     with patch(
-        "homeassistant.components.switcher_kis.cover.SwitcherType2Api.stop"
+        "homeassistant.components.switcher_kis.cover.SwitcherType2Api.stop_shutter"
     ) as mock_control_device:
         await hass.services.async_call(
             COVER_DOMAIN,

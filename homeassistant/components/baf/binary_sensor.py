@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BAFConfigEntry
-from .entity import BAFEntity
+from .entity import BAFDescriptionEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -45,27 +45,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up BAF binary sensors."""
     device = entry.runtime_data
-    sensors_descriptions: list[BAFBinarySensorDescription] = []
     if device.has_occupancy:
-        sensors_descriptions.extend(OCCUPANCY_SENSORS)
-    async_add_entities(
-        BAFBinarySensor(device, description) for description in sensors_descriptions
-    )
+        async_add_entities(
+            BAFBinarySensor(device, description) for description in OCCUPANCY_SENSORS
+        )
 
 
-class BAFBinarySensor(BAFEntity, BinarySensorEntity):
+class BAFBinarySensor(BAFDescriptionEntity, BinarySensorEntity):
     """BAF binary sensor."""
 
     entity_description: BAFBinarySensorDescription
 
-    def __init__(self, device: Device, description: BAFBinarySensorDescription) -> None:
-        """Initialize the entity."""
-        self.entity_description = description
-        super().__init__(device)
-        self._attr_unique_id = f"{self._device.mac_address}-{description.key}"
-
     @callback
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
-        description = self.entity_description
-        self._attr_is_on = description.value_fn(self._device)
+        self._attr_is_on = self.entity_description.value_fn(self._device)

@@ -87,7 +87,7 @@ async def validate_input(
             when = datetime.combine(
                 departure_day,
                 _time,
-                dt_util.get_time_zone(hass.config.time_zone),
+                dt_util.get_default_time_zone(),
             )
 
     try:

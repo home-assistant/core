@@ -15,12 +15,12 @@ from gps3.agps3threaded import (
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -37,6 +37,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import GPSDConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,7 +71,7 @@ SENSOR_TYPES: tuple[GpsdSensorDescription, ...] = (
     ),
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
@@ -81,15 +82,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: GPSDConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the GPSD component."""
     async_add_entities(
         [
             GpsdSensor(
-                config_entry.data[CONF_HOST],
-                config_entry.data[CONF_PORT],
+                config_entry.runtime_data,
                 config_entry.entry_id,
                 description,
             )
@@ -135,8 +135,7 @@ class GpsdSensor(SensorEntity):
 
     def __init__(
         self,
-        host: str,
-        port: int,
+        agps_thread: AGPS3mechanism,
         unique_id: str,
         description: GpsdSensorDescription,
     ) -> None:
@@ -148,9 +147,7 @@ class GpsdSensor(SensorEntity):
         )
         self._attr_unique_id = f"{unique_id}-{self.entity_description.key}"
 
-        self.agps_thread = AGPS3mechanism()
-        self.agps_thread.stream_data(host=host, port=port)
-        self.agps_thread.run_thread()
+        self.agps_thread = agps_thread
 
     @property
     def native_value(self) -> str | None:

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from homeassistant.components.ruuvitag_ble.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
@@ -13,7 +15,8 @@ from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 
-async def test_sensors(enable_bluetooth: None, hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_sensors(hass: HomeAssistant) -> None:
     """Test the RuuviTag BLE sensors."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id=RUUVITAG_SERVICE_INFO.address)
     entry.add_to_hass(hass)
@@ -29,12 +32,12 @@ async def test_sensors(enable_bluetooth: None, hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) >= 4
 
-    for sensor, value, unit, state_class in [
+    for sensor, value, unit, state_class in (
         ("temperature", "7.2", "°C", "measurement"),
         ("humidity", "61.84", "%", "measurement"),
         ("pressure", "1013.54", "hPa", "measurement"),
         ("voltage", "2395", "mV", "measurement"),
-    ]:
+    ):
         state = hass.states.get(f"sensor.{CONFIGURED_PREFIX}_{sensor}")
         assert state is not None
         assert state.state == value

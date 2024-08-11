@@ -28,9 +28,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
+from . import _generate_mock_feed_entry
+from .conftest import URL
+
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.geo_json_events import _generate_mock_feed_entry
-from tests.components.geo_json_events.conftest import URL
 
 CONFIG_LEGACY = {
     GEO_LOCATION_DOMAIN: [

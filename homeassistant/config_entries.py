@@ -15,6 +15,7 @@ from collections.abc import (
 )
 from contextvars import ContextVar
 from copy import deepcopy
+from datetime import datetime
 from enum import Enum, StrEnum
 import functools
 from functools import cached_property
@@ -31,7 +32,7 @@ from .components import persistent_notification
 from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
 from .core import (
     CALLBACK_TYPE,
-    DOMAIN as HA_DOMAIN,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
     Event,
     HassJob,
@@ -66,9 +67,10 @@ from .setup import (
     async_setup_component,
     async_start_setup,
 )
-from .util import uuid as uuid_util
+from .util import ulid as ulid_util
 from .util.async_ import create_eager_task
 from .util.decorator import Registry
+from .util.dt import utc_from_timestamp, utcnow
 from .util.enum import try_parse_enum
 
 if TYPE_CHECKING:
@@ -118,14 +120,13 @@ HANDLERS: Registry[str, type[ConfigFlow]] = Registry()
 
 STORAGE_KEY = "core.config_entries"
 STORAGE_VERSION = 1
-STORAGE_VERSION_MINOR = 2
+STORAGE_VERSION_MINOR = 3
 
 SAVE_DELAY = 1
 
 DISCOVERY_COOLDOWN = 1
 
 _DataT = TypeVar("_DataT", default=Any)
-_R = TypeVar("_R")
 
 
 class ConfigEntryState(Enum):
@@ -238,7 +239,9 @@ class OperationNotAllowed(ConfigError):
     """Raised when a config entry operation is not allowed."""
 
 
-UpdateListenerType = Callable[[HomeAssistant, "ConfigEntry"], Coroutine[Any, Any, None]]
+type UpdateListenerType = Callable[
+    [HomeAssistant, ConfigEntry], Coroutine[Any, Any, None]
+]
 
 FROZEN_CONFIG_ENTRY_ATTRS = {
     "entry_id",
@@ -302,15 +305,19 @@ class ConfigEntry(Generic[_DataT]):
     _background_tasks: set[asyncio.Future[Any]]
     _integration_for_domain: loader.Integration | None
     _tries: int
+    created_at: datetime
+    modified_at: datetime
 
     def __init__(
         self,
         *,
+        created_at: datetime | None = None,
         data: Mapping[str, Any],
         disabled_by: ConfigEntryDisabler | None = None,
         domain: str,
         entry_id: str | None = None,
         minor_version: int,
+        modified_at: datetime | None = None,
         options: Mapping[str, Any] | None,
         pref_disable_new_entities: bool | None = None,
         pref_disable_polling: bool | None = None,
@@ -323,7 +330,7 @@ class ConfigEntry(Generic[_DataT]):
         """Initialize a config entry."""
         _setter = object.__setattr__
         # Unique id of the config entry
-        _setter(self, "entry_id", entry_id or uuid_util.random_uuid_hex())
+        _setter(self, "entry_id", entry_id or ulid_util.ulid_now())
 
         # Version of the configuration.
         _setter(self, "version", version)
@@ -414,6 +421,8 @@ class ConfigEntry(Generic[_DataT]):
 
         _setter(self, "_integration_for_domain", None)
         _setter(self, "_tries", 0)
+        _setter(self, "created_at", created_at or utcnow())
+        _setter(self, "modified_at", modified_at or utcnow())
 
     def __repr__(self) -> str:
         """Representation of ConfigEntry."""
@@ -482,8 +491,10 @@ class ConfigEntry(Generic[_DataT]):
     def as_json_fragment(self) -> json_fragment:
         """Return JSON fragment of a config entry."""
         json_repr = {
+            "created_at": self.created_at.timestamp(),
             "entry_id": self.entry_id,
             "domain": self.domain,
+            "modified_at": self.modified_at.timestamp(),
             "title": self.title,
             "source": self.source,
             "state": self.state.value,
@@ -727,6 +738,17 @@ class ConfigEntry(Generic[_DataT]):
     ) -> None:
         """Set up while holding the setup lock."""
         async with self.setup_lock:
+            if self.state is ConfigEntryState.LOADED:
+                # If something loaded the config entry while
+                # we were waiting for the lock, we should not
+                # set it up again.
+                _LOGGER.debug(
+                    "Not setting up %s (%s %s) again, already loaded",
+                    self.title,
+                    self.domain,
+                    self.entry_id,
+                )
+                return
             await self.async_setup(hass, integration=integration)
 
     @callback
@@ -799,13 +821,13 @@ class ConfigEntry(Generic[_DataT]):
             assert isinstance(result, bool)
 
             # Only adjust state if we unloaded the component
-            if domain_is_integration:
-                if result:
-                    self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
-                    if hasattr(self, "runtime_data"):
-                        object.__delattr__(self, "runtime_data")
-
+            if domain_is_integration and result:
                 await self._async_process_on_unload(hass)
+                if hasattr(self, "runtime_data"):
+                    object.__delattr__(self, "runtime_data")
+
+                self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
+
         except Exception as exc:
             _LOGGER.exception(
                 "Error unloading entry %s for %s", self.title, integration.domain
@@ -819,6 +841,10 @@ class ConfigEntry(Generic[_DataT]):
 
     async def async_remove(self, hass: HomeAssistant) -> None:
         """Invoke remove callback on component."""
+        old_modified_at = self.modified_at
+        object.__setattr__(self, "modified_at", utcnow())
+        self.clear_cache()
+
         if self.source == SOURCE_IGNORE:
             return
 
@@ -850,6 +876,8 @@ class ConfigEntry(Generic[_DataT]):
                 self.title,
                 integration.domain,
             )
+            # Restore modified_at
+            object.__setattr__(self, "modified_at", old_modified_at)
 
     @callback
     def _async_set_state(
@@ -938,11 +966,13 @@ class ConfigEntry(Generic[_DataT]):
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this entry."""
         return {
+            "created_at": self.created_at.isoformat(),
             "data": dict(self.data),
             "disabled_by": self.disabled_by,
             "domain": self.domain,
             "entry_id": self.entry_id,
             "minor_version": self.minor_version,
+            "modified_at": self.modified_at.isoformat(),
             "options": dict(self.options),
             "pref_disable_new_entities": self.pref_disable_new_entities,
             "pref_disable_polling": self.pref_disable_polling,
@@ -1037,7 +1067,7 @@ class ConfigEntry(Generic[_DataT]):
         issue_id = f"config_entry_reauth_{self.domain}_{self.entry_id}"
         ir.async_create_issue(
             hass,
-            HA_DOMAIN,
+            HOMEASSISTANT_DOMAIN,
             issue_id,
             data={"flow_id": result["flow_id"]},
             is_fixable=False,
@@ -1093,7 +1123,7 @@ class ConfigEntry(Generic[_DataT]):
     @callback
     def async_get_active_flows(
         self, hass: HomeAssistant, sources: set[str]
-    ) -> Generator[ConfigFlowResult, None, None]:
+    ) -> Generator[ConfigFlowResult]:
         """Get any active flows of certain sources for this entry."""
         return (
             flow
@@ -1106,7 +1136,7 @@ class ConfigEntry(Generic[_DataT]):
         )
 
     @callback
-    def async_create_task(
+    def async_create_task[_R](
         self,
         hass: HomeAssistant,
         target: Coroutine[Any, Any, _R],
@@ -1130,7 +1160,7 @@ class ConfigEntry(Generic[_DataT]):
         return task
 
     @callback
-    def async_create_background_task(
+    def async_create_background_task[_R](
         self,
         hass: HomeAssistant,
         target: Coroutine[Any, Any, _R],
@@ -1164,6 +1194,19 @@ current_entry: ContextVar[ConfigEntry | None] = ContextVar(
 
 class FlowCancelledError(Exception):
     """Error to indicate that a flow has been cancelled."""
+
+
+def _report_non_awaited_platform_forwards(entry: ConfigEntry, what: str) -> None:
+    """Report non awaited platform forwards."""
+    report(
+        f"calls {what} for integration {entry.domain} with "
+        f"title: {entry.title} and entry_id: {entry.entry_id}, "
+        f"during setup without awaiting {what}, which can cause "
+        "the setup lock to be released before the setup is done. "
+        "This will stop working in Home Assistant 2025.1",
+        error_if_integration=False,
+        error_if_core=False,
+    )
 
 
 class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
@@ -1202,10 +1245,10 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
     @callback
     def _async_has_other_discovery_flows(self, flow_id: str) -> bool:
         """Check if there are any other discovery flows in progress."""
-        return any(
-            flow.context["source"] in DISCOVERY_SOURCES and flow.flow_id != flow_id
-            for flow in self._progress.values()
-        )
+        for flow in self._progress.values():
+            if flow.flow_id != flow_id and flow.context["source"] in DISCOVERY_SOURCES:
+                return True
+        return False
 
     async def async_init(
         self, handler: str, *, context: dict[str, Any] | None = None, data: Any = None
@@ -1214,12 +1257,13 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         if not context or "source" not in context:
             raise KeyError("Context not set or doesn't have a source set")
 
-        flow_id = uuid_util.random_uuid_hex()
+        flow_id = ulid_util.ulid_now()
 
         # Avoid starting a config flow on an integration that only supports
         # a single config entry, but which already has an entry
         if (
-            context.get("source") not in {SOURCE_IGNORE, SOURCE_REAUTH, SOURCE_UNIGNORE}
+            context.get("source")
+            not in {SOURCE_IGNORE, SOURCE_REAUTH, SOURCE_UNIGNORE, SOURCE_RECONFIGURE}
             and self.config_entries.async_has_entries(handler, include_ignore=False)
             and await _support_single_config_entry_only(self.hass, handler)
         ):
@@ -1228,7 +1272,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
                 flow_id=flow_id,
                 handler=handler,
                 reason="single_instance_allowed",
-                translation_domain=HA_DOMAIN,
+                translation_domain=HOMEASSISTANT_DOMAIN,
             )
 
         loop = self.hass.loop
@@ -1317,7 +1361,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
                 entry := self.config_entries.async_get_entry(entry_id)
             ) is not None:
                 issue_id = f"config_entry_reauth_{entry.domain}_{entry.entry_id}"
-                ir.async_delete_issue(self.hass, HA_DOMAIN, issue_id)
+                ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
         if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
             return result
@@ -1334,7 +1378,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
                 flow_id=flow.flow_id,
                 handler=flow.handler,
                 reason="single_instance_allowed",
-                translation_domain=HA_DOMAIN,
+                translation_domain=HOMEASSISTANT_DOMAIN,
             )
 
         # Check if config entry exists with unique ID. Unload it.
@@ -1573,25 +1617,34 @@ class ConfigEntryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
     ) -> dict[str, Any]:
         """Migrate to the new version."""
         data = old_data
-        if old_major_version == 1 and old_minor_version < 2:
-            # Version 1.2 implements migration and freezes the available keys
-            for entry in data["entries"]:
-                # Populate keys which were introduced before version 1.2
+        if old_major_version == 1:
+            if old_minor_version < 2:
+                # Version 1.2 implements migration and freezes the available keys
+                for entry in data["entries"]:
+                    # Populate keys which were introduced before version 1.2
 
-                pref_disable_new_entities = entry.get("pref_disable_new_entities")
-                if pref_disable_new_entities is None and "system_options" in entry:
-                    pref_disable_new_entities = entry.get("system_options", {}).get(
-                        "disable_new_entities"
+                    pref_disable_new_entities = entry.get("pref_disable_new_entities")
+                    if pref_disable_new_entities is None and "system_options" in entry:
+                        pref_disable_new_entities = entry.get("system_options", {}).get(
+                            "disable_new_entities"
+                        )
+
+                    entry.setdefault("disabled_by", entry.get("disabled_by"))
+                    entry.setdefault("minor_version", entry.get("minor_version", 1))
+                    entry.setdefault("options", entry.get("options", {}))
+                    entry.setdefault(
+                        "pref_disable_new_entities", pref_disable_new_entities
                     )
+                    entry.setdefault(
+                        "pref_disable_polling", entry.get("pref_disable_polling")
+                    )
+                    entry.setdefault("unique_id", entry.get("unique_id"))
 
-                entry.setdefault("disabled_by", entry.get("disabled_by"))
-                entry.setdefault("minor_version", entry.get("minor_version", 1))
-                entry.setdefault("options", entry.get("options", {}))
-                entry.setdefault("pref_disable_new_entities", pref_disable_new_entities)
-                entry.setdefault(
-                    "pref_disable_polling", entry.get("pref_disable_polling")
-                )
-                entry.setdefault("unique_id", entry.get("unique_id"))
+            if old_minor_version < 3:
+                # Version 1.3 adds the created_at and modified_at fields
+                created_at = utc_from_timestamp(0).isoformat()
+                for entry in data["entries"]:
+                    entry["created_at"] = entry["modified_at"] = created_at
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -1646,12 +1699,12 @@ class ConfigEntries:
         entries = self._entries.get_entries_for_domain(domain)
         if include_ignore and include_disabled:
             return bool(entries)
-        return any(
-            entry
-            for entry in entries
-            if (include_ignore or entry.source != SOURCE_IGNORE)
-            and (include_disabled or not entry.disabled_by)
-        )
+        for entry in entries:
+            if (include_ignore or entry.source != SOURCE_IGNORE) and (
+                include_disabled or not entry.disabled_by
+            ):
+                return True
+        return False
 
     @callback
     def async_entries(
@@ -1726,7 +1779,7 @@ class ConfigEntries:
             if "flow_id" in progress_flow:
                 self.hass.config_entries.flow.async_abort(progress_flow["flow_id"])
                 issue_id = f"config_entry_reauth_{entry.domain}_{entry.entry_id}"
-                ir.async_delete_issue(self.hass, HA_DOMAIN, issue_id)
+                ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
 
         # After we have fully removed an "ignore" config entry we can try and rediscover
         # it so that a user is able to immediately start configuring it. We do this by
@@ -1767,11 +1820,13 @@ class ConfigEntries:
             entry_id = entry["entry_id"]
 
             config_entry = ConfigEntry(
+                created_at=datetime.fromisoformat(entry["created_at"]),
                 data=entry["data"],
                 disabled_by=try_parse_enum(ConfigEntryDisabler, entry["disabled_by"]),
                 domain=entry["domain"],
                 entry_id=entry_id,
                 minor_version=entry["minor_version"],
+                modified_at=datetime.fromisoformat(entry["modified_at"]),
                 options=entry["options"],
                 pref_disable_new_entities=entry["pref_disable_new_entities"],
                 pref_disable_polling=entry["pref_disable_polling"],
@@ -1794,9 +1849,9 @@ class ConfigEntries:
 
         if entry.state is not ConfigEntryState.NOT_LOADED:
             raise OperationNotAllowed(
-                f"The config entry {entry.title} ({entry.domain}) with entry_id"
-                f" {entry.entry_id} cannot be set up because it is already loaded"
-                f" in the {entry.state} state"
+                f"The config entry '{entry.title}' ({entry.domain}) with entry_id"
+                f" '{entry.entry_id}' cannot be set up because it is in state "
+                f"{entry.state}, but needs to be in the {ConfigEntryState.NOT_LOADED} state"
             )
 
         # Setup Component if not set up yet
@@ -1826,9 +1881,9 @@ class ConfigEntries:
 
         if not entry.state.recoverable:
             raise OperationNotAllowed(
-                f"The config entry {entry.title} ({entry.domain}) with entry_id"
-                f" {entry.entry_id} cannot be unloaded because it is not in a"
-                f" recoverable state ({entry.state})"
+                f"The config entry '{entry.title}' ({entry.domain}) with entry_id"
+                f" '{entry.entry_id}' cannot be unloaded because it is in the non"
+                f" recoverable state {entry.state}"
             )
 
         if _lock:
@@ -1955,7 +2010,7 @@ class ConfigEntries:
         if entry.entry_id not in self._entries:
             raise UnknownEntry(entry.entry_id)
 
-        self.hass.verify_event_loop_thread("async_update_entry")
+        self.hass.verify_event_loop_thread("hass.config_entries.async_update_entry")
         changed = False
         _setter = object.__setattr__
 
@@ -1988,6 +2043,8 @@ class ConfigEntries:
         if not changed:
             return False
 
+        _setter(entry, "modified_at", utcnow())
+
         for listener in entry.update_listeners:
             self.hass.async_create_task(
                 listener(self.hass, entry),
@@ -2011,11 +2068,44 @@ class ConfigEntries:
     async def async_forward_entry_setups(
         self, entry: ConfigEntry, platforms: Iterable[Platform | str]
     ) -> None:
-        """Forward the setup of an entry to platforms."""
+        """Forward the setup of an entry to platforms.
+
+        This method should be awaited before async_setup_entry is finished
+        in each integration. This is to ensure that all platforms are loaded
+        before the entry is set up. This ensures that the config entry cannot
+        be unloaded before all platforms are loaded.
+
+        This method is more efficient than async_forward_entry_setup as
+        it can load multiple platforms at once and does not require a separate
+        import executor job for each platform.
+        """
         integration = await loader.async_get_integration(self.hass, entry.domain)
         if not integration.platforms_are_loaded(platforms):
             with async_pause_setup(self.hass, SetupPhases.WAIT_IMPORT_PLATFORMS):
                 await integration.async_get_platforms(platforms)
+
+        if not entry.setup_lock.locked():
+            async with entry.setup_lock:
+                if entry.state is not ConfigEntryState.LOADED:
+                    raise OperationNotAllowed(
+                        f"The config entry '{entry.title}' ({entry.domain}) with "
+                        f"entry_id '{entry.entry_id}' cannot forward setup for "
+                        f"{platforms} because it is in state {entry.state}, but needs "
+                        f"to be in the {ConfigEntryState.LOADED} state"
+                    )
+                await self._async_forward_entry_setups_locked(entry, platforms)
+        else:
+            await self._async_forward_entry_setups_locked(entry, platforms)
+            # If the lock was held when we stated, and it was released during
+            # the platform setup, it means they did not await the setup call.
+            if not entry.setup_lock.locked():
+                _report_non_awaited_platform_forwards(
+                    entry, "async_forward_entry_setups"
+                )
+
+    async def _async_forward_entry_setups_locked(
+        self, entry: ConfigEntry, platforms: Iterable[Platform | str]
+    ) -> None:
         await asyncio.gather(
             *(
                 create_eager_task(
@@ -2038,11 +2128,44 @@ class ConfigEntries:
         By default an entry is setup with the component it belongs to. If that
         component also has related platforms, the component will have to
         forward the entry to be setup by that component.
+
+        This method is deprecated and will stop working in Home Assistant 2025.6.
+
+        Instead, await async_forward_entry_setups as it can load
+        multiple platforms at once and is more efficient since it
+        does not require a separate import executor job for each platform.
         """
-        return await self._async_forward_entry_setup(entry, domain, True)
+        report(
+            "calls async_forward_entry_setup for "
+            f"integration, {entry.domain} with title: {entry.title} "
+            f"and entry_id: {entry.entry_id}, which is deprecated and "
+            "will stop working in Home Assistant 2025.6, "
+            "await async_forward_entry_setups instead",
+            error_if_core=False,
+            error_if_integration=False,
+        )
+        if not entry.setup_lock.locked():
+            async with entry.setup_lock:
+                if entry.state is not ConfigEntryState.LOADED:
+                    raise OperationNotAllowed(
+                        f"The config entry '{entry.title}' ({entry.domain}) with "
+                        f"entry_id '{entry.entry_id}' cannot forward setup for "
+                        f"{domain} because it is in state {entry.state}, but needs "
+                        f"to be in the {ConfigEntryState.LOADED} state"
+                    )
+                return await self._async_forward_entry_setup(entry, domain, True)
+        result = await self._async_forward_entry_setup(entry, domain, True)
+        # If the lock was held when we stated, and it was released during
+        # the platform setup, it means they did not await the setup call.
+        if not entry.setup_lock.locked():
+            _report_non_awaited_platform_forwards(entry, "async_forward_entry_setup")
+        return result
 
     async def _async_forward_entry_setup(
-        self, entry: ConfigEntry, domain: Platform | str, preload_platform: bool
+        self,
+        entry: ConfigEntry,
+        domain: Platform | str,
+        preload_platform: bool,
     ) -> bool:
         """Forward the setup of an entry to a different component."""
         # Setup Component if not set up yet
@@ -2091,7 +2214,11 @@ class ConfigEntries:
     async def async_forward_entry_unload(
         self, entry: ConfigEntry, domain: Platform | str
     ) -> bool:
-        """Forward the unloading of an entry to a different component."""
+        """Forward the unloading of an entry to a different component.
+
+        Its is preferred to call async_unload_platforms instead
+        of directly calling this method.
+        """
         # It was never loaded.
         if domain not in self.hass.config.components:
             return True
@@ -2125,7 +2252,7 @@ class ConfigEntries:
         # The component was not loaded.
         if entry.domain not in self.hass.config.components:
             return False
-        return entry.state == ConfigEntryState.LOADED
+        return entry.state is ConfigEntryState.LOADED
 
 
 @callback

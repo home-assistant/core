@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 from typing import Any
 
@@ -12,6 +14,7 @@ from habitipy.aio import HabitipyAsync
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -43,12 +46,31 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
         self.api = habitipy
 
     async def _async_update_data(self) -> HabiticaData:
-        user_fields = set(self.async_contexts())
-
         try:
-            user_response = await self.api.user.get(userFields=",".join(user_fields))
+            user_response = await self.api.user.get()
             tasks_response = await self.api.tasks.user.get()
+            tasks_response.extend(await self.api.tasks.user.get(type="completedTodos"))
         except ClientResponseError as error:
             raise UpdateFailed(f"Error communicating with API: {error}") from error
 
         return HabiticaData(user=user_response, tasks=tasks_response)
+
+    async def execute(
+        self, func: Callable[[HabiticaDataUpdateCoordinator], Any]
+    ) -> None:
+        """Execute an API call."""
+
+        try:
+            await func(self)
+        except ClientResponseError as e:
+            if e.status == HTTPStatus.TOO_MANY_REQUESTS:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="setup_rate_limit_exception",
+                ) from e
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+            ) from e
+        else:
+            await self.async_refresh()

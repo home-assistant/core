@@ -3,6 +3,7 @@
 from collections.abc import Awaitable, Callable
 
 from syrupy import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
 
@@ -11,7 +12,7 @@ from . import ClientMock
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
-ComponentSetup = Callable[[], Awaitable[ClientMock]]
+type ComponentSetup = Callable[[], Awaitable[ClientMock]]
 
 DOMAIN = "twinkly"
 
@@ -26,4 +27,6 @@ async def test_diagnostics(
     await setup_integration()
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot
+    assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot(
+        exclude=props("created_at", "modified_at")
+    )

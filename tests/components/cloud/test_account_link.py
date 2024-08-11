@@ -1,6 +1,7 @@
 """Test account link services."""
 
 import asyncio
+from collections.abc import Generator
 import logging
 from time import time
 from unittest.mock import AsyncMock, Mock, patch
@@ -9,6 +10,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.cloud import account_link
+from homeassistant.components.cloud.const import DATA_CLOUD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -20,7 +22,9 @@ TEST_DOMAIN = "oauth2_test"
 
 
 @pytest.fixture
-def flow_handler(hass):
+def flow_handler(
+    hass: HomeAssistant,
+) -> Generator[type[config_entry_oauth2_flow.AbstractOAuth2FlowHandler]]:
     """Return a registered config flow."""
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
@@ -133,7 +137,7 @@ async def test_setup_provide_implementation(hass: HomeAssistant) -> None:
 
 async def test_get_services_cached(hass: HomeAssistant) -> None:
     """Test that we cache services."""
-    hass.data["cloud"] = None
+    hass.data[DATA_CLOUD] = None
 
     services = 1
 
@@ -165,7 +169,7 @@ async def test_get_services_cached(hass: HomeAssistant) -> None:
 
 async def test_get_services_error(hass: HomeAssistant) -> None:
     """Test that we cache services."""
-    hass.data["cloud"] = None
+    hass.data[DATA_CLOUD] = None
 
     with (
         patch.object(account_link, "CACHE_TIMEOUT", 0),
@@ -178,11 +182,13 @@ async def test_get_services_error(hass: HomeAssistant) -> None:
         assert account_link.DATA_SERVICES not in hass.data
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_implementation(
-    hass: HomeAssistant, flow_handler, current_request_with_host: None
+    hass: HomeAssistant,
+    flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2FlowHandler],
 ) -> None:
     """Test Cloud OAuth2 implementation."""
-    hass.data["cloud"] = None
+    hass.data[DATA_CLOUD] = None
 
     impl = account_link.CloudOAuth2Implementation(hass, "test")
     assert impl.name == "Home Assistant Cloud"

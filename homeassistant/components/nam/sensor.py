@@ -43,6 +43,7 @@ from .const import (
     ATTR_BMP280_TEMPERATURE,
     ATTR_DHT22_HUMIDITY,
     ATTR_DHT22_TEMPERATURE,
+    ATTR_DS18B20_TEMPERATURE,
     ATTR_HECA_HUMIDITY,
     ATTR_HECA_TEMPERATURE,
     ATTR_MHZ14A_CARBON_DIOXIDE,
@@ -144,6 +145,15 @@ SENSORS: tuple[NAMSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda sensors: sensors.bmp280_temperature,
+    ),
+    NAMSensorEntityDescription(
+        key=ATTR_DS18B20_TEMPERATURE,
+        translation_key="ds18b20_temperature",
+        suggested_display_precision=1,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda sensors: sensors.ds18b20_temperature,
     ),
     NAMSensorEntityDescription(
         key=ATTR_HECA_HUMIDITY,

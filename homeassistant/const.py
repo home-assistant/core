@@ -18,12 +18,12 @@ from .util.hass_dict import HassKey
 from .util.signal_type import SignalType
 
 if TYPE_CHECKING:
-    from .core import EventStateChangedData
+    from .core import EventStateChangedData, EventStateReportedData
     from .helpers.typing import NoEventData
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
-MINOR_VERSION: Final = 6
+MINOR_VERSION: Final = 9
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -83,6 +83,9 @@ class Platform(StrEnum):
     WEATHER = "weather"
 
 
+BASE_PLATFORMS: Final = {platform.value for platform in Platform}
+
+
 # Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL: Final = "*"
 
@@ -110,9 +113,11 @@ SUN_EVENT_SUNRISE: Final = "sunrise"
 # #### CONFIG ####
 CONF_ABOVE: Final = "above"
 CONF_ACCESS_TOKEN: Final = "access_token"
+CONF_ACTION: Final = "action"
 CONF_ADDRESS: Final = "address"
 CONF_AFTER: Final = "after"
 CONF_ALIAS: Final = "alias"
+CONF_LLM_HASS_API = "llm_hass_api"
 CONF_ALLOWLIST_EXTERNAL_URLS: Final = "allowlist_external_urls"
 CONF_API_KEY: Final = "api_key"
 CONF_API_TOKEN: Final = "api_token"
@@ -217,6 +222,7 @@ CONF_METHOD: Final = "method"
 CONF_MINIMUM: Final = "minimum"
 CONF_MODE: Final = "mode"
 CONF_MODEL: Final = "model"
+CONF_MODEL_ID: Final = "model_id"
 CONF_MONITORED_CONDITIONS: Final = "monitored_conditions"
 CONF_MONITORED_VARIABLES: Final = "monitored_variables"
 CONF_NAME: Final = "name"
@@ -317,7 +323,7 @@ EVENT_LOGGING_CHANGED: Final = "logging_changed"
 EVENT_SERVICE_REGISTERED: Final = "service_registered"
 EVENT_SERVICE_REMOVED: Final = "service_removed"
 EVENT_STATE_CHANGED: EventType[EventStateChangedData] = EventType("state_changed")
-EVENT_STATE_REPORTED: Final = "state_reported"
+EVENT_STATE_REPORTED: EventType[EventStateReportedData] = EventType("state_reported")
 EVENT_THEMES_UPDATED: Final = "themes_updated"
 EVENT_PANELS_UPDATED: Final = "panels_updated"
 EVENT_LOVELACE_UPDATED: Final = "lovelace_updated"
@@ -560,6 +566,7 @@ ATTR_CONNECTIONS: Final = "connections"
 ATTR_DEFAULT_NAME: Final = "default_name"
 ATTR_MANUFACTURER: Final = "manufacturer"
 ATTR_MODEL: Final = "model"
+ATTR_MODEL_ID: Final = "model_id"
 ATTR_SERIAL_NUMBER: Final = "serial_number"
 ATTR_SUGGESTED_AREA: Final = "suggested_area"
 ATTR_SW_VERSION: Final = "sw_version"
@@ -1140,8 +1147,21 @@ _DEPRECATED_MASS_POUNDS: Final = DeprecatedConstantEnum(
 )
 """Deprecated: please use UnitOfMass.POUNDS"""
 
+
 # Conductivity units
-CONDUCTIVITY: Final = "µS/cm"
+class UnitOfConductivity(StrEnum):
+    """Conductivity units."""
+
+    SIEMENS = "S/cm"
+    MICROSIEMENS = "µS/cm"
+    MILLISIEMENS = "mS/cm"
+
+
+_DEPRECATED_CONDUCTIVITY: Final = DeprecatedConstantEnum(
+    UnitOfConductivity.MICROSIEMENS,
+    "2025.6",
+)
+"""Deprecated: please use UnitOfConductivity.MICROSIEMENS"""
 
 # Light units
 LIGHT_LUX: Final = "lx"
@@ -1648,6 +1668,12 @@ KEY_DATA_LOGGING: HassKey[str] = HassKey("logging")
 FORMAT_DATE: Final = "%Y-%m-%d"
 FORMAT_TIME: Final = "%H:%M:%S"
 FORMAT_DATETIME: Final = f"{FORMAT_DATE} {FORMAT_TIME}"
+
+
+# Maximum entities expected in the state machine
+# This is not a hard limit, but caches and other
+# data structures will be pre-allocated to this size
+MAX_EXPECTED_ENTITY_IDS: Final = 16384
 
 # These can be removed if no deprecated constant are in this module anymore
 __getattr__ = partial(check_if_deprecated_constant, module_globals=globals())

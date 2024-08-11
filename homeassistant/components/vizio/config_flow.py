@@ -188,7 +188,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize config flow."""
-        self._user_schema = None
+        self._user_schema: vol.Schema | None = None
         self._must_show_form: bool | None = None
         self._ch_type: str | None = None
         self._pairing_token: str | None = None

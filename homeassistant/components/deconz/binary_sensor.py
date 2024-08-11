@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic, TypeVar
 
 from pydeconz.interfaces.sensors import SensorResources
 from pydeconz.models.event import EventType
@@ -48,29 +47,28 @@ PROVIDES_EXTRA_ATTRIBUTES = (
     "water",
 )
 
-T = TypeVar(
-    "T",
-    Alarm,
-    CarbonMonoxide,
-    Fire,
-    GenericFlag,
-    OpenClose,
-    Presence,
-    Vibration,
-    Water,
-    PydeconzSensorBase,
-)
-
 
 @dataclass(frozen=True, kw_only=True)
-class DeconzBinarySensorDescription(Generic[T], BinarySensorEntityDescription):
+class DeconzBinarySensorDescription[
+    _T: (
+        Alarm,
+        CarbonMonoxide,
+        Fire,
+        GenericFlag,
+        OpenClose,
+        Presence,
+        Vibration,
+        Water,
+        PydeconzSensorBase,
+    )
+](BinarySensorEntityDescription):
     """Class describing deCONZ binary sensor entities."""
 
-    instance_check: type[T] | None = None
+    instance_check: type[_T] | None = None
     name_suffix: str = ""
     old_unique_id_suffix: str = ""
     update_key: str
-    value_fn: Callable[[T], bool | None]
+    value_fn: Callable[[_T], bool | None]
 
 
 ENTITY_DESCRIPTIONS: tuple[DeconzBinarySensorDescription, ...] = (

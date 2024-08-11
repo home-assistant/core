@@ -491,7 +491,7 @@ async def test_bad_address(
     )
 
     ws_id = 0
-    for call in ["get", "write", "load", "reset"]:
+    for call in ("get", "write", "load", "reset"):
         ws_id += 1
         params = {
             ID: ws_id,

@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def config_entry(hass):
+def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Define a config entry fixture."""
     entry = MockConfigEntry(
         domain=DOMAIN,

@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from datetime import date, datetime, timedelta
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING
 
 from aiowithings import (
     Activity,
     Goals,
+    MeasurementPosition,
     MeasurementType,
     NotificationCategory,
     SleepSummary,
@@ -30,12 +31,10 @@ from .const import LOGGER
 if TYPE_CHECKING:
     from . import WithingsConfigEntry
 
-_T = TypeVar("_T")
-
 UPDATE_INTERVAL = timedelta(minutes=10)
 
 
-class WithingsDataUpdateCoordinator(DataUpdateCoordinator[_T]):
+class WithingsDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Base coordinator."""
 
     config_entry: WithingsConfigEntry
@@ -75,19 +74,21 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[_T]):
         )
         await self.async_request_refresh()
 
-    async def _async_update_data(self) -> _T:
+    async def _async_update_data(self) -> _DataT:
         try:
             return await self._internal_update_data()
         except (WithingsUnauthorizedError, WithingsAuthenticationFailedError) as exc:
             raise ConfigEntryAuthFailed from exc
 
     @abstractmethod
-    async def _internal_update_data(self) -> _T:
+    async def _internal_update_data(self) -> _DataT:
         """Update coordinator data."""
 
 
 class WithingsMeasurementDataUpdateCoordinator(
-    WithingsDataUpdateCoordinator[dict[MeasurementType, float]]
+    WithingsDataUpdateCoordinator[
+        dict[tuple[MeasurementType, MeasurementPosition | None], float]
+    ]
 ):
     """Withings measurement coordinator."""
 
@@ -100,9 +101,13 @@ class WithingsMeasurementDataUpdateCoordinator(
             NotificationCategory.WEIGHT,
             NotificationCategory.PRESSURE,
         }
-        self._previous_data: dict[MeasurementType, float] = {}
+        self._previous_data: dict[
+            tuple[MeasurementType, MeasurementPosition | None], float
+        ] = {}
 
-    async def _internal_update_data(self) -> dict[MeasurementType, float]:
+    async def _internal_update_data(
+        self,
+    ) -> dict[tuple[MeasurementType, MeasurementPosition | None], float]:
         """Retrieve measurement data."""
         if self._last_valid_update is None:
             now = dt_util.utcnow()

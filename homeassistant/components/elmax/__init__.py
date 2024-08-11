@@ -10,15 +10,11 @@ from elmax_api.http import Elmax, ElmaxLocal, GenericElmax
 from elmax_api.model.panel import PanelEntry
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from .common import (
-    DirectPanel,
-    ElmaxCoordinator,
-    build_direct_ssl_context,
-    get_direct_api_url,
-)
+from .common import DirectPanel, build_direct_ssl_context, get_direct_api_url
 from .const import (
     CONF_ELMAX_MODE,
     CONF_ELMAX_MODE_CLOUD,
@@ -35,6 +31,7 @@ from .const import (
     ELMAX_PLATFORMS,
     POLLING_SECONDS,
 )
+from .coordinator import ElmaxCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -106,6 +103,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         panel=panel,
         name=f"Elmax Cloud {entry.entry_id}",
         update_interval=timedelta(seconds=POLLING_SECONDS),
+    )
+
+    async def _async_on_hass_stop(_: Event) -> None:
+        """Close connection when hass stops."""
+        await coordinator.async_shutdown()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_on_hass_stop)
     )
 
     # Issue a first refresh, so that we trigger a re-auth flow if necessary

@@ -12,10 +12,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -23,11 +19,13 @@ from homeassistant.util import dt as dt_util
 
 from .const import ATTR_DATETIME, DOMAIN, SERVICE_SET_VALUE
 
-SCAN_INTERVAL = timedelta(seconds=30)
+_LOGGER = logging.getLogger(__name__)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=30)
 
-_LOGGER = logging.getLogger(__name__)
 
 __all__ = ["ATTR_DATETIME", "DOMAIN", "DateTimeEntity", "DateTimeEntityDescription"]
 
@@ -36,9 +34,7 @@ async def _async_set_value(entity: DateTimeEntity, service_call: ServiceCall) ->
     """Service call wrapper to set a new date/time."""
     value: datetime = service_call.data[ATTR_DATETIME]
     if value.tzinfo is None:
-        value = value.replace(
-            tzinfo=dt_util.get_time_zone(entity.hass.config.time_zone)
-        )
+        value = value.replace(tzinfo=dt_util.get_default_time_zone())
     return await entity.async_set_value(value)
 
 

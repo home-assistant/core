@@ -1,9 +1,9 @@
-"""Config flow for Logitech Squeezebox integration."""
+"""Config flow for Squeezebox integration."""
 
 import asyncio
 from http import HTTPStatus
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
@@ -13,9 +13,9 @@ from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.entity_registry import async_get
 
 from .const import CONF_HTTPS, DEFAULT_PORT, DOMAIN
 
@@ -64,7 +64,7 @@ def _base_schema(discovery_info=None):
 
 
 class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Logitech Squeezebox."""
+    """Handle a config flow for Squeezebox."""
 
     VERSION = 1
 
@@ -102,7 +102,7 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         # update with suggested values from discovery
         self.data_schema = _base_schema(self.discovery_info)
 
-    async def _validate_input(self, data):
+    async def _validate_input(self, data: dict[str, Any]) -> str | None:
         """Validate the user input allows us to connect.
 
         Retrieve unique id and abort if already configured.
@@ -128,6 +128,8 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         if "uuid" in status:
             await self.async_set_unique_id(status["uuid"])
             self._abort_if_unique_id_configured()
+
+        return None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -199,7 +201,7 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("Configuring dhcp player with unique id: %s", self.unique_id)
 
-        registry = async_get(self.hass)
+        registry = er.async_get(self.hass)
 
         if TYPE_CHECKING:
             assert self.unique_id

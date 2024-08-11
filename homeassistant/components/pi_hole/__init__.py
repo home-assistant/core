@@ -20,7 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -33,7 +33,6 @@ from .const import CONF_STATISTICS_ONLY, DOMAIN, MIN_TIME_BETWEEN_UPDATES
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -42,7 +41,7 @@ PLATFORMS = [
     Platform.UPDATE,
 ]
 
-PiHoleConfigEntry = ConfigEntry["PiHoleData"]
+type PiHoleConfigEntry = ConfigEntry[PiHoleData]
 
 
 @dataclass
@@ -60,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PiHoleConfigEntry) -> bo
     use_tls = entry.data[CONF_SSL]
     verify_tls = entry.data[CONF_VERIFY_SSL]
     location = entry.data[CONF_LOCATION]
-    api_key = entry.data.get(CONF_API_KEY)
+    api_key = entry.data.get(CONF_API_KEY, "")
 
     # remove obsolet CONF_STATISTICS_ONLY from entry.data
     if CONF_STATISTICS_ONLY in entry.data:

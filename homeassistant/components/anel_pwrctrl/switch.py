@@ -9,7 +9,10 @@ from typing import Any
 from anel_pwrctrl import Device, DeviceMaster, Switch
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -24,7 +27,7 @@ CONF_PORT_SEND = "port_send"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_PORT_RECV): cv.port,
         vol.Required(CONF_PORT_SEND): cv.port,

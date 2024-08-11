@@ -43,7 +43,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
@@ -86,7 +85,6 @@ from .const import (
     ATTR_API_WIND_BEARING,
     ATTR_API_WIND_MAX_SPEED,
     ATTR_API_WIND_SPEED,
-    ATTRIBUTION,
     CONDITIONS_MAP,
 )
 from .coordinator import WeatherUpdateCoordinator
@@ -366,12 +364,15 @@ async def async_setup_entry(
     name = domain_data.name
     coordinator = domain_data.coordinator
 
+    unique_id = config_entry.unique_id
+    assert unique_id is not None
+
     async_add_entities(
         AemetSensor(
             name,
             coordinator,
             description,
-            config_entry,
+            unique_id,
         )
         for description in FORECAST_SENSORS + WEATHER_SENSORS
         if dict_nested_value(coordinator.data["lib"], description.keys) is not None
@@ -381,7 +382,6 @@ async def async_setup_entry(
 class AemetSensor(AemetEntity, SensorEntity):
     """Implementation of an AEMET OpenData sensor."""
 
-    _attr_attribution = ATTRIBUTION
     entity_description: AemetSensorEntityDescription
 
     def __init__(
@@ -389,13 +389,12 @@ class AemetSensor(AemetEntity, SensorEntity):
         name: str,
         coordinator: WeatherUpdateCoordinator,
         description: AemetSensorEntityDescription,
-        config_entry: ConfigEntry,
+        unique_id: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, name, unique_id)
         self.entity_description = description
-        self._attr_name = f"{name} {description.name}"
-        self._attr_unique_id = f"{config_entry.unique_id}-{description.key}"
+        self._attr_unique_id = f"{unique_id}-{description.key}"
 
     @property
     def native_value(self):

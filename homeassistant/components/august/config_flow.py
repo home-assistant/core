@@ -3,12 +3,14 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
+from pathlib import Path
 from typing import Any
 
 import aiohttp
 import voluptuous as vol
 from yalexs.authenticator import ValidationResult
 from yalexs.const import BRANDS, DEFAULT_BRAND
+from yalexs.manager.exceptions import CannotConnect, InvalidAuth, RequireValidation
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -23,7 +25,6 @@ from .const import (
     LOGIN_METHODS,
     VERIFICATION_CODE_KEY,
 )
-from .exceptions import CannotConnect, InvalidAuth, RequireValidation
 from .gateway import AugustGateway
 from .util import async_create_august_clientsession
 
@@ -65,7 +66,7 @@ async def async_validate_input(
     }
 
 
-@dataclass
+@dataclass(slots=True)
 class ValidateResult:
     """Result from validation."""
 
@@ -164,7 +165,9 @@ class AugustConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._august_gateway is not None:
             return self._august_gateway
         self._aiohttp_session = async_create_august_clientsession(self.hass)
-        self._august_gateway = AugustGateway(self.hass, self._aiohttp_session)
+        self._august_gateway = AugustGateway(
+            Path(self.hass.config.config_dir), self._aiohttp_session
+        )
         return self._august_gateway
 
     @callback

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from aioswitcher.api import SwitcherBaseResponse, SwitcherType2Api
 from aioswitcher.device import DeviceCategory, ShutterDirection, SwitcherShutter
@@ -23,13 +23,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SwitcherDataUpdateCoordinator
 from .const import SIGNAL_DEVICE_ADD
+from .coordinator import SwitcherDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 API_SET_POSITON = "set_position"
-API_STOP = "stop"
+API_STOP = "stop_shutter"
 
 
 async def async_setup_entry(
@@ -84,7 +84,7 @@ class SwitcherCoverEntity(
 
     def _update_data(self) -> None:
         """Update data from device."""
-        data: SwitcherShutter = self.coordinator.data
+        data = cast(SwitcherShutter, self.coordinator.data)
         self._attr_current_cover_position = data.position
         self._attr_is_closed = data.position == 0
         self._attr_is_closing = data.direction == ShutterDirection.SHUTTER_DOWN
@@ -93,11 +93,12 @@ class SwitcherCoverEntity(
     async def _async_call_api(self, api: str, *args: Any) -> None:
         """Call Switcher API."""
         _LOGGER.debug("Calling api for %s, api: '%s', args: %s", self.name, api, args)
-        response: SwitcherBaseResponse = None
+        response: SwitcherBaseResponse | None = None
         error = None
 
         try:
             async with SwitcherType2Api(
+                self.coordinator.data.device_type,
                 self.coordinator.data.ip_address,
                 self.coordinator.data.device_id,
                 self.coordinator.data.device_key,

@@ -5,8 +5,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import uuid
 
-from bring_api.exceptions import BringRequestException
-from bring_api.types import BringItem, BringItemOperation, BringNotificationType
+from bring_api import (
+    BringItem,
+    BringItemOperation,
+    BringNotificationType,
+    BringRequestException,
+)
 import voluptuous as vol
 
 from homeassistant.components.todo import (
@@ -107,7 +111,7 @@ class BringTodoListEntity(
                     description=item["specification"] or "",
                     status=TodoItemStatus.NEEDS_ACTION,
                 )
-                for item in self.bring_list["purchase_items"]
+                for item in self.bring_list["purchase"]
             ),
             *(
                 TodoItem(
@@ -116,7 +120,7 @@ class BringTodoListEntity(
                     description=item["specification"] or "",
                     status=TodoItemStatus.COMPLETED,
                 )
-                for item in self.bring_list["recently_items"]
+                for item in self.bring_list["recently"]
             ),
         ]
 
@@ -130,7 +134,7 @@ class BringTodoListEntity(
         try:
             await self.coordinator.bring.save_item(
                 self.bring_list["listUuid"],
-                item.summary,
+                item.summary or "",
                 item.description or "",
                 str(uuid.uuid4()),
             )
@@ -165,12 +169,12 @@ class BringTodoListEntity(
         bring_list = self.bring_list
 
         bring_purchase_item = next(
-            (i for i in bring_list["purchase_items"] if i["uuid"] == item.uid),
+            (i for i in bring_list["purchase"] if i["uuid"] == item.uid),
             None,
         )
 
         bring_recently_item = next(
-            (i for i in bring_list["recently_items"] if i["uuid"] == item.uid),
+            (i for i in bring_list["recently"] if i["uuid"] == item.uid),
             None,
         )
 
@@ -185,8 +189,8 @@ class BringTodoListEntity(
                 await self.coordinator.bring.batch_update_list(
                     bring_list["listUuid"],
                     BringItem(
-                        itemId=item.summary,
-                        spec=item.description,
+                        itemId=item.summary or "",
+                        spec=item.description or "",
                         uuid=item.uid,
                     ),
                     BringItemOperation.ADD
@@ -206,13 +210,13 @@ class BringTodoListEntity(
                     [
                         BringItem(
                             itemId=current_item["itemId"],
-                            spec=item.description,
+                            spec=item.description or "",
                             uuid=item.uid,
                             operation=BringItemOperation.REMOVE,
                         ),
                         BringItem(
-                            itemId=item.summary,
-                            spec=item.description,
+                            itemId=item.summary or "",
+                            spec=item.description or "",
                             uuid=str(uuid.uuid4()),
                             operation=BringItemOperation.ADD
                             if item.status == TodoItemStatus.NEEDS_ACTION

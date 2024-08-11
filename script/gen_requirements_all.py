@@ -129,7 +129,7 @@ regex==2021.8.28
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.3.0
+anyio==4.4.0
 h11==0.14.0
 httpcore==1.0.5
 
@@ -155,7 +155,10 @@ backoff>=2.0
 
 # Required to avoid breaking (#101042).
 # v2 has breaking changes (#99218).
-pydantic==1.10.15
+pydantic==1.10.17
+
+# Required for Python 3.12.4 compatibility (#119223).
+mashumaro>=3.13.1
 
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130
@@ -205,8 +208,8 @@ dacite>=1.7.0
 # Musle wheels for pandas 2.2.0 cannot be build for any architecture.
 pandas==2.1.4
 
-# chacha20poly1305-reuseable==0.12.0 is incompatible with cryptography==42.0.x
-chacha20poly1305-reuseable>=0.12.1
+# chacha20poly1305-reuseable==0.12.x is incompatible with cryptography==43.0.x
+chacha20poly1305-reuseable>=0.13.0
 
 # pycountry<23.12.11 imports setuptools at run time
 # https://github.com/pycountry/pycountry/blob/ea69bab36f00df58624a0e490fdad4ccdc14268b/HISTORY.txt#L39
@@ -219,6 +222,9 @@ scapy>=2.5.0
 # Only tuf>=4 includes a constraint to <1.0.
 # https://github.com/theupdateframework/python-tuf/releases/tag/v4.0.0
 tuf>=4.0.0
+
+# https://github.com/jd/tenacity/issues/471
+tenacity!=8.4.0
 """
 
 GENERATED_MESSAGE = (

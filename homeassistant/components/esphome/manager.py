@@ -27,7 +27,7 @@ from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
 from homeassistant.components import tag, zeroconf
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_MODE,
@@ -72,11 +72,12 @@ from .dashboard import async_get_dashboard
 from .domain_data import DomainData
 
 # Import config flow so that it's added to the registry
-from .entry_data import RuntimeEntryData
+from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .voice_assistant import (
     VoiceAssistantAPIPipeline,
     VoiceAssistantPipeline,
     VoiceAssistantUDPPipeline,
+    handle_timer_event,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -157,13 +158,12 @@ class ESPHomeManager:
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: ESPHomeConfigEntry,
         host: str,
         password: str | None,
         cli: APIClient,
         zeroconf_instance: zeroconf.HaZeroconf,
         domain_data: DomainData,
-        entry_data: RuntimeEntryData,
     ) -> None:
         """Initialize the esphome manager."""
         self.hass = hass
@@ -176,7 +176,7 @@ class ESPHomeManager:
         self.voice_assistant_pipeline: VoiceAssistantPipeline | None = None
         self.reconnect_logic: ReconnectLogic | None = None
         self.zeroconf_instance = zeroconf_instance
-        self.entry_data = entry_data
+        self.entry_data = entry.runtime_data
 
     async def on_stop(self, event: Event) -> None:
         """Cleanup the socket client on HA close."""
@@ -346,7 +346,7 @@ class ESPHomeManager:
     ) -> int | None:
         """Start a voice assistant pipeline."""
         if self.voice_assistant_pipeline is not None:
-            _LOGGER.warning("Voice assistant UDP server was not stopped")
+            _LOGGER.warning("Previous Voice assistant pipeline was not stopped")
             self.voice_assistant_pipeline.stop()
             self.voice_assistant_pipeline = None
 
@@ -517,6 +517,12 @@ class ESPHomeManager:
                         handle_stop=self._handle_pipeline_stop,
                     )
                 )
+            if flags & VoiceAssistantFeature.TIMERS:
+                entry_data.disconnect_callbacks.add(
+                    async_register_timer_handler(
+                        hass, self.device_id, partial(handle_timer_event, cli)
+                    )
+                )
 
         cli.subscribe_states(entry_data.async_update_state)
         cli.subscribe_service_calls(self.async_on_service_call)
@@ -580,23 +586,6 @@ class ESPHomeManager:
         if entry.options.get(CONF_ALLOW_SERVICE_CALLS, DEFAULT_ALLOW_SERVICE_CALLS):
             async_delete_issue(hass, DOMAIN, self.services_issue)
 
-        # Use async_listen instead of async_listen_once so that we don't deregister
-        # the callback twice when shutting down Home Assistant.
-        # "Unable to remove unknown listener
-        # <function EventBus.async_listen_once.<locals>.onetime_listener>"
-        # We only close the connection at the last possible moment
-        # when the CLOSE event is fired so anything using a Bluetooth
-        # proxy has a chance to shut down properly.
-        entry_data.cleanup_callbacks.append(
-            hass.bus.async_listen(EVENT_HOMEASSISTANT_CLOSE, self.on_stop)
-        )
-        entry_data.cleanup_callbacks.append(
-            hass.bus.async_listen(
-                EVENT_LOGGING_CHANGED,
-                self._async_handle_logging_changed,
-            )
-        )
-
         reconnect_logic = ReconnectLogic(
             client=self.cli,
             on_connect=self.on_connect,
@@ -606,6 +595,21 @@ class ESPHomeManager:
             on_connect_error=self.on_connect_error,
         )
         self.reconnect_logic = reconnect_logic
+
+        # Use async_listen instead of async_listen_once so that we don't deregister
+        # the callback twice when shutting down Home Assistant.
+        # "Unable to remove unknown listener
+        # <function EventBus.async_listen_once.<locals>.onetime_listener>"
+        # We only close the connection at the last possible moment
+        # when the CLOSE event is fired so anything using a Bluetooth
+        # proxy has a chance to shut down properly.
+        bus = hass.bus
+        cleanups = (
+            bus.async_listen(EVENT_HOMEASSISTANT_CLOSE, self.on_stop),
+            bus.async_listen(EVENT_LOGGING_CHANGED, self._async_handle_logging_changed),
+            reconnect_logic.stop_callback,
+        )
+        entry_data.cleanup_callbacks.extend(cleanups)
 
         infos, services = await entry_data.async_load_from_store()
         if entry.unique_id:
@@ -622,7 +626,6 @@ class ESPHomeManager:
                 )
 
         await reconnect_logic.start()
-        entry_data.cleanup_callbacks.append(reconnect_logic.stop_callback)
 
         entry.async_on_unload(
             entry.add_update_listener(entry_data.async_update_listener)
@@ -631,7 +634,7 @@ class ESPHomeManager:
 
 @callback
 def _async_setup_device_registry(
-    hass: HomeAssistant, entry: ConfigEntry, entry_data: RuntimeEntryData
+    hass: HomeAssistant, entry: ESPHomeConfigEntry, entry_data: RuntimeEntryData
 ) -> str:
     """Set up device registry feature for a particular config entry."""
     device_info = entry_data.device_info
@@ -651,12 +654,13 @@ def _async_setup_device_registry(
     if device_info.manufacturer:
         manufacturer = device_info.manufacturer
     model = device_info.model
-    hw_version = None
     if device_info.project_name:
         project_name = device_info.project_name.split(".")
         manufacturer = project_name[0]
         model = project_name[1]
-        hw_version = device_info.project_version
+        sw_version = (
+            f"{device_info.project_version} (ESPHome {device_info.esphome_version})"
+        )
 
     suggested_area = None
     if device_info.suggested_area:
@@ -671,7 +675,6 @@ def _async_setup_device_registry(
         manufacturer=manufacturer,
         model=model,
         sw_version=sw_version,
-        hw_version=hw_version,
         suggested_area=suggested_area,
     )
     return device_entry.id
@@ -831,10 +834,11 @@ def _setup_services(
         _async_register_service(hass, entry_data, device_info, service)
 
 
-async def cleanup_instance(hass: HomeAssistant, entry: ConfigEntry) -> RuntimeEntryData:
+async def cleanup_instance(
+    hass: HomeAssistant, entry: ESPHomeConfigEntry
+) -> RuntimeEntryData:
     """Cleanup the esphome client if it exists."""
-    domain_data = DomainData.get(hass)
-    data = domain_data.pop_entry_data(entry)
+    data = entry.runtime_data
     data.async_on_disconnect()
     for cleanup_callback in data.cleanup_callbacks:
         cleanup_callback()
