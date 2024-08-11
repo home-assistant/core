@@ -123,7 +123,6 @@ PLATFORM_SCHEMA = vol.Schema(
         ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
-                vol.Optional(CONF_UNIQUE_ID): cv.string,
                 vol.Exclusive(CONF_CODE, "code validation"): cv.string,
                 vol.Exclusive(CONF_CODE_TEMPLATE, "code validation"): cv.template,
                 vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
