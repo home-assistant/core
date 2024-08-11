@@ -14,6 +14,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
 from .coordinator import SwitcherDataUpdateCoordinator
+from .utils import validate_token
 
 PLATFORMS = [
     Platform.BUTTON,
@@ -45,15 +46,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> 
 
         # New device - create device
         _LOGGER.info(
-            "Discovered Switcher device - id: %s, key: %s, name: %s, type: %s (%s)",
+            "Discovered Switcher device - id: %s, key: %s, name: %s, type: %s (%s), is_token_needed: %s",
             device.device_id,
             device.device_key,
             device.name,
             device.device_type.value,
             device.device_type.hex_rep,
+            device.token_needed,
         )
+        token = ""  # Temp
+        if device.token_needed == True:
+            _LOGGER.info("Found a Switcher device that needs a token")
+            token = "enter_token"  # Temp
+            username = "enter_email"  # Temp
+            token_is_valid = validate_token(username, token)
+            if token_is_valid == True:
+                _LOGGER.info("Token is valid")
+            else:
+                _LOGGER.info("Token is invalid")
 
-        coordinator = SwitcherDataUpdateCoordinator(hass, entry, device)
+        coordinator = SwitcherDataUpdateCoordinator(hass, entry, device, token)
         coordinator.async_setup()
         coordinators[device.device_id] = coordinator
 

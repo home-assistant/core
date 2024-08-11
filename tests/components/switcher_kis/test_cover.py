@@ -58,7 +58,7 @@ async def test_cover(
         await hass.async_block_till_done()
 
         assert mock_api.call_count == 2
-        mock_control_device.assert_called_once_with(77)
+        mock_control_device.assert_called_once_with(77, 0)
         state = hass.states.get(ENTITY_ID)
         assert state.state == STATE_OPEN
         assert state.attributes[ATTR_CURRENT_POSITION] == 77
@@ -79,7 +79,7 @@ async def test_cover(
         await hass.async_block_till_done()
 
         assert mock_api.call_count == 4
-        mock_control_device.assert_called_once_with(100)
+        mock_control_device.assert_called_once_with(100, 0)
         state = hass.states.get(ENTITY_ID)
         assert state.state == STATE_OPENING
 
@@ -99,7 +99,7 @@ async def test_cover(
         await hass.async_block_till_done()
 
         assert mock_api.call_count == 6
-        mock_control_device.assert_called_once_with(0)
+        mock_control_device.assert_called_once_with(0, 0)
         state = hass.states.get(ENTITY_ID)
         assert state.state == STATE_CLOSING
 
@@ -119,7 +119,7 @@ async def test_cover(
         await hass.async_block_till_done()
 
         assert mock_api.call_count == 8
-        mock_control_device.assert_called_once()
+        mock_control_device.assert_called_once_with(0)
         state = hass.states.get(ENTITY_ID)
         assert state.state == STATE_OPEN
 
@@ -157,7 +157,7 @@ async def test_cover_control_fail(hass: HomeAssistant, mock_bridge, mock_api) ->
             )
 
         assert mock_api.call_count == 2
-        mock_control_device.assert_called_once_with(44)
+        mock_control_device.assert_called_once_with(44, 0)
         state = hass.states.get(ENTITY_ID)
         assert state.state == STATE_UNAVAILABLE
 
@@ -182,6 +182,6 @@ async def test_cover_control_fail(hass: HomeAssistant, mock_bridge, mock_api) ->
             )
 
         assert mock_api.call_count == 4
-        mock_control_device.assert_called_once_with(27)
+        mock_control_device.assert_called_once_with(27, 0)
         state = hass.states.get(ENTITY_ID)
         assert state.state == STATE_UNAVAILABLE

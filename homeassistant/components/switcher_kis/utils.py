@@ -7,11 +7,12 @@ import logging
 
 from aioswitcher.api.remotes import SwitcherBreezeRemoteManager
 from aioswitcher.bridge import SwitcherBase, SwitcherBridge
+from aioswitcher.device.tools import validate_token as vt
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import singleton
 
-from .const import DISCOVERY_TIME_SEC
+from .const import DISCOVERY_TIME_SEC, COVER1_ID, COVER2_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,3 +43,26 @@ async def async_has_devices(hass: HomeAssistant) -> bool:
 def get_breeze_remote_manager(hass: HomeAssistant) -> SwitcherBreezeRemoteManager:
     """Get Switcher Breeze remote manager."""
     return SwitcherBreezeRemoteManager()
+
+
+def get_circuit_number(id: str | None) -> int:
+    """Get the current shutter circuit number used for the API Call."""
+    if id is None:
+        return 0
+    if id in (COVER1_ID):
+        return 0
+    if id in (COVER2_ID):
+        return 1
+    return 0
+
+
+def validate_token(username: str, token: str) -> bool:
+    # should call tools.validate_token(username, token)
+    # and return true or false
+    # not working because:
+    # RuntimeError: Caught blocking call to putrequest with args ..., 'POST', '/ValidateToken/') inside the event loop by integration 'switcher_kis'  ..._HTTPConnection.putrequest(self, method, url, *args, **kwargs))....
+    # .....For developers, please see https://developers.home-assistant.io/docs/asyncio_blocking_operations/#putrequest
+    # return vt(username, token)
+
+    # At the moment return true
+    return True

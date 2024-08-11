@@ -23,7 +23,11 @@ class SwitcherDataUpdateCoordinator(
     """Switcher device data update coordinator."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, device: SwitcherBase
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        device: SwitcherBase,
+        token: str | None,
     ) -> None:
         """Initialize the Switcher device coordinator."""
         super().__init__(
@@ -34,6 +38,7 @@ class SwitcherDataUpdateCoordinator(
         )
         self.entry = entry
         self.data = device
+        self.token = token
 
     async def _async_update_data(self) -> SwitcherBase:
         """Mark device offline if no data."""

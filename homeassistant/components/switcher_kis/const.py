@@ -5,6 +5,10 @@ DOMAIN = "switcher_kis"
 DISCOVERY_TIME_SEC = 12
 
 SIGNAL_DEVICE_ADD = "switcher_device_add"
+CONF_TOKEN = "token"
+
+COVER1_ID = "runner"
+COVER2_ID = "runner2"
 
 # Services
 CONF_AUTO_OFF = "auto_off"
