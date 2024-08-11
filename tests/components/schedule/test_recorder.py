@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.recorder.history import get_significant_states
@@ -18,8 +19,11 @@ from tests.components.recorder.common import async_wait_recording_done
 
 
 @pytest.mark.usefixtures("recorder_mock", "enable_custom_integrations")
-async def test_exclude_attributes(hass: HomeAssistant) -> None:
+async def test_exclude_attributes(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test attributes to be excluded."""
+    freezer.move_to("2024-08-02 06:30:00-07:00")  # Before Friday event
     now = dt_util.utcnow()
     assert await async_setup_component(
         hass,
@@ -49,11 +53,25 @@ async def test_exclude_attributes(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_FRIENDLY_NAME]
     assert state.attributes[ATTR_ICON]
     assert state.attributes[ATTR_NEXT_EVENT]
-    assert state.attributes[CONF_DATA]
-    assert state.attributes["party_level"]
+
+    # Move to during Friday event
+    freezer.move_to("2024-08-02 07:30:00-07:00")
+    async_fire_time_changed(hass, fire_all=True)
+    await hass.async_block_till_done()
+    state = hass.states.get("schedule.test")
+    assert CONF_DATA not in state.attributes
+    assert state.attributes["party_level"] == "epic"
+
+    # Move to during Sunday event
+    freezer.move_to("2024-08-04 11:30:00-07:00")
+    async_fire_time_changed(hass, fire_all=True)
+    await hass.async_block_till_done()
+    state = hass.states.get("schedule.test")
+    assert state.attributes[CONF_DATA] == "VIPs only"
 
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)
 
