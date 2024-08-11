@@ -8,7 +8,6 @@ from typing import Any
 
 from pylutron import Output
 
-from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_FLASH,
@@ -17,17 +16,10 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.components.script import scripts_with_entity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import (
-    IssueSeverity,
-    async_create_issue,
-    create_issue,
-)
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 
 from . import DOMAIN, LutronData
 from .entity import LutronDevice
@@ -45,50 +37,13 @@ async def async_setup_entry(
     Adds dimmers from the Main Repeater associated with the config_entry as
     light entities.
     """
-    ent_reg = er.async_get(hass)
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
-    lights = []
-
-    for area_name, device in entry_data.lights:
-        if device.type == "CEILING_FAN_TYPE":
-            # If this is a fan, check to see if this entity already exists.
-            # If not, do not create a new one.
-            entity_id = ent_reg.async_get_entity_id(
-                Platform.LIGHT,
-                DOMAIN,
-                f"{entry_data.client.guid}_{device.uuid}",
-            )
-            if entity_id:
-                entity_entry = ent_reg.async_get(entity_id)
-                assert entity_entry
-                if entity_entry.disabled:
-                    # If the entity exists and is disabled then we want to remove
-                    # the entity so that the user is using the new fan entity instead.
-                    ent_reg.async_remove(entity_id)
-                else:
-                    lights.append(LutronLight(area_name, device, entry_data.client))
-                    entity_automations = automations_with_entity(hass, entity_id)
-                    entity_scripts = scripts_with_entity(hass, entity_id)
-                    for item in entity_automations + entity_scripts:
-                        async_create_issue(
-                            hass,
-                            DOMAIN,
-                            f"deprecated_light_fan_{entity_id}_{item}",
-                            breaks_in_ha_version="2024.8.0",
-                            is_fixable=True,
-                            is_persistent=True,
-                            severity=IssueSeverity.WARNING,
-                            translation_key="deprecated_light_fan_entity",
-                            translation_placeholders={
-                                "entity": entity_id,
-                                "info": item,
-                            },
-                        )
-        else:
-            lights.append(LutronLight(area_name, device, entry_data.client))
 
     async_add_entities(
-        lights,
+        (
+            LutronLight(area_name, device, entry_data.client)
+            for area_name, device in entry_data.lights
+        ),
         True,
     )
 
