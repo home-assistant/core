@@ -110,7 +110,7 @@ class CommandCover(ManualTriggerEntity, CoverEntity):
 
     async def _async_move_cover(self, command: str) -> bool:
         """Execute the actual commands."""
-        LOGGER.info("Running command: %s", command)
+        LOGGER.debug("Running command: %s", command)
 
         returncode = await async_call_shell_with_timeout(command, self._timeout)
         success = returncode == 0
@@ -140,7 +140,7 @@ class CommandCover(ManualTriggerEntity, CoverEntity):
     async def _async_query_state(self) -> str | None:
         """Query for the state."""
         if self._command_state:
-            LOGGER.info("Running state value command: %s", self._command_state)
+            LOGGER.debug("Running state value command: %s", self._command_state)
             return await async_check_output_or_log(self._command_state, self._timeout)
         return None
 
