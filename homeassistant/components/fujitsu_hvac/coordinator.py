@@ -1,4 +1,5 @@
 """Coordinator for Fujitsu HVAC integration."""
+
 from asyncio import gather
 from datetime import timedelta
 import logging
@@ -15,7 +16,7 @@ from .const import API_REFRESH_SECONDS
 _LOGGER = logging.getLogger(__name__)
 
 
-class FujitsuHVACCoordinator(DataUpdateCoordinator):
+class FujitsuHVACCoordinator(DataUpdateCoordinator[dict[str, FujitsuHVAC]]):
     """Coordinator for Fujitsu HVAC integration."""
 
     def __init__(self, hass: HomeAssistant, api: AylaApi) -> None:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from contextlib import suppress
+from dataclasses import dataclass
 
 from ayla_iot_unofficial import AylaAuthError, new_ayla_api
 
@@ -11,10 +12,19 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import API_TIMEOUT, CONF_EUROPE, DOMAIN, FGLAIR_APP_ID, FGLAIR_APP_SECRET
+from .const import API_TIMEOUT, CONF_EUROPE, FGLAIR_APP_ID, FGLAIR_APP_SECRET
 from .coordinator import FujitsuHVACCoordinator
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
+
+type FujitsuHVACConfigEntry = ConfigEntry[FujitsuHVACConfigData]
+
+
+@dataclass
+class FujitsuHVACConfigData:
+    """Config data for FujitsuHVAC config entries."""
+
+    coordinator: FujitsuHVACCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -38,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = FujitsuHVACCoordinator(hass, api)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = FujitsuHVACConfigData(coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -48,8 +58,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     with suppress(TimeoutError):
-        await hass.data[DOMAIN][entry.entry_id].api.async_sign_out()
-
-    hass.data[DOMAIN].pop(entry.entry_id)
+        await entry.runtime_data.coordinator.api.async_sign_out()
 
     return unload_ok

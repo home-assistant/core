@@ -25,7 +25,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reauth_different_username": "Cannot reauthenticate with a different username"
+      "wrong_account": "Cannot reauthenticate with a different username"
     }
   }
 }

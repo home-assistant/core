@@ -1,4 +1,5 @@
 """Config flow for Fujitsu HVAC (based on Ayla IOT) integration."""
+
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -6,9 +7,8 @@ from typing import Any
 from ayla_iot_unofficial import AylaAuthError, new_ayla_api
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import API_TIMEOUT, CONF_EUROPE, DOMAIN, FGLAIR_APP_ID, FGLAIR_APP_SECRET
 
@@ -31,15 +31,15 @@ class FujitsuHVACConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input:
             if not self.reauth_entry:
-                await self.async_set_unique_id(f"{user_input[CONF_USERNAME].lower()}")
+                await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
                 self._abort_if_unique_id_configured()
             elif user_input[CONF_USERNAME] != self.reauth_entry.data[CONF_USERNAME]:
-                return self.async_abort(reason="reauth_different_username")
+                return self.async_abort(reason="wrong_account")
 
             api = new_ayla_api(
                 user_input[CONF_USERNAME],
@@ -77,7 +77,9 @@ class FujitsuHVACConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, user_input: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -86,7 +88,7 @@ class FujitsuHVACConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")

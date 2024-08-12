@@ -2,20 +2,20 @@
 
 from typing import Any
 
-from ayla_iot_unofficial.fujitsu_hvac import Capability, FujitsuHVAC
+from ayla_iot_unofficial.fujitsu_hvac import Capability
 
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import FujitsuHVACConfigEntry
 from .const import (
     DOMAIN,
     FUJI_TO_HA_FAN,
@@ -30,14 +30,13 @@ from .coordinator import FujitsuHVACCoordinator
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: FujitsuHVACConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up one Fujitsu HVAC device."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-
     async_add_entities(
-        FujitsuHVACDevice(coordinator, dev) for dev in coordinator.data.values()
+        FujitsuHVACDevice(entry.runtime_data.coordinator, dev.device_serial_number)
+        for dev in entry.runtime_data.coordinator.data.values()
     )
 
 
@@ -52,14 +51,10 @@ class FujitsuHVACDevice(CoordinatorEntity[FujitsuHVACCoordinator], ClimateEntity
 
     _enable_turn_on_off_backwards_compatibility: bool = False
 
-    @property
-    def device(self) -> FujitsuHVAC:
-        """Return the FujitsuHVAC device object."""
-        return self.coordinator.data[self.coordinator_context]
-
-    def __init__(self, coordinator: FujitsuHVACCoordinator, dev: FujitsuHVAC) -> None:
+    def __init__(self, coordinator: FujitsuHVACCoordinator, dev_sn: str) -> None:
         """Store the representation of the device and set the static attributes."""
-        super().__init__(coordinator, context=dev.device_serial_number)
+        super().__init__(coordinator, context=dev_sn)
+        self.device = self.coordinator.data[self.coordinator_context]
 
         self._attr_unique_id = self.device.device_serial_number
         self._attr_device_info = DeviceInfo(
@@ -70,6 +65,19 @@ class FujitsuHVACDevice(CoordinatorEntity[FujitsuHVACCoordinator], ClimateEntity
             serial_number=self.device.device_serial_number,
             sw_version=self.device.property_values["mcu_firmware_version"],
         )
+
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
+        )
+        if self.device.has_capability(Capability.OP_FAN):
+            self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
+
+        if self.device.has_capability(
+            Capability.SWING_HORIZONTAL
+        ) or self.device.has_capability(Capability.SWING_VERTICAL):
+            self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
 
     @property
     def fan_mode(self) -> str | None:
@@ -160,21 +168,3 @@ class FujitsuHVACDevice(CoordinatorEntity[FujitsuHVACCoordinator], ClimateEntity
             return
         await self.device.async_set_set_temp(temperature)
         await self.coordinator.async_request_refresh()
-
-    @property
-    def supported_features(self) -> ClimateEntityFeature:
-        """Return the list of supported features."""
-        ret = (
-            ClimateEntityFeature.TARGET_TEMPERATURE
-            | ClimateEntityFeature.TURN_ON
-            | ClimateEntityFeature.TURN_OFF
-        )
-        if self.device.has_capability(Capability.OP_FAN):
-            ret |= ClimateEntityFeature.FAN_MODE
-
-        if self.device.has_capability(
-            Capability.SWING_HORIZONTAL
-        ) or self.device.has_capability(Capability.SWING_VERTICAL):
-            ret |= ClimateEntityFeature.SWING_MODE
-
-        return ret
