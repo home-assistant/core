@@ -240,7 +240,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.1
+aiohomekit==3.2.2
 
 # homeassistant.components.hue
 aiohue==4.7.2
