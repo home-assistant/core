@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from homematicip.aio.device import AsyncFloorTerminalBlock12, AsyncSwitchMeasuring
+from homematicip.aio.device import AsyncSwitchMeasuring
 from homematicip.aio.group import AsyncHeatingGroup
 from homematicip.aio.home import AsyncHome
 from homematicip.base.helpers import handle_config
@@ -45,9 +45,6 @@ SERVICE_DEACTIVATE_VACATION = "deactivate_vacation"
 SERVICE_DUMP_HAP_CONFIG = "dump_hap_config"
 SERVICE_RESET_ENERGY_COUNTER = "reset_energy_counter"
 SERVICE_SET_ACTIVE_CLIMATE_PROFILE = "set_active_climate_profile"
-SERVICE_SET_MINIMUM_FLOOR_HEATING_VALVE_POSITION = (
-    "set_minimum_floor_heating_valve_position"
-)
 SERVICE_SET_HOME_COOLING_MODE = "set_home_cooling_mode"
 
 HMIPC_SERVICES = [
@@ -59,19 +56,8 @@ HMIPC_SERVICES = [
     SERVICE_DUMP_HAP_CONFIG,
     SERVICE_RESET_ENERGY_COUNTER,
     SERVICE_SET_ACTIVE_CLIMATE_PROFILE,
-    SERVICE_SET_MINIMUM_FLOOR_HEATING_VALVE_POSITION,
     SERVICE_SET_HOME_COOLING_MODE,
 ]
-
-SCHEMA_SET_MINIMUM_FLOOR_HEATING_VALVE_POSITION = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): comp_entity_ids,
-        vol.Required(ATTR_VALVE_POSITION, default=0): vol.All(
-            vol.Coerce(float), vol.Range(min=0, max=1)
-        ),
-        vol.Optional(ATTR_ACCESSPOINT_ID): vol.All(str, vol.Length(min=24, max=24)),
-    }
-)
 
 SCHEMA_ACTIVATE_ECO_MODE_WITH_DURATION = vol.Schema(
     {
@@ -161,8 +147,6 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             await _async_reset_energy_counter(hass, service)
         elif service_name == SERVICE_SET_ACTIVE_CLIMATE_PROFILE:
             await _set_active_climate_profile(hass, service)
-        elif service_name == SERVICE_SET_MINIMUM_FLOOR_HEATING_VALVE_POSITION:
-            await _async_set_minimum_floor_heating_valve_position(hass, service)
         elif service_name == SERVICE_SET_HOME_COOLING_MODE:
             await _async_set_home_cooling_mode(hass, service)
 
@@ -222,14 +206,6 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         service=SERVICE_RESET_ENERGY_COUNTER,
         service_func=async_call_hmipc_service,
         schema=SCHEMA_RESET_ENERGY_COUNTER,
-    )
-
-    async_register_admin_service(
-        hass=hass,
-        domain=HMIPC_DOMAIN,
-        service=SERVICE_SET_MINIMUM_FLOOR_HEATING_VALVE_POSITION,
-        service_func=async_call_hmipc_service,
-        schema=SCHEMA_SET_MINIMUM_FLOOR_HEATING_VALVE_POSITION,
     )
 
     async_register_admin_service(
@@ -368,29 +344,6 @@ async def _async_reset_energy_counter(hass: HomeAssistant, service: ServiceCall)
             for device in hap.home.devices:
                 if isinstance(device, AsyncSwitchMeasuring):
                     await device.reset_energy_counter()
-
-
-async def _async_set_minimum_floor_heating_valve_position(
-    hass: HomeAssistant, service: ServiceCall
-):
-    """Service to sets the minimum floot heating valve position."""
-    entity_id_list = service.data[ATTR_ENTITY_ID]
-    valve_position = service.data[ATTR_VALVE_POSITION]
-
-    for hap in hass.data[HMIPC_DOMAIN].values():
-        if entity_id_list != "all":
-            for entity_id in entity_id_list:
-                device = hap.hmip_device_by_entity_id.get(entity_id)
-                if device and isinstance(device, AsyncFloorTerminalBlock12):
-                    await device.set_minimum_floor_heating_valve_position(
-                        valve_position
-                    )
-        else:
-            for device in hap.home.devices:
-                if isinstance(device, AsyncFloorTerminalBlock12):
-                    await device.set_minimum_floor_heating_valve_position(
-                        valve_position
-                    )
 
 
 async def _async_set_home_cooling_mode(hass: HomeAssistant, service: ServiceCall):

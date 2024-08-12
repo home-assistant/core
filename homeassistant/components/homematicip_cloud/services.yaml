@@ -99,28 +99,6 @@ reset_energy_counter:
       selector:
         text:
 
-set_minimum_floor_heating_valve_position:
-  fields:
-    entity_id:
-      required: true
-      example: sensor.test_fussbodenheizungsaktor_og_minimumfloorheatingvalveposition
-      default: sensor.test_fussbodenheizungsaktor_og_minimumfloorheatingvalveposition
-      selector:
-        text:
-    accesspoint_id:
-      default: 3014xxxxxxxxxxxxxxxxxxxx
-      selector:
-        text:
-    valve_position:
-      required: true
-      example: 0.1
-      default: 0
-      selector:
-        number:
-          min: 0
-          max: 1
-          step: 0.1
-
 set_home_cooling_mode:
   fields:
     cooling:
