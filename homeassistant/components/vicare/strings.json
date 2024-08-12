@@ -107,7 +107,7 @@
       },
       "dhw_temperature": {
         "name": "DHW temperature"
-      }
+      },
       "dhw_secondary_temperature": {
         "name": "DHW secondary temperature"
       }
