@@ -7,7 +7,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 
 from .const import CONF_TOKEN, CONF_USERNAME, DATA_DISCOVERY, DOMAIN
 from .utils import async_discover_devices
@@ -18,10 +18,9 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize flow."""
-        self._username: str | None = None
-        self._token: str | None = None
+    entry: ConfigEntry | None = None
+    username: str | None = None
+    token: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -51,8 +50,8 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title="Switcher",
             data={
-                CONF_USERNAME: self._username,
-                CONF_TOKEN: self._token,
+                CONF_USERNAME: self.username,
+                CONF_TOKEN: self.token,
             },
         )
 
