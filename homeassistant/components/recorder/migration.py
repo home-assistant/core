@@ -698,7 +698,7 @@ def _restore_foreign_key_constraints(
                 table,
             )
             _delete_foreign_key_violations(
-                session_maker, table, column, foreign_table, foreign_column
+                session_maker, engine, table, column, foreign_table, foreign_column
             )
             _add_constraint(session_maker, add_constraint, table, column)
 
@@ -727,12 +727,17 @@ def _add_constraint(
 
 def _delete_foreign_key_violations(
     session_maker: Callable[[], Session],
+    engine: Engine,
     table: str,
     column: str,
     foreign_table: str | None,
     foreign_column: str | None,
 ) -> None:
     """Remove rows which violate the constraints."""
+    if engine.dialect.name not in (SupportedDialect.MYSQL, SupportedDialect.POSTGRESQL):
+        raise RuntimeError(
+            f"_delete_foreign_key_violations not supported for {engine.dialect.name}"
+        )
     if foreign_table is None:
         return
 
@@ -753,45 +758,86 @@ def _delete_foreign_key_violations(
         # references to NULL instead of deleting as deleting rows may
         # cause additional invalid references to be created. This is to handle
         # old_state_id referencing a missing state.
+        if engine.dialect.name == SupportedDialect.MYSQL:
+            while result is None or result.rowcount > 0:
+                with session_scope(session=session_maker()) as session:
+                    # The subquery (SELECT {foreign_column} from {foreign_table}) is
+                    # to be compatible with old MySQL versions which do not allow
+                    # referencing the table being updated in the WHERE clause.
+                    result = session.connection().execute(
+                        text(
+                            f"UPDATE {table} as t1 "  # noqa: S608
+                            f"SET {column} = NULL "
+                            "WHERE ("
+                            f"t1.{column} IS NOT NULL AND "
+                            "NOT EXISTS "
+                            "(SELECT 1 "
+                            f"FROM (SELECT {foreign_column} from {foreign_table}) AS t2 "
+                            f"WHERE t2.{foreign_column} = t1.{column})) "
+                            "LIMIT 100000;"
+                        )
+                    )
+        elif engine.dialect.name == SupportedDialect.POSTGRESQL:
+            while result is None or result.rowcount > 0:
+                with session_scope(session=session_maker()) as session:
+                    # PostgreSQL does not support LIMIT in UPDATE clauses, so we
+                    # update matches from a limited subquery instead.
+                    result = session.connection().execute(
+                        text(
+                            f"UPDATE {table} "  # noqa: S608
+                            f"SET {column} = NULL "
+                            f"WHERE {column} in "
+                            f"(SELECT {column} from {table} as t1 "
+                            "WHERE ("
+                            f"t1.{column} IS NOT NULL AND "
+                            "NOT EXISTS "
+                            "(SELECT 1 "
+                            f"FROM {foreign_table} AS t2 "
+                            f"WHERE t2.{foreign_column} = t1.{column})) "
+                            "LIMIT 100000);"
+                        )
+                    )
+        return
+
+    if engine.dialect.name == SupportedDialect.MYSQL:
         while result is None or result.rowcount > 0:
             with session_scope(session=session_maker()) as session:
-                # The subquery (SELECT {foreign_column} from {foreign_table}) is
-                # to be compatible with old MySQL versions which do not allow
-                # referencing the table being updated in the WHERE clause.
                 result = session.connection().execute(
+                    # We don't use an alias for the table we're deleting from,
+                    # support of the form `DELETE FROM table AS t1` was added in
+                    # MariaDB 11.6 and is not supported by MySQL. Those engines
+                    # instead support the from `DELETE t1 from table AS t1` which
+                    # is not supported by PostgreSQL and undocumented for MariaDB.
                     text(
-                        f"UPDATE {table} "  # noqa: S608
-                        f"SET {column} = NULL "
+                        f"DELETE FROM {table} "  # noqa: S608
                         "WHERE ("
                         f"{table}.{column} IS NOT NULL AND "
                         "NOT EXISTS "
                         "(SELECT 1 "
-                        f"FROM  (SELECT {foreign_column} from {foreign_table}) AS t2 "
+                        f"FROM {foreign_table} AS t2 "
                         f"WHERE t2.{foreign_column} = {table}.{column})) "
                         "LIMIT 100000;"
                     )
                 )
-        return
-
-    while result is None or result.rowcount > 0:
-        with session_scope(session=session_maker()) as session:
-            result = session.connection().execute(
-                # We don't use an alias for the table we're deleting from,
-                # support of the form `DELETE FROM table AS t1` was added in
-                # MariaDB 11.6 and is not supported by MySQL. Those engines
-                # instead support the from `DELETE t1 from table AS t1` which
-                # is not supported by PostgreSQL and undocumented for MariaDB.
-                text(
-                    f"DELETE FROM {table} "  # noqa: S608
-                    "WHERE ("
-                    f"{table}.{column} IS NOT NULL AND "
-                    "NOT EXISTS "
-                    "(SELECT 1 "
-                    f"FROM {foreign_table} AS t2 "
-                    f"WHERE t2.{foreign_column} = {table}.{column})) "
-                    "LIMIT 100000;"
+    elif engine.dialect.name == SupportedDialect.POSTGRESQL:
+        while result is None or result.rowcount > 0:
+            with session_scope(session=session_maker()) as session:
+                # PostgreSQL does not support LIMIT in DELETE clauses, so we
+                # delete matches from a limited subquery instead.
+                result = session.connection().execute(
+                    text(
+                        f"DELETE FROM {table} "  # noqa: S608
+                        f"WHERE {column} in "
+                        f"(SELECT {column} from {table} as t1 "
+                        "WHERE ("
+                        f"t1.{column} IS NOT NULL AND "
+                        "NOT EXISTS "
+                        "(SELECT 1 "
+                        f"FROM {foreign_table} AS t2 "
+                        f"WHERE t2.{foreign_column} = t1.{column})) "
+                        "LIMIT 100000);"
+                    )
                 )
-            )
 
 
 @database_job_retry_wrapper("Apply migration update", 10)
