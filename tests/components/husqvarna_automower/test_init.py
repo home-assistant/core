@@ -188,6 +188,12 @@ async def test_websocket_not_available(
         assert mock_automower_client.start_listening.call_count == 3
         assert "Trying to reconnect: Boom" not in caplog.text
 
+        # Simulate hass shutting down
+        mock_automower_client.reset_mock()
+        await hass.async_stop()
+        assert mock_automower_client.auth.websocket_connect.call_count == 0
+        assert mock_automower_client.start_listening.call_count == 0
+
         sys.setrecursionlimit(default_recursion_limit)
         assert sys.getrecursionlimit() == default_recursion_limit
 
