@@ -164,9 +164,6 @@ class MqttCommandTemplate:
         """Instantiate a command template."""
         self._template_state: template.TemplateStateFromEntityId | None = None
         self._command_template = command_template
-        if command_template is None:
-            return
-
         self._entity = entity
 
     @callback
@@ -272,14 +269,7 @@ class MqttValueTemplate:
         self._template_state: template.TemplateStateFromEntityId | None = None
         self._value_template = value_template
         self._config_attributes = config_attributes
-        if value_template is None:
-            return
-
-        # value_template.hass = hass
         self._entity = entity
-
-        # if entity:
-        #    value_template.hass = entity.hass
 
     @callback
     def async_render_with_possible_json_value(
