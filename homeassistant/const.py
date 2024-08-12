@@ -60,7 +60,6 @@ class Platform(StrEnum):
     LAWN_MOWER = "lawn_mower"
     LIGHT = "light"
     LOCK = "lock"
-    MAILBOX = "mailbox"
     MEDIA_PLAYER = "media_player"
     NOTIFY = "notify"
     NUMBER = "number"
