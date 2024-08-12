@@ -26,6 +26,11 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "exceptions": {
+    "access_point_not_found": {
+      "message": "No matching access point found for access point id {id}"
+    }
+  },
   "services": {
     "activate_eco_mode_with_duration": {
       "name": "Activate eco mode with duration",
@@ -132,6 +137,20 @@
         "entity_id": {
           "name": "Entity",
           "description": "The ID of the measuring entity. Use 'all' keyword to reset all energy counters."
+        }
+      }
+    },
+    "set_home_cooling_mode": {
+      "name": "Set home cooling mode",
+      "description": "Set the heating/cooling mode for the entire home",
+      "fields": {
+        "accesspoint_id": {
+          "name": "[%key:component::homematicip_cloud::services::activate_eco_mode_with_duration::fields::accesspoint_id::name%]",
+          "description": "[%key:component::homematicip_cloud::services::activate_eco_mode_with_duration::fields::accesspoint_id::description%]"
+        },
+        "cooling": {
+          "name": "Cooling",
+          "description": "Enable for cooling mode, disable for heating mode"
         }
       }
     }

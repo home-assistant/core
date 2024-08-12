@@ -199,7 +199,7 @@ async def test_setup_services_and_unload_services(hass: HomeAssistant) -> None:
 
     # Check services are created
     hmipc_services = hass.services.async_services()[HMIPC_DOMAIN]
-    assert len(hmipc_services) == 8
+    assert len(hmipc_services) == 9
 
     config_entries = hass.config_entries.async_entries(HMIPC_DOMAIN)
     assert len(config_entries) == 1
@@ -232,7 +232,7 @@ async def test_setup_two_haps_unload_one_by_one(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, HMIPC_DOMAIN, {})
 
     hmipc_services = hass.services.async_services()[HMIPC_DOMAIN]
-    assert len(hmipc_services) == 8
+    assert len(hmipc_services) == 9
 
     config_entries = hass.config_entries.async_entries(HMIPC_DOMAIN)
     assert len(config_entries) == 2
@@ -241,7 +241,7 @@ async def test_setup_two_haps_unload_one_by_one(hass: HomeAssistant) -> None:
 
     # services still exists
     hmipc_services = hass.services.async_services()[HMIPC_DOMAIN]
-    assert len(hmipc_services) == 8
+    assert len(hmipc_services) == 9
 
     # unload the second AP
     await hass.config_entries.async_unload(config_entries[1].entry_id)
