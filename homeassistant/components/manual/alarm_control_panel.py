@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_DISARM_AFTER_TRIGGER,
     CONF_NAME,
     CONF_TRIGGER_TIME,
+    CONF_UNIQUE_ID,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
@@ -122,6 +123,7 @@ PLATFORM_SCHEMA = vol.Schema(
         ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_ALARM_NAME): cv.string,
+                vol.Optional(CONF_UNIQUE_ID): cv.string,
                 vol.Exclusive(CONF_CODE, "code validation"): cv.string,
                 vol.Exclusive(CONF_CODE_TEMPLATE, "code validation"): cv.template,
                 vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
@@ -180,6 +182,7 @@ async def async_setup_platform(
             ManualAlarm(
                 hass,
                 config[CONF_NAME],
+                config[CONF_UNIQUE_ID],
                 config.get(CONF_CODE),
                 config.get(CONF_CODE_TEMPLATE),
                 config[CONF_CODE_ARM_REQUIRED],
@@ -206,6 +209,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         self,
         hass: HomeAssistant,
         name: str,
+        unique_id: str | None,
         code: str | None,
         code_template: Template | None,
         code_arm_required: bool,
@@ -216,6 +220,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         self._state = STATE_ALARM_DISARMED
         self._hass = hass
         self._attr_name = name
+        self._attr_unique_id = unique_id
         if code_template:
             self._code = code_template
         else:
