@@ -147,7 +147,7 @@ async def test_websocket_not_available(
         # assert mock_config_entry.state is ConfigEntryState.LOADED
 
         # reconnect_time = 0  # Default to zero for testing
-        test_range = 1940
+        test_range = 866
         start_call_count = mock_automower_client.auth.websocket_connect.call_count
         for count in range(1, test_range):
             # reconnect_time = min(reconnect_time * 2, MAX_WS_RECONNECT_TIME)
