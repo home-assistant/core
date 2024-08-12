@@ -166,7 +166,6 @@ class LogiCam(Camera):
     async def download_livestream(self, filename, duration):
         """Download a recording from the camera's livestream."""
         # Render filename from template.
-        filename.hass = self.hass
         stream_file = filename.async_render(variables={ATTR_ENTITY_ID: self.entity_id})
 
         # Respect configured allowed paths.
@@ -183,7 +182,6 @@ class LogiCam(Camera):
     async def livestream_snapshot(self, filename):
         """Download a still frame from the camera's livestream."""
         # Render filename from template.
-        filename.hass = self.hass
         snapshot_file = filename.async_render(
             variables={ATTR_ENTITY_ID: self.entity_id}
         )

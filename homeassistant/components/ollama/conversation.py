@@ -63,6 +63,34 @@ def _format_tool(
     return {"type": "function", "function": tool_spec}
 
 
+def _fix_invalid_arguments(value: Any) -> Any:
+    """Attempt to repair incorrectly formatted json function arguments.
+
+    Small models (for example llama3.1 8B) may produce invalid argument values
+    which we attempt to repair here.
+    """
+    if not isinstance(value, str):
+        return value
+    if (value.startswith("[") and value.endswith("]")) or (
+        value.startswith("{") and value.endswith("}")
+    ):
+        try:
+            return json.loads(value)
+        except json.decoder.JSONDecodeError:
+            pass
+    return value
+
+
+def _parse_tool_args(arguments: dict[str, Any]) -> dict[str, Any]:
+    """Rewrite ollama tool arguments.
+
+    This function improves tool use quality by fixing common mistakes made by
+    small local tool use models. This will repair invalid json arguments and
+    omit unnecessary arguments with empty values that will fail intent parsing.
+    """
+    return {k: _fix_invalid_arguments(v) for k, v in arguments.items() if v}
+
+
 class OllamaConversationEntity(
     conversation.ConversationEntity, conversation.AbstractConversationAgent
 ):
@@ -78,6 +106,10 @@ class OllamaConversationEntity(
         self._history: dict[str, MessageHistory] = {}
         self._attr_name = entry.title
         self._attr_unique_id = entry.entry_id
+        if self.entry.options.get(CONF_LLM_HASS_API):
+            self._attr_supported_features = (
+                conversation.ConversationEntityFeature.CONTROL
+            )
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to Home Assistant."""
@@ -86,6 +118,9 @@ class OllamaConversationEntity(
             self.hass, "conversation", self.entry.entry_id, self.entity_id
         )
         conversation.async_set_agent(self.hass, self.entry, self)
+        self.entry.async_on_unload(
+            self.entry.add_update_listener(self._async_entry_update_listener)
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """When entity will be removed from Home Assistant."""
@@ -255,7 +290,7 @@ class OllamaConversationEntity(
             for tool_call in tool_calls:
                 tool_input = llm.ToolInput(
                     tool_name=tool_call["function"]["name"],
-                    tool_args=tool_call["function"]["arguments"],
+                    tool_args=_parse_tool_args(tool_call["function"]["arguments"]),
                 )
                 _LOGGER.debug(
                     "Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args
@@ -271,7 +306,7 @@ class OllamaConversationEntity(
                 _LOGGER.debug("Tool response: %s", tool_response)
                 message_history.messages.append(
                     ollama.Message(
-                        role=MessageRole.TOOL.value,  # type: ignore[typeddict-item]
+                        role=MessageRole.TOOL.value,
                         content=json.dumps(tool_response),
                     )
                 )
@@ -306,3 +341,10 @@ class OllamaConversationEntity(
             message_history.messages = [
                 message_history.messages[0]
             ] + message_history.messages[drop_index:]
+
+    async def _async_entry_update_listener(
+        self, hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
+        """Handle options update."""
+        # Reload as we update device info + entity name + supported features
+        await hass.config_entries.async_reload(entry.entry_id)

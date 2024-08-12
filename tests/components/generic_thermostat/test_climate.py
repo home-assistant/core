@@ -1097,9 +1097,9 @@ async def setup_comp_9(hass: HomeAssistant) -> None:
 async def test_precision(hass: HomeAssistant) -> None:
     """Test that setting precision to tenths works as intended."""
     hass.config.units = US_CUSTOMARY_SYSTEM
-    await common.async_set_temperature(hass, 23.27)
+    await common.async_set_temperature(hass, 55.27)
     state = hass.states.get(ENTITY)
-    assert state.attributes.get("temperature") == 23.3
+    assert state.attributes.get("temperature") == 55.3
     # check that target_temp_step defaults to precision
     assert state.attributes.get("target_temp_step") == 0.1
 

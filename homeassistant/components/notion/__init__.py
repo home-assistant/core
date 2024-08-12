@@ -14,11 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -49,7 +45,6 @@ ATTR_SYSTEM_NAME = "system_name"
 
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 # Define a map of old-API task types to new-API listener types:
 TASK_TYPE_TO_LISTENER_MAP: dict[str, ListenerKind] = {

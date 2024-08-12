@@ -16,6 +16,10 @@ from .const import (
     DATA_LAST_WAKE_UP,
     DOMAIN,
     EVENT_RECORDING,
+    SAMPLE_CHANNELS,
+    SAMPLE_RATE,
+    SAMPLE_WIDTH,
+    SAMPLES_PER_CHUNK,
 )
 from .error import PipelineNotFound
 from .pipeline import (
@@ -53,6 +57,10 @@ __all__ = (
     "PipelineNotFound",
     "WakeWordSettings",
     "EVENT_RECORDING",
+    "SAMPLES_PER_CHUNK",
+    "SAMPLE_RATE",
+    "SAMPLE_WIDTH",
+    "SAMPLE_CHANNELS",
 )
 
 CONFIG_SCHEMA = vol.Schema(

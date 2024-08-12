@@ -115,6 +115,13 @@ class FritzDeviceClimateMock(FritzEntityBaseMock):
     scheduled_preset = PRESET_ECO
 
 
+class FritzDeviceClimateWithoutTempSensorMock(FritzDeviceClimateMock):
+    """Mock of a AVM Fritz!Box climate device without exposing temperature sensor."""
+
+    temperature = None
+    has_temperature_sensor = False
+
+
 class FritzDeviceSensorMock(FritzEntityBaseMock):
     """Mock of a AVM Fritz!Box sensor device."""
 
@@ -187,3 +194,9 @@ class FritzDeviceCoverMock(FritzEntityBaseMock):
     has_thermostat = False
     has_blind = True
     levelpercentage = 0
+
+
+class FritzDeviceCoverUnknownPositionMock(FritzDeviceCoverMock):
+    """Mock of a AVM Fritz!Box cover device with unknown position."""
+
+    levelpercentage = None

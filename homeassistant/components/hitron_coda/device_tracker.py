@@ -42,7 +42,7 @@ def get_scanner(
     return scanner if scanner.success_init else None
 
 
-Device = namedtuple("Device", ["mac", "name"])
+Device = namedtuple("Device", ["mac", "name"])  # noqa: PYI024
 
 
 class HitronCODADeviceScanner(DeviceScanner):

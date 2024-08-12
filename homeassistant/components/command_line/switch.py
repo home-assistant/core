@@ -37,6 +37,8 @@ async def async_setup_platform(
 ) -> None:
     """Find and return switches controlled by shell commands."""
 
+    if not discovery_info:
+        return
     switches = []
     discovery_info = cast(DiscoveryInfoType, discovery_info)
     entities: dict[str, dict[str, Any]] = {
@@ -44,9 +46,6 @@ async def async_setup_platform(
     }
 
     for object_id, switch_config in entities.items():
-        if value_template := switch_config.get(CONF_VALUE_TEMPLATE):
-            value_template.hass = hass
-
         trigger_entity_config = {
             CONF_NAME: Template(switch_config.get(CONF_NAME, object_id), hass),
             **{k: v for k, v in switch_config.items() if k in TRIGGER_ENTITY_OPTIONS},
@@ -59,7 +58,7 @@ async def async_setup_platform(
                 switch_config[CONF_COMMAND_ON],
                 switch_config[CONF_COMMAND_OFF],
                 switch_config.get(CONF_COMMAND_STATE),
-                value_template,
+                switch_config.get(CONF_VALUE_TEMPLATE),
                 switch_config[CONF_COMMAND_TIMEOUT],
                 switch_config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL),
             )

@@ -80,12 +80,6 @@ async def test_climate_on_off(
             )
         }
     )
-
-    await hass.async_block_till_done()
-    # read heat/cool state
-    if heat_cool_ga:
-        await knx.assert_read("1/2/11")
-        await knx.receive_response("1/2/11", 0)  # cool
     # read temperature state
     await knx.assert_read("1/2/3")
     await knx.receive_response("1/2/3", RAW_FLOAT_20_0)
@@ -95,6 +89,10 @@ async def test_climate_on_off(
     # read on/off state
     await knx.assert_read("1/2/9")
     await knx.receive_response("1/2/9", 1)
+    # read heat/cool state
+    if heat_cool_ga:
+        await knx.assert_read("1/2/11")
+        await knx.receive_response("1/2/11", 0)  # cool
 
     # turn off
     await hass.services.async_call(
@@ -171,18 +169,15 @@ async def test_climate_hvac_mode(
             )
         }
     )
-
-    await hass.async_block_till_done()
     # read states state updater
-    await knx.assert_read("1/2/7")
-    await knx.assert_read("1/2/3")
-    # StateUpdater initialize state
-    await knx.receive_response("1/2/7", (0x01,))
-    await knx.receive_response("1/2/3", RAW_FLOAT_20_0)
     # StateUpdater semaphore allows 2 concurrent requests
-    # read target temperature state
+    await knx.assert_read("1/2/3")
     await knx.assert_read("1/2/5")
+    # StateUpdater initialize state
+    await knx.receive_response("1/2/3", RAW_FLOAT_20_0)
     await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
+    await knx.assert_read("1/2/7")
+    await knx.receive_response("1/2/7", (0x01,))
 
     # turn hvac mode to off - set_hvac_mode() doesn't send to on_off if dedicated hvac mode is available
     await hass.services.async_call(
@@ -254,17 +249,14 @@ async def test_climate_preset_mode(
     )
     events = async_capture_events(hass, "state_changed")
 
-    await hass.async_block_till_done()
-    # read states state updater
-    await knx.assert_read("1/2/7")
-    await knx.assert_read("1/2/3")
     # StateUpdater initialize state
-    await knx.receive_response("1/2/7", (0x01,))
-    await knx.receive_response("1/2/3", RAW_FLOAT_21_0)
     # StateUpdater semaphore allows 2 concurrent requests
-    # read target temperature state
+    await knx.assert_read("1/2/3")
     await knx.assert_read("1/2/5")
+    await knx.receive_response("1/2/3", RAW_FLOAT_21_0)
     await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
+    await knx.assert_read("1/2/7")
+    await knx.receive_response("1/2/7", (0x01,))
     events.clear()
 
     # set preset mode
@@ -294,8 +286,6 @@ async def test_climate_preset_mode(
     assert len(knx.xknx.devices[1].device_updated_cbs) == 2
     # test removing also removes hooks
     entity_registry.async_remove("climate.test")
-    await hass.async_block_till_done()
-
     # If we remove the entity the underlying devices should disappear too
     assert len(knx.xknx.devices) == 0
 
@@ -315,18 +305,15 @@ async def test_update_entity(hass: HomeAssistant, knx: KNXTestKit) -> None:
         }
     )
     assert await async_setup_component(hass, "homeassistant", {})
-    await hass.async_block_till_done()
 
-    await hass.async_block_till_done()
     # read states state updater
-    await knx.assert_read("1/2/7")
     await knx.assert_read("1/2/3")
-    # StateUpdater initialize state
-    await knx.receive_response("1/2/7", (0x01,))
-    await knx.receive_response("1/2/3", RAW_FLOAT_21_0)
-    # StateUpdater semaphore allows 2 concurrent requests
     await knx.assert_read("1/2/5")
+    # StateUpdater initialize state
+    await knx.receive_response("1/2/3", RAW_FLOAT_21_0)
     await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
+    await knx.assert_read("1/2/7")
+    await knx.receive_response("1/2/7", (0x01,))
 
     # verify update entity retriggers group value reads to the bus
     await hass.services.async_call(
@@ -354,8 +341,6 @@ async def test_command_value_idle_mode(hass: HomeAssistant, knx: KNXTestKit) -> 
             }
         }
     )
-
-    await hass.async_block_till_done()
     # read states state updater
     await knx.assert_read("1/2/3")
     await knx.assert_read("1/2/5")

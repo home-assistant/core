@@ -390,6 +390,27 @@ class APIDomainServicesView(HomeAssistantView):
             )
 
         context = self.context(request)
+        if not hass.services.has_service(domain, service):
+            raise HTTPBadRequest from ServiceNotFound(domain, service)
+
+        if response_requested := "return_response" in request.query:
+            if (
+                hass.services.supports_response(domain, service)
+                is ha.SupportsResponse.NONE
+            ):
+                return self.json_message(
+                    "Service does not support responses. Remove return_response from request.",
+                    HTTPStatus.BAD_REQUEST,
+                )
+        elif (
+            hass.services.supports_response(domain, service) is ha.SupportsResponse.ONLY
+        ):
+            return self.json_message(
+                "Service call requires responses but caller did not ask for responses. "
+                "Add ?return_response to query parameters.",
+                HTTPStatus.BAD_REQUEST,
+            )
+
         changed_states: list[json_fragment] = []
 
         @ha.callback
@@ -406,19 +427,25 @@ class APIDomainServicesView(HomeAssistantView):
 
         try:
             # shield the service call from cancellation on connection drop
-            await shield(
+            response = await shield(
                 hass.services.async_call(
                     domain,
                     service,
                     data,  # type: ignore[arg-type]
                     blocking=True,
                     context=context,
+                    return_response=response_requested,
                 )
             )
         except (vol.Invalid, ServiceNotFound) as ex:
             raise HTTPBadRequest from ex
         finally:
             cancel_listen()
+
+        if response_requested:
+            return self.json(
+                {"changed_states": changed_states, "service_response": response}
+            )
 
         return self.json(changed_states)
 

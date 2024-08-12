@@ -40,7 +40,7 @@ async def test_diagnostics(
                     "__type": "<enum 'DeviceType'>",
                     "repr": (
                         "<DeviceType.V4: ('Switcher V4', '0317', "
-                        "1, <DeviceCategory.WATER_HEATER: 1>)>"
+                        "1, <DeviceCategory.WATER_HEATER: 1>, False)>"
                     ),
                 },
                 "electric_current": 12.8,
@@ -50,6 +50,7 @@ async def test_diagnostics(
                 "name": "Heater FE12",
                 "power_consumption": 2780,
                 "remaining_time": "01:29:32",
+                "token_needed": False,
             }
         ],
         "entry": {
