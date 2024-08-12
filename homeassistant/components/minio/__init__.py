@@ -127,7 +127,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     def _render_service_value(service, key):
         value = service.data[key]
-        value.hass = hass
         return value.async_render(parse_result=False)
 
     def put_file(service: ServiceCall) -> None:
