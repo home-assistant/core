@@ -205,28 +205,24 @@ class InfluxSensor(SensorEntity):
         self._attr_unique_id = query.get(CONF_UNIQUE_ID)
 
         if query[CONF_LANGUAGE] == LANGUAGE_FLUX:
-            query_clause = query.get(CONF_QUERY)
-            query_clause.hass = hass
             self.data = InfluxFluxSensorData(
                 influx,
                 query.get(CONF_BUCKET),
                 query.get(CONF_RANGE_START),
                 query.get(CONF_RANGE_STOP),
-                query_clause,
+                query.get(CONF_QUERY),
                 query.get(CONF_IMPORTS),
                 query.get(CONF_GROUP_FUNCTION),
             )
 
         else:
-            where_clause = query.get(CONF_WHERE)
-            where_clause.hass = hass
             self.data = InfluxQLSensorData(
                 influx,
                 query.get(CONF_DB_NAME),
                 query.get(CONF_GROUP_FUNCTION),
                 query.get(CONF_FIELD),
                 query.get(CONF_MEASUREMENT_NAME),
-                where_clause,
+                query.get(CONF_WHERE),
             )
 
     @property
