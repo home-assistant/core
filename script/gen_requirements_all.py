@@ -120,11 +120,6 @@ enum34==1000000000.0.0
 typing==1000000000.0.0
 uuid==1000000000.0.0
 
-# regex causes segfault with version 2021.8.27
-# https://bitbucket.org/mrabarnett/mrab-regex/issues/421/2021827-results-in-fatal-python-error
-# This is fixed in 2021.8.28
-regex==2021.8.28
-
 # httpx requires httpcore, and httpcore requires anyio and h11, but the version constraints on
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
