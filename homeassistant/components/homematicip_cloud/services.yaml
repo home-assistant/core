@@ -95,7 +95,7 @@ reset_energy_counter:
   fields:
     entity_id:
       required: true
-      example: switch.livingrooms
+      example: switch.livingroom
       selector:
         text:
 

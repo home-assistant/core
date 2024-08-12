@@ -32,7 +32,6 @@ from homematicip.aio.device import (
 )
 from homematicip.base.enums import FunctionalChannelType, ValveState
 from homematicip.base.functionalChannels import (
-    DeviceBaseFloorHeatingChannel,
     FloorTerminalBlockMechanicChannel,
     FunctionalChannel,
 )
@@ -197,50 +196,8 @@ async def async_setup_entry(  # noqa: C901
                                 hap, device, channel=channel.index
                             )
                         )
-                elif isinstance(channel, DeviceBaseFloorHeatingChannel):
-                    entities.append(
-                        HomematicipMinimumFloorHeatingValvePosition(
-                            hap, device, channel=channel.index
-                        )
-                    )
 
     async_add_entities(entities)
-
-
-class HomematicipMinimumFloorHeatingValvePosition(
-    HomematicipGenericEntity, SensorEntity
-):
-    """Representation of the HomematicIP floor terminal block minimum valve position."""
-
-    _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_state_class = SensorStateClass.MEASUREMENT
-
-    def __init__(
-        self, hap: HomematicipHAP, device, channel, is_multi_channel=True
-    ) -> None:
-        """Initialize floor terminal block 12 device."""
-        super().__init__(
-            hap,
-            device,
-            channel=channel,
-            is_multi_channel=is_multi_channel,
-            post="minimum valve position",
-        )
-
-    @property
-    def native_value(self) -> int | None:
-        """Return the state of the floor terminal block minimum Valve Position."""
-        if hasattr(
-            self._device.functionalChannels[self._channel],
-            "minimumFloorHeatingValvePosition",
-        ):
-            return round(
-                self._device.functionalChannels[
-                    self._channel
-                ].minimumFloorHeatingValvePosition
-                * 100
-            )
-        return None
 
 
 class HomematicipFloorTerminalBlockMechanicChannelValve(
