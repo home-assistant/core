@@ -1278,9 +1278,6 @@ lmcloud==1.1.13
 # homeassistant.components.google_maps
 locationsharinglib==5.0.1
 
-# homeassistant.components.logi_circle
-logi-circle==0.2.3
-
 # homeassistant.components.london_underground
 london-tube-status==0.5
 
