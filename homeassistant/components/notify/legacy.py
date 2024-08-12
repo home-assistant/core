@@ -259,7 +259,6 @@ class BaseNotificationService:
         title: Template | None
         if title := service.data.get(ATTR_TITLE):
             check_templates_warn(self.hass, title)
-            title.hass = self.hass
             kwargs[ATTR_TITLE] = title.async_render(parse_result=False)
 
         if self.registered_targets.get(service.service) is not None:
@@ -268,7 +267,6 @@ class BaseNotificationService:
             kwargs[ATTR_TARGET] = service.data.get(ATTR_TARGET)
 
         check_templates_warn(self.hass, message)
-        message.hass = self.hass
         kwargs[ATTR_MESSAGE] = message.async_render(parse_result=False)
         kwargs[ATTR_DATA] = service.data.get(ATTR_DATA)
 
