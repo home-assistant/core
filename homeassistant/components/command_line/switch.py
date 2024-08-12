@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
 from homeassistant.const import (
@@ -142,11 +142,11 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
 
     async def _async_query_state(self) -> str | int | None:
         """Query for state."""
-        if self._command_state:
-            if self._value_template:
-                return await self._async_query_state_value(self._command_state)
-            return await self._async_query_state_code(self._command_state)
-        return None
+        if TYPE_CHECKING:
+            assert self._command_state
+        if self._value_template:
+            return await self._async_query_state_value(self._command_state)
+        return await self._async_query_state_code(self._command_state)
 
     async def _update_entity_state(self, now: datetime | None = None) -> None:
         """Update the state of the entity."""
