@@ -176,7 +176,7 @@ aio-georss-gdacs==0.9
 aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.6.1
+aioairzone-cloud==0.6.2
 
 # homeassistant.components.airzone
 aioairzone==0.8.1
