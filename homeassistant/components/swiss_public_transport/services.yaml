@@ -7,9 +7,8 @@ fetch_connections:
           integration: swiss_public_transport
     limit:
       example: 3
-      required: true
       selector:
         number:
-          min: 0
+          min: 1
           max: 15
           step: 1

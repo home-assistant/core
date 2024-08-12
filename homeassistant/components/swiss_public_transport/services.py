@@ -1,7 +1,5 @@
 """Define services for the Swiss public transport integration."""
 
-from datetime import date
-
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -32,9 +30,9 @@ from .const import (
 SERVICE_FETCH_CONNECTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Required(ATTR_LIMIT, default=CONNECTIONS_COUNT): NumberSelector(
+        vol.Optional(ATTR_LIMIT, default=CONNECTIONS_COUNT): NumberSelector(
             NumberSelectorConfig(
-                min=0, max=CONNECTIONS_MAX, mode=NumberSelectorMode.BOX
+                min=1, max=CONNECTIONS_MAX, mode=NumberSelectorMode.BOX
             )
         ),
     }
@@ -68,7 +66,7 @@ def setup_services(hass: HomeAssistant) -> None:
     ) -> ServiceResponse:
         """Fetch a set of connections."""
         config_entry = async_get_entry(hass, call.data[ATTR_CONFIG_ENTRY_ID])
-        limit = call.data.get(ATTR_LIMIT, date.today())
+        limit = call.data.get(ATTR_LIMIT) or CONNECTIONS_COUNT
         coordinator = hass.data[DOMAIN][config_entry.entry_id]
         try:
             connections = await coordinator.fetch_connections(limit=int(limit))

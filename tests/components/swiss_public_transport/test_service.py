@@ -16,6 +16,7 @@ from homeassistant.components.swiss_public_transport.const import (
     ATTR_LIMIT,
     CONF_DESTINATION,
     CONF_START,
+    CONNECTIONS_COUNT,
     CONNECTIONS_MAX,
     DOMAIN,
     SERVICE_FETCH_CONNECTIONS,
@@ -39,10 +40,11 @@ MOCK_DATA_STEP_BASE = {
 @pytest.mark.parametrize(
     ("limit", "config_data"),
     [
-        (0, MOCK_DATA_STEP_BASE),
         (1, MOCK_DATA_STEP_BASE),
         (2, MOCK_DATA_STEP_BASE),
         (3, MOCK_DATA_STEP_BASE),
+        (CONNECTIONS_MAX, MOCK_DATA_STEP_BASE),
+        (None, MOCK_DATA_STEP_BASE),
     ],
 )
 async def test_service_call_fetch_connections_success(
@@ -67,31 +69,32 @@ async def test_service_call_fetch_connections_success(
         return_value=AsyncMock(),
     ) as mock:
         mock().connections = json.loads(load_fixture("connections.json", DOMAIN))[
-            0 : limit + 2
+            0 : (limit or CONNECTIONS_COUNT) + 2
         ]
 
         await setup_integration(hass, config_entry)
 
+        data = {ATTR_CONFIG_ENTRY_ID: config_entry.entry_id}
+        if limit is not None:
+            data[ATTR_LIMIT] = limit
         assert hass.services.has_service(DOMAIN, SERVICE_FETCH_CONNECTIONS)
         response = await hass.services.async_call(
             domain=DOMAIN,
             service=SERVICE_FETCH_CONNECTIONS,
-            service_data={
-                ATTR_CONFIG_ENTRY_ID: config_entry.entry_id,
-                ATTR_LIMIT: limit,
-            },
+            service_data=data,
             blocking=True,
             return_response=True,
         )
         await hass.async_block_till_done()
         assert response["connections"] is not None
-        assert len(response["connections"]) == limit
+        assert len(response["connections"]) == (limit or CONNECTIONS_COUNT)
 
 
 @pytest.mark.parametrize(
     ("limit", "config_data", "expected_result", "raise_error"),
     [
         (-1, MOCK_DATA_STEP_BASE, pytest.raises(vol_er.MultipleInvalid), None),
+        (0, MOCK_DATA_STEP_BASE, pytest.raises(vol_er.MultipleInvalid), None),
         (
             CONNECTIONS_MAX + 1,
             MOCK_DATA_STEP_BASE,
