@@ -727,6 +727,7 @@ def _add_constraint(
             connection.execute(add_constraint)
         except (InternalError, OperationalError):
             _LOGGER.exception("Could not update foreign options in %s table", table)
+            raise
 
 
 def _delete_foreign_key_violations(
