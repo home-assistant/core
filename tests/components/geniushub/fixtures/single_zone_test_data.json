@@ -1,0 +1,172 @@
+{
+  "data": [
+    {
+      "bIsActive": "False",
+      "bOutRequestHeat": "False",
+      "bOverrideLimitingAllowed": "False",
+      "bPrimaryZone": "True",
+      "datapoints": [
+        {
+          "addr": "SwitchBinary",
+          "path": "site/0xEC0BBD04/86",
+          "type": "Int",
+          "val": 0
+        }
+      ],
+      "fBoostSP": 1.0,
+      "fMaxSP": 1,
+      "fMinSP": 0,
+      "fOutput": 0.0,
+      "fSP": 0.0,
+      "iBaseMode": 1,
+      "iBoostTimeRemaining": 1028,
+      "iFlagActualKit": 0,
+      "iFlagExpectedKit": 0,
+      "iFlags": 1023,
+      "iID": 32,
+      "iMode": 1,
+      "iOverrideDuration": 3600,
+      "iOverrideMode": 1,
+      "iPriority": 10,
+      "iType": 2,
+      "lOptions": 0,
+      "linkedSettings": {
+        "bFollowActive": "False",
+        "bFollowOutput": "True",
+        "fLinkSP": 21.0,
+        "lstLinkedTo": []
+      },
+      "log": [],
+      "lstIssues": [],
+      "maximumOverrideDuration": 86400,
+      "nodes": [
+        {
+          "addr": "86",
+          "childValues": {
+            "ApplicationVersion": {
+              "addr": "ApplicationVersion",
+              "path": "site/0xEC0BBD04/86",
+              "type": "String",
+              "val": "1.1"
+            },
+            "BasicValue": {
+              "addr": "BasicValue",
+              "path": "site/0xEC0BBD04/86",
+              "type": "Int",
+              "val": 0
+            },
+            "LibraryType": {
+              "addr": "LibraryType",
+              "path": "site/0xEC0BBD04/86",
+              "type": "String",
+              "val": "Enhanced Slave"
+            },
+            "ProtocolVersion": {
+              "addr": "ProtocolVersion",
+              "path": "site/0xEC0BBD04/86",
+              "type": "String",
+              "val": "3.41"
+            },
+            "SwitchAllMode": {
+              "addr": "SwitchAllMode",
+              "path": "site/0xEC0BBD04/86",
+              "type": "Int",
+              "val": 255
+            },
+            "SwitchBinary": {
+              "addr": "SwitchBinary",
+              "path": "site/0xEC0BBD04/86",
+              "type": "Int",
+              "val": 0
+            },
+            "hash": {
+              "addr": "hash",
+              "path": "site/0xEC0BBD04/86",
+              "type": "String",
+              "val": "0x0000013C00010001"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/0xEC0BBD04/86",
+              "type": "Int",
+              "val": 0
+            },
+            "lastComms": {
+              "addr": "lastComms",
+              "path": "site/0xEC0BBD04/86",
+              "type": "Int",
+              "val": 1722858761
+            },
+            "location": {
+              "addr": "location",
+              "path": "site/0xEC0BBD04/86",
+              "type": "String",
+              "val": "Study Socket"
+            },
+            "lostFromModule": {
+              "addr": "lostFromModule",
+              "path": "site/0xEC0BBD04/86",
+              "type": "Bool",
+              "val": "False"
+            },
+            "manfID": {
+              "addr": "manfID",
+              "path": "site/0xEC0BBD04/86",
+              "type": "String",
+              "val": "316/1/1"
+            }
+          },
+          "type": ""
+        }
+      ],
+      "objTimer": [
+        { "fSP": 0.0, "iDay": 0, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 0, "iTm": 0 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 0, "iTm": 86400 },
+        { "fSP": 0.0, "iDay": 1, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 1, "iTm": 0 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 1, "iTm": 86400 },
+        { "fSP": 0.0, "iDay": 2, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 2, "iTm": 0 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 2, "iTm": 86400 },
+        { "fSP": 0.0, "iDay": 3, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 3, "iTm": 0 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 3, "iTm": 86400 },
+        { "fSP": 0.0, "iDay": 4, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 4, "iTm": 0 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 4, "iTm": 86400 },
+        { "fSP": 0.0, "iDay": 5, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 5, "iTm": 0 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 5, "iTm": 86400 },
+        { "fSP": 0.0, "iDay": 6, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 6, "iTm": 0 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 6, "iTm": 86400 }
+      ],
+      "strName": "Study Socket",
+      "tmLastTick": 1722858788,
+      "trigger": {
+        "boost": 1,
+        "linkChildActive": 0,
+        "linkChildOutput": 0,
+        "output": 0,
+        "preheat": 0,
+        "reactive": 1,
+        "setpoint": 1,
+        "test": 0
+      },
+      "zoneReactive": {
+        "bTriggerOff": "True",
+        "bTriggerOn": "False",
+        "fActivityLevel": 0.0,
+        "fThreshold": 1.0,
+        "iReactiveMinutesTriggerOff": 20,
+        "iReactiveMinutesTriggerOn": 2,
+        "iSensitivity": 80,
+        "iTimeTillOff": 0,
+        "iTimeTillOn": 2,
+        "tmLastActivity": 0
+      },
+      "zoneSubType": 0
+    }
+  ]
+}

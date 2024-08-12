@@ -1,0 +1,4980 @@
+{
+  "data": [
+    {
+      "bHeatEnabled": "False",
+      "bIsActive": "False",
+      "bOutRequestHeat": "False",
+      "bOverrideLimitingAllowed": "False",
+      "bPrimaryZone": "True",
+      "datapoints": [
+        {
+          "addr": "SwitchBinary",
+          "path": "site/0xEC0BBD04/2",
+          "type": "Int",
+          "val": "None"
+        },
+        {
+          "addr": "SwitchBinary",
+          "path": "site/0xEC0BBD04/22",
+          "type": "Int",
+          "val": 0
+        }
+      ],
+      "fExternalHumidity": 0.0,
+      "fExternalPV": 0.0,
+      "fMaxSP": 28.0,
+      "fMinSP": 4.0,
+      "fOutput": 0.0,
+      "fOverrideTemp": 21.0,
+      "fPV": 0.0,
+      "iBaseMode": 1,
+      "iBoostTimeRemaining": 0,
+      "iFlagActualKit": 0,
+      "iFlagExpectedKit": 0,
+      "iFlags": 0,
+      "iID": 0,
+      "iMode": 1,
+      "iOverrideDuration": 3600,
+      "iOverrideMode": 0,
+      "iPriority": 0,
+      "iType": 1,
+      "lOptions": 3,
+      "log": [],
+      "lstIssues": [
+        {
+          "data": {
+            "location": "Duxford Close",
+            "nodeHash": "0x0000005900010003",
+            "nodeID": "2"
+          },
+          "id": "node:not_seen",
+          "level": 2
+        },
+        {
+          "data": { "msg": "", "location": "Duxford Close" },
+          "id": "manager:weather",
+          "level": 1
+        }
+      ],
+      "mappings": {
+        "0": ["site/0xEC0BBD04/3", "site/0xEC0BBD04/2", "site/0xEC0BBD04/22"],
+        "1": ["site/0xEC0BBD04/11", "site/0xEC0BBD04/53"],
+        "10": ["site/0xEC0BBD04/5"],
+        "11": ["site/0xEC0BBD04/6"],
+        "12": ["site/0xEC0BBD04/4"],
+        "18": ["site/0xEC0BBD04/6"],
+        "2": [
+          "site/0xEC0BBD04/21",
+          "site/0xEC0BBD04/59",
+          "site/0xEC0BBD04/60",
+          "site/0xEC0BBD04/68"
+        ],
+        "24": ["site/0xEC0BBD04/6"],
+        "27": ["site/0xEC0BBD04/4"],
+        "28": ["site/0xEC0BBD04/6"],
+        "29": [
+          "site/0xEC0BBD04/18",
+          "site/0xEC0BBD04/77",
+          "site/0xEC0BBD04/87",
+          "site/0xEC0BBD04/78"
+        ],
+        "3": [
+          "site/0xEC0BBD04/12",
+          "site/0xEC0BBD04/56",
+          "site/0xEC0BBD04/61",
+          "site/0xEC0BBD04/20",
+          "site/0xEC0BBD04/89"
+        ],
+        "30": ["site/0xEC0BBD04/50", "site/0xEC0BBD04/85"],
+        "32": ["site/0xEC0BBD04/86"],
+        "5": ["site/0xEC0BBD04/9", "site/0xEC0BBD04/17", "site/0xEC0BBD04/88"],
+        "6": ["site/0xEC0BBD04/7", "site/0xEC0BBD04/15"],
+        "7": [
+          "site/0xEC0BBD04/8",
+          "site/0xEC0BBD04/70",
+          "site/0xEC0BBD04/16",
+          "site/0xEC0BBD04/90"
+        ]
+      },
+      "maximumOverrideDuration": 86400,
+      "nodes": [
+        {
+          "addr": "2",
+          "childValues": {
+            "ApplicationVersion": {
+              "addr": "ApplicationVersion",
+              "path": "site/0xEC0BBD04/2",
+              "type": "String",
+              "val": "2.0"
+            },
+            "LibraryType": {
+              "addr": "LibraryType",
+              "path": "site/0xEC0BBD04/2",
+              "type": "String",
+              "val": "Routing Slave"
+            },
+            "ProtocolVersion": {
+              "addr": "ProtocolVersion",
+              "path": "site/0xEC0BBD04/2",
+              "type": "String",
+              "val": "2.78"
+            },
+            "SwitchBinary": {
+              "addr": "SwitchBinary",
+              "path": "site/0xEC0BBD04/2",
+              "type": "Int",
+              "val": "None"
+            },
+            "hash": {
+              "addr": "hash",
+              "path": "site/0xEC0BBD04/2",
+              "type": "String",
+              "val": "0x0000005900010003"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/0xEC0BBD04/2",
+              "type": "Int",
+              "val": 4
+            },
+            "lastComms": {
+              "addr": "lastComms",
+              "path": "site/0xEC0BBD04/2",
+              "type": "Int",
+              "val": 1695587599
+            },
+            "location": {
+              "addr": "location",
+              "path": "site/0xEC0BBD04/2",
+              "type": "String",
+              "val": ""
+            },
+            "manfID": {
+              "addr": "manfID",
+              "path": "site/0xEC0BBD04/2",
+              "type": "String",
+              "val": "89/3/1"
+            }
+          },
+          "type": ""
+        },
+        {
+          "addr": "22",
+          "childValues": {
+            "ApplicationVersion": {
+              "addr": "ApplicationVersion",
+              "path": "site/0xEC0BBD04/22",
+              "type": "String",
+              "val": "2.0"
+            },
+            "LibraryType": {
+              "addr": "LibraryType",
+              "path": "site/0xEC0BBD04/22",
+              "type": "String",
+              "val": "Routing Slave"
+            },
+            "ProtocolVersion": {
+              "addr": "ProtocolVersion",
+              "path": "site/0xEC0BBD04/22",
+              "type": "String",
+              "val": "2.78"
+            },
+            "SwitchBinary": {
+              "addr": "SwitchBinary",
+              "path": "site/0xEC0BBD04/22",
+              "type": "Int",
+              "val": 0
+            },
+            "hash": {
+              "addr": "hash",
+              "path": "site/0xEC0BBD04/22",
+              "type": "String",
+              "val": "0x0000005900010003"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/0xEC0BBD04/22",
+              "type": "Int",
+              "val": 0
+            },
+            "lastComms": {
+              "addr": "lastComms",
+              "path": "site/0xEC0BBD04/22",
+              "type": "Int",
+              "val": 1722858790
+            },
+            "location": {
+              "addr": "location",
+              "path": "site/0xEC0BBD04/22",
+              "type": "String",
+              "val": "Duxford Close"
+            },
+            "lostFromModule": {
+              "addr": "lostFromModule",
+              "path": "site/0xEC0BBD04/22",
+              "type": "Bool",
+              "val": "False"
+            },
+            "manfID": {
+              "addr": "manfID",
+              "path": "site/0xEC0BBD04/22",
+              "type": "String",
+              "val": "89/3/1"
+            }
+          },
+          "type": ""
+        }
+      ],
+      "strBuildDate": "Jun 11 2024",
+      "strName": "Duxford Close",
+      "strTime": "12:53:08",
+      "tmLastTick": 1722858788,
+      "trigger": {
+        "boost": 0,
+        "linkChildActive": 0,
+        "linkChildOutput": 0,
+        "output": 0,
+        "preheat": 0,
+        "reactive": 0,
+        "setpoint": 0,
+        "test": 0
+      },
+      "weatherData": {
+        "feels_like": "None",
+        "humidity": "None",
+        "message": "None",
+        "precipitation": "None",
+        "status": 16,
+        "temperature": "None",
+        "uv": "None",
+        "weather_type": "None"
+      },
+      "zoneSubType": 0
+    },
+    {
+      "activeTemperatureDevices": ["AssumedTemperature"],
+      "assumedTemp": 20.0,
+      "bInHeatEnabled": "False",
+      "bIsActive": "False",
+      "bOutRequestHeat": "False",
+      "bOverrideLimitingAllowed": "True",
+      "bPrimaryZone": "True",
+      "bTriggerWarmup": "False",
+      "calibration": {
+        "last_device_status": {},
+        "last_result": "",
+        "last_start_time": 0,
+        "last_stop_time": 0,
+        "state": 0,
+        "state_name": "ECALIBRATION_STATE_IDLE"
+      },
+      "datapoints": [
+        {
+          "addr": "TEMPERATURE",
+          "path": "site/WeatherData",
+          "type": "Float",
+          "val": "None"
+        },
+        {
+          "addr": "TEMPERATURE",
+          "path": "site/0xEC0BBD04/53",
+          "type": "Float",
+          "val": "None"
+        },
+        {
+          "addr": "LUMINANCE",
+          "path": "site/0xEC0BBD04/53",
+          "type": "Float",
+          "val": "None"
+        },
+        {
+          "addr": "HEATING_1",
+          "path": "site/0xEC0BBD04/11",
+          "type": "Float",
+          "val": 4.0
+        },
+        {
+          "addr": "RELATIVE_HUMIDITY",
+          "path": "site/WeatherData",
+          "type": "Float",
+          "val": "None"
+        },
+        {
+          "addr": "Motion",
+          "path": "site/0xEC0BBD04/53",
+          "type": "Int",
+          "val": "None"
+        },
+        {
+          "addr": "Battery",
+          "path": "site/0xEC0BBD04/11",
+          "type": "Int",
+          "val": 43
+        },
+        {
+          "addr": "Battery",
+          "path": "site/0xEC0BBD04/53",
+          "type": "Int",
+          "val": 28
+        }
+      ],
+      "fBoostSP": 20.0,
+      "fDeadbandHigh": 0.5,
+      "fDeadbandLow": 0.5,
+      "fFrostSP": 4.0,
+      "fMaxSP": 28.0,
+      "fMinSP": 4.0,
+      "fOutput": 0.0,
+      "fOverrideTemp": 5.0,
+      "fPV": 20.0,
+      "fPV_offset": 0.0,
+      "fSP": 4.0,
+      "iActivity": 0,
+      "iBaseMode": 1,
+      "iBoostTimeRemaining": 0,
+      "iFlagActualKit": 128,
+      "iFlagExpectedKit": 516,
+      "iFlags": 2047,
+      "iID": 1,
+      "iLogPeriod": 300,
+      "iMode": 1,
+      "iOverrideDuration": 2700,
+      "iOverrideMode": 0,
+      "iPriority": 2,
+      "iType": 3,
+      "lOptions": 24,
+      "linkedSettings": {
+        "bFollowActive": "True",
+        "bFollowOutput": "False",
+        "fLinkSP": 21.0,
+        "lstLinkedTo": []
+      },
+      "log": [],
+      "lstIssues": [
+        {
+          "data": {
+            "location": "Lounge",
+            "nodeHash": "0x0000013C00020002",
+            "nodeID": 53
+          },
+          "id": "node:not_seen",
+          "level": 2
+        },
+        {
+          "id": "zone:using_assumed_temp",
+          "level": 1,
+          "data": { "location": "Lounge" }
+        }
+      ],
+      "lstNodes": [
+        { "addr": "11", "type": "" },
+        { "addr": "53", "type": "" },
+        { "addr": "WeatherData", "type": "" }
+      ],
+      "manualTemp": "site/0xEC0BBD04/53/TEMPERATURE",
+      "maximumOverrideDuration": 86400,
+      "nodes": [
+        {
+          "addr": "11",
+          "childValues": {
+            "ApplicationVersion": {
+              "addr": "ApplicationVersion",
+              "path": "site/0xEC0BBD04/11",
+              "type": "String",
+              "val": "1.0"
+            },
+            "Battery": {
+              "addr": "Battery",
+              "path": "site/0xEC0BBD04/11",
+              "type": "Int",
+              "val": 43
+            },
+            "ClockHour": {
+              "addr": "ClockHour",
+              "path": "site/0xEC0BBD04/11",
+              "type": "Int",
+              "val": 12
+            },
+            "ClockMinute": {
+              "addr": "ClockMinute",
+              "path": "site/0xEC0BBD04/11",
+              "type": "Int",
+              "val": 54
+            },
+            "ClockWeekday": {
+              "addr": "ClockWeekday",
+              "path": "site/0xEC0BBD04/11",
+              "type": "Int",
+              "val": 1
+            },
+            "HEATING_1": {
+              "addr": "HEATING_1",
+              "path": "site/0xEC0BBD04/11",
+              "type": "Float",
+              "val": 4.0
+            },
+            "LibraryType": {
+              "addr": "LibraryType",
+              "path": "site/0xEC0BBD04/11",
+              "type": "String",
+              "val": "Routing Slave"
+            },
+            "ProtectionState": {
+              "addr": "ProtectionState",
+              "path": "site/0xEC0BBD04/11",
+              "type": "Int",
+              "val": 0
+            },
+            "ProtocolVersion": {
+              "addr": "ProtocolVersion",
+              "path": "site/0xEC0BBD04/11",
+              "type": "String",
+              "val": "3.67"
+            },
+            "WakeUp_Interval": {
+              "addr": "WakeUp_Interval",
+              "path": "site/0xEC0BBD04/11",
+              "type": "Int",
+              "val": 300
+            },
+            "WakeUp_TargetNode": {
+              "addr": "WakeUp_TargetNode",
+              "path": "site/0xEC0BBD04/11",
+              "type": "Int",
+              "val": 1
+            },
+            "hash": {
+              "addr": "hash",
+              "path": "site/0xEC0BBD04/11",
+              "type": "String",
+              "val": "0x0000000200040005"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/0xEC0BBD04/11",
+              "type": "Int",
+              "val": 0
+            },
+            "lastComms": {
+              "addr": "lastComms",
+              "path": "site/0xEC0BBD04/11",
+              "type": "Int",
+              "val": 1722858659
+            },
+            "location": {
+              "addr": "location",
+              "path": "site/0xEC0BBD04/11",
+              "type": "String",
+              "val": "Lounge"
+            },
+            "lostFromModule": {
+              "addr": "lostFromModule",
+              "path": "site/0xEC0BBD04/11",
+              "type": "Bool",
+              "val": "False"
+            },
+            "manfID": {
+              "addr": "manfID",
+              "path": "site/0xEC0BBD04/11",
+              "type": "String",
+              "val": "2/5/4"
+            },
+            "setback": {
+              "addr": "setback",
+              "path": "site/0xEC0BBD04/11",
+              "type": "Float",
+              "val": 0.0
+            }
+          },
+          "type": ""
+        },
+        {
+          "addr": "53",
+          "childValues": {
+            "ApplicationVersion": {
+              "addr": "ApplicationVersion",
+              "path": "site/0xEC0BBD04/53",
+              "type": "String",
+              "val": "1.0"
+            },
+            "BasicValue": {
+              "addr": "BasicValue",
+              "path": "site/0xEC0BBD04/53",
+              "type": "Int",
+              "val": "None"
+            },
+            "Battery": {
+              "addr": "Battery",
+              "path": "site/0xEC0BBD04/53",
+              "type": "Int",
+              "val": 28
+            },
+            "LUMINANCE": {
+              "addr": "LUMINANCE",
+              "path": "site/0xEC0BBD04/53",
+              "type": "Float",
+              "val": "None"
+            },
+            "LibraryType": {
+              "addr": "LibraryType",
+              "path": "site/0xEC0BBD04/53",
+              "type": "String",
+              "val": "Routing Slave"
+            },
+            "Motion": {
+              "addr": "Motion",
+              "path": "site/0xEC0BBD04/53",
+              "type": "Int",
+              "val": "None"
+            },
+            "ProtocolVersion": {
+              "addr": "ProtocolVersion",
+              "path": "site/0xEC0BBD04/53",
+              "type": "String",
+              "val": "3.41"
+            },
+            "TEMPERATURE": {
+              "addr": "TEMPERATURE",
+              "path": "site/0xEC0BBD04/53",
+              "type": "Float",
+              "val": "None"
+            },
+            "Tamper": {
+              "addr": "Tamper",
+              "path": "site/0xEC0BBD04/53",
+              "type": "Int",
+              "val": "None"
+            },
+            "WakeUp_Interval": {
+              "addr": "WakeUp_Interval",
+              "path": "site/0xEC0BBD04/53",
+              "type": "Int",
+              "val": 1800
+            },
+            "WakeUp_TargetNode": {
+              "addr": "WakeUp_TargetNode",
+              "path": "site/0xEC0BBD04/53",
+              "type": "Int",
+              "val": 1
+            },
+            "hash": {
+              "addr": "hash",
+              "path": "site/0xEC0BBD04/53",
+              "type": "String",
+              "val": "0x0000013C00020002"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/0xEC0BBD04/53",
+              "type": "Int",
+              "val": 4
+            },
+            "lastComms": {
+              "addr": "lastComms",
+              "path": "site/0xEC0BBD04/53",
+              "type": "Int",
+              "val": 1722174571
+            },
+            "location": {
+              "addr": "location",
+              "path": "site/0xEC0BBD04/53",
+              "type": "String",
+              "val": "Lounge"
+            },
+            "lostFromModule": {
+              "addr": "lostFromModule",
+              "path": "site/0xEC0BBD04/53",
+              "type": "Bool",
+              "val": "False"
+            },
+            "manfID": {
+              "addr": "manfID",
+              "path": "site/0xEC0BBD04/53",
+              "type": "String",
+              "val": "316/2/2"
+            }
+          },
+          "type": ""
+        },
+        {
+          "addr": "WeatherData",
+          "childValues": {
+            "PRECIPITATION": {
+              "addr": "PRECIPITATION",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "RELATIVE_HUMIDITY": {
+              "addr": "RELATIVE_HUMIDITY",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "TEMPERATURE": {
+              "addr": "TEMPERATURE",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "TEMPERATURE_FEELS_LIKE": {
+              "addr": "TEMPERATURE_FEELS_LIKE",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "UV": {
+              "addr": "UV",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "WEATHER_TYPE": {
+              "addr": "WEATHER_TYPE",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/WeatherData",
+              "type": "Int",
+              "val": 16
+            },
+            "message": {
+              "addr": "message",
+              "path": "site/WeatherData",
+              "type": "String",
+              "val": "None"
+            }
+          },
+          "type": ""
+        }
+      ],
+      "objFootprint": {
+        "bIsNight": "True",
+        "fFootprintActiveSP": 21.0,
+        "fFootprintAwaySP": 17.0,
+        "fFootprintNightSP": 4.0,
+        "fFootprintThreshold": 2.5,
+        "fThresholdPIR": 1.0,
+        "iFootprintTmNightEnd": 61200,
+        "iFootprintTmNightStart": 80100,
+        "iOffGapSize": 1440,
+        "iOnGapSize": 1440,
+        "iProfile": 1,
+        "lstSP": [
+          { "fSP": 4.0, "iDay": 0, "iTm": 0 },
+          { "fSP": 17.0, "iDay": 0, "iTm": 61200 },
+          { "fSP": 4.0, "iDay": 0, "iTm": 80100 },
+          { "fSP": 4.0, "iDay": 1, "iTm": 0 },
+          { "fSP": 17.0, "iDay": 1, "iTm": 61200 },
+          { "fSP": 4.0, "iDay": 1, "iTm": 80100 },
+          { "fSP": 4.0, "iDay": 2, "iTm": 0 },
+          { "fSP": 17.0, "iDay": 2, "iTm": 61200 },
+          { "fSP": 4.0, "iDay": 2, "iTm": 80100 },
+          { "fSP": 4.0, "iDay": 3, "iTm": 0 },
+          { "fSP": 17.0, "iDay": 3, "iTm": 61200 },
+          { "fSP": 4.0, "iDay": 3, "iTm": 80100 },
+          { "fSP": 4.0, "iDay": 4, "iTm": 0 },
+          { "fSP": 17.0, "iDay": 4, "iTm": 61200 },
+          { "fSP": 4.0, "iDay": 4, "iTm": 80100 },
+          { "fSP": 4.0, "iDay": 5, "iTm": 0 },
+          { "fSP": 17.0, "iDay": 5, "iTm": 61200 },
+          { "fSP": 4.0, "iDay": 5, "iTm": 80100 },
+          { "fSP": 4.0, "iDay": 6, "iTm": 0 },
+          { "fSP": 17.0, "iDay": 6, "iTm": 61200 },
+          { "fSP": 4.0, "iDay": 6, "iTm": 80100 }
+        ],
+        "objReactive": {
+          "bTriggerOff": "True",
+          "bTriggerOn": "False",
+          "fActivityLevel": 0.0,
+          "fThreshold": 1.0,
+          "iReactiveMinutesTriggerOff": 6,
+          "iReactiveMinutesTriggerOn": 60,
+          "iSensitivity": 60,
+          "iTimeTillOff": 0,
+          "iTimeTillOn": 60,
+          "tmLastActivity": 0
+        }
+      },
+      "objTimer": [
+        { "fSP": 14.5, "iDay": 0, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 0, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 20.0, "iDay": 0, "iTm": 68400 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 0, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 0, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 1, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 1, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 20.0, "iDay": 1, "iTm": 68400 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 1, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 1, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 2, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 2, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 20.0, "iDay": 2, "iTm": 68400 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 2, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 2, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 3, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 3, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 20.0, "iDay": 3, "iTm": 68400 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 3, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 3, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 4, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 4, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 20.0, "iDay": 4, "iTm": 68400 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 4, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 4, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 5, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 5, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 20.0, "iDay": 5, "iTm": 68400 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 5, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 5, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 6, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 6, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 20.0, "iDay": 6, "iTm": 68400 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 6, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 6, "iTm": 81000 }
+      ],
+      "strName": "Lounge",
+      "tmLastTick": 1722858788,
+      "tmMaxTimeAtSP": 1800,
+      "tmTimeAtSP": 0,
+      "trigger": {
+        "boost": 0,
+        "linkChildActive": 0,
+        "linkChildOutput": 0,
+        "output": 0,
+        "preheat": 0,
+        "reactive": 1,
+        "setpoint": 0,
+        "test": 0
+      },
+      "warmupDuration": {
+        "bEnable": "True",
+        "bEnableCalcs": "False",
+        "fRiseRate": 2.0,
+        "iLagTime": 1958,
+        "iRiseTime": 1800,
+        "iTotalTime": 1827
+      },
+      "zoneReactive": {
+        "bTriggerOff": "True",
+        "bTriggerOn": "False",
+        "fActivityLevel": 0.0,
+        "fThreshold": 1.0,
+        "iReactiveMinutesTriggerOff": 6,
+        "iReactiveMinutesTriggerOn": 60,
+        "iSensitivity": 60,
+        "iTimeTillOff": 0,
+        "iTimeTillOn": 60,
+        "tmLastActivity": 0
+      },
+      "zoneSubType": 0
+    },
+    {
+      "activeTemperatureDevices": ["site/0xEC0BBD04/21/TEMPERATURE"],
+      "assumedTemp": 18.0,
+      "bInHeatEnabled": "False",
+      "bIsActive": "False",
+      "bOutRequestHeat": "False",
+      "bOverrideLimitingAllowed": "True",
+      "bPrimaryZone": "True",
+      "bTriggerWarmup": "False",
+      "calibration": {
+        "last_device_status": {},
+        "last_result": "",
+        "last_start_time": 0,
+        "last_stop_time": 0,
+        "state": 0,
+        "state_name": "ECALIBRATION_STATE_IDLE"
+      },
+      "datapoints": [
+        {
+          "addr": "TEMPERATURE",
+          "path": "site/WeatherData",
+          "type": "Float",
+          "val": "None"
+        },
+        {
+          "addr": "TEMPERATURE",
+          "path": "site/0xEC0BBD04/21",
+          "type": "Float",
+          "val": 22.0
+        },
+        {
+          "addr": "min_sp",
+          "path": "site/0xEC0BBD04/68/_cfg",
+          "type": "Float",
+          "val": 4.0
+        },
+        {
+          "addr": "min_sp",
+          "path": "site/0xEC0BBD04/59/_cfg",
+          "type": "Float",
+          "val": 4.0
+        },
+        {
+          "addr": "LUMINANCE",
+          "path": "site/0xEC0BBD04/21",
+          "type": "Float",
+          "val": 27.0
+        },
+        {
+          "addr": "HEATING_1",
+          "path": "site/0xEC0BBD04/68",
+          "type": "Float",
+          "val": 4.0
+        },
+        {
+          "addr": "RELATIVE_HUMIDITY",
+          "path": "site/WeatherData",
+          "type": "Float",
+          "val": "None"
+        },
+        {
+          "addr": "Motion",
+          "path": "site/0xEC0BBD04/21",
+          "type": "Int",
+          "val": 0
+        },
+        {
+          "addr": "Battery",
+          "path": "site/0xEC0BBD04/21",
+          "type": "Int",
+          "val": 100
+        },
+        {
+          "addr": "Battery",
+          "path": "site/0xEC0BBD04/59",
+          "type": "Int",
+          "val": 70
+        },
+        {
+          "addr": "Battery",
+          "path": "site/0xEC0BBD04/68",
+          "type": "Int",
+          "val": 92
+        }
+      ],
+      "fBoostSP": 20.0,
+      "fDeadbandHigh": 0.5,
+      "fDeadbandLow": 0.5,
+      "fFrostSP": 4.0,
+      "fMaxSP": 28.0,
+      "fMinSP": 4.0,
+      "fOutput": 0.0,
+      "fOverrideTemp": 20.0,
+      "fPV": 22.0,
+      "fPV_offset": 0.0,
+      "fSP": 4.0,
+      "iActivity": 0,
+      "iBaseMode": 1,
+      "iBoostTimeRemaining": 0,
+      "iFlagActualKit": 517,
+      "iFlagExpectedKit": 517,
+      "iFlags": 2047,
+      "iID": 2,
+      "iLogPeriod": 300,
+      "iMode": 1,
+      "iOverrideDuration": 3600,
+      "iOverrideMode": 0,
+      "iPriority": 1,
+      "iType": 3,
+      "lOptions": 24,
+      "linkedSettings": {
+        "bFollowActive": "True",
+        "bFollowOutput": "False",
+        "fLinkSP": 21.0,
+        "lstLinkedTo": []
+      },
+      "log": [],
+      "lstIssues": [
+        {
+          "data": {
+            "location": "Hall",
+            "nodeHash": "0x0000000200040005",
+            "nodeID": "59"
+          },
+          "id": "node:not_seen",
+          "level": 2
+        }
+      ],
+      "lstNodes": [
+        { "addr": "59", "type": "" },
+        { "addr": "68", "type": "" },
+        { "addr": "21", "type": "" },
+        { "addr": "WeatherData", "type": "" }
+      ],
+      "manualTemp": "site/0xEC0BBD04/21/TEMPERATURE",
+      "maximumOverrideDuration": 86400,
+      "nodes": [
+        {
+          "addr": "59",
+          "childValues": {
+            "ApplicationVersion": {
+              "addr": "ApplicationVersion",
+              "path": "site/0xEC0BBD04/59",
+              "type": "String",
+              "val": "1.0"
+            },
+            "Battery": {
+              "addr": "Battery",
+              "path": "site/0xEC0BBD04/59",
+              "type": "Int",
+              "val": 70
+            },
+            "ClockHour": {
+              "addr": "ClockHour",
+              "path": "site/0xEC0BBD04/59",
+              "type": "Int",
+              "val": "None"
+            },
+            "ClockMinute": {
+              "addr": "ClockMinute",
+              "path": "site/0xEC0BBD04/59",
+              "type": "Int",
+              "val": "None"
+            },
+            "ClockWeekday": {
+              "addr": "ClockWeekday",
+              "path": "site/0xEC0BBD04/59",
+              "type": "Int",
+              "val": "None"
+            },
+            "LibraryType": {
+              "addr": "LibraryType",
+              "path": "site/0xEC0BBD04/59",
+              "type": "String",
+              "val": "Routing Slave"
+            },
+            "ProtectionState": {
+              "addr": "ProtectionState",
+              "path": "site/0xEC0BBD04/59",
+              "type": "Int",
+              "val": "None"
+            },
+            "ProtocolVersion": {
+              "addr": "ProtocolVersion",
+              "path": "site/0xEC0BBD04/59",
+              "type": "String",
+              "val": "3.67"
+            },
+            "WakeUp_Interval": {
+              "addr": "WakeUp_Interval",
+              "path": "site/0xEC0BBD04/59",
+              "type": "Int",
+              "val": 450
+            },
+            "WakeUp_TargetNode": {
+              "addr": "WakeUp_TargetNode",
+              "path": "site/0xEC0BBD04/59",
+              "type": "Int",
+              "val": 1
+            },
+            "hash": {
+              "addr": "hash",
+              "path": "site/0xEC0BBD04/59",
+              "type": "String",
+              "val": "0x0000000200040005"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/0xEC0BBD04/59",
+              "type": "Int",
+              "val": 4
+            },
+            "lastComms": {
+              "addr": "lastComms",
+              "path": "site/0xEC0BBD04/59",
+              "type": "Int",
+              "val": 1535875463
+            },
+            "location": {
+              "addr": "location",
+              "path": "site/0xEC0BBD04/59",
+              "type": "String",
+              "val": ""
+            },
+            "manfID": {
+              "addr": "manfID",
+              "path": "site/0xEC0BBD04/59",
+              "type": "String",
+              "val": "2/5/4"
+            },
+            "setback": {
+              "addr": "setback",
+              "path": "site/0xEC0BBD04/59",
+              "type": "Float",
+              "val": 0.0
+            }
+          },
+          "type": ""
+        },
+        {
+          "addr": "68",
+          "childValues": {
+            "ApplicationVersion": {
+              "addr": "ApplicationVersion",
+              "path": "site/0xEC0BBD04/68",
+              "type": "String",
+              "val": "1.0"
+            },
+            "Battery": {
+              "addr": "Battery",
+              "path": "site/0xEC0BBD04/68",
+              "type": "Int",
+              "val": 92
+            },
+            "ClockHour": {
+              "addr": "ClockHour",
+              "path": "site/0xEC0BBD04/68",
+              "type": "Int",
+              "val": 11
+            },
+            "ClockMinute": {
+              "addr": "ClockMinute",
+              "path": "site/0xEC0BBD04/68",
+              "type": "Int",
+              "val": 15
+            },
+            "ClockWeekday": {
+              "addr": "ClockWeekday",
+              "path": "site/0xEC0BBD04/68",
+              "type": "Int",
+              "val": 1
+            },
+            "HEATING_1": {
+              "addr": "HEATING_1",
+              "path": "site/0xEC0BBD04/68",
+              "type": "Float",
+              "val": 4.0
+            },
+            "LibraryType": {
+              "addr": "LibraryType",
+              "path": "site/0xEC0BBD04/68",
+              "type": "String",
+              "val": "Routing Slave"
+            },
+            "ProtectionState": {
+              "addr": "ProtectionState",
+              "path": "site/0xEC0BBD04/68",
+              "type": "Int",
+              "val": 0
+            },
+            "ProtocolVersion": {
+              "addr": "ProtocolVersion",
+              "path": "site/0xEC0BBD04/68",
+              "type": "String",
+              "val": "3.67"
+            },
+            "WakeUp_Interval": {
+              "addr": "WakeUp_Interval",
+              "path": "site/0xEC0BBD04/68",
+              "type": "Int",
+              "val": 450
+            },
+            "WakeUp_TargetNode": {
+              "addr": "WakeUp_TargetNode",
+              "path": "site/0xEC0BBD04/68",
+              "type": "Int",
+              "val": 1
+            },
+            "hash": {
+              "addr": "hash",
+              "path": "site/0xEC0BBD04/68",
+              "type": "String",
+              "val": "0x0000000200040005"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/0xEC0BBD04/68",
+              "type": "Int",
+              "val": 0
+            },
+            "lastComms": {
+              "addr": "lastComms",
+              "path": "site/0xEC0BBD04/68",
+              "type": "Int",
+              "val": 1722858671
+            },
+            "location": {
+              "addr": "location",
+              "path": "site/0xEC0BBD04/68",
+              "type": "String",
+              "val": "Hall"
+            },
+            "lostFromModule": {
+              "addr": "lostFromModule",
+              "path": "site/0xEC0BBD04/68",
+              "type": "Bool",
+              "val": "False"
+            },
+            "manfID": {
+              "addr": "manfID",
+              "path": "site/0xEC0BBD04/68",
+              "type": "String",
+              "val": "2/5/4"
+            },
+            "setback": {
+              "addr": "setback",
+              "path": "site/0xEC0BBD04/68",
+              "type": "Float",
+              "val": 0.0
+            }
+          },
+          "type": ""
+        },
+        {
+          "addr": "21",
+          "childValues": {
+            "ApplicationVersion": {
+              "addr": "ApplicationVersion",
+              "path": "site/0xEC0BBD04/21",
+              "type": "String",
+              "val": "1.0"
+            },
+            "BasicValue": {
+              "addr": "BasicValue",
+              "path": "site/0xEC0BBD04/21",
+              "type": "Int",
+              "val": 0
+            },
+            "Battery": {
+              "addr": "Battery",
+              "path": "site/0xEC0BBD04/21",
+              "type": "Int",
+              "val": 100
+            },
+            "LUMINANCE": {
+              "addr": "LUMINANCE",
+              "path": "site/0xEC0BBD04/21",
+              "type": "Float",
+              "val": 27.0
+            },
+            "LibraryType": {
+              "addr": "LibraryType",
+              "path": "site/0xEC0BBD04/21",
+              "type": "String",
+              "val": "Routing Slave"
+            },
+            "Motion": {
+              "addr": "Motion",
+              "path": "site/0xEC0BBD04/21",
+              "type": "Int",
+              "val": 0
+            },
+            "ProtocolVersion": {
+              "addr": "ProtocolVersion",
+              "path": "site/0xEC0BBD04/21",
+              "type": "String",
+              "val": "3.41"
+            },
+            "TEMPERATURE": {
+              "addr": "TEMPERATURE",
+              "path": "site/0xEC0BBD04/21",
+              "type": "Float",
+              "val": 22.0
+            },
+            "Tamper": {
+              "addr": "Tamper",
+              "path": "site/0xEC0BBD04/21",
+              "type": "Int",
+              "val": "None"
+            },
+            "WakeUp_Interval": {
+              "addr": "WakeUp_Interval",
+              "path": "site/0xEC0BBD04/21",
+              "type": "Int",
+              "val": 1800
+            },
+            "WakeUp_TargetNode": {
+              "addr": "WakeUp_TargetNode",
+              "path": "site/0xEC0BBD04/21",
+              "type": "Int",
+              "val": 1
+            },
+            "hash": {
+              "addr": "hash",
+              "path": "site/0xEC0BBD04/21",
+              "type": "String",
+              "val": "0x0000013C00020002"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/0xEC0BBD04/21",
+              "type": "Int",
+              "val": 0
+            },
+            "lastComms": {
+              "addr": "lastComms",
+              "path": "site/0xEC0BBD04/21",
+              "type": "Int",
+              "val": 1722857058
+            },
+            "location": {
+              "addr": "location",
+              "path": "site/0xEC0BBD04/21",
+              "type": "String",
+              "val": "Hall"
+            },
+            "lostFromModule": {
+              "addr": "lostFromModule",
+              "path": "site/0xEC0BBD04/21",
+              "type": "Bool",
+              "val": "False"
+            },
+            "manfID": {
+              "addr": "manfID",
+              "path": "site/0xEC0BBD04/21",
+              "type": "String",
+              "val": "316/2/2"
+            }
+          },
+          "type": ""
+        },
+        {
+          "addr": "WeatherData",
+          "childValues": {
+            "PRECIPITATION": {
+              "addr": "PRECIPITATION",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "RELATIVE_HUMIDITY": {
+              "addr": "RELATIVE_HUMIDITY",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "TEMPERATURE": {
+              "addr": "TEMPERATURE",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "TEMPERATURE_FEELS_LIKE": {
+              "addr": "TEMPERATURE_FEELS_LIKE",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "UV": {
+              "addr": "UV",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "WEATHER_TYPE": {
+              "addr": "WEATHER_TYPE",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/WeatherData",
+              "type": "Int",
+              "val": 16
+            },
+            "message": {
+              "addr": "message",
+              "path": "site/WeatherData",
+              "type": "String",
+              "val": "None"
+            }
+          },
+          "type": ""
+        }
+      ],
+      "objFootprint": {
+        "bIsNight": "True",
+        "fFootprintActiveSP": 20.0,
+        "fFootprintAwaySP": 14.0,
+        "fFootprintNightSP": 16.0,
+        "fFootprintThreshold": 2.5,
+        "fThresholdPIR": 1.0,
+        "iFootprintTmNightEnd": 23400,
+        "iFootprintTmNightStart": 75600,
+        "iOffGapSize": 60,
+        "iOnGapSize": 60,
+        "iProfile": 1,
+        "lstSP": [
+          { "fSP": 16.0, "iDay": 0, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 0, "iTm": 23400 },
+          { "fSP": 16.0, "iDay": 0, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 1, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 1, "iTm": 23400 },
+          { "fSP": 16.0, "iDay": 1, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 2, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 2, "iTm": 23400 },
+          { "fSP": 20.0, "iDay": 2, "iTm": 29700 },
+          { "fSP": 14.0, "iDay": 2, "iTm": 34200 },
+          { "fSP": 20.0, "iDay": 2, "iTm": 66300 },
+          { "fSP": 16.0, "iDay": 2, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 3, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 3, "iTm": 23400 },
+          { "fSP": 20.0, "iDay": 3, "iTm": 28800 },
+          { "fSP": 14.0, "iDay": 3, "iTm": 33900 },
+          { "fSP": 16.0, "iDay": 3, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 4, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 4, "iTm": 23400 },
+          { "fSP": 20.0, "iDay": 4, "iTm": 28500 },
+          { "fSP": 14.0, "iDay": 4, "iTm": 36000 },
+          { "fSP": 20.0, "iDay": 4, "iTm": 55200 },
+          { "fSP": 14.0, "iDay": 4, "iTm": 68700 },
+          { "fSP": 16.0, "iDay": 4, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 5, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 5, "iTm": 23400 },
+          { "fSP": 20.0, "iDay": 5, "iTm": 28500 },
+          { "fSP": 14.0, "iDay": 5, "iTm": 51300 },
+          { "fSP": 20.0, "iDay": 5, "iTm": 57600 },
+          { "fSP": 16.0, "iDay": 5, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 6, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 6, "iTm": 23400 },
+          { "fSP": 20.0, "iDay": 6, "iTm": 44400 },
+          { "fSP": 14.0, "iDay": 6, "iTm": 51900 },
+          { "fSP": 16.0, "iDay": 6, "iTm": 75600 }
+        ],
+        "objReactive": {
+          "bTriggerOff": "True",
+          "bTriggerOn": "False",
+          "fActivityLevel": 0.0,
+          "fThreshold": 1.0,
+          "iReactiveMinutesTriggerOff": 5,
+          "iReactiveMinutesTriggerOn": 5,
+          "iSensitivity": 80,
+          "iTimeTillOff": 0,
+          "iTimeTillOn": 5,
+          "tmLastActivity": 1722855437
+        }
+      },
+      "objTimer": [
+        { "fSP": 14.5, "iDay": 0, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 0, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 0, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 0, "iTm": 61200 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 0, "iTm": 70200 },
+        { "fSP": 14.5, "iDay": 1, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 1, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 1, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 1, "iTm": 61200 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 1, "iTm": 70200 },
+        { "fSP": 14.5, "iDay": 2, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 2, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 2, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 2, "iTm": 61200 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 2, "iTm": 70200 },
+        { "fSP": 14.5, "iDay": 3, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 3, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 3, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 3, "iTm": 61200 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 3, "iTm": 70200 },
+        { "fSP": 14.5, "iDay": 4, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 4, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 4, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 4, "iTm": 61200 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 4, "iTm": 70200 },
+        { "fSP": 14.5, "iDay": 5, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 5, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 5, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 5, "iTm": 61200 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 5, "iTm": 70200 },
+        { "fSP": 14.5, "iDay": 6, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 6, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 6, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 6, "iTm": 61200 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 6, "iTm": 68400 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 6, "iTm": 73800 }
+      ],
+      "strName": "Hall",
+      "tmLastTick": 1722858788,
+      "tmMaxTimeAtSP": 1800,
+      "tmTimeAtSP": 0,
+      "trigger": {
+        "boost": 0,
+        "linkChildActive": 0,
+        "linkChildOutput": 0,
+        "output": 0,
+        "preheat": 0,
+        "reactive": 1,
+        "setpoint": 0,
+        "test": 0
+      },
+      "warmupDuration": {
+        "bEnable": "True",
+        "bEnableCalcs": "False",
+        "fRiseRate": 0.5,
+        "iLagTime": 2203,
+        "iRiseTime": 1800,
+        "iTotalTime": 1827
+      },
+      "zoneReactive": {
+        "bTriggerOff": "True",
+        "bTriggerOn": "False",
+        "fActivityLevel": 0.0,
+        "fThreshold": 1.0,
+        "iReactiveMinutesTriggerOff": 5,
+        "iReactiveMinutesTriggerOn": 5,
+        "iSensitivity": 80,
+        "iTimeTillOff": 0,
+        "iTimeTillOn": 5,
+        "tmLastActivity": 1722855437
+      },
+      "zoneSubType": 0
+    },
+    {
+      "activeTemperatureDevices": ["site/0xEC0BBD04/20/TEMPERATURE"],
+      "assumedTemp": 18.0,
+      "bInHeatEnabled": "False",
+      "bIsActive": "False",
+      "bOutRequestHeat": "False",
+      "bOverrideLimitingAllowed": "True",
+      "bPrimaryZone": "True",
+      "bTriggerWarmup": "False",
+      "calibration": {
+        "last_device_status": {},
+        "last_result": "",
+        "last_start_time": 0,
+        "last_stop_time": 0,
+        "state": 0,
+        "state_name": "ECALIBRATION_STATE_IDLE"
+      },
+      "datapoints": [
+        {
+          "addr": "TEMPERATURE",
+          "path": "site/WeatherData",
+          "type": "Float",
+          "val": "None"
+        },
+        {
+          "addr": "TEMPERATURE",
+          "path": "site/0xEC0BBD04/20",
+          "type": "Float",
+          "val": 22.0
+        },
+        {
+          "addr": "min_sp",
+          "path": "site/0xEC0BBD04/56/_cfg",
+          "type": "Float",
+          "val": 4.0
+        },
+        {
+          "addr": "min_sp",
+          "path": "site/0xEC0BBD04/89/_cfg",
+          "type": "Float",
+          "val": 4.0
+        },
+        {
+          "addr": "min_sp",
+          "path": "site/0xEC0BBD04/12/_cfg",
+          "type": "Float",
+          "val": 4.0
+        },
+        {
+          "addr": "LUMINANCE",
+          "path": "site/0xEC0BBD04/20",
+          "type": "Float",
+          "val": "None"
+        },
+        {
+          "addr": "HEATING_1",
+          "path": "site/0xEC0BBD04/56",
+          "type": "Float",
+          "val": 4.0
+        },
+        {
+          "addr": "HEATING_1",
+          "path": "site/0xEC0BBD04/89",
+          "type": "Float",
+          "val": 4.0
+        },
+        {
+          "addr": "RELATIVE_HUMIDITY",
+          "path": "site/WeatherData",
+          "type": "Float",
+          "val": "None"
+        },
+        {
+          "addr": "Motion",
+          "path": "site/0xEC0BBD04/20",
+          "type": "Int",
+          "val": 0
+        },
+        {
+          "addr": "Battery",
+          "path": "site/0xEC0BBD04/12",
+          "type": "Int",
+          "val": 49
+        },
+        {
+          "addr": "Battery",
+          "path": "site/0xEC0BBD04/20",
+          "type": "Int",
+          "val": 100
+        },
+        {
+          "addr": "Battery",
+          "path": "site/0xEC0BBD04/56",
+          "type": "Int",
+          "val": 55
+        },
+        {
+          "addr": "Battery",
+          "path": "site/0xEC0BBD04/89",
+          "type": "Int",
+          "val": 48
+        }
+      ],
+      "fBoostSP": 20.0,
+      "fDeadbandHigh": 0.5,
+      "fDeadbandLow": 0.5,
+      "fFrostSP": 4.0,
+      "fMaxSP": 28.0,
+      "fMinSP": 4.0,
+      "fOutput": 0.0,
+      "fOverrideTemp": 21.0,
+      "fPV": 22.0,
+      "fPV_offset": 0.0,
+      "fSP": 4.0,
+      "iActivity": 0,
+      "iBaseMode": 1,
+      "iBoostTimeRemaining": 0,
+      "iFlagActualKit": 5,
+      "iFlagExpectedKit": 517,
+      "iFlags": 2047,
+      "iID": 3,
+      "iLogPeriod": 300,
+      "iMode": 8,
+      "iOverrideDuration": 3600,
+      "iOverrideMode": 0,
+      "iPriority": 3,
+      "iType": 3,
+      "lOptions": 24,
+      "linkedSettings": {
+        "bFollowActive": "True",
+        "bFollowOutput": "False",
+        "fLinkSP": 21.0,
+        "lstLinkedTo": []
+      },
+      "log": [],
+      "lstIssues": [
+        {
+          "data": {
+            "location": "Kitchen",
+            "nodeHash": "0x0000000200040005",
+            "nodeID": "12"
+          },
+          "id": "node:not_seen",
+          "level": 2
+        }
+      ],
+      "lstNodes": [
+        { "addr": "12", "type": "" },
+        { "addr": "89", "type": "" },
+        { "addr": "20", "type": "" },
+        { "addr": "56", "type": "" },
+        { "addr": "WeatherData", "type": "" }
+      ],
+      "manualTemp": "site/0xEC0BBD04/20/TEMPERATURE",
+      "maximumOverrideDuration": 86400,
+      "nodes": [
+        {
+          "addr": "12",
+          "childValues": {
+            "ApplicationVersion": {
+              "addr": "ApplicationVersion",
+              "path": "site/0xEC0BBD04/12",
+              "type": "String",
+              "val": "1.0"
+            },
+            "Battery": {
+              "addr": "Battery",
+              "path": "site/0xEC0BBD04/12",
+              "type": "Int",
+              "val": 49
+            },
+            "ClockHour": {
+              "addr": "ClockHour",
+              "path": "site/0xEC0BBD04/12",
+              "type": "Int",
+              "val": "None"
+            },
+            "ClockMinute": {
+              "addr": "ClockMinute",
+              "path": "site/0xEC0BBD04/12",
+              "type": "Int",
+              "val": "None"
+            },
+            "ClockWeekday": {
+              "addr": "ClockWeekday",
+              "path": "site/0xEC0BBD04/12",
+              "type": "Int",
+              "val": "None"
+            },
+            "LibraryType": {
+              "addr": "LibraryType",
+              "path": "site/0xEC0BBD04/12",
+              "type": "String",
+              "val": "Routing Slave"
+            },
+            "ProtectionState": {
+              "addr": "ProtectionState",
+              "path": "site/0xEC0BBD04/12",
+              "type": "Int",
+              "val": "None"
+            },
+            "ProtocolVersion": {
+              "addr": "ProtocolVersion",
+              "path": "site/0xEC0BBD04/12",
+              "type": "String",
+              "val": "3.67"
+            },
+            "WakeUp_Interval": {
+              "addr": "WakeUp_Interval",
+              "path": "site/0xEC0BBD04/12",
+              "type": "Int",
+              "val": 450
+            },
+            "WakeUp_TargetNode": {
+              "addr": "WakeUp_TargetNode",
+              "path": "site/0xEC0BBD04/12",
+              "type": "Int",
+              "val": 1
+            },
+            "hash": {
+              "addr": "hash",
+              "path": "site/0xEC0BBD04/12",
+              "type": "String",
+              "val": "0x0000000200040005"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/0xEC0BBD04/12",
+              "type": "Int",
+              "val": 4
+            },
+            "lastComms": {
+              "addr": "lastComms",
+              "path": "site/0xEC0BBD04/12",
+              "type": "Int",
+              "val": 1535875338
+            },
+            "location": {
+              "addr": "location",
+              "path": "site/0xEC0BBD04/12",
+              "type": "String",
+              "val": ""
+            },
+            "manfID": {
+              "addr": "manfID",
+              "path": "site/0xEC0BBD04/12",
+              "type": "String",
+              "val": "2/5/4"
+            },
+            "setback": {
+              "addr": "setback",
+              "path": "site/0xEC0BBD04/12",
+              "type": "Float",
+              "val": 0.0
+            }
+          },
+          "type": ""
+        },
+        {
+          "addr": "89",
+          "childValues": {
+            "ApplicationVersion": {
+              "addr": "ApplicationVersion",
+              "path": "site/0xEC0BBD04/89",
+              "type": "String",
+              "val": "1.0"
+            },
+            "Battery": {
+              "addr": "Battery",
+              "path": "site/0xEC0BBD04/89",
+              "type": "Int",
+              "val": 48
+            },
+            "ClockHour": {
+              "addr": "ClockHour",
+              "path": "site/0xEC0BBD04/89",
+              "type": "Int",
+              "val": 10
+            },
+            "ClockMinute": {
+              "addr": "ClockMinute",
+              "path": "site/0xEC0BBD04/89",
+              "type": "Int",
+              "val": 16
+            },
+            "ClockWeekday": {
+              "addr": "ClockWeekday",
+              "path": "site/0xEC0BBD04/89",
+              "type": "Int",
+              "val": 1
+            },
+            "HEATING_1": {
+              "addr": "HEATING_1",
+              "path": "site/0xEC0BBD04/89",
+              "type": "Float",
+              "val": 4.0
+            },
+            "LibraryType": {
+              "addr": "LibraryType",
+              "path": "site/0xEC0BBD04/89",
+              "type": "String",
+              "val": "Routing Slave"
+            },
+            "ProtectionState": {
+              "addr": "ProtectionState",
+              "path": "site/0xEC0BBD04/89",
+              "type": "Int",
+              "val": 0
+            },
+            "ProtocolVersion": {
+              "addr": "ProtocolVersion",
+              "path": "site/0xEC0BBD04/89",
+              "type": "String",
+              "val": "3.67"
+            },
+            "WakeUp_Interval": {
+              "addr": "WakeUp_Interval",
+              "path": "site/0xEC0BBD04/89",
+              "type": "Int",
+              "val": 450
+            },
+            "WakeUp_TargetNode": {
+              "addr": "WakeUp_TargetNode",
+              "path": "site/0xEC0BBD04/89",
+              "type": "Int",
+              "val": 1
+            },
+            "hash": {
+              "addr": "hash",
+              "path": "site/0xEC0BBD04/89",
+              "type": "String",
+              "val": "0x0000000200040005"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/0xEC0BBD04/89",
+              "type": "Int",
+              "val": 0
+            },
+            "lastComms": {
+              "addr": "lastComms",
+              "path": "site/0xEC0BBD04/89",
+              "type": "Int",
+              "val": 1722858337
+            },
+            "location": {
+              "addr": "location",
+              "path": "site/0xEC0BBD04/89",
+              "type": "String",
+              "val": "Kitchen"
+            },
+            "lostFromModule": {
+              "addr": "lostFromModule",
+              "path": "site/0xEC0BBD04/89",
+              "type": "Bool",
+              "val": "False"
+            },
+            "manfID": {
+              "addr": "manfID",
+              "path": "site/0xEC0BBD04/89",
+              "type": "String",
+              "val": "2/5/4"
+            },
+            "setback": {
+              "addr": "setback",
+              "path": "site/0xEC0BBD04/89",
+              "type": "Float",
+              "val": 0.0
+            }
+          },
+          "type": ""
+        },
+        {
+          "addr": "20",
+          "childValues": {
+            "ApplicationVersion": {
+              "addr": "ApplicationVersion",
+              "path": "site/0xEC0BBD04/20",
+              "type": "String",
+              "val": "1.0"
+            },
+            "BasicValue": {
+              "addr": "BasicValue",
+              "path": "site/0xEC0BBD04/20",
+              "type": "Int",
+              "val": 0
+            },
+            "Battery": {
+              "addr": "Battery",
+              "path": "site/0xEC0BBD04/20",
+              "type": "Int",
+              "val": 100
+            },
+            "LUMINANCE": {
+              "addr": "LUMINANCE",
+              "path": "site/0xEC0BBD04/20",
+              "type": "Float",
+              "val": "None"
+            },
+            "LibraryType": {
+              "addr": "LibraryType",
+              "path": "site/0xEC0BBD04/20",
+              "type": "String",
+              "val": "Routing Slave"
+            },
+            "Motion": {
+              "addr": "Motion",
+              "path": "site/0xEC0BBD04/20",
+              "type": "Int",
+              "val": 0
+            },
+            "ProtocolVersion": {
+              "addr": "ProtocolVersion",
+              "path": "site/0xEC0BBD04/20",
+              "type": "String",
+              "val": "3.41"
+            },
+            "TEMPERATURE": {
+              "addr": "TEMPERATURE",
+              "path": "site/0xEC0BBD04/20",
+              "type": "Float",
+              "val": 22.0
+            },
+            "Tamper": {
+              "addr": "Tamper",
+              "path": "site/0xEC0BBD04/20",
+              "type": "Int",
+              "val": "None"
+            },
+            "WakeUp_Interval": {
+              "addr": "WakeUp_Interval",
+              "path": "site/0xEC0BBD04/20",
+              "type": "Int",
+              "val": 1800
+            },
+            "WakeUp_TargetNode": {
+              "addr": "WakeUp_TargetNode",
+              "path": "site/0xEC0BBD04/20",
+              "type": "Int",
+              "val": 1
+            },
+            "hash": {
+              "addr": "hash",
+              "path": "site/0xEC0BBD04/20",
+              "type": "String",
+              "val": "0x0000013C00020002"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/0xEC0BBD04/20",
+              "type": "Int",
+              "val": 0
+            },
+            "lastComms": {
+              "addr": "lastComms",
+              "path": "site/0xEC0BBD04/20",
+              "type": "Int",
+              "val": 1722857639
+            },
+            "location": {
+              "addr": "location",
+              "path": "site/0xEC0BBD04/20",
+              "type": "String",
+              "val": "Kitchen"
+            },
+            "lostFromModule": {
+              "addr": "lostFromModule",
+              "path": "site/0xEC0BBD04/20",
+              "type": "Bool",
+              "val": "False"
+            },
+            "manfID": {
+              "addr": "manfID",
+              "path": "site/0xEC0BBD04/20",
+              "type": "String",
+              "val": "316/2/2"
+            }
+          },
+          "type": ""
+        },
+        {
+          "addr": "56",
+          "childValues": {
+            "ApplicationVersion": {
+              "addr": "ApplicationVersion",
+              "path": "site/0xEC0BBD04/56",
+              "type": "String",
+              "val": "1.0"
+            },
+            "Battery": {
+              "addr": "Battery",
+              "path": "site/0xEC0BBD04/56",
+              "type": "Int",
+              "val": 55
+            },
+            "ClockHour": {
+              "addr": "ClockHour",
+              "path": "site/0xEC0BBD04/56",
+              "type": "Int",
+              "val": 11
+            },
+            "ClockMinute": {
+              "addr": "ClockMinute",
+              "path": "site/0xEC0BBD04/56",
+              "type": "Int",
+              "val": 4
+            },
+            "ClockWeekday": {
+              "addr": "ClockWeekday",
+              "path": "site/0xEC0BBD04/56",
+              "type": "Int",
+              "val": 1
+            },
+            "HEATING_1": {
+              "addr": "HEATING_1",
+              "path": "site/0xEC0BBD04/56",
+              "type": "Float",
+              "val": 4.0
+            },
+            "LibraryType": {
+              "addr": "LibraryType",
+              "path": "site/0xEC0BBD04/56",
+              "type": "String",
+              "val": "Routing Slave"
+            },
+            "ProtectionState": {
+              "addr": "ProtectionState",
+              "path": "site/0xEC0BBD04/56",
+              "type": "Int",
+              "val": 0
+            },
+            "ProtocolVersion": {
+              "addr": "ProtocolVersion",
+              "path": "site/0xEC0BBD04/56",
+              "type": "String",
+              "val": "3.67"
+            },
+            "WakeUp_Interval": {
+              "addr": "WakeUp_Interval",
+              "path": "site/0xEC0BBD04/56",
+              "type": "Int",
+              "val": 450
+            },
+            "WakeUp_TargetNode": {
+              "addr": "WakeUp_TargetNode",
+              "path": "site/0xEC0BBD04/56",
+              "type": "Int",
+              "val": 1
+            },
+            "hash": {
+              "addr": "hash",
+              "path": "site/0xEC0BBD04/56",
+              "type": "String",
+              "val": "0x0000000200040005"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/0xEC0BBD04/56",
+              "type": "Int",
+              "val": 0
+            },
+            "lastComms": {
+              "addr": "lastComms",
+              "path": "site/0xEC0BBD04/56",
+              "type": "Int",
+              "val": 1722858614
+            },
+            "location": {
+              "addr": "location",
+              "path": "site/0xEC0BBD04/56",
+              "type": "String",
+              "val": "Kitchen"
+            },
+            "lostFromModule": {
+              "addr": "lostFromModule",
+              "path": "site/0xEC0BBD04/56",
+              "type": "Bool",
+              "val": "False"
+            },
+            "manfID": {
+              "addr": "manfID",
+              "path": "site/0xEC0BBD04/56",
+              "type": "String",
+              "val": "2/5/4"
+            },
+            "setback": {
+              "addr": "setback",
+              "path": "site/0xEC0BBD04/56",
+              "type": "Float",
+              "val": 0.0
+            }
+          },
+          "type": ""
+        },
+        {
+          "addr": "WeatherData",
+          "childValues": {
+            "PRECIPITATION": {
+              "addr": "PRECIPITATION",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "RELATIVE_HUMIDITY": {
+              "addr": "RELATIVE_HUMIDITY",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "TEMPERATURE": {
+              "addr": "TEMPERATURE",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "TEMPERATURE_FEELS_LIKE": {
+              "addr": "TEMPERATURE_FEELS_LIKE",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "UV": {
+              "addr": "UV",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "WEATHER_TYPE": {
+              "addr": "WEATHER_TYPE",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/WeatherData",
+              "type": "Int",
+              "val": 16
+            },
+            "message": {
+              "addr": "message",
+              "path": "site/WeatherData",
+              "type": "String",
+              "val": "None"
+            }
+          },
+          "type": ""
+        }
+      ],
+      "objFootprint": {
+        "bIsNight": "True",
+        "fFootprintActiveSP": 20.0,
+        "fFootprintAwaySP": 14.0,
+        "fFootprintNightSP": 16.0,
+        "fFootprintThreshold": 2.5,
+        "fThresholdPIR": 1.0,
+        "iFootprintTmNightEnd": 23400,
+        "iFootprintTmNightStart": 75600,
+        "iOffGapSize": 60,
+        "iOnGapSize": 60,
+        "iProfile": 1,
+        "lstSP": [
+          { "fSP": 16.0, "iDay": 0, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 0, "iTm": 23400 },
+          { "fSP": 20.0, "iDay": 0, "iTm": 30600 },
+          { "fSP": 14.0, "iDay": 0, "iTm": 34200 },
+          { "fSP": 16.0, "iDay": 0, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 1, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 1, "iTm": 23400 },
+          { "fSP": 16.0, "iDay": 1, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 2, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 2, "iTm": 23400 },
+          { "fSP": 20.0, "iDay": 2, "iTm": 27600 },
+          { "fSP": 14.0, "iDay": 2, "iTm": 33300 },
+          { "fSP": 20.0, "iDay": 2, "iTm": 58800 },
+          { "fSP": 14.0, "iDay": 2, "iTm": 68400 },
+          { "fSP": 16.0, "iDay": 2, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 3, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 3, "iTm": 23400 },
+          { "fSP": 20.0, "iDay": 3, "iTm": 28800 },
+          { "fSP": 14.0, "iDay": 3, "iTm": 33300 },
+          { "fSP": 16.0, "iDay": 3, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 4, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 4, "iTm": 23400 },
+          { "fSP": 20.0, "iDay": 4, "iTm": 56400 },
+          { "fSP": 14.0, "iDay": 4, "iTm": 71400 },
+          { "fSP": 16.0, "iDay": 4, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 5, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 5, "iTm": 23400 },
+          { "fSP": 20.0, "iDay": 5, "iTm": 39300 },
+          { "fSP": 14.0, "iDay": 5, "iTm": 56100 },
+          { "fSP": 20.0, "iDay": 5, "iTm": 65700 },
+          { "fSP": 16.0, "iDay": 5, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 6, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 6, "iTm": 23400 },
+          { "fSP": 20.0, "iDay": 6, "iTm": 34500 },
+          { "fSP": 14.0, "iDay": 6, "iTm": 63900 },
+          { "fSP": 16.0, "iDay": 6, "iTm": 75600 }
+        ],
+        "objReactive": {
+          "bTriggerOff": "True",
+          "bTriggerOn": "False",
+          "fActivityLevel": 0.0,
+          "fThreshold": 1.0,
+          "iReactiveMinutesTriggerOff": 5,
+          "iReactiveMinutesTriggerOn": 5,
+          "iSensitivity": 87,
+          "iTimeTillOff": 0,
+          "iTimeTillOn": 5,
+          "tmLastActivity": 1722857298
+        }
+      },
+      "objTimer": [
+        { "fSP": 14.5, "iDay": 0, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 0, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 0, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 0, "iTm": 61200 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 0, "iTm": 70200 },
+        { "fSP": 14.5, "iDay": 1, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 1, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 1, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 1, "iTm": 61200 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 1, "iTm": 70200 },
+        { "fSP": 14.5, "iDay": 2, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 2, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 2, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 2, "iTm": 61200 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 2, "iTm": 70200 },
+        { "fSP": 14.5, "iDay": 3, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 3, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 3, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 3, "iTm": 61200 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 3, "iTm": 70200 },
+        { "fSP": 14.5, "iDay": 4, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 4, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 4, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 4, "iTm": 61200 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 4, "iTm": 70200 },
+        { "fSP": 14.5, "iDay": 5, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 5, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 5, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 5, "iTm": 61200 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 5, "iTm": 70200 },
+        { "fSP": 14.5, "iDay": 6, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 6, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 6, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 6, "iTm": 61200 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 6, "iTm": 68400 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 6, "iTm": 73800 }
+      ],
+      "strName": "Kitchen",
+      "tmLastTick": 1722858788,
+      "tmMaxTimeAtSP": 1800,
+      "tmTimeAtSP": 0,
+      "trigger": {
+        "boost": 0,
+        "linkChildActive": 0,
+        "linkChildOutput": 0,
+        "output": 0,
+        "preheat": 0,
+        "reactive": 1,
+        "setpoint": 0,
+        "test": 0
+      },
+      "warmupDuration": {
+        "bEnable": "True",
+        "bEnableCalcs": "False",
+        "fRiseRate": 2.0,
+        "iLagTime": 2625,
+        "iRiseTime": 4500,
+        "iTotalTime": 2171
+      },
+      "zoneReactive": {
+        "bTriggerOff": "True",
+        "bTriggerOn": "False",
+        "fActivityLevel": 0.0,
+        "fThreshold": 1.0,
+        "iReactiveMinutesTriggerOff": 5,
+        "iReactiveMinutesTriggerOn": 5,
+        "iSensitivity": 87,
+        "iTimeTillOff": 0,
+        "iTimeTillOn": 5,
+        "tmLastActivity": 1722857298
+      },
+      "zoneSubType": 0
+    },
+    {
+      "activeTemperatureDevices": ["site/0xEC0BBD04/17/TEMPERATURE"],
+      "assumedTemp": 18.0,
+      "bInHeatEnabled": "False",
+      "bIsActive": "False",
+      "bOutRequestHeat": "False",
+      "bOverrideLimitingAllowed": "True",
+      "bPrimaryZone": "True",
+      "bTriggerWarmup": "False",
+      "calibration": {
+        "last_device_status": {},
+        "last_result": "",
+        "last_start_time": 0,
+        "last_stop_time": 0,
+        "state": 0,
+        "state_name": "ECALIBRATION_STATE_IDLE"
+      },
+      "datapoints": [
+        {
+          "addr": "TEMPERATURE",
+          "path": "site/WeatherData",
+          "type": "Float",
+          "val": "None"
+        },
+        {
+          "addr": "TEMPERATURE",
+          "path": "site/0xEC0BBD04/17",
+          "type": "Float",
+          "val": 21.5
+        },
+        {
+          "addr": "min_sp",
+          "path": "site/0xEC0BBD04/88/_cfg",
+          "type": "Float",
+          "val": 4.0
+        },
+        {
+          "addr": "min_sp",
+          "path": "site/0xEC0BBD04/9/_cfg",
+          "type": "Float",
+          "val": 4.0
+        },
+        {
+          "addr": "LUMINANCE",
+          "path": "site/0xEC0BBD04/17",
+          "type": "Float",
+          "val": "None"
+        },
+        {
+          "addr": "HEATING_1",
+          "path": "site/0xEC0BBD04/88",
+          "type": "Float",
+          "val": 4.0
+        },
+        {
+          "addr": "RELATIVE_HUMIDITY",
+          "path": "site/WeatherData",
+          "type": "Float",
+          "val": "None"
+        },
+        {
+          "addr": "Motion",
+          "path": "site/0xEC0BBD04/17",
+          "type": "Int",
+          "val": 0
+        },
+        {
+          "addr": "Battery",
+          "path": "site/0xEC0BBD04/9",
+          "type": "Int",
+          "val": 47
+        },
+        {
+          "addr": "Battery",
+          "path": "site/0xEC0BBD04/17",
+          "type": "Int",
+          "val": 100
+        },
+        {
+          "addr": "Battery",
+          "path": "site/0xEC0BBD04/88",
+          "type": "Int",
+          "val": 49
+        }
+      ],
+      "fBoostSP": 28.0,
+      "fDeadbandHigh": 0.5,
+      "fDeadbandLow": 0.5,
+      "fFrostSP": 4.0,
+      "fMaxSP": 28.0,
+      "fMinSP": 4.0,
+      "fOutput": 0.0,
+      "fOverrideTemp": 6.0,
+      "fPV": 21.5,
+      "fPV_offset": 0.0,
+      "fSP": 4.0,
+      "iActivity": 0,
+      "iBaseMode": 1,
+      "iBoostTimeRemaining": 0,
+      "iFlagActualKit": 5,
+      "iFlagExpectedKit": 517,
+      "iFlags": 2047,
+      "iID": 5,
+      "iLogPeriod": 300,
+      "iMode": 1,
+      "iOverrideDuration": 3600,
+      "iOverrideMode": 0,
+      "iPriority": 5,
+      "iType": 3,
+      "lOptions": 24,
+      "linkedSettings": {
+        "bFollowActive": "True",
+        "bFollowOutput": "False",
+        "fLinkSP": 21.0,
+        "lstLinkedTo": []
+      },
+      "log": [],
+      "lstIssues": [
+        {
+          "data": {
+            "location": "Ensuite",
+            "nodeHash": "0x0000000200040005",
+            "nodeID": "9"
+          },
+          "id": "node:not_seen",
+          "level": 2
+        }
+      ],
+      "lstNodes": [
+        { "addr": "9", "type": "" },
+        { "addr": "88", "type": "" },
+        { "addr": "17", "type": "" },
+        { "addr": "WeatherData", "type": "" }
+      ],
+      "manualTemp": "site/0xEC0BBD04/17/TEMPERATURE",
+      "maximumOverrideDuration": 86400,
+      "nodes": [
+        {
+          "addr": "9",
+          "childValues": {
+            "ApplicationVersion": {
+              "addr": "ApplicationVersion",
+              "path": "site/0xEC0BBD04/9",
+              "type": "String",
+              "val": "1.0"
+            },
+            "Battery": {
+              "addr": "Battery",
+              "path": "site/0xEC0BBD04/9",
+              "type": "Int",
+              "val": 47
+            },
+            "ClockHour": {
+              "addr": "ClockHour",
+              "path": "site/0xEC0BBD04/9",
+              "type": "Int",
+              "val": "None"
+            },
+            "ClockMinute": {
+              "addr": "ClockMinute",
+              "path": "site/0xEC0BBD04/9",
+              "type": "Int",
+              "val": "None"
+            },
+            "ClockWeekday": {
+              "addr": "ClockWeekday",
+              "path": "site/0xEC0BBD04/9",
+              "type": "Int",
+              "val": "None"
+            },
+            "LibraryType": {
+              "addr": "LibraryType",
+              "path": "site/0xEC0BBD04/9",
+              "type": "String",
+              "val": "Routing Slave"
+            },
+            "ProtectionState": {
+              "addr": "ProtectionState",
+              "path": "site/0xEC0BBD04/9",
+              "type": "Int",
+              "val": "None"
+            },
+            "ProtocolVersion": {
+              "addr": "ProtocolVersion",
+              "path": "site/0xEC0BBD04/9",
+              "type": "String",
+              "val": "3.67"
+            },
+            "WakeUp_Interval": {
+              "addr": "WakeUp_Interval",
+              "path": "site/0xEC0BBD04/9",
+              "type": "Int",
+              "val": 450
+            },
+            "WakeUp_TargetNode": {
+              "addr": "WakeUp_TargetNode",
+              "path": "site/0xEC0BBD04/9",
+              "type": "Int",
+              "val": 1
+            },
+            "hash": {
+              "addr": "hash",
+              "path": "site/0xEC0BBD04/9",
+              "type": "String",
+              "val": "0x0000000200040005"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/0xEC0BBD04/9",
+              "type": "Int",
+              "val": 4
+            },
+            "lastComms": {
+              "addr": "lastComms",
+              "path": "site/0xEC0BBD04/9",
+              "type": "Int",
+              "val": 1707636931
+            },
+            "location": {
+              "addr": "location",
+              "path": "site/0xEC0BBD04/9",
+              "type": "String",
+              "val": ""
+            },
+            "manfID": {
+              "addr": "manfID",
+              "path": "site/0xEC0BBD04/9",
+              "type": "String",
+              "val": "2/5/4"
+            },
+            "setback": {
+              "addr": "setback",
+              "path": "site/0xEC0BBD04/9",
+              "type": "Float",
+              "val": 0.0
+            }
+          },
+          "type": ""
+        },
+        {
+          "addr": "88",
+          "childValues": {
+            "ApplicationVersion": {
+              "addr": "ApplicationVersion",
+              "path": "site/0xEC0BBD04/88",
+              "type": "String",
+              "val": "1.0"
+            },
+            "Battery": {
+              "addr": "Battery",
+              "path": "site/0xEC0BBD04/88",
+              "type": "Int",
+              "val": 49
+            },
+            "ClockHour": {
+              "addr": "ClockHour",
+              "path": "site/0xEC0BBD04/88",
+              "type": "Int",
+              "val": 10
+            },
+            "ClockMinute": {
+              "addr": "ClockMinute",
+              "path": "site/0xEC0BBD04/88",
+              "type": "Int",
+              "val": 15
+            },
+            "ClockWeekday": {
+              "addr": "ClockWeekday",
+              "path": "site/0xEC0BBD04/88",
+              "type": "Int",
+              "val": 1
+            },
+            "HEATING_1": {
+              "addr": "HEATING_1",
+              "path": "site/0xEC0BBD04/88",
+              "type": "Float",
+              "val": 4.0
+            },
+            "LibraryType": {
+              "addr": "LibraryType",
+              "path": "site/0xEC0BBD04/88",
+              "type": "String",
+              "val": "Routing Slave"
+            },
+            "ProtectionState": {
+              "addr": "ProtectionState",
+              "path": "site/0xEC0BBD04/88",
+              "type": "Int",
+              "val": 0
+            },
+            "ProtocolVersion": {
+              "addr": "ProtocolVersion",
+              "path": "site/0xEC0BBD04/88",
+              "type": "String",
+              "val": "3.67"
+            },
+            "WakeUp_Interval": {
+              "addr": "WakeUp_Interval",
+              "path": "site/0xEC0BBD04/88",
+              "type": "Int",
+              "val": 450
+            },
+            "WakeUp_TargetNode": {
+              "addr": "WakeUp_TargetNode",
+              "path": "site/0xEC0BBD04/88",
+              "type": "Int",
+              "val": 1
+            },
+            "hash": {
+              "addr": "hash",
+              "path": "site/0xEC0BBD04/88",
+              "type": "String",
+              "val": "0x0000000200040005"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/0xEC0BBD04/88",
+              "type": "Int",
+              "val": 0
+            },
+            "lastComms": {
+              "addr": "lastComms",
+              "path": "site/0xEC0BBD04/88",
+              "type": "Int",
+              "val": 1722858318
+            },
+            "location": {
+              "addr": "location",
+              "path": "site/0xEC0BBD04/88",
+              "type": "String",
+              "val": "Ensuite"
+            },
+            "lostFromModule": {
+              "addr": "lostFromModule",
+              "path": "site/0xEC0BBD04/88",
+              "type": "Bool",
+              "val": "False"
+            },
+            "manfID": {
+              "addr": "manfID",
+              "path": "site/0xEC0BBD04/88",
+              "type": "String",
+              "val": "2/5/4"
+            },
+            "setback": {
+              "addr": "setback",
+              "path": "site/0xEC0BBD04/88",
+              "type": "Float",
+              "val": 0.0
+            }
+          },
+          "type": ""
+        },
+        {
+          "addr": "17",
+          "childValues": {
+            "ApplicationVersion": {
+              "addr": "ApplicationVersion",
+              "path": "site/0xEC0BBD04/17",
+              "type": "String",
+              "val": "1.0"
+            },
+            "BasicValue": {
+              "addr": "BasicValue",
+              "path": "site/0xEC0BBD04/17",
+              "type": "Int",
+              "val": "None"
+            },
+            "Battery": {
+              "addr": "Battery",
+              "path": "site/0xEC0BBD04/17",
+              "type": "Int",
+              "val": 100
+            },
+            "LUMINANCE": {
+              "addr": "LUMINANCE",
+              "path": "site/0xEC0BBD04/17",
+              "type": "Float",
+              "val": "None"
+            },
+            "LibraryType": {
+              "addr": "LibraryType",
+              "path": "site/0xEC0BBD04/17",
+              "type": "String",
+              "val": "Routing Slave"
+            },
+            "Motion": {
+              "addr": "Motion",
+              "path": "site/0xEC0BBD04/17",
+              "type": "Int",
+              "val": 0
+            },
+            "ProtocolVersion": {
+              "addr": "ProtocolVersion",
+              "path": "site/0xEC0BBD04/17",
+              "type": "String",
+              "val": "3.41"
+            },
+            "TEMPERATURE": {
+              "addr": "TEMPERATURE",
+              "path": "site/0xEC0BBD04/17",
+              "type": "Float",
+              "val": 21.5
+            },
+            "Tamper": {
+              "addr": "Tamper",
+              "path": "site/0xEC0BBD04/17",
+              "type": "Int",
+              "val": "None"
+            },
+            "WakeUp_Interval": {
+              "addr": "WakeUp_Interval",
+              "path": "site/0xEC0BBD04/17",
+              "type": "Int",
+              "val": 1800
+            },
+            "WakeUp_TargetNode": {
+              "addr": "WakeUp_TargetNode",
+              "path": "site/0xEC0BBD04/17",
+              "type": "Int",
+              "val": 1
+            },
+            "hash": {
+              "addr": "hash",
+              "path": "site/0xEC0BBD04/17",
+              "type": "String",
+              "val": "0x0000013C00020002"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/0xEC0BBD04/17",
+              "type": "Int",
+              "val": 0
+            },
+            "lastComms": {
+              "addr": "lastComms",
+              "path": "site/0xEC0BBD04/17",
+              "type": "Int",
+              "val": 1722857021
+            },
+            "location": {
+              "addr": "location",
+              "path": "site/0xEC0BBD04/17",
+              "type": "String",
+              "val": "Ensuite"
+            },
+            "lostFromModule": {
+              "addr": "lostFromModule",
+              "path": "site/0xEC0BBD04/17",
+              "type": "Bool",
+              "val": "False"
+            },
+            "manfID": {
+              "addr": "manfID",
+              "path": "site/0xEC0BBD04/17",
+              "type": "String",
+              "val": "316/2/2"
+            }
+          },
+          "type": ""
+        },
+        {
+          "addr": "WeatherData",
+          "childValues": {
+            "PRECIPITATION": {
+              "addr": "PRECIPITATION",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "RELATIVE_HUMIDITY": {
+              "addr": "RELATIVE_HUMIDITY",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "TEMPERATURE": {
+              "addr": "TEMPERATURE",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "TEMPERATURE_FEELS_LIKE": {
+              "addr": "TEMPERATURE_FEELS_LIKE",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "UV": {
+              "addr": "UV",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "WEATHER_TYPE": {
+              "addr": "WEATHER_TYPE",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/WeatherData",
+              "type": "Int",
+              "val": 16
+            },
+            "message": {
+              "addr": "message",
+              "path": "site/WeatherData",
+              "type": "String",
+              "val": "None"
+            }
+          },
+          "type": ""
+        }
+      ],
+      "objFootprint": {
+        "bIsNight": "True",
+        "fFootprintActiveSP": 20.0,
+        "fFootprintAwaySP": 12.0,
+        "fFootprintNightSP": 16.0,
+        "fFootprintThreshold": 2.5,
+        "fThresholdPIR": 1.0,
+        "iFootprintTmNightEnd": 28800,
+        "iFootprintTmNightStart": 81000,
+        "iOffGapSize": 1440,
+        "iOnGapSize": 1440,
+        "iProfile": 1,
+        "lstSP": [
+          { "fSP": 16.0, "iDay": 0, "iTm": 0 },
+          { "fSP": 12.0, "iDay": 0, "iTm": 28800 },
+          { "fSP": 16.0, "iDay": 0, "iTm": 81000 },
+          { "fSP": 16.0, "iDay": 1, "iTm": 0 },
+          { "fSP": 12.0, "iDay": 1, "iTm": 28800 },
+          { "fSP": 16.0, "iDay": 1, "iTm": 81000 },
+          { "fSP": 16.0, "iDay": 2, "iTm": 0 },
+          { "fSP": 12.0, "iDay": 2, "iTm": 28800 },
+          { "fSP": 16.0, "iDay": 2, "iTm": 81000 },
+          { "fSP": 16.0, "iDay": 3, "iTm": 0 },
+          { "fSP": 12.0, "iDay": 3, "iTm": 28800 },
+          { "fSP": 16.0, "iDay": 3, "iTm": 81000 },
+          { "fSP": 16.0, "iDay": 4, "iTm": 0 },
+          { "fSP": 12.0, "iDay": 4, "iTm": 28800 },
+          { "fSP": 16.0, "iDay": 4, "iTm": 81000 },
+          { "fSP": 16.0, "iDay": 5, "iTm": 0 },
+          { "fSP": 12.0, "iDay": 5, "iTm": 28800 },
+          { "fSP": 16.0, "iDay": 5, "iTm": 81000 },
+          { "fSP": 16.0, "iDay": 6, "iTm": 0 },
+          { "fSP": 12.0, "iDay": 6, "iTm": 28800 },
+          { "fSP": 16.0, "iDay": 6, "iTm": 81000 }
+        ],
+        "objReactive": {
+          "bTriggerOff": "True",
+          "bTriggerOn": "False",
+          "fActivityLevel": 0.0,
+          "fThreshold": 1.0,
+          "iReactiveMinutesTriggerOff": 5,
+          "iReactiveMinutesTriggerOn": 5,
+          "iSensitivity": 80,
+          "iTimeTillOff": 0,
+          "iTimeTillOn": 5,
+          "tmLastActivity": 1722855677
+        }
+      },
+      "objTimer": [
+        { "fSP": 14.5, "iDay": 0, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 0, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 0, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 16.0, "iDay": 0, "iTm": 73800 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 0, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 1, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 1, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 1, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 16.0, "iDay": 1, "iTm": 73800 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 1, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 2, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 2, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 2, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 16.0, "iDay": 2, "iTm": 73800 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 2, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 3, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 3, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 3, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 16.0, "iDay": 3, "iTm": 73800 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 3, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 4, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 4, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 4, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 16.0, "iDay": 4, "iTm": 73800 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 4, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 5, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 5, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 5, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 16.0, "iDay": 5, "iTm": 73800 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 5, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 6, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 6, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 6, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 16.0, "iDay": 6, "iTm": 73800 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 6, "iTm": 81000 }
+      ],
+      "strName": "Ensuite",
+      "tmLastTick": 1722858788,
+      "tmMaxTimeAtSP": 1800,
+      "tmTimeAtSP": 0,
+      "trigger": {
+        "boost": 0,
+        "linkChildActive": 0,
+        "linkChildOutput": 0,
+        "output": 0,
+        "preheat": 0,
+        "reactive": 1,
+        "setpoint": 0,
+        "test": 0
+      },
+      "warmupDuration": {
+        "bEnable": "True",
+        "bEnableCalcs": "False",
+        "fRiseRate": 3.0,
+        "iLagTime": 1686,
+        "iRiseTime": 1200,
+        "iTotalTime": 1202
+      },
+      "zoneReactive": {
+        "bTriggerOff": "True",
+        "bTriggerOn": "False",
+        "fActivityLevel": 0.0,
+        "fThreshold": 1.0,
+        "iReactiveMinutesTriggerOff": 5,
+        "iReactiveMinutesTriggerOn": 5,
+        "iSensitivity": 80,
+        "iTimeTillOff": 0,
+        "iTimeTillOn": 5,
+        "tmLastActivity": 1722855677
+      },
+      "zoneSubType": 0
+    },
+    {
+      "activeTemperatureDevices": [],
+      "assumedTemp": 4.5,
+      "bInHeatEnabled": "False",
+      "bIsActive": "False",
+      "bOutRequestHeat": "False",
+      "bOverrideLimitingAllowed": "True",
+      "bPrimaryZone": "True",
+      "bTriggerWarmup": "False",
+      "calibration": {
+        "last_device_status": {},
+        "last_result": "",
+        "last_start_time": 0,
+        "last_stop_time": 0,
+        "state": 0,
+        "state_name": "ECALIBRATION_STATE_IDLE"
+      },
+      "datapoints": [
+        {
+          "addr": "TEMPERATURE",
+          "path": "site/0xEC0BBD04/16",
+          "type": "Float",
+          "val": 21.5
+        },
+        {
+          "addr": "min_sp",
+          "path": "site/0xEC0BBD04/90/_cfg",
+          "type": "Float",
+          "val": 4.0
+        },
+        {
+          "addr": "min_sp",
+          "path": "site/0xEC0BBD04/8/_cfg",
+          "type": "Float",
+          "val": 4.0
+        },
+        {
+          "addr": "LUMINANCE",
+          "path": "site/0xEC0BBD04/16",
+          "type": "Float",
+          "val": 11.0
+        },
+        {
+          "addr": "HEATING_1",
+          "path": "site/0xEC0BBD04/90",
+          "type": "Float",
+          "val": 4.0
+        },
+        {
+          "addr": "Motion",
+          "path": "site/0xEC0BBD04/16",
+          "type": "Int",
+          "val": 0
+        },
+        {
+          "addr": "Battery",
+          "path": "site/0xEC0BBD04/8",
+          "type": "Int",
+          "val": 52
+        },
+        {
+          "addr": "Battery",
+          "path": "site/0xEC0BBD04/16",
+          "type": "Int",
+          "val": 100
+        },
+        {
+          "addr": "Battery",
+          "path": "site/0xEC0BBD04/90",
+          "type": "Int",
+          "val": 92
+        }
+      ],
+      "fBoostSP": 20.0,
+      "fDeadbandHigh": 0.5,
+      "fDeadbandLow": 0.5,
+      "fFrostSP": 4.0,
+      "fMaxSP": 28.0,
+      "fMinSP": 4.0,
+      "fOutput": 0.0,
+      "fOverrideTemp": 20.0,
+      "fOverrideTemperatureMax": 21.0,
+      "fPV": 21.5,
+      "fPV_offset": 0.0,
+      "fSP": 4.0,
+      "iActivity": 2,
+      "iBaseMode": 1,
+      "iBoostTimeRemaining": 0,
+      "iFlagActualKit": 517,
+      "iFlagExpectedKit": 517,
+      "iFlags": 2047,
+      "iID": 7,
+      "iLogPeriod": 300,
+      "iMode": 8,
+      "iOverrideDuration": 3600,
+      "iOverrideMode": 0,
+      "iPriority": 6,
+      "iType": 3,
+      "lOptions": 16,
+      "linkedSettings": {
+        "bFollowActive": "True",
+        "bFollowOutput": "False",
+        "fLinkSP": 4.0,
+        "lstLinkedTo": []
+      },
+      "log": [],
+      "lstIssues": [
+        {
+          "data": {
+            "location": "Guest room",
+            "nodeHash": "0x0000000200040005",
+            "nodeID": "8"
+          },
+          "id": "node:not_seen",
+          "level": 2
+        }
+      ],
+      "lstNodes": [
+        { "addr": "8", "type": "" },
+        { "addr": "90", "type": "" },
+        { "addr": "16", "type": "" }
+      ],
+      "manualTemp": "site/0xEC0BBD04/16/TEMPERATURE",
+      "maximumOverrideDuration": 86400,
+      "nodes": [
+        {
+          "addr": "8",
+          "childValues": {
+            "ApplicationVersion": {
+              "addr": "ApplicationVersion",
+              "path": "site/0xEC0BBD04/8",
+              "type": "String",
+              "val": "1.0"
+            },
+            "Battery": {
+              "addr": "Battery",
+              "path": "site/0xEC0BBD04/8",
+              "type": "Int",
+              "val": 52
+            },
+            "ClockHour": {
+              "addr": "ClockHour",
+              "path": "site/0xEC0BBD04/8",
+              "type": "Int",
+              "val": "None"
+            },
+            "ClockMinute": {
+              "addr": "ClockMinute",
+              "path": "site/0xEC0BBD04/8",
+              "type": "Int",
+              "val": "None"
+            },
+            "ClockWeekday": {
+              "addr": "ClockWeekday",
+              "path": "site/0xEC0BBD04/8",
+              "type": "Int",
+              "val": "None"
+            },
+            "LibraryType": {
+              "addr": "LibraryType",
+              "path": "site/0xEC0BBD04/8",
+              "type": "String",
+              "val": "Routing Slave"
+            },
+            "ProtectionState": {
+              "addr": "ProtectionState",
+              "path": "site/0xEC0BBD04/8",
+              "type": "Int",
+              "val": "None"
+            },
+            "ProtocolVersion": {
+              "addr": "ProtocolVersion",
+              "path": "site/0xEC0BBD04/8",
+              "type": "String",
+              "val": "3.67"
+            },
+            "WakeUp_Interval": {
+              "addr": "WakeUp_Interval",
+              "path": "site/0xEC0BBD04/8",
+              "type": "Int",
+              "val": 450
+            },
+            "WakeUp_TargetNode": {
+              "addr": "WakeUp_TargetNode",
+              "path": "site/0xEC0BBD04/8",
+              "type": "Int",
+              "val": 1
+            },
+            "hash": {
+              "addr": "hash",
+              "path": "site/0xEC0BBD04/8",
+              "type": "String",
+              "val": "0x0000000200040005"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/0xEC0BBD04/8",
+              "type": "Int",
+              "val": 4
+            },
+            "lastComms": {
+              "addr": "lastComms",
+              "path": "site/0xEC0BBD04/8",
+              "type": "Int",
+              "val": 1535875375
+            },
+            "location": {
+              "addr": "location",
+              "path": "site/0xEC0BBD04/8",
+              "type": "String",
+              "val": ""
+            },
+            "manfID": {
+              "addr": "manfID",
+              "path": "site/0xEC0BBD04/8",
+              "type": "String",
+              "val": "2/5/4"
+            },
+            "setback": {
+              "addr": "setback",
+              "path": "site/0xEC0BBD04/8",
+              "type": "Float",
+              "val": 0.0
+            }
+          },
+          "type": ""
+        },
+        {
+          "addr": "90",
+          "childValues": {
+            "ApplicationVersion": {
+              "addr": "ApplicationVersion",
+              "path": "site/0xEC0BBD04/90",
+              "type": "String",
+              "val": "1.0"
+            },
+            "Battery": {
+              "addr": "Battery",
+              "path": "site/0xEC0BBD04/90",
+              "type": "Int",
+              "val": 92
+            },
+            "ClockHour": {
+              "addr": "ClockHour",
+              "path": "site/0xEC0BBD04/90",
+              "type": "Int",
+              "val": 12
+            },
+            "ClockMinute": {
+              "addr": "ClockMinute",
+              "path": "site/0xEC0BBD04/90",
+              "type": "Int",
+              "val": 5
+            },
+            "ClockWeekday": {
+              "addr": "ClockWeekday",
+              "path": "site/0xEC0BBD04/90",
+              "type": "Int",
+              "val": 1
+            },
+            "HEATING_1": {
+              "addr": "HEATING_1",
+              "path": "site/0xEC0BBD04/90",
+              "type": "Float",
+              "val": 4.0
+            },
+            "LibraryType": {
+              "addr": "LibraryType",
+              "path": "site/0xEC0BBD04/90",
+              "type": "String",
+              "val": "Routing Slave"
+            },
+            "ProtectionState": {
+              "addr": "ProtectionState",
+              "path": "site/0xEC0BBD04/90",
+              "type": "Int",
+              "val": 0
+            },
+            "ProtocolVersion": {
+              "addr": "ProtocolVersion",
+              "path": "site/0xEC0BBD04/90",
+              "type": "String",
+              "val": "3.67"
+            },
+            "WakeUp_Interval": {
+              "addr": "WakeUp_Interval",
+              "path": "site/0xEC0BBD04/90",
+              "type": "Int",
+              "val": 450
+            },
+            "WakeUp_TargetNode": {
+              "addr": "WakeUp_TargetNode",
+              "path": "site/0xEC0BBD04/90",
+              "type": "Int",
+              "val": 1
+            },
+            "hash": {
+              "addr": "hash",
+              "path": "site/0xEC0BBD04/90",
+              "type": "String",
+              "val": "0x0000000200040005"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/0xEC0BBD04/90",
+              "type": "Int",
+              "val": 0
+            },
+            "lastComms": {
+              "addr": "lastComms",
+              "path": "site/0xEC0BBD04/90",
+              "type": "Int",
+              "val": 1722858368
+            },
+            "location": {
+              "addr": "location",
+              "path": "site/0xEC0BBD04/90",
+              "type": "String",
+              "val": "Guest room"
+            },
+            "lostFromModule": {
+              "addr": "lostFromModule",
+              "path": "site/0xEC0BBD04/90",
+              "type": "Bool",
+              "val": "False"
+            },
+            "manfID": {
+              "addr": "manfID",
+              "path": "site/0xEC0BBD04/90",
+              "type": "String",
+              "val": "2/5/4"
+            },
+            "setback": {
+              "addr": "setback",
+              "path": "site/0xEC0BBD04/90",
+              "type": "Float",
+              "val": 0.0
+            }
+          },
+          "type": ""
+        },
+        {
+          "addr": "16",
+          "childValues": {
+            "ApplicationVersion": {
+              "addr": "ApplicationVersion",
+              "path": "site/0xEC0BBD04/16",
+              "type": "String",
+              "val": "1.0"
+            },
+            "BasicValue": {
+              "addr": "BasicValue",
+              "path": "site/0xEC0BBD04/16",
+              "type": "Int",
+              "val": 0
+            },
+            "Battery": {
+              "addr": "Battery",
+              "path": "site/0xEC0BBD04/16",
+              "type": "Int",
+              "val": 100
+            },
+            "GENERAL_PURPOSE_VALUE": {
+              "addr": "GENERAL_PURPOSE_VALUE",
+              "path": "site/0xEC0BBD04/16",
+              "type": "Float",
+              "val": "None"
+            },
+            "LUMINANCE": {
+              "addr": "LUMINANCE",
+              "path": "site/0xEC0BBD04/16",
+              "type": "Float",
+              "val": 11.0
+            },
+            "LibraryType": {
+              "addr": "LibraryType",
+              "path": "site/0xEC0BBD04/16",
+              "type": "String",
+              "val": "Routing Slave"
+            },
+            "Motion": {
+              "addr": "Motion",
+              "path": "site/0xEC0BBD04/16",
+              "type": "Int",
+              "val": 0
+            },
+            "ProtocolVersion": {
+              "addr": "ProtocolVersion",
+              "path": "site/0xEC0BBD04/16",
+              "type": "String",
+              "val": "3.41"
+            },
+            "TEMPERATURE": {
+              "addr": "TEMPERATURE",
+              "path": "site/0xEC0BBD04/16",
+              "type": "Float",
+              "val": 21.5
+            },
+            "Tamper": {
+              "addr": "Tamper",
+              "path": "site/0xEC0BBD04/16",
+              "type": "Int",
+              "val": "None"
+            },
+            "WakeUp_Interval": {
+              "addr": "WakeUp_Interval",
+              "path": "site/0xEC0BBD04/16",
+              "type": "Int",
+              "val": 1800
+            },
+            "WakeUp_TargetNode": {
+              "addr": "WakeUp_TargetNode",
+              "path": "site/0xEC0BBD04/16",
+              "type": "Int",
+              "val": 1
+            },
+            "hash": {
+              "addr": "hash",
+              "path": "site/0xEC0BBD04/16",
+              "type": "String",
+              "val": "0x0000013C00020002"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/0xEC0BBD04/16",
+              "type": "Int",
+              "val": 0
+            },
+            "lastComms": {
+              "addr": "lastComms",
+              "path": "site/0xEC0BBD04/16",
+              "type": "Int",
+              "val": 1722858746
+            },
+            "location": {
+              "addr": "location",
+              "path": "site/0xEC0BBD04/16",
+              "type": "String",
+              "val": "Guest room"
+            },
+            "lostFromModule": {
+              "addr": "lostFromModule",
+              "path": "site/0xEC0BBD04/16",
+              "type": "Bool",
+              "val": "False"
+            },
+            "manfID": {
+              "addr": "manfID",
+              "path": "site/0xEC0BBD04/16",
+              "type": "String",
+              "val": "316/2/2"
+            }
+          },
+          "type": ""
+        }
+      ],
+      "objFootprint": {
+        "bIsNight": "True",
+        "fFootprintActiveSP": 20.0,
+        "fFootprintAwaySP": 14.0,
+        "fFootprintNightSP": 16.0,
+        "fFootprintThreshold": 2.5,
+        "fThresholdPIR": 1.0,
+        "iFootprintTmNightEnd": 23400,
+        "iFootprintTmNightStart": 75600,
+        "iOffGapSize": 60,
+        "iOnGapSize": 60,
+        "iProfile": 1,
+        "lstSP": [
+          { "fSP": 16.0, "iDay": 0, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 0, "iTm": 23400 },
+          { "fSP": 16.0, "iDay": 0, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 1, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 1, "iTm": 23400 },
+          { "fSP": 16.0, "iDay": 1, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 2, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 2, "iTm": 23400 },
+          { "fSP": 16.0, "iDay": 2, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 3, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 3, "iTm": 23400 },
+          { "fSP": 16.0, "iDay": 3, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 4, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 4, "iTm": 23400 },
+          { "fSP": 16.0, "iDay": 4, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 5, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 5, "iTm": 23400 },
+          { "fSP": 16.0, "iDay": 5, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 6, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 6, "iTm": 23400 },
+          { "fSP": 16.0, "iDay": 6, "iTm": 75600 }
+        ],
+        "objReactive": {
+          "bTriggerOff": "False",
+          "bTriggerOn": "True",
+          "fActivityLevel": 0.0,
+          "fThreshold": 1.0,
+          "iReactiveMinutesTriggerOff": 5,
+          "iReactiveMinutesTriggerOn": 5,
+          "iSensitivity": 80,
+          "iTimeTillOff": 5,
+          "iTimeTillOn": 4,
+          "tmLastActivity": 1722858738
+        }
+      },
+      "objTimer": [
+        { "fSP": 14.5, "iDay": 0, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 0, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 0, "iTm": 29700 },
+        { "fSP": 14.0, "iDay": 0, "iTm": 73800 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 0, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 0, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 1, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 1, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 1, "iTm": 29700 },
+        { "fSP": 14.0, "iDay": 1, "iTm": 73800 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 1, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 1, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 2, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 2, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 2, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 2, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 2, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 3, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 3, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 3, "iTm": 29700 },
+        { "fSP": 14.0, "iDay": 3, "iTm": 73800 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 3, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 3, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 4, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 4, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 4, "iTm": 29700 },
+        { "fSP": 14.0, "iDay": 4, "iTm": 73800 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 4, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 4, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 5, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 5, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 5, "iTm": 29700 },
+        { "fSP": 14.0, "iDay": 5, "iTm": 73800 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 5, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 5, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 6, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 6, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 6, "iTm": 29700 },
+        { "fSP": 14.0, "iDay": 6, "iTm": 73800 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 6, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 6, "iTm": 81000 }
+      ],
+      "strName": "Guest room",
+      "tmLastTick": 1722858788,
+      "tmMaxTimeAtSP": 1800,
+      "tmTimeAtSP": 0,
+      "trigger": {
+        "boost": 0,
+        "linkChildActive": 0,
+        "linkChildOutput": 0,
+        "output": 0,
+        "preheat": 0,
+        "reactive": 1,
+        "setpoint": 0,
+        "test": 0
+      },
+      "warmupDuration": {
+        "bEnable": "False",
+        "bEnableCalcs": "True",
+        "fRiseRate": 0.5,
+        "iLagTime": 3600,
+        "iRiseTime": 1800,
+        "iTotalTime": 5400
+      },
+      "zoneReactive": {
+        "bTriggerOff": "False",
+        "bTriggerOn": "True",
+        "fActivityLevel": 0.0,
+        "fThreshold": 1.0,
+        "iReactiveMinutesTriggerOff": 5,
+        "iReactiveMinutesTriggerOn": 5,
+        "iSensitivity": 80,
+        "iTimeTillOff": 5,
+        "iTimeTillOn": 4,
+        "tmLastActivity": 1722858738
+      },
+      "zoneSubType": 0
+    },
+    {
+      "bIsActive": "True",
+      "bOutRequestHeat": "True",
+      "bOverrideLimitingAllowed": "False",
+      "bPrimaryZone": "True",
+      "datapoints": [
+        {
+          "addr": "SwitchBinary",
+          "path": "site/0xEC0BBD04/4",
+          "type": "Int",
+          "val": 1
+        }
+      ],
+      "fBoostSP": 1.0,
+      "fMaxSP": 1,
+      "fMinSP": 0,
+      "fOutput": 1.0,
+      "fSP": 1.0,
+      "iBaseMode": 2,
+      "iBoostTimeRemaining": 0,
+      "iFlagActualKit": 0,
+      "iFlagExpectedKit": 0,
+      "iFlags": 1023,
+      "iID": 27,
+      "iMode": 2,
+      "iOverrideDuration": 3600,
+      "iOverrideMode": 1,
+      "iPriority": 9,
+      "iType": 2,
+      "lOptions": 0,
+      "linkedSettings": {
+        "bFollowActive": "False",
+        "bFollowOutput": "True",
+        "fLinkSP": 21.0,
+        "lstLinkedTo": []
+      },
+      "log": [],
+      "lstIssues": [],
+      "maximumOverrideDuration": 86400,
+      "nodes": [
+        {
+          "addr": "4",
+          "childValues": {
+            "ApplicationVersion": {
+              "addr": "ApplicationVersion",
+              "path": "site/0xEC0BBD04/4",
+              "type": "String",
+              "val": "1.1"
+            },
+            "BasicValue": {
+              "addr": "BasicValue",
+              "path": "site/0xEC0BBD04/4",
+              "type": "Int",
+              "val": 255
+            },
+            "LibraryType": {
+              "addr": "LibraryType",
+              "path": "site/0xEC0BBD04/4",
+              "type": "String",
+              "val": "Enhanced Slave"
+            },
+            "ProtocolVersion": {
+              "addr": "ProtocolVersion",
+              "path": "site/0xEC0BBD04/4",
+              "type": "String",
+              "val": "3.41"
+            },
+            "SwitchAllMode": {
+              "addr": "SwitchAllMode",
+              "path": "site/0xEC0BBD04/4",
+              "type": "Int",
+              "val": 21
+            },
+            "SwitchBinary": {
+              "addr": "SwitchBinary",
+              "path": "site/0xEC0BBD04/4",
+              "type": "Int",
+              "val": 1
+            },
+            "hash": {
+              "addr": "hash",
+              "path": "site/0xEC0BBD04/4",
+              "type": "String",
+              "val": "0x0000013C00010001"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/0xEC0BBD04/4",
+              "type": "Int",
+              "val": 0
+            },
+            "lastComms": {
+              "addr": "lastComms",
+              "path": "site/0xEC0BBD04/4",
+              "type": "Int",
+              "val": 1722858771
+            },
+            "location": {
+              "addr": "location",
+              "path": "site/0xEC0BBD04/4",
+              "type": "String",
+              "val": "Bedroom Socket"
+            },
+            "lostFromModule": {
+              "addr": "lostFromModule",
+              "path": "site/0xEC0BBD04/4",
+              "type": "Bool",
+              "val": "False"
+            },
+            "manfID": {
+              "addr": "manfID",
+              "path": "site/0xEC0BBD04/4",
+              "type": "String",
+              "val": "316/1/1"
+            }
+          },
+          "type": ""
+        }
+      ],
+      "objTimer": [
+        { "fSP": 0.0, "iDay": 0, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 0, "iTm": 0 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 0, "iTm": 86400 },
+        { "fSP": 0.0, "iDay": 1, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 1, "iTm": 0 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 1, "iTm": 86400 },
+        { "fSP": 0.0, "iDay": 2, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 2, "iTm": 0 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 2, "iTm": 86400 },
+        { "fSP": 0.0, "iDay": 3, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 3, "iTm": 0 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 3, "iTm": 86400 },
+        { "fSP": 0.0, "iDay": 4, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 4, "iTm": 0 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 4, "iTm": 86400 },
+        { "fSP": 0.0, "iDay": 5, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 5, "iTm": 0 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 5, "iTm": 86400 },
+        { "fSP": 0.0, "iDay": 6, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 6, "iTm": 0 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 6, "iTm": 86400 }
+      ],
+      "strName": "Bedroom Socket",
+      "tmLastTick": 1722858788,
+      "trigger": {
+        "boost": 0,
+        "linkChildActive": 0,
+        "linkChildOutput": 0,
+        "output": 1,
+        "preheat": 0,
+        "reactive": 1,
+        "setpoint": 1,
+        "test": 0
+      },
+      "zoneReactive": {
+        "bTriggerOff": "True",
+        "bTriggerOn": "False",
+        "fActivityLevel": 0.0,
+        "fThreshold": 1.0,
+        "iReactiveMinutesTriggerOff": 20,
+        "iReactiveMinutesTriggerOn": 2,
+        "iSensitivity": 80,
+        "iTimeTillOff": 0,
+        "iTimeTillOn": 2,
+        "tmLastActivity": 0
+      },
+      "zoneSubType": 0
+    },
+    {
+      "bIsActive": "True",
+      "bOutRequestHeat": "True",
+      "bOverrideLimitingAllowed": "False",
+      "bPrimaryZone": "True",
+      "datapoints": [
+        {
+          "addr": "SwitchBinary",
+          "path": "site/0xEC0BBD04/6",
+          "type": "Int",
+          "val": 1
+        }
+      ],
+      "fBoostSP": 1.0,
+      "fMaxSP": 1,
+      "fMinSP": 0,
+      "fOutput": 1.0,
+      "fSP": 1.0,
+      "iBaseMode": 2,
+      "iBoostTimeRemaining": 0,
+      "iFlagActualKit": 0,
+      "iFlagExpectedKit": 0,
+      "iFlags": 1023,
+      "iID": 28,
+      "iMode": 2,
+      "iOverrideDuration": 3600,
+      "iOverrideMode": 1,
+      "iPriority": 8,
+      "iType": 2,
+      "lOptions": 0,
+      "linkedSettings": {
+        "bFollowActive": "False",
+        "bFollowOutput": "True",
+        "fLinkSP": 21.0,
+        "lstLinkedTo": []
+      },
+      "log": [],
+      "lstIssues": [],
+      "maximumOverrideDuration": 86400,
+      "nodes": [
+        {
+          "addr": "6",
+          "childValues": {
+            "ApplicationVersion": {
+              "addr": "ApplicationVersion",
+              "path": "site/0xEC0BBD04/6",
+              "type": "String",
+              "val": "1.1"
+            },
+            "BasicValue": {
+              "addr": "BasicValue",
+              "path": "site/0xEC0BBD04/6",
+              "type": "Int",
+              "val": 255
+            },
+            "LibraryType": {
+              "addr": "LibraryType",
+              "path": "site/0xEC0BBD04/6",
+              "type": "String",
+              "val": "Enhanced Slave"
+            },
+            "ProtocolVersion": {
+              "addr": "ProtocolVersion",
+              "path": "site/0xEC0BBD04/6",
+              "type": "String",
+              "val": "3.41"
+            },
+            "SwitchAllMode": {
+              "addr": "SwitchAllMode",
+              "path": "site/0xEC0BBD04/6",
+              "type": "Int",
+              "val": 255
+            },
+            "SwitchBinary": {
+              "addr": "SwitchBinary",
+              "path": "site/0xEC0BBD04/6",
+              "type": "Int",
+              "val": 1
+            },
+            "hash": {
+              "addr": "hash",
+              "path": "site/0xEC0BBD04/6",
+              "type": "String",
+              "val": "0x0000013C00010001"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/0xEC0BBD04/6",
+              "type": "Int",
+              "val": 0
+            },
+            "lastComms": {
+              "addr": "lastComms",
+              "path": "site/0xEC0BBD04/6",
+              "type": "Int",
+              "val": 1722858781
+            },
+            "location": {
+              "addr": "location",
+              "path": "site/0xEC0BBD04/6",
+              "type": "String",
+              "val": "Kitchen Socket"
+            },
+            "lostFromModule": {
+              "addr": "lostFromModule",
+              "path": "site/0xEC0BBD04/6",
+              "type": "Bool",
+              "val": "False"
+            },
+            "manfID": {
+              "addr": "manfID",
+              "path": "site/0xEC0BBD04/6",
+              "type": "String",
+              "val": "316/1/1"
+            }
+          },
+          "type": ""
+        }
+      ],
+      "objTimer": [
+        { "fSP": 0.0, "iDay": 0, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 0, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 0, "iTm": 82800 },
+        { "fSP": 0.0, "iDay": 1, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 1, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 1, "iTm": 82800 },
+        { "fSP": 0.0, "iDay": 2, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 2, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 2, "iTm": 82800 },
+        { "fSP": 0.0, "iDay": 3, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 3, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 3, "iTm": 82800 },
+        { "fSP": 0.0, "iDay": 4, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 4, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 4, "iTm": 82800 },
+        { "fSP": 0.0, "iDay": 5, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 5, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 5, "iTm": 82800 },
+        { "fSP": 0.0, "iDay": 6, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 6, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 6, "iTm": 82800 }
+      ],
+      "strName": "Kitchen Socket",
+      "tmLastTick": 1722858788,
+      "trigger": {
+        "boost": 0,
+        "linkChildActive": 0,
+        "linkChildOutput": 0,
+        "output": 1,
+        "preheat": 0,
+        "reactive": 1,
+        "setpoint": 1,
+        "test": 0
+      },
+      "zoneReactive": {
+        "bTriggerOff": "True",
+        "bTriggerOn": "False",
+        "fActivityLevel": 0.0,
+        "fThreshold": 1.0,
+        "iReactiveMinutesTriggerOff": 20,
+        "iReactiveMinutesTriggerOn": 2,
+        "iSensitivity": 80,
+        "iTimeTillOff": 0,
+        "iTimeTillOn": 2,
+        "tmLastActivity": 0
+      },
+      "zoneSubType": 0
+    },
+    {
+      "activeTemperatureDevices": ["site/0xEC0BBD04/18/TEMPERATURE"],
+      "assumedTemp": 13.5,
+      "bInHeatEnabled": "False",
+      "bIsActive": "False",
+      "bOutRequestHeat": "False",
+      "bOverrideLimitingAllowed": "True",
+      "bPrimaryZone": "True",
+      "bTriggerWarmup": "False",
+      "calibration": {
+        "last_device_status": {},
+        "last_result": "",
+        "last_start_time": 0,
+        "last_stop_time": 0,
+        "state": 0,
+        "state_name": "ECALIBRATION_STATE_IDLE"
+      },
+      "datapoints": [
+        {
+          "addr": "TEMPERATURE",
+          "path": "site/WeatherData",
+          "type": "Float",
+          "val": "None"
+        },
+        {
+          "addr": "TEMPERATURE",
+          "path": "site/0xEC0BBD04/18",
+          "type": "Float",
+          "val": 22.0
+        },
+        {
+          "addr": "min_sp",
+          "path": "site/0xEC0BBD04/78/_cfg",
+          "type": "Float",
+          "val": 4.0
+        },
+        {
+          "addr": "LUMINANCE",
+          "path": "site/0xEC0BBD04/18",
+          "type": "Float",
+          "val": "None"
+        },
+        {
+          "addr": "HEATING_1",
+          "path": "site/0xEC0BBD04/78",
+          "type": "Float",
+          "val": 4.0
+        },
+        {
+          "addr": "RELATIVE_HUMIDITY",
+          "path": "site/WeatherData",
+          "type": "Float",
+          "val": "None"
+        },
+        {
+          "addr": "Motion",
+          "path": "site/0xEC0BBD04/18",
+          "type": "Int",
+          "val": "None"
+        },
+        {
+          "addr": "Battery",
+          "path": "site/0xEC0BBD04/18",
+          "type": "Int",
+          "val": 50
+        },
+        {
+          "addr": "Battery",
+          "path": "site/0xEC0BBD04/78",
+          "type": "Int",
+          "val": 42
+        }
+      ],
+      "fBoostSP": 23.5,
+      "fDeadbandHigh": 0.5,
+      "fDeadbandLow": 0.5,
+      "fFrostSP": 4.0,
+      "fMaxSP": 28.0,
+      "fMinSP": 4.0,
+      "fOutput": 0.0,
+      "fOverrideTemp": 20.0,
+      "fPV": 22.0,
+      "fPV_offset": 0.0,
+      "fSP": 4.0,
+      "iActivity": 0,
+      "iBaseMode": 1,
+      "iBoostTimeRemaining": 0,
+      "iFlagActualKit": 1,
+      "iFlagExpectedKit": 517,
+      "iFlags": 2047,
+      "iID": 29,
+      "iLogPeriod": 300,
+      "iMode": 1,
+      "iOverrideDuration": 3600,
+      "iOverrideMode": 1,
+      "iPriority": 4,
+      "iType": 3,
+      "lOptions": 24,
+      "linkedSettings": {
+        "bFollowActive": "False",
+        "bFollowOutput": "True",
+        "fLinkSP": 21.0,
+        "lstLinkedTo": []
+      },
+      "log": [],
+      "lstIssues": [],
+      "lstNodes": [
+        { "addr": "78", "type": "" },
+        { "addr": "18", "type": "" },
+        { "addr": "WeatherData", "type": "" }
+      ],
+      "manualTemp": "site/0xEC0BBD04/18/TEMPERATURE",
+      "maximumOverrideDuration": 86400,
+      "nodes": [
+        {
+          "addr": "78",
+          "childValues": {
+            "ApplicationVersion": {
+              "addr": "ApplicationVersion",
+              "path": "site/0xEC0BBD04/78",
+              "type": "String",
+              "val": "1.0"
+            },
+            "Battery": {
+              "addr": "Battery",
+              "path": "site/0xEC0BBD04/78",
+              "type": "Int",
+              "val": 42
+            },
+            "ClockHour": {
+              "addr": "ClockHour",
+              "path": "site/0xEC0BBD04/78",
+              "type": "Int",
+              "val": 12
+            },
+            "ClockMinute": {
+              "addr": "ClockMinute",
+              "path": "site/0xEC0BBD04/78",
+              "type": "Int",
+              "val": 22
+            },
+            "ClockWeekday": {
+              "addr": "ClockWeekday",
+              "path": "site/0xEC0BBD04/78",
+              "type": "Int",
+              "val": 1
+            },
+            "HEATING_1": {
+              "addr": "HEATING_1",
+              "path": "site/0xEC0BBD04/78",
+              "type": "Float",
+              "val": 4.0
+            },
+            "LibraryType": {
+              "addr": "LibraryType",
+              "path": "site/0xEC0BBD04/78",
+              "type": "String",
+              "val": "Routing Slave"
+            },
+            "ProtectionState": {
+              "addr": "ProtectionState",
+              "path": "site/0xEC0BBD04/78",
+              "type": "Int",
+              "val": 0
+            },
+            "ProtocolVersion": {
+              "addr": "ProtocolVersion",
+              "path": "site/0xEC0BBD04/78",
+              "type": "String",
+              "val": "3.67"
+            },
+            "WakeUp_Interval": {
+              "addr": "WakeUp_Interval",
+              "path": "site/0xEC0BBD04/78",
+              "type": "Int",
+              "val": 450
+            },
+            "WakeUp_TargetNode": {
+              "addr": "WakeUp_TargetNode",
+              "path": "site/0xEC0BBD04/78",
+              "type": "Int",
+              "val": 1
+            },
+            "hash": {
+              "addr": "hash",
+              "path": "site/0xEC0BBD04/78",
+              "type": "String",
+              "val": "0x0000000200040005"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/0xEC0BBD04/78",
+              "type": "Int",
+              "val": 0
+            },
+            "lastComms": {
+              "addr": "lastComms",
+              "path": "site/0xEC0BBD04/78",
+              "type": "Int",
+              "val": 1722858655
+            },
+            "location": {
+              "addr": "location",
+              "path": "site/0xEC0BBD04/78",
+              "type": "String",
+              "val": "Bedroom"
+            },
+            "lostFromModule": {
+              "addr": "lostFromModule",
+              "path": "site/0xEC0BBD04/78",
+              "type": "Bool",
+              "val": "False"
+            },
+            "manfID": {
+              "addr": "manfID",
+              "path": "site/0xEC0BBD04/78",
+              "type": "String",
+              "val": "2/5/4"
+            },
+            "setback": {
+              "addr": "setback",
+              "path": "site/0xEC0BBD04/78",
+              "type": "Float",
+              "val": 0.0
+            }
+          },
+          "type": ""
+        },
+        {
+          "addr": "18",
+          "childValues": {
+            "ApplicationVersion": {
+              "addr": "ApplicationVersion",
+              "path": "site/0xEC0BBD04/18",
+              "type": "String",
+              "val": "1.0"
+            },
+            "Aux": {
+              "addr": "Aux",
+              "path": "site/0xEC0BBD04/18",
+              "type": "Int",
+              "val": "None"
+            },
+            "BasicValue": {
+              "addr": "BasicValue",
+              "path": "site/0xEC0BBD04/18",
+              "type": "Int",
+              "val": 0
+            },
+            "Battery": {
+              "addr": "Battery",
+              "path": "site/0xEC0BBD04/18",
+              "type": "Int",
+              "val": 50
+            },
+            "GlassBreak": {
+              "addr": "GlassBreak",
+              "path": "site/0xEC0BBD04/18",
+              "type": "Int",
+              "val": "None"
+            },
+            "LUMINANCE": {
+              "addr": "LUMINANCE",
+              "path": "site/0xEC0BBD04/18",
+              "type": "Float",
+              "val": "None"
+            },
+            "LibraryType": {
+              "addr": "LibraryType",
+              "path": "site/0xEC0BBD04/18",
+              "type": "String",
+              "val": "Routing Slave"
+            },
+            "Motion": {
+              "addr": "Motion",
+              "path": "site/0xEC0BBD04/18",
+              "type": "Int",
+              "val": "None"
+            },
+            "ProtocolVersion": {
+              "addr": "ProtocolVersion",
+              "path": "site/0xEC0BBD04/18",
+              "type": "String",
+              "val": "3.41"
+            },
+            "TEMPERATURE": {
+              "addr": "TEMPERATURE",
+              "path": "site/0xEC0BBD04/18",
+              "type": "Float",
+              "val": 22.0
+            },
+            "Tamper": {
+              "addr": "Tamper",
+              "path": "site/0xEC0BBD04/18",
+              "type": "Int",
+              "val": "None"
+            },
+            "WakeUp_Interval": {
+              "addr": "WakeUp_Interval",
+              "path": "site/0xEC0BBD04/18",
+              "type": "Int",
+              "val": 1800
+            },
+            "WakeUp_TargetNode": {
+              "addr": "WakeUp_TargetNode",
+              "path": "site/0xEC0BBD04/18",
+              "type": "Int",
+              "val": 1
+            },
+            "hash": {
+              "addr": "hash",
+              "path": "site/0xEC0BBD04/18",
+              "type": "String",
+              "val": "0x0000013C00020002"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/0xEC0BBD04/18",
+              "type": "Int",
+              "val": 0
+            },
+            "lastComms": {
+              "addr": "lastComms",
+              "path": "site/0xEC0BBD04/18",
+              "type": "Int",
+              "val": 1722857621
+            },
+            "location": {
+              "addr": "location",
+              "path": "site/0xEC0BBD04/18",
+              "type": "String",
+              "val": "Bedroom"
+            },
+            "lostFromModule": {
+              "addr": "lostFromModule",
+              "path": "site/0xEC0BBD04/18",
+              "type": "Bool",
+              "val": "False"
+            },
+            "manfID": {
+              "addr": "manfID",
+              "path": "site/0xEC0BBD04/18",
+              "type": "String",
+              "val": "316/2/2"
+            }
+          },
+          "type": ""
+        },
+        {
+          "addr": "WeatherData",
+          "childValues": {
+            "PRECIPITATION": {
+              "addr": "PRECIPITATION",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "RELATIVE_HUMIDITY": {
+              "addr": "RELATIVE_HUMIDITY",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "TEMPERATURE": {
+              "addr": "TEMPERATURE",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "TEMPERATURE_FEELS_LIKE": {
+              "addr": "TEMPERATURE_FEELS_LIKE",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "UV": {
+              "addr": "UV",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "WEATHER_TYPE": {
+              "addr": "WEATHER_TYPE",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/WeatherData",
+              "type": "Int",
+              "val": 16
+            },
+            "message": {
+              "addr": "message",
+              "path": "site/WeatherData",
+              "type": "String",
+              "val": "None"
+            }
+          },
+          "type": ""
+        }
+      ],
+      "objFootprint": {
+        "bIsNight": "True",
+        "fFootprintActiveSP": 20.0,
+        "fFootprintAwaySP": 14.0,
+        "fFootprintNightSP": 16.0,
+        "fFootprintThreshold": 2.5,
+        "fThresholdPIR": 1.0,
+        "iFootprintTmNightEnd": 23400,
+        "iFootprintTmNightStart": 75600,
+        "iOffGapSize": 60,
+        "iOnGapSize": 60,
+        "iProfile": 1,
+        "lstSP": [
+          { "fSP": 16.0, "iDay": 0, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 0, "iTm": 23400 },
+          { "fSP": 16.0, "iDay": 0, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 1, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 1, "iTm": 23400 },
+          { "fSP": 16.0, "iDay": 1, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 2, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 2, "iTm": 23400 },
+          { "fSP": 16.0, "iDay": 2, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 3, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 3, "iTm": 23400 },
+          { "fSP": 16.0, "iDay": 3, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 4, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 4, "iTm": 23400 },
+          { "fSP": 16.0, "iDay": 4, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 5, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 5, "iTm": 23400 },
+          { "fSP": 16.0, "iDay": 5, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 6, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 6, "iTm": 23400 },
+          { "fSP": 16.0, "iDay": 6, "iTm": 75600 }
+        ],
+        "objReactive": {
+          "bTriggerOff": "True",
+          "bTriggerOn": "False",
+          "fActivityLevel": 0.0,
+          "fThreshold": 1.0,
+          "iReactiveMinutesTriggerOff": 20,
+          "iReactiveMinutesTriggerOn": 2,
+          "iSensitivity": 80,
+          "iTimeTillOff": 0,
+          "iTimeTillOn": 2,
+          "tmLastActivity": 0
+        }
+      },
+      "objTimer": [
+        { "fSP": 14.5, "iDay": 0, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 0, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 0, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 0, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 0, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 1, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 1, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 1, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 1, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 1, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 2, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 2, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 2, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 2, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 2, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 3, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 3, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 3, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 3, "iTm": 73800 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 3, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 4, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 4, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 4, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 4, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 4, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 5, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 5, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 5, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 19.5, "iDay": 5, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 5, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 6, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 6, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 6, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 6, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 6, "iTm": 81000 }
+      ],
+      "strName": "Bedroom",
+      "tmLastTick": 1722858788,
+      "tmMaxTimeAtSP": 1800,
+      "tmTimeAtSP": 0,
+      "trigger": {
+        "boost": 0,
+        "linkChildActive": 0,
+        "linkChildOutput": 0,
+        "output": 0,
+        "preheat": 0,
+        "reactive": 1,
+        "setpoint": 0,
+        "test": 0
+      },
+      "warmupDuration": {
+        "bEnable": "False",
+        "bEnableCalcs": "False",
+        "fRiseRate": 3.0,
+        "iLagTime": 1320,
+        "iRiseTime": 3000,
+        "iTotalTime": 1217
+      },
+      "zoneReactive": {
+        "bTriggerOff": "True",
+        "bTriggerOn": "False",
+        "fActivityLevel": 0.0,
+        "fThreshold": 1.0,
+        "iReactiveMinutesTriggerOff": 20,
+        "iReactiveMinutesTriggerOn": 2,
+        "iSensitivity": 80,
+        "iTimeTillOff": 0,
+        "iTimeTillOn": 2,
+        "tmLastActivity": 0
+      },
+      "zoneSubType": 0
+    },
+    {
+      "activeTemperatureDevices": ["site/0xEC0BBD04/50/TEMPERATURE"],
+      "assumedTemp": 18.0,
+      "bInHeatEnabled": "False",
+      "bIsActive": "False",
+      "bOutRequestHeat": "False",
+      "bOverrideLimitingAllowed": "True",
+      "bPrimaryZone": "True",
+      "bTriggerWarmup": "False",
+      "calibration": {
+        "last_device_status": {},
+        "last_result": "",
+        "last_start_time": 0,
+        "last_stop_time": 0,
+        "state": 0,
+        "state_name": "ECALIBRATION_STATE_IDLE"
+      },
+      "datapoints": [
+        {
+          "addr": "TEMPERATURE",
+          "path": "site/WeatherData",
+          "type": "Float",
+          "val": "None"
+        },
+        {
+          "addr": "TEMPERATURE",
+          "path": "site/0xEC0BBD04/50",
+          "type": "Float",
+          "val": 23.5
+        },
+        {
+          "addr": "min_sp",
+          "path": "site/0xEC0BBD04/85/_cfg",
+          "type": "Float",
+          "val": 4.0
+        },
+        {
+          "addr": "LUMINANCE",
+          "path": "site/0xEC0BBD04/50",
+          "type": "Float",
+          "val": 31.0
+        },
+        {
+          "addr": "HEATING_1",
+          "path": "site/0xEC0BBD04/85",
+          "type": "Float",
+          "val": 4.0
+        },
+        {
+          "addr": "RELATIVE_HUMIDITY",
+          "path": "site/WeatherData",
+          "type": "Float",
+          "val": "None"
+        },
+        {
+          "addr": "Motion",
+          "path": "site/0xEC0BBD04/50",
+          "type": "Int",
+          "val": 0
+        },
+        {
+          "addr": "Battery",
+          "path": "site/0xEC0BBD04/50",
+          "type": "Int",
+          "val": 100
+        },
+        {
+          "addr": "Battery",
+          "path": "site/0xEC0BBD04/85",
+          "type": "Int",
+          "val": 61
+        }
+      ],
+      "fBoostSP": 28.0,
+      "fDeadbandHigh": 0.5,
+      "fDeadbandLow": 0.5,
+      "fFrostSP": 4.0,
+      "fMaxSP": 28.0,
+      "fMinSP": 4.0,
+      "fOutput": 0.0,
+      "fOverrideTemp": 21.0,
+      "fPV": 23.5,
+      "fPV_offset": 0.0,
+      "fSP": 4.0,
+      "iActivity": 0,
+      "iBaseMode": 1,
+      "iBoostTimeRemaining": 0,
+      "iFlagActualKit": 517,
+      "iFlagExpectedKit": 517,
+      "iFlags": 2047,
+      "iID": 30,
+      "iLogPeriod": 300,
+      "iMode": 1,
+      "iOverrideDuration": 5400,
+      "iOverrideMode": 0,
+      "iPriority": 7,
+      "iType": 3,
+      "lOptions": 24,
+      "linkedSettings": {
+        "bFollowActive": "False",
+        "bFollowOutput": "True",
+        "fLinkSP": 21.0,
+        "lstLinkedTo": []
+      },
+      "log": [],
+      "lstIssues": [],
+      "lstNodes": [
+        { "addr": "85", "type": "" },
+        { "addr": "50", "type": "" },
+        { "addr": "WeatherData", "type": "" }
+      ],
+      "manualTemp": "",
+      "maximumOverrideDuration": 86400,
+      "nodes": [
+        {
+          "addr": "85",
+          "childValues": {
+            "ApplicationVersion": {
+              "addr": "ApplicationVersion",
+              "path": "site/0xEC0BBD04/85",
+              "type": "String",
+              "val": "1.0"
+            },
+            "Battery": {
+              "addr": "Battery",
+              "path": "site/0xEC0BBD04/85",
+              "type": "Int",
+              "val": 61
+            },
+            "ClockHour": {
+              "addr": "ClockHour",
+              "path": "site/0xEC0BBD04/85",
+              "type": "Int",
+              "val": 13
+            },
+            "ClockMinute": {
+              "addr": "ClockMinute",
+              "path": "site/0xEC0BBD04/85",
+              "type": "Int",
+              "val": 4
+            },
+            "ClockWeekday": {
+              "addr": "ClockWeekday",
+              "path": "site/0xEC0BBD04/85",
+              "type": "Int",
+              "val": 1
+            },
+            "HEATING_1": {
+              "addr": "HEATING_1",
+              "path": "site/0xEC0BBD04/85",
+              "type": "Float",
+              "val": 4.0
+            },
+            "LibraryType": {
+              "addr": "LibraryType",
+              "path": "site/0xEC0BBD04/85",
+              "type": "String",
+              "val": "Routing Slave"
+            },
+            "ProtectionState": {
+              "addr": "ProtectionState",
+              "path": "site/0xEC0BBD04/85",
+              "type": "Int",
+              "val": 0
+            },
+            "ProtocolVersion": {
+              "addr": "ProtocolVersion",
+              "path": "site/0xEC0BBD04/85",
+              "type": "String",
+              "val": "3.67"
+            },
+            "WakeUp_Interval": {
+              "addr": "WakeUp_Interval",
+              "path": "site/0xEC0BBD04/85",
+              "type": "Int",
+              "val": 450
+            },
+            "WakeUp_TargetNode": {
+              "addr": "WakeUp_TargetNode",
+              "path": "site/0xEC0BBD04/85",
+              "type": "Int",
+              "val": 1
+            },
+            "hash": {
+              "addr": "hash",
+              "path": "site/0xEC0BBD04/85",
+              "type": "String",
+              "val": "0x0000000200040005"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/0xEC0BBD04/85",
+              "type": "Int",
+              "val": 0
+            },
+            "lastComms": {
+              "addr": "lastComms",
+              "path": "site/0xEC0BBD04/85",
+              "type": "Int",
+              "val": 1722858436
+            },
+            "location": {
+              "addr": "location",
+              "path": "site/0xEC0BBD04/85",
+              "type": "String",
+              "val": "Study"
+            },
+            "lostFromModule": {
+              "addr": "lostFromModule",
+              "path": "site/0xEC0BBD04/85",
+              "type": "Bool",
+              "val": "False"
+            },
+            "manfID": {
+              "addr": "manfID",
+              "path": "site/0xEC0BBD04/85",
+              "type": "String",
+              "val": "2/5/4"
+            },
+            "setback": {
+              "addr": "setback",
+              "path": "site/0xEC0BBD04/85",
+              "type": "Float",
+              "val": 0.0
+            }
+          },
+          "type": ""
+        },
+        {
+          "addr": "50",
+          "childValues": {
+            "ApplicationVersion": {
+              "addr": "ApplicationVersion",
+              "path": "site/0xEC0BBD04/50",
+              "type": "String",
+              "val": "1.0"
+            },
+            "BasicValue": {
+              "addr": "BasicValue",
+              "path": "site/0xEC0BBD04/50",
+              "type": "Int",
+              "val": 0
+            },
+            "Battery": {
+              "addr": "Battery",
+              "path": "site/0xEC0BBD04/50",
+              "type": "Int",
+              "val": 100
+            },
+            "LUMINANCE": {
+              "addr": "LUMINANCE",
+              "path": "site/0xEC0BBD04/50",
+              "type": "Float",
+              "val": 31.0
+            },
+            "LibraryType": {
+              "addr": "LibraryType",
+              "path": "site/0xEC0BBD04/50",
+              "type": "String",
+              "val": "Routing Slave"
+            },
+            "Motion": {
+              "addr": "Motion",
+              "path": "site/0xEC0BBD04/50",
+              "type": "Int",
+              "val": 0
+            },
+            "ProtocolVersion": {
+              "addr": "ProtocolVersion",
+              "path": "site/0xEC0BBD04/50",
+              "type": "String",
+              "val": "3.41"
+            },
+            "TEMPERATURE": {
+              "addr": "TEMPERATURE",
+              "path": "site/0xEC0BBD04/50",
+              "type": "Float",
+              "val": 23.5
+            },
+            "Tamper": {
+              "addr": "Tamper",
+              "path": "site/0xEC0BBD04/50",
+              "type": "Int",
+              "val": "None"
+            },
+            "WakeUp_Interval": {
+              "addr": "WakeUp_Interval",
+              "path": "site/0xEC0BBD04/50",
+              "type": "Int",
+              "val": 1800
+            },
+            "WakeUp_TargetNode": {
+              "addr": "WakeUp_TargetNode",
+              "path": "site/0xEC0BBD04/50",
+              "type": "Int",
+              "val": 1
+            },
+            "hash": {
+              "addr": "hash",
+              "path": "site/0xEC0BBD04/50",
+              "type": "String",
+              "val": "0x0000013C00020002"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/0xEC0BBD04/50",
+              "type": "Int",
+              "val": 0
+            },
+            "lastComms": {
+              "addr": "lastComms",
+              "path": "site/0xEC0BBD04/50",
+              "type": "Int",
+              "val": 1722858016
+            },
+            "location": {
+              "addr": "location",
+              "path": "site/0xEC0BBD04/50",
+              "type": "String",
+              "val": "Study"
+            },
+            "lostFromModule": {
+              "addr": "lostFromModule",
+              "path": "site/0xEC0BBD04/50",
+              "type": "Bool",
+              "val": "False"
+            },
+            "manfID": {
+              "addr": "manfID",
+              "path": "site/0xEC0BBD04/50",
+              "type": "String",
+              "val": "316/2/2"
+            }
+          },
+          "type": ""
+        },
+        {
+          "addr": "WeatherData",
+          "childValues": {
+            "PRECIPITATION": {
+              "addr": "PRECIPITATION",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "RELATIVE_HUMIDITY": {
+              "addr": "RELATIVE_HUMIDITY",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "TEMPERATURE": {
+              "addr": "TEMPERATURE",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "TEMPERATURE_FEELS_LIKE": {
+              "addr": "TEMPERATURE_FEELS_LIKE",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "UV": {
+              "addr": "UV",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "WEATHER_TYPE": {
+              "addr": "WEATHER_TYPE",
+              "path": "site/WeatherData",
+              "type": "Float",
+              "val": "None"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/WeatherData",
+              "type": "Int",
+              "val": 16
+            },
+            "message": {
+              "addr": "message",
+              "path": "site/WeatherData",
+              "type": "String",
+              "val": "None"
+            }
+          },
+          "type": ""
+        }
+      ],
+      "objFootprint": {
+        "bIsNight": "True",
+        "fFootprintActiveSP": 20.0,
+        "fFootprintAwaySP": 14.0,
+        "fFootprintNightSP": 16.0,
+        "fFootprintThreshold": 2.5,
+        "fThresholdPIR": 1.0,
+        "iFootprintTmNightEnd": 23400,
+        "iFootprintTmNightStart": 75600,
+        "iOffGapSize": 60,
+        "iOnGapSize": 60,
+        "iProfile": 1,
+        "lstSP": [
+          { "fSP": 16.0, "iDay": 0, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 0, "iTm": 23400 },
+          { "fSP": 16.0, "iDay": 0, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 1, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 1, "iTm": 23400 },
+          { "fSP": 16.0, "iDay": 1, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 2, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 2, "iTm": 23400 },
+          { "fSP": 16.0, "iDay": 2, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 3, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 3, "iTm": 23400 },
+          { "fSP": 16.0, "iDay": 3, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 4, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 4, "iTm": 23400 },
+          { "fSP": 16.0, "iDay": 4, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 5, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 5, "iTm": 23400 },
+          { "fSP": 16.0, "iDay": 5, "iTm": 75600 },
+          { "fSP": 16.0, "iDay": 6, "iTm": 0 },
+          { "fSP": 14.0, "iDay": 6, "iTm": 23400 },
+          { "fSP": 16.0, "iDay": 6, "iTm": 75600 }
+        ],
+        "objReactive": {
+          "bTriggerOff": "True",
+          "bTriggerOn": "False",
+          "fActivityLevel": 0.0,
+          "fThreshold": 1.0,
+          "iReactiveMinutesTriggerOff": 20,
+          "iReactiveMinutesTriggerOn": 2,
+          "iSensitivity": 80,
+          "iTimeTillOff": 0,
+          "iTimeTillOn": 2,
+          "tmLastActivity": 1722855677
+        }
+      },
+      "objTimer": [
+        { "fSP": 14.5, "iDay": 0, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 0, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 0, "iTm": 29700 },
+        { "fSP": 14.0, "iDay": 0, "iTm": 73800 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 0, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 0, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 1, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 1, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 1, "iTm": 29700 },
+        { "fSP": 14.0, "iDay": 1, "iTm": 73800 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 1, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 1, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 2, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 2, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 2, "iTm": 29700 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 2, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 2, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 3, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 3, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 3, "iTm": 29700 },
+        { "fSP": 14.0, "iDay": 3, "iTm": 73800 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 3, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 3, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 4, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 4, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 4, "iTm": 29700 },
+        { "fSP": 14.0, "iDay": 4, "iTm": 73800 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 4, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 4, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 5, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 5, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 5, "iTm": 29700 },
+        { "fSP": 14.0, "iDay": 5, "iTm": 73800 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 5, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 5, "iTm": 81000 },
+        { "fSP": 14.5, "iDay": 6, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 18.0, "iDay": 6, "iTm": 27000 },
+        { "bReactive": 0.0, "fSP": 6.0, "iDay": 6, "iTm": 29700 },
+        { "fSP": 14.0, "iDay": 6, "iTm": 73800 },
+        { "bReactive": 0.0, "fSP": 18.5, "iDay": 6, "iTm": 75600 },
+        { "bReactive": 0.0, "fSP": 14.5, "iDay": 6, "iTm": 81000 }
+      ],
+      "strName": "Study",
+      "tmLastTick": 1722858788,
+      "tmMaxTimeAtSP": 1800,
+      "tmTimeAtSP": 0,
+      "trigger": {
+        "boost": 0,
+        "linkChildActive": 0,
+        "linkChildOutput": 0,
+        "output": 0,
+        "preheat": 0,
+        "reactive": 1,
+        "setpoint": 0,
+        "test": 0
+      },
+      "warmupDuration": {
+        "bEnable": "False",
+        "bEnableCalcs": "True",
+        "fRiseRate": 4.0,
+        "iLagTime": 0,
+        "iRiseTime": 0,
+        "iTotalTime": 1852
+      },
+      "zoneReactive": {
+        "bTriggerOff": "True",
+        "bTriggerOn": "False",
+        "fActivityLevel": 0.0,
+        "fThreshold": 1.0,
+        "iReactiveMinutesTriggerOff": 20,
+        "iReactiveMinutesTriggerOn": 2,
+        "iSensitivity": 80,
+        "iTimeTillOff": 0,
+        "iTimeTillOn": 2,
+        "tmLastActivity": 1722855677
+      },
+      "zoneSubType": 0
+    },
+    {
+      "bIsActive": "False",
+      "bOutRequestHeat": "False",
+      "bOverrideLimitingAllowed": "False",
+      "bPrimaryZone": "True",
+      "datapoints": [
+        {
+          "addr": "SwitchBinary",
+          "path": "site/0xEC0BBD04/86",
+          "type": "Int",
+          "val": 0
+        }
+      ],
+      "fBoostSP": 1.0,
+      "fMaxSP": 1,
+      "fMinSP": 0,
+      "fOutput": 0.0,
+      "fSP": 0.0,
+      "iBaseMode": 1,
+      "iBoostTimeRemaining": 1028,
+      "iFlagActualKit": 0,
+      "iFlagExpectedKit": 0,
+      "iFlags": 1023,
+      "iID": 32,
+      "iMode": 1,
+      "iOverrideDuration": 3600,
+      "iOverrideMode": 1,
+      "iPriority": 10,
+      "iType": 2,
+      "lOptions": 0,
+      "linkedSettings": {
+        "bFollowActive": "False",
+        "bFollowOutput": "True",
+        "fLinkSP": 21.0,
+        "lstLinkedTo": []
+      },
+      "log": [],
+      "lstIssues": [],
+      "maximumOverrideDuration": 86400,
+      "nodes": [
+        {
+          "addr": "86",
+          "childValues": {
+            "ApplicationVersion": {
+              "addr": "ApplicationVersion",
+              "path": "site/0xEC0BBD04/86",
+              "type": "String",
+              "val": "1.1"
+            },
+            "BasicValue": {
+              "addr": "BasicValue",
+              "path": "site/0xEC0BBD04/86",
+              "type": "Int",
+              "val": 0
+            },
+            "LibraryType": {
+              "addr": "LibraryType",
+              "path": "site/0xEC0BBD04/86",
+              "type": "String",
+              "val": "Enhanced Slave"
+            },
+            "ProtocolVersion": {
+              "addr": "ProtocolVersion",
+              "path": "site/0xEC0BBD04/86",
+              "type": "String",
+              "val": "3.41"
+            },
+            "SwitchAllMode": {
+              "addr": "SwitchAllMode",
+              "path": "site/0xEC0BBD04/86",
+              "type": "Int",
+              "val": 255
+            },
+            "SwitchBinary": {
+              "addr": "SwitchBinary",
+              "path": "site/0xEC0BBD04/86",
+              "type": "Int",
+              "val": 0
+            },
+            "hash": {
+              "addr": "hash",
+              "path": "site/0xEC0BBD04/86",
+              "type": "String",
+              "val": "0x0000013C00010001"
+            },
+            "health": {
+              "addr": "health",
+              "path": "site/0xEC0BBD04/86",
+              "type": "Int",
+              "val": 0
+            },
+            "lastComms": {
+              "addr": "lastComms",
+              "path": "site/0xEC0BBD04/86",
+              "type": "Int",
+              "val": 1722858761
+            },
+            "location": {
+              "addr": "location",
+              "path": "site/0xEC0BBD04/86",
+              "type": "String",
+              "val": "Study Socket"
+            },
+            "lostFromModule": {
+              "addr": "lostFromModule",
+              "path": "site/0xEC0BBD04/86",
+              "type": "Bool",
+              "val": "False"
+            },
+            "manfID": {
+              "addr": "manfID",
+              "path": "site/0xEC0BBD04/86",
+              "type": "String",
+              "val": "316/1/1"
+            }
+          },
+          "type": ""
+        }
+      ],
+      "objTimer": [
+        { "fSP": 0.0, "iDay": 0, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 0, "iTm": 0 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 0, "iTm": 86400 },
+        { "fSP": 0.0, "iDay": 1, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 1, "iTm": 0 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 1, "iTm": 86400 },
+        { "fSP": 0.0, "iDay": 2, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 2, "iTm": 0 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 2, "iTm": 86400 },
+        { "fSP": 0.0, "iDay": 3, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 3, "iTm": 0 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 3, "iTm": 86400 },
+        { "fSP": 0.0, "iDay": 4, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 4, "iTm": 0 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 4, "iTm": 86400 },
+        { "fSP": 0.0, "iDay": 5, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 5, "iTm": 0 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 5, "iTm": 86400 },
+        { "fSP": 0.0, "iDay": 6, "iTm": -1 },
+        { "bReactive": 0.0, "fSP": 1.0, "iDay": 6, "iTm": 0 },
+        { "bReactive": 0.0, "fSP": 0.0, "iDay": 6, "iTm": 86400 }
+      ],
+      "strName": "Study Socket",
+      "tmLastTick": 1722858788,
+      "trigger": {
+        "boost": 1,
+        "linkChildActive": 0,
+        "linkChildOutput": 0,
+        "output": 0,
+        "preheat": 0,
+        "reactive": 1,
+        "setpoint": 1,
+        "test": 0
+      },
+      "zoneReactive": {
+        "bTriggerOff": "True",
+        "bTriggerOn": "False",
+        "fActivityLevel": 0.0,
+        "fThreshold": 1.0,
+        "iReactiveMinutesTriggerOff": 20,
+        "iReactiveMinutesTriggerOn": 2,
+        "iSensitivity": 80,
+        "iTimeTillOff": 0,
+        "iTimeTillOn": 2,
+        "tmLastActivity": 0
+      },
+      "zoneSubType": 0
+    }
+  ]
+}

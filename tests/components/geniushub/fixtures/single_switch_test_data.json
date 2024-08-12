@@ -1,0 +1,301 @@
+{
+  "data": {
+    "addr": "site",
+    "childNodes": {
+      "0xEC0BBD04": {
+        "addr": "0xEC0BBD04",
+        "childNodes": {
+          "86": {
+            "addr": "86",
+            "childNodes": {
+              "_cfg": {
+                "addr": "_cfg",
+                "childNodes": {},
+                "childValues": {},
+                "type": ""
+              }
+            },
+            "childValues": {
+              "ApplicationVersion": {
+                "addr": "ApplicationVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "String",
+                "val": "1.1",
+                "val_pend": "None",
+                "val_prev": "1.1"
+              },
+              "BasicValue": {
+                "addr": "BasicValue",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "Int",
+                "val": 0,
+                "val_pend": "None",
+                "val_prev": 0
+              },
+              "ConfigurationParameter_001": {
+                "addr": "ConfigurationParameter_001",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "ElasticInt",
+                "val": 720,
+                "val_pend": 720,
+                "val_prev": 720
+              },
+              "ConfigurationParameter_002": {
+                "addr": "ConfigurationParameter_002",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "ElasticInt",
+                "val": 6,
+                "val_pend": 6,
+                "val_prev": 6
+              },
+              "ConfigurationParameter_003": {
+                "addr": "ConfigurationParameter_003",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "ElasticInt",
+                "val": 3000,
+                "val_pend": 3000,
+                "val_prev": 3000
+              },
+              "ConfigurationParameter_004": {
+                "addr": "ConfigurationParameter_004",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "ElasticInt",
+                "val": 10000,
+                "val_pend": 10000,
+                "val_prev": 10000
+              },
+              "ConfigurationParameter_204": {
+                "addr": "ConfigurationParameter_204",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "ElasticInt",
+                "val": 10000,
+                "val_pend": 10000,
+                "val_prev": "None"
+              },
+              "ConfigurationParameter_212": {
+                "addr": "ConfigurationParameter_212",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "ElasticInt",
+                "val": 6,
+                "val_pend": 281,
+                "val_prev": "None"
+              },
+              "LibraryType": {
+                "addr": "LibraryType",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "String",
+                "val": "Enhanced Slave",
+                "val_pend": "None",
+                "val_prev": "Enhanced Slave"
+              },
+              "ProtocolVersion": {
+                "addr": "ProtocolVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "String",
+                "val": "3.41",
+                "val_pend": "None",
+                "val_prev": "3.41"
+              },
+              "SwitchAllMode": {
+                "addr": "SwitchAllMode",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "Int",
+                "val": 255,
+                "val_pend": "None",
+                "val_prev": 255
+              },
+              "SwitchBinary": {
+                "addr": "SwitchBinary",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": 0
+              },
+              "hash": {
+                "addr": "hash",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "String",
+                "val": "0x0000013C00010001",
+                "val_pend": "None",
+                "val_prev": "0x0000013C00010001"
+              },
+              "health": {
+                "addr": "health",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": "None"
+              },
+              "lastComms": {
+                "addr": "lastComms",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "Int",
+                "val": 1723314270,
+                "val_pend": "None",
+                "val_prev": 1723314270
+              },
+              "location": {
+                "addr": "location",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "String",
+                "val": "Study Socket",
+                "val_pend": "Study Socket",
+                "val_prev": ""
+              },
+              "manfID": {
+                "addr": "manfID",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "String",
+                "val": "316/1/1",
+                "val_pend": "None",
+                "val_prev": "316/1/1"
+              }
+            },
+            "type": ""
+          }
+        },
+        "childValues": {
+          "transmitBufferOverflow": {
+            "addr": "transmitBufferOverflow",
+            "confirmedValue": "False",
+            "lastUpdate": 0,
+            "path": "site/0xEC0BBD04",
+            "type": "Bool",
+            "val": "True",
+            "val_pend": "None",
+            "val_prev": "True"
+          }
+        },
+        "type": ""
+      },
+      "WeatherData": {
+        "addr": "WeatherData",
+        "childNodes": {},
+        "childValues": {
+          "PRECIPITATION": {
+            "addr": "PRECIPITATION",
+            "confirmedValue": "False",
+            "lastUpdate": 0,
+            "path": "site/WeatherData",
+            "type": "Float",
+            "val": "None",
+            "val_pend": "None",
+            "val_prev": "None"
+          },
+          "RELATIVE_HUMIDITY": {
+            "addr": "RELATIVE_HUMIDITY",
+            "confirmedValue": "False",
+            "lastUpdate": 0,
+            "path": "site/WeatherData",
+            "type": "Float",
+            "val": "None",
+            "val_pend": "None",
+            "val_prev": "None"
+          },
+          "TEMPERATURE": {
+            "addr": "TEMPERATURE",
+            "confirmedValue": "False",
+            "lastUpdate": 0,
+            "path": "site/WeatherData",
+            "type": "Float",
+            "val": "None",
+            "val_pend": "None",
+            "val_prev": "None"
+          },
+          "TEMPERATURE_FEELS_LIKE": {
+            "addr": "TEMPERATURE_FEELS_LIKE",
+            "confirmedValue": "False",
+            "lastUpdate": 0,
+            "path": "site/WeatherData",
+            "type": "Float",
+            "val": "None",
+            "val_pend": "None",
+            "val_prev": "None"
+          },
+          "UV": {
+            "addr": "UV",
+            "confirmedValue": "False",
+            "lastUpdate": 0,
+            "path": "site/WeatherData",
+            "type": "Float",
+            "val": "None",
+            "val_pend": "None",
+            "val_prev": "None"
+          },
+          "WEATHER_TYPE": {
+            "addr": "WEATHER_TYPE",
+            "confirmedValue": "False",
+            "lastUpdate": 0,
+            "path": "site/WeatherData",
+            "type": "Float",
+            "val": "None",
+            "val_pend": "None",
+            "val_prev": "None"
+          },
+          "health": {
+            "addr": "health",
+            "confirmedValue": "False",
+            "lastUpdate": 0,
+            "path": "site/WeatherData",
+            "type": "Int",
+            "val": 16,
+            "val_pend": "None",
+            "val_prev": 16
+          },
+          "message": {
+            "addr": "message",
+            "confirmedValue": "False",
+            "lastUpdate": 0,
+            "path": "site/WeatherData",
+            "type": "String",
+            "val": "None",
+            "val_pend": "None",
+            "val_prev": "None"
+          }
+        },
+        "type": ""
+      }
+    },
+    "childValues": {},
+    "type": ""
+  },
+  "error": 0,
+  "tm": "2024-08-10T19:24:56+0100",
+  "ts": 1723314296
+}

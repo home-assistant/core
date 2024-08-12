@@ -175,7 +175,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GeniusHubConfigEntry) ->
 
     try:
         await client.update()
-    except aiohttp.ClientResponseError as err:
+    except (aiohttp.ClientResponseError, aiohttp.ClientConnectionError) as err:
         _LOGGER.error("Setup failed, check your configuration, %s", err)
         return False
     broker.make_debug_log_entries()
@@ -258,7 +258,7 @@ class GeniusBroker:
     def make_debug_log_entries(self) -> None:
         """Make any useful debug log entries."""
         _LOGGER.debug(
-            "Raw JSON: \n\nclient._zones = %s \n\nclient._devices = %s",
-            self.client._zones,  # noqa: SLF001
-            self.client._devices,  # noqa: SLF001
+            "Raw JSON: \n\nclient.zones_objs = %s \n\nclient.devices_objs = %s",
+            self.client.zone_objs,  # noqa: SLF001
+            self.client.device_objs,  # noqa: SLF001
         )

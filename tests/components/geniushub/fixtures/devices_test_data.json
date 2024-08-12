@@ -1,0 +1,3999 @@
+{
+  "data": {
+    "addr": "site",
+    "childNodes": {
+      "0xEC0BBD04": {
+        "addr": "0xEC0BBD04",
+        "childNodes": {
+          "1": {
+            "addr": "1",
+            "childNodes": {
+              "_cfg": {
+                "addr": "_cfg",
+                "childNodes": {},
+                "childValues": {},
+                "type": ""
+              }
+            },
+            "childValues": {
+              "health": {
+                "addr": "health",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/1",
+                "type": "Int",
+                "val": 8,
+                "val_pend": 8,
+                "val_prev": "None"
+              },
+              "lastComms": {
+                "addr": "lastComms",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/1",
+                "type": "Int",
+                "val": "None",
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "location": {
+                "addr": "location",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/1",
+                "type": "String",
+                "val": "",
+                "val_pend": "None",
+                "val_prev": "None"
+              }
+            },
+            "type": ""
+          },
+          "11": {
+            "addr": "11",
+            "childNodes": {
+              "_cfg": {
+                "addr": "_cfg",
+                "childNodes": {},
+                "childValues": {
+                  "max_sp_rx_override": {
+                    "addr": "max_sp_rx_override",
+                    "confirmedValue": "False",
+                    "lastUpdate": 0,
+                    "path": "site/0xEC0BBD04/11/_cfg",
+                    "type": "Float",
+                    "val": "None",
+                    "val_pend": "None",
+                    "val_prev": "None"
+                  }
+                },
+                "type": ""
+              }
+            },
+            "childValues": {
+              "ApplicationVersion": {
+                "addr": "ApplicationVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/11",
+                "type": "String",
+                "val": "1.0",
+                "val_pend": "None",
+                "val_prev": "1.0"
+              },
+              "Battery": {
+                "addr": "Battery",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/11",
+                "type": "Int",
+                "val": 43,
+                "val_pend": "None",
+                "val_prev": 43
+              },
+              "ClockHour": {
+                "addr": "ClockHour",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/11",
+                "type": "Int",
+                "val": 12,
+                "val_pend": "None",
+                "val_prev": 12
+              },
+              "ClockMinute": {
+                "addr": "ClockMinute",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/11",
+                "type": "Int",
+                "val": 28,
+                "val_pend": "None",
+                "val_prev": 3
+              },
+              "ClockWeekday": {
+                "addr": "ClockWeekday",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/11",
+                "type": "Int",
+                "val": 6,
+                "val_pend": "None",
+                "val_prev": 5
+              },
+              "HEATING_1": {
+                "addr": "HEATING_1",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/11",
+                "type": "Float",
+                "val": 4.0,
+                "val_pend": 4.0,
+                "val_prev": 4.0
+              },
+              "LibraryType": {
+                "addr": "LibraryType",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/11",
+                "type": "String",
+                "val": "Routing Slave",
+                "val_pend": "None",
+                "val_prev": "Routing Slave"
+              },
+              "ProtectionState": {
+                "addr": "ProtectionState",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/11",
+                "type": "Int",
+                "val": 0,
+                "val_pend": "None",
+                "val_prev": 0
+              },
+              "ProtocolVersion": {
+                "addr": "ProtocolVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/11",
+                "type": "String",
+                "val": "3.67",
+                "val_pend": "None",
+                "val_prev": "3.67"
+              },
+              "WakeUp_Interval": {
+                "addr": "WakeUp_Interval",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/11",
+                "type": "ElasticInt",
+                "val": 300,
+                "val_pend": 300,
+                "val_prev": 300
+              },
+              "WakeUp_TargetNode": {
+                "addr": "WakeUp_TargetNode",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/11",
+                "type": "Int",
+                "val": 1,
+                "val_pend": "None",
+                "val_prev": 1
+              },
+              "hash": {
+                "addr": "hash",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/11",
+                "type": "String",
+                "val": "0x0000000200040005",
+                "val_pend": "None",
+                "val_prev": "0x0000000200040005"
+              },
+              "health": {
+                "addr": "health",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/11",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": "None"
+              },
+              "lastComms": {
+                "addr": "lastComms",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/11",
+                "type": "Int",
+                "val": 1723314143,
+                "val_pend": "None",
+                "val_prev": 1723314143
+              },
+              "location": {
+                "addr": "location",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/11",
+                "type": "String",
+                "val": "Lounge",
+                "val_pend": "Lounge",
+                "val_prev": ""
+              },
+              "manfID": {
+                "addr": "manfID",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/11",
+                "type": "String",
+                "val": "2/5/4",
+                "val_pend": "None",
+                "val_prev": "2/5/4"
+              },
+              "setback": {
+                "addr": "setback",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/11",
+                "type": "ElasticFloat",
+                "val": 0.0,
+                "val_pend": 0.0,
+                "val_prev": 0.0
+              }
+            },
+            "type": ""
+          },
+          "16": {
+            "addr": "16",
+            "childNodes": {
+              "_cfg": {
+                "addr": "_cfg",
+                "childNodes": {},
+                "childValues": {},
+                "type": ""
+              }
+            },
+            "childValues": {
+              "ApplicationVersion": {
+                "addr": "ApplicationVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/16",
+                "type": "String",
+                "val": "1.0",
+                "val_pend": "None",
+                "val_prev": "1.0"
+              },
+              "BasicValue": {
+                "addr": "BasicValue",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/16",
+                "type": "Int",
+                "val": 0,
+                "val_pend": "None",
+                "val_prev": 0
+              },
+              "Battery": {
+                "addr": "Battery",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/16",
+                "type": "Int",
+                "val": 100,
+                "val_pend": "None",
+                "val_prev": 100
+              },
+              "GENERAL_PURPOSE_VALUE": {
+                "addr": "GENERAL_PURPOSE_VALUE",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/16",
+                "type": "Float",
+                "val": "None",
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "LUMINANCE": {
+                "addr": "LUMINANCE",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/16",
+                "type": "Float",
+                "val": 9.0,
+                "val_pend": "None",
+                "val_prev": 9.0
+              },
+              "LibraryType": {
+                "addr": "LibraryType",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/16",
+                "type": "String",
+                "val": "Routing Slave",
+                "val_pend": "None",
+                "val_prev": "Routing Slave"
+              },
+              "Motion": {
+                "addr": "Motion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/16",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": 0
+              },
+              "ProtocolVersion": {
+                "addr": "ProtocolVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/16",
+                "type": "String",
+                "val": "3.41",
+                "val_pend": "None",
+                "val_prev": "3.41"
+              },
+              "TEMPERATURE": {
+                "addr": "TEMPERATURE",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/16",
+                "type": "Float",
+                "val": 22.0,
+                "val_pend": "None",
+                "val_prev": 22.0
+              },
+              "Tamper": {
+                "addr": "Tamper",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/16",
+                "type": "Int",
+                "val": "None",
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "WakeUp_Interval": {
+                "addr": "WakeUp_Interval",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/16",
+                "type": "ElasticInt",
+                "val": 1800,
+                "val_pend": 1800,
+                "val_prev": 1800
+              },
+              "WakeUp_TargetNode": {
+                "addr": "WakeUp_TargetNode",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/16",
+                "type": "Int",
+                "val": 1,
+                "val_pend": "None",
+                "val_prev": 1
+              },
+              "hash": {
+                "addr": "hash",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/16",
+                "type": "String",
+                "val": "0x0000013C00020002",
+                "val_pend": "None",
+                "val_prev": "0x0000013C00020002"
+              },
+              "health": {
+                "addr": "health",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/16",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": "None"
+              },
+              "lastComms": {
+                "addr": "lastComms",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/16",
+                "type": "Int",
+                "val": 1723314270,
+                "val_pend": "None",
+                "val_prev": 1723314262
+              },
+              "location": {
+                "addr": "location",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/16",
+                "type": "String",
+                "val": "Guest room",
+                "val_pend": "Guest room",
+                "val_prev": ""
+              },
+              "manfID": {
+                "addr": "manfID",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/16",
+                "type": "String",
+                "val": "316/2/2",
+                "val_pend": "None",
+                "val_prev": "316/2/2"
+              }
+            },
+            "type": ""
+          },
+          "17": {
+            "addr": "17",
+            "childNodes": {
+              "_cfg": {
+                "addr": "_cfg",
+                "childNodes": {},
+                "childValues": {},
+                "type": ""
+              }
+            },
+            "childValues": {
+              "ApplicationVersion": {
+                "addr": "ApplicationVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/17",
+                "type": "String",
+                "val": "1.0",
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "BasicValue": {
+                "addr": "BasicValue",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/17",
+                "type": "Int",
+                "val": "None",
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "Battery": {
+                "addr": "Battery",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/17",
+                "type": "Int",
+                "val": 100,
+                "val_pend": "None",
+                "val_prev": 100
+              },
+              "ConfigurationParameter_002": {
+                "addr": "ConfigurationParameter_002",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/17",
+                "type": "ElasticInt",
+                "val": "None",
+                "val_pend": -1,
+                "val_prev": "None"
+              },
+              "ConfigurationParameter_003": {
+                "addr": "ConfigurationParameter_003",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/17",
+                "type": "ElasticInt",
+                "val": "None",
+                "val_pend": 88,
+                "val_prev": "None"
+              },
+              "ConfigurationParameter_004": {
+                "addr": "ConfigurationParameter_004",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/17",
+                "type": "ElasticInt",
+                "val": "None",
+                "val_pend": 0,
+                "val_prev": "None"
+              },
+              "ConfigurationParameter_005": {
+                "addr": "ConfigurationParameter_005",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/17",
+                "type": "ElasticInt",
+                "val": "None",
+                "val_pend": 29,
+                "val_prev": "None"
+              },
+              "ConfigurationParameter_006": {
+                "addr": "ConfigurationParameter_006",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/17",
+                "type": "ElasticInt",
+                "val": "None",
+                "val_pend": 71,
+                "val_prev": "None"
+              },
+              "ConfigurationParameter_008": {
+                "addr": "ConfigurationParameter_008",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/17",
+                "type": "ElasticInt",
+                "val": "None",
+                "val_pend": 8,
+                "val_prev": "None"
+              },
+              "ConfigurationParameter_009": {
+                "addr": "ConfigurationParameter_009",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/17",
+                "type": "ElasticInt",
+                "val": "None",
+                "val_pend": 127,
+                "val_prev": "None"
+              },
+              "ConfigurationParameter_010": {
+                "addr": "ConfigurationParameter_010",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/17",
+                "type": "ElasticInt",
+                "val": "None",
+                "val_pend": 0,
+                "val_prev": "None"
+              },
+              "ConfigurationParameter_012": {
+                "addr": "ConfigurationParameter_012",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/17",
+                "type": "ElasticInt",
+                "val": "None",
+                "val_pend": 0,
+                "val_prev": "None"
+              },
+              "ConfigurationParameter_013": {
+                "addr": "ConfigurationParameter_013",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/17",
+                "type": "ElasticInt",
+                "val": "None",
+                "val_pend": 1,
+                "val_prev": "None"
+              },
+              "LUMINANCE": {
+                "addr": "LUMINANCE",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/17",
+                "type": "Float",
+                "val": 56.0,
+                "val_pend": "None",
+                "val_prev": 70.0
+              },
+              "LibraryType": {
+                "addr": "LibraryType",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/17",
+                "type": "String",
+                "val": "Routing Slave",
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "Motion": {
+                "addr": "Motion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/17",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": 255
+              },
+              "ProtocolVersion": {
+                "addr": "ProtocolVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/17",
+                "type": "String",
+                "val": "3.41",
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "TEMPERATURE": {
+                "addr": "TEMPERATURE",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/17",
+                "type": "Float",
+                "val": 22.0,
+                "val_pend": "None",
+                "val_prev": 22.0
+              },
+              "Tamper": {
+                "addr": "Tamper",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/17",
+                "type": "Int",
+                "val": "None",
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "WakeUp_Interval": {
+                "addr": "WakeUp_Interval",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/17",
+                "type": "ElasticInt",
+                "val": 1800,
+                "val_pend": 1800,
+                "val_prev": "None"
+              },
+              "WakeUp_TargetNode": {
+                "addr": "WakeUp_TargetNode",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/17",
+                "type": "Int",
+                "val": 1,
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "hash": {
+                "addr": "hash",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/17",
+                "type": "String",
+                "val": "0x0000013C00020002",
+                "val_pend": "None",
+                "val_prev": "0x0000013C00020002"
+              },
+              "health": {
+                "addr": "health",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/17",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": "None"
+              },
+              "lastComms": {
+                "addr": "lastComms",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/17",
+                "type": "Int",
+                "val": 1723313899,
+                "val_pend": "None",
+                "val_prev": 1723313899
+              },
+              "location": {
+                "addr": "location",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/17",
+                "type": "String",
+                "val": "Ensuite",
+                "val_pend": "Ensuite",
+                "val_prev": ""
+              },
+              "manfID": {
+                "addr": "manfID",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/17",
+                "type": "String",
+                "val": "316/2/2",
+                "val_pend": "None",
+                "val_prev": "316/2/2"
+              }
+            },
+            "type": ""
+          },
+          "18": {
+            "addr": "18",
+            "childNodes": {
+              "_cfg": {
+                "addr": "_cfg",
+                "childNodes": {},
+                "childValues": {},
+                "type": ""
+              }
+            },
+            "childValues": {
+              "ApplicationVersion": {
+                "addr": "ApplicationVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/18",
+                "type": "String",
+                "val": "1.0",
+                "val_pend": "None",
+                "val_prev": "1.0"
+              },
+              "Aux": {
+                "addr": "Aux",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/18",
+                "type": "Int",
+                "val": "None",
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "BasicValue": {
+                "addr": "BasicValue",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/18",
+                "type": "Int",
+                "val": 0,
+                "val_pend": "None",
+                "val_prev": 0
+              },
+              "Battery": {
+                "addr": "Battery",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/18",
+                "type": "Int",
+                "val": 36,
+                "val_pend": "None",
+                "val_prev": 36
+              },
+              "GlassBreak": {
+                "addr": "GlassBreak",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/18",
+                "type": "Int",
+                "val": "None",
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "LUMINANCE": {
+                "addr": "LUMINANCE",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/18",
+                "type": "Float",
+                "val": 1.0,
+                "val_pend": "None",
+                "val_prev": 1.0
+              },
+              "LibraryType": {
+                "addr": "LibraryType",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/18",
+                "type": "String",
+                "val": "Routing Slave",
+                "val_pend": "None",
+                "val_prev": "Routing Slave"
+              },
+              "Motion": {
+                "addr": "Motion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/18",
+                "type": "Int",
+                "val": "None",
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "ProtocolVersion": {
+                "addr": "ProtocolVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/18",
+                "type": "String",
+                "val": "3.41",
+                "val_pend": "None",
+                "val_prev": "3.41"
+              },
+              "TEMPERATURE": {
+                "addr": "TEMPERATURE",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/18",
+                "type": "Float",
+                "val": 22.0,
+                "val_pend": "None",
+                "val_prev": 22.0
+              },
+              "Tamper": {
+                "addr": "Tamper",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/18",
+                "type": "Int",
+                "val": "None",
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "WakeUp_Interval": {
+                "addr": "WakeUp_Interval",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/18",
+                "type": "ElasticInt",
+                "val": 1800,
+                "val_pend": 1800,
+                "val_prev": 1800
+              },
+              "WakeUp_TargetNode": {
+                "addr": "WakeUp_TargetNode",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/18",
+                "type": "Int",
+                "val": 1,
+                "val_pend": "None",
+                "val_prev": 1
+              },
+              "hash": {
+                "addr": "hash",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/18",
+                "type": "String",
+                "val": "0x0000013C00020002",
+                "val_pend": "None",
+                "val_prev": "0x0000013C00020002"
+              },
+              "health": {
+                "addr": "health",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/18",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": "None"
+              },
+              "lastComms": {
+                "addr": "lastComms",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/18",
+                "type": "Int",
+                "val": 1723313809,
+                "val_pend": "None",
+                "val_prev": 1723313809
+              },
+              "location": {
+                "addr": "location",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/18",
+                "type": "String",
+                "val": "Bedroom",
+                "val_pend": "Bedroom",
+                "val_prev": ""
+              },
+              "manfID": {
+                "addr": "manfID",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/18",
+                "type": "String",
+                "val": "316/2/2",
+                "val_pend": "None",
+                "val_prev": "316/2/2"
+              }
+            },
+            "type": ""
+          },
+          "20": {
+            "addr": "20",
+            "childNodes": {
+              "_cfg": {
+                "addr": "_cfg",
+                "childNodes": {},
+                "childValues": {},
+                "type": ""
+              }
+            },
+            "childValues": {
+              "ApplicationVersion": {
+                "addr": "ApplicationVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/20",
+                "type": "String",
+                "val": "1.0",
+                "val_pend": "None",
+                "val_prev": "1.0"
+              },
+              "BasicValue": {
+                "addr": "BasicValue",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/20",
+                "type": "Int",
+                "val": 0,
+                "val_pend": "None",
+                "val_prev": 0
+              },
+              "Battery": {
+                "addr": "Battery",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/20",
+                "type": "Int",
+                "val": 100,
+                "val_pend": "None",
+                "val_prev": 100
+              },
+              "LUMINANCE": {
+                "addr": "LUMINANCE",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/20",
+                "type": "Float",
+                "val": 3.0,
+                "val_pend": "None",
+                "val_prev": 7.0
+              },
+              "LibraryType": {
+                "addr": "LibraryType",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/20",
+                "type": "String",
+                "val": "Routing Slave",
+                "val_pend": "None",
+                "val_prev": "Routing Slave"
+              },
+              "Motion": {
+                "addr": "Motion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/20",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": 255
+              },
+              "ProtocolVersion": {
+                "addr": "ProtocolVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/20",
+                "type": "String",
+                "val": "3.41",
+                "val_pend": "None",
+                "val_prev": "3.41"
+              },
+              "TEMPERATURE": {
+                "addr": "TEMPERATURE",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/20",
+                "type": "Float",
+                "val": 22.0,
+                "val_pend": "None",
+                "val_prev": 22.0
+              },
+              "Tamper": {
+                "addr": "Tamper",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/20",
+                "type": "Int",
+                "val": "None",
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "WakeUp_Interval": {
+                "addr": "WakeUp_Interval",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/20",
+                "type": "ElasticInt",
+                "val": 1800,
+                "val_pend": 1800,
+                "val_prev": 1800
+              },
+              "WakeUp_TargetNode": {
+                "addr": "WakeUp_TargetNode",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/20",
+                "type": "Int",
+                "val": 1,
+                "val_pend": "None",
+                "val_prev": 1
+              },
+              "hash": {
+                "addr": "hash",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/20",
+                "type": "String",
+                "val": "0x0000013C00020002",
+                "val_pend": "None",
+                "val_prev": "0x0000013C00020002"
+              },
+              "health": {
+                "addr": "health",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/20",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": "None"
+              },
+              "lastComms": {
+                "addr": "lastComms",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/20",
+                "type": "Int",
+                "val": 1723314206,
+                "val_pend": "None",
+                "val_prev": 1723314206
+              },
+              "location": {
+                "addr": "location",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/20",
+                "type": "String",
+                "val": "Kitchen",
+                "val_pend": "Kitchen",
+                "val_prev": ""
+              },
+              "manfID": {
+                "addr": "manfID",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/20",
+                "type": "String",
+                "val": "316/2/2",
+                "val_pend": "None",
+                "val_prev": "316/2/2"
+              }
+            },
+            "type": ""
+          },
+          "21": {
+            "addr": "21",
+            "childNodes": {
+              "_cfg": {
+                "addr": "_cfg",
+                "childNodes": {},
+                "childValues": {},
+                "type": ""
+              }
+            },
+            "childValues": {
+              "ApplicationVersion": {
+                "addr": "ApplicationVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/21",
+                "type": "String",
+                "val": "1.0",
+                "val_pend": "None",
+                "val_prev": "1.0"
+              },
+              "BasicValue": {
+                "addr": "BasicValue",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/21",
+                "type": "Int",
+                "val": 0,
+                "val_pend": "None",
+                "val_prev": 0
+              },
+              "Battery": {
+                "addr": "Battery",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/21",
+                "type": "Int",
+                "val": 100,
+                "val_pend": "None",
+                "val_prev": 100
+              },
+              "LUMINANCE": {
+                "addr": "LUMINANCE",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/21",
+                "type": "Float",
+                "val": 36.0,
+                "val_pend": "None",
+                "val_prev": 8.0
+              },
+              "LibraryType": {
+                "addr": "LibraryType",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/21",
+                "type": "String",
+                "val": "Routing Slave",
+                "val_pend": "None",
+                "val_prev": "Routing Slave"
+              },
+              "Motion": {
+                "addr": "Motion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/21",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": 255
+              },
+              "ProtocolVersion": {
+                "addr": "ProtocolVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/21",
+                "type": "String",
+                "val": "3.41",
+                "val_pend": "None",
+                "val_prev": "3.41"
+              },
+              "TEMPERATURE": {
+                "addr": "TEMPERATURE",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/21",
+                "type": "Float",
+                "val": 22.0,
+                "val_pend": "None",
+                "val_prev": 22.0
+              },
+              "Tamper": {
+                "addr": "Tamper",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/21",
+                "type": "Int",
+                "val": "None",
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "WakeUp_Interval": {
+                "addr": "WakeUp_Interval",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/21",
+                "type": "ElasticInt",
+                "val": 1800,
+                "val_pend": 1800,
+                "val_prev": 1800
+              },
+              "WakeUp_TargetNode": {
+                "addr": "WakeUp_TargetNode",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/21",
+                "type": "Int",
+                "val": 1,
+                "val_pend": "None",
+                "val_prev": 1
+              },
+              "hash": {
+                "addr": "hash",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/21",
+                "type": "String",
+                "val": "0x0000013C00020002",
+                "val_pend": "None",
+                "val_prev": "0x0000013C00020002"
+              },
+              "health": {
+                "addr": "health",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/21",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": "None"
+              },
+              "lastComms": {
+                "addr": "lastComms",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/21",
+                "type": "Int",
+                "val": 1723314003,
+                "val_pend": "None",
+                "val_prev": 1723314003
+              },
+              "location": {
+                "addr": "location",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/21",
+                "type": "String",
+                "val": "Hall",
+                "val_pend": "Hall",
+                "val_prev": ""
+              },
+              "manfID": {
+                "addr": "manfID",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/21",
+                "type": "String",
+                "val": "316/2/2",
+                "val_pend": "None",
+                "val_prev": "316/2/2"
+              }
+            },
+            "type": ""
+          },
+          "22": {
+            "addr": "22",
+            "childNodes": {
+              "_cfg": {
+                "addr": "_cfg",
+                "childNodes": {},
+                "childValues": {},
+                "type": ""
+              }
+            },
+            "childValues": {
+              "ApplicationVersion": {
+                "addr": "ApplicationVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/22",
+                "type": "String",
+                "val": "2.0",
+                "val_pend": "None",
+                "val_prev": "2.0"
+              },
+              "LibraryType": {
+                "addr": "LibraryType",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/22",
+                "type": "String",
+                "val": "Routing Slave",
+                "val_pend": "None",
+                "val_prev": "Routing Slave"
+              },
+              "ProtocolVersion": {
+                "addr": "ProtocolVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/22",
+                "type": "String",
+                "val": "2.78",
+                "val_pend": "None",
+                "val_prev": "2.78"
+              },
+              "SwitchBinary": {
+                "addr": "SwitchBinary",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/22",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": 0
+              },
+              "hash": {
+                "addr": "hash",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/22",
+                "type": "String",
+                "val": "0x0000005900010003",
+                "val_pend": "None",
+                "val_prev": "0x0000005900010003"
+              },
+              "health": {
+                "addr": "health",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/22",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": "None"
+              },
+              "lastComms": {
+                "addr": "lastComms",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/22",
+                "type": "Int",
+                "val": 1723314295,
+                "val_pend": "None",
+                "val_prev": 1723314265
+              },
+              "location": {
+                "addr": "location",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/22",
+                "type": "String",
+                "val": "East Berlin",
+                "val_pend": "East Berlin",
+                "val_prev": ""
+              },
+              "manfID": {
+                "addr": "manfID",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/22",
+                "type": "String",
+                "val": "89/3/1",
+                "val_pend": "None",
+                "val_prev": "89/3/1"
+              }
+            },
+            "type": ""
+          },
+          "2": {
+            "addr": "22",
+            "childNodes": {
+              "_cfg": {
+                "addr": "_cfg",
+                "childNodes": {},
+                "childValues": {},
+                "type": ""
+              }
+            },
+            "childValues": {
+              "ApplicationVersion": {
+                "addr": "ApplicationVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/22",
+                "type": "String",
+                "val": "2.0",
+                "val_pend": "None",
+                "val_prev": "2.0"
+              },
+              "LibraryType": {
+                "addr": "LibraryType",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/22",
+                "type": "String",
+                "val": "Routing Slave",
+                "val_pend": "None",
+                "val_prev": "Routing Slave"
+              },
+              "ProtocolVersion": {
+                "addr": "ProtocolVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/22",
+                "type": "String",
+                "val": "2.78",
+                "val_pend": "None",
+                "val_prev": "2.78"
+              },
+              "SwitchBinary": {
+                "addr": "SwitchBinary",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/22",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": 0
+              },
+              "hash": {
+                "addr": "hash",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/22",
+                "type": "String",
+                "val": "0x0000005900060003",
+                "val_pend": "None",
+                "val_prev": "0x0000005900060003"
+              },
+              "health": {
+                "addr": "health",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/22",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": "None"
+              },
+              "lastComms": {
+                "addr": "lastComms",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/22",
+                "type": "Int",
+                "val": 1723314295,
+                "val_pend": "None",
+                "val_prev": 1723314265
+              },
+              "location": {
+                "addr": "location",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/22",
+                "type": "String",
+                "val": "East Berlin",
+                "val_pend": "East Berlin",
+                "val_prev": ""
+              },
+              "manfID": {
+                "addr": "manfID",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/22",
+                "type": "String",
+                "val": "89/3/1",
+                "val_pend": "None",
+                "val_prev": "89/3/1"
+              }
+            },
+            "type": ""
+          },
+          "4": {
+            "addr": "4",
+            "childNodes": {
+              "_cfg": {
+                "addr": "_cfg",
+                "childNodes": {},
+                "childValues": {},
+                "type": ""
+              }
+            },
+            "childValues": {
+              "ApplicationVersion": {
+                "addr": "ApplicationVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/4",
+                "type": "String",
+                "val": "1.1",
+                "val_pend": "None",
+                "val_prev": "1.1"
+              },
+              "BasicValue": {
+                "addr": "BasicValue",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/4",
+                "type": "Int",
+                "val": 255,
+                "val_pend": "None",
+                "val_prev": 255
+              },
+              "ConfigurationParameter_001": {
+                "addr": "ConfigurationParameter_001",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/4",
+                "type": "ElasticInt",
+                "val": 720,
+                "val_pend": 720,
+                "val_prev": 720
+              },
+              "ConfigurationParameter_002": {
+                "addr": "ConfigurationParameter_002",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/4",
+                "type": "ElasticInt",
+                "val": 6,
+                "val_pend": 6,
+                "val_prev": 6
+              },
+              "ConfigurationParameter_003": {
+                "addr": "ConfigurationParameter_003",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/4",
+                "type": "ElasticInt",
+                "val": 3000,
+                "val_pend": 3000,
+                "val_prev": 3000
+              },
+              "ConfigurationParameter_004": {
+                "addr": "ConfigurationParameter_004",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/4",
+                "type": "ElasticInt",
+                "val": 10000,
+                "val_pend": 10000,
+                "val_prev": 10000
+              },
+              "ConfigurationParameter_021": {
+                "addr": "ConfigurationParameter_021",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/4",
+                "type": "ElasticInt",
+                "val": 16400,
+                "val_pend": 16400,
+                "val_prev": 16400
+              },
+              "LibraryType": {
+                "addr": "LibraryType",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/4",
+                "type": "String",
+                "val": "Enhanced Slave",
+                "val_pend": "None",
+                "val_prev": "Enhanced Slave"
+              },
+              "ProtocolVersion": {
+                "addr": "ProtocolVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/4",
+                "type": "String",
+                "val": "3.41",
+                "val_pend": "None",
+                "val_prev": "3.41"
+              },
+              "SwitchAllMode": {
+                "addr": "SwitchAllMode",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/4",
+                "type": "Int",
+                "val": 21,
+                "val_pend": "None",
+                "val_prev": 21
+              },
+              "SwitchBinary": {
+                "addr": "SwitchBinary",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/4",
+                "type": "Int",
+                "val": 1,
+                "val_pend": 1,
+                "val_prev": 1
+              },
+              "hash": {
+                "addr": "hash",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/4",
+                "type": "String",
+                "val": "0x0000013C00010001",
+                "val_pend": "None",
+                "val_prev": "0x0000013C00010001"
+              },
+              "health": {
+                "addr": "health",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/4",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": "None"
+              },
+              "lastComms": {
+                "addr": "lastComms",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/4",
+                "type": "Int",
+                "val": 1723314280,
+                "val_pend": "None",
+                "val_prev": 1723314280
+              },
+              "location": {
+                "addr": "location",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/4",
+                "type": "String",
+                "val": "Bedroom Socket",
+                "val_pend": "Bedroom Socket",
+                "val_prev": ""
+              },
+              "manfID": {
+                "addr": "manfID",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/4",
+                "type": "String",
+                "val": "316/1/1",
+                "val_pend": "None",
+                "val_prev": "316/1/1"
+              }
+            },
+            "type": ""
+          },
+          "50": {
+            "addr": "50",
+            "childNodes": {
+              "_cfg": {
+                "addr": "_cfg",
+                "childNodes": {},
+                "childValues": {},
+                "type": ""
+              }
+            },
+            "childValues": {
+              "ApplicationVersion": {
+                "addr": "ApplicationVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/50",
+                "type": "String",
+                "val": "1.0",
+                "val_pend": "None",
+                "val_prev": "1.0"
+              },
+              "BasicValue": {
+                "addr": "BasicValue",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/50",
+                "type": "Int",
+                "val": 0,
+                "val_pend": "None",
+                "val_prev": 0
+              },
+              "Battery": {
+                "addr": "Battery",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/50",
+                "type": "Int",
+                "val": 100,
+                "val_pend": "None",
+                "val_prev": 100
+              },
+              "LUMINANCE": {
+                "addr": "LUMINANCE",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/50",
+                "type": "Float",
+                "val": 25.0,
+                "val_pend": "None",
+                "val_prev": 9.0
+              },
+              "LibraryType": {
+                "addr": "LibraryType",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/50",
+                "type": "String",
+                "val": "Routing Slave",
+                "val_pend": "None",
+                "val_prev": "Routing Slave"
+              },
+              "Motion": {
+                "addr": "Motion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/50",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": 255
+              },
+              "ProtocolVersion": {
+                "addr": "ProtocolVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/50",
+                "type": "String",
+                "val": "3.41",
+                "val_pend": "None",
+                "val_prev": "3.41"
+              },
+              "TEMPERATURE": {
+                "addr": "TEMPERATURE",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/50",
+                "type": "Float",
+                "val": 22.5,
+                "val_pend": "None",
+                "val_prev": 22.5
+              },
+              "Tamper": {
+                "addr": "Tamper",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/50",
+                "type": "Int",
+                "val": "None",
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "WakeUp_Interval": {
+                "addr": "WakeUp_Interval",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/50",
+                "type": "ElasticInt",
+                "val": 1800,
+                "val_pend": 1800,
+                "val_prev": 1800
+              },
+              "WakeUp_TargetNode": {
+                "addr": "WakeUp_TargetNode",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/50",
+                "type": "Int",
+                "val": 1,
+                "val_pend": "None",
+                "val_prev": 1
+              },
+              "hash": {
+                "addr": "hash",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/50",
+                "type": "String",
+                "val": "0x0000013C00020002",
+                "val_pend": "None",
+                "val_prev": "0x0000013C00020002"
+              },
+              "health": {
+                "addr": "health",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/50",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": "None"
+              },
+              "lastComms": {
+                "addr": "lastComms",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/50",
+                "type": "Int",
+                "val": 1723314096,
+                "val_pend": "None",
+                "val_prev": 1723314096
+              },
+              "location": {
+                "addr": "location",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/50",
+                "type": "String",
+                "val": "Study",
+                "val_pend": "Study",
+                "val_prev": ""
+              },
+              "manfID": {
+                "addr": "manfID",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/50",
+                "type": "String",
+                "val": "316/2/2",
+                "val_pend": "None",
+                "val_prev": "316/2/2"
+              }
+            },
+            "type": ""
+          },
+          "53": {
+            "addr": "53",
+            "childNodes": {
+              "_cfg": {
+                "addr": "_cfg",
+                "childNodes": {},
+                "childValues": {},
+                "type": ""
+              }
+            },
+            "childValues": {
+              "ApplicationVersion": {
+                "addr": "ApplicationVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/53",
+                "type": "String",
+                "val": "1.0",
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "BasicValue": {
+                "addr": "BasicValue",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/53",
+                "type": "Int",
+                "val": "None",
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "Battery": {
+                "addr": "Battery",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/53",
+                "type": "Int",
+                "val": 28,
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "LUMINANCE": {
+                "addr": "LUMINANCE",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/53",
+                "type": "Float",
+                "val": "None",
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "LibraryType": {
+                "addr": "LibraryType",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/53",
+                "type": "String",
+                "val": "Routing Slave",
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "Motion": {
+                "addr": "Motion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/53",
+                "type": "Int",
+                "val": "None",
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "ProtocolVersion": {
+                "addr": "ProtocolVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/53",
+                "type": "String",
+                "val": "3.41",
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "TEMPERATURE": {
+                "addr": "TEMPERATURE",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/53",
+                "type": "Float",
+                "val": "None",
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "Tamper": {
+                "addr": "Tamper",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/53",
+                "type": "Int",
+                "val": "None",
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "WakeUp_Interval": {
+                "addr": "WakeUp_Interval",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/53",
+                "type": "ElasticInt",
+                "val": 1800,
+                "val_pend": 1800,
+                "val_prev": "None"
+              },
+              "WakeUp_TargetNode": {
+                "addr": "WakeUp_TargetNode",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/53",
+                "type": "Int",
+                "val": 1,
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "hash": {
+                "addr": "hash",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/53",
+                "type": "String",
+                "val": "0x0000013C00020002",
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "health": {
+                "addr": "health",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/53",
+                "type": "Int",
+                "val": 4,
+                "val_pend": 4,
+                "val_prev": "None"
+              },
+              "lastComms": {
+                "addr": "lastComms",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/53",
+                "type": "Int",
+                "val": 1722174571,
+                "val_pend": "None",
+                "val_prev": "None"
+              },
+              "location": {
+                "addr": "location",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/53",
+                "type": "String",
+                "val": "Lounge",
+                "val_pend": "Lounge",
+                "val_prev": ""
+              },
+              "manfID": {
+                "addr": "manfID",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/53",
+                "type": "String",
+                "val": "316/2/2",
+                "val_pend": "None",
+                "val_prev": "None"
+              }
+            },
+            "type": ""
+          },
+          "56": {
+            "addr": "56",
+            "childNodes": {
+              "_cfg": {
+                "addr": "_cfg",
+                "childNodes": {},
+                "childValues": {
+                  "max_sp": {
+                    "addr": "max_sp",
+                    "confirmedValue": "False",
+                    "lastUpdate": 0,
+                    "path": "site/0xEC0BBD04/56/_cfg",
+                    "type": "Float",
+                    "val": 28.0,
+                    "val_pend": 0.0,
+                    "val_prev": 28.0
+                  },
+                  "max_sp_rx_override": {
+                    "addr": "max_sp_rx_override",
+                    "confirmedValue": "False",
+                    "lastUpdate": 0,
+                    "path": "site/0xEC0BBD04/56/_cfg",
+                    "type": "Float",
+                    "val": "None",
+                    "val_pend": "None",
+                    "val_prev": "None"
+                  },
+                  "min_sp": {
+                    "addr": "min_sp",
+                    "confirmedValue": "False",
+                    "lastUpdate": 0,
+                    "path": "site/0xEC0BBD04/56/_cfg",
+                    "type": "Float",
+                    "val": 4.0,
+                    "val_pend": 0.0,
+                    "val_prev": 4.0
+                  },
+                  "name": {
+                    "addr": "name",
+                    "confirmedValue": "False",
+                    "lastUpdate": 0,
+                    "path": "site/0xEC0BBD04/56/_cfg",
+                    "type": "String",
+                    "val": "Radiator Valve",
+                    "val_pend": "",
+                    "val_prev": "Radiator Valve"
+                  },
+                  "sku": {
+                    "addr": "sku",
+                    "confirmedValue": "False",
+                    "lastUpdate": 0,
+                    "path": "site/0xEC0BBD04/56/_cfg",
+                    "type": "String",
+                    "val": "DA-WRV-B",
+                    "val_pend": "",
+                    "val_prev": "DA-WRV-B"
+                  }
+                },
+                "type": ""
+              }
+            },
+            "childValues": {
+              "ApplicationVersion": {
+                "addr": "ApplicationVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/56",
+                "type": "String",
+                "val": "1.0",
+                "val_pend": "None",
+                "val_prev": "1.0"
+              },
+              "Battery": {
+                "addr": "Battery",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/56",
+                "type": "Int",
+                "val": 55,
+                "val_pend": "None",
+                "val_prev": 55
+              },
+              "ClockHour": {
+                "addr": "ClockHour",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/56",
+                "type": "Int",
+                "val": 11,
+                "val_pend": "None",
+                "val_prev": 10
+              },
+              "ClockMinute": {
+                "addr": "ClockMinute",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/56",
+                "type": "Int",
+                "val": 12,
+                "val_pend": "None",
+                "val_prev": 40
+              },
+              "ClockWeekday": {
+                "addr": "ClockWeekday",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/56",
+                "type": "Int",
+                "val": 6,
+                "val_pend": "None",
+                "val_prev": 5
+              },
+              "HEATING_1": {
+                "addr": "HEATING_1",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/56",
+                "type": "Float",
+                "val": 4.0,
+                "val_pend": 4.0,
+                "val_prev": 4.0
+              },
+              "LibraryType": {
+                "addr": "LibraryType",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/56",
+                "type": "String",
+                "val": "Routing Slave",
+                "val_pend": "None",
+                "val_prev": "Routing Slave"
+              },
+              "ProtectionState": {
+                "addr": "ProtectionState",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/56",
+                "type": "Int",
+                "val": 0,
+                "val_pend": "None",
+                "val_prev": 0
+              },
+              "ProtocolVersion": {
+                "addr": "ProtocolVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/56",
+                "type": "String",
+                "val": "3.67",
+                "val_pend": "None",
+                "val_prev": "3.67"
+              },
+              "WakeUp_Interval": {
+                "addr": "WakeUp_Interval",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/56",
+                "type": "ElasticInt",
+                "val": 450,
+                "val_pend": 450,
+                "val_prev": 450
+              },
+              "WakeUp_TargetNode": {
+                "addr": "WakeUp_TargetNode",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/56",
+                "type": "Int",
+                "val": 1,
+                "val_pend": "None",
+                "val_prev": 1
+              },
+              "hash": {
+                "addr": "hash",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/56",
+                "type": "String",
+                "val": "0x0000000200040005",
+                "val_pend": "None",
+                "val_prev": "0x0000000200040005"
+              },
+              "health": {
+                "addr": "health",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/56",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": "None"
+              },
+              "lastComms": {
+                "addr": "lastComms",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/56",
+                "type": "Int",
+                "val": 1723314074,
+                "val_pend": "None",
+                "val_prev": 1723314074
+              },
+              "location": {
+                "addr": "location",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/56",
+                "type": "String",
+                "val": "Kitchen",
+                "val_pend": "Kitchen",
+                "val_prev": ""
+              },
+              "manfID": {
+                "addr": "manfID",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/56",
+                "type": "String",
+                "val": "2/5/4",
+                "val_pend": "None",
+                "val_prev": "2/5/4"
+              },
+              "setback": {
+                "addr": "setback",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/56",
+                "type": "ElasticFloat",
+                "val": 0.0,
+                "val_pend": 0.0,
+                "val_prev": 0.0
+              }
+            },
+            "type": ""
+          },
+          "6": {
+            "addr": "6",
+            "childNodes": {
+              "_cfg": {
+                "addr": "_cfg",
+                "childNodes": {},
+                "childValues": {},
+                "type": ""
+              }
+            },
+            "childValues": {
+              "ApplicationVersion": {
+                "addr": "ApplicationVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/6",
+                "type": "String",
+                "val": "1.1",
+                "val_pend": "None",
+                "val_prev": "1.1"
+              },
+              "BasicValue": {
+                "addr": "BasicValue",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/6",
+                "type": "Int",
+                "val": 255,
+                "val_pend": "None",
+                "val_prev": 255
+              },
+              "ConfigurationParameter_001": {
+                "addr": "ConfigurationParameter_001",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/6",
+                "type": "ElasticInt",
+                "val": 720,
+                "val_pend": 720,
+                "val_prev": 720
+              },
+              "ConfigurationParameter_002": {
+                "addr": "ConfigurationParameter_002",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/6",
+                "type": "ElasticInt",
+                "val": 6,
+                "val_pend": 6,
+                "val_prev": 6
+              },
+              "ConfigurationParameter_003": {
+                "addr": "ConfigurationParameter_003",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/6",
+                "type": "ElasticInt",
+                "val": 3000,
+                "val_pend": 3000,
+                "val_prev": 3000
+              },
+              "ConfigurationParameter_004": {
+                "addr": "ConfigurationParameter_004",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/6",
+                "type": "ElasticInt",
+                "val": 10000,
+                "val_pend": 10000,
+                "val_prev": 10000
+              },
+              "ConfigurationParameter_021": {
+                "addr": "ConfigurationParameter_021",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/6",
+                "type": "ElasticInt",
+                "val": 16400,
+                "val_pend": 16400,
+                "val_prev": 16400
+              },
+              "ConfigurationParameter_204": {
+                "addr": "ConfigurationParameter_204",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/6",
+                "type": "ElasticInt",
+                "val": 16400,
+                "val_pend": 720,
+                "val_prev": "None"
+              },
+              "ConfigurationParameter_65415": {
+                "addr": "ConfigurationParameter_65415",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/6",
+                "type": "ElasticInt",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": "None"
+              },
+              "ConfigurationParameter_65480": {
+                "addr": "ConfigurationParameter_65480",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/6",
+                "type": "ElasticInt",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": "None"
+              },
+              "LibraryType": {
+                "addr": "LibraryType",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/6",
+                "type": "String",
+                "val": "Enhanced Slave",
+                "val_pend": "None",
+                "val_prev": "Enhanced Slave"
+              },
+              "ProtocolVersion": {
+                "addr": "ProtocolVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/6",
+                "type": "String",
+                "val": "3.41",
+                "val_pend": "None",
+                "val_prev": "3.41"
+              },
+              "SwitchAllMode": {
+                "addr": "SwitchAllMode",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/6",
+                "type": "Int",
+                "val": 255,
+                "val_pend": "None",
+                "val_prev": 255
+              },
+              "SwitchBinary": {
+                "addr": "SwitchBinary",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/6",
+                "type": "Int",
+                "val": 1,
+                "val_pend": 1,
+                "val_prev": 1
+              },
+              "hash": {
+                "addr": "hash",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/6",
+                "type": "String",
+                "val": "0x0000013C00010001",
+                "val_pend": "None",
+                "val_prev": "0x0000013C00010001"
+              },
+              "health": {
+                "addr": "health",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/6",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": "None"
+              },
+              "lastComms": {
+                "addr": "lastComms",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/6",
+                "type": "Int",
+                "val": 1723314290,
+                "val_pend": "None",
+                "val_prev": 1723314290
+              },
+              "location": {
+                "addr": "location",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/6",
+                "type": "String",
+                "val": "Kitchen Socket",
+                "val_pend": "Kitchen Socket",
+                "val_prev": ""
+              },
+              "manfID": {
+                "addr": "manfID",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/6",
+                "type": "String",
+                "val": "316/1/1",
+                "val_pend": "None",
+                "val_prev": "316/1/1"
+              }
+            },
+            "type": ""
+          },
+          "68": {
+            "addr": "68",
+            "childNodes": {
+              "_cfg": {
+                "addr": "_cfg",
+                "childNodes": {},
+                "childValues": {
+                  "max_sp": {
+                    "addr": "max_sp",
+                    "confirmedValue": "False",
+                    "lastUpdate": 0,
+                    "path": "site/0xEC0BBD04/68/_cfg",
+                    "type": "Float",
+                    "val": 28.0,
+                    "val_pend": "None",
+                    "val_prev": "None"
+                  },
+                  "max_sp_rx_override": {
+                    "addr": "max_sp_rx_override",
+                    "confirmedValue": "False",
+                    "lastUpdate": 0,
+                    "path": "site/0xEC0BBD04/68/_cfg",
+                    "type": "Float",
+                    "val": "None",
+                    "val_pend": "None",
+                    "val_prev": "None"
+                  },
+                  "min_sp": {
+                    "addr": "min_sp",
+                    "confirmedValue": "False",
+                    "lastUpdate": 0,
+                    "path": "site/0xEC0BBD04/68/_cfg",
+                    "type": "Float",
+                    "val": 4.0,
+                    "val_pend": "None",
+                    "val_prev": "None"
+                  }
+                },
+                "type": ""
+              }
+            },
+            "childValues": {
+              "ApplicationVersion": {
+                "addr": "ApplicationVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/68",
+                "type": "String",
+                "val": "1.0",
+                "val_pend": "None",
+                "val_prev": "1.0"
+              },
+              "Battery": {
+                "addr": "Battery",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/68",
+                "type": "Int",
+                "val": 92,
+                "val_pend": "None",
+                "val_prev": 92
+              },
+              "ClockHour": {
+                "addr": "ClockHour",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/68",
+                "type": "Int",
+                "val": 11,
+                "val_pend": "None",
+                "val_prev": 11
+              },
+              "ClockMinute": {
+                "addr": "ClockMinute",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/68",
+                "type": "Int",
+                "val": 53,
+                "val_pend": "None",
+                "val_prev": 21
+              },
+              "ClockWeekday": {
+                "addr": "ClockWeekday",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/68",
+                "type": "Int",
+                "val": 6,
+                "val_pend": "None",
+                "val_prev": 5
+              },
+              "HEATING_1": {
+                "addr": "HEATING_1",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/68",
+                "type": "Float",
+                "val": 4.0,
+                "val_pend": 4.0,
+                "val_prev": 4.0
+              },
+              "LibraryType": {
+                "addr": "LibraryType",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/68",
+                "type": "String",
+                "val": "Routing Slave",
+                "val_pend": "None",
+                "val_prev": "Routing Slave"
+              },
+              "ProtectionState": {
+                "addr": "ProtectionState",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/68",
+                "type": "Int",
+                "val": 0,
+                "val_pend": "None",
+                "val_prev": 0
+              },
+              "ProtocolVersion": {
+                "addr": "ProtocolVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/68",
+                "type": "String",
+                "val": "3.67",
+                "val_pend": "None",
+                "val_prev": "3.67"
+              },
+              "WakeUp_Interval": {
+                "addr": "WakeUp_Interval",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/68",
+                "type": "ElasticInt",
+                "val": 450,
+                "val_pend": 450,
+                "val_prev": 450
+              },
+              "WakeUp_TargetNode": {
+                "addr": "WakeUp_TargetNode",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/68",
+                "type": "Int",
+                "val": 1,
+                "val_pend": "None",
+                "val_prev": 1
+              },
+              "hash": {
+                "addr": "hash",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/68",
+                "type": "String",
+                "val": "0x0000000200040005",
+                "val_pend": "None",
+                "val_prev": "0x0000000200040005"
+              },
+              "health": {
+                "addr": "health",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/68",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": "None"
+              },
+              "lastComms": {
+                "addr": "lastComms",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/68",
+                "type": "Int",
+                "val": 1723314039,
+                "val_pend": "None",
+                "val_prev": 1723314039
+              },
+              "location": {
+                "addr": "location",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/68",
+                "type": "String",
+                "val": "Hall",
+                "val_pend": "Hall",
+                "val_prev": ""
+              },
+              "manfID": {
+                "addr": "manfID",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/68",
+                "type": "String",
+                "val": "2/5/4",
+                "val_pend": "None",
+                "val_prev": "2/5/4"
+              },
+              "setback": {
+                "addr": "setback",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/68",
+                "type": "ElasticFloat",
+                "val": 0.0,
+                "val_pend": 0.0,
+                "val_prev": 0.0
+              }
+            },
+            "type": ""
+          },
+          "78": {
+            "addr": "78",
+            "childNodes": {
+              "_cfg": {
+                "addr": "_cfg",
+                "childNodes": {},
+                "childValues": {
+                  "max_sp": {
+                    "addr": "max_sp",
+                    "confirmedValue": "False",
+                    "lastUpdate": 0,
+                    "path": "site/0xEC0BBD04/78/_cfg",
+                    "type": "Float",
+                    "val": 28.0,
+                    "val_pend": "None",
+                    "val_prev": 28.0
+                  },
+                  "max_sp_rx_override": {
+                    "addr": "max_sp_rx_override",
+                    "confirmedValue": "False",
+                    "lastUpdate": 0,
+                    "path": "site/0xEC0BBD04/78/_cfg",
+                    "type": "Float",
+                    "val": "None",
+                    "val_pend": "None",
+                    "val_prev": "None"
+                  },
+                  "min_sp": {
+                    "addr": "min_sp",
+                    "confirmedValue": "False",
+                    "lastUpdate": 0,
+                    "path": "site/0xEC0BBD04/78/_cfg",
+                    "type": "Float",
+                    "val": 4.0,
+                    "val_pend": "None",
+                    "val_prev": 4.0
+                  }
+                },
+                "type": ""
+              }
+            },
+            "childValues": {
+              "ApplicationVersion": {
+                "addr": "ApplicationVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/78",
+                "type": "String",
+                "val": "1.0",
+                "val_pend": "None",
+                "val_prev": "1.0"
+              },
+              "Battery": {
+                "addr": "Battery",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/78",
+                "type": "Int",
+                "val": 42,
+                "val_pend": "None",
+                "val_prev": 42
+              },
+              "ClockHour": {
+                "addr": "ClockHour",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/78",
+                "type": "Int",
+                "val": 11,
+                "val_pend": "None",
+                "val_prev": 11
+              },
+              "ClockMinute": {
+                "addr": "ClockMinute",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/78",
+                "type": "Int",
+                "val": 32,
+                "val_pend": "None",
+                "val_prev": 16
+              },
+              "ClockWeekday": {
+                "addr": "ClockWeekday",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/78",
+                "type": "Int",
+                "val": 6,
+                "val_pend": "None",
+                "val_prev": 5
+              },
+              "HEATING_1": {
+                "addr": "HEATING_1",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/78",
+                "type": "Float",
+                "val": 4.0,
+                "val_pend": 4.0,
+                "val_prev": 4.0
+              },
+              "LibraryType": {
+                "addr": "LibraryType",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/78",
+                "type": "String",
+                "val": "Routing Slave",
+                "val_pend": "None",
+                "val_prev": "Routing Slave"
+              },
+              "ProtectionState": {
+                "addr": "ProtectionState",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/78",
+                "type": "Int",
+                "val": 0,
+                "val_pend": "None",
+                "val_prev": 0
+              },
+              "ProtocolVersion": {
+                "addr": "ProtocolVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/78",
+                "type": "String",
+                "val": "3.67",
+                "val_pend": "None",
+                "val_prev": "3.67"
+              },
+              "WakeUp_Interval": {
+                "addr": "WakeUp_Interval",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/78",
+                "type": "ElasticInt",
+                "val": 450,
+                "val_pend": 450,
+                "val_prev": 450
+              },
+              "WakeUp_TargetNode": {
+                "addr": "WakeUp_TargetNode",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/78",
+                "type": "Int",
+                "val": 1,
+                "val_pend": "None",
+                "val_prev": 1
+              },
+              "hash": {
+                "addr": "hash",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/78",
+                "type": "String",
+                "val": "0x0000000200040005",
+                "val_pend": "None",
+                "val_prev": "0x0000000200040005"
+              },
+              "health": {
+                "addr": "health",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/78",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": "None"
+              },
+              "lastComms": {
+                "addr": "lastComms",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/78",
+                "type": "Int",
+                "val": 1723313901,
+                "val_pend": "None",
+                "val_prev": 1723313901
+              },
+              "location": {
+                "addr": "location",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/78",
+                "type": "String",
+                "val": "Bedroom",
+                "val_pend": "Bedroom",
+                "val_prev": ""
+              },
+              "manfID": {
+                "addr": "manfID",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/78",
+                "type": "String",
+                "val": "2/5/4",
+                "val_pend": "None",
+                "val_prev": "2/5/4"
+              },
+              "setback": {
+                "addr": "setback",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/78",
+                "type": "ElasticFloat",
+                "val": 0.0,
+                "val_pend": 0.0,
+                "val_prev": 0.0
+              }
+            },
+            "type": ""
+          },
+          "85": {
+            "addr": "85",
+            "childNodes": {
+              "_cfg": {
+                "addr": "_cfg",
+                "childNodes": {},
+                "childValues": {
+                  "max_sp": {
+                    "addr": "max_sp",
+                    "confirmedValue": "False",
+                    "lastUpdate": 0,
+                    "path": "site/0xEC0BBD04/85/_cfg",
+                    "type": "Float",
+                    "val": 28.0,
+                    "val_pend": "None",
+                    "val_prev": "None"
+                  },
+                  "max_sp_rx_override": {
+                    "addr": "max_sp_rx_override",
+                    "confirmedValue": "False",
+                    "lastUpdate": 0,
+                    "path": "site/0xEC0BBD04/85/_cfg",
+                    "type": "Float",
+                    "val": "None",
+                    "val_pend": "None",
+                    "val_prev": "None"
+                  },
+                  "min_sp": {
+                    "addr": "min_sp",
+                    "confirmedValue": "False",
+                    "lastUpdate": 0,
+                    "path": "site/0xEC0BBD04/85/_cfg",
+                    "type": "Float",
+                    "val": 4.0,
+                    "val_pend": "None",
+                    "val_prev": "None"
+                  }
+                },
+                "type": ""
+              }
+            },
+            "childValues": {
+              "ApplicationVersion": {
+                "addr": "ApplicationVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/85",
+                "type": "String",
+                "val": "1.0",
+                "val_pend": "None",
+                "val_prev": "1.0"
+              },
+              "Battery": {
+                "addr": "Battery",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/85",
+                "type": "Int",
+                "val": 61,
+                "val_pend": "None",
+                "val_prev": 61
+              },
+              "ClockHour": {
+                "addr": "ClockHour",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/85",
+                "type": "Int",
+                "val": 10,
+                "val_pend": "None",
+                "val_prev": 12
+              },
+              "ClockMinute": {
+                "addr": "ClockMinute",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/85",
+                "type": "Int",
+                "val": 54,
+                "val_pend": "None",
+                "val_prev": 34
+              },
+              "ClockWeekday": {
+                "addr": "ClockWeekday",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/85",
+                "type": "Int",
+                "val": 6,
+                "val_pend": "None",
+                "val_prev": 5
+              },
+              "HEATING_1": {
+                "addr": "HEATING_1",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/85",
+                "type": "Float",
+                "val": 4.0,
+                "val_pend": 4.0,
+                "val_prev": 4.0
+              },
+              "LibraryType": {
+                "addr": "LibraryType",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/85",
+                "type": "String",
+                "val": "Routing Slave",
+                "val_pend": "None",
+                "val_prev": "Routing Slave"
+              },
+              "ProtectionState": {
+                "addr": "ProtectionState",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/85",
+                "type": "Int",
+                "val": 0,
+                "val_pend": "None",
+                "val_prev": 0
+              },
+              "ProtocolVersion": {
+                "addr": "ProtocolVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/85",
+                "type": "String",
+                "val": "3.67",
+                "val_pend": "None",
+                "val_prev": "3.67"
+              },
+              "WakeUp_Interval": {
+                "addr": "WakeUp_Interval",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/85",
+                "type": "ElasticInt",
+                "val": 450,
+                "val_pend": 450,
+                "val_prev": 450
+              },
+              "WakeUp_TargetNode": {
+                "addr": "WakeUp_TargetNode",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/85",
+                "type": "Int",
+                "val": 1,
+                "val_pend": "None",
+                "val_prev": 1
+              },
+              "hash": {
+                "addr": "hash",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/85",
+                "type": "String",
+                "val": "0x0000000200040005",
+                "val_pend": "None",
+                "val_prev": "0x0000000200040005"
+              },
+              "health": {
+                "addr": "health",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/85",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": "None"
+              },
+              "lastComms": {
+                "addr": "lastComms",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/85",
+                "type": "Int",
+                "val": 1723313874,
+                "val_pend": "None",
+                "val_prev": 1723313874
+              },
+              "location": {
+                "addr": "location",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/85",
+                "type": "String",
+                "val": "Study",
+                "val_pend": "Study",
+                "val_prev": ""
+              },
+              "manfID": {
+                "addr": "manfID",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/85",
+                "type": "String",
+                "val": "2/5/4",
+                "val_pend": "None",
+                "val_prev": "2/5/4"
+              },
+              "setback": {
+                "addr": "setback",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/85",
+                "type": "ElasticFloat",
+                "val": 0.0,
+                "val_pend": 0.0,
+                "val_prev": 0.0
+              }
+            },
+            "type": ""
+          },
+          "86": {
+            "addr": "86",
+            "childNodes": {
+              "_cfg": {
+                "addr": "_cfg",
+                "childNodes": {},
+                "childValues": {},
+                "type": ""
+              }
+            },
+            "childValues": {
+              "ApplicationVersion": {
+                "addr": "ApplicationVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "String",
+                "val": "1.1",
+                "val_pend": "None",
+                "val_prev": "1.1"
+              },
+              "BasicValue": {
+                "addr": "BasicValue",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "Int",
+                "val": 0,
+                "val_pend": "None",
+                "val_prev": 0
+              },
+              "ConfigurationParameter_001": {
+                "addr": "ConfigurationParameter_001",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "ElasticInt",
+                "val": 720,
+                "val_pend": 720,
+                "val_prev": 720
+              },
+              "ConfigurationParameter_002": {
+                "addr": "ConfigurationParameter_002",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "ElasticInt",
+                "val": 6,
+                "val_pend": 6,
+                "val_prev": 6
+              },
+              "ConfigurationParameter_003": {
+                "addr": "ConfigurationParameter_003",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "ElasticInt",
+                "val": 3000,
+                "val_pend": 3000,
+                "val_prev": 3000
+              },
+              "ConfigurationParameter_004": {
+                "addr": "ConfigurationParameter_004",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "ElasticInt",
+                "val": 10000,
+                "val_pend": 10000,
+                "val_prev": 10000
+              },
+              "ConfigurationParameter_204": {
+                "addr": "ConfigurationParameter_204",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "ElasticInt",
+                "val": 10000,
+                "val_pend": 10000,
+                "val_prev": "None"
+              },
+              "ConfigurationParameter_212": {
+                "addr": "ConfigurationParameter_212",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "ElasticInt",
+                "val": 6,
+                "val_pend": 281,
+                "val_prev": "None"
+              },
+              "LibraryType": {
+                "addr": "LibraryType",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "String",
+                "val": "Enhanced Slave",
+                "val_pend": "None",
+                "val_prev": "Enhanced Slave"
+              },
+              "ProtocolVersion": {
+                "addr": "ProtocolVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "String",
+                "val": "3.41",
+                "val_pend": "None",
+                "val_prev": "3.41"
+              },
+              "SwitchAllMode": {
+                "addr": "SwitchAllMode",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "Int",
+                "val": 255,
+                "val_pend": "None",
+                "val_prev": 255
+              },
+              "SwitchBinary": {
+                "addr": "SwitchBinary",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": 0
+              },
+              "hash": {
+                "addr": "hash",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "String",
+                "val": "0x0000013C00010001",
+                "val_pend": "None",
+                "val_prev": "0x0000013C00010001"
+              },
+              "health": {
+                "addr": "health",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": "None"
+              },
+              "lastComms": {
+                "addr": "lastComms",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "Int",
+                "val": 1723314270,
+                "val_pend": "None",
+                "val_prev": 1723314270
+              },
+              "location": {
+                "addr": "location",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "String",
+                "val": "Study Socket",
+                "val_pend": "Study Socket",
+                "val_prev": ""
+              },
+              "manfID": {
+                "addr": "manfID",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/86",
+                "type": "String",
+                "val": "316/1/1",
+                "val_pend": "None",
+                "val_prev": "316/1/1"
+              }
+            },
+            "type": ""
+          },
+          "88": {
+            "addr": "88",
+            "childNodes": {
+              "_cfg": {
+                "addr": "_cfg",
+                "childNodes": {},
+                "childValues": {
+                  "max_sp": {
+                    "addr": "max_sp",
+                    "confirmedValue": "False",
+                    "lastUpdate": 0,
+                    "path": "site/0xEC0BBD04/88/_cfg",
+                    "type": "Float",
+                    "val": 28.0,
+                    "val_pend": "None",
+                    "val_prev": 28.0
+                  },
+                  "max_sp_rx_override": {
+                    "addr": "max_sp_rx_override",
+                    "confirmedValue": "False",
+                    "lastUpdate": 0,
+                    "path": "site/0xEC0BBD04/88/_cfg",
+                    "type": "Float",
+                    "val": "None",
+                    "val_pend": "None",
+                    "val_prev": "None"
+                  },
+                  "min_sp": {
+                    "addr": "min_sp",
+                    "confirmedValue": "False",
+                    "lastUpdate": 0,
+                    "path": "site/0xEC0BBD04/88/_cfg",
+                    "type": "Float",
+                    "val": 4.0,
+                    "val_pend": "None",
+                    "val_prev": 4.0
+                  }
+                },
+                "type": ""
+              }
+            },
+            "childValues": {
+              "ApplicationVersion": {
+                "addr": "ApplicationVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/88",
+                "type": "String",
+                "val": "1.0",
+                "val_pend": "None",
+                "val_prev": "1.0"
+              },
+              "Battery": {
+                "addr": "Battery",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/88",
+                "type": "Int",
+                "val": 49,
+                "val_pend": "None",
+                "val_prev": 49
+              },
+              "ClockHour": {
+                "addr": "ClockHour",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/88",
+                "type": "Int",
+                "val": 12,
+                "val_pend": "None",
+                "val_prev": 11
+              },
+              "ClockMinute": {
+                "addr": "ClockMinute",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/88",
+                "type": "Int",
+                "val": 7,
+                "val_pend": "None",
+                "val_prev": 51
+              },
+              "ClockWeekday": {
+                "addr": "ClockWeekday",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/88",
+                "type": "Int",
+                "val": 6,
+                "val_pend": "None",
+                "val_prev": 5
+              },
+              "HEATING_1": {
+                "addr": "HEATING_1",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/88",
+                "type": "Float",
+                "val": 4.0,
+                "val_pend": 4.0,
+                "val_prev": 4.0
+              },
+              "LibraryType": {
+                "addr": "LibraryType",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/88",
+                "type": "String",
+                "val": "Routing Slave",
+                "val_pend": "None",
+                "val_prev": "Routing Slave"
+              },
+              "ProtectionState": {
+                "addr": "ProtectionState",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/88",
+                "type": "Int",
+                "val": 0,
+                "val_pend": "None",
+                "val_prev": 0
+              },
+              "ProtocolVersion": {
+                "addr": "ProtocolVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/88",
+                "type": "String",
+                "val": "3.67",
+                "val_pend": "None",
+                "val_prev": "3.67"
+              },
+              "WakeUp_Interval": {
+                "addr": "WakeUp_Interval",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/88",
+                "type": "ElasticInt",
+                "val": 450,
+                "val_pend": 450,
+                "val_prev": 450
+              },
+              "WakeUp_TargetNode": {
+                "addr": "WakeUp_TargetNode",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/88",
+                "type": "Int",
+                "val": 1,
+                "val_pend": "None",
+                "val_prev": 1
+              },
+              "hash": {
+                "addr": "hash",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/88",
+                "type": "String",
+                "val": "0x0000000200040005",
+                "val_pend": "None",
+                "val_prev": "0x0000000200040005"
+              },
+              "health": {
+                "addr": "health",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/88",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": "None"
+              },
+              "lastComms": {
+                "addr": "lastComms",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/88",
+                "type": "Int",
+                "val": 1723313846,
+                "val_pend": "None",
+                "val_prev": 1723313846
+              },
+              "location": {
+                "addr": "location",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/88",
+                "type": "String",
+                "val": "Ensuite",
+                "val_pend": "Ensuite",
+                "val_prev": ""
+              },
+              "manfID": {
+                "addr": "manfID",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/88",
+                "type": "String",
+                "val": "2/5/4",
+                "val_pend": "None",
+                "val_prev": "2/5/4"
+              },
+              "setback": {
+                "addr": "setback",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/88",
+                "type": "ElasticFloat",
+                "val": 0.0,
+                "val_pend": 0.0,
+                "val_prev": 0.0
+              }
+            },
+            "type": ""
+          },
+          "89": {
+            "addr": "89",
+            "childNodes": {
+              "_cfg": {
+                "addr": "_cfg",
+                "childNodes": {},
+                "childValues": {
+                  "max_sp": {
+                    "addr": "max_sp",
+                    "confirmedValue": "False",
+                    "lastUpdate": 0,
+                    "path": "site/0xEC0BBD04/89/_cfg",
+                    "type": "Float",
+                    "val": 28.0,
+                    "val_pend": "None",
+                    "val_prev": "None"
+                  },
+                  "max_sp_rx_override": {
+                    "addr": "max_sp_rx_override",
+                    "confirmedValue": "False",
+                    "lastUpdate": 0,
+                    "path": "site/0xEC0BBD04/89/_cfg",
+                    "type": "Float",
+                    "val": "None",
+                    "val_pend": "None",
+                    "val_prev": "None"
+                  },
+                  "min_sp": {
+                    "addr": "min_sp",
+                    "confirmedValue": "False",
+                    "lastUpdate": 0,
+                    "path": "site/0xEC0BBD04/89/_cfg",
+                    "type": "Float",
+                    "val": 4.0,
+                    "val_pend": "None",
+                    "val_prev": "None"
+                  }
+                },
+                "type": ""
+              }
+            },
+            "childValues": {
+              "ApplicationVersion": {
+                "addr": "ApplicationVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/89",
+                "type": "String",
+                "val": "1.0",
+                "val_pend": "None",
+                "val_prev": "1.0"
+              },
+              "Battery": {
+                "addr": "Battery",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/89",
+                "type": "Int",
+                "val": 48,
+                "val_pend": "None",
+                "val_prev": 48
+              },
+              "ClockHour": {
+                "addr": "ClockHour",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/89",
+                "type": "Int",
+                "val": 10,
+                "val_pend": "None",
+                "val_prev": 12
+              },
+              "ClockMinute": {
+                "addr": "ClockMinute",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/89",
+                "type": "Int",
+                "val": 52,
+                "val_pend": "None",
+                "val_prev": 16
+              },
+              "ClockWeekday": {
+                "addr": "ClockWeekday",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/89",
+                "type": "Int",
+                "val": 6,
+                "val_pend": "None",
+                "val_prev": 5
+              },
+              "HEATING_1": {
+                "addr": "HEATING_1",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/89",
+                "type": "Float",
+                "val": 4.0,
+                "val_pend": 4.0,
+                "val_prev": 4.0
+              },
+              "LibraryType": {
+                "addr": "LibraryType",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/89",
+                "type": "String",
+                "val": "Routing Slave",
+                "val_pend": "None",
+                "val_prev": "Routing Slave"
+              },
+              "ProtectionState": {
+                "addr": "ProtectionState",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/89",
+                "type": "Int",
+                "val": 0,
+                "val_pend": "None",
+                "val_prev": 0
+              },
+              "ProtocolVersion": {
+                "addr": "ProtocolVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/89",
+                "type": "String",
+                "val": "3.67",
+                "val_pend": "None",
+                "val_prev": "3.67"
+              },
+              "WakeUp_Interval": {
+                "addr": "WakeUp_Interval",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/89",
+                "type": "ElasticInt",
+                "val": 450,
+                "val_pend": 450,
+                "val_prev": 450
+              },
+              "WakeUp_TargetNode": {
+                "addr": "WakeUp_TargetNode",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/89",
+                "type": "Int",
+                "val": 1,
+                "val_pend": "None",
+                "val_prev": 1
+              },
+              "hash": {
+                "addr": "hash",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/89",
+                "type": "String",
+                "val": "0x0000000200040005",
+                "val_pend": "None",
+                "val_prev": "0x0000000200040005"
+              },
+              "health": {
+                "addr": "health",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/89",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": "None"
+              },
+              "lastComms": {
+                "addr": "lastComms",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/89",
+                "type": "Int",
+                "val": 1723314107,
+                "val_pend": "None",
+                "val_prev": 1723314107
+              },
+              "location": {
+                "addr": "location",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/89",
+                "type": "String",
+                "val": "Kitchen",
+                "val_pend": "Kitchen",
+                "val_prev": ""
+              },
+              "manfID": {
+                "addr": "manfID",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/89",
+                "type": "String",
+                "val": "2/5/4",
+                "val_pend": "None",
+                "val_prev": "2/5/4"
+              },
+              "setback": {
+                "addr": "setback",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/89",
+                "type": "ElasticFloat",
+                "val": 0.0,
+                "val_pend": 0.0,
+                "val_prev": 0.0
+              }
+            },
+            "type": ""
+          },
+          "90": {
+            "addr": "90",
+            "childNodes": {
+              "_cfg": {
+                "addr": "_cfg",
+                "childNodes": {},
+                "childValues": {
+                  "max_sp": {
+                    "addr": "max_sp",
+                    "confirmedValue": "False",
+                    "lastUpdate": 0,
+                    "path": "site/0xEC0BBD04/90/_cfg",
+                    "type": "Float",
+                    "val": 28.0,
+                    "val_pend": "None",
+                    "val_prev": "None"
+                  },
+                  "max_sp_rx_override": {
+                    "addr": "max_sp_rx_override",
+                    "confirmedValue": "False",
+                    "lastUpdate": 0,
+                    "path": "site/0xEC0BBD04/90/_cfg",
+                    "type": "Float",
+                    "val": 21.0,
+                    "val_pend": 21.0,
+                    "val_prev": "None"
+                  },
+                  "min_sp": {
+                    "addr": "min_sp",
+                    "confirmedValue": "False",
+                    "lastUpdate": 0,
+                    "path": "site/0xEC0BBD04/90/_cfg",
+                    "type": "Float",
+                    "val": 4.0,
+                    "val_pend": "None",
+                    "val_prev": "None"
+                  }
+                },
+                "type": ""
+              }
+            },
+            "childValues": {
+              "ApplicationVersion": {
+                "addr": "ApplicationVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/90",
+                "type": "String",
+                "val": "1.0",
+                "val_pend": "None",
+                "val_prev": "1.0"
+              },
+              "Battery": {
+                "addr": "Battery",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/90",
+                "type": "Int",
+                "val": 92,
+                "val_pend": "None",
+                "val_prev": 92
+              },
+              "ClockHour": {
+                "addr": "ClockHour",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/90",
+                "type": "Int",
+                "val": 12,
+                "val_pend": "None",
+                "val_prev": 11
+              },
+              "ClockMinute": {
+                "addr": "ClockMinute",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/90",
+                "type": "Int",
+                "val": 13,
+                "val_pend": "None",
+                "val_prev": 41
+              },
+              "ClockWeekday": {
+                "addr": "ClockWeekday",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/90",
+                "type": "Int",
+                "val": 6,
+                "val_pend": "None",
+                "val_prev": 5
+              },
+              "HEATING_1": {
+                "addr": "HEATING_1",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/90",
+                "type": "Float",
+                "val": 4.0,
+                "val_pend": 4.0,
+                "val_prev": 4.0
+              },
+              "LibraryType": {
+                "addr": "LibraryType",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/90",
+                "type": "String",
+                "val": "Routing Slave",
+                "val_pend": "None",
+                "val_prev": "Routing Slave"
+              },
+              "ProtectionState": {
+                "addr": "ProtectionState",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/90",
+                "type": "Int",
+                "val": 0,
+                "val_pend": "None",
+                "val_prev": 0
+              },
+              "ProtocolVersion": {
+                "addr": "ProtocolVersion",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/90",
+                "type": "String",
+                "val": "3.67",
+                "val_pend": "None",
+                "val_prev": "3.67"
+              },
+              "WakeUp_Interval": {
+                "addr": "WakeUp_Interval",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/90",
+                "type": "ElasticInt",
+                "val": 450,
+                "val_pend": 450,
+                "val_prev": 450
+              },
+              "WakeUp_TargetNode": {
+                "addr": "WakeUp_TargetNode",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/90",
+                "type": "Int",
+                "val": 1,
+                "val_pend": "None",
+                "val_prev": 1
+              },
+              "hash": {
+                "addr": "hash",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/90",
+                "type": "String",
+                "val": "0x0000000200040005",
+                "val_pend": "None",
+                "val_prev": "0x0000000200040005"
+              },
+              "health": {
+                "addr": "health",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/90",
+                "type": "Int",
+                "val": 0,
+                "val_pend": 0,
+                "val_prev": "None"
+              },
+              "lastComms": {
+                "addr": "lastComms",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/90",
+                "type": "Int",
+                "val": 1723314039,
+                "val_pend": "None",
+                "val_prev": 1723314039
+              },
+              "location": {
+                "addr": "location",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/90",
+                "type": "String",
+                "val": "Guest room",
+                "val_pend": "Guest room",
+                "val_prev": ""
+              },
+              "manfID": {
+                "addr": "manfID",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/90",
+                "type": "String",
+                "val": "2/5/4",
+                "val_pend": "None",
+                "val_prev": "2/5/4"
+              },
+              "setback": {
+                "addr": "setback",
+                "confirmedValue": "False",
+                "lastUpdate": 0,
+                "path": "site/0xEC0BBD04/90",
+                "type": "ElasticFloat",
+                "val": 0.0,
+                "val_pend": 0.0,
+                "val_prev": 0.0
+              }
+            },
+            "type": ""
+          }
+        },
+        "childValues": {
+          "transmitBufferOverflow": {
+            "addr": "transmitBufferOverflow",
+            "confirmedValue": "False",
+            "lastUpdate": 0,
+            "path": "site/0xEC0BBD04",
+            "type": "Bool",
+            "val": "True",
+            "val_pend": "None",
+            "val_prev": "True"
+          }
+        },
+        "type": ""
+      },
+      "WeatherData": {
+        "addr": "WeatherData",
+        "childNodes": {},
+        "childValues": {
+          "PRECIPITATION": {
+            "addr": "PRECIPITATION",
+            "confirmedValue": "False",
+            "lastUpdate": 0,
+            "path": "site/WeatherData",
+            "type": "Float",
+            "val": "None",
+            "val_pend": "None",
+            "val_prev": "None"
+          },
+          "RELATIVE_HUMIDITY": {
+            "addr": "RELATIVE_HUMIDITY",
+            "confirmedValue": "False",
+            "lastUpdate": 0,
+            "path": "site/WeatherData",
+            "type": "Float",
+            "val": "None",
+            "val_pend": "None",
+            "val_prev": "None"
+          },
+          "TEMPERATURE": {
+            "addr": "TEMPERATURE",
+            "confirmedValue": "False",
+            "lastUpdate": 0,
+            "path": "site/WeatherData",
+            "type": "Float",
+            "val": "None",
+            "val_pend": "None",
+            "val_prev": "None"
+          },
+          "TEMPERATURE_FEELS_LIKE": {
+            "addr": "TEMPERATURE_FEELS_LIKE",
+            "confirmedValue": "False",
+            "lastUpdate": 0,
+            "path": "site/WeatherData",
+            "type": "Float",
+            "val": "None",
+            "val_pend": "None",
+            "val_prev": "None"
+          },
+          "UV": {
+            "addr": "UV",
+            "confirmedValue": "False",
+            "lastUpdate": 0,
+            "path": "site/WeatherData",
+            "type": "Float",
+            "val": "None",
+            "val_pend": "None",
+            "val_prev": "None"
+          },
+          "WEATHER_TYPE": {
+            "addr": "WEATHER_TYPE",
+            "confirmedValue": "False",
+            "lastUpdate": 0,
+            "path": "site/WeatherData",
+            "type": "Float",
+            "val": "None",
+            "val_pend": "None",
+            "val_prev": "None"
+          },
+          "health": {
+            "addr": "health",
+            "confirmedValue": "False",
+            "lastUpdate": 0,
+            "path": "site/WeatherData",
+            "type": "Int",
+            "val": 16,
+            "val_pend": "None",
+            "val_prev": 16
+          },
+          "message": {
+            "addr": "message",
+            "confirmedValue": "False",
+            "lastUpdate": 0,
+            "path": "site/WeatherData",
+            "type": "String",
+            "val": "None",
+            "val_pend": "None",
+            "val_prev": "None"
+          }
+        },
+        "type": ""
+      }
+    },
+    "childValues": {},
+    "type": ""
+  },
+  "error": 0,
+  "tm": "2024-08-10T19:24:56+0100",
+  "ts": 1723314296
+}
