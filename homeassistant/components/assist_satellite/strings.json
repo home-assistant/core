@@ -1,0 +1,17 @@
+{
+  "entity": {
+    "assist_satellite": {
+      "assist_satellite": {
+        "name": "Assist satellite",
+        "state": {
+          "idle": "Idle",
+          "listening": "Listening",
+          "responding": "Responding",
+          "processing": "Processing",
+          "muted": "Muted",
+          "unavailable": "Unavailable"
+        }
+      }
+    }
+  }
+}

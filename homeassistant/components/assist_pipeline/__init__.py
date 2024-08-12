@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncIterable
 
 import voluptuous as vol
@@ -130,3 +131,19 @@ async def async_pipeline_from_audio_stream(
     )
     await pipeline_input.validate()
     await pipeline_input.execute()
+
+
+async def async_audio_stream_from_queue(
+    audio_queue: asyncio.Queue[bytes], timeout: float | None = None
+) -> AsyncIterable[bytes]:
+    if timeout is None:
+        while chunk := await audio_queue.get():
+            yield chunk
+    else:
+        async with asyncio.timeout(timeout):
+            chunk = await audio_queue.get()
+
+        while chunk:
+            yield chunk
+            async with asyncio.timeout(timeout):
+                chunk = await audio_queue.get()

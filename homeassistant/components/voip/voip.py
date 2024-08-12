@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections import deque
-from collections.abc import AsyncIterable, MutableSequence, Sequence
 from functools import partial
 import io
 import logging
@@ -21,33 +19,30 @@ from voip_utils import (
     VoipDatagramProtocol,
 )
 
-from homeassistant.components import assist_pipeline, stt, tts
+from homeassistant.components import assist_satellite, tts
 from homeassistant.components.assist_pipeline import (
     Pipeline,
     PipelineEvent,
     PipelineEventType,
     PipelineNotFound,
+    async_audio_stream_from_queue,
     async_get_pipeline,
-    async_pipeline_from_audio_stream,
     select as pipeline_select,
 )
-from homeassistant.components.assist_pipeline.audio_enhancer import (
-    AudioEnhancer,
-    MicroVadEnhancer,
-)
-from homeassistant.components.assist_pipeline.vad import (
-    AudioBuffer,
-    VadSensitivity,
-    VoiceCommandSegmenter,
+from homeassistant.components.assist_pipeline.vad import VadSensitivity
+from homeassistant.components.assist_satellite import (
+    AssistSatelliteEntity,
+    async_get_satellite_entity,
 )
 from homeassistant.const import __version__
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.util.ulid import ulid_now
 
 from .const import CHANNELS, DOMAIN, RATE, RTP_AUDIO_SETTINGS, WIDTH
+from .devices import VoIPDevice
 
 if TYPE_CHECKING:
-    from .devices import VoIPDevice, VoIPDevices
+    from .devices import VoIPDevices
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,20 +78,17 @@ def make_protocol(
             rtcp_state=rtcp_state,
         )
 
-    vad_sensitivity = pipeline_select.get_vad_sensitivity(
-        hass,
-        DOMAIN,
-        voip_device.voip_id,
-    )
+    satellite = async_get_satellite_entity(hass, DOMAIN, voip_device.voip_id)
+    assert satellite is not None, "No Assist satellite entity"
 
     # Pipeline is properly configured
     return PipelineRtpDatagramProtocol(
         hass,
-        hass.config.language,
+        devices,
         voip_device,
+        satellite,
         Context(user_id=devices.config_entry.data["user"]),
         opus_payload_type=call_info.opus_payload_type,
-        silence_seconds=VadSensitivity.to_seconds(vad_sensitivity),
         rtcp_state=rtcp_state,
     )
 
@@ -149,19 +141,17 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
     def __init__(
         self,
         hass: HomeAssistant,
-        language: str,
+        voip_devices: VoIPDevices,
         voip_device: VoIPDevice,
+        satellite: AssistSatelliteEntity,
         context: Context,
         opus_payload_type: int,
         pipeline_timeout: float = 30.0,
-        audio_timeout: float = 2.0,
-        buffered_chunks_before_speech: int = 100,
         listening_tone_enabled: bool = True,
         processing_tone_enabled: bool = True,
         error_tone_enabled: bool = True,
         tone_delay: float = 0.2,
         tts_extra_timeout: float = 1.0,
-        silence_seconds: float = 1.0,
         rtcp_state: RtcpState | None = None,
     ) -> None:
         """Set up pipeline RTP server."""
@@ -174,27 +164,25 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         )
 
         self.hass = hass
-        self.language = language
+        self.satellite = satellite
+        self.voip_devices = voip_devices
         self.voip_device = voip_device
         self.pipeline: Pipeline | None = None
         self.pipeline_timeout = pipeline_timeout
-        self.audio_timeout = audio_timeout
-        self.buffered_chunks_before_speech = buffered_chunks_before_speech
         self.listening_tone_enabled = listening_tone_enabled
         self.processing_tone_enabled = processing_tone_enabled
         self.error_tone_enabled = error_tone_enabled
         self.tone_delay = tone_delay
         self.tts_extra_timeout = tts_extra_timeout
-        self.silence_seconds = silence_seconds
 
         self._audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
         self._context = context
-        self._conversation_id: str | None = None
         self._pipeline_task: asyncio.Task | None = None
         self._tts_done = asyncio.Event()
         self._session_id: str | None = None
         self._tone_bytes: bytes | None = None
         self._processing_bytes: bytes | None = None
+        self._processing_tone_done = asyncio.Event()
         self._error_bytes: bytes | None = None
         self._pipeline_error: bool = False
 
@@ -214,9 +202,12 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
             self._clear_audio_queue()
 
             # Run pipeline until voice command finishes, then start over
-            self._pipeline_task = self.hass.async_create_background_task(
-                self._run_pipeline(),
-                "voip_pipeline_run",
+            self._pipeline_task = (
+                self.voip_devices.config_entry.async_create_background_task(
+                    self.hass,
+                    self._run_pipeline(),
+                    "voip_pipeline_run",
+                )
             )
 
         self._audio_queue.put_nowait(audio_bytes)
@@ -233,64 +224,34 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
             await self._play_listening_tone()
 
         try:
-            # Wait for speech before starting pipeline
-            segmenter = VoiceCommandSegmenter(silence_seconds=self.silence_seconds)
-            audio_enhancer = MicroVadEnhancer(0, 0, True)
-            chunk_buffer: deque[bytes] = deque(
-                maxlen=self.buffered_chunks_before_speech,
+            await self.satellite.async_set_config(
+                assist_satellite.SatelliteConfig(
+                    default_pipeline=pipeline_select.get_chosen_pipeline(
+                        self.hass,
+                        DOMAIN,
+                        self.voip_device.voip_id,
+                    ),
+                    finished_speaking_seconds=VadSensitivity.to_seconds(
+                        pipeline_select.get_vad_sensitivity(
+                            self.hass,
+                            DOMAIN,
+                            self.voip_device.voip_id,
+                        )
+                    ),
+                )
             )
-            speech_detected = await self._wait_for_speech(
-                segmenter,
-                audio_enhancer,
-                chunk_buffer,
-            )
-            if not speech_detected:
-                _LOGGER.debug("No speech detected")
-                return
 
-            _LOGGER.debug("Starting pipeline")
             self._tts_done.clear()
 
-            async def stt_stream():
-                try:
-                    async for chunk in self._segment_audio(
-                        segmenter,
-                        audio_enhancer,
-                        chunk_buffer,
-                    ):
-                        yield chunk
-
-                    if self.processing_tone_enabled:
-                        await self._play_processing_tone()
-                except TimeoutError:
-                    # Expected after caller hangs up
-                    _LOGGER.debug("Audio timeout")
-                    self._session_id = None
-                    self.disconnect()
-                finally:
-                    self._clear_audio_queue()
-
             # Run pipeline with a timeout
+            _LOGGER.debug("Starting pipeline")
             async with asyncio.timeout(self.pipeline_timeout):
-                await async_pipeline_from_audio_stream(
-                    self.hass,
+                await self.satellite._async_accept_pipeline_from_satellite(  # noqa: SLF001
                     context=self._context,
                     event_callback=self._event_callback,
-                    stt_metadata=stt.SpeechMetadata(
-                        language="",  # set in async_pipeline_from_audio_stream
-                        format=stt.AudioFormats.WAV,
-                        codec=stt.AudioCodecs.PCM,
-                        bit_rate=stt.AudioBitRates.BITRATE_16,
-                        sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-                        channel=stt.AudioChannels.CHANNEL_MONO,
+                    audio_stream=async_audio_stream_from_queue(
+                        self._audio_queue, timeout=2
                     ),
-                    stt_stream=stt_stream(),
-                    pipeline_id=pipeline_select.get_chosen_pipeline(
-                        self.hass, DOMAIN, self.voip_device.voip_id
-                    ),
-                    conversation_id=self._conversation_id,
-                    device_id=self.voip_device.device_id,
-                    tts_audio_output="wav",
                 )
 
             if self._pipeline_error:
@@ -307,85 +268,15 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
             _LOGGER.debug("Pipeline finished")
         except PipelineNotFound:
             _LOGGER.warning("Pipeline not found")
-        except TimeoutError:
+        except (asyncio.CancelledError, TimeoutError):
             # Expected after caller hangs up
-            _LOGGER.debug("Pipeline timeout")
+            _LOGGER.debug("Pipeline cancelled or timed out")
             self._session_id = None
             self.disconnect()
+            self._clear_audio_queue()
         finally:
             # Allow pipeline to run again
             self._pipeline_task = None
-
-    async def _wait_for_speech(
-        self,
-        segmenter: VoiceCommandSegmenter,
-        audio_enhancer: AudioEnhancer,
-        chunk_buffer: MutableSequence[bytes],
-    ):
-        """Buffer audio chunks until speech is detected.
-
-        Returns True if speech was detected, False otherwise.
-        """
-        # Timeout if no audio comes in for a while.
-        # This means the caller hung up.
-        async with asyncio.timeout(self.audio_timeout):
-            chunk = await self._audio_queue.get()
-
-        vad_buffer = AudioBuffer(assist_pipeline.SAMPLES_PER_CHUNK * WIDTH)
-
-        while chunk:
-            chunk_buffer.append(chunk)
-
-            segmenter.process_with_vad(
-                chunk,
-                assist_pipeline.SAMPLES_PER_CHUNK,
-                lambda x: audio_enhancer.enhance_chunk(x, 0).is_speech is True,
-                vad_buffer,
-            )
-            if segmenter.in_command:
-                # Buffer until command starts
-                if len(vad_buffer) > 0:
-                    chunk_buffer.append(vad_buffer.bytes())
-
-                return True
-
-            async with asyncio.timeout(self.audio_timeout):
-                chunk = await self._audio_queue.get()
-
-        return False
-
-    async def _segment_audio(
-        self,
-        segmenter: VoiceCommandSegmenter,
-        audio_enhancer: AudioEnhancer,
-        chunk_buffer: Sequence[bytes],
-    ) -> AsyncIterable[bytes]:
-        """Yield audio chunks until voice command has finished."""
-        # Buffered chunks first
-        for buffered_chunk in chunk_buffer:
-            yield buffered_chunk
-
-        # Timeout if no audio comes in for a while.
-        # This means the caller hung up.
-        async with asyncio.timeout(self.audio_timeout):
-            chunk = await self._audio_queue.get()
-
-        vad_buffer = AudioBuffer(assist_pipeline.SAMPLES_PER_CHUNK * WIDTH)
-
-        while chunk:
-            if not segmenter.process_with_vad(
-                chunk,
-                assist_pipeline.SAMPLES_PER_CHUNK,
-                lambda x: audio_enhancer.enhance_chunk(x, 0).is_speech is True,
-                vad_buffer,
-            ):
-                # Voice command is finished
-                break
-
-            yield chunk
-
-            async with asyncio.timeout(self.audio_timeout):
-                chunk = await self._audio_queue.get()
 
     def _clear_audio_queue(self) -> None:
         while not self._audio_queue.empty():
@@ -395,15 +286,19 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         if not event.data:
             return
 
-        if event.type == PipelineEventType.INTENT_END:
-            # Capture conversation id
-            self._conversation_id = event.data["intent_output"]["conversation_id"]
+        if event.type == PipelineEventType.STT_END:
+            if self.processing_tone_enabled:
+                self._processing_tone_done.clear()
+                self.voip_devices.config_entry.async_create_background_task(
+                    self.hass, self._play_processing_tone(), "voip_process_tone"
+                )
         elif event.type == PipelineEventType.TTS_END:
             # Send TTS audio to caller over RTP
             tts_output = event.data["tts_output"]
             if tts_output:
                 media_id = tts_output["media_id"]
-                self.hass.async_create_background_task(
+                self.voip_devices.config_entry.async_create_background_task(
+                    self.hass,
                     self._send_tts(media_id),
                     "voip_pipeline_tts",
                 )
@@ -427,6 +322,9 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
 
             if extension != "wav":
                 raise ValueError(f"Only WAV audio can be streamed, got {extension}")
+
+            if self.processing_tone_enabled:
+                await self._processing_tone_done.wait()
 
             with io.BytesIO(data) as wav_io:
                 with wave.open(wav_io, "rb") as wav_file:
@@ -484,14 +382,17 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
 
     async def _play_processing_tone(self) -> None:
         """Play a tone to indicate that Home Assistant is processing the voice command."""
-        if self._processing_bytes is None:
-            # Do I/O in executor
-            self._processing_bytes = await self.hass.async_add_executor_job(
-                self._load_pcm,
-                "processing.pcm",
-            )
+        try:
+            if self._processing_bytes is None:
+                # Do I/O in executor
+                self._processing_bytes = await self.hass.async_add_executor_job(
+                    self._load_pcm,
+                    "processing.pcm",
+                )
 
-        await self._async_send_audio(self._processing_bytes)
+            await self._async_send_audio(self._processing_bytes)
+        finally:
+            self._processing_tone_done.set()
 
     async def _play_error_tone(self) -> None:
         """Play a tone to indicate a pipeline error occurred."""
@@ -547,7 +448,7 @@ class PreRecordMessageProtocol(RtpDatagramProtocol):
             self._audio_bytes = file_path.read_bytes()
 
         if self._audio_task is None:
-            self._audio_task = self.hass.async_create_background_task(
+            self.hass.async_create_background_task(
                 self._play_message(),
                 "voip_not_connected",
             )
