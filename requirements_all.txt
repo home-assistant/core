@@ -1732,7 +1732,7 @@ pyatag==0.3.5.3
 pyatmo==8.0.3
 
 # homeassistant.components.apple_tv
-pyatv==0.14.3
+pyatv==0.15.0
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.0.15
