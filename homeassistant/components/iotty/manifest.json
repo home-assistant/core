@@ -1,7 +1,7 @@
 {
   "domain": "iotty",
   "name": "iotty",
-  "codeowners": ["@pburgio"],
+  "codeowners": ["@pburgio", "@shapournemati-iotty"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/iotty",
