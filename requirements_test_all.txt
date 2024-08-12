@@ -317,7 +317,7 @@ aiopvpc==4.2.2
 aiopyarr==23.4.0
 
 # homeassistant.components.qnap_qsw
-aioqsw==0.4.0
+aioqsw==0.4.1
 
 # homeassistant.components.rainforest_raven
 aioraven==0.7.0
