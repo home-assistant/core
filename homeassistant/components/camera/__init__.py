@@ -992,7 +992,6 @@ async def async_handle_snapshot_service(
     """Handle snapshot services calls."""
     hass = camera.hass
     filename: Template = service_call.data[ATTR_FILENAME]
-    filename.hass = hass
 
     snapshot_file = filename.async_render(variables={ATTR_ENTITY_ID: camera})
 
@@ -1069,9 +1068,7 @@ async def async_handle_record_service(
     if not stream:
         raise HomeAssistantError(f"{camera.entity_id} does not support record service")
 
-    hass = camera.hass
     filename = service_call.data[CONF_FILENAME]
-    filename.hass = hass
     video_path = filename.async_render(variables={ATTR_ENTITY_ID: camera})
 
     await stream.async_record(
