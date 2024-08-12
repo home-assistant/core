@@ -182,7 +182,7 @@ async def async_setup_platform(
             ManualAlarm(
                 hass,
                 config[CONF_NAME],
-                config[CONF_UNIQUE_ID],
+                config.get(CONF_UNIQUE_ID),
                 config.get(CONF_CODE),
                 config.get(CONF_CODE_TEMPLATE),
                 config[CONF_CODE_ARM_REQUIRED],
