@@ -90,14 +90,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, DOMAIN, _async_process_intent
     )
 
-    def supported_domains(target_service: str) -> set[str]:
-        return {
-            domain
-            for domain, service_map in hass.services.async_services().items()
-            for service_name in service_map
-            if service_name == target_service
-        }
-
     intent.async_register(
         hass,
         OnOffIntentHandler(
