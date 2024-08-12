@@ -962,9 +962,10 @@ def test_restore_foreign_key_constraints_with_error(
     engine = Mock()
 
     session_maker = Mock(return_value=session)
-    migration._restore_foreign_key_constraints(
-        session_maker, engine, constraints_to_restore
-    )
+    with pytest.raises(InternalError):
+        migration._restore_foreign_key_constraints(
+            session_maker, engine, constraints_to_restore
+        )
 
     assert "Could not update foreign options in events table" in caplog.text
 
