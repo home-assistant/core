@@ -38,18 +38,18 @@ MOCK_DATA_STEP_BASE = {
 
 
 @pytest.mark.parametrize(
-    ("limit", "config_data"),
+    ("data", "config_data"),
     [
-        (1, MOCK_DATA_STEP_BASE),
-        (2, MOCK_DATA_STEP_BASE),
-        (3, MOCK_DATA_STEP_BASE),
-        (CONNECTIONS_MAX, MOCK_DATA_STEP_BASE),
-        (None, MOCK_DATA_STEP_BASE),
+        ({ATTR_LIMIT: 1}, MOCK_DATA_STEP_BASE),
+        ({ATTR_LIMIT: 2}, MOCK_DATA_STEP_BASE),
+        ({ATTR_LIMIT: 3}, MOCK_DATA_STEP_BASE),
+        ({ATTR_LIMIT: CONNECTIONS_MAX}, MOCK_DATA_STEP_BASE),
+        ({}, MOCK_DATA_STEP_BASE),
     ],
 )
 async def test_service_call_fetch_connections_success(
     hass: HomeAssistant,
-    limit: int,
+    data: dict,
     config_data,
 ) -> None:
     """Test the fetch_connections service."""
@@ -59,7 +59,7 @@ async def test_service_call_fetch_connections_success(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=config_data,
-        title=f"Service test call with limit={limit}",
+        title=f"Service test call with data={data}",
         unique_id=unique_id,
         entry_id=f"entry_{unique_id}",
     )
@@ -69,14 +69,12 @@ async def test_service_call_fetch_connections_success(
         return_value=AsyncMock(),
     ) as mock:
         mock().connections = json.loads(load_fixture("connections.json", DOMAIN))[
-            0 : (limit or CONNECTIONS_COUNT) + 2
+            0 : data.get(ATTR_LIMIT, CONNECTIONS_COUNT) + 2
         ]
 
         await setup_integration(hass, config_entry)
 
-        data = {ATTR_CONFIG_ENTRY_ID: config_entry.entry_id}
-        if limit is not None:
-            data[ATTR_LIMIT] = limit
+        data[ATTR_CONFIG_ENTRY_ID] = config_entry.entry_id
         assert hass.services.has_service(DOMAIN, SERVICE_FETCH_CONNECTIONS)
         response = await hass.services.async_call(
             domain=DOMAIN,
@@ -87,7 +85,7 @@ async def test_service_call_fetch_connections_success(
         )
         await hass.async_block_till_done()
         assert response["connections"] is not None
-        assert len(response["connections"]) == (limit or CONNECTIONS_COUNT)
+        assert len(response["connections"]) == data.get(ATTR_LIMIT, CONNECTIONS_COUNT)
 
 
 @pytest.mark.parametrize(

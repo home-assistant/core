@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.5.3
+AEMET-OpenData==0.5.4
 
 # homeassistant.components.honeywell
 AIOSomecomfort==0.0.25
@@ -164,10 +164,10 @@ aio-georss-gdacs==0.9
 aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.6.1
+aioairzone-cloud==0.6.2
 
 # homeassistant.components.airzone
-aioairzone==0.8.1
+aioairzone==0.8.2
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -240,7 +240,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.1
+aiohomekit==3.2.2
 
 # homeassistant.components.hue
 aiohue==4.7.2
@@ -317,7 +317,7 @@ aiopvpc==4.2.2
 aiopyarr==23.4.0
 
 # homeassistant.components.qnap_qsw
-aioqsw==0.4.0
+aioqsw==0.4.1
 
 # homeassistant.components.rainforest_raven
 aioraven==0.7.0
@@ -332,7 +332,7 @@ aioridwell==2024.01.0
 aioruckus==0.34
 
 # homeassistant.components.russound_rio
-aiorussound==2.2.2
+aiorussound==2.2.3
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -356,7 +356,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.0
 
 # homeassistant.components.switcher_kis
-aioswitcher==4.0.0
+aioswitcher==4.0.2
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -1056,9 +1056,6 @@ linear-garage-door==0.2.9
 # homeassistant.components.lamarzocco
 lmcloud==1.1.13
 
-# homeassistant.components.logi_circle
-logi-circle==0.2.3
-
 # homeassistant.components.london_underground
 london-tube-status==0.5
 
@@ -1726,7 +1723,7 @@ pyrympro==0.0.8
 pysabnzbd==1.1.1
 
 # homeassistant.components.schlage
-pyschlage==2024.6.0
+pyschlage==2024.8.0
 
 # homeassistant.components.sensibo
 pysensibo==1.0.36
