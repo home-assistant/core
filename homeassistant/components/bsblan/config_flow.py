@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import CONF_PASSKEY, DEFAULT_PORT, DOMAIN
@@ -86,7 +87,8 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
             username=self.username,
             password=self.password,
         )
-        bsblan = BSBLAN(config)
+        session = async_get_clientsession(self.hass)
+        bsblan = BSBLAN(config, session)
         device = await bsblan.device()
         self.mac = device.MAC
 

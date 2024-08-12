@@ -13,6 +13,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_PASSKEY, DOMAIN
 from .coordinator import BSBLanUpdateCoordinator
@@ -44,7 +45,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # create BSBLAN client
-    bsblan = BSBLAN(config)
+    session = async_get_clientsession(hass)
+    bsblan = BSBLAN(config, session)
 
     # Create and perform first refresh of the coordinator
     coordinator = BSBLanUpdateCoordinator(hass, entry, bsblan)
