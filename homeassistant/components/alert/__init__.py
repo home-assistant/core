@@ -17,6 +17,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_NAME,
+    CONF_DEVICE_CLASS,
     CONF_REPEAT,
     CONF_STATE,
     SERVICE_TOGGLE,
@@ -56,12 +57,12 @@ from .const import (
 ALERT_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Optional(CONF_ENTITY_ID): cv.entity_id,
+        vol.Optional(CONF_DEVICE_CLASS): cv.string,
         vol.Optional(CONF_STATE, default=STATE_ON): cv.string,
         vol.Required(CONF_REPEAT): vol.All(
             cv.ensure_list,
             [vol.Coerce(float)],
-            # Minimum delay is 1 second = 0.016 minutes
             [vol.Range(min=0.016)],
         ),
         vol.Optional(CONF_CAN_ACK, default=DEFAULT_CAN_ACK): cv.boolean,
@@ -92,7 +93,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             cfg = {}
 
         name = cfg[CONF_NAME]
-        watched_entity_id = cfg[CONF_ENTITY_ID]
+        watched_entity_id = cfg.get(CONF_ENTITY_ID)
+        device_class = cfg.get(CONF_DEVICE_CLASS)
         alert_state = cfg[CONF_STATE]
         repeat = cfg[CONF_REPEAT]
         skip_first = cfg[CONF_SKIP_FIRST]
@@ -103,23 +105,34 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         title_template = cfg.get(CONF_TITLE)
         data = cfg.get(CONF_DATA)
 
-        entities.append(
-            Alert(
-                hass,
-                object_id,
-                name,
-                watched_entity_id,
-                alert_state,
-                repeat,
-                skip_first,
-                message_template,
-                done_message_template,
-                notifiers,
-                can_ack,
-                title_template,
-                data,
+        # Get entities based on the device_class
+        if device_class:
+            matching_entities = [
+                entity_id
+                for entity_id in hass.states.async_entity_ids()
+                if hass.states.get(entity_id).attributes.get("device_class") == device_class
+            ]
+        else:
+            matching_entities = [watched_entity_id]
+
+        for entity_id in matching_entities:
+            entities.append(
+                Alert(
+                    hass,
+                    object_id,
+                    name,
+                    entity_id,
+                    alert_state,
+                    repeat,
+                    skip_first,
+                    message_template,
+                    done_message_template,
+                    notifiers,
+                    can_ack,
+                    title_template,
+                    data,
+                )
             )
-        )
 
     if not entities:
         return False
