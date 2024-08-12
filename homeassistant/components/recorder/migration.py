@@ -747,46 +747,51 @@ def _delete_foreign_key_violations(
         "set to NULL" if table == foreign_table else "deleted",
     )
 
+    result: CursorResult | None = None
     if table == foreign_table:
         # In case of a foreign reference to the same table, we set invalid
         # references to NULL instead of deleting as deleting rows may
         # cause additional invalid references to be created. This is to handle
         # old_state_id referencing a missing state.
-        with session_scope(session=session_maker()) as session:
-            # The subquery (SELECT {foreign_column} from {foreign_table}) is
-            # to be compatible with old MySQL versions which do not allow
-            # referencing the table being updated in the WHERE clause.
-            session.execute(
-                text(
-                    f"UPDATE {table} "  # noqa: S608
-                    f"SET {column} = NULL"
-                    " WHERE ("
-                    f" {table}.{column} IS NOT NULL AND"
-                    "  NOT EXISTS"
-                    "  (SELECT 1 "
-                    f"   FROM  (SELECT {foreign_column} from {foreign_table}) AS t2"
-                    f"   WHERE t2.{foreign_column} = {table}.{column}));"
+        while result is None or result.rowcount > 0:
+            with session_scope(session=session_maker()) as session:
+                # The subquery (SELECT {foreign_column} from {foreign_table}) is
+                # to be compatible with old MySQL versions which do not allow
+                # referencing the table being updated in the WHERE clause.
+                result = session.connection().execute(
+                    text(
+                        f"UPDATE {table} "  # noqa: S608
+                        f"SET {column} = NULL "
+                        "WHERE ("
+                        f"{table}.{column} IS NOT NULL AND "
+                        "NOT EXISTS "
+                        "(SELECT 1 "
+                        f"FROM  (SELECT {foreign_column} from {foreign_table}) AS t2 "
+                        f"WHERE t2.{foreign_column} = {table}.{column})) "
+                        "LIMIT 100000;"
+                    )
                 )
-            )
         return
 
-    with session_scope(session=session_maker()) as session:
-        session.execute(
-            # We don't use an alias for the table we're deleting from,
-            # support of the form `DELETE FROM table AS t1` was added in
-            # MariaDB 11.6 and is not supported by MySQL. Those engines
-            # instead support the from `DELETE t1 from table AS t1` which
-            # is not supported by PostgreSQL and undocumented for MariaDB.
-            text(
-                f"DELETE FROM {table}"  # noqa: S608
-                " WHERE ("
-                f" {table}.{column} IS NOT NULL AND"
-                "  NOT EXISTS"
-                "    (SELECT 1 "
-                f"     FROM {foreign_table} AS t2"
-                f"     WHERE t2.{foreign_column} = {table}.{column}));"
+    while result is None or result.rowcount > 0:
+        with session_scope(session=session_maker()) as session:
+            result = session.connection().execute(
+                # We don't use an alias for the table we're deleting from,
+                # support of the form `DELETE FROM table AS t1` was added in
+                # MariaDB 11.6 and is not supported by MySQL. Those engines
+                # instead support the from `DELETE t1 from table AS t1` which
+                # is not supported by PostgreSQL and undocumented for MariaDB.
+                text(
+                    f"DELETE FROM {table} "  # noqa: S608
+                    "WHERE ("
+                    f"{table}.{column} IS NOT NULL AND "
+                    "NOT EXISTS "
+                    "(SELECT 1 "
+                    f"FROM {foreign_table} AS t2 "
+                    f"WHERE t2.{foreign_column} = {table}.{column})) "
+                    "LIMIT 100000;"
+                )
             )
-        )
 
 
 @database_job_retry_wrapper("Apply migration update", 10)
