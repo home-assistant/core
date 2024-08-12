@@ -548,53 +548,6 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[config_entry_options0-sensor_payload12-expected12][binary_sensor.soil_sensor_low_battery-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.soil_sensor_low_battery',
-    'has_entity_name': False,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
-    'original_icon': None,
-    'original_name': 'Soil Sensor Low Battery',
-    'platform': 'deconz',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'a4:c1:38:fe:86:8f:07:a3-01-0408-low_battery',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[config_entry_options0-sensor_payload12-expected12][binary_sensor.soil_sensor_low_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Soil Sensor Low Battery',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.soil_sensor_low_battery',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_sensors[config_entry_options0-sensor_payload12-expected12][sensor.soil_sensor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1222,55 +1175,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40',
-  })
-# ---
-# name: test_sensors[config_entry_options0-sensor_payload19-expected19][binary_sensor.alarm_10-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.alarm_10',
-    'has_entity_name': False,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
-    'original_icon': None,
-    'original_name': 'Alarm 10',
-    'platform': 'deconz',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00:15:8d:00:02:b5:d1:80-01-0500-alarm',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[config_entry_options0-sensor_payload19-expected19][binary_sensor.alarm_10-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'safety',
-      'friendly_name': 'Alarm 10',
-      'on': True,
-      'temperature': 26.0,
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.alarm_10',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload19-expected19][sensor.alarm_10_battery-entry]

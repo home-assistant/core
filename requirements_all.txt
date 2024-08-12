@@ -255,7 +255,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.1
+aiohomekit==3.2.2
 
 # homeassistant.components.hue
 aiohue==4.7.2
@@ -359,7 +359,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==11.1.0
+aioshelly==11.2.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -374,7 +374,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.0
 
 # homeassistant.components.switcher_kis
-aioswitcher==4.0.0
+aioswitcher==4.0.1
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -1105,7 +1105,7 @@ home-assistant-intents==2024.8.7
 homeconnect==0.8.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.1.1
+homematicip==1.1.2
 
 # homeassistant.components.horizon
 horimote==0.4.1
@@ -1219,7 +1219,7 @@ kiwiki-client==0.1.1
 knocki==0.3.1
 
 # homeassistant.components.knx
-knx-frontend==2024.8.6.211307
+knx-frontend==2024.8.9.225351
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1780,7 +1780,7 @@ pycmus==0.1.1
 pycomfoconnect==0.5.1
 
 # homeassistant.components.coolmaster
-pycoolmasternet-async==0.1.5
+pycoolmasternet-async==0.2.2
 
 # homeassistant.components.microsoft
 pycsspeechtts==1.0.8
@@ -2250,7 +2250,7 @@ python-awair==0.2.4
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==0.5.19
+python-bsblan==0.6.2
 
 # homeassistant.components.clementine
 python-clementine-remote==1.0.1
