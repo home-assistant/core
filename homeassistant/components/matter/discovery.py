@@ -11,6 +11,7 @@ from homeassistant.const import Platform
 from homeassistant.core import callback
 
 from .binary_sensor import DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS
+from .button import DISCOVERY_SCHEMAS as BUTTON_SCHEMAS
 from .climate import DISCOVERY_SCHEMAS as CLIMATE_SENSOR_SCHEMAS
 from .cover import DISCOVERY_SCHEMAS as COVER_SCHEMAS
 from .event import DISCOVERY_SCHEMAS as EVENT_SCHEMAS
@@ -26,6 +27,7 @@ from .update import DISCOVERY_SCHEMAS as UPDATE_SCHEMAS
 
 DISCOVERY_SCHEMAS: dict[Platform, list[MatterDiscoverySchema]] = {
     Platform.BINARY_SENSOR: BINARY_SENSOR_SCHEMAS,
+    Platform.BUTTON: BUTTON_SCHEMAS,
     Platform.CLIMATE: CLIMATE_SENSOR_SCHEMAS,
     Platform.COVER: COVER_SCHEMAS,
     Platform.EVENT: EVENT_SCHEMAS,
