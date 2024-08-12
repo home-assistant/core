@@ -639,6 +639,7 @@ def _update_states_table_with_foreign_key_options(
                 _LOGGER.exception(
                     "Could not update foreign options in %s table", TABLE_STATES
                 )
+                raise
 
 
 def _drop_foreign_key_constraints(
