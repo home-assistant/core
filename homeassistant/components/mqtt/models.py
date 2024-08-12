@@ -12,7 +12,7 @@ import logging
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, Platform
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.exceptions import ServiceValidationError, TemplateError
 from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
@@ -261,7 +261,6 @@ class MqttValueTemplate:
         self,
         value_template: template.Template | None,
         *,
-        hass: HomeAssistant | None = None,
         entity: Entity | None = None,
         config_attributes: TemplateVarsType = None,
     ) -> None:
