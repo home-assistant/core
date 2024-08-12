@@ -95,8 +95,6 @@ async def validate_configs(hass, entity_configs):
             power_val = entity_config[CONF_POWER]
             if isinstance(power_val, str) and is_template_string(power_val):
                 entity_config[CONF_POWER] = Template(power_val, hass)
-            elif isinstance(power_val, Template):
-                entity_config[CONF_POWER].hass = hass
         elif CONF_POWER_ENTITY in entity_config:
             power_val = entity_config[CONF_POWER_ENTITY]
             if hass.states.get(power_val) is None:
