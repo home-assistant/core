@@ -27,7 +27,7 @@ class ListAddItemIntent(intent.IntentHandler):
         vol.Required("item"): intent.non_empty_string,
         vol.Required("name"): intent.non_empty_string,
     }
-    platforms = {DOMAIN}
+    platforms = {DOMAIN: None}
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""

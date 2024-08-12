@@ -24,6 +24,7 @@ from homeassistant.components.intent import (
     async_register_timer_handler,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -2077,3 +2078,37 @@ async def test_config_sentences_priority(
     data = result.as_dict()
     assert data["response"]["response_type"] == "action_done"
     assert data["response"]["speech"]["plain"]["speech"] == "custom response"
+
+
+async def test_entities_with_same_name(
+    hass: HomeAssistant,
+    init_components,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test matching multiple entities with the same name but only one matches the right domain."""
+    hass.states.async_set(
+        "lock.front_door", "locked", attributes={ATTR_FRIENDLY_NAME: "front door"}
+    )
+    expose_entity(hass, "lock.front_door", True)
+    hass.states.async_set(
+        "binary_sensor.front_door", "off", attributes={ATTR_FRIENDLY_NAME: "front door"}
+    )
+    expose_entity(hass, "binary_sensor.front_door", True)
+
+    calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+
+    await hass.services.async_call(
+        "conversation",
+        "process",
+        {conversation.ATTR_TEXT: "lock front door"},
+    )
+    await hass.async_block_till_done()
+
+    # Should only turn on one light instead of all lights in the kitchen
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == LOCK_DOMAIN
+    assert call.service == "turn_on"
+    assert call.data == {"entity_id": ["lock.front_door"]}

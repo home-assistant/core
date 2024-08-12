@@ -26,7 +26,7 @@ class GetTemperatureIntent(intent.IntentHandler):
         vol.Optional("area"): intent.non_empty_string,
         vol.Optional("name"): intent.non_empty_string,
     }
-    platforms = {DOMAIN}
+    platforms = {DOMAIN: None}
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
