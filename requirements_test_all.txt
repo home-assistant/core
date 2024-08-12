@@ -1056,9 +1056,6 @@ linear-garage-door==0.2.9
 # homeassistant.components.lamarzocco
 lmcloud==1.1.13
 
-# homeassistant.components.logi_circle
-logi-circle==0.2.3
-
 # homeassistant.components.london_underground
 london-tube-status==0.5
 
