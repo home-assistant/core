@@ -13,7 +13,6 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.asyncio
 async def test_light_setup_with_device(
     hass: HomeAssistant,
     pydeako_deako_mock: MagicMock,
@@ -35,7 +34,6 @@ async def test_light_setup_with_device(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.asyncio
 async def test_light_initial_props(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -63,7 +61,6 @@ async def test_light_initial_props(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.asyncio
 async def test_dimmable_light_props(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -92,7 +89,6 @@ async def test_dimmable_light_props(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.asyncio
 async def test_light_power_change_on(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -123,7 +119,6 @@ async def test_light_power_change_on(
     )
 
 
-@pytest.mark.asyncio
 async def test_light_power_change_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -162,7 +157,6 @@ async def test_light_power_change_off(
         (127, 50),
     ],
 )
-@pytest.mark.asyncio
 async def test_light_brightness_change(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

@@ -18,7 +18,13 @@ _LOGGER: logging.Logger = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.LIGHT]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+class DeakoConfigEntry(ConfigEntry):
+    """Typed config entry."""
+
+    runtime_data: Deako | None
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: DeakoConfigEntry) -> bool:
     """Set up deako."""
     _zc = await zeroconf.async_get_instance(hass)
     discoverer = DeakoDiscoverer(_zc)
@@ -50,8 +56,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DeakoConfigEntry) -> bool:
     """Unload a config entry."""
-    await entry.runtime_data.disconnect()
+    if entry.runtime_data is not None:
+        await entry.runtime_data.disconnect()
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

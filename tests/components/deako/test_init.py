@@ -1,7 +1,8 @@
 """Tests for the deako component init."""
 
+from unittest.mock import MagicMock
+
 from pydeako.deako import DeviceListTimeout, FindDevicesTimeout
-import pytest
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -9,12 +10,11 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.asyncio
 async def test_deako_async_setup_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    pydeako_deako_mock,
-    pydeako_discoverer_mock,
+    pydeako_deako_mock: MagicMock,
+    pydeako_discoverer_mock: MagicMock,
 ) -> None:
     """Test successful setup entry."""
     pydeako_deako_mock.return_value.get_devices.return_value = {
@@ -37,12 +37,11 @@ async def test_deako_async_setup_entry(
     assert mock_config_entry.runtime_data == pydeako_deako_mock.return_value
 
 
-@pytest.mark.asyncio
 async def test_deako_async_setup_entry_device_list_timeout(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    pydeako_deako_mock,
-    pydeako_discoverer_mock,
+    pydeako_deako_mock: MagicMock,
+    pydeako_discoverer_mock: MagicMock,
 ) -> None:
     """Test async_setup_entry raises ConfigEntryNotReady when pydeako raises DeviceListTimeout."""
 
@@ -63,12 +62,11 @@ async def test_deako_async_setup_entry_device_list_timeout(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.asyncio
 async def test_deako_async_setup_entry_find_devices_timeout(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    pydeako_deako_mock,
-    pydeako_discoverer_mock,
+    pydeako_deako_mock: MagicMock,
+    pydeako_discoverer_mock: MagicMock,
 ) -> None:
     """Test async_setup_entry raises ConfigEntryNotReady when pydeako raises FindDevicesTimeout."""
 
