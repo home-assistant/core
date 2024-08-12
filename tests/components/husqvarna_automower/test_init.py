@@ -9,6 +9,7 @@ from aioautomower.exceptions import (
     ApiException,
     AuthException,
     HusqvarnaWSServerHandshakeError,
+    TimeoutException,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -158,10 +159,8 @@ async def test_websocket_not_available(
         await hass.async_block_till_done()
         assert mock_automower_client.start_listening.call_count == 1
 
-        # Test reconnection after another disconnect
-        mock_automower_client.auth.websocket_connect.side_effect = (
-            HusqvarnaWSServerHandshakeError("Boom")
-        )
+        # Simulate a start_listening TimeoutException
+        mock_automower_client.start_listening.side_effect = TimeoutException("Boom")
         await hass.async_block_till_done()
         assert (
             mock_automower_client.auth.websocket_connect.call_count
