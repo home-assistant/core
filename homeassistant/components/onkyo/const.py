@@ -8,6 +8,8 @@ SINGLE_DEVICE_DISCOVER_RETRIES = 10
 DEVICE_DISCOVERY_RETRY_INTERVAL = 1  # second
 DEVICE_DISCOVERY_RETRIES = 5
 
+OPTION_SOURCE_PREFIX = "source."
+OPTION_SOURCES = "sources"
 OPTION_MAX_VOLUME = "max_volume"
 OPTION_MAX_VOLUME_DEFAULT = 100
 
@@ -16,7 +18,6 @@ CONF_RECEIVER_MAX_VOLUME_DEFAULT = 80
 CONF_DEVICE = "device"
 CONF_VOLUME_RESOLUTION = "volume_resolution"
 CONF_VOLUME_RESOLUTION_DEFAULT = 80
-CONF_SOURCES = "sources"
 CONF_SOURCES_DEFAULT = {
     "tv": "TV",
     "bd": "Bluray",
@@ -31,6 +32,8 @@ CONF_SOURCES_DEFAULT = {
     "video7": "Video 7",
     "fm": "Radio",
 }
+# NOTE: this should be kept in sync with strings.json for dynamic options generation
+# to work correctly.
 CONF_SOURCES_ALLOWED = [
     "aiplay",
     "am",

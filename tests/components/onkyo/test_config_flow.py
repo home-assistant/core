@@ -10,9 +10,9 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.onkyo.const import (
     CONF_RECEIVER_MAX_VOLUME,
-    CONF_SOURCES,
     DOMAIN,
     OPTION_MAX_VOLUME,
+    OPTION_SOURCES,
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
@@ -227,7 +227,7 @@ async def test_select_manually_discovered_device(hass: HomeAssistant) -> None:
     ("user_input", "error"),
     [
         (
-            {CONF_SOURCES: ["list"]},
+            {OPTION_SOURCES: ["list"]},
             "invalid_sources",
         ),
     ],
@@ -338,7 +338,7 @@ async def test_import_success(
                 CONF_NAME: "Receiver test name",
                 OPTION_MAX_VOLUME: 42,
                 CONF_RECEIVER_MAX_VOLUME: 69,
-                CONF_SOURCES: {
+                OPTION_SOURCES: {
                     "Key_one": "Value-A",
                     "Key_two": "Value-B",
                 },

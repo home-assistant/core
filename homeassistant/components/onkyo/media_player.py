@@ -32,12 +32,12 @@ from . import OnkyoConfigEntry, receiver as rcver
 from .const import (
     CONF_RECEIVER_MAX_VOLUME,
     CONF_RECEIVER_MAX_VOLUME_DEFAULT,
-    CONF_SOURCES,
     CONF_SOURCES_DEFAULT,
     CONF_VOLUME_RESOLUTION,
     DOMAIN,
     OPTION_MAX_VOLUME,
     OPTION_MAX_VOLUME_DEFAULT,
+    OPTION_SOURCES,
     ZONES,
 )
 
@@ -120,7 +120,7 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
         vol.Optional(
             CONF_RECEIVER_MAX_VOLUME, default=CONF_RECEIVER_MAX_VOLUME_DEFAULT
         ): cv.positive_int,
-        vol.Optional(CONF_SOURCES, default=CONF_SOURCES_DEFAULT): {
+        vol.Optional(OPTION_SOURCES, default=CONF_SOURCES_DEFAULT): {
             cv.string: cv.string
         },
     }
@@ -257,7 +257,7 @@ async def async_setup_entry(
 
     volume_resolution = entry.data[CONF_VOLUME_RESOLUTION]
     max_volume = entry.options[OPTION_MAX_VOLUME]
-    sources = entry.options[CONF_SOURCES]
+    sources = entry.options[OPTION_SOURCES]
 
     def connect_callback(receiver: rcver.Receiver) -> None:
         if receiver.first_connect:
