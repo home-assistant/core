@@ -159,7 +159,6 @@ class MqttCommandTemplate:
         self,
         command_template: template.Template | None,
         *,
-        hass: HomeAssistant | None = None,
         entity: Entity | None = None,
     ) -> None:
         """Instantiate a command template."""
@@ -169,11 +168,6 @@ class MqttCommandTemplate:
             return
 
         self._entity = entity
-
-        command_template.hass = hass
-
-        if entity:
-            command_template.hass = entity.hass
 
     @callback
     def async_render(
@@ -281,11 +275,11 @@ class MqttValueTemplate:
         if value_template is None:
             return
 
-        value_template.hass = hass
+        # value_template.hass = hass
         self._entity = entity
 
-        if entity:
-            value_template.hass = entity.hass
+        # if entity:
+        #    value_template.hass = entity.hass
 
     @callback
     def async_render_with_possible_json_value(
