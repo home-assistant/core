@@ -1038,7 +1038,7 @@ class TextToSpeechUrlView(HomeAssistantView):
             _LOGGER.error("Error on init tts: %s", err)
             return self.json({"error": err}, HTTPStatus.BAD_REQUEST)
 
-        base = get_url(self.tts.hass)
+        base = get_url(self.tts.hass, prefer_external=True)
         url = base + path
 
         return self.json({"url": url, "path": path})
