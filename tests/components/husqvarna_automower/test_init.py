@@ -148,16 +148,12 @@ async def test_websocket_not_available(
         )
 
         # Initial call count and range for reconnection attempts
-        start_call_count = mock_automower_client.auth.websocket_connect.call_count
-        test_range = 945 - start_call_count
 
+        mock_automower_client.reset_mock()
         # Perform reconnection attempts
-        for count in range(1, test_range):
+        for count in range(1, 945):
             await hass.async_block_till_done()
-            assert (
-                mock_automower_client.auth.websocket_connect.call_count
-                == start_call_count + count
-            )
+            assert mock_automower_client.auth.websocket_connect.call_count == count
             assert mock_config_entry.state is ConfigEntryState.LOADED
 
         # Simulate a successful connection
@@ -174,10 +170,7 @@ async def test_websocket_not_available(
         freezer.tick(timedelta(seconds=0))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
-        assert (
-            mock_automower_client.auth.websocket_connect.call_count
-            == start_call_count + test_range + 1
-        )
+        assert mock_automower_client.auth.websocket_connect.call_count == 946
 
 
 async def test_device_info(
