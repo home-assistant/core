@@ -11,7 +11,7 @@ from aioswitcher.bridge import SwitcherBase, SwitcherBridge
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import singleton
 
-from .const import COVER1_ID, COVER2_ID, DISCOVERY_TIME_SEC
+from .const import DISCOVERY_TIME_SEC
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,17 +42,6 @@ async def async_discover_devices() -> dict[str, SwitcherBase]:
 def get_breeze_remote_manager(hass: HomeAssistant) -> SwitcherBreezeRemoteManager:
     """Get Switcher Breeze remote manager."""
     return SwitcherBreezeRemoteManager()
-
-
-def get_circuit_number(id: str | None) -> int:
-    """Get the current shutter circuit number used for the API Call."""
-    if id is None:
-        return 0
-    if id in (COVER1_ID):
-        return 0
-    if id in (COVER2_ID):
-        return 1
-    return 0
 
 
 def validate_token(username: str, token: str) -> bool:

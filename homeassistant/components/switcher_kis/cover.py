@@ -25,7 +25,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import COVER1_ID, SIGNAL_DEVICE_ADD
 from .coordinator import SwitcherDataUpdateCoordinator
-from .utils import get_circuit_number
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -134,20 +133,16 @@ class SwitcherCoverEntity(
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        index = get_circuit_number(self._cover_id)
-        await self._async_call_api(API_SET_POSITON, 0, index)
+        await self._async_call_api(API_SET_POSITON, 0, 0)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
-        index = get_circuit_number(self._cover_id)
-        await self._async_call_api(API_SET_POSITON, 100, index)
+        await self._async_call_api(API_SET_POSITON, 100, 0)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        index = get_circuit_number(self._cover_id)
-        await self._async_call_api(API_SET_POSITON, kwargs[ATTR_POSITION], index)
+        await self._async_call_api(API_SET_POSITON, kwargs[ATTR_POSITION], 0)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        index = get_circuit_number(self._cover_id)
-        await self._async_call_api(API_STOP, index)
+        await self._async_call_api(API_STOP, 0)

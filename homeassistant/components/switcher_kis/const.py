@@ -9,7 +9,6 @@ CONF_USERNAME = "username"
 CONF_TOKEN = "token"
 
 COVER1_ID = "runner"
-COVER2_ID = "runner2"
 
 # Services
 CONF_AUTO_OFF = "auto_off"
