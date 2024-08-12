@@ -7,6 +7,7 @@
     "deactivate_vacation": "mdi:compass-off",
     "set_active_climate_profile": "mdi:home-thermometer",
     "dump_hap_config": "mdi:database-export",
-    "reset_energy_counter": "mdi:reload"
+    "reset_energy_counter": "mdi:reload",
+    "set_home_cooling_mode": "mdi:snowflake"
   }
 }

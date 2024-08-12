@@ -15,6 +15,7 @@ import re
 import time
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, ParamSpec, TypeVar, cast
+from zoneinfo import ZoneInfo
 
 import voluptuous as vol
 from zha.application.const import (
@@ -1273,6 +1274,7 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
             quirks_configuration=quirks_config,
             device_overrides=overrides_config,
         ),
+        local_timezone=ZoneInfo(hass.config.time_zone),
     )
 
 

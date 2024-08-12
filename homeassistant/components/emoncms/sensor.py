@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import logging
 from typing import Any
 
 from pyemoncms import EmoncmsClient
@@ -33,9 +32,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import CONF_EXCLUDE_FEEDID, CONF_ONLY_INCLUDE_FEEDID
 from .coordinator import EmoncmsCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_FEEDID = "FeedId"
 ATTR_FEEDNAME = "FeedName"
@@ -45,8 +43,6 @@ ATTR_SIZE = "Size"
 ATTR_TAG = "Tag"
 ATTR_USERID = "UserId"
 
-CONF_EXCLUDE_FEEDID = "exclude_feed_id"
-CONF_ONLY_INCLUDE_FEEDID = "include_only_feed_id"
 CONF_SENSOR_NAMES = "sensor_names"
 
 DECIMALS = 2
@@ -91,14 +87,11 @@ async def async_setup_platform(
     sensor_names = config.get(CONF_SENSOR_NAMES)
     scan_interval = config.get(CONF_SCAN_INTERVAL, timedelta(seconds=30))
 
-    if value_template is not None:
-        value_template.hass = hass
-
     emoncms_client = EmoncmsClient(url, apikey, session=async_get_clientsession(hass))
     coordinator = EmoncmsCoordinator(hass, emoncms_client, scan_interval)
     await coordinator.async_refresh()
     elems = coordinator.data
-    if elems is None:
+    if not elems:
         return
 
     sensors: list[EmonCmsSensor] = []
@@ -208,7 +201,7 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
         self._attr_native_value = None
         if self._value_template is not None:
             self._attr_native_value = (
-                self._value_template.render_with_possible_json_value(
+                self._value_template.async_render_with_possible_json_value(
                     elem["value"], STATE_UNKNOWN
                 )
             )

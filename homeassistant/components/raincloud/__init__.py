@@ -102,7 +102,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     try:
         raincloud = RainCloudy(username=username, password=password)
         if not raincloud.is_connected:
-            raise HTTPError
+            raise HTTPError  # noqa: TRY301
         hass.data[DATA_RAINCLOUD] = RainCloudHub(raincloud)
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Rain Cloud service: %s", str(ex))

@@ -268,6 +268,7 @@ class Plant(Entity):
             min_value = self._config[params["min"]]
             if value < min_value:
                 return f"{sensor_name} low"
+        return None
 
     def _check_max(self, sensor_name, value, params):
         """If configured, check the value against the defined maximum value."""

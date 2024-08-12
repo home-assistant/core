@@ -174,7 +174,7 @@ async def setup_device_v1(
         if networking is None:
             # If the api does not return an error but does return None for
             # get_networking - then we need to go through cache checking.
-            raise RoborockException("Networking request returned None.")
+            raise RoborockException("Networking request returned None.")  # noqa: TRY301
     except RoborockException as err:
         _LOGGER.warning(
             "Not setting up %s because we could not get the network information of the device. "

@@ -42,7 +42,7 @@ class Tami4ConfigFlow(ConfigFlow, domain=DOMAIN):
                 if m := _PHONE_MATCHER.match(phone):
                     self.phone = f"+972{m.group('number')}"
                 else:
-                    raise InvalidPhoneNumber
+                    raise InvalidPhoneNumber  # noqa: TRY301
                 await self.hass.async_add_executor_job(
                     Tami4EdgeAPI.request_otp, self.phone
                 )
@@ -82,8 +82,11 @@ class Tami4ConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                device_name = api.device_metadata.name
+                if device_name is None:
+                    device_name = "Tami4"
                 return self.async_create_entry(
-                    title=api.device_metadata.name,
+                    title=device_name,
                     data={CONF_REFRESH_TOKEN: refresh_token},
                 )
 

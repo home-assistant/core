@@ -97,7 +97,7 @@ class UnifiImageEntity(UnifiEntity[HandlerT, ApiItemT], ImageEntity):
         """Return bytes of image."""
         if self.current_image is None:
             description = self.entity_description
-            obj = description.object_fn(self.hub.api, self._obj_id)
+            obj = description.object_fn(self.api, self._obj_id)
             self.current_image = description.image_fn(self.hub, obj)
         return self.current_image
 
@@ -105,7 +105,7 @@ class UnifiImageEntity(UnifiEntity[HandlerT, ApiItemT], ImageEntity):
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:
         """Update entity state."""
         description = self.entity_description
-        obj = description.object_fn(self.hub.api, self._obj_id)
+        obj = description.object_fn(self.api, self._obj_id)
         if (value := description.value_fn(obj)) != self.previous_value:
             self.previous_value = value
             self.current_image = None

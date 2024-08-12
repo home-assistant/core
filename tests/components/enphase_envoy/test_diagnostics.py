@@ -26,6 +26,8 @@ TO_EXCLUDE = {
     "last_updated",
     "last_changed",
     "last_reported",
+    "created_at",
+    "modified_at",
 }
 
 

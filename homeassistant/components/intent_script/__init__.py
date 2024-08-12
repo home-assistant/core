@@ -90,7 +90,6 @@ async def async_reload(hass: HomeAssistant, service_call: ServiceCall) -> None:
 
 def async_load_intents(hass: HomeAssistant, intents: dict[str, ConfigType]) -> None:
     """Load YAML intents into the intent system."""
-    template.attach(hass, intents)
     hass.data[DOMAIN] = intents
 
     for intent_type, conf in intents.items():
