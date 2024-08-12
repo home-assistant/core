@@ -105,9 +105,9 @@ class Control4ConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             try:
                 if not await hub.authenticate():
-                    raise InvalidAuth
+                    raise InvalidAuth  # noqa: TRY301
                 if not await hub.connect_to_director():
-                    raise CannotConnect
+                    raise CannotConnect  # noqa: TRY301
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             except CannotConnect:

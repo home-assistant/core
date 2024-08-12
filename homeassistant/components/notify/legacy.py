@@ -105,7 +105,7 @@ def async_setup_legacy(
                         platform.get_service, hass, p_config, discovery_info
                     )
                 else:
-                    raise HomeAssistantError("Invalid notify platform.")
+                    raise HomeAssistantError("Invalid notify platform.")  # noqa: TRY301
 
                 if notify_service is None:
                     # Platforms can decide not to create a service based
