@@ -45,9 +45,6 @@ async def async_setup_platform(
     }
 
     for device_name, cover_config in entities.items():
-        if value_template := cover_config.get(CONF_VALUE_TEMPLATE):
-            value_template.hass = hass
-
         trigger_entity_config = {
             CONF_NAME: Template(cover_config.get(CONF_NAME, device_name), hass),
             **{k: v for k, v in cover_config.items() if k in TRIGGER_ENTITY_OPTIONS},
@@ -60,7 +57,7 @@ async def async_setup_platform(
                 cover_config[CONF_COMMAND_CLOSE],
                 cover_config[CONF_COMMAND_STOP],
                 cover_config.get(CONF_COMMAND_STATE),
-                value_template,
+                cover_config.get(CONF_VALUE_TEMPLATE),
                 cover_config[CONF_COMMAND_TIMEOUT],
                 cover_config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL),
             )
