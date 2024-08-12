@@ -106,14 +106,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         data = cfg.get(CONF_DATA)
 
         # Get entities based on the device_class
+        matching_entities = []
         if device_class:
-            matching_entities = [
-                entity_id
-                for entity_id in hass.states.async_entity_ids()
-                if hass.states.get(entity_id).attributes.get("device_class") == device_class
-            ]
+            for entity_id in hass.states.async_entity_ids():
+                state = hass.states.get(entity_id)
+                if state is not None and state.attributes.get("device_class") == device_class:
+                    matching_entities.append(entity_id)
         else:
-            matching_entities = [watched_entity_id]
+            matching_entities.append(watched_entity_id)
 
         for entity_id in matching_entities:
             entities.append(
