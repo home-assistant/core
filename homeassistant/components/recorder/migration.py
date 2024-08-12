@@ -681,6 +681,10 @@ def _restore_foreign_key_constraints(
             _LOGGER.info("Did not find a matching constraint for %s.%s", table, column)
             continue
 
+        if TYPE_CHECKING:
+            assert foreign_table is not None
+            assert foreign_column is not None
+
         # AddConstraint mutates the constraint passed to it, we need to
         # undo that to avoid changing the behavior of the table schema.
         # https://github.com/sqlalchemy/sqlalchemy/blob/96f1172812f858fead45cdc7874abac76f45b339/lib/sqlalchemy/sql/ddl.py#L746-L748
@@ -730,16 +734,14 @@ def _delete_foreign_key_violations(
     engine: Engine,
     table: str,
     column: str,
-    foreign_table: str | None,
-    foreign_column: str | None,
+    foreign_table: str,
+    foreign_column: str,
 ) -> None:
     """Remove rows which violate the constraints."""
     if engine.dialect.name not in (SupportedDialect.MYSQL, SupportedDialect.POSTGRESQL):
         raise RuntimeError(
             f"_delete_foreign_key_violations not supported for {engine.dialect.name}"
         )
-    if foreign_table is None:
-        return
 
     _LOGGER.warning(
         "Rows in table %s where %s references non existing %s.%s will be %s. "
