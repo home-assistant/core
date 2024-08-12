@@ -268,12 +268,17 @@ class HomematicipFloorTerminalBlockMechanicChannelValve(
         """Return the icon."""
         if super().icon:
             return super().icon
-        if (
-            self._device.functionalChannels[self._channel].valveState
-            != ValveState.ADAPTION_DONE
+        if hasattr(
+            self._device.functionalChannels[self._channel],
+            "valveState",
         ):
-            return "mdi:alert"
-        return "mdi:heating-coil"
+            if (
+                self._device.functionalChannels[self._channel].valveState
+                != ValveState.ADAPTION_DONE
+            ):
+                return "mdi:alert"
+            return "mdi:heating-coil"
+        return None
 
     @property
     def native_value(self) -> int | None:

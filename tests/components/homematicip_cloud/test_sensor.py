@@ -537,11 +537,20 @@ async def test_hmip_floor_terminal_block_mechanic_channel_1_valve_position(
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "36"
 
-    await async_manipulate_test_data(hass, hmip_device, "config_pending", True)
+    await async_manipulate_test_data(hass, hmip_device, "configPending", True)
     ha_state = hass.states.get(entity_id)
     assert ha_state.attributes["icon"] == "mdi:alert-circle"
 
-    await async_manipulate_test_data(hass, hmip_device, "config_pending", False)
+    await async_manipulate_test_data(hass, hmip_device, "configPending", False)
+    await async_manipulate_test_data(
+        hass, hmip_device, "valveState", ValveState.ADAPTION_IN_PROGRESS
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.attributes["icon"] == "mdi:alert"
+
+    await async_manipulate_test_data(
+        hass, hmip_device, "valveState", ValveState.ADAPTION_DONE
+    )
     ha_state = hass.states.get(entity_id)
     assert ha_state.attributes["icon"] == "mdi:heating-coil"
 
