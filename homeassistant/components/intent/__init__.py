@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from enum import StrEnum
 import logging
 from typing import Any, Protocol
 
@@ -71,11 +72,11 @@ __all__ = [
     "DOMAIN",
 ]
 
-ONOFF_DEVICE_CLASSES = {
-    CoverDeviceClass,
-    ValveDeviceClass,
-    SwitchDeviceClass,
-    MediaPlayerDeviceClass,
+ONOFF_PLATFORMS: dict[str, type[StrEnum] | None] = {
+    "cover": CoverDeviceClass,
+    "valve": ValveDeviceClass,
+    "switch": SwitchDeviceClass,
+    "media_player": MediaPlayerDeviceClass,
 }
 
 
@@ -89,6 +90,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, DOMAIN, _async_process_intent
     )
 
+    def supported_domains(target_service: str) -> set[str]:
+        return {
+            domain
+            for domain, service_map in hass.services.async_services().items()
+            for service_name in service_map
+            if service_name == target_service
+        }
+
     intent.async_register(
         hass,
         OnOffIntentHandler(
@@ -96,7 +105,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             HOMEASSISTANT_DOMAIN,
             SERVICE_TURN_ON,
             description="Turns on/opens a device or entity",
-            device_classes=ONOFF_DEVICE_CLASSES,
+            platforms=ONOFF_PLATFORMS,
         ),
     )
     intent.async_register(
@@ -106,7 +115,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             HOMEASSISTANT_DOMAIN,
             SERVICE_TURN_OFF,
             description="Turns off/closes a device or entity",
-            device_classes=ONOFF_DEVICE_CLASSES,
+            platforms=ONOFF_PLATFORMS,
         ),
     )
     intent.async_register(
@@ -116,7 +125,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             HOMEASSISTANT_DOMAIN,
             SERVICE_TOGGLE,
             description="Toggles a device or entity",
-            device_classes=ONOFF_DEVICE_CLASSES,
+            platforms=ONOFF_PLATFORMS,
         ),
     )
     intent.async_register(
@@ -367,12 +376,12 @@ class SetPositionIntentHandler(intent.DynamicServiceIntentHandler):
         """Create set position handler."""
         super().__init__(
             intent.INTENT_SET_POSITION,
+            required_domains={COVER_DOMAIN, VALVE_DOMAIN},
             required_slots={
                 ATTR_POSITION: vol.All(vol.Coerce(int), vol.Range(min=0, max=100))
             },
             description="Sets the position of a device or entity",
-            platforms={COVER_DOMAIN, VALVE_DOMAIN},
-            device_classes={CoverDeviceClass, ValveDeviceClass},
+            platforms={COVER_DOMAIN: CoverDeviceClass, VALVE_DOMAIN: ValveDeviceClass},
         )
 
     def get_domain_and_service(

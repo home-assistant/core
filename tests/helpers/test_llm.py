@@ -114,7 +114,7 @@ async def test_assist_api(
     class MyIntentHandler(intent.IntentHandler):
         intent_type = "test_intent"
         slot_schema = schema
-        platforms = set()  # Match none
+        platforms = {}  # Match none
 
     intent_handler = MyIntentHandler()
 
@@ -131,7 +131,7 @@ async def test_assist_api(
     assert len(api.tools) == 1
 
     # Match specific domain
-    intent_handler.platforms = {"light"}
+    intent_handler.platforms = {"light": None}
 
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert len(api.tools) == 1

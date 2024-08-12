@@ -400,7 +400,7 @@ class AssistAPI(API):
                 intent_handler
                 for intent_handler in intent_handlers
                 if intent_handler.platforms is None
-                or intent_handler.platforms & exposed_domains
+                or set(intent_handler.platforms.keys()) & exposed_domains
             ]
 
         tools: list[Tool] = [

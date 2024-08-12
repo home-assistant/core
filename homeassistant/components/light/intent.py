@@ -34,6 +34,6 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
                 ),
             },
             description="Sets the brightness or color of a light",
-            platforms={DOMAIN},
+            platforms={DOMAIN: None},
         ),
     )
