@@ -1,262 +1,303 @@
 # serializer version: 1
-# name: test_sensor_sources[client_payload0-sensor.wired_client_rx-config_entry_options0]
-  'data_rate'
-# ---
-# name: test_sensor_sources[client_payload0-sensor.wired_client_rx-config_entry_options0].1
-  'data_rate'
-# ---
-# name: test_sensor_sources[client_payload0-sensor.wired_client_rx-config_entry_options0].2
-  <SensorStateClass.MEASUREMENT: 'measurement'>
-# ---
-# name: test_sensor_sources[client_payload0-sensor.wired_client_rx-config_entry_options0].3
-  <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>
-# ---
-# name: test_sensor_sources[client_payload0-sensor.wired_client_rx-config_entry_options0].4
-  '1234.0'
-# ---
-# name: test_sensor_sources[client_payload0-sensor.wired_client_rx-rx--config_entry_options0]
-  'rx-00:00:00:00:00:01'
-# ---
-# name: test_sensor_sources[client_payload0-sensor.wired_client_rx-rx--config_entry_options0].1
-  <EntityCategory.DIAGNOSTIC: 'diagnostic'>
-# ---
-# name: test_sensor_sources[client_payload0-sensor.wired_client_rx-rx--config_entry_options0].2
-  'data_rate'
-# ---
-# name: test_sensor_sources[client_payload0-sensor.wired_client_rx-rx--config_entry_options0].3
-  'Wired client RX'
-# ---
-# name: test_sensor_sources[client_payload0-sensor.wired_client_rx-rx--config_entry_options0].4
-  <SensorStateClass.MEASUREMENT: 'measurement'>
-# ---
-# name: test_sensor_sources[client_payload0-sensor.wired_client_rx-rx--config_entry_options0].5
-  <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>
-# ---
-# name: test_sensor_sources[client_payload0-sensor.wired_client_rx-rx--config_entry_options0].6
-  '1234.0'
-# ---
-# name: test_sensor_sources[client_payload0-sensor.wired_client_uptime-uptime--config_entry_options0]
-  'uptime-00:00:00:00:00:01'
-# ---
-# name: test_sensor_sources[client_payload0-sensor.wired_client_uptime-uptime--config_entry_options0].1
-  <EntityCategory.DIAGNOSTIC: 'diagnostic'>
-# ---
-# name: test_sensor_sources[client_payload0-sensor.wired_client_uptime-uptime--config_entry_options0].2
-  'timestamp'
-# ---
-# name: test_sensor_sources[client_payload0-sensor.wired_client_uptime-uptime--config_entry_options0].3
-  'Wired client Uptime'
-# ---
-# name: test_sensor_sources[client_payload0-sensor.wired_client_uptime-uptime--config_entry_options0].4
-  None
-# ---
-# name: test_sensor_sources[client_payload0-sensor.wired_client_uptime-uptime--config_entry_options0].5
-  None
-# ---
-# name: test_sensor_sources[client_payload0-sensor.wired_client_uptime-uptime--config_entry_options0].6
-  '2020-09-14T14:41:45+00:00'
-# ---
-# name: test_sensor_sources[client_payload1-sensor.wired_client_rx-rx--config_entry_options0]
-  'rx-00:00:00:00:00:01'
-# ---
-# name: test_sensor_sources[client_payload1-sensor.wired_client_rx-rx--config_entry_options0].1
-  <EntityCategory.DIAGNOSTIC: 'diagnostic'>
-# ---
-# name: test_sensor_sources[client_payload1-sensor.wired_client_rx-rx--config_entry_options0].2
-  'data_rate'
-# ---
-# name: test_sensor_sources[client_payload1-sensor.wired_client_rx-rx--config_entry_options0].3
-  'Wired client RX'
-# ---
-# name: test_sensor_sources[client_payload1-sensor.wired_client_rx-rx--config_entry_options0].4
-  <SensorStateClass.MEASUREMENT: 'measurement'>
-# ---
-# name: test_sensor_sources[client_payload1-sensor.wired_client_rx-rx--config_entry_options0].5
-  <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>
-# ---
-# name: test_sensor_sources[client_payload1-sensor.wired_client_rx-rx--config_entry_options0].6
-  '1234.0'
-# ---
-# name: test_sensor_sources[client_payload1-sensor.wired_client_tx-config_entry_options0]
-  'data_rate'
-# ---
-# name: test_sensor_sources[client_payload1-sensor.wired_client_tx-config_entry_options0].1
-  'data_rate'
-# ---
-# name: test_sensor_sources[client_payload1-sensor.wired_client_tx-config_entry_options0].2
-  <SensorStateClass.MEASUREMENT: 'measurement'>
-# ---
-# name: test_sensor_sources[client_payload1-sensor.wired_client_tx-config_entry_options0].3
-  <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>
-# ---
-# name: test_sensor_sources[client_payload1-sensor.wired_client_tx-config_entry_options0].4
-  '5678.0'
-# ---
-# name: test_sensor_sources[client_payload1-sensor.wired_client_tx-tx--config_entry_options0]
-  'tx-00:00:00:00:00:01'
-# ---
-# name: test_sensor_sources[client_payload1-sensor.wired_client_tx-tx--config_entry_options0].1
-  <EntityCategory.DIAGNOSTIC: 'diagnostic'>
-# ---
-# name: test_sensor_sources[client_payload1-sensor.wired_client_tx-tx--config_entry_options0].2
-  'data_rate'
-# ---
-# name: test_sensor_sources[client_payload1-sensor.wired_client_tx-tx--config_entry_options0].3
-  'Wired client TX'
-# ---
-# name: test_sensor_sources[client_payload1-sensor.wired_client_tx-tx--config_entry_options0].4
-  <SensorStateClass.MEASUREMENT: 'measurement'>
-# ---
-# name: test_sensor_sources[client_payload1-sensor.wired_client_tx-tx--config_entry_options0].5
-  <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>
-# ---
-# name: test_sensor_sources[client_payload1-sensor.wired_client_tx-tx--config_entry_options0].6
-  '5678.0'
-# ---
-# name: test_sensor_sources[client_payload2-sensor.wired_client_tx-tx--config_entry_options0]
-  'tx-00:00:00:00:00:01'
-# ---
-# name: test_sensor_sources[client_payload2-sensor.wired_client_tx-tx--config_entry_options0].1
-  <EntityCategory.DIAGNOSTIC: 'diagnostic'>
-# ---
-# name: test_sensor_sources[client_payload2-sensor.wired_client_tx-tx--config_entry_options0].2
-  'data_rate'
-# ---
-# name: test_sensor_sources[client_payload2-sensor.wired_client_tx-tx--config_entry_options0].3
-  'Wired client TX'
-# ---
-# name: test_sensor_sources[client_payload2-sensor.wired_client_tx-tx--config_entry_options0].4
-  <SensorStateClass.MEASUREMENT: 'measurement'>
-# ---
-# name: test_sensor_sources[client_payload2-sensor.wired_client_tx-tx--config_entry_options0].5
-  <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>
-# ---
-# name: test_sensor_sources[client_payload2-sensor.wired_client_tx-tx--config_entry_options0].6
-  '5678.0'
-# ---
-# name: test_sensor_sources[client_payload2-sensor.wired_client_uptime-uptime--config_entry_options0]
-  'uptime-00:00:00:00:00:01'
-# ---
-# name: test_sensor_sources[client_payload2-sensor.wired_client_uptime-uptime--config_entry_options0].1
-  <EntityCategory.DIAGNOSTIC: 'diagnostic'>
-# ---
-# name: test_sensor_sources[client_payload2-sensor.wired_client_uptime-uptime--config_entry_options0].2
-  'timestamp'
-# ---
-# name: test_sensor_sources[client_payload2-sensor.wired_client_uptime-uptime--config_entry_options0].3
-  'Wired client Uptime'
-# ---
-# name: test_sensor_sources[client_payload2-sensor.wired_client_uptime-uptime--config_entry_options0].4
-  None
-# ---
-# name: test_sensor_sources[client_payload2-sensor.wired_client_uptime-uptime--config_entry_options0].5
-  None
-# ---
-# name: test_sensor_sources[client_payload2-sensor.wired_client_uptime-uptime--config_entry_options0].6
-  '2020-09-14T14:41:45+00:00'
-# ---
-# name: test_sensor_sources[client_payload2-sensor.wireless_client_rx-rx--config_entry_options0]
-  'rx-00:00:00:00:00:02'
-# ---
-# name: test_sensor_sources[client_payload2-sensor.wireless_client_rx-rx--config_entry_options0].1
-  <EntityCategory.DIAGNOSTIC: 'diagnostic'>
-# ---
-# name: test_sensor_sources[client_payload2-sensor.wireless_client_rx-rx--config_entry_options0].2
-  'data_rate'
-# ---
-# name: test_sensor_sources[client_payload2-sensor.wireless_client_rx-rx--config_entry_options0].3
-  'Wireless client RX'
-# ---
-# name: test_sensor_sources[client_payload2-sensor.wireless_client_rx-rx--config_entry_options0].4
-  <SensorStateClass.MEASUREMENT: 'measurement'>
-# ---
-# name: test_sensor_sources[client_payload2-sensor.wireless_client_rx-rx--config_entry_options0].5
-  <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>
-# ---
-# name: test_sensor_sources[client_payload2-sensor.wireless_client_rx-rx--config_entry_options0].6
-  '2345.0'
-# ---
-# name: test_sensor_sources[client_payload3-sensor.wireless_client_rx-rx--config_entry_options0]
-  'rx-00:00:00:00:00:01'
-# ---
-# name: test_sensor_sources[client_payload3-sensor.wireless_client_rx-rx--config_entry_options0].1
-  <EntityCategory.DIAGNOSTIC: 'diagnostic'>
-# ---
-# name: test_sensor_sources[client_payload3-sensor.wireless_client_rx-rx--config_entry_options0].2
-  'data_rate'
-# ---
-# name: test_sensor_sources[client_payload3-sensor.wireless_client_rx-rx--config_entry_options0].3
-  'Wireless client RX'
-# ---
-# name: test_sensor_sources[client_payload3-sensor.wireless_client_rx-rx--config_entry_options0].4
-  <SensorStateClass.MEASUREMENT: 'measurement'>
-# ---
-# name: test_sensor_sources[client_payload3-sensor.wireless_client_rx-rx--config_entry_options0].5
-  <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>
-# ---
-# name: test_sensor_sources[client_payload3-sensor.wireless_client_rx-rx--config_entry_options0].6
-  '2345.0'
-# ---
-# name: test_sensor_sources[client_payload3-sensor.wireless_client_tx-tx--config_entry_options0]
-  'tx-00:00:00:00:00:02'
-# ---
-# name: test_sensor_sources[client_payload3-sensor.wireless_client_tx-tx--config_entry_options0].1
-  <EntityCategory.DIAGNOSTIC: 'diagnostic'>
-# ---
-# name: test_sensor_sources[client_payload3-sensor.wireless_client_tx-tx--config_entry_options0].2
-  'data_rate'
-# ---
-# name: test_sensor_sources[client_payload3-sensor.wireless_client_tx-tx--config_entry_options0].3
-  'Wireless client TX'
-# ---
-# name: test_sensor_sources[client_payload3-sensor.wireless_client_tx-tx--config_entry_options0].4
-  <SensorStateClass.MEASUREMENT: 'measurement'>
-# ---
-# name: test_sensor_sources[client_payload3-sensor.wireless_client_tx-tx--config_entry_options0].5
-  <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>
-# ---
-# name: test_sensor_sources[client_payload3-sensor.wireless_client_tx-tx--config_entry_options0].6
-  '6789.0'
-# ---
-# name: test_sensor_sources[client_payload4-sensor.wireless_client_tx-tx--config_entry_options0]
-  'tx-00:00:00:00:00:01'
-# ---
-# name: test_sensor_sources[client_payload4-sensor.wireless_client_tx-tx--config_entry_options0].1
-  <EntityCategory.DIAGNOSTIC: 'diagnostic'>
-# ---
-# name: test_sensor_sources[client_payload4-sensor.wireless_client_tx-tx--config_entry_options0].2
-  'data_rate'
-# ---
-# name: test_sensor_sources[client_payload4-sensor.wireless_client_tx-tx--config_entry_options0].3
-  'Wireless client TX'
-# ---
-# name: test_sensor_sources[client_payload4-sensor.wireless_client_tx-tx--config_entry_options0].4
-  <SensorStateClass.MEASUREMENT: 'measurement'>
-# ---
-# name: test_sensor_sources[client_payload4-sensor.wireless_client_tx-tx--config_entry_options0].5
-  <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>
-# ---
-# name: test_sensor_sources[client_payload4-sensor.wireless_client_tx-tx--config_entry_options0].6
-  '6789.0'
-# ---
-# name: test_sensor_sources[client_payload5-sensor.wireless_client_uptime-uptime--config_entry_options0]
-  'uptime-00:00:00:00:00:01'
-# ---
-# name: test_sensor_sources[client_payload5-sensor.wireless_client_uptime-uptime--config_entry_options0].1
-  <EntityCategory.DIAGNOSTIC: 'diagnostic'>
-# ---
-# name: test_sensor_sources[client_payload5-sensor.wireless_client_uptime-uptime--config_entry_options0].2
-  'timestamp'
-# ---
-# name: test_sensor_sources[client_payload5-sensor.wireless_client_uptime-uptime--config_entry_options0].3
-  'Wireless client Uptime'
-# ---
-# name: test_sensor_sources[client_payload5-sensor.wireless_client_uptime-uptime--config_entry_options0].4
-  None
-# ---
-# name: test_sensor_sources[client_payload5-sensor.wireless_client_uptime-uptime--config_entry_options0].5
-  None
-# ---
-# name: test_sensor_sources[client_payload5-sensor.wireless_client_uptime-uptime--config_entry_options0].6
-  '2021-01-01T01:00:00+00:00'
+# name: test_sensor_sources[wired-config_entry_options0][sensor.wired_client_rx-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wired_client_rx',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': 'mdi:upload',
+    'original_name': 'RX',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rx-00:00:00:00:00:01',
+    'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+  })
+# ---
+# name: test_sensor_sources[wired-config_entry_options0][sensor.wired_client_rx-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_rate',
+      'friendly_name': 'Wired client RX',
+      'icon': 'mdi:upload',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wired_client_rx',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1234.0',
+  })
+# ---
+# name: test_sensor_sources[wired-config_entry_options0][sensor.wired_client_tx-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wired_client_tx',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': 'mdi:download',
+    'original_name': 'TX',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tx-00:00:00:00:00:01',
+    'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+  })
+# ---
+# name: test_sensor_sources[wired-config_entry_options0][sensor.wired_client_tx-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_rate',
+      'friendly_name': 'Wired client TX',
+      'icon': 'mdi:download',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wired_client_tx',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5678.0',
+  })
+# ---
+# name: test_sensor_sources[wired-config_entry_options0][sensor.wired_client_uptime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wired_client_uptime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Uptime',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'uptime-00:00:00:00:00:01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_sources[wired-config_entry_options0][sensor.wired_client_uptime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Wired client Uptime',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wired_client_uptime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2020-09-14T14:41:45+00:00',
+  })
+# ---
+# name: test_sensor_sources[wireless-config_entry_options0][sensor.wireless_client_rx-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wireless_client_rx',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': 'mdi:upload',
+    'original_name': 'RX',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'rx-00:00:00:00:00:01',
+    'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+  })
+# ---
+# name: test_sensor_sources[wireless-config_entry_options0][sensor.wireless_client_rx-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_rate',
+      'friendly_name': 'Wireless client RX',
+      'icon': 'mdi:upload',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wireless_client_rx',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2345.0',
+  })
+# ---
+# name: test_sensor_sources[wireless-config_entry_options0][sensor.wireless_client_tx-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wireless_client_tx',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_RATE: 'data_rate'>,
+    'original_icon': 'mdi:download',
+    'original_name': 'TX',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tx-00:00:00:00:00:01',
+    'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+  })
+# ---
+# name: test_sensor_sources[wireless-config_entry_options0][sensor.wireless_client_tx-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_rate',
+      'friendly_name': 'Wireless client TX',
+      'icon': 'mdi:download',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wireless_client_tx',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6789.0',
+  })
+# ---
+# name: test_sensor_sources[wireless-config_entry_options0][sensor.wireless_client_uptime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wireless_client_uptime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Uptime',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'uptime-00:00:00:00:00:01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_sources[wireless-config_entry_options0][sensor.wireless_client_uptime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Wireless client Uptime',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wireless_client_uptime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-01-01T01:00:00+00:00',
+  })
 # ---

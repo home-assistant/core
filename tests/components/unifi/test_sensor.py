@@ -29,13 +29,7 @@ from homeassistant.components.unifi.const import (
     DEVICE_STATES,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_FRIENDLY_NAME,
-    ATTR_UNIT_OF_MEASUREMENT,
-    STATE_UNAVAILABLE,
-    EntityCategory,
-)
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
@@ -1216,15 +1210,12 @@ WIRELESS_CLIENT = {
     ],
 )
 @pytest.mark.parametrize(
-    ("client_payload", "entity_id", "unique_id_prefix"),
+    ("client_payload", "device_name"),
     [
-        ([WIRED_CLIENT], "sensor.wired_client_rx", "rx-"),
-        ([WIRED_CLIENT], "sensor.wired_client_tx", "tx-"),
-        ([WIRED_CLIENT], "sensor.wired_client_uptime", "uptime-"),
-        ([WIRELESS_CLIENT], "sensor.wireless_client_rx", "rx-"),
-        ([WIRELESS_CLIENT], "sensor.wireless_client_tx", "tx-"),
-        ([WIRELESS_CLIENT], "sensor.wireless_client_uptime", "uptime-"),
+        ([WIRED_CLIENT], "wired_client"),
+        ([WIRELESS_CLIENT], "wireless_client"),
     ],
+    ids=["wired", "wireless"],
 )
 @pytest.mark.usefixtures("config_entry_setup")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -1233,21 +1224,17 @@ async def test_sensor_sources(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
-    entity_id: str,
-    unique_id_prefix: str,
+    device_name: str,
 ) -> None:
     """Test sensor sources and the entity description."""
-    ent_reg_entry = entity_registry.async_get(entity_id)
-    assert ent_reg_entry.unique_id.startswith(unique_id_prefix)
-    assert ent_reg_entry.unique_id == snapshot
-    assert ent_reg_entry.entity_category == snapshot
-
-    state = hass.states.get(entity_id)
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == snapshot
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == snapshot
-    assert state.attributes.get(ATTR_STATE_CLASS) == snapshot
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == snapshot
-    assert state.state == snapshot
+    for entity_suffix in ("rx", "tx", "uptime"):
+        entity_id = f"sensor.{device_name}_{entity_suffix}"
+        entity_entry = entity_registry.async_get(entity_id)
+        assert entity_entry.unique_id.startswith(f"{entity_suffix}-")
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        state = hass.states.get(entity_entry.entity_id)
+        assert state, f"State not found for {entity_entry.entity_id}"
+        assert state == snapshot(name=f"{entity_entry.entity_id}-state")
 
 
 async def _test_uptime_entity(
