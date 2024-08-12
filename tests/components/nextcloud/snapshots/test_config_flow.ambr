@@ -1,12 +1,4 @@
 # serializer version: 1
-# name: test_import
-  dict({
-    'password': 'nc_pass',
-    'url': 'nc_url',
-    'username': 'nc_user',
-    'verify_ssl': True,
-  })
-# ---
 # name: test_reauth
   dict({
     'password': 'other_password',

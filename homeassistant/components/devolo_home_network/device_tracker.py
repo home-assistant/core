@@ -22,6 +22,8 @@ from homeassistant.helpers.update_coordinator import (
 from . import DevoloHomeNetworkConfigEntry
 from .const import CONNECTED_WIFI_CLIENTS, DOMAIN, WIFI_APTYPE, WIFI_BANDS
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

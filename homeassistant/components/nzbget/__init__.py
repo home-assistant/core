@@ -23,7 +23,6 @@ from .coordinator import NZBGetDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 SPEED_LIMIT_SCHEMA = vol.Schema(
     {vol.Optional(ATTR_SPEED, default=DEFAULT_SPEED_LIMIT): cv.positive_int}

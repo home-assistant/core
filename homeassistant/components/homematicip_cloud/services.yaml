@@ -120,3 +120,14 @@ set_minimum_floor_heating_valve_position:
           min: 0
           max: 1
           step: 0.1
+
+set_home_cooling_mode:
+  fields:
+    cooling:
+      default: true
+      selector:
+        boolean:
+    accesspoint_id:
+      example: 3014xxxxxxxxxxxxxxxxxxxx
+      selector:
+        text:

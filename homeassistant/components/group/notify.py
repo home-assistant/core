@@ -22,8 +22,9 @@ from homeassistant.components.notify import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SERVICE,
+    CONF_ACTION,
     CONF_ENTITIES,
+    CONF_SERVICE,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -36,11 +37,37 @@ from .entity import GroupEntity
 
 CONF_SERVICES = "services"
 
+
+def _backward_compat_schema(value: Any | None) -> Any:
+    """Backward compatibility for notify service schemas."""
+
+    if not isinstance(value, dict):
+        return value
+
+    # `service` has been renamed to `action`
+    if CONF_SERVICE in value:
+        if CONF_ACTION in value:
+            raise vol.Invalid(
+                "Cannot specify both 'service' and 'action'. Please use 'action' only."
+            )
+        value[CONF_ACTION] = value.pop(CONF_SERVICE)
+
+    return value
+
+
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SERVICES): vol.All(
             cv.ensure_list,
-            [{vol.Required(ATTR_SERVICE): cv.slug, vol.Optional(ATTR_DATA): dict}],
+            [
+                vol.All(
+                    _backward_compat_schema,
+                    {
+                        vol.Required(CONF_ACTION): cv.slug,
+                        vol.Optional(ATTR_DATA): dict,
+                    },
+                )
+            ],
         )
     }
 )
@@ -88,7 +115,7 @@ class GroupNotifyPlatform(BaseNotificationService):
             tasks.append(
                 asyncio.create_task(
                     self.hass.services.async_call(
-                        DOMAIN, entity[ATTR_SERVICE], sending_payload, blocking=True
+                        DOMAIN, entity[CONF_ACTION], sending_payload, blocking=True
                     )
                 )
             )

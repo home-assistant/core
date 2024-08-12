@@ -137,6 +137,7 @@ class SwitcherThermostatButtonEntity(
 
         try:
             async with SwitcherType2Api(
+                self.coordinator.data.device_type,
                 self.coordinator.data.ip_address,
                 self.coordinator.data.device_id,
                 self.coordinator.data.device_key,

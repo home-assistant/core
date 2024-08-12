@@ -34,6 +34,7 @@ import multidict
 import pytest
 import pytest_socket
 import requests_mock
+import respx
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import block_async_io
@@ -83,7 +84,7 @@ from homeassistant.helpers.translation import _TranslationsCacheData
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
-from homeassistant.util.async_ import create_eager_task
+from homeassistant.util.async_ import create_eager_task, get_scheduled_timer_handles
 from homeassistant.util.json import json_loads
 
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
@@ -371,7 +372,7 @@ def verify_cleanup(
     if tasks:
         event_loop.run_until_complete(asyncio.wait(tasks))
 
-    for handle in event_loop._scheduled:  # type: ignore[attr-defined]
+    for handle in get_scheduled_timer_handles(event_loop):
         if not handle.cancelled():
             with long_repr_strings():
                 if expected_lingering_timers:
@@ -397,6 +398,13 @@ def verify_cleanup(
     finally:
         # Restore the default time zone to not break subsequent tests
         dt_util.DEFAULT_TIME_ZONE = datetime.UTC
+
+    try:
+        # Verify respx.mock has been cleaned up
+        assert not respx.mock.routes, "respx.mock routes not cleaned up, maybe the test needs to be decorated with @respx.mock"
+    finally:
+        # Clear mock routes not break subsequent tests
+        respx.mock.clear()
 
 
 @pytest.fixture(autouse=True)
@@ -1399,6 +1407,7 @@ async def _async_init_recorder_component(
     db_url: str | None = None,
     *,
     expected_setup_result: bool,
+    wait_setup: bool,
 ) -> None:
     """Initialize the recorder asynchronously."""
     # pylint: disable-next=import-outside-toplevel
@@ -1416,10 +1425,14 @@ async def _async_init_recorder_component(
         setup_task = asyncio.ensure_future(
             async_setup_component(hass, recorder.DOMAIN, {recorder.DOMAIN: config})
         )
-        # Wait for recorder integration to setup
-        setup_result = await setup_task
-        assert setup_result == expected_setup_result
-        assert (recorder.DOMAIN in hass.config.components) == expected_setup_result
+        if wait_setup:
+            # Wait for recorder integration to setup
+            setup_result = await setup_task
+            assert setup_result == expected_setup_result
+            assert (recorder.DOMAIN in hass.config.components) == expected_setup_result
+        else:
+            # Wait for recorder to connect to the database
+            await recorder_helper.async_wait_recorder(hass)
     _LOGGER.info(
         "Test recorder successfully started, database location: %s",
         config[recorder.CONF_DB_URL],
@@ -1585,6 +1598,7 @@ async def async_test_recorder(
             *,
             expected_setup_result: bool = True,
             wait_recorder: bool = True,
+            wait_recorder_setup: bool = True,
         ) -> AsyncGenerator[recorder.Recorder]:
             """Setup and return recorder instance."""  # noqa: D401
             await _async_init_recorder_component(
@@ -1592,6 +1606,7 @@ async def async_test_recorder(
                 config,
                 recorder_db_url,
                 expected_setup_result=expected_setup_result,
+                wait_setup=wait_recorder_setup,
             )
             await hass.async_block_till_done()
             instance = hass.data[recorder.DATA_INSTANCE]
@@ -1621,6 +1636,7 @@ async def async_setup_recorder_instance(
             *,
             expected_setup_result: bool = True,
             wait_recorder: bool = True,
+            wait_recorder_setup: bool = True,
         ) -> AsyncGenerator[recorder.Recorder]:
             """Set up and return recorder instance."""
 
@@ -1630,6 +1646,7 @@ async def async_setup_recorder_instance(
                     config,
                     expected_setup_result=expected_setup_result,
                     wait_recorder=wait_recorder,
+                    wait_recorder_setup=wait_recorder_setup,
                 )
             )
 

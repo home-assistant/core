@@ -49,12 +49,37 @@
       }
     }
   },
+  "services": {
+    "fetch_connections": {
+      "name": "Fetch Connections",
+      "description": "Fetch a list of connections from the swiss public transport.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Instance",
+          "description": "Swiss public transport instance to fetch connections for."
+        },
+        "limit": {
+          "name": "Limit",
+          "description": "Number of connections to fetch from [1-15]"
+        }
+      }
+    }
+  },
   "exceptions": {
     "invalid_data": {
       "message": "Setup failed for entry {config_title} with invalid data, check at the [stationboard]({stationboard_url}) if your station names are valid.\n{error}"
     },
     "request_timeout": {
       "message": "Timeout while connecting for entry {config_title}.\n{error}"
+    },
+    "cannot_connect": {
+      "message": "Cannot connect to server.\n{error}"
+    },
+    "not_loaded": {
+      "message": "{target} is not loaded."
+    },
+    "config_entry_not_found": {
+      "message": "Swiss public transport integration instance \"{target}\" not found."
     }
   }
 }
