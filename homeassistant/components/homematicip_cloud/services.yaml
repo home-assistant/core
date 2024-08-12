@@ -99,7 +99,7 @@ reset_energy_counter:
       selector:
         text:
 
-set_cooling:
+set_home_cooling_mode:
   fields:
     cooling:
       default: true

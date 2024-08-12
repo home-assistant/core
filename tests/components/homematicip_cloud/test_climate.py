@@ -634,14 +634,16 @@ async def test_hmip_climate_services(
     assert len(home._connection.mock_calls) == 10
 
 
-async def test_hmip_set_cooling(hass: HomeAssistant, mock_hap_with_service) -> None:
-    """Test HomematicipSetCooling."""
+async def test_hmip_set_home_cooling_mode(
+    hass: HomeAssistant, mock_hap_with_service
+) -> None:
+    """Test HomematicipSetHomeCoolingMode."""
 
     home = mock_hap_with_service.home
 
     await hass.services.async_call(
         "homematicip_cloud",
-        "set_cooling",
+        "set_home_cooling_mode",
         {"accesspoint_id": HAPID, "cooling": False},
         blocking=True,
     )
@@ -651,7 +653,7 @@ async def test_hmip_set_cooling(hass: HomeAssistant, mock_hap_with_service) -> N
 
     await hass.services.async_call(
         "homematicip_cloud",
-        "set_cooling",
+        "set_home_cooling_mode",
         {"accesspoint_id": HAPID, "cooling": True},
         blocking=True,
     )
@@ -659,7 +661,9 @@ async def test_hmip_set_cooling(hass: HomeAssistant, mock_hap_with_service) -> N
     assert home.mock_calls[-1][1]
     assert len(home._connection.mock_calls) == 2
 
-    await hass.services.async_call("homematicip_cloud", "set_cooling", blocking=True)
+    await hass.services.async_call(
+        "homematicip_cloud", "set_home_cooling_mode", blocking=True
+    )
     assert home.mock_calls[-1][0] == "set_cooling"
     assert home.mock_calls[-1][1]
     assert len(home._connection.mock_calls) == 3
@@ -667,7 +671,7 @@ async def test_hmip_set_cooling(hass: HomeAssistant, mock_hap_with_service) -> N
     not_existing_hap_id = "5555F7110000000000000001"
     await hass.services.async_call(
         "homematicip_cloud",
-        "set_cooling",
+        "set_home_cooling_mode",
         {"accesspoint_id": not_existing_hap_id, "cooling": True},
         blocking=True,
     )

@@ -43,7 +43,7 @@ SERVICE_DEACTIVATE_VACATION = "deactivate_vacation"
 SERVICE_DUMP_HAP_CONFIG = "dump_hap_config"
 SERVICE_RESET_ENERGY_COUNTER = "reset_energy_counter"
 SERVICE_SET_ACTIVE_CLIMATE_PROFILE = "set_active_climate_profile"
-SERVICE_SET_COOLING = "set_cooling"
+SERVICE_SET_HOME_COOLING_MODE = "set_home_cooling_mode"
 
 HMIPC_SERVICES = [
     SERVICE_ACTIVATE_ECO_MODE_WITH_DURATION,
@@ -54,7 +54,7 @@ HMIPC_SERVICES = [
     SERVICE_DUMP_HAP_CONFIG,
     SERVICE_RESET_ENERGY_COUNTER,
     SERVICE_SET_ACTIVE_CLIMATE_PROFILE,
-    SERVICE_SET_COOLING,
+    SERVICE_SET_HOME_COOLING_MODE,
 ]
 
 SCHEMA_ACTIVATE_ECO_MODE_WITH_DURATION = vol.Schema(
@@ -110,7 +110,7 @@ SCHEMA_RESET_ENERGY_COUNTER = vol.Schema(
     {vol.Required(ATTR_ENTITY_ID): comp_entity_ids}
 )
 
-SCHEMA_SET_COOLING = vol.Schema(
+SCHEMA_SET_HOME_COOLING_MODE = vol.Schema(
     {
         vol.Optional(ATTR_COOLING, default=True): cv.boolean,
         vol.Optional(ATTR_ACCESSPOINT_ID): vol.All(str, vol.Length(min=24, max=24)),
@@ -145,8 +145,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             await _async_reset_energy_counter(hass, service)
         elif service_name == SERVICE_SET_ACTIVE_CLIMATE_PROFILE:
             await _set_active_climate_profile(hass, service)
-        elif service_name == SERVICE_SET_COOLING:
-            await _async_set_cooling(hass, service)
+        elif service_name == SERVICE_SET_HOME_COOLING_MODE:
+            await _async_set_home_cooling_mode(hass, service)
 
     hass.services.async_register(
         domain=HMIPC_DOMAIN,
@@ -209,9 +209,9 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass=hass,
         domain=HMIPC_DOMAIN,
-        service=SERVICE_SET_COOLING,
+        service=SERVICE_SET_HOME_COOLING_MODE,
         service_func=async_call_hmipc_service,
-        schema=SCHEMA_SET_COOLING,
+        schema=SCHEMA_SET_HOME_COOLING_MODE,
     )
 
 
@@ -344,7 +344,7 @@ async def _async_reset_energy_counter(hass: HomeAssistant, service: ServiceCall)
                     await device.reset_energy_counter()
 
 
-async def _async_set_cooling(hass: HomeAssistant, service: ServiceCall):
+async def _async_set_home_cooling_mode(hass: HomeAssistant, service: ServiceCall):
     """Service to set the cooling mode."""
     cooling = service.data[ATTR_COOLING]
 

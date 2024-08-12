@@ -135,9 +135,9 @@
         }
       }
     },
-    "set_cooling": {
-      "name": "Set cooling mode",
-      "description": "Set the cooling mode for the home.",
+    "set_home_cooling_mode": {
+      "name": "Set home cooling mode",
+      "description": "Set the heating/cooling mode for the entire home",
       "fields": {
         "accesspoint_id": {
           "name": "[%key:component::homematicip_cloud::services::activate_eco_mode_with_duration::fields::accesspoint_id::name%]",
@@ -145,7 +145,7 @@
         },
         "cooling": {
           "name": "Cooling",
-          "description": "To enable or disable cooling"
+          "description": "Enable for cooling mode, disable for heating mode"
         }
       }
     }
