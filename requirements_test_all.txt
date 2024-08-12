@@ -931,7 +931,7 @@ home-assistant-intents==2024.8.7
 homeconnect==0.8.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.1.1
+homematicip==1.1.2
 
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
