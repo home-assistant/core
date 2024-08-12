@@ -88,12 +88,12 @@ async def test_command_template_value(hass: HomeAssistant) -> None:
     variables = {"id": 1234, "some_var": "beer"}
 
     # test rendering value
-    tpl = template.Template("{{ value + 1 }}", hass)
+    tpl = template.Template("{{ value + 1 }}", hass=hass)
     cmd_tpl = mqtt.MqttCommandTemplate(tpl)
     assert cmd_tpl.async_render(4321) == "4322"
 
     # test variables at rendering
-    tpl = template.Template("{{ some_var }}", hass)
+    tpl = template.Template("{{ some_var }}", hass=hass)
     cmd_tpl = mqtt.MqttCommandTemplate(tpl)
     assert cmd_tpl.async_render(None, variables=variables) == "beer"
 
@@ -161,7 +161,7 @@ async def test_command_template_variables(
 
 async def test_command_template_fails(hass: HomeAssistant) -> None:
     """Test the exception handling of an MQTT command template."""
-    tpl = template.Template("{{ value * 2 }}", hass)
+    tpl = template.Template("{{ value * 2 }}", hass=hass)
     cmd_tpl = mqtt.MqttCommandTemplate(tpl)
     with pytest.raises(MqttCommandTemplateException) as exc:
         cmd_tpl.async_render(None)
@@ -174,12 +174,12 @@ async def test_value_template_value(hass: HomeAssistant) -> None:
     variables = {"id": 1234, "some_var": "beer"}
 
     # test rendering value
-    tpl = template.Template("{{ value_json.id }}", hass)
+    tpl = template.Template("{{ value_json.id }}", hass=hass)
     val_tpl = mqtt.MqttValueTemplate(tpl)
     assert val_tpl.async_render_with_possible_json_value('{"id": 4321}') == "4321"
 
     # test variables at rendering
-    tpl = template.Template("{{ value_json.id }} {{ some_var }} {{ code }}", hass)
+    tpl = template.Template("{{ value_json.id }} {{ some_var }} {{ code }}", hass=hass)
     val_tpl = mqtt.MqttValueTemplate(tpl, config_attributes={"code": 1234})
     assert (
         val_tpl.async_render_with_possible_json_value(
@@ -189,7 +189,7 @@ async def test_value_template_value(hass: HomeAssistant) -> None:
     )
 
     # test with default value if an error occurs due to an invalid template
-    tpl = template.Template("{{ value_json.id | as_datetime }}", hass)
+    tpl = template.Template("{{ value_json.id | as_datetime }}", hass=hass)
     val_tpl = mqtt.MqttValueTemplate(tpl)
     assert (
         val_tpl.async_render_with_possible_json_value('{"otherid": 4321}', "my default")
@@ -200,19 +200,19 @@ async def test_value_template_value(hass: HomeAssistant) -> None:
     entity = Entity()
     entity.hass = hass
     entity.entity_id = "select.test"
-    tpl = template.Template("{{ value_json.id }}", hass)
+    tpl = template.Template("{{ value_json.id }}", hass=hass)
     val_tpl = mqtt.MqttValueTemplate(tpl, entity=entity)
     assert val_tpl.async_render_with_possible_json_value('{"id": 4321}') == "4321"
 
     # test this object in a template
-    tpl2 = template.Template("{{ this.entity_id }}", hass)
+    tpl2 = template.Template("{{ this.entity_id }}", hass=hass)
     val_tpl2 = mqtt.MqttValueTemplate(tpl2, entity=entity)
     assert val_tpl2.async_render_with_possible_json_value("bla") == "select.test"
 
     with patch(
         "homeassistant.helpers.template.TemplateStateFromEntityId", MagicMock()
     ) as template_state_calls:
-        tpl3 = template.Template("{{ this.entity_id }}", hass)
+        tpl3 = template.Template("{{ this.entity_id }}", hass=hass)
         val_tpl3 = mqtt.MqttValueTemplate(tpl3, entity=entity)
         val_tpl3.async_render_with_possible_json_value("call1")
         val_tpl3.async_render_with_possible_json_value("call2")
@@ -223,7 +223,7 @@ async def test_value_template_fails(hass: HomeAssistant) -> None:
     """Test the rendering of MQTT value template fails."""
     entity = MockEntity(entity_id="sensor.test")
     entity.hass = hass
-    tpl = template.Template("{{ value_json.some_var * 2 }}", hass)
+    tpl = template.Template("{{ value_json.some_var * 2 }}", hass=hass)
     val_tpl = mqtt.MqttValueTemplate(tpl, entity=entity)
     with pytest.raises(MqttValueTemplateException) as exc:
         val_tpl.async_render_with_possible_json_value('{"some_var": null }')
