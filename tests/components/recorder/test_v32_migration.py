@@ -9,6 +9,7 @@ import pytest
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session
+from sqlalchemy.pool import StaticPool
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import core, migration, statistics
@@ -669,10 +670,13 @@ async def test_out_of_disk_space_while_removing_foreign_key(
 
     def _get_event_id_foreign_keys():
         assert instance.engine is not None
+        return _get_event_id_foreign_keys_impl(instance.engine)
+
+    def _get_event_id_foreign_keys_impl(engine):
         return next(
             (
                 fk  # type: ignore[misc]
-                for fk in inspect(instance.engine).get_foreign_keys("states")
+                for fk in inspect(engine).get_foreign_keys("states")
                 if fk["constrained_columns"] == ["event_id"]
             ),
             None,
@@ -680,7 +684,10 @@ async def test_out_of_disk_space_while_removing_foreign_key(
 
     def _get_states_index_names():
         with session_scope(hass=hass) as session:
-            return inspect(session.connection()).get_indexes("states")
+            return _get_states_index_names_impl(session)
+
+    def _get_states_index_names_impl(session):
+        return inspect(session.connection()).get_indexes("states")
 
     with (
         patch.object(recorder, "db_schema", old_db_schema),
@@ -749,24 +756,22 @@ async def test_out_of_disk_space_while_removing_foreign_key(
     ):
         async with (
             async_test_home_assistant() as hass,
-            async_test_recorder(hass) as instance,
+            async_test_recorder(hass, wait_recorder=False) as instance,
         ):
             await hass.async_block_till_done()
-
-            # We need to wait for all the migration tasks to complete
-            # before we can check the database.
-            for _ in range(number_of_migrations):
-                await instance.async_block_till_done()
-                await async_wait_recording_done(hass)
-
-            states_indexes = await instance.async_add_executor_job(
-                _get_states_index_names
-            )
-            states_index_names = {index["name"] for index in states_indexes}
-            assert instance.use_legacy_events_index is True
-            assert await instance.async_add_executor_job(_get_event_id_foreign_keys)
+            # Wait for recorder thread to finish
+            instance.join()
 
             await hass.async_stop()
+
+    engine = create_engine(recorder_db_url, poolclass=StaticPool)
+    with Session(engine) as session:
+        states_indexes = _get_states_index_names_impl(session)
+        states_index_names = {index["name"] for index in states_indexes}
+        assert instance.use_legacy_events_index is True
+        assert _get_event_id_foreign_keys_impl(engine)
+
+    engine.dispose()
 
     # Now run it again to verify the table rebuild tries again
     caplog.clear()
