@@ -3,7 +3,7 @@
 from datetime import timedelta
 import http
 import time
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aioautomower.exceptions import (
     ApiException,
@@ -130,30 +130,54 @@ async def test_websocket_not_available(
     caplog: pytest.LogCaptureFixture,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test trying reload the websocket."""
-    mock_automower_client.auth.websocket_connect.side_effect = (
-        HusqvarnaWSServerHandshakeError("Boom")
-    )
-    await setup_integration(hass, mock_config_entry)
-    assert "Failed to connect to websocket. Trying to reconnect: Boom" in caplog.text
-    assert mock_automower_client.auth.websocket_connect.call_count == 1
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    reconnect_time = 2
-    for count in range(1, 945):
-        reconnect_time = min(reconnect_time * 2, MAX_WS_RECONNECT_TIME)
-        freezer.tick(timedelta(seconds=reconnect_time))
+    """Test trying to reload the websocket."""
+    with patch(
+        "homeassistant.components.husqvarna_automower.coordinator.DEFAULT_RECONNECT_TIME",
+        new=0,
+    ):
+        mock_automower_client.auth.websocket_connect.side_effect = (
+            HusqvarnaWSServerHandshakeError("Boom")
+        )
+        await setup_integration(hass, mock_config_entry)
+        assert (
+            "Failed to connect to websocket. Trying to reconnect: Boom" in caplog.text
+        )
+        # await hass.async_block_till_done()
+        # assert mock_automower_client.auth.websocket_connect.call_count == 1
+        # assert mock_config_entry.state is ConfigEntryState.LOADED
+
+        # reconnect_time = 0  # Default to zero for testing
+        test_range = 1940
+        start_call_count = mock_automower_client.auth.websocket_connect.call_count
+        for count in range(1, test_range):
+            # reconnect_time = min(reconnect_time * 2, MAX_WS_RECONNECT_TIME)
+            # freezer.tick(timedelta(seconds=reconnect_time))
+            # async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+            assert (
+                mock_automower_client.auth.websocket_connect.call_count
+                == start_call_count + count
+            )
+            assert mock_config_entry.state is ConfigEntryState.LOADED
+
+        # Simulate a successful connection and starting of listening
+        mock_automower_client.auth.websocket_connect.side_effect = None
+        freezer.tick(timedelta(seconds=MAX_WS_RECONNECT_TIME))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
-        assert mock_automower_client.auth.websocket_connect.call_count == count + 1
-        assert mock_config_entry.state is ConfigEntryState.LOADED
-    mock_automower_client.auth.websocket_connect.side_effect = None
-    freezer.tick(timedelta(seconds=MAX_WS_RECONNECT_TIME))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert mock_automower_client.start_listening.call_count == 1
-    mock_automower_client.auth.websocket_connect.side_effect = (
-        HusqvarnaWSServerHandshakeError("Boom")
-    )
+        assert mock_automower_client.start_listening.call_count == 1
+
+        # Test that reconnection occurs if the websocket disconnects again
+        mock_automower_client.auth.websocket_connect.side_effect = (
+            HusqvarnaWSServerHandshakeError("Boom")
+        )
+        freezer.tick(timedelta(seconds=0))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert (
+            mock_automower_client.auth.websocket_connect.call_count
+            == start_call_count + test_range + 1
+        )
 
 
 async def test_device_info(

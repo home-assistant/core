@@ -22,6 +22,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 MAX_WS_RECONNECT_TIME = 600
 SCAN_INTERVAL = timedelta(minutes=8)
+DEFAULT_RECONNECT_TIME = 2  # Define a default reconnect time
 
 
 class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttributes]]):
@@ -38,8 +39,10 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
             update_interval=SCAN_INTERVAL,
         )
         self.api = api
-
         self.ws_connected: bool = False
+        self.reconnect_time: int = (
+            DEFAULT_RECONNECT_TIME  # Initialize the reconnect time
+        )
 
     async def _async_update_data(self) -> dict[str, MowerAttributes]:
         """Subscribe for websocket and poll data from the API."""
@@ -64,22 +67,22 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
         hass: HomeAssistant,
         entry: ConfigEntry,
         automower_client: AutomowerSession,
-        reconnect_time: int = 2,
     ) -> None:
         """Listen with the client."""
         try:
             await automower_client.auth.websocket_connect()
-        except HusqvarnaWSServerHandshakeError as err:
+            await automower_client.start_listening()  # Ensure we catch errors here too
+            self.reconnect_time = DEFAULT_RECONNECT_TIME  # Reset reconnect time after successful connection
+        except (HusqvarnaWSServerHandshakeError, Exception) as err:
             _LOGGER.debug(
-                "Failed to connect to websocket. Trying to reconnect: %s", err
+                "Failed to connect to websocket. Trying to reconnect: %s",
+                err,
             )
-            if not hass.is_stopping:
-                await asyncio.sleep(reconnect_time)
-                reconnect_time = min(reconnect_time * 2, MAX_WS_RECONNECT_TIME)
-                entry.async_create_background_task(
-                    hass,
-                    self.client_listen(hass, entry, automower_client, reconnect_time),
-                    "reconnect_task",
-                )
-        else:
-            await automower_client.start_listening()
+        if not hass.is_stopping:
+            await asyncio.sleep(self.reconnect_time)
+            self.reconnect_time = min(self.reconnect_time * 2, MAX_WS_RECONNECT_TIME)
+            entry.async_create_background_task(
+                hass,
+                self.client_listen(hass, entry, automower_client),
+                "reconnect_task",
+            )
