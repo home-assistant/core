@@ -365,7 +365,6 @@ def async_prepare_call_from_config(
 
     if isinstance(domain_service, template.Template):
         try:
-            domain_service.hass = hass
             domain_service = domain_service.async_render(variables)
             domain_service = cv.service(domain_service)
         except TemplateError as ex:
@@ -384,10 +383,8 @@ def async_prepare_call_from_config(
         conf = config[CONF_TARGET]
         try:
             if isinstance(conf, template.Template):
-                conf.hass = hass
                 target.update(conf.async_render(variables))
             else:
-                template.attach(hass, conf)
                 target.update(template.render_complex(conf, variables))
 
             if CONF_ENTITY_ID in target:
@@ -413,7 +410,6 @@ def async_prepare_call_from_config(
         if conf not in config:
             continue
         try:
-            template.attach(hass, config[conf])
             render = template.render_complex(config[conf], variables)
             if not isinstance(render, dict):
                 raise HomeAssistantError(
