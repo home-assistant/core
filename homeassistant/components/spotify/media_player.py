@@ -34,7 +34,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from . import SpotifyConfigEntry
 from .browse_media import async_browse_media_internal
-from .const import DOMAIN, MEDIA_PLAYER_PREFIX, PLAYABLE_MEDIA_TYPES, SPOTIFY_SCOPES
+from .const import DOMAIN, MEDIA_PLAYER_PREFIX, PLAYABLE_MEDIA_TYPES
 from .coordinator import SpotifyCoordinator
 from .util import fetch_image_url
 
@@ -139,10 +139,6 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
             name=f"Spotify {name}",
             entry_type=DeviceEntryType.SERVICE,
             configuration_url="https://open.spotify.com",
-        )
-
-        self._scope_ok = set(coordinator.session.token["scope"].split(" ")).issuperset(
-            SPOTIFY_SCOPES
         )
 
     @property
@@ -416,13 +412,6 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
-
-        if not self._scope_ok:
-            _LOGGER.debug(
-                "Spotify scopes are not set correctly, this can impact features such as"
-                " media browsing"
-            )
-            raise NotImplementedError
 
         return await async_browse_media_internal(
             self.hass,
