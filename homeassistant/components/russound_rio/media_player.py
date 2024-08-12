@@ -128,11 +128,18 @@ class RussoundZoneDevice(MediaPlayerEntity):
         self._zone = zone
         self._sources = sources
         self._attr_name = zone.name
-        self._attr_unique_id = f"{self._controller.mac_address}-{zone.device_str()}"
+        primary_mac_address = (
+            self._controller.mac_address
+            or self._controller.parent_controller.mac_address
+        )
+        self._attr_unique_id = f"{primary_mac_address}-{zone.device_str()}"
+        device_identifier = (
+            self._controller.mac_address
+            or f"{primary_mac_address}-{self._controller.controller_id}"
+        )
         self._attr_device_info = DeviceInfo(
             # Use MAC address of Russound device as identifier
-            identifiers={(DOMAIN, self._controller.mac_address)},
-            connections={(CONNECTION_NETWORK_MAC, self._controller.mac_address)},
+            identifiers={(DOMAIN, device_identifier)},
             manufacturer="Russound",
             name=self._controller.controller_type,
             model=self._controller.controller_type,
@@ -143,6 +150,10 @@ class RussoundZoneDevice(MediaPlayerEntity):
                 DOMAIN,
                 self._controller.parent_controller.mac_address,
             )
+        else:
+            self._attr_device_info["connections"] = {
+                (CONNECTION_NETWORK_MAC, self._controller.mac_address)
+            }
         for flag, feature in MP_FEATURES_BY_FLAG.items():
             if flag in zone.instance.supported_features:
                 self._attr_supported_features |= feature
