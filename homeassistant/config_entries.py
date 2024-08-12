@@ -434,26 +434,10 @@ class ConfigEntry(Generic[_DataT]):
     def __setattr__(self, key: str, value: Any) -> None:
         """Set an attribute."""
         if key in UPDATE_ENTRY_CONFIG_ENTRY_ATTRS:
-            if key == "unique_id":
-                # Setting unique_id directly will corrupt internal state
-                # There is no deprecation period for this key
-                # as changing them will corrupt internal state
-                # so we raise an error here
-                raise AttributeError(
-                    "unique_id cannot be changed directly, use async_update_entry instead"
-                )
-            report(
-                f'sets "{key}" directly to update a config entry. This is deprecated and will'
-                " stop working in Home Assistant 2024.9, it should be updated to use"
-                " async_update_entry instead",
-                error_if_core=False,
+            raise AttributeError(
+                f"{key} cannot be changed directly, use async_update_entry instead"
             )
-
-        elif key in FROZEN_CONFIG_ENTRY_ATTRS:
-            # These attributes are frozen and cannot be changed
-            # There is no deprecation period for these
-            # as changing them will corrupt internal state
-            # so we raise an error here
+        if key in FROZEN_CONFIG_ENTRY_ATTRS:
             raise AttributeError(f"{key} cannot be changed")
 
         super().__setattr__(key, value)
