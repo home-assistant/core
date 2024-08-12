@@ -13,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import comp_entity_ids
 from homeassistant.helpers.service import (
@@ -361,5 +362,8 @@ def _get_home(hass: HomeAssistant, hapid: str) -> AsyncHome | None:
     if hap := hass.data[HMIPC_DOMAIN].get(hapid):
         return hap.home
 
-    _LOGGER.info("No matching access point found for access point id %s", hapid)
-    return None
+    raise ServiceValidationError(
+        translation_domain=HMIPC_DOMAIN,
+        translation_key="access_point_not_found",
+        translation_placeholders={"id": hapid},
+    )
