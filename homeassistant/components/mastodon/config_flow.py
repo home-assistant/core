@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from mastodon.Mastodon import MastodonNetworkError, MastodonUnauthorizedError
@@ -42,12 +43,27 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
+REAUTH_SCHEMA = vol.Schema(
+    {
+        vol.Required(
+            CONF_CLIENT_ID,
+        ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
+        vol.Required(
+            CONF_CLIENT_SECRET,
+        ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
+        vol.Required(
+            CONF_ACCESS_TOKEN,
+        ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
+    }
+)
+
 
 class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    config_entry: ConfigEntry
+    config_entry: ConfigEntry | None = None
+    base_url: str
 
     def check_connection(
         self,
@@ -126,6 +142,51 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.show_user_form(user_input, errors)
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        self.base_url = entry_data[CONF_BASE_URL]
+        self.config_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauth dialog."""
+        errors: dict[str, str] = {}
+        if user_input:
+            _, _, errors = await self.hass.async_add_executor_job(
+                self.check_connection,
+                self.base_url,
+                user_input[CONF_CLIENT_ID],
+                user_input[CONF_CLIENT_SECRET],
+                user_input[CONF_ACCESS_TOKEN],
+            )
+
+            if not errors:
+                assert self.config_entry
+                # Access token only used to auth but as client_id originally captured and
+                # used as unique_id we capture again/validate to avoid switching accounts.
+                if self.config_entry.unique_id == user_input[CONF_CLIENT_ID]:
+                    return self.async_update_reload_and_abort(
+                        self.config_entry,
+                        data={
+                            **self.config_entry.data,
+                            CONF_CLIENT_ID: user_input[CONF_CLIENT_ID],
+                            CONF_CLIENT_SECRET: user_input[CONF_CLIENT_SECRET],
+                            CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN],
+                        },
+                    )
+                return self.async_abort(reason="wrong_client_key")
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=REAUTH_SCHEMA,
+            errors=errors,
+        )
 
     async def async_step_import(self, import_config: ConfigType) -> ConfigFlowResult:
         """Import a config entry from configuration.yaml."""

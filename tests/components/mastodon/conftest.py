@@ -32,6 +32,7 @@ def mock_mastodon_client() -> Generator[AsyncMock]:
         ) as mock_client,
     ):
         client = mock_client.return_value
+        client.client_id = "client_id"
         client.instance.return_value = load_json_object_fixture("instance.json", DOMAIN)
         client.account_verify_credentials.return_value = load_json_object_fixture(
             "account_verify_credentials.json", DOMAIN

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from mastodon.Mastodon import Mastodon, MastodonError
+from mastodon.Mastodon import Mastodon, MastodonError, MastodonUnauthorizedError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -15,7 +15,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import discovery
 
 from .const import CONF_BASE_URL, DOMAIN
@@ -46,9 +46,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -> 
             setup_mastodon,
             entry,
         )
-
-    except MastodonError as ex:
-        raise ConfigEntryNotReady("Failed to connect") from ex
+    except MastodonUnauthorizedError as error:
+        raise ConfigEntryAuthFailed from error
+    except MastodonError as error:
+        raise ConfigEntryNotReady(error) from error
 
     assert entry.unique_id
 

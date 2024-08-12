@@ -11,10 +11,20 @@
         "data_description": {
           "base_url": "The URL of your Mastodon instance."
         }
+      },
+      "reauth_confirm": {
+        "description": "Please reauthenticate with Mastodon.",
+        "data": {
+          "client_id": "Client Key",
+          "client_secret": "Client Secret",
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        }
       }
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_client_key": "You have to use the same client key that was used to configure the integration."
     },
     "error": {
       "unauthorized_error": "The credentials are incorrect.",

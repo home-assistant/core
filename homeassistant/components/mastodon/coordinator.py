@@ -6,9 +6,10 @@ from datetime import timedelta
 from typing import Any
 
 from mastodon import Mastodon
-from mastodon.Mastodon import MastodonError
+from mastodon.Mastodon import MastodonError, MastodonUnauthorizedError
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
@@ -29,6 +30,8 @@ class MastodonCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             account: dict = await self.hass.async_add_executor_job(
                 self.client.account_verify_credentials
             )
+        except MastodonUnauthorizedError as error:
+            raise ConfigEntryAuthFailed from error
         except MastodonError as ex:
             raise UpdateFailed(ex) from ex
 
