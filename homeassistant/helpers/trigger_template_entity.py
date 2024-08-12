@@ -30,7 +30,7 @@ from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from . import config_validation as cv
 from .entity import Entity
-from .template import attach as render_complex
+from .template import render_complex
 from .typing import ConfigType
 
 CONF_AVAILABILITY = "availability"
