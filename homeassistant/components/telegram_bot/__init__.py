@@ -408,7 +408,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 ):
                     data[attribute] = attribute_templ
                 else:
-                    attribute_templ.hass = hass
                     try:
                         data[attribute] = attribute_templ.async_render(
                             parse_result=False
