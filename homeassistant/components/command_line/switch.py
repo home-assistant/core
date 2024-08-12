@@ -111,7 +111,7 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
 
     async def _switch(self, command: str) -> bool:
         """Execute the actual commands."""
-        LOGGER.info("Running command: %s", command)
+        LOGGER.debug("Running command: %s", command)
 
         success = await async_call_shell_with_timeout(command, self._timeout) == 0
 
@@ -122,12 +122,12 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
 
     async def _async_query_state_value(self, command: str) -> str | None:
         """Execute state command for return value."""
-        LOGGER.info("Running state value command: %s", command)
+        LOGGER.debug("Running state value command: %s", command)
         return await async_check_output_or_log(command, self._timeout)
 
     async def _async_query_state_code(self, command: str) -> bool:
         """Execute state command for return code."""
-        LOGGER.info("Running state code command: %s", command)
+        LOGGER.debug("Running state code command: %s", command)
         return (
             await async_call_shell_with_timeout(
                 command, self._timeout, log_return_code=False
