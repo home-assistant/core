@@ -4,10 +4,15 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
+from homeassistant.components.remote import (
+    DOMAIN as REMOTE_DOMAIN,
+    SERVICE_SEND_COMMAND,
+)
 from homeassistant.const import (
+    ATTR_COMMAND,
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -18,6 +23,14 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 
 from . import setup_integration
+from .const import (
+    TEST_COMMAND,
+    TEST_CON_ERROR,
+    TEST_FAILED_CMD,
+    TEST_FAILED_OFF,
+    TEST_FAILED_ON,
+    TEST_IMP_ERROR,
+)
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -39,6 +52,7 @@ async def test_remote_power(
     hass: HomeAssistant,
     mock_madvr_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test turning on the remote entity."""
 
@@ -61,11 +75,47 @@ async def test_remote_power(
 
     mock_madvr_client.power_on.assert_called_once()
 
+    # cover exception cases
+    caplog.clear()
+    mock_madvr_client.power_off.side_effect = TEST_CON_ERROR
+    await hass.services.async_call(
+        REMOTE_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    assert TEST_FAILED_OFF in caplog.text
+
+    # Test turning off with NotImplementedError
+    caplog.clear()
+    mock_madvr_client.power_off.side_effect = TEST_IMP_ERROR
+    await hass.services.async_call(
+        REMOTE_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    assert TEST_FAILED_OFF in caplog.text
+
+    # Reset side_effect for power_off
+    mock_madvr_client.power_off.side_effect = None
+
+    # Test turning on with ConnectionError
+    caplog.clear()
+    mock_madvr_client.power_on.side_effect = TEST_CON_ERROR
+    await hass.services.async_call(
+        REMOTE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    assert TEST_FAILED_ON in caplog.text
+
+    # Test turning on with NotImplementedError
+    caplog.clear()
+    mock_madvr_client.power_on.side_effect = TEST_IMP_ERROR
+    await hass.services.async_call(
+        REMOTE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    assert TEST_FAILED_ON in caplog.text
+
 
 async def test_send_command(
     hass: HomeAssistant,
     mock_madvr_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test sending command to the remote entity."""
 
@@ -77,9 +127,29 @@ async def test_send_command(
 
     await hass.services.async_call(
         REMOTE_DOMAIN,
-        "send_command",
-        {ATTR_ENTITY_ID: entity_id, "command": "test"},
+        SERVICE_SEND_COMMAND,
+        {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: TEST_COMMAND},
         blocking=True,
     )
 
-    mock_madvr_client.add_command_to_queue.assert_called_once_with(["test"])
+    mock_madvr_client.add_command_to_queue.assert_called_once_with([TEST_COMMAND])
+    # cover exceptions
+    # Test ConnectionError
+    mock_madvr_client.add_command_to_queue.side_effect = TEST_CON_ERROR
+    await hass.services.async_call(
+        REMOTE_DOMAIN,
+        SERVICE_SEND_COMMAND,
+        {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: TEST_COMMAND},
+        blocking=True,
+    )
+    assert TEST_FAILED_CMD in caplog.text
+
+    # Test NotImplementedError
+    mock_madvr_client.add_command_to_queue.side_effect = TEST_IMP_ERROR
+    await hass.services.async_call(
+        REMOTE_DOMAIN,
+        SERVICE_SEND_COMMAND,
+        {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: TEST_COMMAND},
+        blocking=True,
+    )
+    assert TEST_FAILED_CMD in caplog.text

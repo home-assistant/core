@@ -8,11 +8,11 @@ from typing import Any
 from aiohttp.test_utils import TestClient
 import pytest
 
-from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import mailbox
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockModule, mock_integration, mock_platform

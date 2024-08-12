@@ -17,6 +17,7 @@ from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.const import CONF_HOSTS
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture, load_json_value_fixture
 
@@ -453,6 +454,7 @@ def mock_get_music_library_information(
                 "object.container.album.musicAlbum",
             )
         ]
+    return []
 
 
 @pytest.fixture(name="music_library_browse_categories")
@@ -660,3 +662,26 @@ def zgs_event_fixture(hass: HomeAssistant, soco: SoCo, zgs_discovery: str):
         await hass.async_block_till_done(wait_background_tasks=True)
 
     return _wrapper
+
+
+@pytest.fixture(name="sonos_setup_two_speakers")
+async def sonos_setup_two_speakers(
+    hass: HomeAssistant, soco_factory: SoCoMockFactory
+) -> list[MockSoCo]:
+    """Set up home assistant with two Sonos Speakers."""
+    soco_lr = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
+    soco_br = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "media_player": {
+                    "interface_addr": "127.0.0.1",
+                    "hosts": ["10.10.10.1", "10.10.10.2"],
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    return [soco_lr, soco_br]

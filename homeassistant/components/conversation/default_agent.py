@@ -47,6 +47,7 @@ from homeassistant.util.json import JsonObjectType, json_loads_object
 from .const import DEFAULT_EXPOSED_ATTRIBUTES, DOMAIN, ConversationEntityFeature
 from .entity import ConversationEntity
 from .models import ConversationInput, ConversationResult
+from .trace import ConversationTraceEventType, async_conversation_trace_append
 
 _LOGGER = logging.getLogger(__name__)
 _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
@@ -348,6 +349,16 @@ class DefaultAgent(ConversationEntity):
             }
             for entity in result.entities_list
         }
+        async_conversation_trace_append(
+            ConversationTraceEventType.TOOL_CALL,
+            {
+                "intent_name": result.intent.name,
+                "slots": {
+                    entity.name: entity.value or entity.text
+                    for entity in result.entities_list
+                },
+            },
+        )
 
         try:
             intent_response = await intent.async_handle(

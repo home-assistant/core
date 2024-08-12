@@ -55,7 +55,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected error")
             return {"base": "unknown"}, None
-        if not version.valid or version < MIN_REQUIRED_MEALIE_VERSION:
+        if version.valid and version < MIN_REQUIRED_MEALIE_VERSION:
             return {"base": "mealie_version"}, None
         return {}, info.user_id
 
