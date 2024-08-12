@@ -8,6 +8,7 @@ from aioautomower.exceptions import (
     ApiException,
     AuthException,
     HusqvarnaWSServerHandshakeError,
+    TimeoutException,
 )
 from aioautomower.model import MowerAttributes
 from aioautomower.session import AutomowerSession
@@ -73,9 +74,14 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
             await automower_client.auth.websocket_connect()
             await automower_client.start_listening()  # Ensure we catch errors here too
             self.reconnect_time = DEFAULT_RECONNECT_TIME  # Reset reconnect time after successful connection
-        except (HusqvarnaWSServerHandshakeError, Exception) as err:
+        except HusqvarnaWSServerHandshakeError as err:
             _LOGGER.debug(
                 "Failed to connect to websocket. Trying to reconnect: %s",
+                err,
+            )
+        except TimeoutException as err:
+            _LOGGER.debug(
+                "Failed to listen to websocket. Trying to reconnect: %s",
                 err,
             )
         if not hass.is_stopping:
