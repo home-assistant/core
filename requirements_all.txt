@@ -255,7 +255,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.1
+aiohomekit==3.2.2
 
 # homeassistant.components.hue
 aiohue==4.7.2
@@ -374,7 +374,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.0
 
 # homeassistant.components.switcher_kis
-aioswitcher==4.0.0
+aioswitcher==4.0.1
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
