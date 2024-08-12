@@ -56,6 +56,24 @@ async def test_setup_integration_yaml(
     assert entity_state.name == "Test"
 
 
+async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
+    """Test setting up the platform with platform yaml."""
+    await setup.async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "command_line",
+                "command": "echo 1",
+                "payload_on": "1",
+                "payload_off": "0",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 0
+
+
 @pytest.mark.parametrize(
     "get_config",
     [

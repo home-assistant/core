@@ -37,6 +37,8 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up cover controlled by shell commands."""
+    if not discovery_info:
+        return
 
     covers = []
     discovery_info = cast(DiscoveryInfoType, discovery_info)
