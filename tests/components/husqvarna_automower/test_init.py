@@ -147,9 +147,12 @@ async def test_websocket_not_available(
 
         # Initial call count and range for reconnection attempts
         mock_automower_client.reset_mock()
-        recursion_limit = sys.getrecursionlimit()
+        default_recursion_limit = sys.getrecursionlimit()
+        temporary_recursion_limit = 200
+        sys.setrecursionlimit(temporary_recursion_limit)
+        assert sys.getrecursionlimit() == temporary_recursion_limit
         # Perform reconnection attempts
-        for count in range(recursion_limit):
+        for count in range(temporary_recursion_limit):
             await hass.async_block_till_done()
             assert mock_automower_client.auth.websocket_connect.call_count == count + 1
             assert mock_config_entry.state is ConfigEntryState.LOADED
@@ -164,8 +167,10 @@ async def test_websocket_not_available(
         await hass.async_block_till_done()
         assert (
             mock_automower_client.auth.websocket_connect.call_count
-            == recursion_limit + 2
+            == temporary_recursion_limit + 2
         )
+        sys.setrecursionlimit(default_recursion_limit)
+        assert sys.getrecursionlimit() == default_recursion_limit
 
 
 async def test_device_info(
