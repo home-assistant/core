@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from ayla_iot_unofficial.fujitsu_hvac import Capability
+from ayla_iot_unofficial.fujitsu_hvac import Capability, FujitsuHVAC
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -54,7 +54,6 @@ class FujitsuHVACDevice(CoordinatorEntity[FujitsuHVACCoordinator], ClimateEntity
     def __init__(self, coordinator: FujitsuHVACCoordinator, dev_sn: str) -> None:
         """Store the representation of the device and set the static attributes."""
         super().__init__(coordinator, context=dev_sn)
-        self.device = self.coordinator.data[self.coordinator_context]
 
         self._attr_unique_id = self.device.device_serial_number
         self._attr_device_info = DeviceInfo(
@@ -78,6 +77,11 @@ class FujitsuHVACDevice(CoordinatorEntity[FujitsuHVACCoordinator], ClimateEntity
             Capability.SWING_HORIZONTAL
         ) or self.device.has_capability(Capability.SWING_VERTICAL):
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
+
+    @property
+    def device(self) -> FujitsuHVAC:
+        """Return the device object from the coordinator data."""
+        return self.coordinator.data[self.coordinator_context]
 
     @property
     def fan_mode(self) -> str | None:
