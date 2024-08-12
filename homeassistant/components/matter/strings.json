@@ -56,6 +56,11 @@
         "name": "Rain"
       }
     },
+	"button":{
+		"identify":{
+			"name":"Identify"
+		},
+	},
     "climate": {
       "thermostat": {
         "name": "Thermostat"
