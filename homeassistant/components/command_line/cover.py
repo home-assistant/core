@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.components.cover import CoverEntity
 from homeassistant.const import (
@@ -139,10 +139,10 @@ class CommandCover(ManualTriggerEntity, CoverEntity):
 
     async def _async_query_state(self) -> str | None:
         """Query for the state."""
-        if self._command_state:
-            LOGGER.debug("Running state value command: %s", self._command_state)
-            return await async_check_output_or_log(self._command_state, self._timeout)
-        return None
+        if TYPE_CHECKING:
+            assert self._command_state
+        LOGGER.debug("Running state value command: %s", self._command_state)
+        return await async_check_output_or_log(self._command_state, self._timeout)
 
     async def _update_entity_state(self, now: datetime | None = None) -> None:
         """Update the state of the entity."""
