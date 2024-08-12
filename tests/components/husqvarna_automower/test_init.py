@@ -1,6 +1,5 @@
 """Tests for init module."""
 
-from datetime import timedelta
 import http
 import sys
 import time
@@ -16,9 +15,6 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN, OAUTH2_TOKEN
-from homeassistant.components.husqvarna_automower.coordinator import (
-    MAX_WS_RECONNECT_TIME,
-)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -26,7 +22,7 @@ from homeassistant.helpers import device_registry as dr
 from . import setup_integration
 from .const import TEST_MOWER_ID
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -159,8 +155,6 @@ async def test_websocket_not_available(
 
         # Simulate a successful connection
         mock_automower_client.auth.websocket_connect.side_effect = None
-        freezer.tick(timedelta(seconds=MAX_WS_RECONNECT_TIME))
-        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert mock_automower_client.start_listening.call_count == 1
 
@@ -168,8 +162,6 @@ async def test_websocket_not_available(
         mock_automower_client.auth.websocket_connect.side_effect = (
             HusqvarnaWSServerHandshakeError("Boom")
         )
-        freezer.tick(timedelta(seconds=0))
-        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert (
             mock_automower_client.auth.websocket_connect.call_count
