@@ -75,7 +75,6 @@ async def async_attach_trigger(
     wanted_payload = command_template(None, variables)
 
     topic_template: Template = config[CONF_TOPIC]
-    topic_template.hass = hass
     topic = topic_template.async_render(variables, limited=True, parse_result=False)
     mqtt.util.valid_subscribe_topic(topic)
 
