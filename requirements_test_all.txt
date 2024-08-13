@@ -2137,7 +2137,7 @@ surepy==0.9.0
 switchbot-api==2.2.1
 
 # homeassistant.components.system_bridge
-systembridgeconnector==4.1.4
+systembridgeconnector==4.1.5
 
 # homeassistant.components.system_bridge
 systembridgemodels==4.2.4
