@@ -7,10 +7,16 @@ from unittest.mock import AsyncMock, Mock, patch
 import wave
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
+from voip_utils import CallInfo
 
 from homeassistant.components import assist_pipeline, assist_satellite, voip
+from homeassistant.components.voip import HassVoipDatagramProtocol
 from homeassistant.components.voip.devices import VoIPDevice, VoIPDevices
+from homeassistant.components.voip.voip import PreRecordMessageProtocol, make_protocol
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 _ONE_SECOND = 16000 * 2  # 16Khz 16-bit
@@ -32,6 +38,59 @@ def _empty_wav() -> bytes:
             wav_file.setnchannels(1)
 
         return wav_io.getvalue()
+
+
+async def test_is_valid_call(
+    hass: HomeAssistant,
+    voip_devices: VoIPDevices,
+    voip_device: VoIPDevice,
+    call_info: CallInfo,
+) -> None:
+    """Test that a call is now allowed from an unknown device."""
+    assert await async_setup_component(hass, "voip", {})
+    protocol = HassVoipDatagramProtocol(hass, voip_devices)
+    assert not protocol.is_valid_call(call_info)
+
+    ent_reg = er.async_get(hass)
+    allowed_call_entity_id = ent_reg.async_get_entity_id(
+        "switch", voip.DOMAIN, f"{voip_device.voip_id}-allow_call"
+    )
+    assert allowed_call_entity_id is not None
+    state = hass.states.get(allowed_call_entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+
+    # Allow calls
+    hass.states.async_set(allowed_call_entity_id, STATE_ON)
+    assert protocol.is_valid_call(call_info)
+
+
+async def test_pre_recorded_message(
+    hass: HomeAssistant,
+    voip_devices: VoIPDevices,
+    voip_device: VoIPDevice,
+    call_info: CallInfo,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that a pre-recorded message is played when calls aren't allowed."""
+    assert await async_setup_component(hass, "voip", {})
+    protocol: PreRecordMessageProtocol = make_protocol(hass, voip_devices, call_info)
+    assert isinstance(protocol, PreRecordMessageProtocol)
+    assert protocol.file_name == "problem.pcm"
+
+    done = asyncio.Event()
+
+    def send_audio(audio_bytes: bytes, **kwargs):
+        # Should be problem.pcm from components/voip
+        assert audio_bytes == snapshot()
+        done.set()
+
+    protocol.transport = Mock()
+    with patch.object(protocol, "send_audio", send_audio):
+        protocol.on_chunk(bytes(_ONE_SECOND))
+
+    async with asyncio.timeout(1):
+        await done.wait()
 
 
 async def test_pipeline(
@@ -629,3 +688,61 @@ async def test_empty_tts_output(
             await rtp_protocol._tts_done.wait()
 
         mock_send_tts.assert_not_called()
+
+
+async def test_pipeline_error(
+    hass: HomeAssistant,
+    voip_devices: VoIPDevices,
+    voip_device: VoIPDevice,
+) -> None:
+    """Test that a pipeline error causes the error tone to be played."""
+    assert await async_setup_component(hass, "voip", {})
+
+    satellite = assist_satellite.async_get_satellite_entity(
+        hass, voip.DOMAIN, voip_device.voip_id
+    )
+    assert satellite is not None
+
+    done = asyncio.Event()
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        # Fake error
+        event_callback = kwargs["event_callback"]
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                type=assist_pipeline.PipelineEventType.ERROR,
+                data={"code": "error-code", "message": "error message"},
+            )
+        )
+
+    async def play_error_tone(self):
+        done.set()
+
+    with (
+        patch(
+            "homeassistant.components.voip.assist_satellite.async_pipeline_from_audio_stream",
+            new=async_pipeline_from_audio_stream,
+        ),
+        patch(
+            "homeassistant.components.voip.voip.PipelineRtpDatagramProtocol._play_error_tone",
+            new=play_error_tone,
+        ),
+    ):
+        rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
+            hass,
+            voip_devices,
+            voip_device,
+            satellite,
+            Context(),
+            opus_payload_type=123,
+            listening_tone_enabled=False,
+            processing_tone_enabled=False,
+            error_tone_enabled=True,
+        )
+        rtp_protocol.transport = Mock()
+
+        rtp_protocol.on_chunk(bytes(_ONE_SECOND))
+
+        # Wait for error tone to be played
+        async with asyncio.timeout(1):
+            await done.wait()
