@@ -53,27 +53,28 @@ async def test_full_flow(
 
 
 @pytest.mark.parametrize(
-    ("mock_ayla_api", "errmsg"),
+    ("exception", "err_msg"),
     [
         (AylaAuthError, "invalid_auth"),
         (TimeoutError, "cannot_connect"),
         (Exception, "unknown"),
     ],
-    indirect=["mock_ayla_api"],
 )
 async def test_form_exceptions(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_ayla_api: AsyncMock,
-    errmsg: str,
+    exception: Exception,
+    err_msg: str,
 ) -> None:
     """Test we handle exceptions."""
 
+    mock_ayla_api.async_sign_in.side_effect = exception
     result = await _initial_step(hass)
     mock_ayla_api.async_sign_in.assert_called_once()
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": errmsg}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": err_msg}
 
     mock_ayla_api.async_sign_in.side_effect = None
     result = await hass.config_entries.flow.async_configure(

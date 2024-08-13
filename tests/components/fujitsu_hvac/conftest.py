@@ -1,8 +1,9 @@
 """Common fixtures for the Fujitsu HVAC (based on Ayla IOT) tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, create_autospec, patch
 
+from ayla_iot_unofficial import AylaApi
 import pytest
 
 from homeassistant.components.fujitsu_hvac.const import CONF_EUROPE, DOMAIN
@@ -29,13 +30,15 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_ayla_api(request: pytest.FixtureRequest) -> Generator[AsyncMock]:
-    """Override async_sign_in in AylaApi to either do nothing or raise an exception."""
-    mymock = MagicMock()
-    mymock.async_sign_in = AsyncMock(side_effect=getattr(request, "param", None))
+def mock_ayla_api() -> Generator[AsyncMock]:
+    """Override AylaApi creation."""
+    mymock = create_autospec(AylaApi)
 
     with (
-        patch("ayla_iot_unofficial.ayla_iot_unofficial.AylaApi", return_value=mymock),
+        patch(
+            "homeassistant.components.fujitsu_hvac.config_flow.new_ayla_api",
+            return_value=mymock,
+        ),
     ):
         yield mymock
 
