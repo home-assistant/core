@@ -12,9 +12,10 @@ from yalexs.authenticator import ValidationResult
 from yalexs.const import BRANDS
 from yalexs.manager.exceptions import CannotConnect, InvalidAuth, RequireValidation
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import (
     CONF_ACCESS_TOKEN_CACHE_FILE,
@@ -77,10 +78,16 @@ class ValidateResult:
     description_placeholders: dict[str, str]
 
 
-class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
+class YaleConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Handle a config flow for Yale."""
 
     VERSION = 1
+    DOMAIN = DOMAIN
+
+    @property
+    def logger(self) -> logging.Logger:
+        """Return logger."""
+        return logging.getLogger(__name__)
 
     def __init__(self) -> None:
         """Store an YaleGateway()."""
