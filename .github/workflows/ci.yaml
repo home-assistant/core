@@ -31,12 +31,16 @@ on:
         description: "Only run mypy"
         default: false
         type: boolean
+      audit-licenses-only:
+        description: "Only run audit licenses"
+        default: false
+        type: boolean
 
 env:
-  CACHE_VERSION: 9
+  CACHE_VERSION: 10
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 8
-  HA_SHORT_VERSION: "2024.8"
+  HA_SHORT_VERSION: "2024.9"
   DEFAULT_PYTHON: "3.12"
   ALL_PYTHON_VERSIONS: "['3.12']"
   # 10.3 is the oldest supported version
@@ -86,7 +90,7 @@ jobs:
       tests_glob: ${{ steps.info.outputs.tests_glob }}
       tests: ${{ steps.info.outputs.tests }}
       skip_coverage: ${{ steps.info.outputs.skip_coverage }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
@@ -218,10 +222,11 @@ jobs:
 
   pre-commit:
     name: Prepare pre-commit base
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
     needs:
       - info
     steps:
@@ -266,7 +271,7 @@ jobs:
 
   lint-ruff-format:
     name: Check ruff-format
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs:
       - info
       - pre-commit
@@ -306,7 +311,7 @@ jobs:
 
   lint-ruff:
     name: Check ruff
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs:
       - info
       - pre-commit
@@ -343,9 +348,10 @@ jobs:
           pre-commit run --hook-stage manual ruff --all-files --show-diff-on-failure
         env:
           RUFF_OUTPUT_FORMAT: github
+
   lint-other:
     name: Check other linters
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs:
       - info
       - pre-commit
@@ -437,7 +443,7 @@ jobs:
 
   base:
     name: Prepare dependencies
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: info
     timeout-minutes: 60
     strategy:
@@ -508,16 +514,16 @@ jobs:
           uv pip install -U "pip>=21.3.1" setuptools wheel
           uv pip install -r requirements.txt
           python -m script.gen_requirements_all ci
-          uv pip install -r requirements_all_pytest.txt
-          uv pip install -r requirements_test.txt
+          uv pip install -r requirements_all_pytest.txt -r requirements_test.txt
           uv pip install -e . --config-settings editable_mode=compat
 
   hassfest:
     name: Check hassfest
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
     needs:
       - info
       - base
@@ -552,10 +558,11 @@ jobs:
 
   gen-requirements-all:
     name: Check all requirements
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
     needs:
       - info
       - base
@@ -584,12 +591,15 @@ jobs:
 
   audit-licenses:
     name: Audit licenses
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs:
       - info
       - base
     if: |
-      needs.info.outputs.requirements == 'true'
+      (github.event.inputs.pylint-only != 'true'
+        && github.event.inputs.mypy-only != 'true'
+        || github.event.inputs.audit-licenses-only == 'true')
+      && needs.info.outputs.requirements == 'true'
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
@@ -613,7 +623,7 @@ jobs:
           . venv/bin/activate
           pip-licenses --format=json --output-file=licenses.json
       - name: Upload licenses
-        uses: actions/upload-artifact@v4.3.4
+        uses: actions/upload-artifact@v4.3.6
         with:
           name: licenses
           path: licenses.json
@@ -624,10 +634,11 @@ jobs:
 
   pylint:
     name: Check pylint
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     if: |
       github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
       || github.event.inputs.pylint-only == 'true'
     needs:
       - info
@@ -669,10 +680,12 @@ jobs:
 
   pylint-tests:
     name: Check pylint on tests
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     if: |
-      (github.event.inputs.mypy-only != 'true' || github.event.inputs.pylint-only == 'true')
+      (github.event.inputs.mypy-only != 'true'
+        && github.event.inputs.audit-licenses-only != 'true'
+        || github.event.inputs.pylint-only == 'true')
       && (needs.info.outputs.tests_glob || needs.info.outputs.test_full_suite == 'true')
     needs:
       - info
@@ -714,9 +727,10 @@ jobs:
 
   mypy:
     name: Check mypy
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: |
       github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
       || github.event.inputs.mypy-only == 'true'
     needs:
       - info
@@ -775,12 +789,13 @@ jobs:
           mypy homeassistant/components/${{ needs.info.outputs.integrations_glob }}
 
   prepare-pytest-full:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: |
       (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
       && github.event.inputs.lint-only != 'true'
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
       && needs.info.outputs.test_full_suite == 'true'
     needs:
       - info
@@ -818,19 +833,20 @@ jobs:
           . venv/bin/activate
           python -m script.split_tests ${{ needs.info.outputs.test_group_count }} tests
       - name: Upload pytest_buckets
-        uses: actions/upload-artifact@v4.3.4
+        uses: actions/upload-artifact@v4.3.6
         with:
           name: pytest_buckets
           path: pytest_buckets.txt
           overwrite: true
 
   pytest-full:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: |
       (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
       && github.event.inputs.lint-only != 'true'
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
       && needs.info.outputs.test_full_suite == 'true'
     needs:
       - info
@@ -904,6 +920,7 @@ jobs:
             cov_params+=(--cov-report=xml)
           fi
 
+          echo "Test group ${{ matrix.group }}: $(sed -n "${{ matrix.group }},1p" pytest_buckets.txt)"
           python3 -b -X dev -m pytest \
             -qq \
             --timeout=9 \
@@ -917,14 +934,14 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-full.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.3.4
+        uses: actions/upload-artifact@v4.3.6
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{ matrix.group }}
           path: pytest-*.txt
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.3.4
+        uses: actions/upload-artifact@v4.3.6
         with:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
@@ -936,7 +953,7 @@ jobs:
           ./script/check_dirty
 
   pytest-mariadb:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     services:
       mariadb:
         image: ${{ matrix.mariadb-group }}
@@ -950,6 +967,7 @@ jobs:
       && github.event.inputs.lint-only != 'true'
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
       && needs.info.outputs.mariadb_groups != '[]'
     needs:
       - info
@@ -1042,7 +1060,7 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${mariadb}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.3.4
+        uses: actions/upload-artifact@v4.3.6
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.mariadb }}
@@ -1050,7 +1068,7 @@ jobs:
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.3.4
+        uses: actions/upload-artifact@v4.3.6
         with:
           name: coverage-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.mariadb }}
@@ -1075,6 +1093,7 @@ jobs:
       && github.event.inputs.lint-only != 'true'
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
       && needs.info.outputs.postgresql_groups != '[]'
     needs:
       - info
@@ -1168,7 +1187,7 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${postgresql}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.3.4
+        uses: actions/upload-artifact@v4.3.6
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.postgresql }}
@@ -1176,7 +1195,7 @@ jobs:
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.3.4
+        uses: actions/upload-artifact@v4.3.6
         with:
           name: coverage-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.postgresql }}
@@ -1189,7 +1208,7 @@ jobs:
   coverage-full:
     name: Upload test coverage to Codecov (full suite)
     if: needs.info.outputs.skip_coverage != 'true'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs:
       - info
       - pytest-full
@@ -1213,12 +1232,13 @@ jobs:
           version: v0.6.0
 
   pytest-partial:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: |
       (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
       && github.event.inputs.lint-only != 'true'
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
       && needs.info.outputs.tests_glob
       && needs.info.outputs.test_full_suite == 'false'
     needs:
@@ -1309,14 +1329,14 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.3.4
+        uses: actions/upload-artifact@v4.3.6
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{ matrix.group }}
           path: pytest-*.txt
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.3.4
+        uses: actions/upload-artifact@v4.3.6
         with:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
@@ -1328,7 +1348,7 @@ jobs:
   coverage-partial:
     name: Upload test coverage to Codecov (partial suite)
     if: needs.info.outputs.skip_coverage != 'true'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs:
       - info
       - pytest-partial

@@ -37,7 +37,7 @@ from homeassistant.const import (
 )
 import homeassistant.core as ha
 from homeassistant.core import (
-    DOMAIN as HASS_DOMAIN,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
     HomeAssistant,
     State,
@@ -484,7 +484,7 @@ async def test_set_target_temp_heater_on(hass: HomeAssistant) -> None:
     await common.async_set_temperature(hass, 30)
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -498,7 +498,7 @@ async def test_set_target_temp_heater_off(hass: HomeAssistant) -> None:
     await common.async_set_temperature(hass, 25)
     assert len(calls) == 2
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -522,7 +522,7 @@ async def test_temp_change_heater_on_outside_tolerance(hass: HomeAssistant) -> N
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -546,7 +546,7 @@ async def test_temp_change_heater_off_outside_tolerance(hass: HomeAssistant) -> 
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -559,7 +559,7 @@ async def test_running_when_hvac_mode_is_off(hass: HomeAssistant) -> None:
     await common.async_set_hvac_mode(hass, HVACMode.OFF)
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -589,7 +589,7 @@ async def test_hvac_mode_heat(hass: HomeAssistant) -> None:
     await common.async_set_hvac_mode(hass, HVACMode.HEAT)
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -643,7 +643,7 @@ async def test_set_target_temp_ac_off(hass: HomeAssistant) -> None:
     await common.async_set_temperature(hass, 30)
     assert len(calls) == 2
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -674,7 +674,7 @@ async def test_hvac_mode_cool(hass: HomeAssistant) -> None:
     await common.async_set_hvac_mode(hass, HVACMode.COOL)
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -688,7 +688,7 @@ async def test_set_target_temp_ac_on(hass: HomeAssistant) -> None:
     await common.async_set_temperature(hass, 25)
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -712,7 +712,7 @@ async def test_set_temp_change_ac_off_outside_tolerance(hass: HomeAssistant) -> 
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -736,7 +736,7 @@ async def test_temp_change_ac_on_outside_tolerance(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -749,7 +749,7 @@ async def test_running_when_operating_mode_is_off_2(hass: HomeAssistant) -> None
     await common.async_set_hvac_mode(hass, HVACMode.OFF)
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -867,7 +867,7 @@ async def test_heating_cooling_switch_toggles_when_outside_min_cycle_duration(
     # Then
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == expected_triggered_service_call
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -965,7 +965,7 @@ async def test_temp_change_ac_trigger_on_long_enough_3(hass: HomeAssistant) -> N
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -989,7 +989,7 @@ async def test_temp_change_ac_trigger_off_long_enough_3(hass: HomeAssistant) -> 
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -1038,7 +1038,7 @@ async def test_temp_change_heater_trigger_on_long_enough_2(hass: HomeAssistant) 
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -1064,7 +1064,7 @@ async def test_temp_change_heater_trigger_off_long_enough_2(
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -1097,9 +1097,9 @@ async def setup_comp_9(hass: HomeAssistant) -> None:
 async def test_precision(hass: HomeAssistant) -> None:
     """Test that setting precision to tenths works as intended."""
     hass.config.units = US_CUSTOMARY_SYSTEM
-    await common.async_set_temperature(hass, 23.27)
+    await common.async_set_temperature(hass, 55.27)
     state = hass.states.get(ENTITY)
-    assert state.attributes.get("temperature") == 23.3
+    assert state.attributes.get("temperature") == 55.3
     # check that target_temp_step defaults to precision
     assert state.attributes.get("target_temp_step") == 0.1
 
@@ -1237,7 +1237,7 @@ async def test_initial_hvac_off_force_heater_off(hass: HomeAssistant) -> None:
     # heater must be switched off
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -1345,7 +1345,7 @@ async def test_restore_will_turn_off_when_loaded_second(hass: HomeAssistant) -> 
     assert len(calls_on) == 0
     assert len(calls_off) == 1
     call = calls_off[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == "input_boolean.test"
 

@@ -103,7 +103,7 @@ class BSBLANClimate(
         self._attr_min_temp = float(static.min_temp.value)
         self._attr_max_temp = float(static.max_temp.value)
         # check if self.coordinator.data.current_temperature.unit is "&deg;C" or "°C"
-        if self.coordinator.data.current_temperature.unit in ("&deg;C", "°C"):
+        if static.min_temp.unit in ("&deg;C", "°C"):
             self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         else:
             self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT

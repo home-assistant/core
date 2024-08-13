@@ -52,6 +52,7 @@ from .auto_repairs.statistics.schema import (
 from .const import (
     CONTEXT_ID_AS_BINARY_SCHEMA_VERSION,
     EVENT_TYPE_IDS_SCHEMA_VERSION,
+    LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION,
     STATES_META_SCHEMA_VERSION,
     SupportedDialect,
 )
@@ -118,7 +119,17 @@ from .util import (
 if TYPE_CHECKING:
     from . import Recorder
 
-LIVE_MIGRATION_MIN_SCHEMA_VERSION = 0
+# Live schema migration supported starting from schema version 42 or newer
+# Schema version 41 was introduced in HA Core 2023.4
+# Schema version 42 was introduced in HA Core 2023.11
+LIVE_MIGRATION_MIN_SCHEMA_VERSION = 42
+
+MIGRATION_NOTE_OFFLINE = (
+    "Note: this may take several hours on large databases and slow machines. "
+    "Home Assistant will not start until the upgrade is completed. Please be patient "
+    "and do not turn off or restart Home Assistant while the upgrade is in progress!"
+)
+
 _EMPTY_ENTITY_ID = "missing.entity_id"
 _EMPTY_EVENT_TYPE = "missing_event_type"
 
@@ -188,13 +199,14 @@ def get_schema_version(session_maker: Callable[[], Session]) -> int | None:
         return None
 
 
-@dataclass
+@dataclass(frozen=True)
 class SchemaValidationStatus:
     """Store schema validation status."""
 
     current_version: int
+    migration_needed: bool
     schema_errors: set[str]
-    valid: bool
+    start_version: int
 
 
 def _schema_is_current(current_version: int) -> bool:
@@ -222,9 +234,9 @@ def validate_db_schema(
         # columns may otherwise not exist etc.
         schema_errors = _find_schema_errors(hass, instance, session_maker)
 
-    valid = is_current and not schema_errors
-
-    return SchemaValidationStatus(current_version, schema_errors, valid)
+    return SchemaValidationStatus(
+        current_version, not is_current, schema_errors, current_version
+    )
 
 
 def _find_schema_errors(
@@ -260,35 +272,33 @@ def pre_migrate_schema(engine: Engine) -> None:
         )
 
 
-def migrate_schema(
+def _migrate_schema(
     instance: Recorder,
     hass: HomeAssistant,
     engine: Engine,
     session_maker: Callable[[], Session],
     schema_status: SchemaValidationStatus,
-) -> None:
+    end_version: int,
+) -> SchemaValidationStatus:
     """Check if the schema needs to be upgraded."""
     current_version = schema_status.current_version
-    if current_version != SCHEMA_VERSION:
+    start_version = schema_status.start_version
+
+    if current_version < end_version:
         _LOGGER.warning(
-            "Database is about to upgrade from schema version: %s to: %s",
+            "The database is about to upgrade from schema version %s to %s%s",
             current_version,
-            SCHEMA_VERSION,
+            end_version,
+            f". {MIGRATION_NOTE_OFFLINE}"
+            if current_version < LIVE_MIGRATION_MIN_SCHEMA_VERSION
+            else "",
         )
-    db_ready = False
-    for version in range(current_version, SCHEMA_VERSION):
-        if (
-            live_migration(dataclass_replace(schema_status, current_version=version))
-            and not db_ready
-        ):
-            db_ready = True
-            instance.migration_is_live = True
-            hass.add_job(instance.async_set_db_ready)
+        schema_status = dataclass_replace(schema_status, current_version=end_version)
+
+    for version in range(current_version, end_version):
         new_version = version + 1
         _LOGGER.info("Upgrading recorder db schema to version %s", new_version)
-        _apply_update(
-            instance, hass, engine, session_maker, new_version, current_version
-        )
+        _apply_update(instance, hass, engine, session_maker, new_version, start_version)
         with session_scope(session=session_maker()) as session:
             session.add(SchemaChanges(schema_version=new_version))
 
@@ -296,6 +306,37 @@ def migrate_schema(
         # so its clear that the upgrade is done
         _LOGGER.warning("Upgrade to version %s done", new_version)
 
+    return schema_status
+
+
+def migrate_schema_non_live(
+    instance: Recorder,
+    hass: HomeAssistant,
+    engine: Engine,
+    session_maker: Callable[[], Session],
+    schema_status: SchemaValidationStatus,
+) -> SchemaValidationStatus:
+    """Check if the schema needs to be upgraded."""
+    end_version = LIVE_MIGRATION_MIN_SCHEMA_VERSION
+    return _migrate_schema(
+        instance, hass, engine, session_maker, schema_status, end_version
+    )
+
+
+def migrate_schema_live(
+    instance: Recorder,
+    hass: HomeAssistant,
+    engine: Engine,
+    session_maker: Callable[[], Session],
+    schema_status: SchemaValidationStatus,
+) -> SchemaValidationStatus:
+    """Check if the schema needs to be upgraded."""
+    end_version = SCHEMA_VERSION
+    schema_status = _migrate_schema(
+        instance, hass, engine, session_maker, schema_status, end_version
+    )
+
+    # Repairs are currently done during the live migration
     if schema_errors := schema_status.schema_errors:
         _LOGGER.warning(
             "Database is about to correct DB schema errors: %s",
@@ -305,11 +346,14 @@ def migrate_schema(
         states_correct_db_schema(instance, schema_errors)
         events_correct_db_schema(instance, schema_errors)
 
-    if current_version != SCHEMA_VERSION:
-        instance.queue_task(PostSchemaMigrationTask(current_version, SCHEMA_VERSION))
+    start_version = schema_status.start_version
+    if start_version != SCHEMA_VERSION:
+        instance.queue_task(PostSchemaMigrationTask(start_version, SCHEMA_VERSION))
         # Make sure the post schema migration task is committed in case
         # the next task does not have commit_before = True
         instance.queue_task(CommitTask())
+
+    return schema_status
 
 
 def _create_index(
@@ -331,7 +375,7 @@ def _create_index(
     _LOGGER.debug("Creating %s index", index_name)
     _LOGGER.warning(
         "Adding index `%s` to table `%s`. Note: this can take several "
-        "minutes on large databases and slow computers. Please "
+        "minutes on large databases and slow machines. Please "
         "be patient!",
         index_name,
         table_name,
@@ -380,7 +424,7 @@ def _drop_index(
     """
     _LOGGER.warning(
         "Dropping index `%s` from table `%s`. Note: this can take several "
-        "minutes on large databases and slow computers. Please "
+        "minutes on large databases and slow machines. Please "
         "be patient!",
         index_name,
         table_name,
@@ -431,7 +475,7 @@ def _add_columns(
     _LOGGER.warning(
         (
             "Adding columns %s to table %s. Note: this can take several "
-            "minutes on large databases and slow computers. Please "
+            "minutes on large databases and slow machines. Please "
             "be patient!"
         ),
         ", ".join(column.split(" ")[0] for column in columns_def),
@@ -493,7 +537,7 @@ def _modify_columns(
     _LOGGER.warning(
         (
             "Modifying columns %s in table %s. Note: this can take several "
-            "minutes on large databases and slow computers. Please "
+            "minutes on large databases and slow machines. Please "
             "be patient!"
         ),
         ", ".join(column.split(" ")[0] for column in columns_def),
@@ -588,7 +632,7 @@ def _update_states_table_with_foreign_key_options(
 
 def _drop_foreign_key_constraints(
     session_maker: Callable[[], Session], engine: Engine, table: str, column: str
-) -> list[tuple[str, str, ReflectedForeignKeyConstraint]]:
+) -> tuple[bool, list[tuple[str, str, ReflectedForeignKeyConstraint]]]:
     """Drop foreign key constraints for a table on specific columns."""
     inspector = sqlalchemy.inspect(engine)
     dropped_constraints = [
@@ -605,6 +649,7 @@ def _drop_foreign_key_constraints(
         if foreign_key["name"] and foreign_key["constrained_columns"] == [column]
     ]
 
+    fk_remove_ok = True
     for drop in drops:
         with session_scope(session=session_maker()) as session:
             try:
@@ -616,8 +661,9 @@ def _drop_foreign_key_constraints(
                     TABLE_STATES,
                     column,
                 )
+                fk_remove_ok = False
 
-    return dropped_constraints
+    return fk_remove_ok, dropped_constraints
 
 
 def _restore_foreign_key_constraints(
@@ -1437,7 +1483,7 @@ class _SchemaVersion44Migrator(_SchemaVersionMigrator, target_version=44):
             for column in columns
             for dropped_constraint in _drop_foreign_key_constraints(
                 self.session_maker, self.engine, table, column
-            )
+            )[1]
         ]
         _LOGGER.debug("Dropped foreign key constraints: %s", dropped_constraints)
 
@@ -1523,7 +1569,7 @@ def _correct_table_character_set_and_collation(
     _LOGGER.warning(
         "Updating character set and collation of table %s to utf8mb4. "
         "Note: this can take several minutes on large databases and slow "
-        "computers. Please be patient!",
+        "machines. Please be patient!",
         table,
     )
     with (
@@ -1912,13 +1958,15 @@ def cleanup_legacy_states_event_ids(instance: Recorder) -> bool:
         if instance.dialect_name == SupportedDialect.SQLITE:
             # SQLite does not support dropping foreign key constraints
             # so we have to rebuild the table
-            rebuild_sqlite_table(session_maker, instance.engine, States)
+            fk_remove_ok = rebuild_sqlite_table(session_maker, instance.engine, States)
         else:
-            _drop_foreign_key_constraints(
+            fk_remove_ok, _ = _drop_foreign_key_constraints(
                 session_maker, instance.engine, TABLE_STATES, "event_id"
             )
-        _drop_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
-        instance.use_legacy_events_index = False
+        if fk_remove_ok:
+            _drop_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
+            instance.use_legacy_events_index = False
+            _mark_migration_done(session, EventIDPostMigration)
 
     return True
 
@@ -1978,7 +2026,7 @@ class MigrationTask(RecorderTask):
             # Schedule a new migration task if this one didn't finish
             instance.queue_task(MigrationTask(self.migrator))
         else:
-            self.migrator.migration_done(instance)
+            self.migrator.migration_done(instance, None)
 
 
 @dataclass(slots=True)
@@ -1986,6 +2034,14 @@ class CommitBeforeMigrationTask(MigrationTask):
     """Base class for migration tasks which commit first."""
 
     commit_before = True
+
+
+@dataclass(frozen=True, kw_only=True)
+class NeedsMigrateResult:
+    """Container for the return value of BaseRunTimeMigration.needs_migrate_impl."""
+
+    needs_migrate: bool
+    migration_done: bool
 
 
 class BaseRunTimeMigration(ABC):
@@ -2003,24 +2059,26 @@ class BaseRunTimeMigration(ABC):
 
     def do_migrate(self, instance: Recorder, session: Session) -> None:
         """Start migration if needed."""
-        if self.needs_migrate(session):
+        if self.needs_migrate(instance, session):
             instance.queue_task(self.task(self))
         else:
-            self.migration_done(instance)
+            self.migration_done(instance, session)
 
     @staticmethod
     @abstractmethod
     def migrate_data(instance: Recorder) -> bool:
         """Migrate some data, returns True if migration is completed."""
 
-    def migration_done(self, instance: Recorder) -> None:
+    def migration_done(self, instance: Recorder, session: Session | None) -> None:
         """Will be called after migrate returns True or if migration is not needed."""
 
     @abstractmethod
-    def needs_migrate_query(self) -> StatementLambdaElement:
-        """Return the query to check if the migration needs to run."""
+    def needs_migrate_impl(
+        self, instance: Recorder, session: Session
+    ) -> NeedsMigrateResult:
+        """Return if the migration needs to run and if it is done."""
 
-    def needs_migrate(self, session: Session) -> bool:
+    def needs_migrate(self, instance: Recorder, session: Session) -> bool:
         """Return if the migration needs to run.
 
         If the migration needs to run, it will return True.
@@ -2038,13 +2096,30 @@ class BaseRunTimeMigration(ABC):
         # We do not know if the migration is done from the
         # migration changes table so we must check the data
         # This is the slow path
-        if not execute_stmt_lambda_element(session, self.needs_migrate_query()):
+        needs_migrate = self.needs_migrate_impl(instance, session)
+        if needs_migrate.migration_done:
             _mark_migration_done(session, self.__class__)
-            return False
-        return True
+        return needs_migrate.needs_migrate
 
 
-class StatesContextIDMigration(BaseRunTimeMigration):
+class BaseRunTimeMigrationWithQuery(BaseRunTimeMigration):
+    """Base class for run time migrations."""
+
+    @abstractmethod
+    def needs_migrate_query(self) -> StatementLambdaElement:
+        """Return the query to check if the migration needs to run."""
+
+    def needs_migrate_impl(
+        self, instance: Recorder, session: Session
+    ) -> NeedsMigrateResult:
+        """Return if the migration needs to run."""
+        needs_migrate = execute_stmt_lambda_element(session, self.needs_migrate_query())
+        return NeedsMigrateResult(
+            needs_migrate=bool(needs_migrate), migration_done=not needs_migrate
+        )
+
+
+class StatesContextIDMigration(BaseRunTimeMigrationWithQuery):
     """Migration to migrate states context_ids to binary format."""
 
     required_schema_version = CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
@@ -2093,7 +2168,7 @@ class StatesContextIDMigration(BaseRunTimeMigration):
         return has_states_context_ids_to_migrate()
 
 
-class EventsContextIDMigration(BaseRunTimeMigration):
+class EventsContextIDMigration(BaseRunTimeMigrationWithQuery):
     """Migration to migrate events context_ids to binary format."""
 
     required_schema_version = CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
@@ -2142,7 +2217,7 @@ class EventsContextIDMigration(BaseRunTimeMigration):
         return has_events_context_ids_to_migrate()
 
 
-class EventTypeIDMigration(BaseRunTimeMigration):
+class EventTypeIDMigration(BaseRunTimeMigrationWithQuery):
     """Migration to migrate event_type to event_type_ids."""
 
     required_schema_version = EVENT_TYPE_IDS_SCHEMA_VERSION
@@ -2215,7 +2290,7 @@ class EventTypeIDMigration(BaseRunTimeMigration):
         _LOGGER.debug("Migrating event_types done=%s", is_done)
         return is_done
 
-    def migration_done(self, instance: Recorder) -> None:
+    def migration_done(self, instance: Recorder, session: Session | None) -> None:
         """Will be called after migrate returns True."""
         _LOGGER.debug("Activating event_types manager as all data is migrated")
         instance.event_type_manager.active = True
@@ -2225,7 +2300,7 @@ class EventTypeIDMigration(BaseRunTimeMigration):
         return has_event_type_to_migrate()
 
 
-class EntityIDMigration(BaseRunTimeMigration):
+class EntityIDMigration(BaseRunTimeMigrationWithQuery):
     """Migration to migrate entity_ids to states_meta."""
 
     required_schema_version = STATES_META_SCHEMA_VERSION
@@ -2308,7 +2383,7 @@ class EntityIDMigration(BaseRunTimeMigration):
         _LOGGER.debug("Migrating entity_ids done=%s", is_done)
         return is_done
 
-    def migration_done(self, instance: Recorder) -> None:
+    def migration_done(self, instance: Recorder, _session: Session | None) -> None:
         """Will be called after migrate returns True."""
         # The migration has finished, now we start the post migration
         # to remove the old entity_id data from the states table
@@ -2316,9 +2391,14 @@ class EntityIDMigration(BaseRunTimeMigration):
         # so we set active to True
         _LOGGER.debug("Activating states_meta manager as all data is migrated")
         instance.states_meta_manager.active = True
+        session_generator = (
+            contextlib.nullcontext(_session)
+            if _session
+            else session_scope(session=instance.get_session())
+        )
         with (
             contextlib.suppress(SQLAlchemyError),
-            session_scope(session=instance.get_session()) as session,
+            session_generator as session,
         ):
             # If ix_states_entity_id_last_updated_ts still exists
             # on the states table it means the entity id migration
@@ -2337,6 +2417,49 @@ class EntityIDMigration(BaseRunTimeMigration):
         return has_entity_ids_to_migrate()
 
 
+class EventIDPostMigration(BaseRunTimeMigration):
+    """Migration to remove old event_id index from states."""
+
+    migration_id = "event_id_post_migration"
+    task = MigrationTask
+    migration_version = 2
+
+    @staticmethod
+    def migrate_data(instance: Recorder) -> bool:
+        """Migrate some data, returns True if migration is completed."""
+        return cleanup_legacy_states_event_ids(instance)
+
+    @staticmethod
+    def _legacy_event_id_foreign_key_exists(instance: Recorder) -> bool:
+        """Check if the legacy event_id foreign key exists."""
+        engine = instance.engine
+        assert engine is not None
+        inspector = sqlalchemy.inspect(engine)
+        return bool(
+            next(
+                (
+                    fk
+                    for fk in inspector.get_foreign_keys(TABLE_STATES)
+                    if fk["constrained_columns"] == ["event_id"]
+                ),
+                None,
+            )
+        )
+
+    def needs_migrate_impl(
+        self, instance: Recorder, session: Session
+    ) -> NeedsMigrateResult:
+        """Return if the migration needs to run."""
+        if self.schema_version <= LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION:
+            return NeedsMigrateResult(needs_migrate=False, migration_done=False)
+        if get_index_by_name(
+            session, TABLE_STATES, LEGACY_STATES_EVENT_ID_INDEX
+        ) is not None or self._legacy_event_id_foreign_key_exists(instance):
+            instance.use_legacy_events_index = True
+            return NeedsMigrateResult(needs_migrate=True, migration_done=False)
+        return NeedsMigrateResult(needs_migrate=False, migration_done=True)
+
+
 def _mark_migration_done(
     session: Session, migration: type[BaseRunTimeMigration]
 ) -> None:
@@ -2350,7 +2473,7 @@ def _mark_migration_done(
 
 def rebuild_sqlite_table(
     session_maker: Callable[[], Session], engine: Engine, table: type[Base]
-) -> None:
+) -> bool:
     """Rebuild an SQLite table.
 
     This must only be called after all migrations are complete
@@ -2405,8 +2528,10 @@ def rebuild_sqlite_table(
         # Swallow the exception since we do not want to ever raise
         # an integrity error as it would cause the database
         # to be discarded and recreated from scratch
+        return False
     else:
         _LOGGER.warning("Rebuilding SQLite table %s finished", orig_name)
+        return True
     finally:
         with session_scope(session=session_maker()) as session:
             # Step 12 - Re-enable foreign keys

@@ -16,14 +16,7 @@ import time
 from typing import TYPE_CHECKING, Any, cast
 
 import psutil_home_assistant as ha_psutil
-from sqlalchemy import (
-    create_engine,
-    event as sqlalchemy_event,
-    exc,
-    inspect,
-    select,
-    update,
-)
+from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select, update
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.exc import SQLAlchemyError
@@ -62,7 +55,6 @@ from .const import (
     DOMAIN,
     KEEPALIVE_TIME,
     LAST_REPORTED_SCHEMA_VERSION,
-    LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION,
     MARIADB_PYMYSQL_URL_PREFIX,
     MARIADB_URL_PREFIX,
     MAX_QUEUE_BACKLOG_MIN_VALUE,
@@ -75,9 +67,7 @@ from .const import (
     SupportedDialect,
 )
 from .db_schema import (
-    LEGACY_STATES_EVENT_ID_INDEX,
     SCHEMA_VERSION,
-    TABLE_STATES,
     Base,
     EventData,
     Events,
@@ -91,6 +81,7 @@ from .db_schema import (
 from .executor import DBInterruptibleThreadPoolExecutor
 from .migration import (
     EntityIDMigration,
+    EventIDPostMigration,
     EventsContextIDMigration,
     EventTypeIDMigration,
     StatesContextIDMigration,
@@ -113,7 +104,6 @@ from .tasks import (
     CommitTask,
     CompileMissingStatisticsTask,
     DatabaseLockTask,
-    EventIdMigrationTask,
     ImportStatisticsTask,
     KeepAliveTask,
     PerodicCleanupTask,
@@ -132,7 +122,6 @@ from .util import (
     dburl_to_path,
     end_incomplete_runs,
     execute_stmt_lambda_element,
-    get_index_by_name,
     is_second_sunday,
     move_away_broken_database,
     session_scope,
@@ -716,6 +705,19 @@ class Recorder(threading.Thread):
         self._event_session_has_pending_writes = True
         session.add(obj)
 
+    def _notify_migration_failed(self) -> None:
+        """Notify the user schema migration failed."""
+        persistent_notification.create(
+            self.hass,
+            "The database migration failed, check [the logs](/config/logs).",
+            "Database Migration Failed",
+            "recorder_database_migration",
+        )
+
+    def _dismiss_migration_in_progress(self) -> None:
+        """Dismiss notification about migration in progress."""
+        persistent_notification.dismiss(self.hass, "recorder_database_migration")
+
     def _run(self) -> None:
         """Start processing events to save."""
         thread_id = threading.get_ident()
@@ -734,33 +736,41 @@ class Recorder(threading.Thread):
             return
         self.schema_version = schema_status.current_version
 
-        if schema_status.valid:
+        if not schema_status.migration_needed and not schema_status.schema_errors:
             self._setup_run()
         else:
             self.migration_in_progress = True
             self.migration_is_live = migration.live_migration(schema_status)
 
         self.hass.add_job(self.async_connection_success)
-        database_was_ready = self.migration_is_live or schema_status.valid
 
-        if database_was_ready:
-            # If the migrate is live or the schema is valid, we need to
-            # wait for startup to complete. If its not live, we need to continue
-            # on.
-            self._activate_and_set_db_ready()
-
-            # We wait to start a live migration until startup has finished
-            # since it can be cpu intensive and we do not want it to compete
-            # with startup which is also cpu intensive
-            if self._wait_startup_or_shutdown() is SHUTDOWN_TASK:
-                # Shutdown happened before Home Assistant finished starting
+        # First do non-live migration steps, if needed
+        if schema_status.migration_needed:
+            result, schema_status = self._migrate_schema_offline(schema_status)
+            if not result:
+                self._notify_migration_failed()
                 self.migration_in_progress = False
-                # Make sure we cleanly close the run if
-                # we restart before startup finishes
                 return
+            self.schema_version = schema_status.current_version
+            # Non-live migration is now completed, remaining steps are live
+            self.migration_is_live = True
 
-        if not schema_status.valid:
-            if self._migrate_schema_and_setup_run(schema_status):
+        # After non-live migration, activate the recorder
+        self._activate_and_set_db_ready(schema_status)
+        # We wait to start a live migration until startup has finished
+        # since it can be cpu intensive and we do not want it to compete
+        # with startup which is also cpu intensive
+        if self._wait_startup_or_shutdown() is SHUTDOWN_TASK:
+            # Shutdown happened before Home Assistant finished starting
+            self.migration_in_progress = False
+            # Make sure we cleanly close the run if
+            # we restart before startup finishes
+            return
+
+        # Do live migration steps and repairs, if needed
+        if schema_status.migration_needed or schema_status.schema_errors:
+            result, schema_status = self._migrate_schema_live(schema_status)
+            if result:
                 self.schema_version = SCHEMA_VERSION
                 if not self._event_listener:
                     # If the schema migration takes so long that the end
@@ -768,16 +778,16 @@ class Recorder(threading.Thread):
                     # was True, we need to reinitialize the listener.
                     self.hass.add_job(self.async_initialize)
             else:
-                persistent_notification.create(
-                    self.hass,
-                    "The database migration failed, check [the logs](/config/logs).",
-                    "Database Migration Failed",
-                    "recorder_database_migration",
-                )
+                self.migration_in_progress = False
+                self._dismiss_migration_in_progress()
+                self._notify_migration_failed()
                 return
 
-        if not database_was_ready:
-            self._activate_and_set_db_ready()
+        # Schema migration and repair is now completed
+        if self.migration_in_progress:
+            self.migration_in_progress = False
+            self._dismiss_migration_in_progress()
+            self._setup_run()
 
         # Catch up with missed statistics
         self._schedule_compile_missing_statistics()
@@ -786,7 +796,9 @@ class Recorder(threading.Thread):
         self.hass.add_job(self._async_set_recorder_ready_migration_done)
         self._run_event_loop()
 
-    def _activate_and_set_db_ready(self) -> None:
+    def _activate_and_set_db_ready(
+        self, schema_status: migration.SchemaValidationStatus
+    ) -> None:
         """Activate the table managers or schedule migrations and mark the db as ready."""
         with session_scope(session=self.get_session()) as session:
             # Prime the statistics meta manager as soon as possible
@@ -807,23 +819,10 @@ class Recorder(threading.Thread):
                 EventsContextIDMigration,
                 EventTypeIDMigration,
                 EntityIDMigration,
+                EventIDPostMigration,
             ):
-                migrator = migrator_cls(schema_version, migration_changes)
+                migrator = migrator_cls(schema_status.start_version, migration_changes)
                 migrator.do_migrate(self, session)
-
-            if self.schema_version > LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION:
-                with contextlib.suppress(SQLAlchemyError):
-                    # If the index of event_ids on the states table is still present
-                    # or the event_id foreign key still exists we need to queue a
-                    # task to remove it.
-                    if (
-                        get_index_by_name(
-                            session, TABLE_STATES, LEGACY_STATES_EVENT_ID_INDEX
-                        )
-                        or self._legacy_event_id_foreign_key_exists()
-                    ):
-                        self.queue_task(EventIdMigrationTask())
-                        self.use_legacy_events_index = True
 
         # We must only set the db ready after we have set the table managers
         # to active if there is no data to migrate.
@@ -907,7 +906,7 @@ class Recorder(threading.Thread):
                 self._commit_event_session_or_retry()
             task.run(self)
         except exc.DatabaseError as err:
-            if self._handle_database_error(err):
+            if self._handle_database_error(err, setup_run=True):
                 return
             _LOGGER.exception("Unhandled database error while processing task %s", task)
         except SQLAlchemyError:
@@ -947,9 +946,16 @@ class Recorder(threading.Thread):
         """Set the migration started event."""
         self.async_migration_event.set()
 
-    def _migrate_schema_and_setup_run(
+    def _migrate_schema_offline(
         self, schema_status: migration.SchemaValidationStatus
-    ) -> bool:
+    ) -> tuple[bool, migration.SchemaValidationStatus]:
+        """Migrate schema to the latest version."""
+        with self.hass.timeout.freeze(DOMAIN):
+            return self._migrate_schema(schema_status, False)
+
+    def _migrate_schema_live(
+        self, schema_status: migration.SchemaValidationStatus
+    ) -> tuple[bool, migration.SchemaValidationStatus]:
         """Migrate schema to the latest version."""
         persistent_notification.create(
             self.hass,
@@ -957,7 +963,7 @@ class Recorder(threading.Thread):
                 "System performance will temporarily degrade during the database"
                 " upgrade. Do not power down or restart the system until the upgrade"
                 " completes. Integrations that read the database, such as logbook,"
-                " history, and statistics may return inconsistent results until the "
+                " history, and statistics may return inconsistent results until the"
                 " upgrade completes. This notification will be automatically dismissed"
                 " when the upgrade completes."
             ),
@@ -965,26 +971,41 @@ class Recorder(threading.Thread):
             "recorder_database_migration",
         )
         self.hass.add_job(self._async_migration_started)
+        return self._migrate_schema(schema_status, True)
 
+    def _migrate_schema(
+        self,
+        schema_status: migration.SchemaValidationStatus,
+        live: bool,
+    ) -> tuple[bool, migration.SchemaValidationStatus]:
+        """Migrate schema to the latest version."""
+        assert self.engine is not None
         try:
-            assert self.engine is not None
-            migration.migrate_schema(
+            if live:
+                migrator = migration.migrate_schema_live
+            else:
+                migrator = migration.migrate_schema_non_live
+            new_schema_status = migrator(
                 self, self.hass, self.engine, self.get_session, schema_status
             )
         except exc.DatabaseError as err:
-            if self._handle_database_error(err):
-                return True
+            if self._handle_database_error(err, setup_run=False):
+                # If _handle_database_error returns True, we have a new database
+                # which does not need migration or repair.
+                new_schema_status = migration.SchemaValidationStatus(
+                    current_version=SCHEMA_VERSION,
+                    migration_needed=False,
+                    schema_errors=set(),
+                    start_version=SCHEMA_VERSION,
+                )
+                return (True, new_schema_status)
             _LOGGER.exception("Database error during schema migration")
-            return False
+            return (False, schema_status)
         except Exception:
             _LOGGER.exception("Error during schema migration")
-            return False
+            return (False, schema_status)
         else:
-            self._setup_run()
-            return True
-        finally:
-            self.migration_in_progress = False
-            persistent_notification.dismiss(self.hass, "recorder_database_migration")
+            return (True, new_schema_status)
 
     def _lock_database(self, task: DatabaseLockTask) -> None:
         @callback
@@ -1155,7 +1176,7 @@ class Recorder(threading.Thread):
 
         self._add_to_session(session, dbstate)
 
-    def _handle_database_error(self, err: Exception) -> bool:
+    def _handle_database_error(self, err: Exception, *, setup_run: bool) -> bool:
         """Handle a database error that may result in moving away the corrupt db."""
         if (
             (cause := err.__cause__)
@@ -1169,7 +1190,7 @@ class Recorder(threading.Thread):
             _LOGGER.exception(
                 "Unrecoverable sqlite3 database corruption detected: %s", err
             )
-            self._handle_sqlite_corruption()
+            self._handle_sqlite_corruption(setup_run)
             return True
         return False
 
@@ -1236,7 +1257,7 @@ class Recorder(threading.Thread):
             self._commits_without_expire = 0
             session.expire_all()
 
-    def _handle_sqlite_corruption(self) -> None:
+    def _handle_sqlite_corruption(self, setup_run: bool) -> None:
         """Handle the sqlite3 database being corrupt."""
         try:
             self._close_event_session()
@@ -1245,7 +1266,8 @@ class Recorder(threading.Thread):
         move_away_broken_database(dburl_to_path(self.db_url))
         self.recorder_runs_manager.reset()
         self._setup_recorder()
-        self._setup_run()
+        if setup_run:
+            self._setup_run()
 
     def _close_event_session(self) -> None:
         """Close the event session."""
@@ -1279,28 +1301,9 @@ class Recorder(threading.Thread):
         """Run post schema migration tasks."""
         migration.post_schema_migration(self, old_version, new_version)
 
-    def _legacy_event_id_foreign_key_exists(self) -> bool:
-        """Check if the legacy event_id foreign key exists."""
-        engine = self.engine
-        assert engine is not None
-        return bool(
-            next(
-                (
-                    fk
-                    for fk in inspect(engine).get_foreign_keys(TABLE_STATES)
-                    if fk["constrained_columns"] == ["event_id"]
-                ),
-                None,
-            )
-        )
-
     def _post_migrate_entity_ids(self) -> bool:
         """Post migrate entity_ids if needed."""
         return migration.post_migrate_entity_ids(self)
-
-    def _cleanup_legacy_states_event_ids(self) -> bool:
-        """Cleanup legacy event_ids if needed."""
-        return migration.cleanup_legacy_states_event_ids(self)
 
     def _send_keep_alive(self) -> None:
         """Send a keep alive to keep the db connection open."""

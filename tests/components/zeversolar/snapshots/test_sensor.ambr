@@ -1,24 +1,4 @@
 # serializer version: 1
-# name: test_sensors
-  ConfigEntrySnapshot({
-    'data': dict({
-      'host': 'zeversolar-fake-host',
-      'port': 10200,
-    }),
-    'disabled_by': None,
-    'domain': 'zeversolar',
-    'entry_id': <ANY>,
-    'minor_version': 1,
-    'options': dict({
-    }),
-    'pref_disable_new_entities': False,
-    'pref_disable_polling': False,
-    'source': 'user',
-    'title': 'Mock Title',
-    'unique_id': None,
-    'version': 1,
-  })
-# ---
 # name: test_sensors[sensor.zeversolar_sensor_energy_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
