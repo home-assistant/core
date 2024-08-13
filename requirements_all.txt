@@ -2703,7 +2703,7 @@ synology-srm==0.2.0
 systembridgeconnector==4.1.4
 
 # homeassistant.components.system_bridge
-systembridgemodels==4.2.3
+systembridgemodels==4.2.4
 
 # homeassistant.components.tailscale
 tailscale==0.6.1
