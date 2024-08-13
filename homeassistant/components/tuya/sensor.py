@@ -667,41 +667,16 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="liquid_depth",
             device_class=SensorDeviceClass.DISTANCE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfLength.CENTIMETERS,
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.MAX_SET,
-            translation_key="max_set",
-            device_class=SensorDeviceClass.DISTANCE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfLength.CENTIMETERS,
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.MINI_SET,
-            translation_key="mini_set",
-            device_class=SensorDeviceClass.DISTANCE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfLength.CENTIMETERS,
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.INSTALLATION_HEIGHT,
-            translation_key="installation_height",
-            device_class=SensorDeviceClass.DISTANCE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfLength.CENTIMETERS,
-        ),
-        TuyaSensorEntityDescription(
-            key=DPCode.LIQUID_DEPTH_MAX,
-            translation_key="liquid_depth_max",
-            device_class=SensorDeviceClass.DISTANCE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfLength.CENTIMETERS,
+            native_unit_of_measurement=UnitOfLength.METERS,
+            icon="mdi:waves-arrow-up"
         ),
         TuyaSensorEntityDescription(
             key=DPCode.LIQUID_LEVEL_PERCENT,
             translation_key="liquid_level_percent",
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=PERCENTAGE,
+            suggested_display_precision=0,
+            icon="mdi:waves-arrow-up"
         ),
     ),
     # Vibration Sensor

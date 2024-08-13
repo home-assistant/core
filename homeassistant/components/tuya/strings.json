@@ -190,6 +190,18 @@
       },
       "down_delay": {
         "name": "Down delay"
+      },
+      "max_set": {
+        "name": "Max set"
+      },
+      "mini_set": {
+        "name": "Mini set"
+      },
+      "installation_height": {
+        "name": "Installation height"
+      },
+      "liquid_depth_max": {
+        "name": "Liquid depth max"
       }
     },
     "select": {
@@ -628,18 +640,6 @@
       },
       "liquid_depth": {
         "name": "Liquid depth"
-      },
-      "max_set": {
-        "name": "Max set"
-      },
-      "mini_set": {
-        "name": "Mini set"
-      },
-      "installation_height": {
-        "name": "Installation height"
-      },
-      "liquid_depth_max": {
-        "name": "Liquid depth max"
       },
       "liquid_level_percent": {
         "name": "Liquid level percent"
