@@ -2055,7 +2055,7 @@
       "supported_by": "advantage_air"
     },
     "fujitsu_hvac": {
-      "name": "Fujitsu HVAC (based on Ayla IOT platform)",
+      "name": "Fujitsu HVAC (using FGLair app)",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"

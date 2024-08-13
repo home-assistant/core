@@ -1,6 +1,6 @@
 {
   "domain": "fujitsu_hvac",
-  "name": "Fujitsu HVAC (based on Ayla IOT platform)",
+  "name": "Fujitsu HVAC (using FGLair app)",
   "codeowners": ["@crevetor"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/fujitsu_hvac",
