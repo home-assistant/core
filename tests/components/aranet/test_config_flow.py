@@ -12,6 +12,7 @@ from . import (
     NOT_ARANET4_SERVICE_INFO,
     OLD_FIRMWARE_SERVICE_INFO,
     VALID_DATA_SERVICE_INFO,
+    VALID_DATA_SERVICE_INFO_WITH_NO_NAME,
 )
 
 from tests.common import MockConfigEntry
@@ -32,6 +33,25 @@ async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
         )
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Aranet4 12345"
+    assert result2["data"] == {}
+    assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
+
+
+async def test_async_step_bluetooth_device_without_name(hass: HomeAssistant) -> None:
+    """Test discovery via bluetooth with a valid device that has no name."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=VALID_DATA_SERVICE_INFO_WITH_NO_NAME,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+    with patch("homeassistant.components.aranet.async_setup_entry", return_value=True):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Aranet (EEFF)"
     assert result2["data"] == {}
     assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
 

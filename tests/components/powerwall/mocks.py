@@ -16,12 +16,16 @@ from tesla_powerwall import (
     SiteMasterResponse,
 )
 
+from homeassistant.core import HomeAssistant
+
 from tests.common import load_fixture
 
 MOCK_GATEWAY_DIN = "111-0----2-000000000FFA"
 
 
-async def _mock_powerwall_with_fixtures(hass, empty_meters: bool = False) -> MagicMock:
+async def _mock_powerwall_with_fixtures(
+    hass: HomeAssistant, empty_meters: bool = False
+) -> MagicMock:
     """Mock data used to build powerwall state."""
     async with asyncio.TaskGroup() as tg:
         meters_file = "meters_empty.json" if empty_meters else "meters.json"

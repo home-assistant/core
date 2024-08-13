@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
-import attr
+from typing import Any
+
 import eternalegypt
+from eternalegypt.eternalegypt import Modem
 
 from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
 from homeassistant.const import CONF_RECIPIENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_NOTIFY, DOMAIN, LOGGER
+from .const import CONF_NOTIFY, LOGGER
 
 
 async def async_get_service(
@@ -22,21 +24,25 @@ async def async_get_service(
     if discovery_info is None:
         return None
 
-    return NetgearNotifyService(hass, discovery_info)
+    return NetgearNotifyService(config, discovery_info)
 
 
-@attr.s
 class NetgearNotifyService(BaseNotificationService):
     """Implementation of a notification service."""
 
-    hass = attr.ib()
-    config = attr.ib()
+    def __init__(
+        self,
+        config: ConfigType,
+        discovery_info: dict[str, Any],
+    ) -> None:
+        """Initialize the service."""
+        self.config = config
+        self.modem: Modem = discovery_info["modem"]
 
     async def async_send_message(self, message="", **kwargs):
         """Send a message to a user."""
 
-        modem_data = self.hass.data[DOMAIN].get_modem_data(self.config)
-        if not modem_data:
+        if not self.modem.token:
             LOGGER.error("Modem not ready")
             return
         if not (targets := kwargs.get(ATTR_TARGET)):
@@ -50,6 +56,6 @@ class NetgearNotifyService(BaseNotificationService):
 
         for target in targets:
             try:
-                await modem_data.modem.sms(target, message)
+                await self.modem.sms(target, message)
             except eternalegypt.Error:
                 LOGGER.error("Unable to send to %s", target)

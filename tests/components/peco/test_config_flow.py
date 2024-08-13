@@ -62,7 +62,6 @@ async def test_invalid_county(hass: HomeAssistant) -> None:
                 "county": "INVALID_COUNTY_THAT_SHOULDNT_EXIST",
             },
         )
-        await hass.async_block_till_done()
 
 
 async def test_meter_value_error(hass: HomeAssistant) -> None:

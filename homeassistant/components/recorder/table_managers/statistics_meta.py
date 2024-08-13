@@ -36,7 +36,7 @@ QUERY_STATISTIC_META = (
 
 def _generate_get_metadata_stmt(
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+    statistic_type: Literal["mean", "sum"] | None = None,
     statistic_source: str | None = None,
 ) -> StatementLambdaElement:
     """Generate a statement to fetch metadata."""
@@ -88,7 +88,7 @@ class StatisticsMetaManager:
         self,
         session: Session,
         statistic_ids: set[str] | None = None,
-        statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+        statistic_type: Literal["mean", "sum"] | None = None,
         statistic_source: str | None = None,
     ) -> dict[str, tuple[int, StatisticMetaData]]:
         """Fetch meta data and process it into results and/or cache."""
@@ -202,7 +202,7 @@ class StatisticsMetaManager:
         self,
         session: Session,
         statistic_ids: set[str] | None = None,
-        statistic_type: Literal["mean"] | Literal["sum"] | None = None,
+        statistic_type: Literal["mean", "sum"] | None = None,
         statistic_source: str | None = None,
     ) -> dict[str, tuple[int, StatisticMetaData]]:
         """Fetch meta data.

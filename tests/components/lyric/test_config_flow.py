@@ -11,6 +11,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.lyric.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -25,7 +26,7 @@ CLIENT_SECRET = "5678"
 
 
 @pytest.fixture
-async def mock_impl(hass):
+async def mock_impl(hass: HomeAssistant) -> None:
     """Mock implementation."""
     await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
@@ -44,12 +45,11 @@ async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
     assert result["reason"] == "missing_credentials"
 
 
+@pytest.mark.usefixtures("current_request_with_host", "mock_impl")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
-    mock_impl,
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -105,18 +105,17 @@ async def test_full_flow(
 
     assert DOMAIN in hass.config.components
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("current_request_with_host", "mock_impl")
 async def test_reauthentication_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
-    mock_impl,
 ) -> None:
     """Test reauthentication flow."""
     old_entry = MockConfigEntry(

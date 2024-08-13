@@ -5,15 +5,13 @@ from __future__ import annotations
 from hole import Hole
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import PiHoleEntity
-from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN as PIHOLE_DOMAIN
+from . import PiHoleConfigEntry, PiHoleEntity
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -65,15 +63,17 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: PiHoleConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Pi-hole sensor."""
     name = entry.data[CONF_NAME]
-    hole_data = hass.data[PIHOLE_DOMAIN][entry.entry_id]
+    hole_data = entry.runtime_data
     sensors = [
         PiHoleSensor(
-            hole_data[DATA_KEY_API],
-            hole_data[DATA_KEY_COORDINATOR],
+            hole_data.api,
+            hole_data.coordinator,
             name,
             entry.entry_id,
             description,
@@ -92,7 +92,7 @@ class PiHoleSensor(PiHoleEntity, SensorEntity):
     def __init__(
         self,
         api: Hole,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[None],
         name: str,
         server_unique_id: str,
         description: SensorEntityDescription,

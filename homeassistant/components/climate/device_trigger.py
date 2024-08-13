@@ -38,6 +38,7 @@ HVAC_MODE_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
         vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Required(CONF_TYPE): "hvac_mode_changed",
         vol.Required(state_trigger.CONF_TO): vol.In(const.HVAC_MODES),
+        vol.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 

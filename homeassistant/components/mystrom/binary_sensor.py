@@ -38,8 +38,7 @@ class MyStromView(HomeAssistantView):
 
     async def get(self, request):
         """Handle the GET request received from a myStrom button."""
-        res = await self._handle(request.app[KEY_HASS], request.query)
-        return res
+        return await self._handle(request.app[KEY_HASS], request.query)
 
     async def _handle(self, hass, data):
         """Handle requests to the myStrom endpoint."""
@@ -68,6 +67,7 @@ class MyStromView(HomeAssistantView):
         else:
             new_state = self.buttons[entity_id].state == "off"
             self.buttons[entity_id].async_on_update(new_state)
+        return None
 
 
 class MyStromBinarySensor(BinarySensorEntity):

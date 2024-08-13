@@ -3,10 +3,12 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+import pytest
 from yolink.const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
 from homeassistant import config_entries, setup
 from homeassistant.components import application_credentials
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -39,11 +41,11 @@ async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Check full flow."""
     assert await setup.async_setup_component(
@@ -108,15 +110,14 @@ async def test_full_flow(
 
     assert DOMAIN in hass.config.components
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_abort_if_authorization_timeout(
-    hass: HomeAssistant, current_request_with_host: None
-) -> None:
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_abort_if_authorization_timeout(hass: HomeAssistant) -> None:
     """Check yolink authorization timeout."""
     assert await setup.async_setup_component(
         hass,
@@ -141,11 +142,11 @@ async def test_abort_if_authorization_timeout(
     assert result["reason"] == "authorize_url_timeout"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauthentication(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Test yolink reauthentication."""
     await setup.async_setup_component(

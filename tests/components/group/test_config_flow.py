@@ -29,6 +29,7 @@ from tests.typing import WebSocketGenerator
     [
         ("binary_sensor", "on", "on", {}, {}, {"all": False}, {}),
         ("binary_sensor", "on", "on", {}, {"all": True}, {"all": True}, {}),
+        ("button", STATE_UNKNOWN, "2021-01-01T23:59:59.123+00:00", {}, {}, {}, {}),
         ("cover", "open", "open", {}, {}, {}, {}),
         (
             "event",
@@ -45,6 +46,7 @@ from tests.typing import WebSocketGenerator
         ("fan", "on", "on", {}, {}, {}, {}),
         ("light", "on", "on", {}, {}, {}, {}),
         ("lock", "locked", "locked", {}, {}, {}, {}),
+        ("notify", STATE_UNKNOWN, "2021-01-01T23:59:59.123+00:00", {}, {}, {}, {}),
         ("media_player", "on", "on", {}, {}, {}, {}),
         (
             "sensor",
@@ -135,11 +137,13 @@ async def test_config_flow(
     ("group_type", "extra_input"),
     [
         ("binary_sensor", {"all": False}),
+        ("button", {}),
         ("cover", {}),
         ("event", {}),
         ("fan", {}),
         ("light", {}),
         ("lock", {}),
+        ("notify", {}),
         ("media_player", {}),
         ("switch", {}),
     ],
@@ -205,18 +209,20 @@ def get_suggested(schema, key):
                 return None
             return k.description["suggested_value"]
     # Wanted key absent from schema
-    raise Exception
+    raise KeyError("Wanted key absent from schema")
 
 
 @pytest.mark.parametrize(
     ("group_type", "member_state", "extra_options", "options_options"),
     [
         ("binary_sensor", "on", {"all": False}, {}),
+        ("button", "2021-01-01T23:59:59.123+00:00", {}, {}),
         ("cover", "open", {}, {}),
         ("event", "2021-01-01T23:59:59.123+00:00", {}, {}),
         ("fan", "on", {}, {}),
         ("light", "on", {"all": False}, {}),
         ("lock", "locked", {}, {}),
+        ("notify", "2021-01-01T23:59:59.123+00:00", {}, {}),
         ("media_player", "on", {}, {}),
         (
             "sensor",
@@ -396,11 +402,13 @@ async def test_all_options(
     ("group_type", "extra_input"),
     [
         ("binary_sensor", {"all": False}),
+        ("button", {}),
         ("cover", {}),
         ("event", {}),
         ("fan", {}),
         ("light", {}),
         ("lock", {}),
+        ("notify", {}),
         ("media_player", {}),
         ("switch", {}),
     ],
@@ -483,6 +491,7 @@ LIGHT_ATTRS = [
     {"color_mode": "unknown"},
 ]
 LOCK_ATTRS = [{"supported_features": 1}, {}]
+NOTIFY_ATTRS = [{"supported_features": 0}, {}]
 MEDIA_PLAYER_ATTRS = [{"supported_features": 0}, {}]
 SENSOR_ATTRS = [{"icon": "mdi:calculator"}, {"max_entity_id": "sensor.input_two"}]
 
@@ -491,11 +500,13 @@ SENSOR_ATTRS = [{"icon": "mdi:calculator"}, {"max_entity_id": "sensor.input_two"
     ("domain", "extra_user_input", "input_states", "group_state", "extra_attributes"),
     [
         ("binary_sensor", {"all": True}, ["on", "off"], "off", [{}, {}]),
+        ("button", {}, ["", ""], "unknown", [{}, {}]),
         ("cover", {}, ["open", "closed"], "open", COVER_ATTRS),
         ("event", {}, ["", ""], "unknown", EVENT_ATTRS),
         ("fan", {}, ["on", "off"], "on", FAN_ATTRS),
         ("light", {}, ["on", "off"], "on", LIGHT_ATTRS),
         ("lock", {}, ["unlocked", "locked"], "unlocked", LOCK_ATTRS),
+        ("notify", {}, ["", ""], "unknown", NOTIFY_ATTRS),
         ("media_player", {}, ["on", "off"], "on", MEDIA_PLAYER_ATTRS),
         ("sensor", {"type": "max"}, ["10", "20"], "20.0", SENSOR_ATTRS),
         ("switch", {}, ["on", "off"], "on", [{}, {}]),
@@ -540,6 +551,7 @@ async def test_config_flow_preview(
         }
     )
     msg = await client.receive_json()
+    preview_subscribe_id = msg["id"]
     assert msg["success"]
     assert msg["result"] is None
 
@@ -549,8 +561,31 @@ async def test_config_flow_preview(
         "state": "unavailable",
     }
 
+    await client.send_json_auto_id(
+        {
+            "type": "unsubscribe_events",
+            "subscription": preview_subscribe_id,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
     hass.states.async_set(input_entities[0], input_states[0])
     hass.states.async_set(input_entities[1], input_states[1])
+
+    await client.send_json_auto_id(
+        {
+            "type": "group/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "config_flow",
+            "user_input": {"name": "My group", "entities": input_entities}
+            | extra_user_input,
+        }
+    )
+    msg = await client.receive_json()
+    preview_subscribe_id = msg["id"]
+    assert msg["success"]
+    assert msg["result"] is None
 
     msg = await client.receive_json()
     assert msg["event"] == {
@@ -576,11 +611,13 @@ async def test_config_flow_preview(
     ),
     [
         ("binary_sensor", {"all": True}, {"all": False}, ["on", "off"], "on", [{}, {}]),
+        ("button", {}, {}, ["", ""], "unknown", [{}, {}]),
         ("cover", {}, {}, ["open", "closed"], "open", COVER_ATTRS),
         ("event", {}, {}, ["", ""], "unknown", EVENT_ATTRS),
         ("fan", {}, {}, ["on", "off"], "on", FAN_ATTRS),
         ("light", {}, {}, ["on", "off"], "on", LIGHT_ATTRS),
         ("lock", {}, {}, ["unlocked", "locked"], "unlocked", LOCK_ATTRS),
+        ("notify", {}, {}, ["", ""], "unknown", NOTIFY_ATTRS),
         ("media_player", {}, {}, ["on", "off"], "on", MEDIA_PLAYER_ATTRS),
         (
             "sensor",

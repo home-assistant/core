@@ -6,7 +6,8 @@ from collections.abc import Mapping
 from typing import Any
 
 from pytrafikverket.exceptions import InvalidAuthentication, NoCameraFound, UnknownError
-from pytrafikverket.trafikverket_camera import CameraInfo, TrafikverketCamera
+from pytrafikverket.models import CameraInfoModel
+from pytrafikverket.trafikverket_camera import TrafikverketCamera
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
@@ -29,15 +30,15 @@ class TVCameraConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 3
 
     entry: ConfigEntry | None
-    cameras: list[CameraInfo]
+    cameras: list[CameraInfoModel]
     api_key: str
 
     async def validate_input(
         self, sensor_api: str, location: str
-    ) -> tuple[dict[str, str], list[CameraInfo] | None]:
+    ) -> tuple[dict[str, str], list[CameraInfoModel] | None]:
         """Validate input from user input."""
         errors: dict[str, str] = {}
-        cameras: list[CameraInfo] | None = None
+        cameras: list[CameraInfoModel] | None = None
 
         web_session = async_get_clientsession(self.hass)
         camera_api = TrafikverketCamera(web_session, sensor_api)

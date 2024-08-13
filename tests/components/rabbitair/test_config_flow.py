@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from ipaddress import ip_address
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from rabbitair import Mode, Model, Speed
@@ -38,12 +38,12 @@ ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
 
 
 @pytest.fixture(autouse=True)
-def use_mocked_zeroconf(mock_async_zeroconf):
+def use_mocked_zeroconf(mock_async_zeroconf: MagicMock) -> None:
     """Mock zeroconf in all tests."""
 
 
 @pytest.fixture
-def rabbitair_connect() -> Generator[None, None, None]:
+def rabbitair_connect() -> Generator[None]:
     """Mock connection."""
     with (
         patch("rabbitair.UdpClient.get_info", return_value=get_mock_info()),

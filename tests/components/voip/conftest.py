@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
-async def load_homeassistant(hass) -> None:
+async def load_homeassistant(hass: HomeAssistant) -> None:
     """Load the homeassistant integration."""
     assert await async_setup_component(hass, "homeassistant", {})
 
@@ -38,7 +38,7 @@ async def setup_voip(hass: HomeAssistant, config_entry: MockConfigEntry) -> None
         return_value=(Mock(), AsyncMock()),
     ):
         assert await async_setup_component(hass, DOMAIN, {})
-        assert config_entry.state == ConfigEntryState.LOADED
+        assert config_entry.state is ConfigEntryState.LOADED
         yield
 
 

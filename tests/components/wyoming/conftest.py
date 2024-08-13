@@ -1,6 +1,7 @@
 """Common fixtures for the Wyoming tests."""
 
 from collections.abc import Generator
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -18,9 +19,8 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
-def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir: Path) -> None:
     """Mock the TTS cache dir with empty dir."""
-    return mock_tts_cache_dir
 
 
 @pytest.fixture(autouse=True)
@@ -30,7 +30,7 @@ async def init_components(hass: HomeAssistant):
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.wyoming.async_setup_entry", return_value=True

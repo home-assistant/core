@@ -4,14 +4,13 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
-from lmcloud import LMCloud as LaMarzoccoClient
+from lmcloud.lm_machine import LaMarzoccoMachine
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import LaMarzoccoConfigEntry
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
 
@@ -22,26 +21,26 @@ class LaMarzoccoButtonEntityDescription(
 ):
     """Description of a La Marzocco button."""
 
-    press_fn: Callable[[LaMarzoccoClient], Coroutine[Any, Any, None]]
+    press_fn: Callable[[LaMarzoccoMachine], Coroutine[Any, Any, None]]
 
 
 ENTITIES: tuple[LaMarzoccoButtonEntityDescription, ...] = (
     LaMarzoccoButtonEntityDescription(
         key="start_backflush",
         translation_key="start_backflush",
-        press_fn=lambda lm: lm.start_backflush(),
+        press_fn=lambda machine: machine.start_backflush(),
     ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: LaMarzoccoConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up button entities."""
 
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         LaMarzoccoButtonEntity(coordinator, description)
         for description in ENTITIES
@@ -56,4 +55,5 @@ class LaMarzoccoButtonEntity(LaMarzoccoEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press button."""
-        await self.entity_description.press_fn(self.coordinator.lm)
+        await self.entity_description.press_fn(self.coordinator.device)
+        await self.coordinator.async_request_refresh()

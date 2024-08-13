@@ -27,8 +27,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ConsoleData, XboxUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import ConsoleData, XboxUpdateCoordinator
 
 
 async def async_setup_entry(

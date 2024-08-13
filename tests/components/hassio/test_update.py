@@ -21,7 +21,7 @@ MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 
 @pytest.fixture(autouse=True)
-def mock_all(aioclient_mock, request):
+def mock_all(aioclient_mock: AiohttpClientMocker) -> None:
     """Mock all setup requests."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
@@ -186,6 +186,16 @@ def mock_all(aioclient_mock, request):
                 "suggestions": [],
                 "issues": [],
                 "checks": [],
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/network/info",
+        json={
+            "result": "ok",
+            "data": {
+                "host_internet": True,
+                "supervisor_internet": True,
             },
         },
     )
@@ -473,7 +483,7 @@ async def test_release_notes_between_versions(
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
         patch(
-            "homeassistant.components.hassio.data.get_addons_changelogs",
+            "homeassistant.components.hassio.coordinator.get_addons_changelogs",
             return_value={"test": "# 2.0.1\nNew updates\n# 2.0.0\nOld updates"},
         ),
     ):
@@ -512,7 +522,7 @@ async def test_release_notes_full(
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
         patch(
-            "homeassistant.components.hassio.data.get_addons_changelogs",
+            "homeassistant.components.hassio.coordinator.get_addons_changelogs",
             return_value={"test": "# 2.0.0\nNew updates\n# 2.0.0\nOld updates"},
         ),
     ):
@@ -551,7 +561,7 @@ async def test_not_release_notes(
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
         patch(
-            "homeassistant.components.hassio.data.get_addons_changelogs",
+            "homeassistant.components.hassio.coordinator.get_addons_changelogs",
             return_value={"test": None},
         ),
     ):

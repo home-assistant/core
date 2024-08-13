@@ -5,14 +5,11 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from logging import Logger
-from typing import Generic, TypeVar
 
 from homeassistant.core import HassJob, HomeAssistant, callback
 
-_R_co = TypeVar("_R_co", covariant=True)
 
-
-class Debouncer(Generic[_R_co]):
+class Debouncer[_R_co]:
     """Class to rate limit calls to a specific command."""
 
     def __init__(
@@ -138,7 +135,7 @@ class Debouncer(Generic[_R_co]):
                     self._job, background=self._background
                 ):
                     await task
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 self.logger.exception("Unexpected exception from %s", self.function)
             finally:
                 # Schedule a new timer to prevent new runs during cooldown

@@ -1,13 +1,12 @@
 """Tests for Ecovacs sensors."""
 
-from deebot_client.capabilities import Capabilities
 from deebot_client.command import Command
 from deebot_client.commands.json import ResetLifeSpan, SetRelocationState
 from deebot_client.events import LifeSpan
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.button.const import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
@@ -43,13 +42,26 @@ def platforms() -> Platform | list[Platform]:
                     ResetLifeSpan(LifeSpan.FILTER),
                 ),
                 (
-                    "button.ozmo_950_reset_side_brushes_lifespan",
+                    "button.ozmo_950_reset_side_brush_lifespan",
                     ResetLifeSpan(LifeSpan.SIDE_BRUSH),
                 ),
             ],
         ),
+        (
+            "5xu9h3",
+            [
+                (
+                    "button.goat_g1_reset_blade_lifespan",
+                    ResetLifeSpan(LifeSpan.BLADE),
+                ),
+                (
+                    "button.goat_g1_reset_lens_brush_lifespan",
+                    ResetLifeSpan(LifeSpan.LENS_BRUSH),
+                ),
+            ],
+        ),
     ],
-    ids=["yna5x1"],
+    ids=["yna5x1", "5xu9h3"],
 )
 async def test_buttons(
     hass: HomeAssistant,
@@ -61,7 +73,7 @@ async def test_buttons(
 ) -> None:
     """Test that sensor entity snapshots match."""
     assert hass.states.async_entity_ids() == [e[0] for e in entities]
-    device = next(controller.devices(Capabilities))
+    device = controller.devices[0]
     for entity_id, command in entities:
         assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
         assert state.state == STATE_UNKNOWN
@@ -95,7 +107,14 @@ async def test_buttons(
             [
                 "button.ozmo_950_reset_main_brush_lifespan",
                 "button.ozmo_950_reset_filter_lifespan",
-                "button.ozmo_950_reset_side_brushes_lifespan",
+                "button.ozmo_950_reset_side_brush_lifespan",
+            ],
+        ),
+        (
+            "5xu9h3",
+            [
+                "button.goat_g1_reset_blade_lifespan",
+                "button.goat_g1_reset_lens_brush_lifespan",
             ],
         ),
     ],

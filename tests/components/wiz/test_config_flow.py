@@ -9,6 +9,7 @@ from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.wiz.config_flow import CONF_DEVICE
 from homeassistant.components.wiz.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -344,7 +345,7 @@ async def test_discovered_by_dhcp_or_integration_discovery_avoid_waiting_for_ret
     bulb.getMac = AsyncMock(side_effect=OSError)
     _, entry = await async_setup_integration(hass, wizlight=bulb)
     assert entry.data[CONF_HOST] == FAKE_IP
-    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
     bulb.getMac = AsyncMock(return_value=FAKE_MAC)
 
     with _patch_wizlight():
@@ -355,7 +356,7 @@ async def test_discovered_by_dhcp_or_integration_discovery_avoid_waiting_for_ret
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_setup_via_discovery(hass: HomeAssistant) -> None:

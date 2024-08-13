@@ -5,11 +5,15 @@ from unittest.mock import patch
 from homeassistant.components import dynalite
 from homeassistant.components.cover import DEVICE_CLASSES
 from homeassistant.const import CONF_PORT
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 
-async def test_get_config(hass, hass_ws_client):
+async def test_get_config(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Get the config via websocket."""
     host = "1.2.3.4"
     port = 765
@@ -49,7 +53,9 @@ async def test_get_config(hass, hass_ws_client):
     }
 
 
-async def test_save_config(hass, hass_ws_client):
+async def test_save_config(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Save the config via websocket."""
     host1 = "1.2.3.4"
     port1 = 765
@@ -103,7 +109,9 @@ async def test_save_config(hass, hass_ws_client):
     assert modified_entry.data[CONF_PORT] == port3
 
 
-async def test_save_config_invalid_entry(hass, hass_ws_client):
+async def test_save_config_invalid_entry(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Try to update nonexistent entry."""
     host1 = "1.2.3.4"
     port1 = 765

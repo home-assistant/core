@@ -2,13 +2,13 @@
 
 from unittest.mock import patch
 
-from homeassistant import config_entries
 from homeassistant.components.coinbase.const import (
     API_TYPE_VAULT,
     CONF_CURRENCIES,
     CONF_EXCHANGE_RATES,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -45,12 +45,12 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         entry = await init_mock_coinbase(hass)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == config_entries.ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)
 
 

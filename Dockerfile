@@ -12,7 +12,7 @@ ENV \
 ARG QEMU_CPU
 
 # Install uv
-RUN pip3 install uv==0.1.27
+RUN pip3 install uv==0.2.27
 
 WORKDIR /usr/src
 
@@ -30,14 +30,10 @@ RUN \
         uv pip install homeassistant/home_assistant_*.whl; \
     fi \
     && if [ "${BUILD_ARCH}" = "i386" ]; then \
-        LD_PRELOAD="/usr/local/lib/libjemalloc.so.2" \
-        MALLOC_CONF="background_thread:true,metadata_thp:auto,dirty_decay_ms:20000,muzzy_decay_ms:20000" \
         linux32 uv pip install \
             --no-build \
             -r homeassistant/requirements_all.txt; \
     else \
-        LD_PRELOAD="/usr/local/lib/libjemalloc.so.2" \
-        MALLOC_CONF="background_thread:true,metadata_thp:auto,dirty_decay_ms:20000,muzzy_decay_ms:20000" \
         uv pip install \
             --no-build \
             -r homeassistant/requirements_all.txt; \

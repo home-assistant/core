@@ -39,11 +39,12 @@ async def _validate_input(data):
     url = _make_url_from_data(data)
 
     upb = upb_lib.UpbPim({"url": url, "UPStartExportFile": file_path})
+
+    await upb.async_connect(_connected_callback)
+
     if not upb.config_ok:
         _LOGGER.error("Missing or invalid UPB file: %s", file_path)
         raise InvalidUpbFile
-
-    upb.connect(_connected_callback)
 
     with suppress(TimeoutError):
         async with asyncio.timeout(VALIDATE_TIMEOUT):
@@ -93,7 +94,7 @@ class UPBConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidUpbFile:
                 errors["base"] = "invalid_upb_file"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 

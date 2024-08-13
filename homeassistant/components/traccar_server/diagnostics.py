@@ -57,7 +57,7 @@ async def async_get_config_entry_diagnostics(
             "coordinator_data": coordinator.data,
             "entities": [
                 {
-                    "enity_id": entity.entity_id,
+                    "entity_id": entity.entity_id,
                     "disabled": entity.disabled,
                     "unit_of_measurement": entity.unit_of_measurement,
                     "state": _entity_state(hass, entity, coordinator),
@@ -92,7 +92,7 @@ async def async_get_device_diagnostics(
             "coordinator_data": coordinator.data,
             "entities": [
                 {
-                    "enity_id": entity.entity_id,
+                    "entity_id": entity.entity_id,
                     "disabled": entity.disabled,
                     "unit_of_measurement": entity.unit_of_measurement,
                     "state": _entity_state(hass, entity, coordinator),

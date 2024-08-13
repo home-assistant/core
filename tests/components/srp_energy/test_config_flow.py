@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from homeassistant.components.srp_energy.const import CONF_IS_TOU, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_SOURCE, CONF_USERNAME
@@ -23,8 +25,9 @@ from . import (
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_srp_energy_config_flow")
 async def test_show_form(
-    hass: HomeAssistant, mock_srp_energy_config_flow: MagicMock, capsys
+    hass: HomeAssistant, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
@@ -121,7 +124,7 @@ async def test_flow_entry_already_configured(
 ) -> None:
     """Test user input for config_entry that already exists."""
     # Verify mock config setup from fixture
-    assert init_integration.state == ConfigEntryState.LOADED
+    assert init_integration.state is ConfigEntryState.LOADED
     assert init_integration.data[CONF_ID] == ACCNT_ID
     assert init_integration.unique_id == ACCNT_ID
 
@@ -140,11 +143,11 @@ async def test_flow_entry_already_configured(
 
 
 async def test_flow_multiple_configs(
-    hass: HomeAssistant, init_integration: MockConfigEntry, capsys
+    hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """Test multiple config entries."""
     # Verify mock config setup from fixture
-    assert init_integration.state == ConfigEntryState.LOADED
+    assert init_integration.state is ConfigEntryState.LOADED
     assert init_integration.data[CONF_ID] == ACCNT_ID
     assert init_integration.unique_id == ACCNT_ID
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine, Sequence
 from datetime import datetime, timedelta
+from functools import cached_property
 import hashlib
 from types import ModuleType
 from typing import Any, Final, Protocol, final
@@ -13,7 +14,6 @@ import attr
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.backports.functools import cached_property
 from homeassistant.components import zone
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config import (
@@ -281,9 +281,7 @@ async def _async_setup_integration(
         """
         cancel_update_stale()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, _on_hass_stop, run_immediately=True
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_hass_stop)
 
 
 @attr.s
@@ -352,7 +350,7 @@ class DeviceTrackerPlatform:
                         discovery_info,
                     )
                 else:
-                    raise HomeAssistantError("Invalid legacy device_tracker platform.")
+                    raise HomeAssistantError("Invalid legacy device_tracker platform.")  # noqa: TRY301
 
                 if scanner is not None:
                     async_setup_scanner_platform(
@@ -367,7 +365,7 @@ class DeviceTrackerPlatform:
 
                 hass.config.components.add(full_name)
 
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 LOGGER.exception(
                     "Error setting up platform %s %s", self.type, self.name
                 )
@@ -558,8 +556,7 @@ async def get_tracker(hass: HomeAssistant, config: ConfigType) -> DeviceTracker:
         track_new = defaults.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
     devices = await async_load_config(yaml_path, hass, consider_home)
-    tracker = DeviceTracker(hass, consider_home, track_new, defaults, devices)
-    return tracker
+    return DeviceTracker(hass, consider_home, track_new, defaults, devices)
 
 
 class DeviceTracker:

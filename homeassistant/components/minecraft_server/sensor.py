@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, MutableMapping
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
@@ -37,7 +37,7 @@ class MinecraftServerSensorEntityDescription(SensorEntityDescription):
     """Class describing Minecraft Server sensor entities."""
 
     value_fn: Callable[[MinecraftServerData], StateType]
-    attributes_fn: Callable[[MinecraftServerData], MutableMapping[str, Any]] | None
+    attributes_fn: Callable[[MinecraftServerData], dict[str, Any]] | None
     supported_server_types: set[MinecraftServerType]
 
 

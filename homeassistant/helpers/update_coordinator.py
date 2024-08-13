@@ -6,6 +6,7 @@ from abc import abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Generator
 from datetime import datetime, timedelta
+from functools import cached_property
 import logging
 from random import randint
 from time import monotonic
@@ -33,9 +34,6 @@ REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
 _DataT = TypeVar("_DataT", default=dict[str, Any])
-_BaseDataUpdateCoordinatorT = TypeVar(
-    "_BaseDataUpdateCoordinatorT", bound="BaseDataUpdateCoordinatorProtocol"
-)
 _DataUpdateCoordinatorT = TypeVar(
     "_DataUpdateCoordinatorT",
     bound="DataUpdateCoordinator[Any]",
@@ -73,6 +71,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         name: str,
         update_interval: timedelta | None = None,
         update_method: Callable[[], Awaitable[_DataT]] | None = None,
+        setup_method: Callable[[], Awaitable[None]] | None = None,
         request_refresh_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None,
         always_update: bool = True,
     ) -> None:
@@ -81,6 +80,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self.logger = logger
         self.name = name
         self.update_method = update_method
+        self.setup_method = setup_method
         self._update_interval_seconds: float | None = None
         self.update_interval = update_interval
         self._shutdown_requested = False
@@ -136,7 +136,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             await self.async_shutdown()
 
         self._unsub_shutdown = self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _on_hass_stop, run_immediately=True
+            EVENT_HOMEASSISTANT_STOP, _on_hass_stop
         )
 
     @callback
@@ -180,7 +180,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._async_unsub_refresh()
         self._debounced_refresh.async_cancel()
 
-    def async_contexts(self) -> Generator[Any, None, None]:
+    def async_contexts(self) -> Generator[Any]:
         """Return all registered contexts."""
         yield from (
             context for _, context in self._listeners.values() if context is not None
@@ -277,14 +277,53 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         fails. Additionally logging is handled by config entry setup
         to ensure that multiple retries do not cause log spam.
         """
-        await self._async_refresh(
-            log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
-        )
-        if self.last_update_success:
-            return
+        if await self.__wrap_async_setup():
+            await self._async_refresh(
+                log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
+            )
+            if self.last_update_success:
+                return
         ex = ConfigEntryNotReady()
         ex.__cause__ = self.last_exception
         raise ex
+
+    async def __wrap_async_setup(self) -> bool:
+        """Error handling for _async_setup."""
+        try:
+            await self._async_setup()
+        except (
+            TimeoutError,
+            requests.exceptions.Timeout,
+            aiohttp.ClientError,
+            requests.exceptions.RequestException,
+            urllib.error.URLError,
+            UpdateFailed,
+        ) as err:
+            self.last_exception = err
+
+        except (ConfigEntryError, ConfigEntryAuthFailed) as err:
+            self.last_exception = err
+            self.last_update_success = False
+            raise
+
+        except Exception as err:  # pylint: disable=broad-except
+            self.last_exception = err
+            self.logger.exception("Unexpected error fetching %s data", self.name)
+        else:
+            return True
+
+        self.last_update_success = False
+        return False
+
+    async def _async_setup(self) -> None:
+        """Set up the coordinator.
+
+        Can be overwritten by integrations to load data or resources
+        only once during the first refresh.
+        """
+        if self.setup_method is None:
+            return None
+        return await self.setup_method()
 
     async def async_refresh(self) -> None:
         """Refresh data and log errors."""
@@ -380,7 +419,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             self.last_exception = err
             raise
 
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:
             self.last_exception = err
             self.last_update_success = False
             self.logger.exception("Unexpected error fetching %s data", self.name)
@@ -395,11 +434,13 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 self.logger.debug(
                     "Finished fetching %s data in %.3f seconds (success: %s)",
                     self.name,
-                    monotonic() - start,
+                    monotonic() - start,  # pylint: disable=possibly-used-before-assignment
                     self.last_update_success,
                 )
             if not auth_failed and self._listeners and not self.hass.is_stopping:
                 self._schedule_refresh()
+
+        self._async_refresh_finished()
 
         if not self.last_update_success and not previous_update_success:
             return
@@ -410,6 +451,15 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             or previous_data != self.data
         ):
             self.async_update_listeners()
+
+    @callback
+    def _async_refresh_finished(self) -> None:
+        """Handle when a refresh has finished.
+
+        Called when refresh is finished before listeners are updated.
+
+        To be overridden by subclasses.
+        """
 
     @callback
     def async_set_update_error(self, err: Exception) -> None:
@@ -444,25 +494,16 @@ class TimestampDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
 
     last_update_success_time: datetime | None = None
 
-    async def _async_refresh(
-        self,
-        log_failures: bool = True,
-        raise_on_auth_failed: bool = False,
-        scheduled: bool = False,
-        raise_on_entry_error: bool = False,
-    ) -> None:
-        """Refresh data."""
-        await super()._async_refresh(
-            log_failures,
-            raise_on_auth_failed,
-            scheduled,
-            raise_on_entry_error,
-        )
+    @callback
+    def _async_refresh_finished(self) -> None:
+        """Handle when a refresh has finished."""
         if self.last_update_success:
             self.last_update_success_time = utcnow()
 
 
-class BaseCoordinatorEntity(entity.Entity, Generic[_BaseDataUpdateCoordinatorT]):
+class BaseCoordinatorEntity[
+    _BaseDataUpdateCoordinatorT: BaseDataUpdateCoordinatorProtocol
+](entity.Entity):
     """Base class for all Coordinator entities."""
 
     def __init__(
@@ -472,7 +513,7 @@ class BaseCoordinatorEntity(entity.Entity, Generic[_BaseDataUpdateCoordinatorT])
         self.coordinator = coordinator
         self.coordinator_context = context
 
-    @property
+    @cached_property
     def should_poll(self) -> bool:
         """No need to poll. Coordinator notifies entity of updates."""
         return False

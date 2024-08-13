@@ -166,8 +166,23 @@ async def test_config_flow_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {CONF_HOST: "invalid_auth"}
+    assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
+    reolink_connect.valid_password.return_value = False
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_HOST: TEST_HOST,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {CONF_PASSWORD: "password_incompatible"}
+
+    reolink_connect.valid_password.return_value = True
     reolink_connect.get_host_data.side_effect = ApiError("Test error")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -452,7 +467,7 @@ async def test_dhcp_ip_update(
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     if not last_update_success:
         # ensure the last_update_succes is False for the device_coordinator.
@@ -475,8 +490,8 @@ async def test_dhcp_ip_update(
         const.DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
     )
 
-    expected_calls = [
-        call(
+    for host in host_call_list:
+        expected_call = call(
             host,
             TEST_USERNAME,
             TEST_PASSWORD,
@@ -485,10 +500,10 @@ async def test_dhcp_ip_update(
             protocol=DEFAULT_PROTOCOL,
             timeout=DEFAULT_TIMEOUT,
         )
-        for host in host_call_list
-    ]
+        assert expected_call in reolink_connect_class.call_args_list
 
-    assert reolink_connect_class.call_args_list == expected_calls
+    for exc_call in reolink_connect_class.call_args_list:
+        assert exc_call[0][0] in host_call_list
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

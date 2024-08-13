@@ -6,7 +6,7 @@ import binascii
 from collections.abc import Callable, Mapping
 import copy
 import logging
-from typing import Any, NamedTuple, TypeVarTuple, cast
+from typing import Any, NamedTuple, cast
 
 import RFXtrx as rfxtrxmod
 import voluptuous as vol
@@ -25,7 +25,10 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    DeviceInfo,
+    EventDeviceRegistryUpdatedData,
+)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -51,8 +54,6 @@ DEFAULT_OFF_DELAY = 2.0
 
 SIGNAL_EVENT = f"{DOMAIN}_event"
 CONNECT_TIMEOUT = 30.0
-
-_Ts = TypeVarTuple("_Ts")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -259,7 +260,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
         devices.pop(device_id)
 
     @callback
-    def _updated_device(event: Event) -> None:
+    def _updated_device(event: Event[EventDeviceRegistryUpdatedData]) -> None:
         if event.data["action"] != "remove":
             return
         device_entry = device_registry.deleted_devices[event.data["device_id"]]
@@ -409,7 +410,7 @@ def find_possible_pt2262_device(device_ids: set[str], device_id: str) -> str | N
     for dev_id in device_ids:
         if len(dev_id) == len(device_id):
             size = None
-            for i, (char1, char2) in enumerate(zip(dev_id, device_id)):
+            for i, (char1, char2) in enumerate(zip(dev_id, device_id, strict=False)):
                 if char1 != char2:
                     break
                 size = i
@@ -570,7 +571,7 @@ class RfxtrxCommandEntity(RfxtrxEntity):
         """Initialzie a switch or light device."""
         super().__init__(device, device_id, event=event)
 
-    async def _async_send(
+    async def _async_send[*_Ts](
         self, fun: Callable[[rfxtrxmod.PySerialTransport, *_Ts], None], *args: *_Ts
     ) -> None:
         rfx_object: rfxtrxmod.Connect = self.hass.data[DOMAIN][DATA_RFXOBJECT]

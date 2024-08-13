@@ -25,8 +25,7 @@ def mock_discovery_service_fixture() -> AsyncMock:
 @pytest.fixture(name="mock_controller")
 def mock_controller_fixture() -> MagicMock:
     """Mock controller."""
-    controller = MagicMock()
-    return controller
+    return MagicMock()
 
 
 def _mock_start_discovery(

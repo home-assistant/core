@@ -14,12 +14,10 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_registry import (
-    async_entries_for_config_entry,
-    async_get,
-)
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     _LOGGER,
@@ -116,7 +114,7 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except ApiError:
                 errors["base"] = "cannot_connect"
-            except Exception as err:  # pylint: disable=broad-except
+            except Exception as err:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception: %s", err)
                 return self.async_abort(reason="unknown")
 
@@ -140,14 +138,16 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
 
             errors["base"] = "no_selection"
 
+        regions_schema: VolDictType = {
+            vol.Optional(region): cv.multi_select(self.regions[region])
+            for region in CONST_REGIONS
+        }
+
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    **{
-                        vol.Optional(region): cv.multi_select(self.regions[region])
-                        for region in CONST_REGIONS
-                    },
+                    **regions_schema,
                     vol.Required(CONF_MESSAGE_SLOTS, default=5): vol.All(
                         int, vol.Range(min=1, max=20)
                     ),
@@ -195,7 +195,7 @@ class OptionsFlowHandler(OptionsFlow):
                 )
             except ApiError:
                 errors["base"] = "cannot_connect"
-            except Exception as err:  # pylint: disable=broad-except
+            except Exception as err:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception: %s", err)
                 return self.async_abort(reason="unknown")
 
@@ -213,9 +213,9 @@ class OptionsFlowHandler(OptionsFlow):
                     user_input, self._all_region_codes_sorted
                 )
 
-                entity_registry = async_get(self.hass)
+                entity_registry = er.async_get(self.hass)
 
-                entries = async_entries_for_config_entry(
+                entries = er.async_entries_for_config_entry(
                     entity_registry, self.config_entry.entry_id
                 )
 

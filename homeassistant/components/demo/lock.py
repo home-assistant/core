@@ -11,6 +11,8 @@ from homeassistant.const import (
     STATE_JAMMED,
     STATE_LOCKED,
     STATE_LOCKING,
+    STATE_OPEN,
+    STATE_OPENING,
     STATE_UNLOCKED,
     STATE_UNLOCKING,
 )
@@ -76,6 +78,16 @@ class DemoLock(LockEntity):
         """Return true if lock is locked."""
         return self._state == STATE_LOCKED
 
+    @property
+    def is_open(self) -> bool:
+        """Return true if lock is open."""
+        return self._state == STATE_OPEN
+
+    @property
+    def is_opening(self) -> bool:
+        """Return true if lock is opening."""
+        return self._state == STATE_OPENING
+
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         self._state = STATE_LOCKING
@@ -97,5 +109,8 @@ class DemoLock(LockEntity):
 
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
-        self._state = STATE_UNLOCKED
+        self._state = STATE_OPENING
+        self.async_write_ha_state()
+        await asyncio.sleep(LOCK_UNLOCK_DELAY)
+        self._state = STATE_OPEN
         self.async_write_ha_state()

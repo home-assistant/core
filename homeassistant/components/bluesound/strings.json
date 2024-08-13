@@ -1,4 +1,30 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your Bluesound player",
+          "port": "Port of your Bluesound player. This is usually 11000."
+        }
+      },
+      "confirm": {
+        "title": "Discover Bluesound player",
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
   "services": {
     "join": {
       "name": "Join",

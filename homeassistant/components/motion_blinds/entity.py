@@ -39,7 +39,7 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
         if blind.device_type in DEVICE_TYPES_GATEWAY:
             gateway = blind
         else:
-            gateway = blind._gateway
+            gateway = blind._gateway  # noqa: SLF001
         if gateway.firmware is not None:
             sw_version = f"{gateway.firmware}, protocol: {gateway.protocol}"
         else:
@@ -70,7 +70,7 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
                 manufacturer=MANUFACTURER,
                 model=blind.blind_type,
                 name=device_name(blind),
-                via_device=(DOMAIN, blind._gateway.mac),
+                via_device=(DOMAIN, blind._gateway.mac),  # noqa: SLF001
                 hw_version=blind.wireless_name,
             )
 

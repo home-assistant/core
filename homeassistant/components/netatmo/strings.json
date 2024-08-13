@@ -166,5 +166,78 @@
       "name": "Clear temperature setting",
       "description": "Clears any temperature setting for a Netatmo climate device reverting it to the current preset or schedule."
     }
+  },
+  "entity": {
+    "sensor": {
+      "temp_trend": {
+        "name": "Temperature trend"
+      },
+      "pressure_trend": {
+        "name": "Pressure trend"
+      },
+      "noise": {
+        "name": "Noise"
+      },
+      "sum_rain_1": {
+        "name": "Precipitation last hour"
+      },
+      "sum_rain_24": {
+        "name": "Precipitation today"
+      },
+      "wind_direction": {
+        "name": "Wind direction",
+        "state": {
+          "n": "North",
+          "ne": "North-east",
+          "e": "East",
+          "se": "South-east",
+          "s": "South",
+          "sw": "South-west",
+          "w": "West",
+          "nw": "North-west"
+        }
+      },
+      "wind_angle": {
+        "name": "Wind angle"
+      },
+      "gust_direction": {
+        "name": "Gust direction",
+        "state": {
+          "n": "[%key:component::netatmo::entity::sensor::wind_direction::state::n%]",
+          "ne": "[%key:component::netatmo::entity::sensor::wind_direction::state::ne%]",
+          "e": "[%key:component::netatmo::entity::sensor::wind_direction::state::e%]",
+          "se": "[%key:component::netatmo::entity::sensor::wind_direction::state::se%]",
+          "s": "[%key:component::netatmo::entity::sensor::wind_direction::state::s%]",
+          "sw": "[%key:component::netatmo::entity::sensor::wind_direction::state::sw%]",
+          "w": "[%key:component::netatmo::entity::sensor::wind_direction::state::w%]",
+          "nw": "[%key:component::netatmo::entity::sensor::wind_direction::state::nw%]"
+        }
+      },
+      "gust_angle": {
+        "name": "Gust angle"
+      },
+      "gust_strength": {
+        "name": "Gust strength"
+      },
+      "reachable": {
+        "name": "Reachability"
+      },
+      "rf_strength": {
+        "name": "Radio"
+      },
+      "wifi_strength": {
+        "name": "Wi-Fi"
+      },
+      "health_idx": {
+        "name": "Health index",
+        "state": {
+          "healthy": "Healthy",
+          "fine": "Fine",
+          "fair": "Fair",
+          "poor": "Poor",
+          "unhealthy": "Unhealthy"
+        }
+      }
+    }
   }
 }

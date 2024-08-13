@@ -205,6 +205,10 @@ async def test_download_error(hass: HomeAssistant) -> None:
         ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    async def _delayed_runtime_error(*args, **kwargs):
+        await asyncio.sleep(0)
+        raise RuntimeError
+
     with (
         patch(
             "homeassistant.components.ollama.config_flow.ollama.AsyncClient.list",
@@ -212,7 +216,7 @@ async def test_download_error(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.ollama.config_flow.ollama.AsyncClient.pull",
-            side_effect=RuntimeError(),
+            _delayed_runtime_error,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(

@@ -29,7 +29,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers import selector
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import UNDEFINED, VolDictType
 
 from .const import (
     CONF_KNX_AUTOMATIC,
@@ -62,7 +62,7 @@ from .const import (
     TELEGRAM_LOG_MAX,
     KNXConfigEntryData,
 )
-from .helpers.keyring import DEFAULT_KNX_KEYRING_FILENAME, save_uploaded_knxkeys_file
+from .storage.keyring import DEFAULT_KNX_KEYRING_FILENAME, save_uploaded_knxkeys_file
 from .validation import ia_validator, ip_v4_validator
 
 CONF_KNX_GATEWAY: Final = "gateway"
@@ -118,7 +118,7 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
         self._tunnel_endpoints: list[XMLInterface] = []
 
         self._gatewayscanner: GatewayScanner | None = None
-        self._async_scan_gen: AsyncGenerator[GatewayDescriptor, None] | None = None
+        self._async_scan_gen: AsyncGenerator[GatewayDescriptor] | None = None
 
     @abstractmethod
     def finish_flow(self) -> ConfigFlowResult:
@@ -332,6 +332,7 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
             self.initial_data.get(CONF_KNX_CONNECTION_TYPE)
             in CONF_KNX_TUNNELING_TYPE_LABELS
         )
+        ip_address: str | None
         if (  # initial attempt on ConfigFlow or coming from automatic / routing
             (isinstance(self, ConfigFlow) or not _reconfiguring_existing_tunnel)
             and not user_input
@@ -367,7 +368,7 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
             CONF_KNX_ROUTE_BACK, not bool(self._selected_tunnel)
         )
 
-        fields = {
+        fields: VolDictType = {
             vol.Required(CONF_KNX_TUNNELING_TYPE, default=default_type): vol.In(
                 CONF_KNX_TUNNELING_TYPE_LABELS
             ),
@@ -444,7 +445,7 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
             try:
                 key_bytes = bytes.fromhex(user_input[CONF_KNX_ROUTING_BACKBONE_KEY])
                 if len(key_bytes) != 16:
-                    raise ValueError
+                    raise ValueError  # noqa: TRY301
             except ValueError:
                 errors[CONF_KNX_ROUTING_BACKBONE_KEY] = "invalid_backbone_key"
             if not errors:
@@ -693,7 +694,7 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
             router for router in routers if router.routing_requires_secure
         )
 
-        fields = {
+        fields: VolDictType = {
             vol.Required(
                 CONF_KNX_INDIVIDUAL_ADDRESS, default=_individual_address
             ): _IA_SELECTOR,

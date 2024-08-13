@@ -189,7 +189,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
         except CannotConnect:
             LOGGER.error("Error connecting to the Hue bridge at %s", bridge.host)
             return self.async_abort(reason="cannot_connect")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             LOGGER.exception(
                 "Unknown error connecting with Hue bridge at %s", bridge.host
             )

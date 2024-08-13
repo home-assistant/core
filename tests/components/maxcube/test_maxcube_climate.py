@@ -227,7 +227,7 @@ async def test_thermostat_set_no_temperature(
             },
             blocking=True,
         )
-        cube.set_temperature_mode.assert_not_called()
+    cube.set_temperature_mode.assert_not_called()
 
 
 async def test_thermostat_set_preset_on(

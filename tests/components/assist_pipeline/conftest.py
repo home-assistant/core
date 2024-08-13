@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterable, Generator
+from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -10,6 +11,12 @@ import pytest
 
 from homeassistant.components import stt, tts, wake_word
 from homeassistant.components.assist_pipeline import DOMAIN, select as assist_select
+from homeassistant.components.assist_pipeline.const import (
+    BYTES_PER_CHUNK,
+    SAMPLE_CHANNELS,
+    SAMPLE_RATE,
+    SAMPLE_WIDTH,
+)
 from homeassistant.components.assist_pipeline.pipeline import (
     PipelineData,
     PipelineStorageCollection,
@@ -32,11 +39,12 @@ from tests.common import (
 
 _TRANSCRIPT = "test transcript"
 
+BYTES_ONE_SECOND = SAMPLE_RATE * SAMPLE_WIDTH * SAMPLE_CHANNELS
+
 
 @pytest.fixture(autouse=True)
-def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir: Path) -> None:
     """Mock the TTS cache dir with empty dir."""
-    return mock_tts_cache_dir
 
 
 class BaseProvider:
@@ -152,7 +160,7 @@ class MockTTSPlatform(MockPlatform):
 
 
 @pytest.fixture
-async def mock_tts_provider(hass) -> MockTTSProvider:
+async def mock_tts_provider() -> MockTTSProvider:
     """Mock TTS provider."""
     return MockTTSProvider()
 
@@ -255,13 +263,13 @@ class MockWakeWordEntity2(wake_word.WakeWordDetectionEntity):
 
 
 @pytest.fixture
-async def mock_wake_word_provider_entity(hass) -> MockWakeWordEntity:
+async def mock_wake_word_provider_entity() -> MockWakeWordEntity:
     """Mock wake word provider."""
     return MockWakeWordEntity()
 
 
 @pytest.fixture
-async def mock_wake_word_provider_entity2(hass) -> MockWakeWordEntity2:
+async def mock_wake_word_provider_entity2() -> MockWakeWordEntity2:
     """Mock wake word provider."""
     return MockWakeWordEntity2()
 
@@ -271,7 +279,7 @@ class MockFlow(ConfigFlow):
 
 
 @pytest.fixture
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, "test.config_flow")
 
@@ -378,13 +386,14 @@ async def init_components(hass: HomeAssistant, init_supporting_components):
 
 
 @pytest.fixture
-async def assist_device(hass: HomeAssistant, init_components) -> dr.DeviceEntry:
+async def assist_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, init_components
+) -> dr.DeviceEntry:
     """Create an assist device."""
     config_entry = MockConfigEntry(domain="test_assist_device")
     config_entry.add_to_hass(hass)
 
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_or_create(
+    device = device_registry.async_get_or_create(
         name="Test Device",
         config_entry_id=config_entry.entry_id,
         identifiers={("test_assist_device", "test")},
@@ -460,3 +469,8 @@ def pipeline_data(hass: HomeAssistant, init_components) -> PipelineData:
 def pipeline_storage(pipeline_data) -> PipelineStorageCollection:
     """Return pipeline storage collection."""
     return pipeline_data.pipeline_store
+
+
+def make_10ms_chunk(header: bytes) -> bytes:
+    """Return 10ms of zeros with the given header."""
+    return header + bytes(BYTES_PER_CHUNK - len(header))

@@ -7,7 +7,10 @@ from datetime import timedelta
 from pyetherscan import get_balance
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -18,7 +21,7 @@ CONF_TOKEN_ADDRESS = "token_address"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ADDRESS): cv.string,
         vol.Optional(CONF_NAME): cv.string,

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import timedelta
+from functools import cached_property
 import logging
 from typing import Any
 
@@ -18,13 +19,13 @@ from aiounifi.models.device import Device
 from aiounifi.models.event import Event, EventKey
 
 from homeassistant.components.device_tracker import DOMAIN, ScannerEntity, SourceType
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event as core_Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.helpers.entity_registry as er
 import homeassistant.util.dt as dt_util
 
+from . import UnifiConfigEntry
 from .const import DOMAIN as UNIFI_DOMAIN
 from .entity import (
     HandlerT,
@@ -152,7 +153,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
         allowed_fn=async_client_allowed_fn,
         api_handler_fn=lambda api: api.clients,
         device_info_fn=lambda api, obj_id: None,
-        event_is_on=(WIRED_CONNECTION + WIRELESS_CONNECTION),
+        event_is_on=set(WIRED_CONNECTION + WIRELESS_CONNECTION),
         event_to_subscribe=(
             WIRED_CONNECTION
             + WIRED_DISCONNECTION
@@ -185,12 +186,12 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
 
 
 @callback
-def async_update_unique_id(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+def async_update_unique_id(hass: HomeAssistant, config_entry: UnifiConfigEntry) -> None:
     """Normalize client unique ID to have a prefix rather than suffix.
 
     Introduced with release 2023.12.
     """
-    hub: UnifiHub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = config_entry.runtime_data
     ent_reg = er.async_get(hass)
 
     @callback
@@ -210,12 +211,12 @@ def async_update_unique_id(hass: HomeAssistant, config_entry: ConfigEntry) -> No
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: UnifiConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up device tracker for UniFi Network integration."""
     async_update_unique_id(hass, config_entry)
-    UnifiHub.get_hub(hass, config_entry).entity_loader.register_platform(
+    config_entry.runtime_data.entity_loader.register_platform(
         async_add_entities, UnifiScannerEntity, ENTITY_DESCRIPTIONS
     )
 
@@ -225,7 +226,7 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
 
     entity_description: UnifiTrackerEntityDescription
 
-    _event_is_on: tuple[EventKey, ...]
+    _event_is_on: set[EventKey]
     _ignore_events: bool
     _is_connected: bool
 
@@ -236,11 +237,11 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
         Initiate is_connected.
         """
         description = self.entity_description
-        self._event_is_on = description.event_is_on or ()
+        self._event_is_on = description.event_is_on or set()
         self._ignore_events = False
         self._is_connected = description.is_connected_fn(self.hub, self._obj_id)
         if self.is_connected:
-            self.hub.async_heartbeat(
+            self.hub.update_heartbeat(
                 self.unique_id,
                 dt_util.utcnow()
                 + description.heartbeat_timedelta_fn(self.hub, self._obj_id),
@@ -254,24 +255,24 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
     @property
     def hostname(self) -> str | None:
         """Return hostname of the device."""
-        return self.entity_description.hostname_fn(self.hub.api, self._obj_id)
+        return self.entity_description.hostname_fn(self.api, self._obj_id)
 
     @property
     def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
-        return self.entity_description.ip_address_fn(self.hub.api, self._obj_id)
+        return self.entity_description.ip_address_fn(self.api, self._obj_id)
 
-    @property
+    @cached_property
     def mac_address(self) -> str:
         """Return the mac address of the device."""
         return self._obj_id
 
-    @property
+    @cached_property
     def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
         return SourceType.ROUTER
 
-    @property
+    @cached_property
     def unique_id(self) -> str:
         """Return a unique ID."""
         return self._attr_unique_id
@@ -292,42 +293,45 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
         Schedule new heartbeat check if connected.
         """
         description = self.entity_description
+        hub = self.hub
 
-        if event == ItemEvent.CHANGED:
+        if event is ItemEvent.CHANGED:
             # Prioritize normal data updates over events
             self._ignore_events = True
 
-        elif event == ItemEvent.ADDED and not self.available:
+        elif event is ItemEvent.ADDED and not self.available:
             # From unifi.entity.async_signal_reachable_callback
             # Controller connection state has changed and entity is unavailable
             # Cancel heartbeat
-            self.hub.async_heartbeat(self.unique_id)
+            hub.remove_heartbeat(self.unique_id)
             return
 
-        if is_connected := description.is_connected_fn(self.hub, self._obj_id):
+        obj_id = self._obj_id
+        if is_connected := description.is_connected_fn(hub, obj_id):
             self._is_connected = is_connected
-            self.hub.async_heartbeat(
+            self.hub.update_heartbeat(
                 self.unique_id,
-                dt_util.utcnow()
-                + description.heartbeat_timedelta_fn(self.hub, self._obj_id),
+                dt_util.utcnow() + description.heartbeat_timedelta_fn(hub, obj_id),
             )
 
     @callback
     def async_event_callback(self, event: Event) -> None:
         """Event subscription callback."""
-        if event.mac != self._obj_id or self._ignore_events:
+        obj_id = self._obj_id
+        if event.mac != obj_id or self._ignore_events:
             return
 
+        hub = self.hub
         if event.key in self._event_is_on:
-            self.hub.async_heartbeat(self.unique_id)
+            hub.remove_heartbeat(self.unique_id)
             self._is_connected = True
             self.async_write_ha_state()
             return
 
-        self.hub.async_heartbeat(
+        hub.update_heartbeat(
             self.unique_id,
             dt_util.utcnow()
-            + self.entity_description.heartbeat_timedelta_fn(self.hub, self._obj_id),
+            + self.entity_description.heartbeat_timedelta_fn(hub, obj_id),
         )
 
     async def async_added_to_hass(self) -> None:
@@ -344,7 +348,7 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect object when removed."""
         await super().async_will_remove_from_hass()
-        self.hub.async_heartbeat(self.unique_id)
+        self.hub.remove_heartbeat(self.unique_id)
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
@@ -352,13 +356,11 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
         if self.entity_description.key != "Client device scanner":
             return None
 
-        client = self.entity_description.object_fn(self.hub.api, self._obj_id)
+        client = self.entity_description.object_fn(self.api, self._obj_id)
         raw = client.raw
 
         attributes_to_check = CLIENT_STATIC_ATTRIBUTES
         if self.is_connected:
             attributes_to_check = CLIENT_CONNECTED_ALL_ATTRIBUTES
 
-        attributes = {k: raw[k] for k in attributes_to_check if k in raw}
-
-        return attributes
+        return {k: raw[k] for k in attributes_to_check if k in raw}

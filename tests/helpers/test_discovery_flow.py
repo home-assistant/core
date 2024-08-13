@@ -1,16 +1,18 @@
 """Test the discovery flow helper."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, call, patch
 
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.core import EVENT_HOMEASSISTANT_STARTED, CoreState, HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import discovery_flow
 
 
 @pytest.fixture
-def mock_flow_init(hass):
+def mock_flow_init(hass: HomeAssistant) -> Generator[AsyncMock]:
     """Mock hass.config_entries.flow.async_init."""
     with patch.object(
         hass.config_entries.flow, "async_init", return_value=AsyncMock()
@@ -18,7 +20,9 @@ def mock_flow_init(hass):
         yield mock_init
 
 
-async def test_async_create_flow(hass: HomeAssistant, mock_flow_init) -> None:
+async def test_async_create_flow(
+    hass: HomeAssistant, mock_flow_init: AsyncMock
+) -> None:
     """Test we can create a flow."""
     discovery_flow.async_create_flow(
         hass,
@@ -36,7 +40,7 @@ async def test_async_create_flow(hass: HomeAssistant, mock_flow_init) -> None:
 
 
 async def test_async_create_flow_deferred_until_started(
-    hass: HomeAssistant, mock_flow_init
+    hass: HomeAssistant, mock_flow_init: AsyncMock
 ) -> None:
     """Test flows are deferred until started."""
     hass.set_state(CoreState.stopped)
@@ -59,7 +63,7 @@ async def test_async_create_flow_deferred_until_started(
 
 
 async def test_async_create_flow_checks_existing_flows_after_startup(
-    hass: HomeAssistant, mock_flow_init
+    hass: HomeAssistant, mock_flow_init: AsyncMock
 ) -> None:
     """Test existing flows prevent an identical ones from being after startup."""
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -77,7 +81,7 @@ async def test_async_create_flow_checks_existing_flows_after_startup(
 
 
 async def test_async_create_flow_checks_existing_flows_before_startup(
-    hass: HomeAssistant, mock_flow_init
+    hass: HomeAssistant, mock_flow_init: AsyncMock
 ) -> None:
     """Test existing flows prevent an identical ones from being created before startup."""
     hass.set_state(CoreState.stopped)
@@ -100,7 +104,7 @@ async def test_async_create_flow_checks_existing_flows_before_startup(
 
 
 async def test_async_create_flow_does_nothing_after_stop(
-    hass: HomeAssistant, mock_flow_init
+    hass: HomeAssistant, mock_flow_init: AsyncMock
 ) -> None:
     """Test we no longer create flows when hass is stopping."""
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)

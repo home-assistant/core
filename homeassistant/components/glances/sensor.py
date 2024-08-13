@@ -10,10 +10,10 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
+    UnitOfDataRate,
     UnitOfInformation,
     UnitOfTemperature,
 )
@@ -22,7 +22,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import GlancesDataUpdateCoordinator
+from . import GlancesConfigEntry, GlancesDataUpdateCoordinator
 from .const import CPU_ICON, DOMAIN
 
 
@@ -55,6 +55,24 @@ SENSOR_TYPES = {
         translation_key="disk_free",
         native_unit_of_measurement=UnitOfInformation.GIBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("diskio", "read"): GlancesSensorEntityDescription(
+        key="read",
+        type="diskio",
+        translation_key="diskio_read",
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("diskio", "write"): GlancesSensorEntityDescription(
+        key="write",
+        type="diskio",
+        translation_key="diskio_write",
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ("mem", "memory_use_percent"): GlancesSensorEntityDescription(
@@ -216,21 +234,69 @@ SENSOR_TYPES = {
         translation_key="uptime",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
+    ("gpu", "mem"): GlancesSensorEntityDescription(
+        key="mem",
+        type="gpu",
+        translation_key="gpu_memory_usage",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("gpu", "proc"): GlancesSensorEntityDescription(
+        key="proc",
+        type="gpu",
+        translation_key="gpu_processor_usage",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    ("gpu", "temperature"): GlancesSensorEntityDescription(
+        key="temperature",
+        type="gpu",
+        translation_key="temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("gpu", "fan_speed"): GlancesSensorEntityDescription(
+        key="fan_speed",
+        type="gpu",
+        translation_key="fan_speed",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("network", "rx"): GlancesSensorEntityDescription(
+        key="rx",
+        type="network",
+        translation_key="network_rx",
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("network", "tx"): GlancesSensorEntityDescription(
+        key="tx",
+        type="network",
+        translation_key="network_tx",
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: GlancesConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Glances sensors."""
 
-    coordinator: GlancesDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     entities: list[GlancesSensor] = []
 
     for sensor_type, sensors in coordinator.data.items():
-        if sensor_type in ["fs", "sensors", "raid"]:
+        if sensor_type in ["fs", "diskio", "sensors", "raid", "gpu", "network"]:
             entities.extend(
                 GlancesSensor(
                     coordinator,
@@ -259,6 +325,7 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
 
     entity_description: GlancesSensorEntityDescription
     _attr_has_entity_name = True
+    _data_valid: bool = False
 
     def __init__(
         self,
@@ -285,14 +352,7 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
     @property
     def available(self) -> bool:
         """Set sensor unavailable when native value is invalid."""
-        if super().available:
-            return (
-                not self._numeric_state_expected
-                or isinstance(value := self.native_value, (int, float))
-                or isinstance(value, str)
-                and value.isnumeric()
-            )
-        return False
+        return super().available and self._data_valid
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -302,10 +362,19 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
 
     def _update_native_value(self) -> None:
         """Update sensor native value from coordinator data."""
-        data = self.coordinator.data[self.entity_description.type]
-        if dict_val := data.get(self._sensor_label):
+        data = self.coordinator.data.get(self.entity_description.type)
+        if data and (dict_val := data.get(self._sensor_label)):
             self._attr_native_value = dict_val.get(self.entity_description.key)
-        elif self.entity_description.key in data:
+        elif data and (self.entity_description.key in data):
             self._attr_native_value = data.get(self.entity_description.key)
         else:
             self._attr_native_value = None
+        self._update_data_valid()
+
+    def _update_data_valid(self) -> None:
+        self._data_valid = self._attr_native_value is not None and (
+            not self._numeric_state_expected
+            or isinstance(self._attr_native_value, (int, float))
+            or isinstance(self._attr_native_value, str)
+            and self._attr_native_value.isnumeric()
+        )

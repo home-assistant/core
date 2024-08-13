@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import patch
 
 from pyatmo.const import ALL_SCOPES
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
@@ -15,6 +16,7 @@ from homeassistant.components.netatmo.const import (
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -58,11 +60,11 @@ async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Check full flow."""
 
@@ -225,11 +227,11 @@ async def test_option_flow_wrong_coordinates(hass: HomeAssistant) -> None:
         assert config_entry.options[CONF_WEATHER_AREAS]["Home"][k] == v
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Test initialization of the reauth flow."""
 
@@ -275,7 +277,7 @@ async def test_reauth(
 
     new_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert new_entry.state == config_entries.ConfigEntryState.LOADED
+    assert new_entry.state is ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
 
@@ -322,6 +324,6 @@ async def test_reauth(
 
     assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
-    assert new_entry2.state == config_entries.ConfigEntryState.LOADED
+    assert new_entry2.state is ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1

@@ -1,9 +1,9 @@
 """Tests for the Rain Bird config flow."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -40,13 +40,13 @@ def mock_responses() -> list[AiohttpClientMockResponse]:
 
 
 @pytest.fixture(autouse=True)
-async def config_entry_data() -> None:
+async def config_entry_data() -> dict[str, Any] | None:
     """Fixture to disable config entry setup for exercising config flow."""
     return None
 
 
 @pytest.fixture(autouse=True)
-async def mock_setup() -> Generator[Mock, None, None]:
+async def mock_setup() -> AsyncGenerator[AsyncMock]:
     """Fixture for patching out integration setup."""
 
     with patch(
@@ -159,7 +159,7 @@ async def test_multiple_config_entries(
 ) -> None:
     """Test setting up multiple config entries that refer to different devices."""
     await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     responses.clear()
     responses.extend(config_flow_responses)
@@ -234,7 +234,7 @@ async def test_duplicate_config_entries(
 ) -> None:
     """Test that a device can not be registered twice."""
     await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     responses.clear()
     responses.extend(config_flow_responses)
@@ -299,7 +299,7 @@ async def test_options_flow(hass: HomeAssistant, mock_setup: Mock) -> None:
 
     # Assert single config entry is loaded
     config_entry = next(iter(hass.config_entries.async_entries(DOMAIN)))
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     # Initiate the options flow
     result = await hass.config_entries.options.async_init(config_entry.entry_id)

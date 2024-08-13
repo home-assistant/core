@@ -87,10 +87,10 @@ async def test_config_entry_reload(hass: HomeAssistant) -> None:
     with _patch_discovery(), _patch_config_flow_try_connect(), _patch_device():
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert already_migrated_config_entry.state == ConfigEntryState.LOADED
+        assert already_migrated_config_entry.state is ConfigEntryState.LOADED
         await hass.config_entries.async_unload(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
-        assert already_migrated_config_entry.state == ConfigEntryState.NOT_LOADED
+        assert already_migrated_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_config_entry_retry(hass: HomeAssistant) -> None:
@@ -106,7 +106,7 @@ async def test_config_entry_retry(hass: HomeAssistant) -> None:
     ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert already_migrated_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_get_version_fails(hass: HomeAssistant) -> None:
@@ -123,7 +123,7 @@ async def test_get_version_fails(hass: HomeAssistant) -> None:
     with _patch_discovery(device=bulb), _patch_device(device=bulb):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert already_migrated_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_dns_error_at_startup(hass: HomeAssistant) -> None:
@@ -158,7 +158,7 @@ async def test_dns_error_at_startup(hass: HomeAssistant) -> None:
     ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert already_migrated_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_config_entry_wrong_serial(
@@ -173,7 +173,7 @@ async def test_config_entry_wrong_serial(
     with _patch_discovery(), _patch_config_flow_try_connect(), _patch_device():
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
-        assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
+        assert already_migrated_config_entry.state is ConfigEntryState.SETUP_RETRY
 
     assert (
         "Unexpected device found at 127.0.0.1; expected aa:bb:cc:dd:ee:c0, found aa:bb:cc:dd:ee:cc"

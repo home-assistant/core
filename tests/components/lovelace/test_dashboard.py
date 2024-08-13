@@ -1,6 +1,7 @@
 """Test the Lovelace initialization."""
 
 from collections.abc import Generator
+import time
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -16,7 +17,7 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
-def mock_onboarding_done() -> Generator[MagicMock, None, None]:
+def mock_onboarding_done() -> Generator[MagicMock]:
     """Mock that Home Assistant is currently onboarding.
 
     Enabled to prevent creating default dashboards during test execution.
@@ -29,7 +30,9 @@ def mock_onboarding_done() -> Generator[MagicMock, None, None]:
 
 
 async def test_lovelace_from_storage(
-    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test we load lovelace config from storage."""
     assert await async_setup_component(hass, "lovelace", {})
@@ -82,7 +85,9 @@ async def test_lovelace_from_storage(
 
 
 async def test_lovelace_from_storage_save_before_load(
-    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test we can load lovelace config from storage."""
     assert await async_setup_component(hass, "lovelace", {})
@@ -100,7 +105,9 @@ async def test_lovelace_from_storage_save_before_load(
 
 
 async def test_lovelace_from_storage_delete(
-    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test we delete lovelace config from storage."""
     assert await async_setup_component(hass, "lovelace", {})
@@ -179,6 +186,44 @@ async def test_lovelace_from_yaml(
     assert response["result"] == {"hello": "yo2"}
 
     assert len(events) == 1
+
+    # Make sure when the mtime changes, we reload the config
+    with (
+        patch(
+            "homeassistant.components.lovelace.dashboard.load_yaml_dict",
+            return_value={"hello": "yo3"},
+        ),
+        patch(
+            "homeassistant.components.lovelace.dashboard.os.path.getmtime",
+            return_value=time.time(),
+        ),
+    ):
+        await client.send_json({"id": 9, "type": "lovelace/config", "force": False})
+        response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"hello": "yo3"}
+
+    assert len(events) == 2
+
+    # If the mtime is lower, preserve the cache
+    with (
+        patch(
+            "homeassistant.components.lovelace.dashboard.load_yaml_dict",
+            return_value={"hello": "yo4"},
+        ),
+        patch(
+            "homeassistant.components.lovelace.dashboard.os.path.getmtime",
+            return_value=0,
+        ),
+    ):
+        await client.send_json({"id": 10, "type": "lovelace/config", "force": False})
+        response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"hello": "yo3"}
+
+    assert len(events) == 2
 
 
 @pytest.mark.parametrize("url_path", ["test-panel", "test-panel-no-sidebar"])
@@ -313,7 +358,9 @@ async def test_wrong_key_dashboard_from_yaml(hass: HomeAssistant) -> None:
 
 
 async def test_storage_dashboards(
-    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test we load lovelace config from storage."""
     assert await async_setup_component(hass, "lovelace", {})

@@ -159,7 +159,7 @@ class SmartThingsFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "app_setup_error"
                 _LOGGER.exception("Unexpected error setting up the SmartApp")
             return self._show_step_pat(errors)
-        except Exception:  # pylint:disable=broad-except
+        except Exception:
             errors["base"] = "app_setup_error"
             _LOGGER.exception("Unexpected error setting up the SmartApp")
             return self._show_step_pat(errors)

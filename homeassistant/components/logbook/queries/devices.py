@@ -82,7 +82,7 @@ def devices_stmt(
     json_quotable_device_ids: list[str],
 ) -> StatementLambdaElement:
     """Generate a logbook query for multiple devices."""
-    stmt = lambda_stmt(
+    return lambda_stmt(
         lambda: _apply_devices_context_union(
             select_events_without_states(start_day, end_day, event_type_ids).where(
                 apply_event_device_id_matchers(json_quotable_device_ids)
@@ -93,7 +93,6 @@ def devices_stmt(
             json_quotable_device_ids,
         ).order_by(Events.time_fired_ts)
     )
-    return stmt
 
 
 def apply_event_device_id_matchers(

@@ -11,12 +11,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import TedeeConfigEntry
 from .entity import TedeeDescriptionEntity
 
 
@@ -48,16 +47,24 @@ ENTITIES: tuple[TedeeBinarySensorEntityDescription, ...] = (
         is_on_fn=lambda lock: lock.is_enabled_pullspring,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    TedeeBinarySensorEntityDescription(
+        key="uncalibrated",
+        translation_key="uncalibrated",
+        is_on_fn=lambda lock: lock.state == TedeeLockState.UNCALIBRATED,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TedeeConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Tedee sensor entity."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         TedeeBinarySensorEntity(lock, coordinator, entity_description)

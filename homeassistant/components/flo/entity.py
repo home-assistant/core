@@ -6,7 +6,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN as FLO_DOMAIN
-from .device import FloDeviceDataUpdateCoordinator
+from .coordinator import FloDeviceDataUpdateCoordinator
 
 
 class FloEntity(Entity):

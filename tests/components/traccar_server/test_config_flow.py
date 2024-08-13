@@ -17,6 +17,7 @@ from homeassistant.components.traccar_server.const import (
     DOMAIN,
     EVENTS,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -33,7 +34,7 @@ from tests.common import MockConfigEntry
 
 async def test_form(
     hass: HomeAssistant,
-    mock_traccar_api_client: Generator[AsyncMock, None, None],
+    mock_traccar_api_client: Generator[AsyncMock],
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -62,7 +63,7 @@ async def test_form(
         CONF_SSL: False,
         CONF_VERIFY_SSL: True,
     }
-    assert result["result"].state == config_entries.ConfigEntryState.LOADED
+    assert result["result"].state is ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(
@@ -76,7 +77,7 @@ async def test_form_cannot_connect(
     hass: HomeAssistant,
     side_effect: Exception,
     error: str,
-    mock_traccar_api_client: Generator[AsyncMock, None, None],
+    mock_traccar_api_client: Generator[AsyncMock],
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -120,13 +121,13 @@ async def test_form_cannot_connect(
         CONF_VERIFY_SSL: True,
     }
 
-    assert result["result"].state == config_entries.ConfigEntryState.LOADED
+    assert result["result"].state is ConfigEntryState.LOADED
 
 
 async def test_options(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_traccar_api_client: Generator[AsyncMock, None, None],
+    mock_traccar_api_client: Generator[AsyncMock],
 ) -> None:
     """Test options flow."""
     mock_config_entry.add_to_hass(hass)
@@ -230,7 +231,7 @@ async def test_import_from_yaml(
     imported: dict[str, Any],
     data: dict[str, Any],
     options: dict[str, Any],
-    mock_traccar_api_client: Generator[AsyncMock, None, None],
+    mock_traccar_api_client: Generator[AsyncMock],
 ) -> None:
     """Test importing configuration from YAML."""
     result = await hass.config_entries.flow.async_init(
@@ -242,7 +243,7 @@ async def test_import_from_yaml(
     assert result["title"] == f"{data[CONF_HOST]}:{data[CONF_PORT]}"
     assert result["data"] == data
     assert result["options"] == options
-    assert result["result"].state == config_entries.ConfigEntryState.LOADED
+    assert result["result"].state is ConfigEntryState.LOADED
 
 
 async def test_abort_import_already_configured(hass: HomeAssistant) -> None:
@@ -276,7 +277,7 @@ async def test_abort_import_already_configured(hass: HomeAssistant) -> None:
 async def test_abort_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_traccar_api_client: Generator[AsyncMock, None, None],
+    mock_traccar_api_client: Generator[AsyncMock],
 ) -> None:
     """Test abort for existing server."""
     mock_config_entry.add_to_hass(hass)

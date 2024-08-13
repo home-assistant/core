@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .helper import SettingDataUpdateCoordinator
+from .coordinator import SettingDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

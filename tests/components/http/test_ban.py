@@ -190,6 +190,7 @@ async def test_ip_ban_manager_never_started(
             BANNED_IPS_WITH_SUPERVISOR,
             [1, 1, 0],
             [HTTPStatus.FORBIDDEN, HTTPStatus.FORBIDDEN, HTTPStatus.UNAUTHORIZED],
+            strict=False,
         )
     ),
 )

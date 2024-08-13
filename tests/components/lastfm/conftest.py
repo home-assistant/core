@@ -11,16 +11,11 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
-from tests.components.lastfm import (
-    API_KEY,
-    USERNAME_1,
-    USERNAME_2,
-    MockNetwork,
-    MockUser,
-)
+from . import API_KEY, USERNAME_1, USERNAME_2, MockNetwork, MockUser
 
-ComponentSetup = Callable[[MockConfigEntry, MockUser], Awaitable[None]]
+from tests.common import MockConfigEntry
+
+type ComponentSetup = Callable[[MockConfigEntry, MockUser], Awaitable[None]]
 
 
 @pytest.fixture(name="config_entry")
