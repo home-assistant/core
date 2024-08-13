@@ -27,6 +27,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
 from . import GPSDConfigEntry
@@ -48,7 +49,7 @@ _MODE_VALUES = {2: "2d_fix", 3: "3d_fix"}
 class GpsdSensorDescription(SensorEntityDescription):
     """Class describing GPSD sensor entities."""
 
-    value_fn: Callable[[AGPS3mechanism], str | float | datetime | None]
+    value_fn: Callable[[AGPS3mechanism], StateType | datetime]
 
 
 SENSOR_TYPES: tuple[GpsdSensorDescription, ...] = (
@@ -160,7 +161,7 @@ class GpsdSensor(SensorEntity):
         self.agps_thread = agps_thread
 
     @property
-    def native_value(self) -> str | float | datetime | None:
+    def native_value(self) -> StateType | datetime:
         """Return the state of GPSD."""
         value = self.entity_description.value_fn(self.agps_thread)
         return None if value == "n/a" else value

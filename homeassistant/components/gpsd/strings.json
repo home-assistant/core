@@ -24,9 +24,6 @@
       "time": {
         "name": "[%key:component::time_date::selector::display_options::options::time%]"
       },
-      "speed": {
-        "name": "[%key:component::sensor::entity_component::speed::name%]"
-      },
       "climb": { "name": "Climb" },
       "mode": {
         "name": "[%key:common::config_flow::data::mode%]",
