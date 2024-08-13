@@ -38,7 +38,7 @@ class AirGradientUpdate(AirGradientEntity, UpdateEntity):
 
     @cached_property
     def should_poll(self) -> bool:
-        """Return False because entity pushes its state."""
+        """Return True because we need to poll the latest version."""
         return True
 
     @property
