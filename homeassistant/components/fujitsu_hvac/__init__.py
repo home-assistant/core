@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from contextlib import suppress
-from dataclasses import dataclass
 
 from ayla_iot_unofficial import new_ayla_api
 
@@ -16,14 +15,7 @@ from .coordinator import FujitsuHVACCoordinator
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
-type FujitsuHVACConfigEntry = ConfigEntry[FujitsuHVACConfigData]
-
-
-@dataclass
-class FujitsuHVACConfigData:
-    """Config data for FujitsuHVAC config entries."""
-
-    coordinator: FujitsuHVACCoordinator
+type FujitsuHVACConfigEntry = ConfigEntry[FujitsuHVACCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -40,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = FujitsuHVACCoordinator(hass, api)
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = FujitsuHVACConfigData(coordinator)
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -50,6 +42,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     with suppress(TimeoutError):
-        await entry.runtime_data.coordinator.api.async_sign_out()
+        await entry.runtime_data.api.async_sign_out()
 
     return unload_ok

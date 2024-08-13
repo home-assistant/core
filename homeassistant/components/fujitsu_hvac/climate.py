@@ -35,8 +35,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up one Fujitsu HVAC device."""
     async_add_entities(
-        FujitsuHVACDevice(entry.runtime_data.coordinator, dev.device_serial_number)
-        for dev in entry.runtime_data.coordinator.data.values()
+        FujitsuHVACDevice(entry.runtime_data, dev.device_serial_number)
+        for dev in entry.runtime_data.data.values()
     )
 
 
