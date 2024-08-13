@@ -10,11 +10,16 @@ from uuid import uuid4
 
 from homeassistant.components import stt
 from homeassistant.components.assist_pipeline import (
+    PipelineEvent,
     PipelineEventCallback,
+    PipelineEventType,
     PipelineStage,
     async_pipeline_from_audio_stream,
 )
-from homeassistant.components.assist_satellite import AssistSatelliteEntity
+from homeassistant.components.assist_satellite import (
+    AssistSatelliteEntity,
+    AssistSatelliteState,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -56,6 +61,8 @@ async def async_setup_entry(
 class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity):
     """Assist satellite for VoIP devices."""
 
+    _attr_state = AssistSatelliteState.IDLE
+
     def __init__(self, hass: HomeAssistant, voip_device: VoIPDevice) -> None:
         """Initialize an Assist satellite."""
         VoIPEntity.__init__(self, voip_device)
@@ -88,10 +95,28 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity):
         # Update timeout
         self._conversation_id_time = time.monotonic()
 
+        # Set entity state based on pipeline events
+        has_tts = False
+        self._set_state(AssistSatelliteState.LISTENING)
+
+        def _event_callback(event: PipelineEvent) -> None:
+            nonlocal has_tts
+            if event.type == PipelineEventType.STT_END:
+                self._set_state(AssistSatelliteState.PROCESSING)
+            elif event.type == PipelineEventType.TTS_END:
+                # Wait until response_finished is called to return to idle
+                has_tts = True
+                self._set_state(AssistSatelliteState.RESPONDING)
+            elif event.type == PipelineEventType.RUN_END:
+                if not has_tts:
+                    self._set_state(AssistSatelliteState.IDLE)
+
+            event_callback(event)
+
         await async_pipeline_from_audio_stream(
             self.hass,
             context=context,
-            event_callback=event_callback,
+            event_callback=_event_callback,
             stt_metadata=stt.SpeechMetadata(
                 language="",  # set in async_pipeline_from_audio_stream
                 format=stt.AudioFormats.WAV,
@@ -106,6 +131,15 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity):
             device_id=self.voip_device.device_id,
             tts_audio_output="wav",
         )
+
+    def response_finished(self) -> None:
+        """Tell entity that the text-to-speech response has finished playing."""
+        self._set_state(AssistSatelliteState.IDLE)
+
+    def _set_state(self, state: AssistSatelliteState):
+        """Set the entity's state."""
+        self._attr_state = state
+        self.hass.states.async_set(self.entity_id, state.value)
 
     async def _async_config_updated(self) -> None:
         """Inform when the device config is updated.

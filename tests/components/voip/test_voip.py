@@ -11,7 +11,9 @@ from syrupy.assertion import SnapshotAssertion
 from voip_utils import CallInfo
 
 from homeassistant.components import assist_pipeline, assist_satellite, voip
+from homeassistant.components.assist_satellite import AssistSatelliteState
 from homeassistant.components.voip import HassVoipDatagramProtocol
+from homeassistant.components.voip.assist_satellite import VoipAssistSatellite
 from homeassistant.components.voip.devices import VoIPDevice, VoIPDevices
 from homeassistant.components.voip.voip import PreRecordMessageProtocol, make_protocol
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -111,7 +113,8 @@ async def test_pipeline(
     satellite = assist_satellite.async_get_satellite_entity(
         hass, voip.DOMAIN, voip_device.voip_id
     )
-    assert satellite is not None
+    assert isinstance(satellite, VoipAssistSatellite)
+    assert satellite.state == AssistSatelliteState.IDLE
 
     done = asyncio.Event()
 
@@ -132,6 +135,8 @@ async def test_pipeline(
             elif in_command:
                 break  # done with command
 
+        assert satellite.state == AssistSatelliteState.LISTENING
+
         # Test empty data
         event_callback(
             assist_pipeline.PipelineEvent(
@@ -147,6 +152,8 @@ async def test_pipeline(
                 data={"stt_output": {"text": "fake-text"}},
             )
         )
+
+        assert satellite.state == AssistSatelliteState.PROCESSING
 
         # Fake intent result
         event_callback(
@@ -168,6 +175,11 @@ async def test_pipeline(
             )
         )
 
+        assert satellite.state == AssistSatelliteState.RESPONDING
+
+    def response_finished():
+        done.set()
+
     async def async_get_media_source_audio(
         hass: HomeAssistant,
         media_source_id: str,
@@ -184,6 +196,7 @@ async def test_pipeline(
             "homeassistant.components.voip.voip.tts.async_get_media_source_audio",
             new=async_get_media_source_audio,
         ),
+        patch.object(satellite, "response_finished", response_finished),
     ):
         rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
             hass,
@@ -202,8 +215,8 @@ async def test_pipeline(
         rtp_protocol._audio_queue.put_nowait(bad_chunk)
 
         def send_audio(*args, **kwargs):
-            # Test finished successfully
-            done.set()
+            # Don't send audio
+            pass
 
         rtp_protocol.send_audio = Mock(side_effect=send_audio)
 
@@ -230,7 +243,7 @@ async def test_stt_stream_timeout(
     satellite = assist_satellite.async_get_satellite_entity(
         hass, voip.DOMAIN, voip_device.voip_id
     )
-    assert satellite is not None
+    assert isinstance(satellite, VoipAssistSatellite)
 
     done = asyncio.Event()
 
@@ -281,7 +294,7 @@ async def test_tts_timeout(
     satellite = assist_satellite.async_get_satellite_entity(
         hass, voip.DOMAIN, voip_device.voip_id
     )
-    assert satellite is not None
+    assert isinstance(satellite, VoipAssistSatellite)
 
     done = asyncio.Event()
 
@@ -405,7 +418,7 @@ async def test_tts_wrong_extension(
     satellite = assist_satellite.async_get_satellite_entity(
         hass, voip.DOMAIN, voip_device.voip_id
     )
-    assert satellite is not None
+    assert isinstance(satellite, VoipAssistSatellite)
 
     done = asyncio.Event()
 
@@ -510,7 +523,7 @@ async def test_tts_wrong_wav_format(
     satellite = assist_satellite.async_get_satellite_entity(
         hass, voip.DOMAIN, voip_device.voip_id
     )
-    assert satellite is not None
+    assert isinstance(satellite, VoipAssistSatellite)
 
     done = asyncio.Event()
 
@@ -622,7 +635,7 @@ async def test_empty_tts_output(
     satellite = assist_satellite.async_get_satellite_entity(
         hass, voip.DOMAIN, voip_device.voip_id
     )
-    assert satellite is not None
+    assert isinstance(satellite, VoipAssistSatellite)
 
     async def async_pipeline_from_audio_stream(*args, **kwargs):
         stt_stream = kwargs["stt_stream"]
@@ -709,7 +722,7 @@ async def test_pipeline_error(
     satellite = assist_satellite.async_get_satellite_entity(
         hass, voip.DOMAIN, voip_device.voip_id
     )
-    assert satellite is not None
+    assert isinstance(satellite, VoipAssistSatellite)
 
     done = asyncio.Event()
     played_audio_bytes = b""

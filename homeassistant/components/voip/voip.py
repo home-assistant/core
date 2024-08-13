@@ -30,14 +30,12 @@ from homeassistant.components.assist_pipeline import (
     select as pipeline_select,
 )
 from homeassistant.components.assist_pipeline.vad import VadSensitivity
-from homeassistant.components.assist_satellite import (
-    AssistSatelliteEntity,
-    async_get_satellite_entity,
-)
+from homeassistant.components.assist_satellite import async_get_satellite_entity
 from homeassistant.const import __version__
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.util.ulid import ulid_now
 
+from .assist_satellite import VoipAssistSatellite
 from .const import CHANNELS, DOMAIN, RATE, RTP_AUDIO_SETTINGS, WIDTH
 from .devices import VoIPDevice
 
@@ -79,7 +77,7 @@ def make_protocol(
         )
 
     satellite = async_get_satellite_entity(hass, DOMAIN, voip_device.voip_id)
-    assert satellite is not None, "No Assist satellite entity"
+    assert isinstance(satellite, VoipAssistSatellite), "VoIP satellite not found"
 
     # Pipeline is properly configured
     return PipelineRtpDatagramProtocol(
@@ -143,7 +141,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         hass: HomeAssistant,
         voip_devices: VoIPDevices,
         voip_device: VoIPDevice,
-        satellite: AssistSatelliteEntity,
+        satellite: VoipAssistSatellite,
         context: Context,
         opus_payload_type: int,
         pipeline_timeout: float = 30.0,
@@ -284,7 +282,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         while not self._audio_queue.empty():
             self._audio_queue.get_nowait()
 
-    def _event_callback(self, event: PipelineEvent):
+    def _event_callback(self, event: PipelineEvent) -> None:
         if not event.data:
             return
 
@@ -361,6 +359,9 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         finally:
             # Signal pipeline to restart
             self._tts_done.set()
+
+            # Update satellite state
+            self.satellite.response_finished()
 
     async def _async_send_audio(self, audio_bytes: bytes, **kwargs):
         """Send audio in executor."""
