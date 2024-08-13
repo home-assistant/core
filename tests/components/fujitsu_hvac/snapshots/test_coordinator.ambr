@@ -1,0 +1,141 @@
+# serializer version: 1
+# name: test_coordinator_initial_data[climate.testserial123-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+      ]),
+      'hvac_modes': list([
+      ]),
+      'max_temp': 1.0,
+      'min_temp': 1.0,
+      'swing_modes': list([
+      ]),
+      'target_temp_step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.testserial123',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'fujitsu_hvac',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 425>,
+    'translation_key': None,
+    'unique_id': 'testserial123',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_coordinator_initial_data[climate.testserial123-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 1.0,
+      'fan_mode': None,
+      'fan_modes': list([
+      ]),
+      'friendly_name': 'testserial123',
+      'hvac_modes': list([
+      ]),
+      'max_temp': 1.0,
+      'min_temp': 1.0,
+      'supported_features': <ClimateEntityFeature: 425>,
+      'swing_mode': None,
+      'swing_modes': list([
+      ]),
+      'target_temp_step': 0.5,
+      'temperature': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.testserial123',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_coordinator_initial_data[climate.testserial345-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+      ]),
+      'hvac_modes': list([
+      ]),
+      'max_temp': 1.0,
+      'min_temp': 1.0,
+      'swing_modes': list([
+      ]),
+      'target_temp_step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.testserial345',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'fujitsu_hvac',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 425>,
+    'translation_key': None,
+    'unique_id': 'testserial345',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_coordinator_initial_data[climate.testserial345-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 1.0,
+      'fan_mode': None,
+      'fan_modes': list([
+      ]),
+      'friendly_name': 'testserial345',
+      'hvac_modes': list([
+      ]),
+      'max_temp': 1.0,
+      'min_temp': 1.0,
+      'supported_features': <ClimateEntityFeature: 425>,
+      'swing_mode': None,
+      'swing_modes': list([
+      ]),
+      'target_temp_step': 0.5,
+      'temperature': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.testserial345',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

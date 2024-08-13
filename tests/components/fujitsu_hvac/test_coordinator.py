@@ -1,75 +1,149 @@
 """Test for the FujitsuHVACCoordinator."""
-from unittest.mock import AsyncMock, Mock
+
+from unittest.mock import AsyncMock
 
 from ayla_iot_unofficial import AylaAuthError
-from ayla_iot_unofficial.fujitsu_hvac import FujitsuHVAC
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy import SnapshotAssertion
 
-from homeassistant.components.fujitsu_hvac.coordinator import FujitsuHVACCoordinator
+from homeassistant.components.fujitsu_hvac.const import API_REFRESH_SECONDS, DOMAIN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import entity_registry as er
 
-TEST_SERIAL_NUMBER = "testserial123"
-TEST_SERIAL_NUMBER2 = "testserial345"
+from . import setup_integration
+
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-async def test_coordinator_initial_data(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_coordinator_initial_data(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_devices: list[AsyncMock],
+    mock_ayla_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test that coordinator returns the data we expect after the first refresh."""
-    devicemock = AsyncMock(spec=FujitsuHVAC)
-    devicemock.device_serial_number = TEST_SERIAL_NUMBER
-
-    apimock = AsyncMock()
-    apimock.async_get_devices.return_value = [devicemock]
-
-    coordinator = FujitsuHVACCoordinator(hass, apimock)
-    await coordinator.async_config_entry_first_refresh()
-
-    assert coordinator.data == {TEST_SERIAL_NUMBER: devicemock}
+    mock_ayla_api.async_get_devices.return_value = mock_devices
+    await setup_integration(hass, mock_config_entry)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_coordinator_filtered_data(hass: HomeAssistant) -> None:
-    """Test that coordinator returns the data we expect when it has listeners."""
-    devicemock = AsyncMock(spec=FujitsuHVAC)
-    devicemock.device_serial_number = TEST_SERIAL_NUMBER
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_coordinator_one_device_disabled(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_devices: list[AsyncMock],
+    mock_ayla_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that coordinator only updates devices that are currently listening."""
+    mock_ayla_api.async_get_devices.return_value = mock_devices
+    await setup_integration(hass, mock_config_entry)
 
-    devicemock2 = AsyncMock(spec=FujitsuHVAC)
-    devicemock2.device_serial_number = TEST_SERIAL_NUMBER2
+    for d in mock_devices:
+        d.async_update.assert_called_once()
+        d.reset_mock()
 
-    apimock = AsyncMock()
-    apimock.async_get_devices.return_value = [devicemock, devicemock2]
+    entity = entity_registry.async_get(
+        entity_registry.async_get_entity_id(
+            Platform.CLIMATE, DOMAIN, mock_devices[0].device_serial_number
+        )
+    )
+    entity_registry.async_update_entity(
+        entity.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    freezer.tick(API_REFRESH_SECONDS)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    coordinator = FujitsuHVACCoordinator(hass, apimock)
-    await coordinator.async_config_entry_first_refresh()
-
-    assert coordinator.data == {
-        TEST_SERIAL_NUMBER: devicemock,
-        TEST_SERIAL_NUMBER2: devicemock2,
-    }
-
-    coordinator.async_add_listener(Mock(), TEST_SERIAL_NUMBER)
-
-    await coordinator.async_refresh()
-
-    assert coordinator.data == {TEST_SERIAL_NUMBER: devicemock}
-
-
-async def test_coordinator_auth_error(hass: HomeAssistant) -> None:
-    """Test that coordinator raises ConfigEntryAuthFailed when API raises an auth error."""
-    apimock = AsyncMock()
-    apimock.async_get_devices.side_effect = AylaAuthError
-
-    coordinator = FujitsuHVACCoordinator(hass, apimock)
-    with pytest.raises(ConfigEntryAuthFailed):
-        await coordinator.async_config_entry_first_refresh()
+    assert len(hass.states.async_all()) == len(mock_devices) - 1
+    mock_devices[0].async_update.assert_not_called()
+    mock_devices[1].async_update.assert_called_once()
 
 
-async def test_coordinator_device_auth_error(hass: HomeAssistant) -> None:
-    """Test that coordinator raises ConfigEntryAuthFailed when device update raises an auth error."""
-    devicemock = AsyncMock(spec=FujitsuHVAC)
-    devicemock.async_update.side_effect = AylaAuthError
-    apimock = AsyncMock()
-    apimock.async_get_devices.return_value = [devicemock]
+async def test_coordinator_sign_in_exception_get_devices(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_devices: list[AsyncMock],
+    mock_ayla_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the entities become unavailable if we fail to update them because of an auth error while getting the devices."""
+    mock_ayla_api.async_get_devices.return_value = mock_devices
+    await setup_integration(hass, mock_config_entry)
 
-    coordinator = FujitsuHVACCoordinator(hass, apimock)
-    with pytest.raises(ConfigEntryAuthFailed):
-        await coordinator.async_config_entry_first_refresh()
+    mock_ayla_api.async_get_devices.side_effect = AylaAuthError
+    freezer.tick(API_REFRESH_SECONDS)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert all(e.state == STATE_UNAVAILABLE for e in hass.states.async_all())
+
+
+async def test_coordinator_sign_in_exception_update_device(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_devices: list[AsyncMock],
+    mock_ayla_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the entities become unavailable if we fail to update them because of an auth error while updating the devices."""
+    mock_ayla_api.async_get_devices.return_value = mock_devices
+    await setup_integration(hass, mock_config_entry)
+
+    for d in mock_devices:
+        d.async_update.side_effect = AylaAuthError
+
+    freezer.tick(API_REFRESH_SECONDS)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert all(e.state == STATE_UNKNOWN for e in hass.states.async_all())
+
+
+async def test_coordinator_token_expired(
+    hass: HomeAssistant,
+    mock_devices: list[AsyncMock],
+    mock_ayla_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Make sure sign_in is called if the token expired."""
+    mock_ayla_api.token_expired = True
+    await setup_integration(hass, mock_config_entry)
+
+    # Called once during setup and once during update
+    assert mock_ayla_api.async_sign_in.call_count == 2
+
+
+async def test_coordinator_token_expiring_soon(
+    hass: HomeAssistant,
+    mock_devices: list[AsyncMock],
+    mock_ayla_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Make sure sign_in is called if the token expired."""
+    mock_ayla_api.token_expiring_soon = True
+    await setup_integration(hass, mock_config_entry)
+
+    mock_ayla_api.async_refresh_auth.assert_called_once()
+
+
+@pytest.mark.parametrize("exception", [AylaAuthError, TimeoutError])
+async def test_coordinator_setup_exception(
+    hass: HomeAssistant,
+    mock_devices: list[AsyncMock],
+    mock_ayla_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+) -> None:
+    """Make sure that no devices is added if there was an exception while logging in."""
+    mock_ayla_api.async_sign_in.side_effect = exception
+    await setup_integration(hass, mock_config_entry)
+
+    assert len(hass.states.async_all()) == 0
