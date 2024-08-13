@@ -36,6 +36,9 @@ def mock_ayla_api() -> Generator[AsyncMock]:
 
     with (
         patch(
+            "homeassistant.components.fujitsu_hvac.new_ayla_api", return_value=mymock
+        ),
+        patch(
             "homeassistant.components.fujitsu_hvac.config_flow.new_ayla_api",
             return_value=mymock,
         ),
