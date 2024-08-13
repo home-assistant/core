@@ -147,6 +147,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         context: Context,
         opus_payload_type: int,
         pipeline_timeout: float = 30.0,
+        audio_chunk_timeout: float = 2.0,
         listening_tone_enabled: bool = True,
         processing_tone_enabled: bool = True,
         error_tone_enabled: bool = True,
@@ -169,6 +170,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         self.voip_device = voip_device
         self.pipeline: Pipeline | None = None
         self.pipeline_timeout = pipeline_timeout
+        self.audio_chunk_timeout = audio_chunk_timeout
         self.listening_tone_enabled = listening_tone_enabled
         self.processing_tone_enabled = processing_tone_enabled
         self.error_tone_enabled = error_tone_enabled
@@ -250,7 +252,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
                     context=self._context,
                     event_callback=self._event_callback,
                     audio_stream=async_audio_stream_from_queue(
-                        self._audio_queue, timeout=2
+                        self._audio_queue, timeout=self.audio_chunk_timeout
                     ),
                 )
 

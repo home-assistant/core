@@ -3,14 +3,13 @@
 import asyncio
 import io
 from pathlib import Path
-import time
 from unittest.mock import AsyncMock, Mock, patch
 import wave
 
 import pytest
 
-from homeassistant.components import assist_pipeline, voip
-from homeassistant.components.voip.devices import VoIPDevice
+from homeassistant.components import assist_pipeline, assist_satellite, voip
+from homeassistant.components.voip.devices import VoIPDevice, VoIPDevices
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -37,17 +36,16 @@ def _empty_wav() -> bytes:
 
 async def test_pipeline(
     hass: HomeAssistant,
+    voip_devices: VoIPDevices,
     voip_device: VoIPDevice,
 ) -> None:
     """Test that pipeline function is called from RTP protocol."""
     assert await async_setup_component(hass, "voip", {})
 
-    def process_10ms(self, chunk):
-        """Anything non-zero is speech."""
-        if sum(chunk) > 0:
-            return 1
-
-        return 0
+    satellite = assist_satellite.async_get_satellite_entity(
+        hass, voip.DOMAIN, voip_device.voip_id
+    )
+    assert satellite is not None
 
     done = asyncio.Event()
 
@@ -59,15 +57,28 @@ async def test_pipeline(
 
         stt_stream = kwargs["stt_stream"]
         event_callback = kwargs["event_callback"]
-        async for _chunk in stt_stream:
+        in_command = False
+        async for chunk in stt_stream:
             # Stream will end when VAD detects end of "speech"
-            assert _chunk != bad_chunk
+            assert chunk != bad_chunk
+            if sum(chunk) > 0:
+                in_command = True
+            elif in_command:
+                break  # done with command
 
         # Test empty data
         event_callback(
             assist_pipeline.PipelineEvent(
                 type="not-used",
                 data={},
+            )
+        )
+
+        # Fake STT result
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                type=assist_pipeline.PipelineEventType.STT_END,
+                data={"stt_output": {"text": "fake-text"}},
             )
         )
 
@@ -100,11 +111,7 @@ async def test_pipeline(
 
     with (
         patch(
-            "pymicro_vad.MicroVad.Process10ms",
-            new=process_10ms,
-        ),
-        patch(
-            "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
+            "homeassistant.components.voip.assist_satellite.async_pipeline_from_audio_stream",
             new=async_pipeline_from_audio_stream,
         ),
         patch(
@@ -114,14 +121,14 @@ async def test_pipeline(
     ):
         rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
             hass,
-            hass.config.language,
+            voip_devices,
             voip_device,
+            satellite,
             Context(),
             opus_payload_type=123,
             listening_tone_enabled=False,
             processing_tone_enabled=False,
             error_tone_enabled=False,
-            silence_seconds=assist_pipeline.vad.VadSensitivity.to_seconds("aggressive"),
         )
         rtp_protocol.transport = Mock()
 
@@ -140,7 +147,7 @@ async def test_pipeline(
         # "speech"
         rtp_protocol.on_chunk(bytes([255] * _ONE_SECOND * 2))
 
-        # silence (assumes aggressive VAD sensitivity)
+        # silence
         rtp_protocol.on_chunk(bytes(_ONE_SECOND))
 
         # Wait for mock pipeline to exhaust the audio stream
@@ -148,53 +155,16 @@ async def test_pipeline(
             await done.wait()
 
 
-async def test_pipeline_timeout(hass: HomeAssistant, voip_device: VoIPDevice) -> None:
-    """Test timeout during pipeline run."""
-    assert await async_setup_component(hass, "voip", {})
-
-    done = asyncio.Event()
-
-    async def async_pipeline_from_audio_stream(*args, **kwargs):
-        await asyncio.sleep(10)
-
-    with (
-        patch(
-            "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
-            new=async_pipeline_from_audio_stream,
-        ),
-        patch(
-            "homeassistant.components.voip.voip.PipelineRtpDatagramProtocol._wait_for_speech",
-            return_value=True,
-        ),
-    ):
-        rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
-            hass,
-            hass.config.language,
-            voip_device,
-            Context(),
-            opus_payload_type=123,
-            pipeline_timeout=0.001,
-            listening_tone_enabled=False,
-            processing_tone_enabled=False,
-            error_tone_enabled=False,
-        )
-        transport = Mock(spec=["close"])
-        rtp_protocol.connection_made(transport)
-
-        # Closing the transport will cause the test to succeed
-        transport.close.side_effect = done.set
-
-        # silence
-        rtp_protocol.on_chunk(bytes(_ONE_SECOND))
-
-        # Wait for mock pipeline to time out
-        async with asyncio.timeout(1):
-            await done.wait()
-
-
-async def test_stt_stream_timeout(hass: HomeAssistant, voip_device: VoIPDevice) -> None:
+async def test_stt_stream_timeout(
+    hass: HomeAssistant, voip_devices: VoIPDevices, voip_device: VoIPDevice
+) -> None:
     """Test timeout in STT stream during pipeline run."""
     assert await async_setup_component(hass, "voip", {})
+
+    satellite = assist_satellite.async_get_satellite_entity(
+        hass, voip.DOMAIN, voip_device.voip_id
+    )
+    assert satellite is not None
 
     done = asyncio.Event()
 
@@ -205,16 +175,17 @@ async def test_stt_stream_timeout(hass: HomeAssistant, voip_device: VoIPDevice) 
             pass
 
     with patch(
-        "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
+        "homeassistant.components.voip.assist_satellite.async_pipeline_from_audio_stream",
         new=async_pipeline_from_audio_stream,
     ):
         rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
             hass,
-            hass.config.language,
+            voip_devices,
             voip_device,
+            satellite,
             Context(),
             opus_payload_type=123,
-            audio_timeout=0.001,
+            audio_chunk_timeout=0.001,
             listening_tone_enabled=False,
             processing_tone_enabled=False,
             error_tone_enabled=False,
@@ -235,26 +206,36 @@ async def test_stt_stream_timeout(hass: HomeAssistant, voip_device: VoIPDevice) 
 
 async def test_tts_timeout(
     hass: HomeAssistant,
+    voip_devices: VoIPDevices,
     voip_device: VoIPDevice,
 ) -> None:
     """Test that TTS will time out based on its length."""
     assert await async_setup_component(hass, "voip", {})
 
-    def process_10ms(self, chunk):
-        """Anything non-zero is speech."""
-        if sum(chunk) > 0:
-            return 1
-
-        return 0
+    satellite = assist_satellite.async_get_satellite_entity(
+        hass, voip.DOMAIN, voip_device.voip_id
+    )
+    assert satellite is not None
 
     done = asyncio.Event()
 
     async def async_pipeline_from_audio_stream(*args, **kwargs):
         stt_stream = kwargs["stt_stream"]
         event_callback = kwargs["event_callback"]
-        async for _chunk in stt_stream:
-            # Stream will end when VAD detects end of "speech"
-            pass
+        in_command = False
+        async for chunk in stt_stream:
+            if sum(chunk) > 0:
+                in_command = True
+            elif in_command:
+                break  # done with command
+
+        # Fake STT result
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                type=assist_pipeline.PipelineEventType.STT_END,
+                data={"stt_output": {"text": "fake-text"}},
+            )
+        )
 
         # Fake intent result
         event_callback(
@@ -278,14 +259,6 @@ async def test_tts_timeout(
 
     tone_bytes = bytes([1, 2, 3, 4])
 
-    def send_audio(audio_bytes, **kwargs):
-        if audio_bytes == tone_bytes:
-            # Not TTS
-            return
-
-        # Block here to force a timeout in _send_tts
-        time.sleep(2)
-
     async def async_send_audio(audio_bytes, **kwargs):
         if audio_bytes == tone_bytes:
             # Not TTS
@@ -303,11 +276,7 @@ async def test_tts_timeout(
 
     with (
         patch(
-            "pymicro_vad.MicroVad.Process10ms",
-            new=process_10ms,
-        ),
-        patch(
-            "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
+            "homeassistant.components.voip.assist_satellite.async_pipeline_from_audio_stream",
             new=async_pipeline_from_audio_stream,
         ),
         patch(
@@ -317,15 +286,15 @@ async def test_tts_timeout(
     ):
         rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
             hass,
-            hass.config.language,
+            voip_devices,
             voip_device,
+            satellite,
             Context(),
             opus_payload_type=123,
             tts_extra_timeout=0.001,
             listening_tone_enabled=True,
             processing_tone_enabled=True,
             error_tone_enabled=True,
-            silence_seconds=assist_pipeline.vad.VadSensitivity.to_seconds("relaxed"),
         )
         rtp_protocol._tone_bytes = tone_bytes
         rtp_protocol._processing_bytes = tone_bytes
@@ -351,8 +320,8 @@ async def test_tts_timeout(
         # "speech"
         rtp_protocol.on_chunk(bytes([255] * _ONE_SECOND * 2))
 
-        # silence (assumes relaxed VAD sensitivity)
-        rtp_protocol.on_chunk(bytes(_ONE_SECOND * 4))
+        # silence
+        rtp_protocol.on_chunk(bytes(_ONE_SECOND))
 
         # Wait for mock pipeline to exhaust the audio stream
         async with asyncio.timeout(1):
@@ -361,26 +330,36 @@ async def test_tts_timeout(
 
 async def test_tts_wrong_extension(
     hass: HomeAssistant,
+    voip_devices: VoIPDevices,
     voip_device: VoIPDevice,
 ) -> None:
     """Test that TTS will only stream WAV audio."""
     assert await async_setup_component(hass, "voip", {})
 
-    def process_10ms(self, chunk):
-        """Anything non-zero is speech."""
-        if sum(chunk) > 0:
-            return 1
-
-        return 0
+    satellite = assist_satellite.async_get_satellite_entity(
+        hass, voip.DOMAIN, voip_device.voip_id
+    )
+    assert satellite is not None
 
     done = asyncio.Event()
 
     async def async_pipeline_from_audio_stream(*args, **kwargs):
         stt_stream = kwargs["stt_stream"]
         event_callback = kwargs["event_callback"]
-        async for _chunk in stt_stream:
-            # Stream will end when VAD detects end of "speech"
-            pass
+        in_command = False
+        async for chunk in stt_stream:
+            if sum(chunk) > 0:
+                in_command = True
+            elif in_command:
+                break  # done with command
+
+        # Fake STT result
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                type=assist_pipeline.PipelineEventType.STT_END,
+                data={"stt_output": {"text": "fake-text"}},
+            )
+        )
 
         # Fake intent result
         event_callback(
@@ -411,11 +390,7 @@ async def test_tts_wrong_extension(
 
     with (
         patch(
-            "pymicro_vad.MicroVad.Process10ms",
-            new=process_10ms,
-        ),
-        patch(
-            "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
+            "homeassistant.components.voip.assist_satellite.async_pipeline_from_audio_stream",
             new=async_pipeline_from_audio_stream,
         ),
         patch(
@@ -425,8 +400,9 @@ async def test_tts_wrong_extension(
     ):
         rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
             hass,
-            hass.config.language,
+            voip_devices,
             voip_device,
+            satellite,
             Context(),
             opus_payload_type=123,
         )
@@ -459,26 +435,36 @@ async def test_tts_wrong_extension(
 
 async def test_tts_wrong_wav_format(
     hass: HomeAssistant,
+    voip_devices: VoIPDevices,
     voip_device: VoIPDevice,
 ) -> None:
     """Test that TTS will only stream WAV audio with a specific format."""
     assert await async_setup_component(hass, "voip", {})
 
-    def process_10ms(self, chunk):
-        """Anything non-zero is speech."""
-        if sum(chunk) > 0:
-            return 1
-
-        return 0
+    satellite = assist_satellite.async_get_satellite_entity(
+        hass, voip.DOMAIN, voip_device.voip_id
+    )
+    assert satellite is not None
 
     done = asyncio.Event()
 
     async def async_pipeline_from_audio_stream(*args, **kwargs):
         stt_stream = kwargs["stt_stream"]
         event_callback = kwargs["event_callback"]
-        async for _chunk in stt_stream:
-            # Stream will end when VAD detects end of "speech"
-            pass
+        in_command = False
+        async for chunk in stt_stream:
+            if sum(chunk) > 0:
+                in_command = True
+            elif in_command:
+                break  # done with command
+
+        # Fake STT result
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                type=assist_pipeline.PipelineEventType.STT_END,
+                data={"stt_output": {"text": "fake-text"}},
+            )
+        )
 
         # Fake intent result
         event_callback(
@@ -516,11 +502,7 @@ async def test_tts_wrong_wav_format(
 
     with (
         patch(
-            "pymicro_vad.MicroVad.Process10ms",
-            new=process_10ms,
-        ),
-        patch(
-            "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
+            "homeassistant.components.voip.assist_satellite.async_pipeline_from_audio_stream",
             new=async_pipeline_from_audio_stream,
         ),
         patch(
@@ -530,8 +512,9 @@ async def test_tts_wrong_wav_format(
     ):
         rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
             hass,
-            hass.config.language,
+            voip_devices,
             voip_device,
+            satellite,
             Context(),
             opus_payload_type=123,
         )
@@ -564,24 +547,34 @@ async def test_tts_wrong_wav_format(
 
 async def test_empty_tts_output(
     hass: HomeAssistant,
+    voip_devices: VoIPDevices,
     voip_device: VoIPDevice,
 ) -> None:
     """Test that TTS will not stream when output is empty."""
     assert await async_setup_component(hass, "voip", {})
 
-    def process_10ms(self, chunk):
-        """Anything non-zero is speech."""
-        if sum(chunk) > 0:
-            return 1
-
-        return 0
+    satellite = assist_satellite.async_get_satellite_entity(
+        hass, voip.DOMAIN, voip_device.voip_id
+    )
+    assert satellite is not None
 
     async def async_pipeline_from_audio_stream(*args, **kwargs):
         stt_stream = kwargs["stt_stream"]
         event_callback = kwargs["event_callback"]
-        async for _chunk in stt_stream:
-            # Stream will end when VAD detects end of "speech"
-            pass
+        in_command = False
+        async for chunk in stt_stream:
+            if sum(chunk) > 0:
+                in_command = True
+            elif in_command:
+                break  # done with command
+
+        # Fake STT result
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                type=assist_pipeline.PipelineEventType.STT_END,
+                data={"stt_output": {"text": "fake-text"}},
+            )
+        )
 
         # Fake intent result
         event_callback(
@@ -605,11 +598,7 @@ async def test_empty_tts_output(
 
     with (
         patch(
-            "pymicro_vad.MicroVad.Process10ms",
-            new=process_10ms,
-        ),
-        patch(
-            "homeassistant.components.voip.voip.async_pipeline_from_audio_stream",
+            "homeassistant.components.voip.assist_satellite.async_pipeline_from_audio_stream",
             new=async_pipeline_from_audio_stream,
         ),
         patch(
@@ -618,8 +607,9 @@ async def test_empty_tts_output(
     ):
         rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
             hass,
-            hass.config.language,
+            voip_devices,
             voip_device,
+            satellite,
             Context(),
             opus_payload_type=123,
         )
