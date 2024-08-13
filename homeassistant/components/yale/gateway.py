@@ -1,9 +1,13 @@
 """Handle Yale connection setup and authentication."""
 
+from http import HTTPStatus
 from pathlib import Path
 from typing import Any
 
-from aiohttp import ClientSession
+from aiohttp import ClientError, ClientSession
+from aiohttp.client_exceptions import ClientResponseError
+from yalexs.authenticator_common import Authentication
+from yalexs.manager.exceptions import CannotConnect, InvalidAuth
 from yalexs.manager.gateway import Gateway
 
 from homeassistant.const import CONF_USERNAME
@@ -47,3 +51,15 @@ class YaleGateway(Gateway):
             CONF_INSTALL_ID: self._config.get(CONF_INSTALL_ID),
             CONF_ACCESS_TOKEN_CACHE_FILE: self._access_token_cache_file,
         }
+
+    async def async_authenticate(self) -> Authentication:
+        """Authenticate with the details provided to setup."""
+        try:
+            await self._oauth_session.async_ensure_token_valid()
+        except ClientResponseError as ex:
+            if ex.status == HTTPStatus.UNAUTHORIZED:
+                raise InvalidAuth from ex
+            raise CannotConnect from ex
+        except ClientError as ex:
+            raise CannotConnect from ex
+        return self.authentication
