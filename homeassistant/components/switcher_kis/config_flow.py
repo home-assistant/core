@@ -10,6 +10,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.core import callback
 
 from .const import CONF_TOKEN, CONF_USERNAME, DATA_DISCOVERY, DOMAIN
 from .utils import async_discover_devices
@@ -52,12 +53,40 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
             self.hass.data[DOMAIN].pop(DATA_DISCOVERY)
             return self.async_abort(reason="no_devices_found")
 
-        return self.async_create_entry(
-            title="Switcher",
-            data={
-                CONF_USERNAME: self.username,
-                CONF_TOKEN: self.token,
-            },
+        for device_id, device in discovered_devices.items():
+            if device.token_needed:
+                _LOGGER.info("Device with ID %s requires a token", device_id)
+                return await self.async_step_credentials()
+
+        return self._create_entry()
+
+    async def async_step_credentials(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the credentials step."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            self.username = user_input.get(CONF_USERNAME)
+            self.token = user_input.get(CONF_TOKEN)
+
+            token_is_valid = await validate_token(
+                user_input[CONF_USERNAME], user_input[CONF_TOKEN]
+            )
+            if token_is_valid:
+                _LOGGER.info("Token is valid")
+                return self._create_entry()
+            _LOGGER.info("Token is invalid")
+            errors["base"] = "invalid_auth"
+        else:
+            user_input = {}
+
+        schema = {
+            vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")): str,
+            vol.Required(CONF_TOKEN, default=user_input.get(CONF_TOKEN, "")): str,
+        }
+
+        return self.async_show_form(
+            step_id="credentials", data_schema=vol.Schema(schema), errors=errors
         )
 
     async def async_step_reauth(
@@ -97,3 +126,17 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(schema),
             errors=errors,
         )
+
+    @callback
+    def _create_entry(self):
+        return self.async_create_entry(
+            title="Switcher",
+            data=self._get_data(),
+        )
+
+    @callback
+    def _get_data(self):
+        return {
+            CONF_USERNAME: self.username,
+            CONF_TOKEN: self.token,
+        }
