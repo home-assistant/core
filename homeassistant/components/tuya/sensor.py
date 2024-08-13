@@ -664,7 +664,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.LIQUID_DEPTH,
-            translation_key="depth",
+            translation_key="liquid_depth",
             device_class=SensorDeviceClass.DISTANCE,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfLength.CENTIMETERS,
