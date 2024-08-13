@@ -793,9 +793,6 @@ async def test_light_on_off_color(
     }
     assert args["value"] is True
 
-    # Force the light to turn on
-    await update_switch_state(True)
-
 
 async def test_light_color_only(
     hass: HomeAssistant, client, express_controls_ezmultipli, integration

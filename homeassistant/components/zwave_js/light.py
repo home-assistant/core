@@ -627,7 +627,9 @@ class ZwaveColorOnOffLight(ZwaveLight):
         self._last_on_color = None
 
         if new_colors is None:
-            new_colors = self._get_new_colors(hs_color, None, None, scale)
+            new_colors = self._get_new_colors(
+                hs_color=hs_color, color_temp=None, rgbw=None, brightness_scale=scale
+            )
 
         if new_colors is not None:
             await self._async_set_colors(new_colors, transition)
