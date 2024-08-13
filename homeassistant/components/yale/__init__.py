@@ -14,7 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 
 from .const import DOMAIN, PLATFORMS
 from .data import YaleData
@@ -27,7 +27,13 @@ type YaleConfigEntry = ConfigEntry[YaleData]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up yale from a config entry."""
     session = async_create_yale_clientsession(hass)
-    yale_gateway = YaleGateway(Path(hass.config.config_dir), session)
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
+        )
+    )
+    oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    yale_gateway = YaleGateway(Path(hass.config.config_dir), session, oauth_session)
     try:
         await async_setup_yale(hass, entry, yale_gateway)
     except (RequireValidation, InvalidAuth) as err:
