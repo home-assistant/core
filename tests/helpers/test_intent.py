@@ -841,7 +841,7 @@ async def test_service_handler_device_classes(
         "switch",
         "turn_on",
         "Turned {} on",
-        device_classes={switch.SwitchDeviceClass},
+        platforms={"switch": switch.SwitchDeviceClass},
     )
     intent.async_register(hass, handler)
 
