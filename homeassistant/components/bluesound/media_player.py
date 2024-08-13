@@ -239,7 +239,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         self.port = port
         self._polling_task: Task[None] | None = None  # The actual polling task.
         self._id = sync_status.id
-        self._last_status_update = None
+        self._last_status_update: datetime | None = None
         self._sync_status = sync_status
         self._status: Status | None = None
         self._inputs: list[Input] = []
@@ -273,14 +273,6 @@ class BluesoundPlayer(MediaPlayerEntity):
                 via_device=(DOMAIN, format_mac(sync_status.mac)),
             )
 
-    @staticmethod
-    def _try_get_index(string, search_string):
-        """Get the index."""
-        try:
-            return string.index(search_string)
-        except ValueError:
-            return -1
-
     async def force_update_sync_status(self) -> bool:
         """Update the internal status."""
         sync_status = await self._player.sync_status()
@@ -309,7 +301,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         return True
 
-    async def _start_poll_command(self):
+    async def _start_poll_command(self) -> None:
         """Loop which polls the status of the player."""
         while True:
             try:
@@ -359,7 +351,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             await self.async_update_presets()
             await self.async_update_captures()
 
-    async def async_update_status(self):
+    async def async_update_status(self) -> None:
         """Use the poll session to always get the status of the player."""
         etag = None
         if self._status is not None:
@@ -407,7 +399,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             )
             raise
 
-    async def async_trigger_sync_on_all(self):
+    async def async_trigger_sync_on_all(self) -> None:
         """Trigger sync status update on all devices."""
         _LOGGER.debug("Trigger sync status on all devices")
 
@@ -415,7 +407,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             await player.force_update_sync_status()
 
     @Throttle(SYNC_STATUS_INTERVAL)
-    async def async_update_sync_status(self):
+    async def async_update_sync_status(self) -> None:
         """Update sync status."""
         await self.force_update_sync_status()
 
@@ -658,7 +650,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         return shuffle
 
-    async def async_join(self, master):
+    async def async_join(self, master) -> None:
         """Join the player to a group."""
         master_device = [
             device
@@ -709,7 +701,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             if entity.bluesound_device_name in device_group
         ]
 
-    async def async_unjoin(self):
+    async def async_unjoin(self) -> None:
         """Unjoin the player from a group."""
         if self._master is None:
             return
@@ -717,11 +709,11 @@ class BluesoundPlayer(MediaPlayerEntity):
         _LOGGER.debug("Trying to unjoin player: %s", self.id)
         await self._master.async_remove_slave(self)
 
-    async def async_add_slave(self, slave_device: BluesoundPlayer):
+    async def async_add_slave(self, slave_device: BluesoundPlayer) -> None:
         """Add slave to master."""
         await self._player.add_slave(slave_device.host, slave_device.port)
 
-    async def async_remove_slave(self, slave_device: BluesoundPlayer):
+    async def async_remove_slave(self, slave_device: BluesoundPlayer) -> None:
         """Remove slave to master."""
         await self._player.remove_slave(slave_device.host, slave_device.port)
 
@@ -729,7 +721,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         """Increase sleep time on player."""
         return await self._player.sleep_timer()
 
-    async def async_clear_timer(self):
+    async def async_clear_timer(self) -> None:
         """Clear sleep timer on player."""
         sleep = 1
         while sleep > 0:
