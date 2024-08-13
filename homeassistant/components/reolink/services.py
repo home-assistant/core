@@ -53,14 +53,18 @@ async def async_setup_services(hass: HomeAssistant) -> bool:
                 or config_entry.state == ConfigEntryState.NOT_LOADED
             ):
                 raise ServiceValidationError(
-                    "Reolink play_chime error: config entry not found or not loaded"
+                    translation_domain=DOMAIN,
+                    translation_key="service_entry_ex",
+                    translation_placeholders={"service_name": "play_chime"},
                 )
             host: ReolinkHost = hass.data[DOMAIN][config_entry.entry_id].host
             (device_uid, chime_id, is_chime) = get_device_uid_and_ch(device, host)
             chime: Chime | None = host.api.chime(chime_id)
             if not is_chime or chime is None:
                 raise ServiceValidationError(
-                    f"Reolink play_chime error: {device.name} is not a chime"
+                    translation_domain=DOMAIN,
+                    translation_key="service_not_chime",
+                    translation_placeholders={"device_name": device.name},
                 )
 
             ringtone = service_data[ATTR_RINGTONE]
