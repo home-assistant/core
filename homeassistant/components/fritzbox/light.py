@@ -17,10 +17,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzboxDataUpdateCoordinator, FritzBoxDeviceEntity
-from .const import COLOR_MODE, COLOR_TEMP_MODE, LOGGER
+from .const import COLOR_MODE, LOGGER
 from .coordinator import FritzboxConfigEntry
-
-SUPPORTED_COLOR_MODES = {ColorMode.COLOR_TEMP, ColorMode.HS}
 
 
 async def async_setup_entry(
@@ -80,11 +78,8 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
         return (hue, float(saturation) * 100.0 / 255.0)
 
     @property
-    def color_temp_kelvin(self) -> int | None:
+    def color_temp_kelvin(self) -> int:
         """Return the CT color value."""
-        if self.data.color_mode != COLOR_TEMP_MODE:
-            return None
-
         return self.data.color_temp  # type: ignore [no-any-return]
 
     @property
@@ -102,7 +97,7 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
     def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
         if self.data.has_color:
-            return SUPPORTED_COLOR_MODES
+            return {ColorMode.COLOR_TEMP, ColorMode.HS}
         if self.data.has_level:
             return {ColorMode.BRIGHTNESS}
         return {ColorMode.ONOFF}
