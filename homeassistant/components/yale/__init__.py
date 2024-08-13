@@ -6,7 +6,9 @@ from pathlib import Path
 from typing import cast
 
 from aiohttp import ClientResponseError
+from yalexs.const import Brand
 from yalexs.exceptions import AugustApiAIOHTTPError
+from yalexs.manager.const import CONF_BRAND
 from yalexs.manager.exceptions import CannotConnect, InvalidAuth, RequireValidation
 from yalexs.manager.gateway import Config as YaleXSConfig
 
@@ -56,7 +58,7 @@ async def async_setup_yale(
 ) -> None:
     """Set up the yale component."""
     config = cast(YaleXSConfig, entry.data)
-    await yale_gateway.async_setup(config)
+    await yale_gateway.async_setup({**config, CONF_BRAND: Brand.YALE_GLOBAL})
     await yale_gateway.async_authenticate()
     await yale_gateway.async_refresh_access_token_if_needed()
     data = entry.runtime_data = YaleData(hass, yale_gateway)
