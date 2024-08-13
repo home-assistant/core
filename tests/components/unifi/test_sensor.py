@@ -1033,7 +1033,7 @@ async def test_bandwidth_port_sensors(
     assert len(hass.states.async_all()) == 9
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
 
-    # Verify sensor attributes and state
+    # Verify sensor state
     assert hass.states.get("sensor.mock_name_port_1_rx").state == "0.00921"
     assert hass.states.get("sensor.mock_name_port_1_tx").state == "0.04089"
     assert hass.states.get("sensor.mock_name_port_2_rx").state == "0.01229"
@@ -1412,7 +1412,7 @@ async def test_wan_monitor_latency(
     assert len(hass.states.async_all()) == 7
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
 
-    # Verify sensor attributes and state
+    # Verify sensor state
     assert hass.states.get(entity_id).state == state
 
     # Verify state update
