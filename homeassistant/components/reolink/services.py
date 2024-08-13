@@ -23,7 +23,7 @@ ATTR_RINGTONE = "ringtone"
 async def async_setup_services(hass: HomeAssistant) -> bool:
     """Set up Reolink services."""
 
-    async def async_chime_play(service_call: ServiceCall) -> None:
+    async def async_play_chime(service_call: ServiceCall) -> None:
         """Play a ringtone."""
         service_data = service_call.data
         device_registry = dr.async_get(hass)
@@ -53,14 +53,14 @@ async def async_setup_services(hass: HomeAssistant) -> bool:
                 or config_entry.state == ConfigEntryState.NOT_LOADED
             ):
                 raise ServiceValidationError(
-                    "Reolink chime_play error: config entry not found or not loaded"
+                    "Reolink play_chime error: config entry not found or not loaded"
                 )
             host: ReolinkHost = hass.data[DOMAIN][config_entry.entry_id].host
             (device_uid, chime_id, is_chime) = get_device_uid_and_ch(device, host)
             chime: Chime | None = host.api.chime(chime_id)
             if not is_chime or chime is None:
                 raise ServiceValidationError(
-                    f"Reolink chime_play error: {device.name} is not a chime"
+                    f"Reolink play_chime error: {device.name} is not a chime"
                 )
 
             ringtone = service_data[ATTR_RINGTONE]
@@ -73,8 +73,8 @@ async def async_setup_services(hass: HomeAssistant) -> bool:
 
     hass.services.async_register(
         DOMAIN,
-        "chime_play",
-        async_chime_play,
+        "play_chime",
+        async_play_chime,
         schema=vol.Schema(
             {
                 vol.Optional(ATTR_DEVICE_ID): list[str],
