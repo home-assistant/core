@@ -7,7 +7,7 @@ from aiorussound import Russound
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONNECT_TIMEOUT, RUSSOUND_RIO_EXCEPTIONS
@@ -25,6 +25,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> 
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
     russ = Russound(hass.loop, host, port)
+
+    @callback
+    def is_connected_updated(connected: bool) -> None:
+        if connected:
+            _LOGGER.info("Reconnected to controller at %s:%s", host, port)
+        else:
+            _LOGGER.warning(
+                "Disconnected from controller at %s:%s",
+                host,
+                port,
+            )
+
+    russ.add_connection_callback(is_connected_updated)
 
     try:
         async with asyncio.timeout(CONNECT_TIMEOUT):
