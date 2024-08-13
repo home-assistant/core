@@ -11,8 +11,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, KEY_COORDINATOR, KEY_GATEWAY
-from .entity import MotionCoordinatorEntity
 from .coordinator import DataUpdateCoordinatorMotionBlinds
+from .entity import MotionCoordinatorEntity
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -37,7 +38,9 @@ class MotionGoFavoriteButton(MotionCoordinatorEntity, ButtonEntity):
 
     _attr_translation_key = "go_favorite"
 
-    def __init__(self, coordinator: DataUpdateCoordinatorMotionBlinds, blind: MotionBlind) -> None:
+    def __init__(
+        self, coordinator: DataUpdateCoordinatorMotionBlinds, blind: MotionBlind
+    ) -> None:
         """Initialize the Motion Button."""
         super().__init__(coordinator, blind)
         self._attr_unique_id = f"{blind.mac}-go-favorite"
@@ -55,7 +58,9 @@ class MotionSetFavoriteButton(MotionCoordinatorEntity, ButtonEntity):
     _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "set_favorite"
 
-    def __init__(self, coordinator: DataUpdateCoordinatorMotionBlinds, blind: MotionBlind) -> None:
+    def __init__(
+        self, coordinator: DataUpdateCoordinatorMotionBlinds, blind: MotionBlind
+    ) -> None:
         """Initialize the Motion Button."""
         super().__init__(coordinator, blind)
         self._attr_unique_id = f"{blind.mac}-set-favorite"
