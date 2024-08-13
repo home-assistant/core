@@ -146,6 +146,7 @@ class RussoundZoneDevice(MediaPlayerEntity):
 
     def __init__(self, zone: Zone, sources: dict[int, Source]) -> None:
         """Initialize the zone device."""
+        self._instance = zone.instance
         self._controller = zone.controller
         self._zone = zone
         self._sources = sources
@@ -187,12 +188,21 @@ class RussoundZoneDevice(MediaPlayerEntity):
         ):
             self.schedule_update_ha_state()
 
+    def _connection_callback_handler(self, connected: bool) -> None:
+        self.schedule_update_ha_state()
+
     async def async_added_to_hass(self) -> None:
         """Register callback handlers."""
         self._zone.add_callback(self._callback_handler)
+        self._instance.add_connection_callback(self._connection_callback_handler)
 
     def _current_source(self) -> Source:
         return self._zone.fetch_current_source()
+
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return self._instance.connected
 
     @property
     def state(self) -> MediaPlayerState | None:
