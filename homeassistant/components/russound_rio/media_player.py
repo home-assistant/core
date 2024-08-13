@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Coroutine
-from functools import wraps
 import logging
-from typing import Any, Concatenate
 
 from aiorussound import Source, Zone
 
@@ -20,14 +17,13 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import RUSSOUND_RIO_EXCEPTIONS, RussoundConfigEntry
+from . import RussoundConfigEntry
 from .const import DOMAIN, MP_FEATURES_BY_FLAG
+from .entity import RussoundBaseEntity, command
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,31 +107,11 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-def command[_T: RussoundZoneDevice, **_P](
-    func: Callable[Concatenate[_T, _P], Awaitable[None]],
-) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
-    """Wrap async calls to raise on request error."""
-
-    @wraps(func)
-    async def decorator(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
-        """Wrap all command methods."""
-        try:
-            await func(self, *args, **kwargs)
-        except RUSSOUND_RIO_EXCEPTIONS as exc:
-            raise HomeAssistantError(
-                f"Error executing {func.__name__} on entity {self.entity_id},"
-            ) from exc
-
-    return decorator
-
-
-class RussoundZoneDevice(MediaPlayerEntity):
+class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
     """Representation of a Russound Zone."""
 
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_media_content_type = MediaType.MUSIC
-    _attr_should_poll = False
-    _attr_has_entity_name = True
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_STEP
@@ -146,36 +122,11 @@ class RussoundZoneDevice(MediaPlayerEntity):
 
     def __init__(self, zone: Zone, sources: dict[int, Source]) -> None:
         """Initialize the zone device."""
-        self._controller = zone.controller
+        super().__init__(zone.controller)
         self._zone = zone
         self._sources = sources
         self._attr_name = zone.name
-        primary_mac_address = (
-            self._controller.mac_address
-            or self._controller.parent_controller.mac_address
-        )
-        self._attr_unique_id = f"{primary_mac_address}-{zone.device_str()}"
-        device_identifier = (
-            self._controller.mac_address
-            or f"{primary_mac_address}-{self._controller.controller_id}"
-        )
-        self._attr_device_info = DeviceInfo(
-            # Use MAC address of Russound device as identifier
-            identifiers={(DOMAIN, device_identifier)},
-            manufacturer="Russound",
-            name=self._controller.controller_type,
-            model=self._controller.controller_type,
-            sw_version=self._controller.firmware_version,
-        )
-        if self._controller.parent_controller:
-            self._attr_device_info["via_device"] = (
-                DOMAIN,
-                self._controller.parent_controller.mac_address,
-            )
-        else:
-            self._attr_device_info["connections"] = {
-                (CONNECTION_NETWORK_MAC, self._controller.mac_address)
-            }
+        self._attr_unique_id = f"{self._device_identifier}-{zone.device_str()}"
         for flag, feature in MP_FEATURES_BY_FLAG.items():
             if flag in zone.instance.supported_features:
                 self._attr_supported_features |= feature
