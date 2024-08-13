@@ -53,11 +53,7 @@ class YaleGateway(Gateway):
     def _async_setup_authentication(self) -> Authentication:
         token = self._oauth_session.token
         access_token = token["access_token"]
-        access_token_expires = token["expires_at"]
         self.authentication = Authentication(
-            AuthenticationState.AUTHENTICATED,
-            None,
-            access_token,
-            access_token_expires,
+            AuthenticationState.AUTHENTICATED, None, access_token, None
         )
         return self.authentication
