@@ -20,7 +20,7 @@ class FujitsuHVACCoordinator(DataUpdateCoordinator[dict[str, FujitsuHVAC]]):
     """Coordinator for Fujitsu HVAC integration."""
 
     def __init__(self, hass: HomeAssistant, api: AylaApi) -> None:
-        """Initialize coordindtor for Fujitsu HVAC integration."""
+        """Initialize coordinator for Fujitsu HVAC integration."""
         super().__init__(
             hass,
             _LOGGER,
@@ -37,7 +37,7 @@ class FujitsuHVACCoordinator(DataUpdateCoordinator[dict[str, FujitsuHVAC]]):
                 "Timed out while connecting to Ayla IoT API"
             ) from e
         except AylaAuthError as e:
-            raise ConfigEntryAuthFailed("Credentuials expired for Ayla IoT API") from e
+            raise ConfigEntryAuthFailed("Credentials expired for Ayla IoT API") from e
 
     async def _async_update_data(self) -> dict[str, FujitsuHVAC]:
         """Fetch data from api endpoint."""
