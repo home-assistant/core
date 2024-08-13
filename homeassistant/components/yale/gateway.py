@@ -1,15 +1,18 @@
 """Handle Yale connection setup and authentication."""
 
 from http import HTTPStatus
+import logging
 from pathlib import Path
 
 from aiohttp import ClientError, ClientSession
 from aiohttp.client_exceptions import ClientResponseError
-from yalexs.authenticator_common import Authentication
+from yalexs.authenticator_common import Authentication, AuthenticationState
 from yalexs.manager.exceptions import CannotConnect, InvalidAuth
 from yalexs.manager.gateway import Gateway
 
 from homeassistant.helpers import config_entry_oauth2_flow
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class YaleGateway(Gateway):
@@ -41,4 +44,16 @@ class YaleGateway(Gateway):
             raise CannotConnect from ex
         except ClientError as ex:
             raise CannotConnect from ex
+
+        token = self._oauth_session.token
+        _LOGGER.warning("Token: %s", token)
+        access_token = token["access_token"]
+        access_token_expires = token["expiresAt"]
+        v_install_id = token["vInstallId"]
+        self.authentication = Authentication(
+            AuthenticationState.AUTHENTICATED,
+            v_install_id,
+            access_token,
+            access_token_expires,
+        )
         return self.authentication
