@@ -1072,7 +1072,7 @@ lupupy==0.3.2
 lxml==5.1.0
 
 # homeassistant.components.matrix
-matrix-nio==0.24.0
+matrix-nio==0.25.0
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
