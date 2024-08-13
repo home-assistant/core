@@ -50,6 +50,21 @@ async def test_full_flow(
     }
 
 
+async def test_readd_same(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_ayla_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that re-adding the same account fails."""
+    mock_config_entry.add_to_hass(hass)
+    result = await _initial_step(hass)
+    mock_ayla_api.async_sign_in.assert_not_called()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 @pytest.mark.parametrize(
     ("exception", "err_msg"),
     [
