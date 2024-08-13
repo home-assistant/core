@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from aiorussound import Controller
 
@@ -12,11 +12,8 @@ from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, RUSSOUND_RIO_EXCEPTIONS
 
-_P = ParamSpec("_P")
-_EntityT = TypeVar("_EntityT", bound="RussoundBaseEntity")
 
-
-def command(
+def command[_EntityT: RussoundBaseEntity, **_P](
     func: Callable[Concatenate[_EntityT, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
     """Wrap async calls to raise on request error."""
