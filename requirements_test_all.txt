@@ -750,7 +750,7 @@ freebox-api==1.1.0
 fritzconnection[qr]==1.13.2
 
 # homeassistant.components.fyta
-fyta_cli==0.4.1
+fyta_cli==0.5.1
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
