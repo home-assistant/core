@@ -79,18 +79,25 @@ async def test_pre_recorded_message(
     assert protocol.file_name == "problem.pcm"
 
     done = asyncio.Event()
+    played_audio_bytes = b""
 
     def send_audio(audio_bytes: bytes, **kwargs):
+        nonlocal played_audio_bytes
+
         # Should be problem.pcm from components/voip
-        assert audio_bytes == snapshot()
+        played_audio_bytes = audio_bytes
         done.set()
 
     protocol.transport = Mock()
+    protocol.loop_delay = 0
     with patch.object(protocol, "send_audio", send_audio):
         protocol.on_chunk(bytes(_ONE_SECOND))
 
     async with asyncio.timeout(1):
         await done.wait()
+
+    assert sum(played_audio_bytes) > 0
+    assert played_audio_bytes == snapshot()
 
 
 async def test_pipeline(
@@ -318,7 +325,7 @@ async def test_tts_timeout(
 
     tone_bytes = bytes([1, 2, 3, 4])
 
-    async def async_send_audio(audio_bytes, **kwargs):
+    async def async_send_audio(audio_bytes: bytes, **kwargs):
         if audio_bytes == tone_bytes:
             # Not TTS
             return
@@ -694,6 +701,7 @@ async def test_pipeline_error(
     hass: HomeAssistant,
     voip_devices: VoIPDevices,
     voip_device: VoIPDevice,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a pipeline error causes the error tone to be played."""
     assert await async_setup_component(hass, "voip", {})
@@ -704,6 +712,7 @@ async def test_pipeline_error(
     assert satellite is not None
 
     done = asyncio.Event()
+    played_audio_bytes = b""
 
     async def async_pipeline_from_audio_stream(*args, **kwargs):
         # Fake error
@@ -715,17 +724,17 @@ async def test_pipeline_error(
             )
         )
 
-    async def play_error_tone(self):
+    async def async_send_audio(audio_bytes: bytes, **kwargs):
+        nonlocal played_audio_bytes
+
+        # Should be error.pcm from components/voip
+        played_audio_bytes = audio_bytes
         done.set()
 
     with (
         patch(
             "homeassistant.components.voip.assist_satellite.async_pipeline_from_audio_stream",
             new=async_pipeline_from_audio_stream,
-        ),
-        patch(
-            "homeassistant.components.voip.voip.PipelineRtpDatagramProtocol._play_error_tone",
-            new=play_error_tone,
         ),
     ):
         rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
@@ -740,9 +749,13 @@ async def test_pipeline_error(
             error_tone_enabled=True,
         )
         rtp_protocol.transport = Mock()
+        rtp_protocol._async_send_audio = AsyncMock(side_effect=async_send_audio)  # type: ignore[method-assign]
 
         rtp_protocol.on_chunk(bytes(_ONE_SECOND))
 
         # Wait for error tone to be played
         async with asyncio.timeout(1):
             await done.wait()
+
+        assert sum(played_audio_bytes) > 0
+        assert played_audio_bytes == snapshot()

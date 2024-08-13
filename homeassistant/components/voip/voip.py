@@ -450,7 +450,7 @@ class PreRecordMessageProtocol(RtpDatagramProtocol):
             self._audio_bytes = file_path.read_bytes()
 
         if self._audio_task is None:
-            self.hass.async_create_background_task(
+            self._audio_task = self.hass.async_create_background_task(
                 self._play_message(),
                 "voip_not_connected",
             )
