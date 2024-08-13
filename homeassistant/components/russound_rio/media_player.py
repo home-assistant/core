@@ -126,7 +126,7 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
         self._zone = zone
         self._sources = sources
         self._attr_name = zone.name
-        self._attr_unique_id = f"{self._device_identifier}-{zone.device_str()}"
+        self._attr_unique_id = f"{self._primary_mac_address}-{zone.device_str()}"
         for flag, feature in MP_FEATURES_BY_FLAG.items():
             if flag in zone.instance.supported_features:
                 self._attr_supported_features |= feature
