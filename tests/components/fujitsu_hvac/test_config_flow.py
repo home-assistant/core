@@ -24,7 +24,7 @@ async def _initial_step(hass: HomeAssistant) -> FlowResult:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
+    return await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_USERNAME: TEST_USERNAME,
@@ -32,8 +32,6 @@ async def _initial_step(hass: HomeAssistant) -> FlowResult:
             CONF_EUROPE: False,
         },
     )
-    await hass.async_block_till_done()
-    return result
 
 
 async def test_full_flow(
@@ -43,7 +41,7 @@ async def test_full_flow(
     result = await _initial_step(hass)
     mock_ayla_api.async_sign_in.assert_called_once()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Fujitsu HVAC ({TEST_USERNAME})"
     assert result["data"] == {
         CONF_USERNAME: TEST_USERNAME,
@@ -85,9 +83,8 @@ async def test_form_exceptions(
             CONF_EUROPE: False,
         },
     )
-    await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Fujitsu HVAC ({TEST_USERNAME})"
     assert result["data"] == {
         CONF_USERNAME: TEST_USERNAME,
@@ -114,7 +111,7 @@ async def test_reauth_success(
         data={},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
@@ -130,9 +127,8 @@ async def test_reauth_success(
             CONF_EUROPE: False,
         },
     )
-    await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_PASSWORD] == TEST_PASSWORD2
 
@@ -155,7 +151,7 @@ async def test_reauth_different_username(
         data={},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
@@ -172,5 +168,5 @@ async def test_reauth_different_username(
         },
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_account"
