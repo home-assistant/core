@@ -36,6 +36,7 @@ class YaleGateway(Gateway):
         """Refresh the access token if needed."""
         if not self._oauth_session.valid_token:
             await self._oauth_session.async_ensure_token_valid()
+            self._async_setup_authentication()
 
     async def async_authenticate(self) -> Authentication:
         """Authenticate with the details provided to setup."""
@@ -47,7 +48,9 @@ class YaleGateway(Gateway):
             raise CannotConnect from ex
         except ClientError as ex:
             raise CannotConnect from ex
+        self._async_setup_authentication()
 
+    def _async_setup_authentication(self) -> Authentication:
         token = self._oauth_session.token
         access_token = token["access_token"]
         access_token_expires = token["expires_at"]
