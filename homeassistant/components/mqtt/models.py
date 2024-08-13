@@ -12,7 +12,7 @@ import logging
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, Platform
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.exceptions import ServiceValidationError, TemplateError
 from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
@@ -159,21 +159,12 @@ class MqttCommandTemplate:
         self,
         command_template: template.Template | None,
         *,
-        hass: HomeAssistant | None = None,
         entity: Entity | None = None,
     ) -> None:
         """Instantiate a command template."""
         self._template_state: template.TemplateStateFromEntityId | None = None
         self._command_template = command_template
-        if command_template is None:
-            return
-
         self._entity = entity
-
-        command_template.hass = hass
-
-        if entity:
-            command_template.hass = entity.hass
 
     @callback
     def async_render(
@@ -270,7 +261,6 @@ class MqttValueTemplate:
         self,
         value_template: template.Template | None,
         *,
-        hass: HomeAssistant | None = None,
         entity: Entity | None = None,
         config_attributes: TemplateVarsType = None,
     ) -> None:
@@ -278,14 +268,7 @@ class MqttValueTemplate:
         self._template_state: template.TemplateStateFromEntityId | None = None
         self._value_template = value_template
         self._config_attributes = config_attributes
-        if value_template is None:
-            return
-
-        value_template.hass = hass
         self._entity = entity
-
-        if entity:
-            value_template.hass = entity.hass
 
     @callback
     def async_render_with_possible_json_value(
