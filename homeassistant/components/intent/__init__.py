@@ -368,7 +368,6 @@ class SetPositionIntentHandler(intent.DynamicServiceIntentHandler):
         """Create set position handler."""
         super().__init__(
             intent.INTENT_SET_POSITION,
-            required_domains={COVER_DOMAIN, VALVE_DOMAIN},
             required_slots={
                 ATTR_POSITION: vol.All(vol.Coerce(int), vol.Range(min=0, max=100))
             },
