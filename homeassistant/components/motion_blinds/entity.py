@@ -134,7 +134,7 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
             self._previous_positions = []
             self._requesting_position = None
 
-    async def async_request_position_till_stop(self, delay:int=None) -> None:
+    async def async_request_position_till_stop(self, delay: int | None = None) -> None:
         """Request the position of the blind every self._update_interval_moving seconds until it stops moving."""
         if delay is None:
             delay = self._update_interval_moving
