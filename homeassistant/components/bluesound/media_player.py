@@ -312,20 +312,24 @@ class BluesoundPlayer(MediaPlayerEntity):
 
     async def _start_poll_command(self):
         """Loop which polls the status of the player."""
-        try:
-            while True:
+        while True:
+            try:
                 await self.async_update_status()
-
-        except (TimeoutError, ClientError):
-            _LOGGER.error("Node %s:%s is offline, retrying later", self.host, self.port)
-            await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT)
-            self.start_polling()
-
-        except CancelledError:
-            _LOGGER.debug("Stopping the polling of node %s:%s", self.host, self.port)
-        except Exception:
-            _LOGGER.exception("Unexpected error in %s:%s", self.host, self.port)
-            raise
+            except (TimeoutError, ClientError):
+                _LOGGER.error(
+                    "Node %s:%s is offline, retrying later", self.host, self.port
+                )
+                await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT)
+            except CancelledError:
+                _LOGGER.debug(
+                    "Stopping the polling of node %s:%s", self.host, self.port
+                )
+                return
+            except Exception:
+                _LOGGER.exception(
+                    "Unexpected error in %s:%s, retrying later", self.host, self.port
+                )
+                await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT)
 
     async def async_added_to_hass(self) -> None:
         """Start the polling task."""
