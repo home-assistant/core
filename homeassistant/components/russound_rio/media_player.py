@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable, Coroutine
+from functools import wraps
 import logging
+from typing import Any, Concatenate
 
 from aiorussound import Source, Zone
 
@@ -17,12 +20,13 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import RussoundConfigEntry
+from . import RUSSOUND_RIO_EXCEPTIONS, RussoundConfigEntry
 from .const import DOMAIN, MP_FEATURES_BY_FLAG
 
 _LOGGER = logging.getLogger(__name__)
@@ -105,6 +109,24 @@ async def async_setup_entry(
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_stop)
 
     async_add_entities(entities)
+
+
+def command[_T: RussoundZoneDevice, **_P](
+    func: Callable[Concatenate[_T, _P], Awaitable[None]],
+) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
+    """Wrap async calls to raise on request error."""
+
+    @wraps(func)
+    async def decorator(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        """Wrap all command methods."""
+        try:
+            await func(self, *args, **kwargs)
+        except RUSSOUND_RIO_EXCEPTIONS as exc:
+            raise HomeAssistantError(
+                f"Error executing {func.__name__} on entity {self.entity_id},"
+            ) from exc
+
+    return decorator
 
 
 class RussoundZoneDevice(MediaPlayerEntity):
@@ -221,19 +243,23 @@ class RussoundZoneDevice(MediaPlayerEntity):
         """
         return float(self._zone.volume or "0") / 50.0
 
+    @command
     async def async_turn_off(self) -> None:
         """Turn off the zone."""
         await self._zone.zone_off()
 
+    @command
     async def async_turn_on(self) -> None:
         """Turn on the zone."""
         await self._zone.zone_on()
 
+    @command
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
         rvol = int(volume * 50.0)
         await self._zone.set_volume(rvol)
 
+    @command
     async def async_select_source(self, source: str) -> None:
         """Select the source input for this zone."""
         for source_id, src in self._sources.items():
@@ -242,10 +268,12 @@ class RussoundZoneDevice(MediaPlayerEntity):
             await self._zone.select_source(source_id)
             break
 
+    @command
     async def async_volume_up(self) -> None:
         """Step the volume up."""
         await self._zone.volume_up()
 
+    @command
     async def async_volume_down(self) -> None:
         """Step the volume down."""
         await self._zone.volume_down()
