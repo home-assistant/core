@@ -7,8 +7,9 @@ from typing import Any
 from ayla_iot_unofficial import AylaAuthError, new_ayla_api
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers import aiohttp_client
 
 from .const import API_TIMEOUT, CONF_EUROPE, DOMAIN, FGLAIR_APP_ID, FGLAIR_APP_SECRET
 
@@ -22,12 +23,44 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_EUROPE): bool,
     }
 )
+STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PASSWORD): str,
+    }
+)
 
 
 class FujitsuHVACConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fujitsu HVAC (based on Ayla IOT)."""
 
-    reauth_entry: ConfigEntry | None = None
+    def __init__(self) -> None:
+        """Initialize."""
+        self._reauth_data: dict[str, Any] = {}
+
+    async def _async_validate_credentials(
+        self, user_input: dict[str, Any]
+    ) -> dict[str, str]:
+        errors: dict[str, str] = {}
+        api = new_ayla_api(
+            user_input[CONF_USERNAME],
+            user_input[CONF_PASSWORD],
+            FGLAIR_APP_ID,
+            FGLAIR_APP_SECRET,
+            europe=user_input[CONF_EUROPE],
+            websession=aiohttp_client.async_get_clientsession(self.hass),
+            timeout=API_TIMEOUT,
+        )
+        try:
+            await api.async_sign_in()
+        except TimeoutError:
+            errors["base"] = "cannot_connect"
+        except AylaAuthError:
+            errors["base"] = "invalid_auth"
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+
+        return errors
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -35,39 +68,11 @@ class FujitsuHVACConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input:
-            if not self.reauth_entry:
-                await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
-                self._abort_if_unique_id_configured()
-            elif user_input[CONF_USERNAME] != self.reauth_entry.data[CONF_USERNAME]:
-                return self.async_abort(reason="wrong_account")
+            await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
+            self._abort_if_unique_id_configured()
 
-            api = new_ayla_api(
-                user_input[CONF_USERNAME],
-                user_input[CONF_PASSWORD],
-                FGLAIR_APP_ID,
-                FGLAIR_APP_SECRET,
-                europe=user_input[CONF_EUROPE],
-                timeout=API_TIMEOUT,
-            )
-            try:
-                await api.async_sign_in()
-            except TimeoutError:
-                errors["base"] = "cannot_connect"
-            except AylaAuthError:
-                errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                if self.reauth_entry:
-                    self.hass.config_entries.async_update_entry(
-                        self.reauth_entry, data=user_input
-                    )
-                    await self.hass.config_entries.async_reload(
-                        self.reauth_entry.entry_id
-                    )
-                    return self.async_abort(reason="reauth_successful")
-
+            errors = await self._async_validate_credentials(user_input)
+            if len(errors) == 0:
                 return self.async_create_entry(
                     title=f"Fujitsu HVAC ({user_input[CONF_USERNAME]})",
                     data=user_input,
@@ -78,18 +83,41 @@ class FujitsuHVACConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(
-        self, user_input: Mapping[str, Any]
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
+        self._reauth_data = {**entry_data}
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
-        if user_input is None:
-            return self.async_show_form(step_id="reauth_confirm")
-        return await self.async_step_user()
+        errors: dict[str, str] = {}
+        if user_input:
+            self._reauth_data[CONF_PASSWORD] = user_input[CONF_PASSWORD]
+            errors = await self._async_validate_credentials(self._reauth_data)
+
+            if len(errors) == 0:
+                entry = self.hass.config_entries.async_get_entry(
+                    self.context["entry_id"]
+                )
+                if entry:
+                    self.hass.config_entries.async_update_entry(
+                        entry,
+                        data=self._reauth_data,
+                    )
+                    await self.hass.config_entries.async_reload(
+                        self.context["entry_id"]
+                    )
+                    return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=STEP_REAUTH_DATA_SCHEMA,
+            description_placeholders={
+                CONF_USERNAME: self._reauth_data[CONF_USERNAME],
+                **self.context["title_placeholders"],
+            },
+            errors=errors,
+        )
