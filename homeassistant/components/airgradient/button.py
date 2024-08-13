@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, AirGradientConfigEntry
 from .coordinator import AirGradientConfigCoordinator
-from .entity import AirGradientCoordinatedEntity
+from .entity import AirGradientEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -83,7 +83,7 @@ async def async_setup_entry(
     _check_entities()
 
 
-class AirGradientButton(AirGradientCoordinatedEntity, ButtonEntity):
+class AirGradientButton(AirGradientEntity, ButtonEntity):
     """Defines an AirGradient button."""
 
     entity_description: AirGradientButtonEntityDescription

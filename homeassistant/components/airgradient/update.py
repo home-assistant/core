@@ -28,23 +28,18 @@ class AirGradientUpdate(AirGradientEntity, UpdateEntity):
     """Representation of Airgradient Update."""
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE
+    _attr_should_poll = True
+    coordinator: AirGradientMeasurementCoordinator
 
     def __init__(self, coordinator: AirGradientMeasurementCoordinator) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator.serial_number)
+        super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.serial_number}-update"
-        self.coordinator = coordinator
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self._set_installed_version)
-        )
-        self._set_installed_version()
-
-    def _set_installed_version(self) -> None:
-        """Set the installed version."""
-        self._attr_installed_version = self.coordinator.data.firmware_version
+    @property
+    def installed_version(self) -> str:
+        """Return the installed version of the entity."""
+        return self.coordinator.data.firmware_version
 
     async def async_update(self) -> None:
         """Update the entity."""

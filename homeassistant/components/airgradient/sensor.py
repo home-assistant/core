@@ -33,7 +33,7 @@ from homeassistant.helpers.typing import StateType
 from . import AirGradientConfigEntry
 from .const import PM_STANDARD, PM_STANDARD_REVERSE
 from .coordinator import AirGradientConfigCoordinator, AirGradientMeasurementCoordinator
-from .entity import AirGradientCoordinatedEntity
+from .entity import AirGradientEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -264,7 +264,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AirGradientMeasurementSensor(AirGradientCoordinatedEntity, SensorEntity):
+class AirGradientMeasurementSensor(AirGradientEntity, SensorEntity):
     """Defines an AirGradient sensor."""
 
     entity_description: AirGradientMeasurementSensorEntityDescription
@@ -286,7 +286,7 @@ class AirGradientMeasurementSensor(AirGradientCoordinatedEntity, SensorEntity):
         return self.entity_description.value_fn(self.coordinator.data)
 
 
-class AirGradientConfigSensor(AirGradientCoordinatedEntity, SensorEntity):
+class AirGradientConfigSensor(AirGradientEntity, SensorEntity):
     """Defines an AirGradient sensor."""
 
     entity_description: AirGradientConfigSensorEntityDescription
