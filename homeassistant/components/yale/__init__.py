@@ -8,7 +8,7 @@ from typing import cast
 from aiohttp import ClientResponseError
 from yalexs.exceptions import AugustApiAIOHTTPError
 from yalexs.manager.exceptions import CannotConnect, InvalidAuth, RequireValidation
-from yalexs.manager.gateway import Config as YaleXSConfig
+from yalexs.manager.gateway import CONF_USERNAME, Config as YaleXSConfig
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -56,7 +56,9 @@ async def async_setup_yale(
 ) -> None:
     """Set up the yale component."""
     config = cast(YaleXSConfig, entry.data)
-    await yale_gateway.async_setup(config)
+    # The username is not stored so we need a unique identifier to store the token
+    # This is the config entry id
+    await yale_gateway.async_setup({**config, CONF_USERNAME: entry.entry_id})
     await yale_gateway.async_authenticate()
     await yale_gateway.async_refresh_access_token_if_needed()
     data = entry.runtime_data = YaleData(hass, yale_gateway)
