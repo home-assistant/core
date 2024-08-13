@@ -1297,7 +1297,7 @@ lw12==0.9.2
 lxml==5.1.0
 
 # homeassistant.components.matrix
-matrix-nio==0.24.0
+matrix-nio==0.25.0
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
@@ -2953,7 +2953,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==2.4.3
 
 # homeassistant.components.august
-yalexs==6.5.0
+yalexs==8.0.2
 
 # homeassistant.components.yeelight
 yeelight==0.7.14
