@@ -124,10 +124,6 @@
     "deprecate_hdr_switch": {
       "title": "HDR Mode Switch Deprecated",
       "description": "UniFi Protect v3 added a new state for HDR (auto). As a result, the HDR Mode Switch has been replaced with an HDR Mode Select, and it is deprecated.\n\nBelow are the detected automations or scripts that use one or more of the deprecated entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly."
-    },
-    "deprecate_package_sensor": {
-      "title": "Package Event Sensor Deprecated",
-      "description": "The package event sensor never tripped because of the way events are reported in UniFi Protect. As a result, the sensor is deprecated and will be removed.\n\nBelow are the detected automations or scripts that use one or more of the deprecated entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly."
     }
   },
   "entity": {

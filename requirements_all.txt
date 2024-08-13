@@ -986,7 +986,7 @@ google-cloud-texttospeech==2.16.3
 google-generativeai==0.6.0
 
 # homeassistant.components.nest
-google-nest-sdm==4.0.5
+google-nest-sdm==4.0.6
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1650,7 +1650,7 @@ py-madvr2==1.6.29
 py-melissa-climate==2.1.4
 
 # homeassistant.components.nextbus
-py-nextbusnext==2.0.3
+py-nextbusnext==2.0.4
 
 # homeassistant.components.nightscout
 py-nightscout==1.2.2
@@ -2700,10 +2700,10 @@ switchbot-api==2.2.1
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==4.1.0
+systembridgeconnector==4.1.5
 
 # homeassistant.components.system_bridge
-systembridgemodels==4.1.0
+systembridgemodels==4.2.4
 
 # homeassistant.components.tailscale
 tailscale==0.6.1
@@ -2930,7 +2930,7 @@ xbox-webapi==2.0.11
 xiaomi-ble==0.30.2
 
 # homeassistant.components.knx
-xknx==3.0.0
+xknx==3.1.0
 
 # homeassistant.components.knx
 xknxproject==3.7.1
