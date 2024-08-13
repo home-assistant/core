@@ -10,7 +10,6 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
-from homeassistant.core import callback
 
 from .const import CONF_TOKEN, CONF_USERNAME, DATA_DISCOVERY, DOMAIN
 from .utils import async_discover_devices
@@ -127,16 +126,11 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    @callback
-    def _create_entry(self):
+    async def _create_entry(self) -> ConfigFlowResult:
         return self.async_create_entry(
             title="Switcher",
-            data=self._get_data(),
+            data={
+                CONF_USERNAME: self.username,
+                CONF_TOKEN: self.token,
+            },
         )
-
-    @callback
-    def _get_data(self):
-        return {
-            CONF_USERNAME: self.username,
-            CONF_TOKEN: self.token,
-        }
