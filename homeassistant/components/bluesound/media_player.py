@@ -247,7 +247,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         self._muted = False
         self._master: BluesoundPlayer | None = None
         self._is_master = False
-        self._group_name = None
+        self._group_name: str | None = None
         self._group_list: list[str] = []
         self._bluesound_device_name = sync_status.name
         self._player = player
@@ -495,9 +495,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         if self._last_status_update is None or mediastate == MediaPlayerState.IDLE:
             return None
 
-        position = self._status.seconds
-        if position is None:
-            return None
+        position = float(self._status.seconds)
 
         if mediastate == MediaPlayerState.PLAYING:
             position += (dt_util.utcnow() - self._last_status_update).total_seconds()
@@ -514,7 +512,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         if duration is None:
             return None
 
-        return duration
+        return int(duration)
 
     @property
     def media_position_updated_at(self) -> datetime | None:
@@ -650,7 +648,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         return shuffle
 
-    async def async_join(self, master) -> None:
+    async def async_join(self, master: str) -> None:
         """Join the player to a group."""
         master_device = [
             device
@@ -744,6 +742,9 @@ class BluesoundPlayer(MediaPlayerEntity):
         for preset in self._presets:
             if preset.name == source:
                 url = preset.url
+
+        if url is None:
+            raise ServiceValidationError(f"Source {source} not found")
 
         await self._player.play_url(url)
 

@@ -127,7 +127,9 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return await self.async_step_confirm()
 
-    async def async_step_confirm(self, user_input: dict[str, Any] | None=None) -> ConfigFlowResult:
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Confirm the zeroconf setup."""
         assert self._sync_status is not None
         assert self._host is not None
