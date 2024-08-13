@@ -18,7 +18,7 @@ PLATFORMS: list[Platform] = [Platform.CLIMATE]
 type FujitsuHVACConfigEntry = ConfigEntry[FujitsuHVACCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FujitsuHVACConfigEntry) -> bool:
     """Set up Fujitsu HVAC (based on Ayla IOT) from a config entry."""
     api = new_ayla_api(
         entry.data[CONF_USERNAME],
