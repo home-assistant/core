@@ -5,7 +5,11 @@ from __future__ import annotations
 from typing import Any
 
 from xknx import XKNX
-from xknx.devices import Climate as XknxClimate, ClimateMode as XknxClimateMode
+from xknx.devices import (
+    Climate as XknxClimate,
+    ClimateMode as XknxClimateMode,
+    Device as XknxDevice,
+)
 from xknx.dpt.dpt_20 import HVACControllerMode
 
 from homeassistant import config_entries
@@ -241,12 +245,9 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
         if self._device.supports_on_off and not self._device.is_on:
             return HVACMode.OFF
         if self._device.mode is not None and self._device.mode.supports_controller_mode:
-            hvac_mode = CONTROLLER_MODES.get(
+            return CONTROLLER_MODES.get(
                 self._device.mode.controller_mode, self.default_hvac_mode
             )
-            if hvac_mode is not HVACMode.OFF:
-                self._last_hvac_mode = hvac_mode
-            return hvac_mode
         return self.default_hvac_mode
 
     @property
@@ -261,11 +262,15 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
 
         if self._device.supports_on_off:
             if not ha_controller_modes:
-                ha_controller_modes.append(self.default_hvac_mode)
+                ha_controller_modes.append(self._last_hvac_mode)
             ha_controller_modes.append(HVACMode.OFF)
 
         hvac_modes = list(set(filter(None, ha_controller_modes)))
-        return hvac_modes if hvac_modes else [self.default_hvac_mode]
+        return (
+            hvac_modes
+            if hvac_modes
+            else [self.hvac_mode]  # mode read-only -> fall back to only current mode
+        )
 
     @property
     def hvac_action(self) -> HVACAction | None:
@@ -354,3 +359,13 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
             self._device.mode.unregister_device_updated_cb(self.after_update_callback)
             self._device.mode.xknx.devices.async_remove(self._device.mode)
         await super().async_will_remove_from_hass()
+
+    def after_update_callback(self, _device: XknxDevice) -> None:
+        """Call after device was updated."""
+        if self._device.mode is not None and self._device.mode.supports_controller_mode:
+            hvac_mode = CONTROLLER_MODES.get(
+                self._device.mode.controller_mode, self.default_hvac_mode
+            )
+            if hvac_mode is not HVACMode.OFF:
+                self._last_hvac_mode = hvac_mode
+        super().after_update_callback(_device)
