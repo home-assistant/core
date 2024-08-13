@@ -42,7 +42,7 @@ async def test_chime_play_service_entity(
     await hass.services.async_call(
         REOLINK_DOMAIN,
         "chime_play",
-        {ATTR_ENTITY_ID: [entity_id], "ringtone": "attraction"},
+        {ATTR_ENTITY_ID: [entity_id], ATTR_RINGTONE: "attraction"},
         blocking=True,
     )
     test_chime.play.assert_called_once()
