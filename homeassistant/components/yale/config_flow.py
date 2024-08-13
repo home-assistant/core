@@ -98,12 +98,6 @@ class YaleConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=
         self._mode: str | None = None
         super().__init__()
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the initial step."""
-        return await self.async_step_user_validate()
-
     async def async_step_user_validate(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
