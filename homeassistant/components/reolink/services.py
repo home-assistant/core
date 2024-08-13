@@ -64,7 +64,7 @@ async def async_setup_services(hass: HomeAssistant) -> bool:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="service_not_chime",
-                    translation_placeholders={"device_name": device.name},
+                    translation_placeholders={"device_name": str(device.name)},
                 )
 
             ringtone = service_data[ATTR_RINGTONE]
