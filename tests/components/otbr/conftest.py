@@ -19,7 +19,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="otbr_config_entry_multipan")
-async def otbr_config_entry_multipan_fixture(hass):
+async def otbr_config_entry_multipan_fixture(hass: HomeAssistant) -> None:
     """Mock Open Thread Border Router config entry."""
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA_MULTIPAN,
@@ -46,7 +46,7 @@ async def otbr_config_entry_multipan_fixture(hass):
 
 
 @pytest.fixture(name="otbr_config_entry_thread")
-async def otbr_config_entry_thread_fixture(hass):
+async def otbr_config_entry_thread_fixture(hass: HomeAssistant) -> None:
     """Mock Open Thread Border Router config entry."""
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA_THREAD,
