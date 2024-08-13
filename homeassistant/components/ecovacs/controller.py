@@ -74,6 +74,8 @@ class EcovacsController:
             self._authenticator,
         )
 
+        self._added_legacy_entities: set[str] = set()
+
     async def initialize(self) -> None:
         """Init controller."""
         mqtt_config_verfied = False
@@ -116,6 +118,14 @@ class EcovacsController:
             await self._hass.async_add_executor_job(legacy_device.disconnect)
         await self._mqtt.disconnect()
         await self._authenticator.teardown()
+
+    def add_legacy_entity(self, device: VacBot, component: str) -> None:
+        """Add legacy entity."""
+        self._added_legacy_entities.add(f"{device.vacuum['did']}_{component}")
+
+    def legacy_entity_is_added(self, device: VacBot, component: str) -> bool:
+        """Check if legacy entity is added."""
+        return f"{device.vacuum['did']}_{component}" in self._added_legacy_entities
 
     @property
     def devices(self) -> list[Device]:

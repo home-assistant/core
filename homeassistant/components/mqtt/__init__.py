@@ -254,7 +254,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             mqtt_data.client.async_restore_tracked_subscriptions(
                 mqtt_data.subscriptions_to_restore
             )
-            mqtt_data.subscriptions_to_restore = []
+            mqtt_data.subscriptions_to_restore = set()
         mqtt_data.reload_dispatchers.append(
             entry.add_update_listener(_async_config_entry_updated)
         )
@@ -303,8 +303,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # has been deprecated with HA Core 2024.8.0
             # and will be removed with HA Core 2025.2.0
             rendered_topic: Any = MqttCommandTemplate(
-                template.Template(msg_topic_template),
-                hass=hass,
+                template.Template(msg_topic_template, hass),
             ).async_render()
             ir.async_create_issue(
                 hass,
@@ -353,7 +352,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 },
             )
             payload = MqttCommandTemplate(
-                template.Template(payload_template), hass=hass
+                template.Template(payload_template, hass)
             ).async_render()
 
         if TYPE_CHECKING:

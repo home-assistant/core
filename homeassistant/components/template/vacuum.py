@@ -318,7 +318,7 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
         try:
             battery_level_int = int(battery_level)
             if not 0 <= battery_level_int <= 100:
-                raise ValueError
+                raise ValueError  # noqa: TRY301
         except ValueError:
             _LOGGER.error(
                 "Received invalid battery level: %s for entity %s. Expected: 0-100",

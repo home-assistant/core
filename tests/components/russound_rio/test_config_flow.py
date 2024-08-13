@@ -7,7 +7,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import HARDWARE_MAC, MOCK_CONFIG, MODEL
+from .const import MOCK_CONFIG, MOCK_CONTROLLERS, MODEL
 
 
 async def test_form(
@@ -64,7 +64,7 @@ async def test_no_primary_controller(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_russound: AsyncMock
 ) -> None:
     """Test we handle no primary controller error."""
-    mock_russound.enumerate_controllers.return_value = []
+    mock_russound.enumerate_controllers.return_value = {}
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -79,7 +79,7 @@ async def test_no_primary_controller(
     assert result["errors"] == {"base": "no_primary_controller"}
 
     # Recover with correct information
-    mock_russound.enumerate_controllers.return_value = [(1, HARDWARE_MAC, MODEL)]
+    mock_russound.enumerate_controllers.return_value = MOCK_CONTROLLERS
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         MOCK_CONFIG,
@@ -125,7 +125,7 @@ async def test_import_no_primary_controller(
     hass: HomeAssistant, mock_russound: AsyncMock
 ) -> None:
     """Test import with no primary controller error."""
-    mock_russound.enumerate_controllers.return_value = []
+    mock_russound.enumerate_controllers.return_value = {}
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_CONFIG

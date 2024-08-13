@@ -20,8 +20,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
+    CONF_ACTION,
     CONF_ENTITY_ID,
-    CONF_SERVICE,
     CONF_SERVICE_DATA,
     CONF_SERVICE_DATA_TEMPLATE,
     CONF_SERVICE_TEMPLATE,
@@ -358,14 +358,13 @@ def async_prepare_call_from_config(
                 f"Invalid config for calling service: {ex}"
             ) from ex
 
-    if CONF_SERVICE in config:
-        domain_service = config[CONF_SERVICE]
+    if CONF_ACTION in config:
+        domain_service = config[CONF_ACTION]
     else:
         domain_service = config[CONF_SERVICE_TEMPLATE]
 
     if isinstance(domain_service, template.Template):
         try:
-            domain_service.hass = hass
             domain_service = domain_service.async_render(variables)
             domain_service = cv.service(domain_service)
         except TemplateError as ex:
@@ -384,10 +383,8 @@ def async_prepare_call_from_config(
         conf = config[CONF_TARGET]
         try:
             if isinstance(conf, template.Template):
-                conf.hass = hass
                 target.update(conf.async_render(variables))
             else:
-                template.attach(hass, conf)
                 target.update(template.render_complex(conf, variables))
 
             if CONF_ENTITY_ID in target:
@@ -413,7 +410,6 @@ def async_prepare_call_from_config(
         if conf not in config:
             continue
         try:
-            template.attach(hass, config[conf])
             render = template.render_complex(config[conf], variables)
             if not isinstance(render, dict):
                 raise HomeAssistantError(
