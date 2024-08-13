@@ -41,7 +41,7 @@ async def test_user_flow_success(
 
 
 async def test_user_flow_cannot_connect(
-    hass: HomeAssistant, mock_player: AsyncMock
+    hass: HomeAssistant, mock_player: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -75,6 +75,8 @@ async def test_user_flow_cannot_connect(
         CONF_HOST: "1.1.1.1",
         CONF_PORT: 11000,
     }
+
+    mock_setup_entry.assert_called_once()
 
 
 async def test_user_flow_aleady_configured(
