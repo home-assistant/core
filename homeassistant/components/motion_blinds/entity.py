@@ -108,7 +108,7 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
         self._blind.Remove_callback(self.unique_id)
         await super().async_will_remove_from_hass()
 
-    async def async_scheduled_update_request(self, *_):
+    async def async_scheduled_update_request(self, *_) -> None:
         """Request a state update from the blind at a scheduled point in time."""
         # add the last position to the list and keep the list at max 2 items
         self._previous_positions.append(self._blind.position)
@@ -134,7 +134,7 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
             self._previous_positions = []
             self._requesting_position = None
 
-    async def async_request_position_till_stop(self, delay=None):
+    async def async_request_position_till_stop(self, delay:int=None) -> None:
         """Request the position of the blind every self._update_interval_moving seconds until it stops moving."""
         if delay is None:
             delay = self._update_interval_moving
