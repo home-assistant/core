@@ -55,5 +55,31 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "services": {
+    "get_drinks": {
+      "name": "Get Drinks",
+      "description": "Get Tami4 drinks from device",
+      "fields": {
+        "entry_id": {
+          "name": "Tami4 entry",
+          "description": "The Tami4 entry id"
+        }
+      }
+    },
+    "prepare_drink": {
+      "name": "Prepare Drink",
+      "description": "Prepare a specific drink",
+      "fields": {
+        "entry_id": {
+          "name": "Tami4 entry",
+          "description": "The Tami4 entry id"
+        },
+        "drink_id": {
+          "name": "Drink id",
+          "description": "The specific drink id"
+        }
+      }
+    }
   }
 }

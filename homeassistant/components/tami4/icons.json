@@ -28,5 +28,9 @@
         "default": "mdi:water"
       }
     }
+  },
+  "services": {
+    "get_drinks": "mdi:glass-cocktail",
+    "prepare_drink": "mdi:glass-cocktail"
   }
 }
