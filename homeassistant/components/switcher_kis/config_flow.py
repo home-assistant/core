@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
+
+from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
@@ -11,7 +12,8 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 
 from .const import CONF_TOKEN, CONF_USERNAME, DATA_DISCOVERY, DOMAIN
-from .utils import async_discover_devices, validate_input
+from .utils import async_discover_devices
+from aioswitcher.device.tools import validate_token
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,11 +68,13 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
             self.username = user_input.get(CONF_USERNAME)
             self.token = user_input.get(CONF_TOKEN)
 
-            token_is_valid = await validate_input(
+            token_is_valid = await validate_token(
                 user_input[CONF_USERNAME], user_input[CONF_TOKEN]
             )
             if token_is_valid:
+                _LOGGER.info("Token is valid")
                 return self._create_entry()
+            _LOGGER.info("Token is invalid")
             errors["base"] = "invalid_auth"
         else:
             user_input = {}
@@ -99,10 +103,13 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
         assert self.entry is not None
 
         if user_input is not None:
-            token_is_valid = await validate_input(
+            token_is_valid = await validate_token(
                 user_input[CONF_USERNAME], user_input[CONF_TOKEN]
             )
-            if not token_is_valid:
+            if token_is_valid:
+                _LOGGER.info("Token is valid")
+            else:
+                _LOGGER.info("Token is invalid")
                 return self.async_abort(reason="reauth_unsuccessful")
 
             return self.async_update_reload_and_abort(
