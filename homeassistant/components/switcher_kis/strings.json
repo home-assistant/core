@@ -5,14 +5,14 @@
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       },
       "credentials": {
-        "description": "Found a Switcher device that requires a token\nEnter your username(Email Address) and token here\nFor more information see here: https://www.home-assistant.io/integrations/switcher_kis/#prerequisites",
+        "description": "Found a Switcher device that requires a token\nEnter your username(Email Address) and token here\nFor more information see here:\nhttps://www.home-assistant.io/integrations/switcher_kis/#prerequisites",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "token": "[%key:common::config_flow::data::access_token%]"
         }
       },
       "reauth_confirm": {
-        "description": "Found a Switcher device that requires a token\nEnter your username(Email Address) and token here\nFor more information see here: https://www.home-assistant.io/integrations/switcher_kis/#prerequisites",
+        "description": "Found a Switcher device that requires a token\nEnter your username(Email Address) and token here\nFor more information see here:\nhttps://www.home-assistant.io/integrations/switcher_kis/#prerequisites",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "token": "[%key:common::config_flow::data::access_token%]"

@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import logging
-
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -12,8 +11,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 
 from .const import CONF_TOKEN, CONF_USERNAME, DATA_DISCOVERY, DOMAIN
-from .utils import async_discover_devices
-from aioswitcher.device.tools import validate_token
+from .utils import async_discover_devices, validate_input
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +55,7 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
                 _LOGGER.info("Device with ID %s requires a token", device_id)
                 return await self.async_step_credentials()
 
-        return self._create_entry()
+        return await self._create_entry()
 
     async def async_step_credentials(
         self, user_input: dict[str, Any] | None = None
@@ -68,13 +66,11 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
             self.username = user_input.get(CONF_USERNAME)
             self.token = user_input.get(CONF_TOKEN)
 
-            token_is_valid = await validate_token(
+            token_is_valid = await validate_input(
                 user_input[CONF_USERNAME], user_input[CONF_TOKEN]
             )
             if token_is_valid:
-                _LOGGER.info("Token is valid")
-                return self._create_entry()
-            _LOGGER.info("Token is invalid")
+                return await self._create_entry()
             errors["base"] = "invalid_auth"
         else:
             user_input = {}
@@ -103,13 +99,10 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
         assert self.entry is not None
 
         if user_input is not None:
-            token_is_valid = await validate_token(
+            token_is_valid = await validate_input(
                 user_input[CONF_USERNAME], user_input[CONF_TOKEN]
             )
-            if token_is_valid:
-                _LOGGER.info("Token is valid")
-            else:
-                _LOGGER.info("Token is invalid")
+            if not token_is_valid:
                 return self.async_abort(reason="reauth_unsuccessful")
 
             return self.async_update_reload_and_abort(
