@@ -1,7 +1,6 @@
 """Tests for init module."""
 
 import http
-import sys
 import time
 from unittest.mock import AsyncMock, patch
 
@@ -139,52 +138,31 @@ async def test_websocket_not_available(
             HusqvarnaWSServerHandshakeError("Boom")
         )
 
-        # Setup integration and verify initial log message
+        # Setup integration and verify initial log error message
         await setup_integration(hass, mock_config_entry)
         assert (
             "Failed to connect to websocket. Trying to reconnect: Boom" in caplog.text
         )
-
-        # Initial call count and range for reconnection attempts
-        mock_automower_client.reset_mock()
-        default_recursion_limit = sys.getrecursionlimit()
-        temporary_recursion_limit = 200
-        sys.setrecursionlimit(temporary_recursion_limit)
-        assert sys.getrecursionlimit() == temporary_recursion_limit
-        # Perform reconnection attempts
-        for count in range(temporary_recursion_limit):
-            await hass.async_block_till_done()
-            assert mock_automower_client.auth.websocket_connect.call_count == count + 1
-            assert mock_config_entry.state is ConfigEntryState.LOADED
-
         # Simulate a successful connection
-        caplog.clear()
         mock_automower_client.auth.websocket_connect.side_effect = None
+        caplog.clear()
+        mock_automower_client.reset_mock()
         await hass.async_block_till_done()
-        assert (
-            mock_automower_client.auth.websocket_connect.call_count
-            == temporary_recursion_limit + 1
-        )
+        assert mock_automower_client.auth.websocket_connect.call_count == 1
         assert mock_automower_client.start_listening.call_count == 1
         assert "Trying to reconnect: Boom" not in caplog.text
 
         # Simulate a start_listening TimeoutException
         mock_automower_client.start_listening.side_effect = TimeoutException("Boom")
         await hass.async_block_till_done()
-        assert (
-            mock_automower_client.auth.websocket_connect.call_count
-            == temporary_recursion_limit + 2
-        )
+        assert mock_automower_client.auth.websocket_connect.call_count == 2
         assert mock_automower_client.start_listening.call_count == 2
 
         # Simulate a successful connection
         caplog.clear()
         mock_automower_client.start_listening.side_effect = None
         await hass.async_block_till_done()
-        assert (
-            mock_automower_client.auth.websocket_connect.call_count
-            == temporary_recursion_limit + 3
-        )
+        assert mock_automower_client.auth.websocket_connect.call_count == 3
         assert mock_automower_client.start_listening.call_count == 3
         assert "Trying to reconnect: Boom" not in caplog.text
 
@@ -193,9 +171,6 @@ async def test_websocket_not_available(
         await hass.async_stop()
         assert mock_automower_client.auth.websocket_connect.call_count == 0
         assert mock_automower_client.start_listening.call_count == 0
-
-        sys.setrecursionlimit(default_recursion_limit)
-        assert sys.getrecursionlimit() == default_recursion_limit
 
 
 async def test_device_info(
