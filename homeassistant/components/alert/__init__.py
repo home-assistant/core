@@ -162,16 +162,8 @@ class Alert(Entity):
         self._data = data
 
         self._message_template = message_template
-        if self._message_template is not None:
-            self._message_template.hass = hass
-
         self._done_message_template = done_message_template
-        if self._done_message_template is not None:
-            self._done_message_template.hass = hass
-
         self._title_template = title_template
-        if self._title_template is not None:
-            self._title_template.hass = hass
 
         self._notifiers = notifiers
         self._can_ack = can_ack
