@@ -49,13 +49,11 @@ class YaleGateway(Gateway):
             raise CannotConnect from ex
 
         token = self._oauth_session.token
-        _LOGGER.warning("Token: %s", token)
         access_token = token["access_token"]
-        access_token_expires = token["expiresAt"]
-        v_install_id = token["vInstallId"]
+        access_token_expires = token["expires_at"]
         self.authentication = Authentication(
             AuthenticationState.AUTHENTICATED,
-            v_install_id,
+            None,
             access_token,
             access_token_expires,
         )
