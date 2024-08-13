@@ -244,7 +244,6 @@ class BluesoundPlayer(MediaPlayerEntity):
         self._status: Status | None = None
         self._inputs: list[Input] = []
         self._presets: list[Preset] = []
-        self._is_online = False
         self._muted = False
         self._master: BluesoundPlayer | None = None
         self._is_master = False
@@ -312,20 +311,24 @@ class BluesoundPlayer(MediaPlayerEntity):
 
     async def _start_poll_command(self):
         """Loop which polls the status of the player."""
-        try:
-            while True:
+        while True:
+            try:
                 await self.async_update_status()
-
-        except (TimeoutError, ClientError):
-            _LOGGER.error("Node %s:%s is offline, retrying later", self.host, self.port)
-            await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT)
-            self.start_polling()
-
-        except CancelledError:
-            _LOGGER.debug("Stopping the polling of node %s:%s", self.host, self.port)
-        except Exception:
-            _LOGGER.exception("Unexpected error in %s:%s", self.host, self.port)
-            raise
+            except (TimeoutError, ClientError):
+                _LOGGER.error(
+                    "Node %s:%s is offline, retrying later", self.host, self.port
+                )
+                await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT)
+            except CancelledError:
+                _LOGGER.debug(
+                    "Stopping the polling of node %s:%s", self.host, self.port
+                )
+                return
+            except Exception:
+                _LOGGER.exception(
+                    "Unexpected error in %s:%s, retrying later", self.host, self.port
+                )
+                await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT)
 
     async def async_added_to_hass(self) -> None:
         """Start the polling task."""
@@ -348,7 +351,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
     async def async_update(self) -> None:
         """Update internal status of the entity."""
-        if not self._is_online:
+        if not self.available:
             return
 
         with suppress(TimeoutError):
@@ -365,7 +368,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         try:
             status = await self._player.status(etag=etag, poll_timeout=120, timeout=125)
 
-            self._is_online = True
+            self._attr_available = True
             self._last_status_update = dt_util.utcnow()
             self._status = status
 
@@ -394,7 +397,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
             self.async_write_ha_state()
         except (TimeoutError, ClientError):
-            self._is_online = False
+            self._attr_available = False
             self._last_status_update = None
             self._status = None
             self.async_write_ha_state()
