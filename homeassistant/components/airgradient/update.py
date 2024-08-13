@@ -1,6 +1,7 @@
 """Airgradient Update platform."""
 
 from datetime import timedelta
+from functools import cached_property
 
 from homeassistant.components.update import UpdateDeviceClass, UpdateEntity
 from homeassistant.core import HomeAssistant
@@ -28,13 +29,17 @@ class AirGradientUpdate(AirGradientEntity, UpdateEntity):
     """Representation of Airgradient Update."""
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE
-    _attr_should_poll = True
     coordinator: AirGradientMeasurementCoordinator
 
     def __init__(self, coordinator: AirGradientMeasurementCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.serial_number}-update"
+
+    @cached_property
+    def should_poll(self) -> bool:
+        """Return False because entity pushes its state."""
+        return True
 
     @property
     def installed_version(self) -> str:
