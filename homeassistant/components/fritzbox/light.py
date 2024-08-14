@@ -20,6 +20,8 @@ from . import FritzboxDataUpdateCoordinator, FritzBoxDeviceEntity
 from .const import COLOR_MODE, LOGGER
 from .coordinator import FritzboxConfigEntry
 
+SUPPORTED_COLOR_MODES = {ColorMode.COLOR_TEMP, ColorMode.HS}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -97,7 +99,7 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
     def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
         if self.data.has_color:
-            return {ColorMode.COLOR_TEMP, ColorMode.HS}
+            return SUPPORTED_COLOR_MODES
         if self.data.has_level:
             return {ColorMode.BRIGHTNESS}
         return {ColorMode.ONOFF}
