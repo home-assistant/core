@@ -18,6 +18,7 @@ from homeassistant.components.assist_pipeline import (
 )
 from homeassistant.components.assist_satellite import (
     AssistSatelliteEntity,
+    AssistSatelliteEntityFeature,
     AssistSatelliteState,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -61,8 +62,6 @@ async def async_setup_entry(
 class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity):
     """Assist satellite for VoIP devices."""
 
-    _attr_state = AssistSatelliteState.IDLE
-
     def __init__(self, hass: HomeAssistant, voip_device: VoIPDevice) -> None:
         """Initialize an Assist satellite."""
         VoIPEntity.__init__(self, voip_device)
@@ -71,6 +70,21 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity):
         # Conversation id is reset after 5 minutes of inactivity
         self._conversation_id: str | None = None
         self._conversation_id_time: float | None = None
+
+        self._satellite_state: AssistSatelliteState = AssistSatelliteState.IDLE
+
+    @property
+    def state(self) -> AssistSatelliteState:
+        """Return the current state of the satellite."""
+        return self._satellite_state
+
+    @property
+    def supported_features(self) -> AssistSatelliteEntityFeature:
+        """Return supported features of the satellite."""
+        return (
+            AssistSatelliteEntityFeature.AUDIO_INPUT
+            | AssistSatelliteEntityFeature.AUDIO_OUTPUT
+        )
 
     async def _async_accept_pipeline_from_satellite(
         self,
@@ -138,8 +152,8 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity):
 
     def _set_state(self, state: AssistSatelliteState):
         """Set the entity's state."""
-        self._attr_state = state
-        self.hass.states.async_set(self.entity_id, state.value)
+        self._satellite_state = state
+        self.async_write_ha_state()
 
     async def _async_config_updated(self) -> None:
         """Inform when the device config is updated.
