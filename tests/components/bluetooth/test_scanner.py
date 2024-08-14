@@ -631,7 +631,7 @@ async def test_setup_and_stop_macos(
     init_kwargs = None
 
     class MockBleakScanner:
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args, **kwargs) -> None:
             """Init the scanner."""
             nonlocal init_kwargs
             init_kwargs = kwargs

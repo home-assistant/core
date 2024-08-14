@@ -284,14 +284,14 @@ async def test_lru_stats(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) 
         return 1
 
     class DomainData:
-        def __init__(self):
+        def __init__(self) -> None:
             self._data = LRU(1)
 
     domain_data = DomainData()
     assert hass.services.has_service(DOMAIN, SERVICE_LRU_STATS)
 
     class LRUCache:
-        def __init__(self):
+        def __init__(self) -> None:
             self._data = {"sqlalchemy_test": 1}
 
     sqlalchemy_lru_cache = LRUCache()

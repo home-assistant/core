@@ -288,7 +288,7 @@ async def test_manual_dns_error(hass: HomeAssistant) -> None:
     class MockLifxConnectonDnsError:
         """Mock lifx discovery."""
 
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args, **kwargs) -> None:
             """Init connection."""
             self.device = _mocked_failing_bulb()
 

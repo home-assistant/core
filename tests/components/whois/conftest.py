@@ -74,7 +74,7 @@ def mock_whois_missing_some_attrs() -> Generator[Mock]:
     class LimitedWhoisMock:
         """A limited mock of whois_query."""
 
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args, **kwargs) -> None:
             """Mock only attributes the library always sets being available."""
             self.creation_date = datetime(2019, 1, 1, 0, 0, 0)
             self.dnssec = True

@@ -19,7 +19,7 @@ class MockBleakClient:
 
     services = MockServices()
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """Mock BleakClient."""
 
     async def __aenter__(self, *args, **kwargs):

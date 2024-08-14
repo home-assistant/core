@@ -7,7 +7,7 @@ from pyatv.const import Protocol
 class MockPairingHandler(interface.PairingHandler):
     """Mock for PairingHandler in pyatv."""
 
-    def __init__(self, *args):
+    def __init__(self, *args) -> None:
         """Initialize a new MockPairingHandler."""
         super().__init__(*args)
         self.pin_code = None

@@ -31,7 +31,7 @@ from tests.components.bluetooth import generate_advertisement_data, generate_ble
 class MockBleakClient:
     """Mock BleakClient."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """Mock BleakClient."""
 
     async def __aenter__(self, *args, **kwargs):

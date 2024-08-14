@@ -32,7 +32,7 @@ TEST_TIMEOUT = 7.0  # Lower than 9s home assistant timeout
 class WorkerSync:
     """Test fixture that intercepts stream worker calls to StreamOutput."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize WorkerSync."""
         self._event = None
         self._original = StreamState.discontinuity
@@ -74,7 +74,7 @@ def stream_worker_sync() -> Generator[WorkerSync]:
 class HLSSync:
     """Test fixture that intercepts stream worker calls to StreamOutput."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize HLSSync."""
         self._request_event = asyncio.Event()
         self._original_recv = StreamOutput.recv
