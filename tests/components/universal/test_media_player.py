@@ -220,7 +220,7 @@ class MockMediaPlayer(media_player.MediaPlayerEntity):
 
 
 @pytest.fixture
-async def mock_states(hass):
+async def mock_states(hass: HomeAssistant) -> Mock:
     """Set mock states used in tests."""
     result = Mock()
 
