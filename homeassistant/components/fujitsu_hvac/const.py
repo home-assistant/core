@@ -1,4 +1,7 @@
 """Constants for the Fujitsu HVAC (based on Ayla IOT) integration."""
+
+from datetime import timedelta
+
 from ayla_iot_unofficial.fujitsu_consts import (  # noqa: F401
     FGLAIR_APP_ID,
     FGLAIR_APP_SECRET,
@@ -18,7 +21,7 @@ from homeassistant.components.climate import (
 )
 
 API_TIMEOUT = 10
-API_REFRESH_SECONDS = 5 * 60
+API_REFRESH = timedelta(minutes=5)
 
 DOMAIN = "fujitsu_hvac"
 

@@ -35,8 +35,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up one Fujitsu HVAC device."""
     async_add_entities(
-        FujitsuHVACDevice(entry.runtime_data, dev.device_serial_number)
-        for dev in entry.runtime_data.data.values()
+        FujitsuHVACDevice(entry.runtime_data, device)
+        for device in entry.runtime_data.data.values()
     )
 
 
@@ -51,18 +51,20 @@ class FujitsuHVACDevice(CoordinatorEntity[FujitsuHVACCoordinator], ClimateEntity
 
     _enable_turn_on_off_backwards_compatibility: bool = False
 
-    def __init__(self, coordinator: FujitsuHVACCoordinator, dev_sn: str) -> None:
+    def __init__(
+        self, coordinator: FujitsuHVACCoordinator, device: FujitsuHVAC
+    ) -> None:
         """Store the representation of the device and set the static attributes."""
-        super().__init__(coordinator, context=dev_sn)
+        super().__init__(coordinator, context=device.device_serial_number)
 
-        self._attr_unique_id = self.device.device_serial_number
+        self._attr_unique_id = device.device_serial_number
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.device.device_serial_number)},
-            name=self.device.device_name,
+            identifiers={(DOMAIN, device.device_serial_number)},
+            name=device.device_name,
             manufacturer="Fujitsu",
-            model=self.device.property_values["model_name"],
-            serial_number=self.device.device_serial_number,
-            sw_version=self.device.property_values["mcu_firmware_version"],
+            model=device.property_values["model_name"],
+            serial_number=device.device_serial_number,
+            sw_version=device.property_values["mcu_firmware_version"],
         )
 
         self._attr_supported_features = (
@@ -70,13 +72,14 @@ class FujitsuHVACDevice(CoordinatorEntity[FujitsuHVACCoordinator], ClimateEntity
             | ClimateEntityFeature.TURN_ON
             | ClimateEntityFeature.TURN_OFF
         )
-        if self.device.has_capability(Capability.OP_FAN):
+        if device.has_capability(Capability.OP_FAN):
             self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
-        if self.device.has_capability(
-            Capability.SWING_HORIZONTAL
-        ) or self.device.has_capability(Capability.SWING_VERTICAL):
+        if device.has_capability(Capability.SWING_HORIZONTAL) or device.has_capability(
+            Capability.SWING_VERTICAL
+        ):
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
+        self._set_attr()
 
     @property
     def device(self) -> FujitsuHVAC:
@@ -84,87 +87,24 @@ class FujitsuHVACDevice(CoordinatorEntity[FujitsuHVACCoordinator], ClimateEntity
         return self.coordinator.data[self.coordinator_context]
 
     @property
-    def fan_mode(self) -> str | None:
-        """Return the fan setting."""
-        return FUJI_TO_HA_FAN.get(self.device.fan_speed)
-
-    @property
-    def fan_modes(self) -> list[str]:
-        """Return the list of available fan modes."""
-        return [
-            FUJI_TO_HA_FAN[mode]
-            for mode in self.device.supported_fan_speeds
-            if mode in FUJI_TO_HA_FAN
-        ]
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return super().available and self.coordinator_context in self.coordinator.data
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set Fan mode."""
         await self.device.async_set_fan_speed(HA_TO_FUJI_FAN[fan_mode])
         await self.coordinator.async_request_refresh()
 
-    @property
-    def hvac_mode(self) -> HVACMode | None:
-        """Return hvac operation ie. heat, cool mode."""
-        return FUJI_TO_HA_HVAC.get(self.device.op_mode)
-
-    @property
-    def hvac_modes(self) -> list[HVACMode]:
-        """Return the list of available hvac operation modes."""
-        return [
-            FUJI_TO_HA_HVAC[mode]
-            for mode in self.device.supported_op_modes
-            if mode in FUJI_TO_HA_HVAC
-        ]
-
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
         await self.device.async_set_op_mode(HA_TO_FUJI_HVAC[hvac_mode])
         await self.coordinator.async_request_refresh()
 
-    @property
-    def swing_mode(self) -> str | None:
-        """Return the swing setting.
-
-        Requires ClimateEntityFeature.SWING_MODE.
-        """
-        return FUJI_TO_HA_SWING.get(self.device.swing_mode)
-
-    @property
-    def swing_modes(self) -> list[str]:
-        """Return the list of available swing modes.
-
-        Requires ClimateEntityFeature.SWING_MODE.
-        """
-        return [
-            FUJI_TO_HA_SWING[mode]
-            for mode in self.device.supported_swing_modes
-            if mode in FUJI_TO_HA_SWING
-        ]
-
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set swing mode."""
         await self.device.async_set_swing_mode(HA_TO_FUJI_SWING[swing_mode])
         await self.coordinator.async_request_refresh()
-
-    @property
-    def min_temp(self) -> float:
-        """Return the minimum temperature."""
-        return float(self.device.temperature_range[0])
-
-    @property
-    def max_temp(self) -> float:
-        """Return the maximum temperature."""
-        return float(self.device.temperature_range[1])
-
-    @property
-    def current_temperature(self) -> float:
-        """Return the current temperature."""
-        return float(self.device.sensed_temp)
-
-    @property
-    def target_temperature(self) -> float:
-        """Return the target temperature."""
-        return float(self.device.set_temp)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set target temperature."""
@@ -172,3 +112,32 @@ class FujitsuHVACDevice(CoordinatorEntity[FujitsuHVACCoordinator], ClimateEntity
             return
         await self.device.async_set_set_temp(temperature)
         await self.coordinator.async_request_refresh()
+
+    def _set_attr(self) -> None:
+        if self.coordinator_context in self.coordinator.data:
+            self._attr_fan_mode = FUJI_TO_HA_FAN.get(self.device.fan_speed)
+            self._attr_fan_modes = [
+                FUJI_TO_HA_FAN[mode]
+                for mode in self.device.supported_fan_speeds
+                if mode in FUJI_TO_HA_FAN
+            ]
+            self._attr_hvac_mode = FUJI_TO_HA_HVAC.get(self.device.op_mode)
+            self._attr_hvac_modes = [
+                FUJI_TO_HA_HVAC[mode]
+                for mode in self.device.supported_op_modes
+                if mode in FUJI_TO_HA_HVAC
+            ]
+            self._attr_swing_mode = FUJI_TO_HA_SWING.get(self.device.swing_mode)
+            self._attr_swing_modes = [
+                FUJI_TO_HA_SWING[mode]
+                for mode in self.device.supported_swing_modes
+                if mode in FUJI_TO_HA_SWING
+            ]
+            self._attr_min_temp = self.device.temperature_range[0]
+            self._attr_max_temp = self.device.temperature_range[1]
+            self._attr_current_temperature = self.device.sensed_temp
+            self._attr_target_temperature = self.device.set_temp
+
+    def _handle_coordinator_update(self) -> None:
+        self._set_attr()
+        super()._handle_coordinator_update()

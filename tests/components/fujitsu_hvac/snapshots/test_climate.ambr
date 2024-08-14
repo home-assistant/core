@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_coordinator_initial_data[climate.testserial123-entry]
+# name: test_entities[climate.testserial123-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -54,7 +54,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_coordinator_initial_data[climate.testserial123-state]
+# name: test_entities[climate.testserial123-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 22.0,
@@ -93,7 +93,7 @@
     'state': 'cool',
   })
 # ---
-# name: test_coordinator_initial_data[climate.testserial345-entry]
+# name: test_entities[climate.testserial345-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -148,7 +148,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_coordinator_initial_data[climate.testserial345-state]
+# name: test_entities[climate.testserial345-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 22.0,

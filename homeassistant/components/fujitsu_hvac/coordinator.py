@@ -1,7 +1,5 @@
 """Coordinator for Fujitsu HVAC integration."""
 
-from asyncio import gather
-from datetime import timedelta
 import logging
 
 from ayla_iot_unofficial import AylaApi, AylaAuthError
@@ -11,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import API_REFRESH_SECONDS
+from .const import API_REFRESH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +23,7 @@ class FujitsuHVACCoordinator(DataUpdateCoordinator[dict[str, FujitsuHVAC]]):
             hass,
             _LOGGER,
             name="Fujitsu HVAC data",
-            update_interval=timedelta(seconds=API_REFRESH_SECONDS),
+            update_interval=API_REFRESH,
         )
         self.api = api
 
@@ -57,7 +55,8 @@ class FujitsuHVACCoordinator(DataUpdateCoordinator[dict[str, FujitsuHVAC]]):
             )
 
         try:
-            await gather(*[dev.async_update() for dev in devices])
+            for dev in devices:
+                await dev.async_update()
         except AylaAuthError as e:
             raise ConfigEntryError("Credentials expired for Ayla IoT API") from e
 

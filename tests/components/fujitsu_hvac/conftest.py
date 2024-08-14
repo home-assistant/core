@@ -41,19 +41,19 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def mock_ayla_api(mock_devices: list[AsyncMock]) -> Generator[AsyncMock]:
     """Override AylaApi creation."""
-    mymock = create_autospec(AylaApi)
+    my_mock = create_autospec(AylaApi)
 
     with (
         patch(
-            "homeassistant.components.fujitsu_hvac.new_ayla_api", return_value=mymock
+            "homeassistant.components.fujitsu_hvac.new_ayla_api", return_value=my_mock
         ),
         patch(
             "homeassistant.components.fujitsu_hvac.config_flow.new_ayla_api",
-            return_value=mymock,
+            return_value=my_mock,
         ),
     ):
-        mymock.async_get_devices.return_value = mock_devices
-        yield mymock
+        my_mock.async_get_devices.return_value = mock_devices
+        yield my_mock
 
 
 @pytest.fixture

@@ -49,7 +49,7 @@ async def test_full_flow(
     }
 
 
-async def test_readd_same(
+async def test_duplicate_entry(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_ayla_api: AsyncMock,
