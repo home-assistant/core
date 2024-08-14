@@ -669,19 +669,21 @@ def _drop_foreign_key_constraints(
 def _restore_foreign_key_constraints(
     session_maker: Callable[[], Session],
     engine: Engine,
-    dropped_constraints: list[tuple[str, str, ReflectedForeignKeyConstraint]],
+    foreign_columns: list[tuple[str, str, str | None, str | None]],
 ) -> None:
     """Restore foreign key constraints."""
-    for table, column, dropped_constraint in dropped_constraints:
+    for table, column, foreign_table, foreign_column in foreign_columns:
         constraints = Base.metadata.tables[table].foreign_key_constraints
         for constraint in constraints:
             if constraint.column_keys == [column]:
                 break
         else:
-            _LOGGER.info(
-                "Did not find a matching constraint for %s", dropped_constraint
-            )
+            _LOGGER.info("Did not find a matching constraint for %s.%s", table, column)
             continue
+
+        if TYPE_CHECKING:
+            assert foreign_table is not None
+            assert foreign_column is not None
 
         # AddConstraint mutates the constraint passed to it, we need to
         # undo that to avoid changing the behavior of the table schema.
@@ -689,13 +691,155 @@ def _restore_foreign_key_constraints(
         create_rule = constraint._create_rule  # noqa: SLF001
         add_constraint = AddConstraint(constraint)  # type: ignore[no-untyped-call]
         constraint._create_rule = create_rule  # noqa: SLF001
+        try:
+            _add_constraint(session_maker, add_constraint, table, column)
+        except IntegrityError:
+            _LOGGER.exception(
+                (
+                    "Could not update foreign options in %s table, will delete "
+                    "violations and try again"
+                ),
+                table,
+            )
+            _delete_foreign_key_violations(
+                session_maker, engine, table, column, foreign_table, foreign_column
+            )
+            _add_constraint(session_maker, add_constraint, table, column)
 
-        with session_scope(session=session_maker()) as session:
-            try:
-                connection = session.connection()
-                connection.execute(add_constraint)
-            except (InternalError, OperationalError):
-                _LOGGER.exception("Could not update foreign options in %s table", table)
+
+def _add_constraint(
+    session_maker: Callable[[], Session],
+    add_constraint: AddConstraint,
+    table: str,
+    column: str,
+) -> None:
+    """Add a foreign key constraint."""
+    _LOGGER.warning(
+        "Adding foreign key constraint to %s.%s. "
+        "Note: this can take several minutes on large databases and slow "
+        "machines. Please be patient!",
+        table,
+        column,
+    )
+    with session_scope(session=session_maker()) as session:
+        try:
+            connection = session.connection()
+            connection.execute(add_constraint)
+        except (InternalError, OperationalError):
+            _LOGGER.exception("Could not update foreign options in %s table", table)
+
+
+def _delete_foreign_key_violations(
+    session_maker: Callable[[], Session],
+    engine: Engine,
+    table: str,
+    column: str,
+    foreign_table: str,
+    foreign_column: str,
+) -> None:
+    """Remove rows which violate the constraints."""
+    if engine.dialect.name not in (SupportedDialect.MYSQL, SupportedDialect.POSTGRESQL):
+        raise RuntimeError(
+            f"_delete_foreign_key_violations not supported for {engine.dialect.name}"
+        )
+
+    _LOGGER.warning(
+        "Rows in table %s where %s references non existing %s.%s will be %s. "
+        "Note: this can take several minutes on large databases and slow "
+        "machines. Please be patient!",
+        table,
+        column,
+        foreign_table,
+        foreign_column,
+        "set to NULL" if table == foreign_table else "deleted",
+    )
+
+    result: CursorResult | None = None
+    if table == foreign_table:
+        # In case of a foreign reference to the same table, we set invalid
+        # references to NULL instead of deleting as deleting rows may
+        # cause additional invalid references to be created. This is to handle
+        # old_state_id referencing a missing state.
+        if engine.dialect.name == SupportedDialect.MYSQL:
+            while result is None or result.rowcount > 0:
+                with session_scope(session=session_maker()) as session:
+                    # The subquery (SELECT {foreign_column} from {foreign_table}) is
+                    # to be compatible with old MySQL versions which do not allow
+                    # referencing the table being updated in the WHERE clause.
+                    result = session.connection().execute(
+                        text(
+                            f"UPDATE {table} as t1 "  # noqa: S608
+                            f"SET {column} = NULL "
+                            "WHERE ("
+                            f"t1.{column} IS NOT NULL AND "
+                            "NOT EXISTS "
+                            "(SELECT 1 "
+                            f"FROM (SELECT {foreign_column} from {foreign_table}) AS t2 "
+                            f"WHERE t2.{foreign_column} = t1.{column})) "
+                            "LIMIT 100000;"
+                        )
+                    )
+        elif engine.dialect.name == SupportedDialect.POSTGRESQL:
+            while result is None or result.rowcount > 0:
+                with session_scope(session=session_maker()) as session:
+                    # PostgreSQL does not support LIMIT in UPDATE clauses, so we
+                    # update matches from a limited subquery instead.
+                    result = session.connection().execute(
+                        text(
+                            f"UPDATE {table} "  # noqa: S608
+                            f"SET {column} = NULL "
+                            f"WHERE {column} in "
+                            f"(SELECT {column} from {table} as t1 "
+                            "WHERE ("
+                            f"t1.{column} IS NOT NULL AND "
+                            "NOT EXISTS "
+                            "(SELECT 1 "
+                            f"FROM {foreign_table} AS t2 "
+                            f"WHERE t2.{foreign_column} = t1.{column})) "
+                            "LIMIT 100000);"
+                        )
+                    )
+        return
+
+    if engine.dialect.name == SupportedDialect.MYSQL:
+        while result is None or result.rowcount > 0:
+            with session_scope(session=session_maker()) as session:
+                result = session.connection().execute(
+                    # We don't use an alias for the table we're deleting from,
+                    # support of the form `DELETE FROM table AS t1` was added in
+                    # MariaDB 11.6 and is not supported by MySQL. Those engines
+                    # instead support the from `DELETE t1 from table AS t1` which
+                    # is not supported by PostgreSQL and undocumented for MariaDB.
+                    text(
+                        f"DELETE FROM {table} "  # noqa: S608
+                        "WHERE ("
+                        f"{table}.{column} IS NOT NULL AND "
+                        "NOT EXISTS "
+                        "(SELECT 1 "
+                        f"FROM {foreign_table} AS t2 "
+                        f"WHERE t2.{foreign_column} = {table}.{column})) "
+                        "LIMIT 100000;"
+                    )
+                )
+    elif engine.dialect.name == SupportedDialect.POSTGRESQL:
+        while result is None or result.rowcount > 0:
+            with session_scope(session=session_maker()) as session:
+                # PostgreSQL does not support LIMIT in DELETE clauses, so we
+                # delete matches from a limited subquery instead.
+                result = session.connection().execute(
+                    text(
+                        f"DELETE FROM {table} "  # noqa: S608
+                        f"WHERE {column} in "
+                        f"(SELECT {column} from {table} as t1 "
+                        "WHERE ("
+                        f"t1.{column} IS NOT NULL AND "
+                        "NOT EXISTS "
+                        "(SELECT 1 "
+                        f"FROM {foreign_table} AS t2 "
+                        f"WHERE t2.{foreign_column} = t1.{column})) "
+                        "LIMIT 100000);"
+                    )
+                )
 
 
 @database_job_retry_wrapper("Apply migration update", 10)
@@ -1459,6 +1603,38 @@ class _SchemaVersion43Migrator(_SchemaVersionMigrator, target_version=43):
         )
 
 
+FOREIGN_COLUMNS = (
+    (
+        "events",
+        ("data_id", "event_type_id"),
+        (
+            ("data_id", "event_data", "data_id"),
+            ("event_type_id", "event_types", "event_type_id"),
+        ),
+    ),
+    (
+        "states",
+        ("event_id", "old_state_id", "attributes_id", "metadata_id"),
+        (
+            ("event_id", None, None),
+            ("old_state_id", "states", "state_id"),
+            ("attributes_id", "state_attributes", "attributes_id"),
+            ("metadata_id", "states_meta", "metadata_id"),
+        ),
+    ),
+    (
+        "statistics",
+        ("metadata_id",),
+        (("metadata_id", "statistics_meta", "id"),),
+    ),
+    (
+        "statistics_short_term",
+        ("metadata_id",),
+        (("metadata_id", "statistics_meta", "id"),),
+    ),
+)
+
+
 class _SchemaVersion44Migrator(_SchemaVersionMigrator, target_version=44):
     def _apply_update(self) -> None:
         """Version specific update method."""
@@ -1471,24 +1647,14 @@ class _SchemaVersion44Migrator(_SchemaVersionMigrator, target_version=44):
             else ""
         )
         # First drop foreign key constraints
-        foreign_columns = (
-            ("events", ("data_id", "event_type_id")),
-            ("states", ("event_id", "old_state_id", "attributes_id", "metadata_id")),
-            ("statistics", ("metadata_id",)),
-            ("statistics_short_term", ("metadata_id",)),
-        )
-        dropped_constraints = [
-            dropped_constraint
-            for table, columns in foreign_columns
-            for column in columns
-            for dropped_constraint in _drop_foreign_key_constraints(
-                self.session_maker, self.engine, table, column
-            )[1]
-        ]
-        _LOGGER.debug("Dropped foreign key constraints: %s", dropped_constraints)
+        for table, columns, _ in FOREIGN_COLUMNS:
+            for column in columns:
+                _drop_foreign_key_constraints(
+                    self.session_maker, self.engine, table, column
+                )
 
         # Then modify the constrained columns
-        for table, columns in foreign_columns:
+        for table, columns, _ in FOREIGN_COLUMNS:
             _modify_columns(
                 self.session_maker,
                 self.engine,
@@ -1518,9 +1684,24 @@ class _SchemaVersion44Migrator(_SchemaVersionMigrator, target_version=44):
                 table,
                 [f"{column} {BIG_INTEGER_SQL} {identity_sql}"],
             )
-        # Finally restore dropped constraints
+
+
+class _SchemaVersion45Migrator(_SchemaVersionMigrator, target_version=45):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        # We skip this step for SQLITE, it doesn't have differently sized integers
+        if self.engine.dialect.name == SupportedDialect.SQLITE:
+            return
+
+        # Restore constraints dropped in migration to schema version 44
         _restore_foreign_key_constraints(
-            self.session_maker, self.engine, dropped_constraints
+            self.session_maker,
+            self.engine,
+            [
+                (table, column, foreign_table, foreign_column)
+                for table, _, foreign_mappings in FOREIGN_COLUMNS
+                for column, foreign_table, foreign_column in foreign_mappings
+            ],
         )
 
 
