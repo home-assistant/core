@@ -146,6 +146,7 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Remove callbacks."""
         await super().async_will_remove_from_hass()
+        self._zone.remove_callback(self._callback_handler)
 
     def _current_source(self) -> Source:
         return self._zone.fetch_current_source()
