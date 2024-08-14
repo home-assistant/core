@@ -57,6 +57,7 @@ async def async_setup_entry(
 class JellyfinSensor(JellyfinEntity, SensorEntity):
     """Defines a Jellyfin sensor entity."""
 
+    _attr_has_entity_name = True
     entity_description: JellyfinSensorEntityDescription
 
     @property
