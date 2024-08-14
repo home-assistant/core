@@ -268,6 +268,8 @@ async def test_database_migration_failed_step_11(
         ("DropConstraint", False, 2, 1),  # This makes migration to step 44 fail
     ],
 )
+@pytest.mark.skip_on_db_engine(["sqlite"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_database_migration_failed_step_44(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
