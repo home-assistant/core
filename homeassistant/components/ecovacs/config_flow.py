@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import partial
 import logging
 import ssl
 from typing import Any, cast
@@ -105,11 +106,14 @@ async def _validate_input(
     if not user_input.get(CONF_VERIFY_MQTT_CERTIFICATE, True) and mqtt_url:
         ssl_context = get_default_no_verify_context()
 
-    mqtt_config = create_mqtt_config(
-        device_id=device_id,
-        country=country,
-        override_mqtt_url=mqtt_url,
-        ssl_context=ssl_context,
+    mqtt_config = await hass.async_add_executor_job(
+        partial(
+            create_mqtt_config,
+            device_id=device_id,
+            country=country,
+            override_mqtt_url=mqtt_url,
+            ssl_context=ssl_context,
+        )
     )
 
     client = MqttClient(mqtt_config, authenticator)
