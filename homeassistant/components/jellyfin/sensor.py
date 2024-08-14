@@ -35,8 +35,6 @@ SENSOR_TYPES: dict[str, JellyfinSensorEntityDescription] = {
     "sessions": JellyfinSensorEntityDescription(
         key="watching",
         translation_key="watching",
-        name=None,
-        native_unit_of_measurement="Watching",
         value_fn=_count_now_playing,
     )
 }
