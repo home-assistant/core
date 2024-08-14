@@ -73,7 +73,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             fyta = FytaConnector(
                 config_entry.data[CONF_USERNAME], config_entry.data[CONF_PASSWORD]
             )
-            credentials: Credentials = await fyta.login()
+            credentials = await fyta.login()
             await fyta.client.close()
 
             new[CONF_ACCESS_TOKEN] = credentials.access_token
