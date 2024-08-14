@@ -12,13 +12,13 @@ from .const import TEST_INSTALLS
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
-async def test_vendor_json(
+async def test_entities(
     hass: HomeAssistant,
     evo_config: dict[str, str],
     install: str,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test setup of a Honeywell TCC-compatible system."""
+    """Test entities and state after setup of a Honeywell TCC-compatible system."""
 
     await setup_evohome(hass, evo_config, install=install)
 
