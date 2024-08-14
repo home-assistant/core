@@ -58,7 +58,7 @@ def mocked_get_accounts(_, **kwargs):
 class MockGetAccountsV3:
     """Mock accounts with pagination."""
 
-    def __init__(self, cursor=""):
+    def __init__(self, cursor="") -> None:
         """Init mocked object, forced to return two at a time."""
         ids = [account["uuid"] for account in MOCK_ACCOUNTS_RESPONSE_V3]
         start = ids.index(cursor) if cursor else 0

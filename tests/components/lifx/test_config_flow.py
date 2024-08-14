@@ -575,7 +575,7 @@ async def test_suggested_area(
     class MockLifxCommandGetGroup:
         """Mock the get_group method that gets the group name from the bulb."""
 
-        def __init__(self, bulb, **kwargs):
+        def __init__(self, bulb, **kwargs: Any) -> None:
             """Init command."""
             self.bulb = bulb
             self.lifx_group = kwargs.get("lifx_group")
