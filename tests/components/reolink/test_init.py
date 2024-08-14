@@ -44,7 +44,7 @@ pytestmark = pytest.mark.usefixtures("reolink_connect", "reolink_platforms")
 CHIME_MODEL = "Reolink Chime"
 
 
-async def test_wait(*args, **key_args):
+async def test_wait(*args, **key_args) -> None:
     """Ensure a mocked function takes a bit of time to be able to timeout in test."""
     await asyncio.sleep(0)
 
