@@ -124,7 +124,12 @@ def config_flow_handler(
 class OAuthFixture:
     """Fixture to facilitate testing an OAuth flow."""
 
-    def __init__(self, hass, hass_client, aioclient_mock):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        hass_client: ClientSessionGenerator,
+        aioclient_mock: AiohttpClientMocker,
+    ) -> None:
         """Initialize OAuthFixture."""
         self.hass = hass
         self.hass_client = hass_client
