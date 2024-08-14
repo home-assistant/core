@@ -1002,8 +1002,12 @@ class EntityPlatform:
         if schema is None or isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
         # Do a sanity check to check this is a valid entity service schema
-        elif not isinstance(schema, (vol.All, vol.Any)) and any(
-            key not in schema.schema for key in cv.ENTITY_SERVICE_FIELDS
+        elif (
+            # Don't check All/Any
+            not isinstance(schema, (vol.All, vol.Any))
+            # Don't check All/Any wrapped in schema
+            and not isinstance(schema.schema, (vol.All, vol.Any))
+            and any(key not in schema.schema for key in cv.ENTITY_SERVICE_FIELDS)
         ):
             raise HomeAssistantError(
                 "The schema does not have all of keys "
