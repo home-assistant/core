@@ -162,6 +162,11 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             )
             self._supports_dimming = True
 
+        self._current_color = self.get_zwave_value(
+            CURRENT_COLOR_PROPERTY,
+            CommandClass.SWITCH_COLOR,
+            value_property_key=None,
+        )
         self._target_color = self.get_zwave_value(
             TARGET_COLOR_PROPERTY,
             CommandClass.SWITCH_COLOR,
@@ -471,15 +476,8 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         """Calculate light colors."""
         (red_val, green_val, blue_val, ww_val, cw_val) = self._get_color_values()
 
-        # prefer the (new) combined color property
-        # https://github.com/zwave-js/node-zwave-js/pull/1782
-        combined_color_val = self.get_zwave_value(
-            CURRENT_COLOR_PROPERTY,
-            CommandClass.SWITCH_COLOR,
-            value_property_key=None,
-        )
-        if combined_color_val and isinstance(combined_color_val.value, dict):
-            multi_color = combined_color_val.value
+        if self._current_color and isinstance(self._current_color.value, dict):
+            multi_color = self._current_color.value
         else:
             multi_color = {}
 
@@ -558,9 +556,12 @@ class ZwaveColorOnOffLight(ZwaveLight):
             return 0
 
         # Brightness is encoded in the color channels by scaling them lower than 255
-        color_values = [v.value for v in self._get_color_values() if v is not None]
-        max_value = max([v for v in color_values if v is not None])
-        return max_value if max_value is not None else 0
+        color_values = [
+            v.value
+            for v in self._get_color_values()
+            if v is not None and v.value is not None
+        ]
+        return max(color_values) if color_values else 0
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -642,15 +643,10 @@ class ZwaveColorOnOffLight(ZwaveLight):
 
         # Remember last color and brightness to restore it when turning on
         self._last_brightness = self.brightness
-        current_color = self.get_zwave_value(
-            CURRENT_COLOR_PROPERTY,
-            CommandClass.SWITCH_COLOR,
-            value_property_key=None,
-        )
-        if current_color and isinstance(current_color.value, dict):
-            red = current_color.value.get(COLOR_SWITCH_COMBINED_RED)
-            green = current_color.value.get(COLOR_SWITCH_COMBINED_GREEN)
-            blue = current_color.value.get(COLOR_SWITCH_COMBINED_BLUE)
+        if self._current_color and isinstance(self._current_color.value, dict):
+            red = self._current_color.value.get(COLOR_SWITCH_COMBINED_RED)
+            green = self._current_color.value.get(COLOR_SWITCH_COMBINED_GREEN)
+            blue = self._current_color.value.get(COLOR_SWITCH_COMBINED_BLUE)
 
             last_color: dict[ColorComponent, int] = {}
             if red is not None:
