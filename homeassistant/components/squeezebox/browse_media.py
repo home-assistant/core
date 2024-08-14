@@ -1,6 +1,8 @@
 """Support for media browsing."""
 
-import contextlib
+import contextlib, logging
+
+_LOGGER = logging.getLogger(__name__)
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -11,9 +13,12 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.helpers.network import is_internal_request
 
-LIBRARY = ["Artists", "Albums", "Tracks", "Playlists", "Genres"]
+from urllib.parse import unquote
+
+LIBRARY = ["Favorites", "Artists", "Albums", "Tracks", "Playlists", "Genres"]
 
 MEDIA_TYPE_TO_SQUEEZEBOX = {
+    "Favorites": "favorites",
     "Artists": "artists",
     "Albums": "albums",
     "Tracks": "titles",
@@ -32,9 +37,11 @@ SQUEEZEBOX_ID_BY_TYPE = {
     MediaType.TRACK: "track_id",
     MediaType.PLAYLIST: "playlist_id",
     MediaType.GENRE: "genre_id",
+    "favorite": "item_id",
 }
 
 CONTENT_TYPE_MEDIA_CLASS = {
+    "Favorites": {"item": MediaClass.DIRECTORY, "children": MediaClass.TRACK},
     "Artists": {"item": MediaClass.DIRECTORY, "children": MediaClass.ARTIST},
     "Albums": {"item": MediaClass.DIRECTORY, "children": MediaClass.ALBUM},
     "Tracks": {"item": MediaClass.DIRECTORY, "children": MediaClass.TRACK},
@@ -57,13 +64,19 @@ CONTENT_TYPE_TO_CHILD_TYPE = {
     "Tracks": MediaType.TRACK,
     "Playlists": MediaType.PLAYLIST,
     "Genres": MediaType.GENRE,
+    "Favorites": MediaType.TRACK,
 }
 
 BROWSE_LIMIT = 1000
 
 
+def _lms_prefix(player):
+    return (player.generate_image_url_from_track_id("")).split("music/")[0]
+
+
 async def build_item_response(entity, player, payload):
     """Create response payload for search described by payload."""
+
     internal_request = is_internal_request(entity.hass)
 
     search_id = payload["search_id"]
@@ -71,49 +84,86 @@ async def build_item_response(entity, player, payload):
 
     media_class = CONTENT_TYPE_MEDIA_CLASS[search_type]
 
-    if search_id and search_id != search_type:
-        browse_id = (SQUEEZEBOX_ID_BY_TYPE[search_type], search_id)
-    else:
-        browse_id = None
-
-    result = await player.async_browse(
-        MEDIA_TYPE_TO_SQUEEZEBOX[search_type],
-        limit=BROWSE_LIMIT,
-        browse_id=browse_id,
-    )
-
     children = None
 
-    if result is not None and result.get("items"):
-        item_type = CONTENT_TYPE_TO_CHILD_TYPE[search_type]
-        child_media_class = CONTENT_TYPE_MEDIA_CLASS[item_type]
+    if search_type == "Favorites":
 
-        children = []
-        for item in result["items"]:
-            item_id = str(item["id"])
-            item_thumbnail = None
+        _command = ["favorites"]
+        _command.extend(["items", "0", "100"])
 
-            if artwork_track_id := item.get("artwork_track_id"):
-                if internal_request:
-                    item_thumbnail = player.generate_image_url_from_track_id(
-                        artwork_track_id
+        result = await player.async_query(*_command)
+
+        if result is not None and result.get("loop_loop"):
+            children = []
+            item_type = CONTENT_TYPE_TO_CHILD_TYPE[search_type]
+            child_media_class = CONTENT_TYPE_MEDIA_CLASS[item_type]
+
+            for item in result["loop_loop"]:
+                if item.get("type") != "audio":
+                    continue
+
+                if item["image"].startswith("/imageproxy/"):
+                    _icon = unquote(
+                        item["image"].split("/imageproxy/")[1].split("/image.png")[0]
                     )
                 else:
-                    item_thumbnail = entity.get_browse_image_url(
-                        item_type, item_id, artwork_track_id
-                    )
+                    _icon = _lms_prefix(player) + item["image"]
 
-            children.append(
-                BrowseMedia(
-                    title=item["title"],
-                    media_class=child_media_class["item"],
-                    media_content_id=item_id,
-                    media_content_type=item_type,
-                    can_play=True,
-                    can_expand=child_media_class["children"] is not None,
-                    thumbnail=item_thumbnail,
+                children.append(
+                    BrowseMedia(
+                        title=item["name"],
+                        media_class=child_media_class["item"],
+                        media_content_id=item["id"],
+                        media_content_type="favorite",
+                        can_play=True,
+                        can_expand=False,
+                        thumbnail=_icon,
+                    )
                 )
-            )
+
+    else:
+
+        if search_id and search_id != search_type:
+            browse_id = (SQUEEZEBOX_ID_BY_TYPE[search_type], search_id)
+        else:
+            browse_id = None
+
+        result = await player.async_browse(
+            MEDIA_TYPE_TO_SQUEEZEBOX[search_type],
+            limit=BROWSE_LIMIT,
+            browse_id=browse_id,
+        )
+
+        if result is not None and result.get("items"):
+            item_type = CONTENT_TYPE_TO_CHILD_TYPE[search_type]
+            child_media_class = CONTENT_TYPE_MEDIA_CLASS[item_type]
+
+            children = []
+            for item in result["items"]:
+                item_id = str(item["id"])
+                item_thumbnail = None
+
+                if artwork_track_id := item.get("artwork_track_id"):
+                    if internal_request:
+                        item_thumbnail = player.generate_image_url_from_track_id(
+                            artwork_track_id
+                        )
+                    else:
+                        item_thumbnail = entity.get_browse_image_url(
+                            item_type, item_id, artwork_track_id
+                        )
+
+                children.append(
+                    BrowseMedia(
+                        title=item["title"],
+                        media_class=child_media_class["item"],
+                        media_content_id=item_id,
+                        media_content_type=item_type,
+                        can_play=True,
+                        can_expand=child_media_class["children"] is not None,
+                        thumbnail=item_thumbnail,
+                    )
+                )
 
     if children is None:
         raise BrowseError(f"Media not found: {search_type} / {search_id}")
@@ -124,7 +174,7 @@ async def build_item_response(entity, player, payload):
         children_media_class=media_class["children"],
         media_content_id=search_id,
         media_content_type=search_type,
-        can_play=True,
+        can_play=False if search_type == "Favorites" else True,
         children=children,
         can_expand=True,
     )
@@ -144,21 +194,34 @@ async def library_payload(hass, player):
 
     for item in LIBRARY:
         media_class = CONTENT_TYPE_MEDIA_CLASS[item]
-        result = await player.async_browse(
-            MEDIA_TYPE_TO_SQUEEZEBOX[item],
-            limit=1,
-        )
-        if result is not None and result.get("items") is not None:
+        if item == "Favorites":
             library_info["children"].append(
                 BrowseMedia(
                     title=item,
                     media_class=media_class["children"],
                     media_content_id=item,
                     media_content_type=item,
-                    can_play=True,
+                    thumbnail=_lms_prefix(player) + "html/images/favorites.png",
+                    can_play=False,
                     can_expand=True,
                 )
             )
+        else:
+            result = await player.async_browse(
+                MEDIA_TYPE_TO_SQUEEZEBOX[item],
+                limit=1,
+            )
+            if result is not None and result.get("items") is not None:
+                library_info["children"].append(
+                    BrowseMedia(
+                        title=item,
+                        media_class=media_class["children"],
+                        media_content_id=item,
+                        media_content_type=item,
+                        can_play=True,
+                        can_expand=True,
+                    )
+                )
 
     with contextlib.suppress(media_source.BrowseError):
         item = await media_source.async_browse_media(
