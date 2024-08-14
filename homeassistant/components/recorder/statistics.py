@@ -2097,27 +2097,22 @@ def _build_stats(
     sum_idx: int | None,
 ) -> list[StatisticsRow]:
     """Build a list of statistics without unit conversion."""
-    result: list[StatisticsRow] = []
-    ent_results_append = result.append
-    for db_row in db_rows:
-        row: StatisticsRow = {
+    row_mapping = (
+        ("mean", mean_idx),
+        ("min", min_idx),
+        ("max", max_idx),
+        ("last_reset", last_reset_ts_idx),
+        ("state", state_idx),
+        ("sum", sum_idx),
+    )
+    return [
+        {
             "start": (start_ts := db_row[start_ts_idx]),
             "end": start_ts + table_duration_seconds,
+            **{key: db_row[idx] for key, idx in row_mapping if idx is not None},
         }
-        if last_reset_ts_idx is not None:
-            row["last_reset"] = db_row[last_reset_ts_idx]
-        if mean_idx is not None:
-            row["mean"] = db_row[mean_idx]
-        if min_idx is not None:
-            row["min"] = db_row[min_idx]
-        if max_idx is not None:
-            row["max"] = db_row[max_idx]
-        if state_idx is not None:
-            row["state"] = db_row[state_idx]
-        if sum_idx is not None:
-            row["sum"] = db_row[sum_idx]
-        ent_results_append(row)
-    return result
+        for db_row in db_rows
+    ]
 
 
 def _build_converted_stats(
@@ -2133,27 +2128,26 @@ def _build_converted_stats(
     convert: Callable[[float | None], float | None] | Callable[[float], float],
 ) -> list[StatisticsRow]:
     """Build a list of statistics with unit conversion."""
-    result: list[StatisticsRow] = []
-    ent_results_append = result.append
-    for db_row in db_rows:
-        row: StatisticsRow = {
+    row_mapping = (
+        ("mean", mean_idx),
+        ("min", min_idx),
+        ("max", max_idx),
+        ("last_reset", last_reset_ts_idx),
+        ("state", state_idx),
+        ("sum", sum_idx),
+    )
+    return [
+        {
             "start": (start_ts := db_row[start_ts_idx]),
             "end": start_ts + table_duration_seconds,
+            **{
+                key: None if (v := db_row[idx]) is None else convert(v)
+                for key, idx in row_mapping
+                if idx is not None
+            },
         }
-        if last_reset_ts_idx is not None:
-            row["last_reset"] = db_row[last_reset_ts_idx]
-        if mean_idx is not None:
-            row["mean"] = None if (v := db_row[mean_idx]) is None else convert(v)
-        if min_idx is not None:
-            row["min"] = None if (v := db_row[min_idx]) is None else convert(v)
-        if max_idx is not None:
-            row["max"] = None if (v := db_row[max_idx]) is None else convert(v)
-        if state_idx is not None:
-            row["state"] = None if (v := db_row[state_idx]) is None else convert(v)
-        if sum_idx is not None:
-            row["sum"] = None if (v := db_row[sum_idx]) is None else convert(v)
-        ent_results_append(row)
-    return result
+        for db_row in db_rows
+    ]
 
 
 def _sorted_statistics_to_dict(
