@@ -2,8 +2,6 @@
 
 import contextlib, logging
 
-_LOGGER = logging.getLogger(__name__)
-
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     BrowseError,
@@ -14,6 +12,8 @@ from homeassistant.components.media_player import (
 from homeassistant.helpers.network import is_internal_request
 
 from urllib.parse import unquote
+
+_LOGGER = logging.getLogger(__name__)
 
 LIBRARY = ["Favorites", "Artists", "Albums", "Tracks", "Playlists", "Genres"]
 
@@ -87,7 +87,6 @@ async def build_item_response(entity, player, payload):
     children = None
 
     if search_type == "Favorites":
-
         _command = ["favorites"]
         _command.extend(["items", "0", "100"])
 
@@ -122,7 +121,6 @@ async def build_item_response(entity, player, payload):
                 )
 
     else:
-
         if search_id and search_id != search_type:
             browse_id = (SQUEEZEBOX_ID_BY_TYPE[search_type], search_id)
         else:
@@ -174,7 +172,7 @@ async def build_item_response(entity, player, payload):
         children_media_class=media_class["children"],
         media_content_id=search_id,
         media_content_type=search_type,
-        can_play=False if search_type == "Favorites" else True,
+        can_play=not search_type == "Favorites",
         children=children,
         can_expand=True,
     )
