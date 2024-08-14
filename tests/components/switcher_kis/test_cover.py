@@ -197,7 +197,7 @@ async def test_cover_control_fail(hass: HomeAssistant, mock_bridge, mock_api) ->
 async def test_cover2(
     hass: HomeAssistant, mock_bridge, mock_api, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Test cover services."""
+    """Test single cover dual light services."""
     await init_integration(hass, USERNAME, TOKEN)
     assert mock_bridge
 
@@ -298,7 +298,7 @@ async def test_cover2(
 
 @pytest.mark.parametrize("mock_bridge", [[DEVICE2]], indirect=True)
 async def test_cover_control_fail2(hass: HomeAssistant, mock_bridge, mock_api) -> None:
-    """Test cover control fail."""
+    """Test single cover dual light control fail."""
     await init_integration(hass, USERNAME, TOKEN)
     assert mock_bridge
 
@@ -348,3 +348,14 @@ async def test_cover_control_fail2(hass: HomeAssistant, mock_bridge, mock_api) -
         mock_control_device.assert_called_once_with(27, 0)
         state = hass.states.get(ENTITY_ID2)
         assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("mock_bridge", [[DEVICE2]], indirect=True)
+async def test_cover2_no_token(
+    hass: HomeAssistant, mock_bridge, mock_api, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test single cover dual light without token services."""
+    await init_integration(hass)
+    assert mock_bridge
+
+    assert mock_api.call_count == 0
