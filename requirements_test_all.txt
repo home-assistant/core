@@ -1432,6 +1432,9 @@ pycomfoconnect==0.5.1
 # homeassistant.components.coolmaster
 pycoolmasternet-async==0.2.2
 
+# homeassistant.components.lgthinq
+pycountry==23.12.11
+
 # homeassistant.components.microsoft
 pycsspeechtts==1.0.8
 
@@ -2173,6 +2176,9 @@ thermobeacon-ble==0.7.0
 
 # homeassistant.components.thermopro
 thermopro-ble==0.10.0
+
+# homeassistant.components.lgthinq
+thinqconnect==0.9.2
 
 # homeassistant.components.tilt_ble
 tilt-ble==0.2.3
