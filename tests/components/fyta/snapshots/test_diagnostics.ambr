@@ -23,16 +23,12 @@
     }),
     'plant_data': dict({
       '0': dict({
-        'name': 'Gummibaum',
-        'scientific_name': 'Ficus elastica',
-        'status': 1,
-        'sw_version': '1.0',
+        '__type': "<class 'fyta_cli.fyta_models.Plant'>",
+        'repr': "Plant(battery_level=80.0, battery_status=True, last_updated=datetime.datetime(2023, 1, 10, 10, 10), light=2.0, light_status=<PlantMeasurementStatus.PERFECT: 3>, name='Gummibaum', moisture=61.0, moisture_status=<PlantMeasurementStatus.PERFECT: 3>, sensor_available=True, sw_version='1.0', status=<PlantStatus.NO_SENSOR: 3>, online=True, ph=7.0, plant_id=0, plant_origin_path='', plant_thumb_path='', salinity=1.0, salinity_status=<PlantMeasurementStatus.HIGH: 4>, scientific_name='Ficus elastica', temperature=25.2, temperature_status=<PlantMeasurementStatus.PERFECT: 3>)",
       }),
       '1': dict({
-        'name': 'Kakaobaum',
-        'scientific_name': 'Theobroma cacao',
-        'status': 2,
-        'sw_version': '1.0',
+        '__type': "<class 'fyta_cli.fyta_models.Plant'>",
+        'repr': "Plant(battery_level=80.0, battery_status=True, last_updated=datetime.datetime(2023, 1, 2, 10, 10), light=2.0, light_status=<PlantMeasurementStatus.PERFECT: 3>, name='Kakaobaum', moisture=61.0, moisture_status=<PlantMeasurementStatus.PERFECT: 3>, sensor_available=True, sw_version='1.0', status=<PlantStatus.NO_SENSOR: 3>, online=True, ph=7.0, plant_id=0, plant_origin_path='', plant_thumb_path='', salinity=1.0, salinity_status=<PlantMeasurementStatus.HIGH: 4>, scientific_name='Theobroma cacao', temperature=25.2, temperature_status=<PlantMeasurementStatus.PERFECT: 3>)",
       }),
     }),
   })
