@@ -54,10 +54,6 @@ def reolink_connect_class() -> Generator[MagicMock]:
     """Mock reolink connection and return both the host_mock and host_mock_class."""
     with (
         patch(
-            "homeassistant.components.reolink.host.webhook.async_register",
-            return_value=True,
-        ),
-        patch(
             "homeassistant.components.reolink.host.Host", autospec=True
         ) as host_mock_class,
     ):
