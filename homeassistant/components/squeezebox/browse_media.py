@@ -1,6 +1,7 @@
 """Support for media browsing."""
 
-import contextlib, logging
+import contextlib
+from urllib.parse import unquote
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -10,8 +11,6 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.helpers.network import is_internal_request
-
-from urllib.parse import unquote
 
 LIBRARY = ["Favorites", "Artists", "Albums", "Tracks", "Playlists", "Genres"]
 
