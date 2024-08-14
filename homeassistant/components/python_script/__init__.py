@@ -277,7 +277,7 @@ def execute(hass, filename, source, data=None, return_response=False):
         if not isinstance(restricted_globals["output"], dict):
             output_type = type(restricted_globals["output"])
             restricted_globals["output"] = {}
-            raise ScriptError(
+            raise ScriptError(  # noqa: TRY301
                 f"Expected `output` to be a dictionary, was {output_type}"
             )
     except ScriptError as err:

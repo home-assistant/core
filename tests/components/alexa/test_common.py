@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components.alexa import config, smart_home
 from homeassistant.components.alexa.const import CONF_ENDPOINT, CONF_FILTER, CONF_LOCALE
-from homeassistant.core import Context, callback
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import entityfilter
 
 from tests.common import async_mock_service
@@ -28,7 +28,7 @@ class MockConfig(smart_home.AlexaConfig):
         "camera.test": {"display_categories": "CAMERA"},
     }
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Mock Alexa config."""
         super().__init__(
             hass,
@@ -213,7 +213,7 @@ async def reported_properties(hass, endpoint, return_full_response=False):
 class ReportedProperties:
     """Class to help assert reported properties."""
 
-    def __init__(self, properties):
+    def __init__(self, properties) -> None:
         """Initialize class."""
         self.properties = properties
 
