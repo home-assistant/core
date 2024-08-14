@@ -25,7 +25,7 @@ from yalexs.activity import (
     DoorOperationActivity,
     LockOperationActivity,
 )
-from yalexs.authenticator import AuthenticationState
+from yalexs.authenticator_common import AuthenticationState
 from yalexs.const import Brand
 from yalexs.doorbell import Doorbell, DoorbellDetail
 from yalexs.lock import Lock, LockDetail
