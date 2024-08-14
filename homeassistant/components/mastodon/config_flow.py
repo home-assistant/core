@@ -47,7 +47,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 2
+    VERSION = 1
+    MINOR_VERSION = 2
     config_entry: ConfigEntry
 
     def check_connection(

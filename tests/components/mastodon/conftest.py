@@ -54,5 +54,6 @@ def mock_config_entry() -> MockConfigEntry:
         },
         entry_id="01J35M4AH9HYRC2V0G6RNVNWJH",
         unique_id="trwnh_mastodon_social",
-        version=2,
+        version=1,
+        minor_version=2,
     )

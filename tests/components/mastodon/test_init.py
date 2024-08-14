@@ -61,7 +61,9 @@ async def test_migrate(
             CONF_ACCESS_TOKEN: "access_token",
         },
         title="@trwnh@mastodon.social",
+        unique_id="client_id",
         version=1,
+        minor_version=1,
     )
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -76,4 +78,5 @@ async def test_migrate(
         CONF_ACCESS_TOKEN: "access_token",
     }
     assert config_entry.version == MastodonConfigFlow.VERSION
+    assert config_entry.minor_version == MastodonConfigFlow.MINOR_VERSION
     assert config_entry.unique_id == "trwnh_mastodon_social"

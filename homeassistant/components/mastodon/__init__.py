@@ -84,8 +84,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: MastodonConfigEntry) ->
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old config."""
 
-    if entry.version == 1:
-        # Version 1 had the unique_id as client_id, this isn't necessarily unique
+    if entry.version == 1 and entry.minor_version == 1:
+        # Version 1.1 had the unique_id as client_id, this isn't necessarily unique
         LOGGER.debug("Migrating config entry from version %s", entry.version)
 
         try:
@@ -95,19 +95,20 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         except MastodonError as ex:
             LOGGER.error("Migration failed with error %s", ex)
+            return False
 
-        entry.version = 2
+        entry.minor_version = 2
 
         hass.config_entries.async_update_entry(
             entry,
-            title=entry.title,
             unique_id=slugify(construct_mastodon_username(instance, account)),
         )
 
         LOGGER.info(
-            "Entry %s successfully migrated to version %s",
+            "Entry %s successfully migrated to version %s.%s",
             entry.entry_id,
             entry.version,
+            entry.minor_version,
         )
 
     return True
