@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_vendor_json[default]
+# name: test_entities[default]
   list([
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -408,7 +408,7 @@
     }),
   ])
 # ---
-# name: test_vendor_json[h032585]
+# name: test_entities[h032585]
   list([
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -486,7 +486,7 @@
     }),
   ])
 # ---
-# name: test_vendor_json[h099625]
+# name: test_entities[h099625]
   list([
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -614,7 +614,7 @@
     }),
   ])
 # ---
-# name: test_vendor_json[h118169]
+# name: test_entities[h118169]
   list([
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -692,7 +692,7 @@
     }),
   ])
 # ---
-# name: test_vendor_json[minimal]
+# name: test_entities[minimal]
   list([
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -778,7 +778,7 @@
     }),
   ])
 # ---
-# name: test_vendor_json[system_004]
+# name: test_entities[system_004]
   list([
     StateSnapshot({
       'attributes': ReadOnlyDict({
