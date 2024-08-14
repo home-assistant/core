@@ -60,6 +60,9 @@
     "integration_not_found": {
       "title": "Integration {domain} not found",
       "fix_flow": {
+        "abort": {
+          "issue_ignored": "Not existing integration {domain} ignored."
+        },
         "step": {
           "init": {
             "title": "[%key:component::homeassistant::issues::integration_not_found::title%]",
