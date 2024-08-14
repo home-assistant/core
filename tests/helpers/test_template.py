@@ -15,6 +15,7 @@ from unittest.mock import patch
 from freezegun import freeze_time
 import orjson
 import pytest
+from syrupy import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -6290,322 +6291,390 @@ def test_template_output_exceeds_maximum_size(hass: HomeAssistant) -> None:
         tpl.async_render()
 
 
-async def test_merge_response(hass: HomeAssistant) -> None:
-    ("service_response", "expected"),
+@pytest.mark.parametrize(
+    ("service_response"),
     [
-        (
-            {
-                "calendar.sports": {
-                    "events": [
-                        {
-                            "start": "2024-02-27T17:00:00-06:00",
-                            "end": "2024-02-27T18:00:00-06:00",
-                            "summary": "Basketball vs. Rockets",
-                            "description": "",
-                        }
-                    ]
+        {
+            "calendar.sports": {
+                "events": [
+                    {
+                        "start": "2024-02-27T17:00:00-06:00",
+                        "end": "2024-02-27T18:00:00-06:00",
+                        "summary": "Basketball vs. Rockets",
+                        "description": "",
+                    }
+                ]
+            },
+            "calendar.local_furry_events": {"events": []},
+            "calendar.yap_house_schedules": {
+                "events": [
+                    {
+                        "start": "2024-02-26T08:00:00-06:00",
+                        "end": "2024-02-26T09:00:00-06:00",
+                        "summary": "Dr. Appt",
+                        "description": "",
+                    },
+                    {
+                        "start": "2024-02-28T20:00:00-06:00",
+                        "end": "2024-02-28T21:00:00-06:00",
+                        "summary": "Bake a cake",
+                        "description": "something good",
+                    },
+                ]
+            },
+        },
+        {
+            "binary_sensor.workday": {"workday": True},
+            "binary_sensor.workday2": {"workday": False},
+        },
+        {
+            "weather.smhi_home": {
+                "forecast": [
+                    {
+                        "datetime": "2024-03-31T16:00:00",
+                        "condition": "cloudy",
+                        "wind_bearing": 79,
+                        "cloud_coverage": 100,
+                        "temperature": 10,
+                        "templow": 4,
+                        "pressure": 998,
+                        "wind_gust_speed": 21.6,
+                        "wind_speed": 11.88,
+                        "precipitation": 0.2,
+                        "humidity": 87,
+                    },
+                    {
+                        "datetime": "2024-04-01T12:00:00",
+                        "condition": "rainy",
+                        "wind_bearing": 17,
+                        "cloud_coverage": 100,
+                        "temperature": 6,
+                        "templow": 1,
+                        "pressure": 999,
+                        "wind_gust_speed": 20.52,
+                        "wind_speed": 8.64,
+                        "precipitation": 2.2,
+                        "humidity": 88,
+                    },
+                    {
+                        "datetime": "2024-04-02T12:00:00",
+                        "condition": "cloudy",
+                        "wind_bearing": 17,
+                        "cloud_coverage": 100,
+                        "temperature": 0,
+                        "templow": -3,
+                        "pressure": 1003,
+                        "wind_gust_speed": 57.24,
+                        "wind_speed": 30.6,
+                        "precipitation": 1.3,
+                        "humidity": 71,
+                    },
+                ]
+            },
+            "weather.forecast_home": {
+                "forecast": [
+                    {
+                        "condition": "cloudy",
+                        "precipitation_probability": 6.6,
+                        "datetime": "2024-03-31T10:00:00+00:00",
+                        "wind_bearing": 71.8,
+                        "temperature": 10.9,
+                        "templow": 6.5,
+                        "wind_gust_speed": 24.1,
+                        "wind_speed": 13.7,
+                        "precipitation": 0,
+                        "humidity": 71,
+                    },
+                    {
+                        "condition": "cloudy",
+                        "precipitation_probability": 8,
+                        "datetime": "2024-04-01T10:00:00+00:00",
+                        "wind_bearing": 350.6,
+                        "temperature": 10.2,
+                        "templow": 3.4,
+                        "wind_gust_speed": 38.2,
+                        "wind_speed": 21.6,
+                        "precipitation": 0,
+                        "humidity": 79,
+                    },
+                    {
+                        "condition": "snowy",
+                        "precipitation_probability": 67.4,
+                        "datetime": "2024-04-02T10:00:00+00:00",
+                        "wind_bearing": 24.5,
+                        "temperature": 3,
+                        "templow": 0,
+                        "wind_gust_speed": 64.8,
+                        "wind_speed": 37.4,
+                        "precipitation": 2.3,
+                        "humidity": 77,
+                    },
+                ]
+            },
+        },
+        {
+            "vacuum.deebot_n8_plus_1": {
+                "payloadType": "j",
+                "resp": {
+                    "body": {
+                        "msg": "ok",
+                    }
                 },
-                "calendar.local_furry_events": {"events": []},
-                "calendar.yap_house_schedules": {
-                    "events": [
-                        {
-                            "start": "2024-02-26T08:00:00-06:00",
-                            "end": "2024-02-26T09:00:00-06:00",
-                            "summary": "Dr. Appt",
-                            "description": "",
-                        },
-                        {
-                            "start": "2024-02-28T20:00:00-06:00",
-                            "end": "2024-02-28T21:00:00-06:00",
-                            "summary": "Bake a cake",
-                            "description": "something good",
-                        },
-                    ]
+                "header": {
+                    "ver": "0.0.1",
                 },
             },
-            [
-                {
-                    "start": "2024-02-27T17:00:00-06:00",
-                    "end": "2024-02-27T18:00:00-06:00",
-                    "summary": "Basketball vs. Rockets",
-                    "description": "",
+            "vacuum.deebot_n8_plus_2": {
+                "payloadType": "j",
+                "resp": {
+                    "body": {
+                        "msg": "ok",
+                    }
                 },
-                {
-                    "start": "2024-02-26T08:00:00-06:00",
-                    "end": "2024-02-26T09:00:00-06:00",
-                    "summary": "Dr. Appt",
-                    "description": "",
-                },
-                {
-                    "start": "2024-02-28T20:00:00-06:00",
-                    "end": "2024-02-28T21:00:00-06:00",
-                    "summary": "Bake a cake",
-                    "description": "something good",
-                },
-            ],
-        ),
-        (
-            {
-                "binary_sensor.workday": {"workday": True},
-                "binary_sensor.workday2": {"workday": False},
-            },
-            [True, False],
-        ),
-        (
-            {
-                "weather.smhi_home": {
-                    "forecast": [
-                        {
-                            "datetime": "2024-03-31T16:00:00",
-                            "condition": "cloudy",
-                            "wind_bearing": 79,
-                            "cloud_coverage": 100,
-                            "temperature": 10,
-                            "templow": 4,
-                            "pressure": 998,
-                            "wind_gust_speed": 21.6,
-                            "wind_speed": 11.88,
-                            "precipitation": 0.2,
-                            "humidity": 87,
-                        },
-                        {
-                            "datetime": "2024-04-01T12:00:00",
-                            "condition": "rainy",
-                            "wind_bearing": 17,
-                            "cloud_coverage": 100,
-                            "temperature": 6,
-                            "templow": 1,
-                            "pressure": 999,
-                            "wind_gust_speed": 20.52,
-                            "wind_speed": 8.64,
-                            "precipitation": 2.2,
-                            "humidity": 88,
-                        },
-                        {
-                            "datetime": "2024-04-02T12:00:00",
-                            "condition": "cloudy",
-                            "wind_bearing": 17,
-                            "cloud_coverage": 100,
-                            "temperature": 0,
-                            "templow": -3,
-                            "pressure": 1003,
-                            "wind_gust_speed": 57.24,
-                            "wind_speed": 30.6,
-                            "precipitation": 1.3,
-                            "humidity": 71,
-                        },
-                    ]
-                },
-                "weather.forecast_home": {
-                    "forecast": [
-                        {
-                            "condition": "cloudy",
-                            "precipitation_probability": 6.6,
-                            "datetime": "2024-03-31T10:00:00+00:00",
-                            "wind_bearing": 71.8,
-                            "temperature": 10.9,
-                            "templow": 6.5,
-                            "wind_gust_speed": 24.1,
-                            "wind_speed": 13.7,
-                            "precipitation": 0,
-                            "humidity": 71,
-                        },
-                        {
-                            "condition": "cloudy",
-                            "precipitation_probability": 8,
-                            "datetime": "2024-04-01T10:00:00+00:00",
-                            "wind_bearing": 350.6,
-                            "temperature": 10.2,
-                            "templow": 3.4,
-                            "wind_gust_speed": 38.2,
-                            "wind_speed": 21.6,
-                            "precipitation": 0,
-                            "humidity": 79,
-                        },
-                        {
-                            "condition": "snowy",
-                            "precipitation_probability": 67.4,
-                            "datetime": "2024-04-02T10:00:00+00:00",
-                            "wind_bearing": 24.5,
-                            "temperature": 3,
-                            "templow": 0,
-                            "wind_gust_speed": 64.8,
-                            "wind_speed": 37.4,
-                            "precipitation": 2.3,
-                            "humidity": 77,
-                        },
-                    ]
+                "header": {
+                    "ver": "0.0.1",
                 },
             },
-            [
-                {
-                    "datetime": "2024-03-31T16:00:00",
-                    "condition": "cloudy",
-                    "wind_bearing": 79,
-                    "cloud_coverage": 100,
-                    "temperature": 10,
-                    "templow": 4,
-                    "pressure": 998,
-                    "wind_gust_speed": 21.6,
-                    "wind_speed": 11.88,
-                    "precipitation": 0.2,
-                    "humidity": 87,
-                },
-                {
-                    "datetime": "2024-04-01T12:00:00",
-                    "condition": "rainy",
-                    "wind_bearing": 17,
-                    "cloud_coverage": 100,
-                    "temperature": 6,
-                    "templow": 1,
-                    "pressure": 999,
-                    "wind_gust_speed": 20.52,
-                    "wind_speed": 8.64,
-                    "precipitation": 2.2,
-                    "humidity": 88,
-                },
-                {
-                    "datetime": "2024-04-02T12:00:00",
-                    "condition": "cloudy",
-                    "wind_bearing": 17,
-                    "cloud_coverage": 100,
-                    "temperature": 0,
-                    "templow": -3,
-                    "pressure": 1003,
-                    "wind_gust_speed": 57.24,
-                    "wind_speed": 30.6,
-                    "precipitation": 1.3,
-                    "humidity": 71,
-                },
-                {
-                    "condition": "cloudy",
-                    "precipitation_probability": 6.6,
-                    "datetime": "2024-03-31T10:00:00+00:00",
-                    "wind_bearing": 71.8,
-                    "temperature": 10.9,
-                    "templow": 6.5,
-                    "wind_gust_speed": 24.1,
-                    "wind_speed": 13.7,
-                    "precipitation": 0,
-                    "humidity": 71,
-                },
-                {
-                    "condition": "cloudy",
-                    "precipitation_probability": 8,
-                    "datetime": "2024-04-01T10:00:00+00:00",
-                    "wind_bearing": 350.6,
-                    "temperature": 10.2,
-                    "templow": 3.4,
-                    "wind_gust_speed": 38.2,
-                    "wind_speed": 21.6,
-                    "precipitation": 0,
-                    "humidity": 79,
-                },
-                {
-                    "condition": "snowy",
-                    "precipitation_probability": 67.4,
-                    "datetime": "2024-04-02T10:00:00+00:00",
-                    "wind_bearing": 24.5,
-                    "temperature": 3,
-                    "templow": 0,
-                    "wind_gust_speed": 64.8,
-                    "wind_speed": 37.4,
-                    "precipitation": 2.3,
-                    "humidity": 77,
-                },
-            ],
-        ),
+        },
     ],
+    ids=["calendar", "workday", "weather", "vacuum"],
 )
 async def test_merge_response(
-    hass: HomeAssistant, service_response: dict, expected: list
+    hass: HomeAssistant,
+    service_response: dict,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the merge_response function/filter."""
 
     _template = "{{ merge_response(" + str(service_response) + ") }}"
 
     tpl = template.Template(_template, hass)
-    assert tpl.async_render() == expected
+    assert tpl.async_render() == snapshot
 
 
-async def test_merge_response_parameters(hass: HomeAssistant) -> None:
-    """Test the merge_response function/filter with sorting and single_key."""
-
-    service_response = {
-        "calendar.sports": {
-            "events": [
-                {
-                    "start": "2024-02-27T17:00:00-06:00",
-                    "end": "2024-02-27T18:00:00-06:00",
-                    "summary": "Basketball vs. Rockets",
-                    "description": "",
-                }
-            ]
+@pytest.mark.parametrize(
+    ("service_response"),
+    [
+        {
+            "weather.smhi_home": {
+                "forecast": [
+                    {
+                        "datetime": "2024-03-31T16:00:00",
+                        "condition": "cloudy",
+                        "wind_bearing": 79,
+                        "cloud_coverage": 100,
+                        "temperature": 10,
+                        "templow": 4,
+                        "pressure": 998,
+                        "wind_gust_speed": 21.6,
+                        "wind_speed": 11.88,
+                        "precipitation": 0.2,
+                        "humidity": 87,
+                    },
+                    {
+                        "datetime": "2024-04-01T12:00:00",
+                        "condition": "rainy",
+                        "wind_bearing": 17,
+                        "cloud_coverage": 100,
+                        "temperature": 6,
+                        "templow": 1,
+                        "pressure": 999,
+                        "wind_gust_speed": 20.52,
+                        "wind_speed": 8.64,
+                        "precipitation": 2.2,
+                        "humidity": 88,
+                    },
+                    {
+                        "datetime": "2024-04-02T12:00:00",
+                        "condition": "cloudy",
+                        "wind_bearing": 17,
+                        "cloud_coverage": 100,
+                        "temperature": 0,
+                        "templow": -3,
+                        "pressure": 1003,
+                        "wind_gust_speed": 57.24,
+                        "wind_speed": 30.6,
+                        "precipitation": 1.3,
+                        "humidity": 71,
+                    },
+                ]
+            },
+            "weather.forecast_home": {
+                "forecast": [
+                    {
+                        "condition": "cloudy",
+                        "precipitation_probability": 6.6,
+                        "datetime": "2024-03-31T10:00:00+00:00",
+                        "wind_bearing": 71.8,
+                        "temperature": 10.9,
+                        "templow": 6.5,
+                        "wind_gust_speed": 24.1,
+                        "wind_speed": 13.7,
+                        "precipitation": 0,
+                        "humidity": 71,
+                    },
+                    {
+                        "condition": "cloudy",
+                        "precipitation_probability": 8,
+                        "datetime": "2024-04-01T10:00:00+00:00",
+                        "wind_bearing": 350.6,
+                        "temperature": 10.2,
+                        "templow": 3.4,
+                        "wind_gust_speed": 38.2,
+                        "wind_speed": 21.6,
+                        "precipitation": 0,
+                        "humidity": 79,
+                    },
+                    {
+                        "condition": "snowy",
+                        "precipitation_probability": 67.4,
+                        "datetime": "2024-04-02T10:00:00+00:00",
+                        "wind_bearing": 24.5,
+                        "temperature": 3,
+                        "templow": 0,
+                        "wind_gust_speed": 64.8,
+                        "wind_speed": 37.4,
+                        "precipitation": 2.3,
+                        "humidity": 77,
+                    },
+                ]
+            },
         },
-        "calendar.local_furry_events": {"events": []},
-        "calendar.yap_house_schedules": {
-            "events": [
-                {
-                    "start": "2024-02-26T08:00:00-06:00",
-                    "end": "2024-02-26T09:00:00-06:00",
-                    "summary": "Dr. Appt",
-                    "description": "",
+    ],
+    ids=["weather"],
+)
+async def test_merge_response_with_sorting(
+    hass: HomeAssistant,
+    service_response: dict,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the merge_response function/filter using sort_by."""
+
+    _template = "{{ merge_response(" + str(service_response) + ", 'datetime') }}"
+
+    tpl = template.Template(_template, hass)
+    assert tpl.async_render() == snapshot
+
+
+@pytest.mark.parametrize(
+    ("service_response"),
+    [
+        {
+            "binary_sensor.workday": {"workday": True},
+            "binary_sensor.workday2": {"workday": False},
+        },
+    ],
+)
+async def test_merge_response_with_sort_missing_key(
+    hass: HomeAssistant,
+    service_response: dict,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the merge_response function/filter using sort_by with incorrect key."""
+
+    _template = "{{ merge_response(" + str(service_response) + ", 'datetime') }}"
+
+    tpl = template.Template(_template, hass)
+    with pytest.raises(TemplateError, match="ValueError: Sort by key is incorrect"):
+        assert tpl.async_render()
+
+
+@pytest.mark.parametrize(
+    ("service_response"),
+    [
+        {
+            "vacuum.deebot_n8_plus_1": {
+                "payloadType": "j",
+                "resp": {
+                    "body": {
+                        "msg": "ok",
+                    }
                 },
-                {
-                    "start": "2024-02-28T20:00:00-06:00",
-                    "end": "2024-02-28T21:00:00-06:00",
-                    "summary": "Bake a cake",
-                    "description": "something good",
+                "header": {
+                    "ver": "0.0.1",
                 },
-            ]
+            },
+            "vacuum.deebot_n8_plus_2": {
+                "payloadType": "j",
+                "resp": {
+                    "body": {
+                        "msg": "not_ok",
+                    }
+                },
+                "header": {
+                    "ver": "0.0.1",
+                },
+            },
         },
-    }
-    _template = "{{ merge_response(" + str(service_response) + ",'start') }}"
+    ],
+    ids=["vacuum"],
+)
+async def test_merge_response_with_selected_key(
+    hass: HomeAssistant,
+    service_response: dict,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the merge_response function/filter with selected key."""
 
-    tpl = template.Template(_template, hass)
-    assert tpl.async_render() == [
-        {
-            "start": "2024-02-26T08:00:00-06:00",
-            "end": "2024-02-26T09:00:00-06:00",
-            "summary": "Dr. Appt",
-            "description": "",
-        },
-        {
-            "start": "2024-02-27T17:00:00-06:00",
-            "end": "2024-02-27T18:00:00-06:00",
-            "summary": "Basketball vs. Rockets",
-            "description": "",
-        },
-        {
-            "start": "2024-02-28T20:00:00-06:00",
-            "end": "2024-02-28T21:00:00-06:00",
-            "summary": "Bake a cake",
-            "description": "something good",
-        },
-    ]
-
-    _template = "{{ merge_response(" + str(service_response) + ",'start','summary') }}"
-    tpl = template.Template(_template, hass)
-    assert tpl.async_render() == ["Dr. Appt", "Basketball vs. Rockets", "Bake a cake"]
-
-    # Fetch single keys which does not exist should not raise
     _template = (
-        "{{ merge_response(" + str(service_response) + ",'start','not_existing') }}"
+        "{{ merge_response(" + str(service_response) + ",selected_key='resp') }}"
     )
-    tpl = template.Template(_template, hass)
-    assert tpl.async_render() == []
 
-    # Sorting by non existing keys should raise
-    _template = (
-        "{{ merge_response(" + str(service_response) + ",'not_exist','summary') }}"
-    )
     tpl = template.Template(_template, hass)
-    with pytest.raises(TemplateError):
+    assert tpl.async_render() == snapshot
+
+
+@pytest.mark.parametrize(
+    ("service_response"),
+    [
+        {
+            "vacuum.deebot_n8_plus_1": {
+                "payloadType": "j",
+                "resp": {
+                    "body": {
+                        "msg": "ok",
+                    }
+                },
+                "header": {
+                    "ver": "0.0.1",
+                },
+            },
+            "vacuum.deebot_n8_plus_2": {
+                "payloadType": "j",
+                "resp": {
+                    "body": {
+                        "msg": "not_ok",
+                    }
+                },
+                "header": {
+                    "ver": "0.0.1",
+                },
+            },
+        },
+    ],
+    ids=["vacuum"],
+)
+async def test_merge_response_with_selected_key_missing(
+    hass: HomeAssistant,
+    service_response: dict,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the merge_response function/filter with selected key missing."""
+
+    _template = (
+        "{{ merge_response(" + str(service_response) + ",selected_key='not_exist') }}"
+    )
+
+    tpl = template.Template(_template, hass)
+    with pytest.raises(TemplateError, match="ValueError: 'Selected key is incorrect'"):
         tpl.async_render()
 
 
-async def test_merge_response_with_empty_response(hass: HomeAssistant) -> None:
-    """Test the merge_response function/filter with empty response should raise."""
+async def test_merge_response_with_empty_response(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the merge_response function/filter with empty lists."""
 
     service_response = {
         "calendar.sports": {"events": []},
@@ -6614,7 +6683,7 @@ async def test_merge_response_with_empty_response(hass: HomeAssistant) -> None:
     }
     _template = "{{ merge_response(" + str(service_response) + ") }}"
     tpl = template.Template(_template, hass)
-    assert tpl.async_render() == []
+    assert tpl.async_render() == snapshot(name="empty_response")
 
 
 async def test_merge_response_with_incorrect_response(hass: HomeAssistant) -> None:

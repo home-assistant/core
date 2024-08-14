@@ -9,7 +9,6 @@ import collections.abc
 from collections.abc import Callable, Generator, Iterable
 from contextlib import AbstractContextManager
 from contextvars import ContextVar
-import copy
 from datetime import date, datetime, time, timedelta
 from functools import cache, cached_property, lru_cache, partial, wraps
 import json
@@ -2121,7 +2120,7 @@ def as_timedelta(value: str) -> timedelta | None:
 
 
 def merge_response(
-    value: ServiceResponse, sort_by: str | None = None, single_key: str | None = None
+    value: ServiceResponse, sort_by: str | None = None, selected_key: str | None = None
 ) -> list[Any]:
     """Merge action responses into single list.
 
@@ -2130,33 +2129,51 @@ def merge_response(
         "entity_id": {str: dict[str, Any]},
     }
     If response is a list, it will extend the list with the items.
-    Returns empty list by default.
     """
     if not isinstance(value, dict):
         raise TypeError("Response is not a dictionary")
+    if not value:
+        # Bail out early if response is empty empty
+        return []
 
-    response_items: list[Any] = []
-    if isinstance(value, dict):
-        for entity_response in value.values():
-            if not isinstance(entity_response, dict):
-                raise TypeError("Response is not a dictionary")
-            for type_response in entity_response.values():
-                if isinstance(type_response, list):
-                    response_items.extend(type_response)
-                else:
-                    response_items.append(type_response)
+    is_list = False
+    response_items: list = []
+    for entity_id, entity_response in value.items():
+        if not isinstance(entity_response, dict):
+            raise TypeError("Response is not a dictionary")
+        for value_key, type_response in entity_response.items():
+            if len(entity_response) == 1 and isinstance(type_response, list):
+                is_list = True
+                for dict_in_list in type_response:
+                    if isinstance(dict_in_list, dict):
+                        dict_in_list["entity_id"] = entity_id
+                        dict_in_list["value_key"] = value_key
+                response_items.extend(type_response)
+            else:
+                break  # Don't continue looping if not a list
 
+        if not is_list:
+            _response = entity_response.copy()
+            _response["entity_id"] = entity_id
+            response_items.append(_response)
+
+    # Allows to sort the response items by a key within the list
     if sort_by and isinstance(response_items[0], dict):
         if sort_by not in response_items[0]:
             raise ValueError("Sort by key is incorrect")
         response_items = sorted(response_items, key=lambda x: x[sort_by])
 
-    if single_key and isinstance(response_items[0], dict):
-        _dict_list = copy.deepcopy(response_items)
-        response_items.clear()
-        response_items = [
-            _dict[single_key] for _dict in _dict_list if single_key in _dict
-        ]
+    # Allows to select a specific key from the response items (second level)
+    if selected_key and isinstance(response_items[0], dict):
+        new_list = []
+        for sub_dict in response_items:
+            try:
+                new_dict = sub_dict[selected_key]
+            except KeyError as err:
+                raise ValueError("Selected key is incorrect") from err
+            new_dict["entity_id"] = sub_dict["entity_id"]
+            new_list.append(new_dict)
+        response_items = new_list
 
     return response_items
 
