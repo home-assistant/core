@@ -29,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> 
     @callback
     def is_connected_updated(connected: bool) -> None:
         if connected:
-            _LOGGER.debug("Reconnected to controller at %s:%s", host, port)
+            _LOGGER.warning("Reconnected to controller at %s:%s", host, port)
         else:
             _LOGGER.warning(
                 "Disconnected from controller at %s:%s",
