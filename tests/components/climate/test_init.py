@@ -1054,7 +1054,7 @@ async def test_temperature_validation(
 
 
 async def test_temperature_range_deadband(
-    hass: HomeAssistant, config_flow_fixture: None
+    hass: HomeAssistant, config_flow_fixture: None, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test temperature range with deadband."""
 
@@ -1067,6 +1067,7 @@ async def test_temperature_range_deadband(
             | ClimateEntityFeature.SWING_MODE
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         )
+        _attr_temperature_unit = UnitOfTemperature.CELSIUS
         _attr_min_temperature_range = 3
         _attr_target_temperature_high = 16
         _attr_target_temperature_low = 11
@@ -1163,6 +1164,11 @@ async def test_temperature_range_deadband(
     assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 20.0
     assert state.attributes[ATTR_MIN_TEMP_RANGE] == 3.0
 
+    assert (
+        "Moved low temperature from 18 °C to 17 °C due to range 3 and high temperature is 20 °C"
+        in caplog.text
+    )
+
     # Raises as not allowed for min temp to be higher than high temp
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
@@ -1188,3 +1194,52 @@ async def test_temperature_range_deadband(
             },
             blocking=True,
         )
+
+    hass.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
+
+    # Does not raise as 5 degrees Fahrenheit is within the 3 degrees Celsius range
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "climate.test",
+            ATTR_TARGET_TEMP_HIGH: 60,  # 15.5 C
+            ATTR_TARGET_TEMP_LOW: 55,  # 12.7 C
+        },
+        blocking=True,
+    )
+    state = hass.states.get("climate.test")
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] == 55.0
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 60.0
+    assert state.attributes[ATTR_MIN_TEMP_RANGE] == 5.0
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "climate.test",
+            ATTR_TARGET_TEMP_HIGH: 60,
+            ATTR_TARGET_TEMP_LOW: 56,
+        },
+        blocking=True,
+    )
+    state = hass.states.get("climate.test")
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] == 55.0
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 60.0
+    assert state.attributes[ATTR_MIN_TEMP_RANGE] == 5.0
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                "entity_id": "climate.test",
+                ATTR_TARGET_TEMP_HIGH: 54,
+                ATTR_TARGET_TEMP_LOW: 50,
+            },
+            blocking=True,
+        )
+    state = hass.states.get("climate.test")
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] == 55.0
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 60.0
+    assert state.attributes[ATTR_MIN_TEMP_RANGE] == 5.0

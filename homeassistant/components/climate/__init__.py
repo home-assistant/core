@@ -547,8 +547,37 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             data[ATTR_TARGET_TEMP_LOW] = show_temp(
                 hass, self.target_temperature_low, temperature_unit, precision
             )
-            if hasattr(self, "min_temperature_range"):
-                data[ATTR_MIN_TEMP_RANGE] = self.min_temperature_range
+            if (
+                hasattr(self, "min_temperature_range")
+                and (min_temp_range := self.min_temperature_range) is not None
+            ):
+                data[ATTR_MIN_TEMP_RANGE] = min_temp_range
+                if (
+                    self.hass.config.units.temperature_unit != temperature_unit
+                    and temperature_unit == UnitOfTemperature.CELSIUS
+                    and (
+                        show_temp_range := show_temp(
+                            hass,
+                            min_temp_range,
+                            temperature_unit,
+                            precision,
+                        )
+                    )
+                ):
+                    data[ATTR_MIN_TEMP_RANGE] = show_temp_range - 32
+                elif (
+                    self.hass.config.units.temperature_unit != temperature_unit
+                    and temperature_unit == UnitOfTemperature.FAHRENHEIT
+                    and (
+                        show_temp_range := show_temp(
+                            hass,
+                            min_temp_range,
+                            temperature_unit,
+                            precision,
+                        )
+                    )
+                ):
+                    data[ATTR_MIN_TEMP_RANGE] = show_temp_range + 32
 
         if (current_humidity := self.current_humidity) is not None:
             data[ATTR_CURRENT_HUMIDITY] = current_humidity
@@ -961,9 +990,12 @@ async def async_service_temperature_set(
         else:
             kwargs[value] = temp
 
+    if not hasattr(entity, "min_temperature_range"):
+        await entity.async_set_temperature(**kwargs)
+        return
+
     if (
-        hasattr(entity, "min_temperature_range")
-        and (min_temp_range := entity.min_temperature_range)
+        (min_temp_range := entity.min_temperature_range)
         and (target_low_temp := kwargs.get(ATTR_TARGET_TEMP_LOW))
         and (target_high_temp := kwargs.get(ATTR_TARGET_TEMP_HIGH))
         and (target_high_temp - target_low_temp) < min_temp_range
@@ -973,12 +1005,10 @@ async def async_service_temperature_set(
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="low_temp_higher_than_high_temp",
-                translation_placeholders={
-                    "min_temp": str(target_low_temp),
-                    "max_temp": str(target_high_temp),
-                },
             )
+
         # Ensure deadband between target temperatures.
+        initial_low_temp = target_low_temp
         if (target_high_temp - target_low_temp) < min_temp_range:
             target_low_temp = target_high_temp - min_temp_range
 
@@ -986,13 +1016,24 @@ async def async_service_temperature_set(
         if target_low_temp < min_temp:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="range_to_small",
+                translation_key="outside_tolerance",
                 translation_placeholders={
-                    "min_temp": str(target_low_temp),
-                    "max_temp": str(target_high_temp),
+                    "min_temp": str(min_temp),
+                    "target_low": str(target_low_temp),
                     "range": str(min_temp_range),
                 },
             )
+
+        _LOGGER.debug(
+            "Moved low temperature from %d %s to %d %s due to range %d and high temperature is %d %s",
+            initial_low_temp,
+            temp_unit,
+            target_low_temp,
+            temp_unit,
+            min_temp_range,
+            target_high_temp,
+            temp_unit,
+        )
 
         kwargs[ATTR_TARGET_TEMP_HIGH] = target_high_temp
         kwargs[ATTR_TARGET_TEMP_LOW] = target_low_temp
