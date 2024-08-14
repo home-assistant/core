@@ -174,7 +174,7 @@ class AiohttpClientMockResponse:
         headers=None,
         side_effect=None,
         closing=None,
-    ):
+    ) -> None:
         """Initialize a fake response."""
         if json is not None:
             text = json_dumps(json)

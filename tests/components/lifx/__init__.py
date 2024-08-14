@@ -26,7 +26,7 @@ DEFAULT_ENTRY_TITLE = LABEL
 class MockMessage:
     """Mock a lifx message."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         """Init message."""
         self.target_addr = SERIAL
         self.count = 9
@@ -38,7 +38,7 @@ class MockMessage:
 class MockFailingLifxCommand:
     """Mock a lifx command that fails."""
 
-    def __init__(self, bulb, **kwargs):
+    def __init__(self, bulb, **kwargs: Any) -> None:
         """Init command."""
         self.bulb = bulb
         self.calls = []
@@ -61,7 +61,7 @@ class MockLifxCommand:
         """Return name."""
         return "mock_lifx_command"
 
-    def __init__(self, bulb, **kwargs):
+    def __init__(self, bulb, **kwargs: Any) -> None:
         """Init command."""
         self.bulb = bulb
         self.calls = []
