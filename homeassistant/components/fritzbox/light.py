@@ -20,8 +20,6 @@ from . import FritzboxDataUpdateCoordinator, FritzBoxDeviceEntity
 from .const import COLOR_MODE, COLOR_TEMP_MODE, LOGGER
 from .coordinator import FritzboxConfigEntry
 
-SUPPORTED_COLOR_MODES = {ColorMode.COLOR_TEMP, ColorMode.HS}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -61,17 +59,10 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
         super().__init__(coordinator, ain, None)
         self._supported_hs: dict[int, list[int]] = {}
 
-        self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}
-
         if self.data.has_color:
-            if self.data.color_mode == COLOR_MODE:
-                self._attr_color_mode = ColorMode.HS
-            else:
-                self._attr_color_mode = ColorMode.COLOR_TEMP
-            self._attr_supported_color_modes = SUPPORTED_COLOR_MODES
+            self._attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
         elif self.data.has_level:
-            self._attr_color_mode = ColorMode.BRIGHTNESS
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     @property
@@ -99,6 +90,17 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
             return None
 
         return self.data.color_temp  # type: ignore [no-any-return]
+
+    @property
+    def color_mode(self) -> ColorMode:
+        """Return the color mode of the light."""
+        if self.data.has_color:
+            if self.data.color_mode == COLOR_MODE:
+                return ColorMode.HS
+            return ColorMode.COLOR_TEMP
+        if self.data.has_level:
+            return ColorMode.BRIGHTNESS
+        return ColorMode.ONOFF
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
