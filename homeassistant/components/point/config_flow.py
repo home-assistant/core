@@ -9,8 +9,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN
 
-CONF_REFRESH_TOKEN = "refresh_token"
-
 DATA_FLOW_IMPL = "point_flow_implementation"
 
 
