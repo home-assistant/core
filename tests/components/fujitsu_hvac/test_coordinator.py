@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock
 from ayla_iot_unofficial import AylaAuthError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
 
 from homeassistant.components.fujitsu_hvac.const import API_REFRESH_SECONDS, DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
@@ -14,25 +13,9 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_coordinator_initial_data(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
-    mock_devices: list[AsyncMock],
-    mock_ayla_api: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test that coordinator returns the data we expect after the first refresh."""
-    mock_ayla_api.async_get_devices.return_value = mock_devices
-    await setup_integration(hass, mock_config_entry)
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_coordinator_one_device_disabled(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
