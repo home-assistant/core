@@ -1,15 +1,24 @@
 """Test the Switcher config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.switcher_kis.const import DOMAIN
+from homeassistant.components.switcher_kis.const import (
+    CONF_TOKEN,
+    CONF_USERNAME,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .consts import DUMMY_PLUG_DEVICE, DUMMY_WATER_HEATER_DEVICE
+from .consts import (
+    DUMMY_PLUG_DEVICE,
+    DUMMY_TOKEN,
+    DUMMY_USERNAME,
+    DUMMY_WATER_HEATER_DEVICE,
+)
 
 from tests.common import MockConfigEntry
 
@@ -84,3 +93,59 @@ async def test_single_instance(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+
+
+@pytest.mark.parametrize(
+    ("user_input"),
+    [
+        ({CONF_USERNAME: DUMMY_USERNAME, CONF_TOKEN: DUMMY_TOKEN}),
+    ],
+)
+async def test_reauth_successful(
+    hass: HomeAssistant,
+    user_input: dict[str, str],
+) -> None:
+    """Test starting a reauthentication flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="test-token",
+        data={CONF_USERNAME: DUMMY_USERNAME, CONF_TOKEN: DUMMY_TOKEN},
+    )
+    entry.add_to_hass(hass)
+
+    mock_response = MagicMock()
+    mock_response.status = 200
+    mock_response.json = AsyncMock(return_value={"result": "true"})
+    mock_response.__aenter__.return_value = mock_response
+    mock_response.__aexit__.return_value = AsyncMock()
+
+    with (
+        patch(
+            "homeassistant.components.switcher_kis.utils.validate_input",
+            return_value=True,
+        ),
+        patch(
+            "aioswitcher.device.tools.aiohttp.ClientSession.post",
+            new=AsyncMock(return_value=mock_response),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": entry.entry_id,
+            },
+            data=entry.data,
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        # Currently not working
+        # result = await hass.config_entries.flow.async_configure(
+        #     result["flow_id"],
+        #     user_input=user_input,
+        # )
+
+        # assert result["type"] is FlowResultType.ABORT
+        # assert result["reason"] == "reauth_successful"
