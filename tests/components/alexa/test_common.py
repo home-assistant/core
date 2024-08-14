@@ -213,7 +213,7 @@ async def reported_properties(hass, endpoint, return_full_response=False):
 class ReportedProperties:
     """Class to help assert reported properties."""
 
-    def __init__(self, properties):
+    def __init__(self, properties) -> None:
         """Initialize class."""
         self.properties = properties
 
