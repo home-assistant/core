@@ -590,20 +590,6 @@ async def test_device_tracker_test1_nearest_after_test2_in_ignored_zone(
         1,
     )
 
-    # assert await async_setup_component(
-    #     hass,
-    #     DOMAIN,
-    #     {
-    #         "proximity": {
-    #             "home": {
-    #                 "ignored_zones": ["zone.work"],
-    #                 "devices": ["device_tracker.test1", "device_tracker.test2"],
-    #                 "zone": "home",
-    #             }
-    #         }
-    #     },
-    # )
-
     hass.states.async_set(
         "device_tracker.test1",
         "not_home",
@@ -893,3 +879,44 @@ async def test_sensor_unique_ids(
     assert (
         entity.unique_id == f"{mock_config.entry_id}_device_tracker.test2_dist_to_zone"
     )
+
+
+async def test_tracked_zone_is_removed(hass: HomeAssistant) -> None:
+    """Test that tracked zone is removed."""
+    await async_setup_single_entry(hass, "zone.home", ["device_tracker.test1"], [], 1)
+
+    hass.states.async_set(
+        "device_tracker.test1",
+        "home",
+        {"friendly_name": "test1", "latitude": 2.1, "longitude": 1.1},
+    )
+    await hass.async_block_till_done()
+
+    # check sensor entities
+    state = hass.states.get("sensor.home_nearest_device")
+    assert state.state == "test1"
+
+    entity_base_name = "sensor.home_test1"
+    state = hass.states.get(f"{entity_base_name}_distance")
+    assert state.state == "0"
+    state = hass.states.get(f"{entity_base_name}_direction_of_travel")
+    assert state.state == "arrived"
+
+    # remove tracked zone and move tracked entity
+    assert hass.states.async_remove("zone.home")
+    hass.states.async_set(
+        "device_tracker.test1",
+        "home",
+        {"friendly_name": "test1", "latitude": 2.2, "longitude": 1.2},
+    )
+    await hass.async_block_till_done()
+
+    # check sensor entities
+    state = hass.states.get("sensor.home_nearest_device")
+    assert state.state == STATE_UNKNOWN
+
+    entity_base_name = "sensor.home_test1"
+    state = hass.states.get(f"{entity_base_name}_distance")
+    assert state.state == STATE_UNAVAILABLE
+    state = hass.states.get(f"{entity_base_name}_direction_of_travel")
+    assert state.state == STATE_UNAVAILABLE

@@ -318,9 +318,9 @@ class MySensorsSensor(mysensors.device.MySensorsChildEntity, SensorEntity):
         entity_description = SENSORS.get(set_req(self.value_type).name)
 
         if not entity_description:
-            pres = self.gateway.const.Presentation
+            presentation = self.gateway.const.Presentation
             entity_description = SENSORS.get(
-                f"{set_req(self.value_type).name}_{pres(self.child_type).name}"
+                f"{set_req(self.value_type).name}_{presentation(self.child_type).name}"
             )
 
         return entity_description
