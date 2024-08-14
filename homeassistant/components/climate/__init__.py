@@ -304,7 +304,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_target_humidity: float | None = None
     _attr_target_temperature_high: float | None
     _attr_target_temperature_low: float | None
-    _attr_min_temperature_range: float | None = None
+    _attr_min_temperature_range: float | None
     _attr_target_temperature_step: float | None = None
     _attr_target_temperature: float | None = None
     _attr_temperature_unit: str
@@ -962,33 +962,40 @@ async def async_service_temperature_set(
             kwargs[value] = temp
 
     if (
-        (min_temp_range := entity.min_temperature_range)
-        and (low_temp := kwargs.get(ATTR_TARGET_TEMP_LOW))
-        and (high_temp := kwargs.get(ATTR_TARGET_TEMP_HIGH))
-        and high_temp - low_temp < min_temp_range
+        hasattr(entity, "min_temperature_range")
+        and (min_temp_range := entity.min_temperature_range)
+        and (target_low_temp := kwargs.get(ATTR_TARGET_TEMP_LOW))
+        and (target_high_temp := kwargs.get(ATTR_TARGET_TEMP_HIGH))
+        and (target_high_temp - target_low_temp) < min_temp_range
     ):
-        # Ensure there is a minimum gap from the new temp.
-        new_high_temp = high_temp
-        new_low_temp = low_temp
-        if (
-            entity.target_temperature_high
-            and abs(high_temp - entity.target_temperature_high) < 0.01
-        ):
-            new_high_temp = low_temp + min_temp_range
-        else:
-            new_low_temp = high_temp - min_temp_range
+        # Ensure target_low_temp is not higher than target_high_temp.
+        if target_low_temp > target_high_temp:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="low_temp_higher_than_high_temp",
+                translation_placeholders={
+                    "min_temp": str(target_low_temp),
+                    "max_temp": str(target_high_temp),
+                },
+            )
+        # Ensure deadband between target temperatures.
+        if (target_high_temp - target_low_temp) < min_temp_range:
+            target_low_temp = target_high_temp - min_temp_range
 
-        if new_high_temp > (max_temp := entity.max_temp):
-            diff = new_high_temp - max_temp
-            new_high_temp -= diff
-            new_low_temp -= diff
-        elif new_low_temp < (min_temp := entity.min_temp):
-            diff = min_temp - new_low_temp
-            new_high_temp += diff
-            new_low_temp += diff
+        # Guard target_low_temp isn't lower than entity low_temp
+        if target_low_temp < min_temp:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="range_to_small",
+                translation_placeholders={
+                    "min_temp": str(target_low_temp),
+                    "max_temp": str(target_high_temp),
+                    "range": str(min_temp_range),
+                },
+            )
 
-        kwargs[ATTR_TARGET_TEMP_HIGH] = new_high_temp
-        kwargs[ATTR_TARGET_TEMP_LOW] = new_low_temp
+        kwargs[ATTR_TARGET_TEMP_HIGH] = target_high_temp
+        kwargs[ATTR_TARGET_TEMP_LOW] = target_low_temp
 
     await entity.async_set_temperature(**kwargs)
 

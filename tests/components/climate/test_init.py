@@ -1153,8 +1153,8 @@ async def test_temperature_range_deadband(
         SERVICE_SET_TEMPERATURE,
         {
             "entity_id": "climate.test",
-            ATTR_TARGET_TEMP_HIGH: 25,
-            ATTR_TARGET_TEMP_LOW: 23,
+            ATTR_TARGET_TEMP_HIGH: 20,
+            ATTR_TARGET_TEMP_LOW: 18,
         },
         blocking=True,
     )
@@ -1163,17 +1163,28 @@ async def test_temperature_range_deadband(
     assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 20.0
     assert state.attributes[ATTR_MIN_TEMP_RANGE] == 3.0
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {
-            "entity_id": "climate.test",
-            ATTR_TARGET_TEMP_HIGH: 7,
-            ATTR_TARGET_TEMP_LOW: 5,
-        },
-        blocking=True,
-    )
-    state = hass.states.get("climate.test")
-    assert state.attributes[ATTR_TARGET_TEMP_LOW] == 10.0
-    assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 13.0
-    assert state.attributes[ATTR_MIN_TEMP_RANGE] == 3.0
+    # Raises as not allowed for min temp to be higher than high temp
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                "entity_id": "climate.test",
+                ATTR_TARGET_TEMP_HIGH: 18,
+                ATTR_TARGET_TEMP_LOW: 20,
+            },
+            blocking=True,
+        )
+
+    # Raises due to low_temp falls outside of allowed range
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                "entity_id": "climate.test",
+                ATTR_TARGET_TEMP_HIGH: 12,
+                ATTR_TARGET_TEMP_LOW: 10,
+            },
+            blocking=True,
+        )
