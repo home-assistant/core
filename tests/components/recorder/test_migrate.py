@@ -154,6 +154,7 @@ async def test_migration_in_progress(
     [
         ("migrate_schema_non_live", False, 1, 0),
         ("migrate_schema_live", True, 2, 1),
+        ("DropConstraint", False, 1, 0),  # This makes migration to step 11 fail
     ],
 )
 async def test_database_migration_failed(
