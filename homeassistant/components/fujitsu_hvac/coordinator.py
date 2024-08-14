@@ -8,7 +8,7 @@ from ayla_iot_unofficial import AylaApi, AylaAuthError
 from ayla_iot_unofficial.fujitsu_hvac import FujitsuHVAC
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import API_REFRESH_SECONDS
@@ -33,7 +33,7 @@ class FujitsuHVACCoordinator(DataUpdateCoordinator[dict[str, FujitsuHVAC]]):
         try:
             await self.api.async_sign_in()
         except AylaAuthError as e:
-            raise ConfigEntryAuthFailed("Credentials expired for Ayla IoT API") from e
+            raise ConfigEntryError("Credentials expired for Ayla IoT API") from e
 
     async def _async_update_data(self) -> dict[str, FujitsuHVAC]:
         """Fetch data from api endpoint."""
@@ -47,7 +47,7 @@ class FujitsuHVACCoordinator(DataUpdateCoordinator[dict[str, FujitsuHVAC]]):
 
             devices = await self.api.async_get_devices()
         except AylaAuthError as e:
-            raise ConfigEntryAuthFailed("Credentials expired for Ayla IoT API") from e
+            raise ConfigEntryError("Credentials expired for Ayla IoT API") from e
 
         if len(listening_entities) == 0:
             devices = list(filter(lambda x: isinstance(x, FujitsuHVAC), devices))
@@ -59,6 +59,6 @@ class FujitsuHVACCoordinator(DataUpdateCoordinator[dict[str, FujitsuHVAC]]):
         try:
             await gather(*[dev.async_update() for dev in devices])
         except AylaAuthError as e:
-            raise ConfigEntryAuthFailed("Credentials expired for Ayla IoT API") from e
+            raise ConfigEntryError("Credentials expired for Ayla IoT API") from e
 
         return {d.device_serial_number: d for d in devices}
