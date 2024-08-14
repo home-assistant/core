@@ -302,7 +302,7 @@ class KNXModule:
         self.entry = entry
 
         self.project = KNXProject(hass=hass, entry=entry)
-        self.config_store = KNXConfigStore(hass=hass, entry=entry)
+        self.config_store = KNXConfigStore(hass=hass, config_entry=entry)
 
         self.xknx = XKNX(
             connection_config=self.connection_config(),

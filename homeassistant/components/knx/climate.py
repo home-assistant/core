@@ -5,7 +5,11 @@ from __future__ import annotations
 from typing import Any
 
 from xknx import XKNX
-from xknx.devices import Climate as XknxClimate, ClimateMode as XknxClimateMode
+from xknx.devices import (
+    Climate as XknxClimate,
+    ClimateMode as XknxClimateMode,
+    Device as XknxDevice,
+)
 from xknx.dpt.dpt_20 import HVACControllerMode
 
 from homeassistant import config_entries
@@ -27,6 +31,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
+from . import KNXModule
 from .const import (
     CONTROLLER_MODES,
     CURRENT_HVAC_ACTIONS,
@@ -34,7 +39,7 @@ from .const import (
     DOMAIN,
     PRESET_MODES,
 )
-from .knx_entity import KnxEntity
+from .knx_entity import KnxYamlEntity
 from .schema import ClimateSchema
 
 ATTR_COMMAND_VALUE = "command_value"
@@ -48,10 +53,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up climate(s) for KNX platform."""
-    xknx: XKNX = hass.data[DOMAIN].xknx
+    knx_module: KNXModule = hass.data[DOMAIN]
     config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.CLIMATE]
 
-    async_add_entities(KNXClimate(xknx, entity_config) for entity_config in config)
+    async_add_entities(
+        KNXClimate(knx_module, entity_config) for entity_config in config
+    )
 
 
 def _create_climate(xknx: XKNX, config: ConfigType) -> XknxClimate:
@@ -130,16 +137,19 @@ def _create_climate(xknx: XKNX, config: ConfigType) -> XknxClimate:
     )
 
 
-class KNXClimate(KnxEntity, ClimateEntity):
+class KNXClimate(KnxYamlEntity, ClimateEntity):
     """Representation of a KNX climate device."""
 
     _device: XknxClimate
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _enable_turn_on_off_backwards_compatibility = False
 
-    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
+    def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of a KNX climate device."""
-        super().__init__(_create_climate(xknx, config))
+        super().__init__(
+            knx_module=knx_module,
+            device=_create_climate(knx_module.xknx, config),
+        )
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         if self._device.supports_on_off:
@@ -235,12 +245,9 @@ class KNXClimate(KnxEntity, ClimateEntity):
         if self._device.supports_on_off and not self._device.is_on:
             return HVACMode.OFF
         if self._device.mode is not None and self._device.mode.supports_controller_mode:
-            hvac_mode = CONTROLLER_MODES.get(
+            return CONTROLLER_MODES.get(
                 self._device.mode.controller_mode, self.default_hvac_mode
             )
-            if hvac_mode is not HVACMode.OFF:
-                self._last_hvac_mode = hvac_mode
-            return hvac_mode
         return self.default_hvac_mode
 
     @property
@@ -255,11 +262,15 @@ class KNXClimate(KnxEntity, ClimateEntity):
 
         if self._device.supports_on_off:
             if not ha_controller_modes:
-                ha_controller_modes.append(self.default_hvac_mode)
+                ha_controller_modes.append(self._last_hvac_mode)
             ha_controller_modes.append(HVACMode.OFF)
 
         hvac_modes = list(set(filter(None, ha_controller_modes)))
-        return hvac_modes if hvac_modes else [self.default_hvac_mode]
+        return (
+            hvac_modes
+            if hvac_modes
+            else [self.hvac_mode]  # mode read-only -> fall back to only current mode
+        )
 
     @property
     def hvac_action(self) -> HVACAction | None:
@@ -348,3 +359,13 @@ class KNXClimate(KnxEntity, ClimateEntity):
             self._device.mode.unregister_device_updated_cb(self.after_update_callback)
             self._device.mode.xknx.devices.async_remove(self._device.mode)
         await super().async_will_remove_from_hass()
+
+    def after_update_callback(self, _device: XknxDevice) -> None:
+        """Call after device was updated."""
+        if self._device.mode is not None and self._device.mode.supports_controller_mode:
+            hvac_mode = CONTROLLER_MODES.get(
+                self._device.mode.controller_mode, self.default_hvac_mode
+            )
+            if hvac_mode is not HVACMode.OFF:
+                self._last_hvac_mode = hvac_mode
+        super().after_update_callback(_device)

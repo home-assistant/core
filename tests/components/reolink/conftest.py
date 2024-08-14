@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from reolink_aio.api import Chime
 
 from homeassistant.components.reolink import const
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
@@ -107,6 +108,14 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.capabilities = {"Host": ["RTSP"], "0": ["motion_detection"]}
         host_mock.checked_api_versions = {"GetEvents": 1}
         host_mock.abilities = {"abilityChn": [{"aiTrack": {"permit": 0, "ver": 0}}]}
+
+        # enums
+        host_mock.whiteled_mode.return_value = 1
+        host_mock.whiteled_mode_list.return_value = ["off", "auto"]
+        host_mock.doorbell_led.return_value = "Off"
+        host_mock.doorbell_led_list.return_value = ["stayoff", "auto"]
+        host_mock.auto_track_method.return_value = 3
+        host_mock.daynight_state.return_value = "Black&White"
         yield host_mock_class
 
 
@@ -145,3 +154,26 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     )
     config_entry.add_to_hass(hass)
     return config_entry
+
+
+@pytest.fixture
+def test_chime(reolink_connect: MagicMock) -> None:
+    """Mock a reolink chime."""
+    TEST_CHIME = Chime(
+        host=reolink_connect,
+        dev_id=12345678,
+        channel=0,
+    )
+    TEST_CHIME.name = "Test chime"
+    TEST_CHIME.volume = 3
+    TEST_CHIME.connect_state = 2
+    TEST_CHIME.led_state = True
+    TEST_CHIME.event_info = {
+        "md": {"switch": 0, "musicId": 0},
+        "people": {"switch": 0, "musicId": 1},
+        "visitor": {"switch": 1, "musicId": 2},
+    }
+
+    reolink_connect.chime_list = [TEST_CHIME]
+    reolink_connect.chime.return_value = TEST_CHIME
+    return TEST_CHIME

@@ -8,9 +8,11 @@ from typing import Final
 
 from xknx import XKNX
 from xknx.dpt import DPTBase
+from xknx.telegram.address import DeviceAddressableType
 from xknxproject import XKNXProj
 from xknxproject.models import (
     Device,
+    DPTType,
     GroupAddress as GroupAddressModel,
     KNXProject as KNXProjectModel,
     ProjectInfo,
@@ -89,7 +91,7 @@ class KNXProject:
             self.devices = project["devices"]
             self.info = project["info"]
             xknx.group_address_dpt.clear()
-            xknx_ga_dict = {}
+            xknx_ga_dict: dict[DeviceAddressableType, DPTType] = {}
 
             for ga_model in project["group_addresses"].values():
                 ga_info = _create_group_address_info(ga_model)
@@ -97,7 +99,7 @@ class KNXProject:
                 if (dpt_model := ga_model.get("dpt")) is not None:
                     xknx_ga_dict[ga_model["address"]] = dpt_model
 
-            xknx.group_address_dpt.set(xknx_ga_dict)  # type: ignore[arg-type]
+            xknx.group_address_dpt.set(xknx_ga_dict)
 
             _LOGGER.debug(
                 "Loaded KNX project data with %s group addresses from storage",

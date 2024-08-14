@@ -10,14 +10,7 @@ from unittest.mock import AsyncMock, patch
 import jwt
 import pytest
 
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
-from homeassistant.components.tesla_fleet.application_credentials import CLIENT_ID
 from homeassistant.components.tesla_fleet.const import DOMAIN, SCOPES
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .const import LIVE_STATUS, PRODUCTS, SITE_INFO, VEHICLE_DATA, VEHICLE_ONLINE
 
@@ -68,18 +61,6 @@ def normal_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
                 "scope": ",".join(scopes),
             },
         },
-    )
-
-
-@pytest.fixture(autouse=True)
-async def setup_credentials(hass: HomeAssistant) -> None:
-    """Fixture to setup credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(CLIENT_ID, ""),
-        DOMAIN,
     )
 
 

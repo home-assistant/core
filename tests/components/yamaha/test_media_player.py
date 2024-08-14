@@ -53,10 +53,45 @@ def device_fixture(main_zone):
         yield device
 
 
-async def test_setup_host(hass: HomeAssistant, device, main_zone) -> None:
+@pytest.fixture(name="device2")
+def device2_fixture(main_zone):
+    """Mock the yamaha device."""
+    device = FakeYamahaDevice(
+        "http://127.0.0.1:80/YamahaRemoteControl/ctrl", "Receiver 2", zones=[main_zone]
+    )
+    with (
+        patch("rxv.RXV", return_value=device),
+        patch("rxv.find", return_value=[device]),
+    ):
+        yield device
+
+
+async def test_setup_host(hass: HomeAssistant, device, device2, main_zone) -> None:
     """Test set up integration with host."""
     assert await async_setup_component(hass, MP_DOMAIN, CONFIG)
     await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.yamaha_receiver_main_zone")
+
+    assert state is not None
+    assert state.state == "off"
+
+    with patch("rxv.find", return_value=[device2]):
+        assert await async_setup_component(hass, MP_DOMAIN, CONFIG)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.yamaha_receiver_main_zone")
+
+    assert state is not None
+    assert state.state == "off"
+
+
+async def test_setup_attribute_error(hass: HomeAssistant, device, main_zone) -> None:
+    """Test set up integration encountering an Attribute Error."""
+
+    with patch("rxv.find", side_effect=AttributeError):
+        assert await async_setup_component(hass, MP_DOMAIN, CONFIG)
+        await hass.async_block_till_done()
 
     state = hass.states.get("media_player.yamaha_receiver_main_zone")
 
