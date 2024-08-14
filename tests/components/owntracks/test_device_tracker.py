@@ -1,7 +1,7 @@
 """The tests for the Owntracks device tracker."""
 
 import base64
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 import json
 import pickle
 from unittest.mock import patch
@@ -294,7 +294,7 @@ def setup_comp(
     hass: HomeAssistant,
     mock_device_tracker_conf: list[Device],
     mqtt_mock: MqttMockHAClient,
-):
+) -> None:
     """Initialize components."""
     hass.loop.run_until_complete(async_setup_component(hass, "device_tracker", {}))
 
@@ -1426,7 +1426,7 @@ def mock_cipher():
 
 
 @pytest.fixture
-def config_context(hass, setup_comp):
+def config_context(setup_comp: None) -> Generator[None]:
     """Set up the mocked context."""
     patch_load = patch(
         "homeassistant.components.device_tracker.async_load_config",
