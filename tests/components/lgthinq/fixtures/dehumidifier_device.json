@@ -1,0 +1,9 @@
+{
+  "deviceId": "TQS-B5F907B3-61C6-4062-9859-943CABC5766C",
+  "deviceInfo": {
+    "deviceType": "DEVICE_DEHUMIDIFIER",
+    "modelName": "DHUM_056905_KR",
+    "alias": "Test dehumidifier",
+    "reportable": true
+  }
+}

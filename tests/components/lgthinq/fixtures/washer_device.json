@@ -1,0 +1,9 @@
+{
+  "deviceId": "TQS-4A0BE0EC-1ABC-4012-AD33-54F0FBFE6ACF",
+  "deviceInfo": {
+    "deviceType": "DEVICE_WASHER",
+    "modelName": "F21KBT_KOR",
+    "alias": "Test washer",
+    "reportable": true
+  }
+}

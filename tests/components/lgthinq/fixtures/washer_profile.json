@@ -1,0 +1,148 @@
+{
+  "error": [
+    "OUT_OF_BALANCE_ERROR",
+    "WATER_LEVEL_SENSOR_ERROR",
+    "DOOR_LOCK_ERROR",
+    "OVERFILL_ERROR",
+    "UNABLE_TO_LOCK_ERROR",
+    "POWER_FAIL_ERROR",
+    "TEMPERATURE_SENSOR_ERROR",
+    "WATER_DRAIN_ERROR",
+    "DOOR_OPEN_ERROR",
+    "WATER_SUPPLY_ERROR"
+  ],
+  "notification": {
+    "push": ["WASHING_IS_COMPLETE", "ERROR_DURING_WASHING"]
+  },
+  "property": [
+    {
+      "location": {
+        "locationName": "MAIN"
+      },
+      "operation": {
+        "washerOperationMode": {
+          "mode": ["w"],
+          "type": "enum",
+          "value": {
+            "w": ["START", "STOP", "POWER_OFF", "WAKE_UP"]
+          }
+        }
+      },
+      "remoteControlEnable": {
+        "remoteControlEnabled": {
+          "mode": ["r"],
+          "type": "boolean",
+          "value": {
+            "r": [true, false]
+          }
+        }
+      },
+      "runState": {
+        "currentState": {
+          "mode": ["r"],
+          "type": "enum",
+          "value": {
+            "r": [
+              "RINSING",
+              "END",
+              "REFRESHING",
+              "COOL_DOWN",
+              "RINSE_HOLD",
+              "DETECTING",
+              "POWER_OFF",
+              "SLEEP",
+              "SPINNING",
+              "ERROR",
+              "RESERVED",
+              "PAUSE",
+              "RUNNING",
+              "INITIAL",
+              "STEAM_SOFTENING",
+              "DRYING"
+            ]
+          }
+        }
+      },
+      "timer": {
+        "relativeHourToStop": {
+          "mode": ["r", "w"],
+          "type": "range",
+          "value": {
+            "r": {
+              "except": [],
+              "max": 19,
+              "min": 3,
+              "step": 1
+            },
+            "w": {
+              "except": [],
+              "max": 19,
+              "min": 3,
+              "step": 1
+            }
+          }
+        },
+        "relativeMinuteToStop": {
+          "mode": ["r"],
+          "type": "range",
+          "value": {
+            "r": {
+              "except": [],
+              "max": 59,
+              "min": 0,
+              "step": 1
+            }
+          }
+        },
+        "remainHour": {
+          "mode": ["r"],
+          "type": "range",
+          "value": {
+            "r": {
+              "except": [],
+              "max": 30,
+              "min": 0,
+              "step": 1
+            }
+          }
+        },
+        "remainMinute": {
+          "mode": ["r"],
+          "type": "range",
+          "value": {
+            "r": {
+              "except": [],
+              "max": 59,
+              "min": 0,
+              "step": 1
+            }
+          }
+        },
+        "totalHour": {
+          "mode": ["r"],
+          "type": "range",
+          "value": {
+            "r": {
+              "except": [],
+              "max": 30,
+              "min": 0,
+              "step": 1
+            }
+          }
+        },
+        "totalMinute": {
+          "mode": ["r"],
+          "type": "range",
+          "value": {
+            "r": {
+              "except": [],
+              "max": 59,
+              "min": 0,
+              "step": 1
+            }
+          }
+        }
+      }
+    }
+  ]
+}

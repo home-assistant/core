@@ -1,0 +1,82 @@
+{
+  "notification": {
+    "push": [
+      "TIME_TO_CHANGE_WATER_FILTER",
+      "FROZEN_IS_COMPLETE",
+      "DOOR_IS_OPEN",
+      "TIME_TO_CHANGE_FILTER"
+    ]
+  },
+  "property": {
+    "doorStatus": [
+      {
+        "doorState": {
+          "mode": ["r"],
+          "type": "enum",
+          "value": {
+            "r": ["OPEN", "CLOSE"]
+          }
+        },
+        "locationName": "MAIN"
+      }
+    ],
+    "refrigeration": {
+      "expressMode": {
+        "mode": ["r", "w"],
+        "type": "boolean",
+        "value": {
+          "r": [true, false],
+          "w": [true, false]
+        }
+      }
+    },
+    "temperature": [
+      {
+        "locationName": "FRIDGE",
+        "targetTemperature": {
+          "mode": ["r", "w"],
+          "type": "range",
+          "value": {
+            "r": {
+              "max": 6,
+              "min": 0,
+              "step": 1
+            },
+            "w": {
+              "max": 6,
+              "min": 0,
+              "step": 1
+            }
+          }
+        },
+        "unit": "C"
+      },
+      {
+        "locationName": "FREEZER",
+        "targetTemperature": {
+          "mode": ["r", "w"],
+          "type": "range",
+          "value": {
+            "r": {
+              "max": -16,
+              "min": -24,
+              "step": 1
+            },
+            "w": {
+              "max": -16,
+              "min": -24,
+              "step": 1
+            }
+          }
+        },
+        "unit": "C"
+      }
+    ],
+    "waterFilterInfo": {
+      "usedTime": {
+        "mode": ["r"],
+        "type": "number"
+      }
+    }
+  }
+}

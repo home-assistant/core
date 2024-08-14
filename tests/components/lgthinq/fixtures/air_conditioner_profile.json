@@ -1,0 +1,154 @@
+{
+  "notification": {
+    "push": ["WATER_IS_FULL"]
+  },
+  "property": {
+    "airConJobMode": {
+      "currentJobMode": {
+        "mode": ["r", "w"],
+        "type": "enum",
+        "value": {
+          "r": ["AIR_CLEAN", "COOL", "AIR_DRY"],
+          "w": ["AIR_CLEAN", "COOL", "AIR_DRY"]
+        }
+      }
+    },
+    "airFlow": {
+      "windStrength": {
+        "mode": ["r", "w"],
+        "type": "enum",
+        "value": {
+          "r": ["LOW", "HIGH", "MID"],
+          "w": ["LOW", "HIGH", "MID"]
+        }
+      }
+    },
+    "airQualitySensor": {
+      "PM1": {
+        "mode": ["r"],
+        "type": "number"
+      },
+      "PM10": {
+        "mode": ["r"],
+        "type": "number"
+      },
+      "PM2": {
+        "mode": ["r"],
+        "type": "number"
+      },
+      "humidity": {
+        "mode": ["r"],
+        "type": "number"
+      },
+      "monitoringEnabled": {
+        "mode": ["r", "w"],
+        "type": "enum",
+        "value": {
+          "r": ["ON_WORKING", "ALWAYS"],
+          "w": ["ON_WORKING", "ALWAYS"]
+        }
+      },
+      "oder": {
+        "mode": ["r"],
+        "type": "number"
+      },
+      "totalPollution": {
+        "mode": ["r"],
+        "type": "number"
+      }
+    },
+    "operation": {
+      "airCleanOperationMode": {
+        "mode": ["w"],
+        "type": "enum",
+        "value": {
+          "w": ["START", "STOP"]
+        }
+      },
+      "airConOperationMode": {
+        "mode": ["r", "w"],
+        "type": "enum",
+        "value": {
+          "r": ["POWER_ON", "POWER_OFF"],
+          "w": ["POWER_ON", "POWER_OFF"]
+        }
+      }
+    },
+    "powerSave": {
+      "powerSaveEnabled": {
+        "mode": ["r", "w"],
+        "type": "boolean",
+        "value": {
+          "r": [false, true],
+          "w": [false, true]
+        }
+      }
+    },
+    "temperature": {
+      "coolTargetTemperature": {
+        "mode": ["w"],
+        "type": "range",
+        "value": {
+          "w": {
+            "max": 30,
+            "min": 18,
+            "step": 1
+          }
+        }
+      },
+      "currentTemperature": {
+        "mode": ["r"],
+        "type": "number"
+      },
+      "targetTemperature": {
+        "mode": ["r", "w"],
+        "type": "range",
+        "value": {
+          "r": {
+            "max": 30,
+            "min": 18,
+            "step": 1
+          },
+          "w": {
+            "max": 30,
+            "min": 18,
+            "step": 1
+          }
+        }
+      },
+      "unit": {
+        "mode": ["r"],
+        "type": "enum",
+        "value": {
+          "r": ["C", "F"]
+        }
+      }
+    },
+    "timer": {
+      "relativeHourToStart": {
+        "mode": ["r", "w"],
+        "type": "number"
+      },
+      "relativeHourToStop": {
+        "mode": ["r", "w"],
+        "type": "number"
+      },
+      "relativeMinuteToStart": {
+        "mode": ["r", "w"],
+        "type": "number"
+      },
+      "relativeMinuteToStop": {
+        "mode": ["r", "w"],
+        "type": "number"
+      },
+      "absoluteHourToStart": {
+        "mode": ["r", "w"],
+        "type": "number"
+      },
+      "absoluteMinuteToStart": {
+        "mode": ["r", "w"],
+        "type": "number"
+      }
+    }
+  }
+}
