@@ -56,7 +56,7 @@ def pywemo_discovery_responder_fixture():
 @contextlib.contextmanager
 def create_pywemo_device(
     pywemo_registry: MagicMock, pywemo_model: str
-) -> pywemo.Device:
+) -> pywemo.WeMoDevice:
     """Create a WeMoDevice instance."""
     cls = getattr(pywemo, pywemo_model)
     device = create_autospec(cls, instance=True)
