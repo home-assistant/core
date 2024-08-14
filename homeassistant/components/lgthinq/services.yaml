@@ -1,0 +1,38 @@
+reload_device_list:
+
+refresh_device_status:
+  fields:
+    device_id:
+      required: false
+      selector:
+        device:
+          integration: lgthinq
+
+get_device_profile:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: lgthinq
+
+get_device_status:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: lgthinq
+
+post_device_status:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: lgthinq
+    value:
+      required: true
+      example: "{'operation': {'airConOperationMode': 'POWER_OFF'}}"
+      selector:
+        text:

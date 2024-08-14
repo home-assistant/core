@@ -1,0 +1,154 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured.",
+            "already_in_progress": "Configuration flow is already in progress",
+            "1218": "The token is not valid.",
+            "1304": "The service terms are not accepted.",
+            "1306": "The number of API calls has been exceeded.",
+            "1307": "The country is not supported.",
+            "1314": "The number of API calls has been exceeded."
+        },
+        "step": {
+            "user": {
+                "title": "Connect to ThinQ",
+                "description": "Please enter a ThinQ [PAT(Personal Access Token)]({pat_url}) created with your LG ThinQ account.",
+                "data": {
+                    "access_token": "Personal Access Token",
+                    "name": "Entry Name"
+                }
+            },
+            "region": {
+                "title": "Choose the region",
+                "data": {
+                    "country": "Country"
+                }
+            }
+        }
+    },
+    "services": {
+        "reload_device_list": {
+            "name": "Reload device list",
+            "description": "Reload LG ThinQ device list."
+        },
+        "refresh_device_status": {
+            "name": "Refresh device status",
+            "description": "Refresh status of LG ThinQ device.",
+            "fields": {
+                "device_id": {
+                    "name": "Device ID",
+                    "description": "The target device id."
+                }
+            }
+        },
+        "get_device_profile": {
+            "name": "Get device profile",
+            "description": "Get profile of LG ThinQ device from the server.",
+            "fields": {
+                "device_id": {
+                    "name": "Device ID",
+                    "description": "The target device id."
+                }
+            }
+        },
+        "get_device_status": {
+            "name": "Get device status",
+            "description": "Get status of LG ThinQ device from the server.",
+            "fields": {
+                "device_id": {
+                    "name": "Device ID",
+                    "description": "The target device id."
+                }
+            }
+        },
+        "post_device_status": {
+            "name": "Post device status",
+            "description": "Post status of LG ThinQ device to the server.",
+            "fields": {
+                "device_id": {
+                    "name": "Device ID",
+                    "description": "The target device id."
+                },
+                "value": {
+                    "name": "Value",
+                    "description": "Value to post."
+                }
+            }
+        }
+    },
+    "entity": {
+        "switch": {
+            "operation_power": {
+                "name": "Power"
+            }
+        }
+    },
+    "exceptions": {
+        "0000": {
+            "message": "Undefined error."
+        },
+        "0001": {
+            "message": "The control command is not supported."
+        },
+        "1218": {
+            "message": "The token is not valid."
+        },
+        "1222": {
+            "message": "The device is not connected."
+        },
+        "1304": {
+            "message": "The service terms are not accepted."
+        },
+        "1306": {
+            "message": "The number of API calls has been exceeded."
+        },
+        "1307": {
+            "message": "The country is not supported."
+        },
+        "1309": {
+            "message": "The user does NOT have permission on the API call."
+        },
+        "1314": {
+            "message": "The number of User API calls has been exceeded."
+        },
+        "2201": {
+            "message": "The feature is not supported."
+        },
+        "2205": {
+            "message": "The device status data is not transmitted normally or the transmitted data is not parsed normally."
+        },
+        "2207": {
+            "message": "The control command is not valid."
+        },
+        "2208": {
+            "message": "Failed to control the device."
+        },
+        "2209": {
+            "message": "The response from the device is being delayed."
+        },
+        "2210": {
+            "message": "Retry the request."
+        },
+        "2211": {
+            "message": "Timeout occured."
+        },
+        "2214": {
+            "message": "Failed to request."
+        },
+        "2301": {
+            "message": "The control command cannot be processed because the device is remote off."
+        },
+        "2302": {
+            "message": "In the {state}, the control command is not supported."
+        },
+        "2303": {
+            "message": "The control command cannot be processed because the device is in an error state."
+        },
+        "2304": {
+            "message": "The control command cannot be processed because the device is powered off."
+        },
+        "2305": {
+            "message": "In the {state}, the control command is not supported."
+        }
+    }
+}
