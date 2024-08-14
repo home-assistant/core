@@ -2,17 +2,66 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
+
 from homeassistant.components.geniushub import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from tests.common import load_json_object_fixture
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_all_sensors(
+
+@pytest.fixture(autouse=True)
+def mock_local_all(aioclient_mock: AiohttpClientMocker) -> None:
+    """Mock all setup requests."""
+    zones = load_json_object_fixture("zones_local_test_data.json", DOMAIN)
+    devices = load_json_object_fixture("devices_local_test_data.json", DOMAIN)
+    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
+    aioclient_mock.get(
+        "http://10.0.0.130:1223/v3/auth/release",
+        json=({"data": {"UID": "aa:bb:cc:dd:ee:ff", "release": "10.0"}}),
+    )
+    aioclient_mock.get("http://10.0.0.130:1223/v3/zones", json=zones)
+    aioclient_mock.get(
+        "http://10.0.0.130:1223/v3/data_manager",
+        json=devices,
+    )
+
+
+@pytest.fixture(autouse=True)
+def mock_local_single_zone_with_switch(aioclient_mock: AiohttpClientMocker) -> None:
+    """Mock all setup requests."""
+    zones = load_json_object_fixture("single_zone_local_test_data.json", DOMAIN)
+    devices = load_json_object_fixture("single_switch_local_test_data.json", DOMAIN)
+    switch_on = load_json_object_fixture("switch_on_local_test_data.json", DOMAIN)
+    switch_off = load_json_object_fixture("switch_off_local_test_data.json", DOMAIN)
+    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
+    aioclient_mock.get(
+        "http://10.0.0.130:1223/v3/auth/release",
+        json=({"data": {"UID": "aa:bb:cc:dd:ee:ff", "release": "10.0"}}),
+    )
+    aioclient_mock.get("http://10.0.0.130:1223/v3/zones", json=zones)
+    aioclient_mock.get(
+        "http://10.0.0.130:1223/v3/data_manager",
+        json=devices,
+    )
+    aioclient_mock.patch(
+        "http://10.0.0.130:1223/v3/zone/32",
+        json=switch_on,
+    )
+    aioclient_mock.patch(
+        "http://10.0.0.131:1223/v3/zone/32",
+        json=switch_off,
+    )
+
+
+async def test_local_all_sensors(
     hass: HomeAssistant,
     mock_local_config_entry: AsyncMock,
-    mock_all: AsyncMock,
+    mock_local_all: AsyncMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test full local flow."""
@@ -39,23 +88,21 @@ async def test_all_sensors(
     assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff"
 
 
-async def test_single_zone_and_switch(
+async def test_local_single_zone_and_switch(
     hass: HomeAssistant,
     mock_local_config_entry: AsyncMock,
-    mock_single_zone_with_switch: AsyncMock,
-    entity_registry: er.EntityRegistry,
+    mock_local_single_zone_with_switch: AsyncMock,
+    # entity_registry: er.EntityRegistry,
 ) -> None:
     """Test full local flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"next_step_id": "local_api"},
     )
-    await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
