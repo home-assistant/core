@@ -230,7 +230,9 @@ async def test_database_migration_failed_step_11(
         ),
         patch(
             f"homeassistant.components.recorder.migration.{func_to_patch}",
-            side_effect=ValueError,
+            side_effect=OperationalError(
+                None, None, OSError("No space left on device")
+            ),
         ),
         patch(
             "homeassistant.components.persistent_notification.create",
