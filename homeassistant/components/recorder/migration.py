@@ -639,6 +639,7 @@ def _update_states_table_with_foreign_key_options(
                 _LOGGER.exception(
                     "Could not update foreign options in %s table", TABLE_STATES
                 )
+                raise
 
 
 def _drop_foreign_key_constraints(
@@ -1116,6 +1117,10 @@ class _SchemaVersion16Migrator(_SchemaVersionMigrator, target_version=16):
             SupportedDialect.MYSQL,
             SupportedDialect.POSTGRESQL,
         ):
+            # Version 16 changes settings for the foreign key constraint on
+            # states.old_state_id. Dropping the constraint is not really correct
+            # we should have recreated it instead. Recreating the constraint now
+            # happens in the migration to schema version 45.
             _drop_foreign_key_constraints(
                 self.session_maker, self.engine, TABLE_STATES, "old_state_id"
             )
