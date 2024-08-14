@@ -8,7 +8,7 @@ class NumatoModuleMock:
 
     NumatoGpioError = NumatoGpioError
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the numato_gpio module mockup class."""
         self.devices = {}
 

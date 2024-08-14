@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import contextmanager
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiolifx.aiolifx import Light
@@ -212,7 +213,7 @@ def _patch_device(device: Light | None = None, no_device: bool = False):
     class MockLifxConnecton:
         """Mock lifx discovery."""
 
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             """Init connection."""
             if no_device:
                 self.device = _mocked_failing_bulb()
@@ -240,7 +241,7 @@ def _patch_discovery(device: Light | None = None, no_device: bool = False):
     class MockLifxDiscovery:
         """Mock lifx discovery."""
 
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             """Init discovery."""
             if no_device:
                 self.lights = {}
@@ -276,7 +277,7 @@ def _patch_config_flow_try_connect(
     class MockLifxConnection:
         """Mock lifx discovery."""
 
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             """Init connection."""
             if no_device:
                 self.device = _mocked_failing_bulb()

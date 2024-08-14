@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import time
+from typing import Any
 from unittest.mock import ANY, MagicMock, patch
 
 from bleak import BleakError
@@ -631,7 +632,7 @@ async def test_setup_and_stop_macos(
     init_kwargs = None
 
     class MockBleakScanner:
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             """Init the scanner."""
             nonlocal init_kwargs
             init_kwargs = kwargs
