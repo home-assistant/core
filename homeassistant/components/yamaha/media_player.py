@@ -134,8 +134,13 @@ def _discovery(config_info):
         # Fix for upstream issues in rxv.find() with some hardware.
         with contextlib.suppress(AttributeError, ValueError):
             for recv in rxv.find():
+                _LOGGER.debug("Found Serial %s", recv.serial_number)
                 if recv.ctrl_url == config_info.ctrl_url:
-                    _LOGGER.debug("Config Zones Matched %s", config_info.ctrl_url)
+                    _LOGGER.debug(
+                        "Config Zones Matched Serial %s: %s",
+                        recv.ctrl_url,
+                        recv.serial_number,
+                    )
                     zones = recv.zone_controllers()
                     break
 
