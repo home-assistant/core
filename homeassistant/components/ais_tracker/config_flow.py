@@ -79,7 +79,7 @@ class AisTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the reconfigure confirm step."""
         if not user_input:
             return self.show_user_form(
-                user_input={**self._config_entry.data},
+                user_input={**self._config_entry.data}, step_id="reconfigure_confirm"
             )
 
         return self.async_update_reload_and_abort(
