@@ -23,7 +23,6 @@ async def test_coordinator_one_device_disabled(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that coordinator only updates devices that are currently listening."""
-    mock_ayla_api.async_get_devices.return_value = mock_devices
     await setup_integration(hass, mock_config_entry)
 
     for d in mock_devices:

@@ -23,7 +23,6 @@ async def test_coordinator_sign_in_exception_get_devices(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that the entities become unavailable if we fail to update them because of an auth error while getting the devices."""
-    mock_ayla_api.async_get_devices.return_value = mock_devices
     await setup_integration(hass, mock_config_entry)
 
     mock_ayla_api.async_get_devices.side_effect = AylaAuthError
@@ -42,7 +41,6 @@ async def test_coordinator_sign_in_exception_update_device(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that the entities become unavailable if we fail to update them because of an auth error while updating the devices."""
-    mock_ayla_api.async_get_devices.return_value = mock_devices
     await setup_integration(hass, mock_config_entry)
 
     for d in mock_devices:

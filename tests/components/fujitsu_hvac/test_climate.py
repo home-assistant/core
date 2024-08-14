@@ -21,6 +21,5 @@ async def test_coordinator_initial_data(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that coordinator returns the data we expect after the first refresh."""
-    mock_ayla_api.async_get_devices.return_value = mock_devices
     await setup_integration(hass, mock_config_entry)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
