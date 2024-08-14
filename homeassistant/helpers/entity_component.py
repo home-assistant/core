@@ -258,13 +258,13 @@ class EntityComponent(Generic[_EntityT]):
     def async_register_entity_service(
         self,
         name: str,
-        schema: VolDictType | VolSchemaType,
+        schema: VolDictType | VolSchemaType | None,
         func: str | Callable[..., Any],
         required_features: list[int] | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
     ) -> None:
         """Register an entity service."""
-        if isinstance(schema, dict):
+        if schema is None or isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
         service_func: str | HassJob[..., Any]
