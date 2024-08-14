@@ -1,20 +1,13 @@
 """Test the Reolink binary sensor platform."""
 
-from asyncio import CancelledError
 from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
-
-from aiohttp import ClientResponseError
-import pytest
+from unittest.mock import MagicMock, patch
 
 from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL, const
-from homeassistant.components.webhook import async_handle_webhook
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.util.aiohttp import MockRequest
 from homeassistant.util.dt import utcnow
 
 from .conftest import TEST_NVR_NAME, TEST_UID
@@ -48,12 +41,12 @@ async def test_motion_sensor(
     await hass.async_block_till_done()
 
     assert hass.states.is_state(entity_id, "off")
-    
+
     # test webhook callback
     reolink_connect.motion_detected.return_value = True
     reolink_connect.ONVIF_event_callback.return_value = [0]
     webhook_id = f"{const.DOMAIN}_{TEST_UID.replace(':', '')}_ONVIF"
     client = await hass_client_no_auth()
     await client.post(f"/api/webhook/{webhook_id}", data="test_data")
-    
+
     assert hass.states.is_state(entity_id, "on")

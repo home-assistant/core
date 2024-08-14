@@ -1,25 +1,22 @@
 """Test the Reolink host."""
 
 from asyncio import CancelledError
-from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import ClientResponseError
 import pytest
 
-from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL, const
+from homeassistant.components.reolink import const
 from homeassistant.components.webhook import async_handle_webhook
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.aiohttp import MockRequest
-from homeassistant.util.dt import utcnow
 
-from .conftest import TEST_NVR_NAME, TEST_UID
+from .conftest import TEST_UID
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
 
