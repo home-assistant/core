@@ -1052,3 +1052,51 @@ def test_delete_foreign_key_violations_unsupported_engine(
         RuntimeError, match="_delete_foreign_key_violations not supported for sqlite"
     ):
         migration._delete_foreign_key_violations(session_maker, engine, "", "", "", "")
+
+
+def test_drop_foreign_key_constraints_unsupported_engine(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test calling _drop_foreign_key_constraints with an unsupported engine."""
+
+    connection = Mock()
+    connection.execute = Mock(side_effect=InternalError(None, None, None))
+    session = Mock()
+    session.connection = Mock(return_value=connection)
+    instance = Mock()
+    instance.get_session = Mock(return_value=session)
+    engine = Mock()
+    engine.dialect = Mock()
+    engine.dialect.name = "sqlite"
+
+    session_maker = Mock(return_value=session)
+    with pytest.raises(
+        RuntimeError, match="_drop_foreign_key_constraints not supported for sqlite"
+    ):
+        migration._drop_foreign_key_constraints(session_maker, engine, "", "")
+
+
+def test_update_states_table_with_foreign_key_options_unsupported_engine(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test calling function with an unsupported engine.
+
+    This tests _update_states_table_with_foreign_key_options.
+    """
+
+    connection = Mock()
+    connection.execute = Mock(side_effect=InternalError(None, None, None))
+    session = Mock()
+    session.connection = Mock(return_value=connection)
+    instance = Mock()
+    instance.get_session = Mock(return_value=session)
+    engine = Mock()
+    engine.dialect = Mock()
+    engine.dialect.name = "sqlite"
+
+    session_maker = Mock(return_value=session)
+    with pytest.raises(
+        RuntimeError,
+        match="_update_states_table_with_foreign_key_options not supported for sqlite",
+    ):
+        migration._update_states_table_with_foreign_key_options(session_maker, engine)

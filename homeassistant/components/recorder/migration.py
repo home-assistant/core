@@ -585,7 +585,18 @@ def _modify_columns(
 def _update_states_table_with_foreign_key_options(
     session_maker: Callable[[], Session], engine: Engine
 ) -> None:
-    """Add the options to foreign key constraints."""
+    """Add the options to foreign key constraints.
+
+    This is not supported for SQLite because it does not support
+    dropping constraints.
+    """
+
+    if engine.dialect.name not in (SupportedDialect.MYSQL, SupportedDialect.POSTGRESQL):
+        raise RuntimeError(
+            "_update_states_table_with_foreign_key_options not supported for "
+            f"{engine.dialect.name}"
+        )
+
     inspector = sqlalchemy.inspect(engine)
     tmp_states_table = Table(TABLE_STATES, MetaData())
     alters = [
@@ -633,7 +644,17 @@ def _update_states_table_with_foreign_key_options(
 def _drop_foreign_key_constraints(
     session_maker: Callable[[], Session], engine: Engine, table: str, column: str
 ) -> tuple[bool, list[tuple[str, str, ReflectedForeignKeyConstraint]]]:
-    """Drop foreign key constraints for a table on specific columns."""
+    """Drop foreign key constraints for a table on specific columns.
+
+    This is not supported for SQLite because it does not support
+    dropping constraints.
+    """
+
+    if engine.dialect.name not in (SupportedDialect.MYSQL, SupportedDialect.POSTGRESQL):
+        raise RuntimeError(
+            f"_drop_foreign_key_constraints not supported for {engine.dialect.name}"
+        )
+
     inspector = sqlalchemy.inspect(engine)
     dropped_constraints = [
         (table, column, foreign_key)
@@ -1025,7 +1046,17 @@ class _SchemaVersion11Migrator(_SchemaVersionMigrator, target_version=11):
     def _apply_update(self) -> None:
         """Version specific update method."""
         _create_index(self.session_maker, "states", "ix_states_old_state_id")
-        _update_states_table_with_foreign_key_options(self.session_maker, self.engine)
+
+        # _update_states_table_with_foreign_key_options first drops foreign
+        # key constraints, and then re-adds them with the correct settings.
+        # This is not supported by SQLite
+        if self.engine.dialect.name in (
+            SupportedDialect.MYSQL,
+            SupportedDialect.POSTGRESQL,
+        ):
+            _update_states_table_with_foreign_key_options(
+                self.session_maker, self.engine
+            )
 
 
 class _SchemaVersion12Migrator(_SchemaVersionMigrator, target_version=12):
@@ -1079,9 +1110,14 @@ class _SchemaVersion15Migrator(_SchemaVersionMigrator, target_version=15):
 class _SchemaVersion16Migrator(_SchemaVersionMigrator, target_version=16):
     def _apply_update(self) -> None:
         """Version specific update method."""
-        _drop_foreign_key_constraints(
-            self.session_maker, self.engine, TABLE_STATES, "old_state_id"
-        )
+        # Dropping foreign key constraints is not supported by SQLite
+        if self.engine.dialect.name in (
+            SupportedDialect.MYSQL,
+            SupportedDialect.POSTGRESQL,
+        ):
+            _drop_foreign_key_constraints(
+                self.session_maker, self.engine, TABLE_STATES, "old_state_id"
+            )
 
 
 class _SchemaVersion17Migrator(_SchemaVersionMigrator, target_version=17):
