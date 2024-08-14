@@ -37,7 +37,7 @@ def mock_stream(data):
 class AiohttpClientMocker:
     """Mock Aiohttp client requests."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the request mocker."""
         self._mocks = []
         self._cookies = {}
@@ -327,7 +327,7 @@ class MockLongPollSideEffect:
     If queue is empty, will await until done.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the queue."""
         self.semaphore = asyncio.Semaphore(0)
         self.response_list = []
