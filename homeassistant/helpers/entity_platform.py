@@ -1001,7 +1001,9 @@ class EntityPlatform:
 
         if schema is None or isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
-        # Do a sanity check to check this is a valid entity service schema
+        # Do a sanity check to check this is a valid entity service schema,
+        # the check could be extended to require All/Any to have sub schema(s)
+        # with all entity service fields
         elif (
             # Don't check All/Any
             not isinstance(schema, (vol.All, vol.Any))
