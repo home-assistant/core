@@ -13,8 +13,6 @@ from homeassistant.helpers.network import is_internal_request
 
 from urllib.parse import unquote
 
-_LOGGER = logging.getLogger(__name__)
-
 LIBRARY = ["Favorites", "Artists", "Albums", "Tracks", "Playlists", "Genres"]
 
 MEDIA_TYPE_TO_SQUEEZEBOX = {
@@ -172,7 +170,7 @@ async def build_item_response(entity, player, payload):
         children_media_class=media_class["children"],
         media_content_id=search_id,
         media_content_type=search_type,
-        can_play=not search_type == "Favorites",
+        can_play=search_type != "Favorites",
         children=children,
         can_expand=True,
     )
