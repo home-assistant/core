@@ -179,7 +179,6 @@ TODO = {
     "aiocache": AwesomeVersion(
         "0.12.2"
     ),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
-    "pyflic": AwesomeVersion("2.0.3"),  # No OSI approved license CC0-1.0 Universal)
 }
 
 
