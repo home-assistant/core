@@ -611,7 +611,7 @@ async def test_schema_migrate(
         assert recorder.util.async_migration_is_live(hass) == live
         instrument_migration.migration_stall.set()
         await hass.async_block_till_done()
-        await hass.async_add_executor_job(instrument_migration.migration_done.wait)
+        await hass.async_add_executor_job(instrument_migration.live_migration_done.wait)
         await async_wait_recording_done(hass)
         assert instrument_migration.migration_version == db_schema.SCHEMA_VERSION
         assert setup_run.called
