@@ -1521,7 +1521,7 @@ async def test_gas_meter_providing_energy_reading(
     )
 
 
-def test_all_obis_references_exists():
+def test_all_obis_references_exists() -> None:
     """Verify that all attributes exist by name in database."""
     for sensor in SENSORS:
         assert hasattr(obis_references, sensor.obis_reference)
