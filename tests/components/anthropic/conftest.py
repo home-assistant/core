@@ -1,5 +1,6 @@
 """Tests helpers."""
 
+from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -13,7 +14,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_config_entry(hass):
+def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Mock a config entry."""
     entry = MockConfigEntry(
         title="Claude",
@@ -27,7 +28,9 @@ def mock_config_entry(hass):
 
 
 @pytest.fixture
-def mock_config_entry_with_assist(hass, mock_config_entry):
+def mock_config_entry_with_assist(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> MockConfigEntry:
     """Mock a config entry with assist."""
     hass.config_entries.async_update_entry(
         mock_config_entry, options={CONF_LLM_HASS_API: llm.LLM_API_ASSIST}
@@ -36,7 +39,9 @@ def mock_config_entry_with_assist(hass, mock_config_entry):
 
 
 @pytest.fixture
-async def mock_init_component(hass, mock_config_entry):
+async def mock_init_component(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> AsyncGenerator[None]:
     """Initialize integration."""
     with patch(
         "anthropic.resources.messages.AsyncMessages.create", new_callable=AsyncMock

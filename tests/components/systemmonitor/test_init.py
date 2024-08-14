@@ -95,9 +95,49 @@ async def test_migrate_process_sensor_to_binary_sensors(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    process_sensor = hass.states.get("sensor.system_monitor_process_python3")
-    assert process_sensor is not None
-    assert process_sensor.state == STATE_ON
     process_sensor = hass.states.get("binary_sensor.system_monitor_process_python3")
     assert process_sensor is not None
     assert process_sensor.state == STATE_ON
+
+    assert mock_config_entry.minor_version == 3
+    assert mock_config_entry.options == {
+        "binary_sensor": {"process": ["python3", "pip"]},
+        "resources": [
+            "disk_use_percent_/",
+            "disk_use_percent_/home/notexist/",
+            "memory_free_",
+            "network_out_eth0",
+            "process_python3",
+        ],
+    }
+
+
+async def test_migration_from_future_version(
+    hass: HomeAssistant,
+    mock_psutil: Mock,
+    mock_os: Mock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test migration from future version."""
+    mock_config_entry = MockConfigEntry(
+        title="System Monitor",
+        domain=DOMAIN,
+        version=2,
+        data={},
+        options={
+            "sensor": {"process": ["python3", "pip"]},
+            "resources": [
+                "disk_use_percent_/",
+                "disk_use_percent_/home/notexist/",
+                "memory_free_",
+                "network_out_eth0",
+                "process_python3",
+            ],
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.MIGRATION_ERROR

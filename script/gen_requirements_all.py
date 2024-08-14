@@ -101,11 +101,6 @@ grpcio==1.59.0
 grpcio-status==1.59.0
 grpcio-reflection==1.59.0
 
-# libcst >=0.4.0 requires a newer Rust than we currently have available,
-# thus our wheels builds fail. This pins it to the last working version,
-# which at this point satisfies our needs.
-libcst==0.3.23
-
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
 
@@ -119,11 +114,6 @@ btlewrap>=0.0.10
 enum34==1000000000.0.0
 typing==1000000000.0.0
 uuid==1000000000.0.0
-
-# regex causes segfault with version 2021.8.27
-# https://bitbucket.org/mrabarnett/mrab-regex/issues/421/2021827-results-in-fatal-python-error
-# This is fixed in 2021.8.28
-regex==2021.8.28
 
 # httpx requires httpcore, and httpcore requires anyio and h11, but the version constraints on
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
@@ -174,7 +164,7 @@ pyOpenSSL>=24.0.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==4.25.1
+protobuf==4.25.4
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
