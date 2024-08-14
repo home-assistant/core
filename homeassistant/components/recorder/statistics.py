@@ -2096,7 +2096,7 @@ def _build_stats(
         {
             "start": (start_ts := db_row[start_ts_idx]),
             "end": start_ts + table_duration_seconds,
-            **{key: db_row[idx] for key, idx in row_mapping if idx is not None},
+            **{key: db_row[idx] for key, idx in row_mapping},  # type: ignore[typeddict-item]
         }
         for db_row in db_rows
     ]
@@ -2115,9 +2115,8 @@ def _build_converted_stats(
             "start": (start_ts := db_row[start_ts_idx]),
             "end": start_ts + table_duration_seconds,
             **{
-                key: None if (v := db_row[idx]) is None else convert(v)
+                key: None if (v := db_row[idx]) is None else convert(v)  # type: ignore[typeddict-item]
                 for key, idx in row_mapping
-                if idx is not None
             },
         }
         for db_row in db_rows
