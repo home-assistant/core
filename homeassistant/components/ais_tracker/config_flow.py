@@ -54,7 +54,10 @@ class AisTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the user step."""
         if user_input is not None:
-            return self.async_create_entry(title="AIS tracker", data=user_input)
+            self._async_abort_entries_match({CONF_PORT: user_input[CONF_PORT]})
+            return self.async_create_entry(
+                title=f"AIS listener on {user_input[CONF_PORT]}", data=user_input
+            )
 
         return self.show_user_form()
 
