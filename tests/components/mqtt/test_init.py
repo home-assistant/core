@@ -420,6 +420,31 @@ async def test_mqtt_publish_action_call_with_template_payload_renders_template(
     mqtt_mock.reset_mock()
 
 
+@pytest.mark.parametrize(
+    ("attr_payload", "payload"),
+    [("b'\\xde\\xad\\xbe\\xef'", b"\xde\xad\xbe\xef"), ("DEADBEEF", "DEADBEEF")],
+)
+async def test_mqtt_publish_action_call_with_raw_data(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    attr_payload: str,
+    payload: str | bytes,
+) -> None:
+    """Test the mqtt publish action call with a previous rendered template.
+
+    When a template rendered to a binary we try literal_eval to obtain the raw value.
+    """
+    mqtt_mock = await mqtt_mock_entry()
+    await hass.services.async_call(
+        mqtt.DOMAIN,
+        mqtt.SERVICE_PUBLISH,
+        {mqtt.ATTR_TOPIC: "test/topic", mqtt.ATTR_PAYLOAD: attr_payload},
+        blocking=True,
+    )
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0][1] == payload
+
+
 # The use of a payload_template in an mqtt publish action call
 # has been deprecated with HA Core 2024.8.0 and will be removed with HA Core 2025.2.0
 async def test_publish_action_call_with_bad_payload_template(

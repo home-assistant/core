@@ -90,6 +90,7 @@ from .models import (  # noqa: F401
     PublishPayloadType,
     ReceiveMessage,
     ReceivePayloadType,
+    convert_outgoing_mqtt_payload,
 )
 from .subscription import (  # noqa: F401
     EntitySubscription,
@@ -354,6 +355,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             payload = MqttCommandTemplate(
                 template.Template(payload_template, hass)
             ).async_render()
+        else:
+            # Convert templated and quoted binary payload to binary with literal_eval
+            payload = convert_outgoing_mqtt_payload(payload)
 
         if TYPE_CHECKING:
             assert msg_topic is not None
