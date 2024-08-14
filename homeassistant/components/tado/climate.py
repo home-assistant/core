@@ -183,7 +183,7 @@ def create_climate_entity(
                     )
                 if capabilities[mode].get(TADO_VERTICAL_SWING_SETTING):
                     supported_swing_modes.append(SWING_VERTICAL)
-                if capabilities[mode].get("horizontalSwing"):
+                if capabilities[mode].get(TADO_HORIZONTAL_SWING_SETTING):
                     supported_swing_modes.append(SWING_HORIZONTAL)
                 if (
                     SWING_HORIZONTAL in supported_swing_modes
@@ -779,7 +779,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             ):
                 vertical_swing = self._current_tado_vertical_swing
             if self._is_current_setting_supported_by_current_hvac_mode(
-                "horizontalSwing", self._current_tado_horizontal_swing
+                TADO_HORIZONTAL_SWING_SETTING, self._current_tado_horizontal_swing
             ):
                 horizontal_swing = self._current_tado_horizontal_swing
             if self._is_current_setting_supported_by_current_hvac_mode(
