@@ -2,6 +2,7 @@
 
 from ipaddress import ip_address
 import socket
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -288,7 +289,7 @@ async def test_manual_dns_error(hass: HomeAssistant) -> None:
     class MockLifxConnectonDnsError:
         """Mock lifx discovery."""
 
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             """Init connection."""
             self.device = _mocked_failing_bulb()
 

@@ -160,7 +160,7 @@ class PacketSequence:
 
         class FakePacket(bytearray):
             # Be a bytearray so that memoryview works
-            def __init__(self):
+            def __init__(self) -> None:
                 super().__init__(3)
 
             time_base = VIDEO_TIME_BASE
@@ -209,7 +209,7 @@ class FakePyAvContainer:
 class FakePyAvBuffer:
     """Holds outputs of the decoded stream for tests to assert on results."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the FakePyAvBuffer."""
         self.segments = []
         self.audio_packets = []
