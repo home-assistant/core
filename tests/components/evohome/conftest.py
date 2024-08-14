@@ -23,11 +23,6 @@ from .const import ACCESS_TOKEN, REFRESH_TOKEN, USERNAME
 from tests.common import load_json_array_fixture, load_json_object_fixture
 
 
-def expected_results_fixture(install: str) -> JsonObjectType:
-    """Load the expected results for an installation."""
-    return load_json_object_fixture(f"{install}/expected_results.json", DOMAIN)
-
-
 def user_account_config_fixture(install: str) -> JsonObjectType:
     """Load JSON for the config of a user's account."""
     try:
