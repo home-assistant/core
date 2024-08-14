@@ -8,9 +8,10 @@ from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .const import MOCK_USER_DATA
+
 from tests.common import MockConfigEntry
 
-MOCK_USER_DATA = {CONF_PORT: 12346, CONF_MMSIS: ["123456789"]}
 MOCK_USER_DATA2 = {CONF_PORT: 23456, CONF_MMSIS: ["123456789"]}
 
 
