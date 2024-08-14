@@ -262,9 +262,12 @@ class SynologyDsmMediaView(http.HomeAssistantView):
 
         diskstation: SynologyDSMData = self.hass.data[DOMAIN][source_dir_id]
         assert diskstation.api.photos is not None
-        item = SynoPhotosItem(image_id, "", "", "", cache_key, "", shared, passphrase)
+        item = SynoPhotosItem(image_id, "", "", "", cache_key, "xl", shared, passphrase)
         try:
-            image = await diskstation.api.photos.download_item(item)
+            if passphrase:
+                image = await diskstation.api.photos.download_item_thumbnail(item)
+            else:
+                image = await diskstation.api.photos.download_item(item)
         except SynologyDSMException as exc:
             raise web.HTTPNotFound from exc
         return web.Response(body=image, content_type=mime_type)
