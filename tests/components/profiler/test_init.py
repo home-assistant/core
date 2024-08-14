@@ -176,7 +176,7 @@ async def test_dump_log_object(
     await hass.async_block_till_done()
 
     class DumpLogDummy:
-        def __init__(self, fail):
+        def __init__(self, fail) -> None:
             self.fail = fail
 
         def __repr__(self):

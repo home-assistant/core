@@ -15,7 +15,7 @@ class NumatoModuleMock:
     class NumatoDeviceMock:
         """Mockup for the numato_gpio.NumatoUsbGpio class."""
 
-        def __init__(self, device):
+        def __init__(self, device) -> None:
             """Initialize numato device mockup."""
             self.device = device
             self.callbacks = {}

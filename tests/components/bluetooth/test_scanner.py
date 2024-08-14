@@ -212,7 +212,7 @@ async def test_recovery_from_dbus_restart(hass: HomeAssistant) -> None:
     mock_discovered = []
 
     class MockBleakScanner:
-        def __init__(self, detection_callback, *args, **kwargs):
+        def __init__(self, detection_callback, *args: Any, **kwargs: Any) -> None:
             nonlocal _callback
             _callback = detection_callback
 

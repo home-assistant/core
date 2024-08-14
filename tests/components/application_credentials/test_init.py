@@ -189,7 +189,7 @@ async def oauth_fixture(
 class Client:
     """Test client with helper methods for application credentials websocket."""
 
-    def __init__(self, client):
+    def __init__(self, client) -> None:
         """Initialize Client."""
         self.client = client
         self.id = 0
