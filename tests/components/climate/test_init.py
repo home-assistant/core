@@ -1243,3 +1243,5 @@ async def test_temperature_range_deadband(
     assert state.attributes[ATTR_TARGET_TEMP_LOW] == 55.0
     assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 60.0
     assert state.attributes[ATTR_MIN_TEMP_RANGE] == 5.0
+
+    hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS
