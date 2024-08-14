@@ -6,12 +6,24 @@
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
+        'low',
+        'medium',
+        'high',
+        'auto',
       ]),
       'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
       ]),
-      'max_temp': 1.0,
-      'min_temp': 1.0,
+      'max_temp': 26.0,
+      'min_temp': 18.0,
       'swing_modes': list([
+        'off',
+        'horizontal',
+        'vertical',
+        'both',
       ]),
       'target_temp_step': 0.5,
     }),
@@ -45,28 +57,40 @@
 # name: test_coordinator_initial_data[climate.testserial123-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 1.0,
-      'fan_mode': None,
+      'current_temperature': 22.0,
+      'fan_mode': 'auto',
       'fan_modes': list([
+        'low',
+        'medium',
+        'high',
+        'auto',
       ]),
       'friendly_name': 'testserial123',
       'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
       ]),
-      'max_temp': 1.0,
-      'min_temp': 1.0,
+      'max_temp': 26.0,
+      'min_temp': 18.0,
       'supported_features': <ClimateEntityFeature: 425>,
-      'swing_mode': None,
+      'swing_mode': 'both',
       'swing_modes': list([
+        'off',
+        'horizontal',
+        'vertical',
+        'both',
       ]),
       'target_temp_step': 0.5,
-      'temperature': 1.0,
+      'temperature': 21.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.testserial123',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'cool',
   })
 # ---
 # name: test_coordinator_initial_data[climate.testserial345-entry]
@@ -76,12 +100,24 @@
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
+        'low',
+        'medium',
+        'high',
+        'auto',
       ]),
       'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
       ]),
-      'max_temp': 1.0,
-      'min_temp': 1.0,
+      'max_temp': 26.0,
+      'min_temp': 18.0,
       'swing_modes': list([
+        'off',
+        'horizontal',
+        'vertical',
+        'both',
       ]),
       'target_temp_step': 0.5,
     }),
@@ -115,27 +151,39 @@
 # name: test_coordinator_initial_data[climate.testserial345-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 1.0,
-      'fan_mode': None,
+      'current_temperature': 22.0,
+      'fan_mode': 'auto',
       'fan_modes': list([
+        'low',
+        'medium',
+        'high',
+        'auto',
       ]),
       'friendly_name': 'testserial345',
       'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
       ]),
-      'max_temp': 1.0,
-      'min_temp': 1.0,
+      'max_temp': 26.0,
+      'min_temp': 18.0,
       'supported_features': <ClimateEntityFeature: 425>,
-      'swing_mode': None,
+      'swing_mode': 'both',
       'swing_modes': list([
+        'off',
+        'horizontal',
+        'vertical',
+        'both',
       ]),
       'target_temp_step': 0.5,
-      'temperature': 1.0,
+      'temperature': 21.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.testserial345',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'cool',
   })
 # ---

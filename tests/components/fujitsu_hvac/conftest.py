@@ -4,7 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, create_autospec, patch
 
 from ayla_iot_unofficial import AylaApi
-from ayla_iot_unofficial.fujitsu_hvac import FujitsuHVAC
+from ayla_iot_unofficial.fujitsu_hvac import FanSpeed, FujitsuHVAC, OpMode, SwingMode
 import pytest
 
 from homeassistant.components.fujitsu_hvac.const import CONF_EUROPE, DOMAIN
@@ -70,17 +70,44 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
+def _create_device(serial_number: str) -> AsyncMock:
+    dev = AsyncMock(spec=FujitsuHVAC)
+    dev.device_serial_number = serial_number
+    dev.device_name = serial_number
+    dev.property_values = TEST_PROPERTY_VALUES
+    dev.has_capability.return_value = True
+    dev.fan_speed = FanSpeed.AUTO
+    dev.supported_fan_speeds = [
+        FanSpeed.LOW,
+        FanSpeed.MEDIUM,
+        FanSpeed.HIGH,
+        FanSpeed.AUTO,
+    ]
+    dev.op_mode = OpMode.COOL
+    dev.supported_op_modes = [
+        OpMode.OFF,
+        OpMode.ON,
+        OpMode.AUTO,
+        OpMode.COOL,
+        OpMode.DRY,
+    ]
+    dev.swing_mode = SwingMode.SWING_BOTH
+    dev.supported_swing_modes = [
+        SwingMode.OFF,
+        SwingMode.SWING_HORIZONTAL,
+        SwingMode.SWING_VERTICAL,
+        SwingMode.SWING_BOTH,
+    ]
+    dev.temperature_range = [18.0, 26.0]
+    dev.sensed_temp = 22.0
+    dev.set_temp = 21.0
+
+    return dev
+
+
 @pytest.fixture
 def mock_devices() -> list[AsyncMock]:
     """Generate a list of mock devices that the API can return."""
-    devices = [AsyncMock(spec=FujitsuHVAC) for i in range(2)]
-
-    devices[0].device_serial_number = TEST_SERIAL_NUMBER
-    devices[0].device_name = TEST_SERIAL_NUMBER
-    devices[0].property_values = TEST_PROPERTY_VALUES
-
-    devices[1].device_serial_number = TEST_SERIAL_NUMBER2
-    devices[1].device_name = TEST_SERIAL_NUMBER2
-    devices[1].property_values = TEST_PROPERTY_VALUES
-
-    return devices
+    return [
+        _create_device(serial) for serial in (TEST_SERIAL_NUMBER, TEST_SERIAL_NUMBER2)
+    ]
