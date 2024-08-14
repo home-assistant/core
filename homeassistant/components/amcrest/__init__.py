@@ -67,6 +67,7 @@ CONF_RESOLUTION = "resolution"
 CONF_STREAM_SOURCE = "stream_source"
 CONF_FFMPEG_ARGUMENTS = "ffmpeg_arguments"
 CONF_CONTROL_LIGHT = "control_light"
+CONF_CHANNEL = "channel"
 
 DEFAULT_NAME = "Amcrest Camera"
 DEFAULT_PORT = 80
@@ -120,6 +121,7 @@ AMCREST_SCHEMA = vol.Schema(
             cv.ensure_list, [vol.In(SENSOR_KEYS)], vol.Unique()
         ),
         vol.Optional(CONF_CONTROL_LIGHT, default=True): cv.boolean,
+        vol.Optional(CONF_CHANNEL, default=0): cv.positive_int,
     }
 )
 
@@ -384,6 +386,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         switches = device.get(CONF_SWITCHES)
         stream_source = device[CONF_STREAM_SOURCE]
         control_light = device.get(CONF_CONTROL_LIGHT)
+        channel = device[CONF_CHANNEL]
 
         # currently aiohttp only works with basic authentication
         # only valid for mjpeg streaming
@@ -401,6 +404,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             stream_source,
             resolution,
             control_light,
+            channel,
         )
 
         hass.async_create_task(

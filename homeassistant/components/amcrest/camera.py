@@ -192,7 +192,7 @@ class AmcrestCam(Camera):
             # Send the request to snap a picture and return raw jpg data
             # Snapshot command needs a much longer read timeout than other commands.
             return await self._api.async_snapshot(
-                timeout=(COMM_TIMEOUT, SNAPSHOT_TIMEOUT)
+                channel=self._channel, timeout=(COMM_TIMEOUT, SNAPSHOT_TIMEOUT)
             )
         except AmcrestError as error:
             log_update_error(_LOGGER, "get image from", self.name, "camera", error)
@@ -515,12 +515,12 @@ class AmcrestCam(Camera):
 
     async def _async_get_video(self) -> bool:
         return await self._api.async_is_video_enabled(
-            channel=0, stream=RESOLUTION_TO_STREAM[self._resolution]
+            channel=self._channel, stream=RESOLUTION_TO_STREAM[self._resolution]
         )
 
     async def _async_set_video(self, enable: bool) -> None:
         await self._api.async_set_video_enabled(
-            enable, channel=0, stream=RESOLUTION_TO_STREAM[self._resolution]
+            enable, channel=self._channel, stream=RESOLUTION_TO_STREAM[self._resolution]
         )
 
     async def _async_enable_video(self, enable: bool) -> None:
@@ -568,12 +568,12 @@ class AmcrestCam(Camera):
 
     async def _async_get_audio(self) -> bool:
         return await self._api.async_is_audio_enabled(
-            channel=0, stream=RESOLUTION_TO_STREAM[self._resolution]
+            channel=self._channel, stream=RESOLUTION_TO_STREAM[self._resolution]
         )
 
     async def _async_set_audio(self, enable: bool) -> None:
         await self._api.async_set_audio_enabled(
-            enable, channel=0, stream=RESOLUTION_TO_STREAM[self._resolution]
+            enable, channel=self._channel, stream=RESOLUTION_TO_STREAM[self._resolution]
         )
 
     async def _async_enable_audio(self, enable: bool) -> None:
@@ -628,7 +628,9 @@ class AmcrestCam(Camera):
         return _CBW[await self._api.async_day_night_color]
 
     async def _async_set_color_mode(self, cbw: str) -> None:
-        await self._api.async_set_day_night_color(_CBW.index(cbw), channel=0)
+        await self._api.async_set_day_night_color(
+            _CBW.index(cbw), channel=self._channel
+        )
 
     async def _async_set_color_bw(self, cbw: str) -> None:
         """Set camera color mode."""
