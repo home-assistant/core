@@ -551,64 +551,6 @@
     'state': '2023-06-05T17:00:00+00:00',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_none-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'Front lawn',
-        'Back lawn',
-        'my_lawn',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_mower_1_none',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'husqvarna_automower',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'work_area',
-    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_work_area',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor_snapshot[sensor.test_mower_1_none-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Test Mower 1 None',
-      'options': list([
-        'Front lawn',
-        'Back lawn',
-        'my_lawn',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_mower_1_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'Front lawn',
-  })
-# ---
 # name: test_sensor_snapshot[sensor.test_mower_1_number_of_charging_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

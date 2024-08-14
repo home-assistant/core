@@ -322,8 +322,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         },
         trigger_service_handler,
     )
-    component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
-    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
+    component.async_register_entity_service(SERVICE_TOGGLE, None, "async_toggle")
+    component.async_register_entity_service(SERVICE_TURN_ON, None, "async_turn_on")
     component.async_register_entity_service(
         SERVICE_TURN_OFF,
         {vol.Optional(CONF_STOP_ACTIONS, default=DEFAULT_STOP_ACTIONS): cv.boolean},
