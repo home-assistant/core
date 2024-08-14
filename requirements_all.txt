@@ -257,9 +257,6 @@ aioharmony==0.2.10
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.0
 
-# homeassistant.components.iotmeter
-aiohttp==3.9.5
-
 # homeassistant.components.hue
 aiohue==4.7.1
 
@@ -1168,6 +1165,9 @@ insteon-frontend-home-assistant==0.5.0
 
 # homeassistant.components.intellifire
 intellifire4py==2.2.2
+
+# homeassistant.components.iotmeter
+iotmeter_api==1.0.2
 
 # homeassistant.components.iotty
 iottycloud==0.1.3

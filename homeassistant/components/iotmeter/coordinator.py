@@ -1,16 +1,17 @@
 """Module for IoTMeter integration in Home Assistant."""
 
-import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 
-import aiohttp
+from iotmeter_api import IoTMeterAPI, IotMeterAPIError
 
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
-from .number import ChargingCurrentNumber
+
+# from .number import ChargingCurrentNumber
 from .sensor import (
     ConsumptionEnergySensor,
     EvseSensor,
@@ -20,12 +21,6 @@ from .sensor import (
 
 SCAN_INTERVAL = 5
 _LOGGER = logging.getLogger(__name__)
-
-
-async def fetch_data(session, url):
-    """Fetch data from a URL."""
-    async with session.get(url) as response:
-        return await response.json()
 
 
 class IotMeterDataUpdateCoordinator(DataUpdateCoordinator):
@@ -41,6 +36,7 @@ class IotMeterDataUpdateCoordinator(DataUpdateCoordinator):
         self.entities = []
         self.number_of_evse: int = 0
         self.is_smartmodul = None
+        self.api = IoTMeterAPI(ip_address, port)
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=timedelta(seconds=SCAN_INTERVAL)
         )
@@ -49,54 +45,34 @@ class IotMeterDataUpdateCoordinator(DataUpdateCoordinator):
         """Update IP address and port."""
         self.ip_address = ip_address
         self.port = port
+        self.api = IoTMeterAPI(ip_address, port)
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API."""
+        data: dict[str, Any] = {}
         try:
-            urls = [
-                f"http://{self.ip_address}:{self.port}/updateSetting",
-                f"http://{self.ip_address}:{self.port}/updateData",
-            ]
+            data = await self.api.fetch_all_data(self.is_smartmodul)
+            number_of_evse = data.get("NUMBER_OF_EVSE", 0)
 
-            if self.is_smartmodul is not None:
-                if self.is_smartmodul:
-                    urls.append(
-                        f"http://{self.ip_address}:{self.port}/updateRamSetting"
-                    )
-                else:
-                    urls.append(f"http://{self.ip_address}:{self.port}/updateEvse")
+            if "TYPE" in data:
+                if data["TYPE"] == "2":
+                    self.is_smartmodul = True
+            elif "inp,EVSE1" in data:
+                self.is_smartmodul = False
 
-            async with aiohttp.ClientSession() as session:
-                tasks = [fetch_data(session, url) for url in urls]
-                results = await asyncio.gather(*tasks)
-                data = results[0]
-                data.update(results[1])
-                if self.is_smartmodul is not None:
-                    data.update(results[2])
+            if not self.setting_read or (
+                self.number_of_evse != number_of_evse and self.setting_read
+            ):
+                self.number_of_evse = number_of_evse
+                await self.remove_entities()
+                if self.async_add_sensor_entities:
+                    self.setting_read = True
+                    await self.add_sensor_entities()
 
-                number_of_evse = data.get("NUMBER_OF_EVSE", 0)
-
-                if "TYPE" in data:
-                    if data["TYPE"] == "2":
-                        self.is_smartmodul = True
-                elif "inp,EVSE1" in data:
-                    self.is_smartmodul = False
-
-                if not self.setting_read or (
-                    self.number_of_evse != number_of_evse and self.setting_read
-                ):
-                    self.number_of_evse = number_of_evse
-                    await self.remove_entities()
-                    if self.async_add_sensor_entities:
-                        self.setting_read = True
-                        await self.add_sensor_entities()
-                    if self.async_add_number_entities and self.is_smartmodul:
-                        await self.add_number_entities(data["txt,ACTUAL SW VERSION"])
-
-                return data
-
-        except aiohttp.ClientError as err:
+        except IotMeterAPIError as err:
             raise UpdateFailed(f"Error fetching data: {err}") from err
+
+        return data
 
     async def add_sensor_entities(self):
         """Add sensor entities to Home Assistant."""
@@ -122,26 +98,6 @@ class IotMeterDataUpdateCoordinator(DataUpdateCoordinator):
                 )
             )
         self.async_add_sensor_entities(self.entities)
-
-    async def add_number_entities(self, fw_version):
-        """Add number entities to Home Assistant."""
-        translations = await async_get_translations(
-            self.hass, self.hass.config.language, "entity"
-        )
-        self.entities = [
-            ChargingCurrentNumber(
-                self,
-                "Charging current",
-                translations,
-                "A",
-                0,
-                32,
-                1,
-                fw_version=fw_version,
-                smartmodule=self.is_smartmodul,
-            )
-        ]
-        self.async_add_number_entities(self.entities)
 
     async def remove_entities(self):
         """Remove entities."""

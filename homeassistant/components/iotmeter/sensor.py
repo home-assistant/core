@@ -59,9 +59,21 @@ class TotalPowerSensor(TranslatableSensorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        p1 = self.coordinator.data.get("P1")
-        p2 = self.coordinator.data.get("P2")
-        p3 = self.coordinator.data.get("P3")
+        p1 = (
+            self.coordinator.data.get("P1") - 65535
+            if self.coordinator.data.get("P1") > 32767
+            else self.coordinator.data.get("P1")
+        )
+        p2 = (
+            self.coordinator.data.get("P2") - 65535
+            if self.coordinator.data.get("P2") > 32767
+            else self.coordinator.data.get("P2")
+        )
+        p3 = (
+            self.coordinator.data.get("P3") - 65535
+            if self.coordinator.data.get("P3") > 32767
+            else self.coordinator.data.get("P3")
+        )
         if p1 is not None and p2 is not None and p3 is not None:
             self.total_power = (float(p1) + float(p2) + float(p3)) / 1000
             return round(self.total_power, 2)
@@ -71,9 +83,33 @@ class TotalPowerSensor(TranslatableSensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {
-            "P1": round(self.coordinator.data.get("P1") / 1000, 2),
-            "P2": round(self.coordinator.data.get("P2") / 1000, 2),
-            "P3": round(self.coordinator.data.get("P3") / 1000, 2),
+            "P1": round(
+                (
+                    self.coordinator.data.get("P1") - 65535
+                    if self.coordinator.data.get("P1") > 32767
+                    else self.coordinator.data.get("P1")
+                )
+                / 1000,
+                2,
+            ),
+            "P2": round(
+                (
+                    self.coordinator.data.get("P2") - 65535
+                    if self.coordinator.data.get("P2") > 32767
+                    else self.coordinator.data.get("P2")
+                )
+                / 1000,
+                2,
+            ),
+            "P3": round(
+                (
+                    self.coordinator.data.get("P3") - 65535
+                    if self.coordinator.data.get("P3") > 32767
+                    else self.coordinator.data.get("P3")
+                )
+                / 1000,
+                2,
+            ),
         }
 
     @property
