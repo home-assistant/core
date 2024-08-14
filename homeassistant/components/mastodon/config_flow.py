@@ -20,6 +20,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import slugify
 
 from .const import CONF_BASE_URL, DEFAULT_URL, DOMAIN, LOGGER
 from .utils import construct_mastodon_username, create_mastodon_client
@@ -46,7 +47,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 1
+    VERSION = 2
     config_entry: ConfigEntry
 
     def check_connection(
@@ -119,7 +120,7 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 name = construct_mastodon_username(instance, account)
-                await self.async_set_unique_id(user_input[CONF_CLIENT_ID])
+                await self.async_set_unique_id(slugify(name))
                 return self.async_create_entry(
                     title=name,
                     data=user_input,
