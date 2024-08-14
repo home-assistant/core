@@ -1843,7 +1843,11 @@ async def test_homekit_uses_system_zeroconf(hass: HomeAssistant, hk_driver) -> N
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        entry_data: HomeKitEntryData = hass.data[DOMAIN][entry.entry_id]
+        # New tests should not access runtime data.
+        # Do not use this pattern for new tests.
+        entry_data: HomeKitEntryData = hass.config_entries.async_get_entry(
+            entry.entry_id
+        ).runtime_data
         assert entry_data.homekit.driver.advertiser == system_async_zc
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()

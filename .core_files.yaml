@@ -146,6 +146,7 @@ requirements: &requirements
   - homeassistant/package_constraints.txt
   - requirements*.txt
   - pyproject.toml
+  - script/licenses.py
 
 any:
   - *base_platforms

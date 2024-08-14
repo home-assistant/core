@@ -2,6 +2,7 @@ get_forecasts_extra:
   target:
     entity:
       domain: weather
+      integration: nws
   fields:
     type:
       required: true

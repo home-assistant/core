@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import StrEnum
 import logging
-from typing import Final, cast
+from typing import Final
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,44 +32,6 @@ class VadSensitivity(StrEnum):
             return 0.5
 
         return 1.0
-
-
-class VoiceActivityDetector(ABC):
-    """Base class for voice activity detectors (VAD)."""
-
-    @abstractmethod
-    def is_speech(self, chunk: bytes) -> bool:
-        """Return True if audio chunk contains speech."""
-
-    @property
-    @abstractmethod
-    def samples_per_chunk(self) -> int | None:
-        """Return number of samples per chunk or None if chunking is not required."""
-
-
-class WebRtcVad(VoiceActivityDetector):
-    """Voice activity detector based on webrtc."""
-
-    def __init__(self) -> None:
-        """Initialize webrtcvad."""
-        # Delay import of webrtc so HA start up is not crashing
-        # on older architectures (armhf).
-        #
-        # pylint: disable=import-outside-toplevel
-        from webrtc_noise_gain import AudioProcessor
-
-        # Just VAD: no noise suppression or auto gain
-        self._audio_processor = AudioProcessor(0, 0)
-
-    def is_speech(self, chunk: bytes) -> bool:
-        """Return True if audio chunk contains speech."""
-        result = self._audio_processor.Process10ms(chunk)
-        return cast(bool, result.is_speech)
-
-    @property
-    def samples_per_chunk(self) -> int | None:
-        """Return 10 ms."""
-        return int(0.01 * _SAMPLE_RATE)  # 10 ms
 
 
 class AudioBuffer:
@@ -119,7 +80,7 @@ class VoiceCommandSegmenter:
     speech_seconds: float = 0.3
     """Seconds of speech before voice command has started."""
 
-    silence_seconds: float = 0.5
+    silence_seconds: float = 1.0
     """Seconds of silence after voice command has ended."""
 
     timeout_seconds: float = 15.0
@@ -176,29 +137,38 @@ class VoiceCommandSegmenter:
                 if self._speech_seconds_left <= 0:
                     # Inside voice command
                     self.in_command = True
+                    self._silence_seconds_left = self.silence_seconds
+                    _LOGGER.debug("Voice command started")
             else:
                 # Reset if enough silence
                 self._reset_seconds_left -= chunk_seconds
                 if self._reset_seconds_left <= 0:
                     self._speech_seconds_left = self.speech_seconds
+                    self._reset_seconds_left = self.reset_seconds
         elif not is_speech:
+            # Silence in command
             self._reset_seconds_left = self.reset_seconds
             self._silence_seconds_left -= chunk_seconds
             if self._silence_seconds_left <= 0:
+                # Command finished successfully
                 self.reset()
+                _LOGGER.debug("Voice command finished")
                 return False
         else:
-            # Reset if enough speech
+            # Speech in command.
+            # Reset silence counter if enough speech.
             self._reset_seconds_left -= chunk_seconds
             if self._reset_seconds_left <= 0:
                 self._silence_seconds_left = self.silence_seconds
+                self._reset_seconds_left = self.reset_seconds
 
         return True
 
     def process_with_vad(
         self,
         chunk: bytes,
-        vad: VoiceActivityDetector,
+        vad_samples_per_chunk: int | None,
+        vad_is_speech: Callable[[bytes], bool],
         leftover_chunk_buffer: AudioBuffer | None,
     ) -> bool:
         """Process an audio chunk using an external VAD.
@@ -207,20 +177,20 @@ class VoiceCommandSegmenter:
 
         Returns False when voice command is finished.
         """
-        if vad.samples_per_chunk is None:
+        if vad_samples_per_chunk is None:
             # No chunking
             chunk_seconds = (len(chunk) // _SAMPLE_WIDTH) / _SAMPLE_RATE
-            is_speech = vad.is_speech(chunk)
+            is_speech = vad_is_speech(chunk)
             return self.process(chunk_seconds, is_speech)
 
         if leftover_chunk_buffer is None:
             raise ValueError("leftover_chunk_buffer is required when vad uses chunking")
 
         # With chunking
-        seconds_per_chunk = vad.samples_per_chunk / _SAMPLE_RATE
-        bytes_per_chunk = vad.samples_per_chunk * _SAMPLE_WIDTH
+        seconds_per_chunk = vad_samples_per_chunk / _SAMPLE_RATE
+        bytes_per_chunk = vad_samples_per_chunk * _SAMPLE_WIDTH
         for vad_chunk in chunk_samples(chunk, bytes_per_chunk, leftover_chunk_buffer):
-            is_speech = vad.is_speech(vad_chunk)
+            is_speech = vad_is_speech(vad_chunk)
             if not self.process(seconds_per_chunk, is_speech):
                 return False
 

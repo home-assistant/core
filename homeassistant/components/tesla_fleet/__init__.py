@@ -26,6 +26,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 
+from .config_flow import OAuth2FlowHandler
 from .const import DOMAIN, LOGGER, MODELS
 from .coordinator import (
     TeslaFleetEnergySiteInfoCoordinator,
@@ -33,6 +34,7 @@ from .coordinator import (
     TeslaFleetVehicleDataCoordinator,
 )
 from .models import TeslaFleetData, TeslaFleetEnergyData, TeslaFleetVehicleData
+from .oauth import TeslaSystemImplementation
 
 PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER, Platform.SENSOR]
 
@@ -50,6 +52,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
     token = jwt.decode(access_token, options={"verify_signature": False})
     scopes = token["scp"]
     region = token["ou_code"].lower()
+
+    OAuth2FlowHandler.async_register_implementation(
+        hass,
+        TeslaSystemImplementation(hass),
+    )
 
     implementation = await async_get_config_entry_implementation(hass, entry)
     oauth_session = OAuth2Session(hass, entry, implementation)
@@ -86,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
     vehicles: list[TeslaFleetVehicleData] = []
     energysites: list[TeslaFleetEnergyData] = []
     for product in products:
-        if "vin" in product and tesla.vehicle:
+        if "vin" in product and hasattr(tesla, "vehicle"):
             # Remove the protobuff 'cached_data' that we do not use to save memory
             product.pop("cached_data", None)
             vin = product["vin"]
@@ -111,7 +118,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                     device=device,
                 )
             )
-        elif "energy_site_id" in product and tesla.energy:
+        elif "energy_site_id" in product and hasattr(tesla, "energy"):
             site_id = product["energy_site_id"]
             if not (
                 product["components"]["battery"]

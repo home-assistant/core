@@ -31,6 +31,14 @@ BINARY_SENSOR_DESCRIPTIONS = {
         key=GoveeBLEBinarySensorDeviceClass.WINDOW,
         device_class=BinarySensorDeviceClass.WINDOW,
     ),
+    GoveeBLEBinarySensorDeviceClass.MOTION: BinarySensorEntityDescription(
+        key=GoveeBLEBinarySensorDeviceClass.MOTION,
+        device_class=BinarySensorDeviceClass.MOTION,
+    ),
+    GoveeBLEBinarySensorDeviceClass.OCCUPANCY: BinarySensorEntityDescription(
+        key=GoveeBLEBinarySensorDeviceClass.OCCUPANCY,
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
+    ),
 }
 
 

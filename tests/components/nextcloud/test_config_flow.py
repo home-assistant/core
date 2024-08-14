@@ -10,7 +10,7 @@ from nextcloudmonitor import (
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.nextcloud import DOMAIN
+from homeassistant.components.nextcloud.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant

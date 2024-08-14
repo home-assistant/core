@@ -85,7 +85,6 @@ def fixture_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture(name="config_entry")
 def fixture_config_entry(
-    hass: HomeAssistant,
     config_entry_data: MappingProxyType[str, Any],
     config_entry_options: MappingProxyType[str, Any],
     config_entry_version: int,
@@ -127,6 +126,13 @@ def fixture_config_entry_options() -> MappingProxyType[str, Any]:
 
 
 # Axis API fixtures
+
+
+@pytest.fixture(autouse=True)
+def reset_mock_requests() -> Generator[None]:
+    """Reset respx mock routes after the test."""
+    yield
+    respx.mock.clear()
 
 
 @pytest.fixture(name="mock_requests")

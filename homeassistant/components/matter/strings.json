@@ -74,7 +74,7 @@
             "state": {
               "switch_latched": "Switch latched",
               "initial_press": "Pressed",
-              "long_press": "Hold down",
+              "long_press": "Held down",
               "short_release": "Released after being pressed",
               "long_release": "Released after being held down",
               "multi_press_1": "Pressed once",
@@ -134,6 +134,9 @@
     "select": {
       "mode": {
         "name": "Mode"
+      },
+      "startup_on_off": {
+        "name": "Power-on behavior on Startup"
       }
     },
     "sensor": {

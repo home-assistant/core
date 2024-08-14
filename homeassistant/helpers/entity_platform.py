@@ -997,7 +997,7 @@ class EntityPlatform:
         if self.hass.services.has_service(self.platform_name, name):
             return
 
-        if isinstance(schema, dict):
+        if schema is None or isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
         service_func: str | HassJob[..., Any]

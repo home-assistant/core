@@ -388,7 +388,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @soco_error()
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        self.soco.volume = str(int(volume * 100))
+        self.soco.volume = int(volume * 100)
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
     def set_shuffle(self, shuffle: bool) -> None:
