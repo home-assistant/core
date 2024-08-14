@@ -58,6 +58,15 @@ def _downtime_to_timestamp(
     return utcnow() - timedelta(seconds=seconds_offset)
 
 
+def _uptime_to_timestamp(
+    coordinator: IntelliFireDataUpdateCoordinator,
+) -> datetime | None:
+    """Return a timestamp of how long the sensor has been up."""
+    if not (seconds_offset := coordinator.data.uptime):
+        return None
+    return utcnow() - timedelta(seconds=seconds_offset)
+
+
 INTELLIFIRE_SENSORS: tuple[IntelliFireSensorEntityDescription, ...] = (
     IntelliFireSensorEntityDescription(
         key="flame_height",
@@ -106,8 +115,7 @@ INTELLIFIRE_SENSORS: tuple[IntelliFireSensorEntityDescription, ...] = (
         translation_key="uptime",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda coordinator: utcnow()
-        - timedelta(seconds=coordinator.data.uptime),
+        value_fn=_uptime_to_timestamp,
     ),
     IntelliFireSensorEntityDescription(
         key="connection_quality",

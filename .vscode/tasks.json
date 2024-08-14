@@ -29,6 +29,20 @@
       "problemMatcher": []
     },
     {
+      "label": "Run Pytest for Intellifire Sensor",
+      "type": "shell",
+      "command": "python3 -m pytest ./tests/components/intellifire/test_sensor.py --snapshot-update -vv --log-cli-level=DEBUG",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "Pytest (changed tests only)",
       "type": "shell",
       "command": "python3 -m pytest --timeout=10 --picked",

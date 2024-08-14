@@ -5,8 +5,13 @@ import json
 from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 from aiohttp.client_reqrep import ConnectionKey
+from intellifire4py.const import IntelliFireApiMode
 from intellifire4py.exceptions import LoginError
-from intellifire4py.model import IntelliFirePollData, IntelliFireUserData
+from intellifire4py.model import (
+    IntelliFireCommonFireplaceData,
+    IntelliFirePollData,
+    IntelliFireUserData,
+)
 import pytest
 
 from homeassistant.components.intellifire.const import (
@@ -288,3 +293,76 @@ def mock_api_connection_error() -> ConnectionError:
     ret = ConnectionError()
     ret.args = [ConnectionKey("iftapi.net", 443, False, None, None, None, None)]
     return ret
+
+
+@pytest.fixture
+def mock_common_data_local() -> IntelliFireCommonFireplaceData:
+    """Fixture for mock common data."""
+    return IntelliFireCommonFireplaceData(
+        auth_cookie="B984F21A6378560019F8A1CDE41B6782",
+        user_id="52C3F9E8B9D3AC99F8E4D12345678901FE9A2BC7D85F7654E28BF98BCD123456",
+        web_client_id="FA2B1C3045601234D0AE17D72F8E975",
+        serial="3FB284769E4736F30C8973A7ED358123",
+        api_key="B5C4DA27AAEF31D1FB21AFF9BFA6BCD2",
+        ip_address="192.168.2.108",
+        read_mode=IntelliFireApiMode.LOCAL,
+        control_mode=IntelliFireApiMode.LOCAL,
+    )
+
+
+@pytest.fixture
+def mock_fp(mock_common_data_local):
+    """Mock fireplace."""
+    fixture_data = load_fixture("local_poll.json", DOMAIN)
+    local_poll_json = IntelliFirePollData(**json.loads(fixture_data))
+
+    assert local_poll_json.connection_quality == 988451
+
+    with patch(
+        "homeassistant.components.intellifire.__init__.UnifiedFireplace"
+    ) as MockUnifiedFireplace:
+        # Create an instance of the mock
+        mock_instance = MockUnifiedFireplace.return_value
+
+        # Mock methods and properties of the instance
+        mock_instance.perform_cloud_poll = AsyncMock()
+        mock_instance.perform_local_poll = AsyncMock()
+
+        mock_instance.async_validate_connectivity = AsyncMock(return_value=(True, True))
+
+        mock_instance.is_cloud_polling.return_value = False
+        mock_instance.is_local_polling.return_value = True
+
+        mock_instance.get_user_data_as_json.return_value = '{"mock": "data"}'
+
+        mock_instance.ip_address = "192.168.1.100"
+        mock_instance.api_key = "mock_api_key"
+        mock_instance.serial = "mock_serial"
+        mock_instance.user_id = "mock_user_id"
+        mock_instance.auth_cookie = "mock_auth_cookie"
+        mock_instance.web_client_id = "mock_web_client_id"
+
+        mock_instance.read_api = MagicMock()  # If needed, you can mock this further
+        mock_instance.control_api = MagicMock()  # If needed, you can mock this further
+
+        # Connectivity
+        mock_instance.local_connectivity = True
+        mock_instance.cloud_connectivity = False
+
+        mock_instance._read_mode = IntelliFireApiMode.LOCAL
+        mock_instance.read_mode = IntelliFireApiMode.LOCAL
+
+        mock_instance.control_mode = IntelliFireApiMode.LOCAL
+        mock_instance._control_mode = IntelliFireApiMode.LOCAL
+
+        # Use poll data locally
+        mock_instance.data = local_poll_json
+
+        mock_instance.set_read_mode = AsyncMock()
+        mock_instance.set_control_mode = AsyncMock()
+
+        mock_instance.async_validate_connectivity = AsyncMock(
+            return_value=(True, False)
+        )
+
+        yield mock_instance  # Provide the mock instance to the test
