@@ -76,7 +76,7 @@ async def _async_create_entities(hass, config):
     switches = []
 
     for object_id, entity_config in config[CONF_SWITCHES].items():
-        entity_config = rewrite_common_legacy_to_modern_conf(entity_config)
+        entity_config = rewrite_common_legacy_to_modern_conf(hass, entity_config)
         unique_id = entity_config.get(CONF_UNIQUE_ID)
 
         switches.append(

@@ -976,8 +976,6 @@ class TrackTemplateResultInfo:
         self.hass = hass
         self._job = HassJob(action, f"track template result {track_templates}")
 
-        for track_template_ in track_templates:
-            track_template_.template.hass = hass
         self._track_templates = track_templates
         self._has_super_template = has_super_template
 
