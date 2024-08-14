@@ -59,7 +59,10 @@ async def test_diagnostics(
             "minor_version": 1,
             "domain": "switcher_kis",
             "title": "Mock Title",
-            "data": {},
+            "data": {
+                "token": None,
+                "username": None,
+            },
             "options": {},
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
