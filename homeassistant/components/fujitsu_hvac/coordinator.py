@@ -8,7 +8,7 @@ from ayla_iot_unofficial import AylaApi, AylaAuthError
 from ayla_iot_unofficial.fujitsu_hvac import FujitsuHVAC
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import API_REFRESH_SECONDS
@@ -32,10 +32,6 @@ class FujitsuHVACCoordinator(DataUpdateCoordinator[dict[str, FujitsuHVAC]]):
     async def _async_setup(self) -> None:
         try:
             await self.api.async_sign_in()
-        except TimeoutError as e:
-            raise ConfigEntryNotReady(
-                "Timed out while connecting to Ayla IoT API"
-            ) from e
         except AylaAuthError as e:
             raise ConfigEntryAuthFailed("Credentials expired for Ayla IoT API") from e
 
