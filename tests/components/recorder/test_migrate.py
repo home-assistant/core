@@ -154,10 +154,65 @@ async def test_migration_in_progress(
     [
         ("migrate_schema_non_live", False, 1, 0),
         ("migrate_schema_live", True, 2, 1),
-        ("DropConstraint", False, 1, 0),  # This makes migration to step 11 fail
     ],
 )
 async def test_database_migration_failed(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    func_to_patch: str,
+    expected_setup_result: bool,
+    expected_pn_create: int,
+    expected_pn_dismiss: int,
+) -> None:
+    """Test we notify if the migration fails."""
+    assert recorder.util.async_migration_in_progress(hass) is False
+
+    with (
+        patch(
+            "homeassistant.components.recorder.core.create_engine",
+            new=create_engine_test,
+        ),
+        patch(
+            f"homeassistant.components.recorder.migration.{func_to_patch}",
+            side_effect=ValueError,
+        ),
+        patch(
+            "homeassistant.components.persistent_notification.create",
+            side_effect=pn.create,
+        ) as mock_create,
+        patch(
+            "homeassistant.components.persistent_notification.dismiss",
+            side_effect=pn.dismiss,
+        ) as mock_dismiss,
+    ):
+        await async_setup_recorder_instance(
+            hass, wait_recorder=False, expected_setup_result=expected_setup_result
+        )
+        hass.states.async_set("my.entity", "on", {})
+        hass.states.async_set("my.entity", "off", {})
+        await hass.async_block_till_done()
+        await hass.async_add_executor_job(recorder.get_instance(hass).join)
+        await hass.async_block_till_done()
+
+    assert recorder.util.async_migration_in_progress(hass) is False
+    assert len(mock_create.mock_calls) == expected_pn_create
+    assert len(mock_dismiss.mock_calls) == expected_pn_dismiss
+
+
+@pytest.mark.parametrize(
+    (
+        "func_to_patch",
+        "expected_setup_result",
+        "expected_pn_create",
+        "expected_pn_dismiss",
+    ),
+    [
+        ("DropConstraint", False, 1, 0),  # This makes migration to step 11 fail
+    ],
+)
+@pytest.mark.skip_on_db_engine(["sqlite"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+async def test_database_migration_failed_step_11(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
     func_to_patch: str,
