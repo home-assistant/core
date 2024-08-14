@@ -165,7 +165,7 @@ class LGDevice:
         """Returns the tag string."""
         return f"[{self.name}]"
 
-    def _fill_property_map_with_NONE_KEY(
+    def _fill_property_map_with_none_key(
         self, profiles: ConnectDeviceProfile, property_map: PropertyMap
     ) -> None:
         if profiles.properties:
@@ -231,7 +231,7 @@ class LGDevice:
         property_map: PropertyMap = {NONE_KEY: {}}
 
         # Get properties that do not have location information.
-        self._fill_property_map_with_NONE_KEY(profiles, property_map)
+        self._fill_property_map_with_none_key(profiles, property_map)
 
         # Get properties that have location information.
         self._fill_property_map_with_location(profiles, property_map)
