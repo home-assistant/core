@@ -43,6 +43,7 @@ from homeassistant.util.dt import as_local, parse_datetime, utc_from_timestamp
 from . import api
 from .const import (
     CONF_WEBHOOK_URL,
+    DATA_CONFIG_ENTRY_CLIENT,
     DOMAIN,
     EVENT_RECEIVED,
     POINT_DISCOVERY_NEW,
@@ -156,10 +157,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: PointConfigEntry) -> boo
 
     client = MinutPointClient(hass, entry, pointSession)
     hass.async_create_task(client.update())
-    hass.data[DOMAIN][entry.entry_id] = client
-
-    hass.data[DOMAIN][DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
-    hass.data[DOMAIN][CONFIG_ENTRY_IS_SETUP] = set()
+    entry.runtime_data[DATA_CONFIG_ENTRY_CLIENT] = client
+    entry.runtime_data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
+    entry.runtime_data[CONFIG_ENTRY_IS_SETUP] = set()
 
     await async_setup_webhook(hass, entry, pointSession)
     # Entries are added in the client.update() function.
@@ -209,7 +209,7 @@ async def async_setup_webhook(
 async def async_unload_entry(hass: HomeAssistant, entry: PointConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        session: PointSession = hass.data[DOMAIN].pop(entry.entry_id)
+        session: PointSession = entry.runtime_data[DATA_CONFIG_ENTRY_CLIENT]
         if CONF_WEBHOOK_ID in entry.data:
             webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
             await session.remove_webhook()
@@ -263,15 +263,15 @@ class MinutPointClient:
         async def new_device(device_id, platform):
             """Load new device."""
             config_entries_key = f"{platform}.{DOMAIN}"
-            async with self._hass.data[DOMAIN][DATA_CONFIG_ENTRY_LOCK]:
+            async with self._config_entry.runtime_data[DATA_CONFIG_ENTRY_LOCK]:
                 if (
                     config_entries_key
-                    not in self._hass.data[DOMAIN][CONFIG_ENTRY_IS_SETUP]
+                    not in self._config_entry.runtime_data[CONFIG_ENTRY_IS_SETUP]
                 ):
                     await self._hass.config_entries.async_forward_entry_setup(
                         self._config_entry, platform
                     )
-                    self._hass.data[DOMAIN][CONFIG_ENTRY_IS_SETUP].add(
+                    self._config_entry.runtime_data[CONFIG_ENTRY_IS_SETUP].add(
                         config_entries_key
                     )
 

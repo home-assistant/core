@@ -16,3 +16,5 @@ POINT_DISCOVERY_NEW = "point_new_{}_{}"
 
 OAUTH2_AUTHORIZE = "https://api.minut.com/v8/oauth/authorize"
 OAUTH2_TOKEN = "https://api.minut.com/v8/oauth/token"
+
+DATA_CONFIG_ENTRY_CLIENT = "client"

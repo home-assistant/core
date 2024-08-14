@@ -17,7 +17,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MinutPointEntity
-from .const import DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW, SIGNAL_WEBHOOK
+from .const import (
+    DATA_CONFIG_ENTRY_CLIENT,
+    DOMAIN as POINT_DOMAIN,
+    POINT_DISCOVERY_NEW,
+    SIGNAL_WEBHOOK,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +54,7 @@ async def async_setup_entry(
 
     async def async_discover_sensor(device_id):
         """Discover and add a discovered sensor."""
-        client = hass.data[POINT_DOMAIN][config_entry.entry_id]
+        client = config_entry.runtime_data[DATA_CONFIG_ENTRY_CLIENT]
         async_add_entities(
             (
                 MinutPointBinarySensor(client, device_id, device_name)
