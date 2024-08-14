@@ -1,6 +1,6 @@
 """Fixtures for the recorder component tests."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import partial
@@ -8,6 +8,8 @@ import threading
 from unittest.mock import Mock, patch
 
 import pytest
+from sqlalchemy.engine import Engine
+from sqlalchemy.orm.session import Session
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import db_schema
@@ -66,6 +68,8 @@ class InstrumentedMigration:
     non_live_migration_done: threading.Event
     non_live_migration_done_stall: threading.Event
     apply_update_mock: Mock
+    stall_on_schema_version: int
+    apply_update_stalled: threading.Event
 
 
 @pytest.fixture(name="instrument_migration")
@@ -134,10 +138,21 @@ def instrument_migration(
         migration_done_stall.wait()
         return migration_result
 
-    def _instrument_apply_update(*args):
+    def _instrument_apply_update(
+        instance: recorder.Recorder,
+        hass: HomeAssistant,
+        engine: Engine,
+        session_maker: Callable[[], Session],
+        new_version: int,
+        old_version: int,
+    ):
         """Control migration progress."""
-        instrumented_migration.migration_stall.wait()
-        real_apply_update(*args)
+        if new_version == instrumented_migration.stall_on_schema_version:
+            instrumented_migration.apply_update_stalled.set()
+            instrumented_migration.migration_stall.wait()
+        real_apply_update(
+            instance, hass, engine, session_maker, new_version, old_version
+        )
 
     with (
         patch(
@@ -164,6 +179,8 @@ def instrument_migration(
             non_live_migration_done=threading.Event(),
             non_live_migration_done_stall=threading.Event(),
             apply_update_mock=apply_update_mock,
+            stall_on_schema_version=1,
+            apply_update_stalled=threading.Event(),
         )
 
         instrumented_migration.live_migration_done_stall.set()
