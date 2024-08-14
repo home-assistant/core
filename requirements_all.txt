@@ -198,7 +198,7 @@ aioaseko==0.2.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.7.3
+aioautomower==2024.8.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.1.1
@@ -237,7 +237,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==25.0.0
+aioesphomeapi==25.1.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1297,7 +1297,7 @@ lw12==0.9.2
 lxml==5.1.0
 
 # homeassistant.components.matrix
-matrix-nio==0.24.0
+matrix-nio==0.25.0
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
@@ -1662,7 +1662,7 @@ py-schluter==0.1.7
 py-sucks==0.9.10
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.4.4
+py-synologydsm-api==2.4.5
 
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
@@ -1786,7 +1786,7 @@ pycsspeechtts==1.0.8
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.13.2
+pydaikin==2.13.4
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -1867,7 +1867,7 @@ pyfido==2.1.2
 pyfireservicerota==0.0.43
 
 # homeassistant.components.flic
-pyflic==2.0.3
+pyflic==2.0.4
 
 # homeassistant.components.futurenow
 pyfnip==0.2
@@ -2813,7 +2813,7 @@ twitchAPI==4.2.1
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==6.0.1
+uiprotect==6.0.2
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
