@@ -1030,7 +1030,7 @@ konnected==1.2.0
 krakenex==2.1.0
 
 # homeassistant.components.lacrosse_view
-lacrosse-view==1.0.1
+lacrosse-view==1.0.2
 
 # homeassistant.components.laundrify
 laundrify-aio==1.2.2
@@ -1595,7 +1595,7 @@ pylitejet==0.6.2
 pylitterbot==2023.5.0
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.20.0
+pylutron-caseta==0.21.1
 
 # homeassistant.components.lutron
 pylutron==0.2.15
