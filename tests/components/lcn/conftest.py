@@ -2,6 +2,7 @@
 
 from collections.abc import AsyncGenerator
 import json
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pypck
@@ -29,7 +30,7 @@ class MockModuleConnection(ModuleConnection):
     request_name = AsyncMock(return_value="TestModule")
     send_command = AsyncMock(return_value=True)
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Construct ModuleConnection instance."""
         super().__init__(*args, **kwargs)
         self.serials_request_handler.serial_known.set()

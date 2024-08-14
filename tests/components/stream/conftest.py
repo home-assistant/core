@@ -16,6 +16,7 @@ import asyncio
 from collections.abc import Generator
 import logging
 import threading
+from typing import Any
 from unittest.mock import Mock, patch
 
 from aiohttp import web
@@ -91,7 +92,7 @@ class HLSSync:
             self.check_requests_ready()
 
         class SyncResponse(web.Response):
-            def __init__(self, *args, **kwargs) -> None:
+            def __init__(self, *args: Any, **kwargs: Any) -> None:
                 super().__init__(*args, **kwargs)
                 on_resp()
 
