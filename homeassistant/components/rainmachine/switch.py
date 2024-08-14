@@ -195,8 +195,8 @@ async def async_setup_entry(
             },
             "async_start_zone",
         ),
-        ("stop_program", {}, "async_stop_program"),
-        ("stop_zone", {}, "async_stop_zone"),
+        ("stop_program", None, "async_stop_program"),
+        ("stop_zone", None, "async_stop_zone"),
     )
     for service_name, schema, method in services:
         platform.async_register_entity_service(service_name, schema, method)
