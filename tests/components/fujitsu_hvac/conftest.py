@@ -39,7 +39,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_ayla_api() -> Generator[AsyncMock]:
+def mock_ayla_api(mock_devices: list[AsyncMock]) -> Generator[AsyncMock]:
     """Override AylaApi creation."""
     mymock = create_autospec(AylaApi)
 
@@ -52,6 +52,7 @@ def mock_ayla_api() -> Generator[AsyncMock]:
             return_value=mymock,
         ),
     ):
+        mymock.async_get_devices.return_value = mock_devices
         yield mymock
 
 
