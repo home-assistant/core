@@ -30,11 +30,11 @@ from .coordinator import FytaCoordinator
 from .entity import FytaPlantEntity
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class FytaSensorEntityDescription(SensorEntityDescription):
     """Describes Fyta sensor entity."""
 
-    value_fn: Callable[[Plant], StateType | datetime] = lambda value: value.name
+    value_fn: Callable[[Plant], StateType | datetime]
 
 
 PLANT_STATUS_LIST: list[str] = ["deleted", "doing_great", "need_attention", "no_sensor"]

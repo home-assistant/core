@@ -32,7 +32,7 @@
         'moisture_status': 3,
         'name': 'Gummibaum',
         'online': True,
-        'ph': 7.0,
+        'ph': None,
         'plant_id': 0,
         'plant_origin_path': '',
         'plant_thumb_path': '',
