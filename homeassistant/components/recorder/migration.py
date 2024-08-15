@@ -15,7 +15,6 @@ from uuid import UUID
 import sqlalchemy
 from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text, update
 from sqlalchemy.engine import CursorResult, Engine
-from sqlalchemy.engine.interfaces import ReflectedForeignKeyConstraint
 from sqlalchemy.exc import (
     DatabaseError,
     IntegrityError,
@@ -644,7 +643,7 @@ def _update_states_table_with_foreign_key_options(
 
 def _drop_foreign_key_constraints(
     session_maker: Callable[[], Session], engine: Engine, table: str, column: str
-) -> list[tuple[str, str, ReflectedForeignKeyConstraint]]:
+) -> None:
     """Drop foreign key constraints for a table on specific columns.
 
     This is not supported for SQLite because it does not support
@@ -657,11 +656,6 @@ def _drop_foreign_key_constraints(
         )
 
     inspector = sqlalchemy.inspect(engine)
-    dropped_constraints = [
-        (table, column, foreign_key)
-        for foreign_key in inspector.get_foreign_keys(table)
-        if foreign_key["name"] and foreign_key["constrained_columns"] == [column]
-    ]
 
     ## Bind the ForeignKeyConstraints to the table
     tmp_table = Table(table, MetaData())
@@ -683,8 +677,6 @@ def _drop_foreign_key_constraints(
                     column,
                 )
                 raise
-
-    return dropped_constraints
 
 
 def _restore_foreign_key_constraints(
