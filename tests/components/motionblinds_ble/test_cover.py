@@ -31,6 +31,7 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("motionblinds_ble_connect")
 @pytest.mark.parametrize("blind_type", [MotionBlindType.VENETIAN])
 @pytest.mark.parametrize(
     ("service", "method", "kwargs"),
@@ -67,6 +68,7 @@ async def test_cover_service(
     getattr(mock_motion_device, method).assert_called_once()
 
 
+@pytest.mark.usefixtures("motionblinds_ble_connect")
 @pytest.mark.parametrize(
     ("running_type", "state"),
     [
@@ -94,6 +96,7 @@ async def test_cover_update_running(
     assert hass.states.get(f"cover.{name}").state == state
 
 
+@pytest.mark.usefixtures("motionblinds_ble_connect")
 @pytest.mark.parametrize(
     ("position", "tilt", "state"),
     [
