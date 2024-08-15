@@ -217,94 +217,6 @@ class AmberPriceDescriptorSensor(AmberSensor):
         return self.coordinator.data[self.entity_description.key][self.channel_type]  # type: ignore[no-any-return]
 
 
-class AmberAdvancedForecastSensor(AmberSensor):
-    """Sensor to show the advanced forecast."""
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the current advanced price in $/kWh."""
-        interval = self.coordinator.data["current"].get(self.channel_type)
-        per_kwh = interval.per_kwh
-        if interval.advanced_price is not None:
-            per_kwh = interval.advanced_price.predicted
-
-        if interval.channel_type == ChannelType.FEEDIN:
-            return format_cents_to_dollars(per_kwh) * -1
-        return format_cents_to_dollars(per_kwh)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return additional pieces of information about the advanced price."""
-
-        interval = self.coordinator.data["current"][self.channel_type]
-
-        data: dict[str, Any] = {}
-        if interval is None:
-            return data
-
-        data["duration"] = interval.duration
-        data["date"] = interval.var_date.isoformat()
-        data["nem_date"] = interval.nem_time.isoformat()
-        data["start_time"] = interval.start_time.isoformat()
-        data["end_time"] = interval.end_time.isoformat()
-        data["channel_type"] = interval.channel_type.value
-
-        if interval.advanced_price is not None:
-            if interval.channel_type == ChannelType.FEEDIN:
-                data["low"] = -1 * format_cents_to_dollars(interval.advanced_price.low)
-                data["predicted"] = -1 * format_cents_to_dollars(
-                    interval.advanced_price.predicted
-                )
-                data["high"] = -1 * format_cents_to_dollars(
-                    interval.advanced_price.high
-                )
-
-            else:
-                data["low"] = format_cents_to_dollars(interval.advanced_price.low)
-                data["predicted"] = format_cents_to_dollars(
-                    interval.advanced_price.predicted
-                )
-                data["high"] = format_cents_to_dollars(interval.advanced_price.high)
-
-        forecasts = self.coordinator.data["forecasts"].get(self.channel_type)
-        if forecasts:
-            data["forecasts"] = []
-
-            for forecast in forecasts:
-                datum = {}
-                datum["duration"] = forecast.duration
-                datum["date"] = forecast.var_date.isoformat()
-                datum["nem_date"] = forecast.nem_time.isoformat()
-                datum["start_time"] = forecast.start_time.isoformat()
-                datum["end_time"] = forecast.end_time.isoformat()
-
-                if forecast.advanced_price is not None:
-                    if interval.channel_type == ChannelType.FEEDIN:
-                        datum["low"] = -format_cents_to_dollars(
-                            forecast.advanced_price.low
-                        )
-                        datum["predicted"] = -format_cents_to_dollars(
-                            forecast.advanced_price.predicted
-                        )
-                        datum["high"] = -format_cents_to_dollars(
-                            forecast.advanced_price.high
-                        )
-                    else:
-                        datum["low"] = format_cents_to_dollars(
-                            forecast.advanced_price.low
-                        )
-                        datum["predicted"] = format_cents_to_dollars(
-                            forecast.advanced_price.predicted
-                        )
-                        datum["high"] = format_cents_to_dollars(
-                            forecast.advanced_price.high
-                        )
-
-                data["forecasts"].append(datum)
-
-        return data
-
-
 class AmberGridSensor(CoordinatorEntity[AmberUpdateCoordinator], SensorEntity):
     """Sensor to show single grid specific values."""
 
@@ -369,9 +281,6 @@ async def async_setup_entry(
             native_unit_of_measurement=UNIT,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key=channel_type,
-        )
-        entities.append(
-            AmberAdvancedForecastSensor(coordinator, description, channel_type)
         )
 
     for channel_type in forecasts:
