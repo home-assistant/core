@@ -6,7 +6,7 @@
           "preset_mode": {
             "state": {
               "comfort": "mdi:sofa",
-              "standby": "mdi:account-arrow-right",
+              "standby": "mdi:home-export-outline",
               "economy": "mdi:leaf",
               "building_protection": "mdi:sun-snowflake-variant"
             }
