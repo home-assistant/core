@@ -30,6 +30,7 @@ from .const import (
     PACKETS_PER_SEC_SENT,
     PACKETS_RECEIVED,
     PACKETS_SENT,
+    PORT_MAPPING_NUMBER_OF_ENTRIES_IPV4,
     ROUTER_IP,
     ROUTER_UPTIME,
     TIMESTAMP,
@@ -48,6 +49,7 @@ TYPE_STATE_ITEM_MAPPING = {
     ROUTER_IP: IgdStateItem.EXTERNAL_IP_ADDRESS,
     ROUTER_UPTIME: IgdStateItem.UPTIME,
     WAN_STATUS: IgdStateItem.CONNECTION_STATUS,
+    PORT_MAPPING_NUMBER_OF_ENTRIES_IPV4: IgdStateItem.PORT_MAPPING_NUMBER_OF_ENTRIES,
 }
 
 
@@ -254,4 +256,7 @@ class Device:
             KIBIBYTES_PER_SEC_SENT: igd_state.kibibytes_per_sec_sent,
             PACKETS_PER_SEC_RECEIVED: igd_state.packets_per_sec_received,
             PACKETS_PER_SEC_SENT: igd_state.packets_per_sec_sent,
+            PORT_MAPPING_NUMBER_OF_ENTRIES_IPV4: get_value(
+                igd_state.port_mapping_number_of_entries
+            ),
         }

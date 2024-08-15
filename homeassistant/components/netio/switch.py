@@ -38,7 +38,7 @@ CONF_OUTLETS = "outlets"
 
 DEFAULT_PORT = 1234
 DEFAULT_USERNAME = "admin"
-Device = namedtuple("Device", ["netio", "entities"])
+Device = namedtuple("Device", ["netio", "entities"])  # noqa: PYI024
 DEVICES: dict[str, Device] = {}
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)

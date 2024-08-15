@@ -74,7 +74,7 @@ def upcoming_event_url(entity: str = TEST_ENTITY) -> str:
 class Client:
     """Test client with helper methods for calendar websocket."""
 
-    def __init__(self, client):
+    def __init__(self, client) -> None:
         """Initialize Client."""
         self.client = client
         self.id = 0
@@ -839,7 +839,7 @@ async def test_websocket_create(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
     test_api_calendar: dict[str, Any],
-    mock_insert_event: Callable[[str, dict[str, Any]], None],
+    mock_insert_event: Callable[..., None],
     mock_events_list: ApiResult,
     aioclient_mock: AiohttpClientMocker,
     ws_client: ClientFixture,
@@ -881,7 +881,7 @@ async def test_websocket_create_all_day(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
     test_api_calendar: dict[str, Any],
-    mock_insert_event: Callable[[str, dict[str, Any]], None],
+    mock_insert_event: Callable[..., None],
     mock_events_list: ApiResult,
     aioclient_mock: AiohttpClientMocker,
     ws_client: ClientFixture,
@@ -1078,7 +1078,7 @@ async def test_readonly_websocket_create(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
     test_api_calendar: dict[str, Any],
-    mock_insert_event: Callable[[str, dict[str, Any]], None],
+    mock_insert_event: Callable[..., None],
     mock_events_list: ApiResult,
     aioclient_mock: AiohttpClientMocker,
     ws_client: ClientFixture,
@@ -1129,7 +1129,7 @@ async def test_readonly_search_calendar(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
     mock_calendars_yaml,
-    mock_insert_event: Callable[[str, dict[str, Any]], None],
+    mock_insert_event: Callable[..., None],
     mock_events_list: ApiResult,
     aioclient_mock: AiohttpClientMocker,
     ws_client: ClientFixture,

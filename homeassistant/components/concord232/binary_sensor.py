@@ -1,11 +1,12 @@
 """Support for exposing Concord232 elements as sensors."""
 
+# mypy: ignore-errors
 from __future__ import annotations
 
 import datetime
 import logging
 
-from concord232 import client as concord232_client
+# from concord232 import client as concord232_client
 import requests
 import voluptuous as vol
 

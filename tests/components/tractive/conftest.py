@@ -1,12 +1,12 @@
 """Common fixtures for the Tractive tests."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiotractive.trackable_object import TrackableObject
 from aiotractive.tracker import Tracker
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.tractive.const import DOMAIN, SERVER_UNAVAILABLE
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD

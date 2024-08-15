@@ -154,10 +154,10 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_init_component")
 async def test_options_switching(
     hass: HomeAssistant,
-    mock_config_entry,
-    mock_init_component,
+    mock_config_entry: MockConfigEntry,
     mock_models,
     current_options,
     new_options,

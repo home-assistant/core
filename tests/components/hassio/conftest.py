@@ -1,5 +1,6 @@
 """Fixtures for Hass.io."""
 
+from collections.abc import Generator
 import os
 import re
 from unittest.mock import Mock, patch
@@ -7,6 +8,7 @@ from unittest.mock import Mock, patch
 from aiohttp.test_utils import TestClient
 import pytest
 
+from homeassistant.auth.models import RefreshToken
 from homeassistant.components.hassio.handler import HassIO, HassioAPIError
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -19,7 +21,7 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
-def disable_security_filter():
+def disable_security_filter() -> Generator[None]:
     """Disable the security filter to ensure the integration is secure."""
     with patch(
         "homeassistant.components.http.security_filter.FILTERS",
@@ -29,7 +31,7 @@ def disable_security_filter():
 
 
 @pytest.fixture
-def hassio_env():
+def hassio_env() -> Generator[None]:
     """Fixture to inject hassio env."""
     with (
         patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
@@ -48,11 +50,11 @@ def hassio_env():
 
 @pytest.fixture
 def hassio_stubs(
-    hassio_env,
+    hassio_env: None,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-):
+) -> RefreshToken:
     """Create mock hassio http client."""
     with (
         patch(
@@ -86,7 +88,7 @@ def hassio_stubs(
 
 @pytest.fixture
 def hassio_client(
-    hassio_stubs, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hassio_stubs: RefreshToken, hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> TestClient:
     """Return a Hass.io HTTP client."""
     return hass.loop.run_until_complete(hass_client())
@@ -94,7 +96,9 @@ def hassio_client(
 
 @pytest.fixture
 def hassio_noauth_client(
-    hassio_stubs, hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+    hassio_stubs: RefreshToken,
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
 ) -> TestClient:
     """Return a Hass.io HTTP client without auth."""
     return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
@@ -102,7 +106,9 @@ def hassio_noauth_client(
 
 @pytest.fixture
 async def hassio_client_supervisor(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, hassio_stubs
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    hassio_stubs: RefreshToken,
 ) -> TestClient:
     """Return an authenticated HTTP client."""
     access_token = hass.auth.async_create_access_token(hassio_stubs)
@@ -113,7 +119,9 @@ async def hassio_client_supervisor(
 
 
 @pytest.fixture
-async def hassio_handler(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
+def hassio_handler(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> Generator[HassIO]:
     """Create mock hassio handler."""
     with patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}):
         yield HassIO(hass.loop, async_get_clientsession(hass), "127.0.0.1")

@@ -1,5 +1,6 @@
 """Test the aiohttp client helper."""
 
+import socket
 from unittest.mock import Mock, patch
 
 import aiohttp
@@ -16,9 +17,10 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_CLOSE,
     HTTP_BASIC_AUTHENTICATION,
 )
-from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE, HomeAssistant
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.aiohttp_client as client
 from homeassistant.util.color import RGBColor
 
@@ -82,7 +84,14 @@ async def test_get_clientsession_without_ssl(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("verify_ssl", "expected_family"),
-    [(True, 0), (False, 0), (True, 4), (False, 4), (True, 6), (False, 6)],
+    [
+        (True, socket.AF_UNSPEC),
+        (False, socket.AF_UNSPEC),
+        (True, socket.AF_INET),
+        (False, socket.AF_INET),
+        (True, socket.AF_INET6),
+        (False, socket.AF_INET6),
+    ],
 )
 async def test_get_clientsession(
     hass: HomeAssistant, verify_ssl: bool, expected_family: int

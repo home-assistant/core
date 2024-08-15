@@ -6,7 +6,7 @@ from collections.abc import Callable, Coroutine
 from typing import Any
 import uuid
 
-from hass_nabucasa.voice import MAP_VOICE
+from hass_nabucasa.voice import MAP_VOICE, Gender
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
@@ -91,8 +91,8 @@ class CloudPreferencesStore(Store):
                 # The new second item is the voice name.
                 default_tts_voice = old_data.get(PREF_TTS_DEFAULT_VOICE)
                 if default_tts_voice and (voice_item_two := default_tts_voice[1]) in (
-                    "female",
-                    "male",
+                    Gender.FEMALE,
+                    Gender.MALE,
                 ):
                     language: str = default_tts_voice[0]
                     if voice := MAP_VOICE.get((language, voice_item_two)):

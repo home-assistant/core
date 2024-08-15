@@ -148,6 +148,7 @@ def get_suggested(schema, key):
             if k.description is None or "suggested_value" not in k.description:
                 return None
             return k.description["suggested_value"]
+    return None
 
 
 @pytest.mark.parametrize(

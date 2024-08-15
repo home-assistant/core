@@ -16,7 +16,6 @@ from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
 
 from . import RoborockConfigEntry
 from .coordinator import RoborockDataUpdateCoordinator
@@ -141,7 +140,7 @@ async def async_setup_entry(
         else:
             valid_entities.append(
                 RoborockTimeEntity(
-                    f"{description.key}_{slugify(coordinator.duid)}",
+                    f"{description.key}_{coordinator.duid_slug}",
                     coordinator,
                     description,
                 )

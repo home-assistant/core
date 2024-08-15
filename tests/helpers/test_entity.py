@@ -22,15 +22,16 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityCategory,
 )
 from homeassistant.core import (
     Context,
     HassJobType,
     HomeAssistant,
-    HomeAssistantError,
     ReleaseChannel,
     callback,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
@@ -922,13 +923,13 @@ async def test_entity_category_property(hass: HomeAssistant) -> None:
         key="abc", entity_category="ignore_me"
     )
     mock_entity1.entity_id = "hello.world"
-    mock_entity1._attr_entity_category = entity.EntityCategory.CONFIG
+    mock_entity1._attr_entity_category = EntityCategory.CONFIG
     assert mock_entity1.entity_category == "config"
 
     mock_entity2 = entity.Entity()
     mock_entity2.hass = hass
     mock_entity2.entity_description = entity.EntityDescription(
-        key="abc", entity_category=entity.EntityCategory.CONFIG
+        key="abc", entity_category=EntityCategory.CONFIG
     )
     mock_entity2.entity_id = "hello.world"
     assert mock_entity2.entity_category == "config"
@@ -937,8 +938,8 @@ async def test_entity_category_property(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("value", "expected"),
     [
-        ("config", entity.EntityCategory.CONFIG),
-        ("diagnostic", entity.EntityCategory.DIAGNOSTIC),
+        ("config", EntityCategory.CONFIG),
+        ("diagnostic", EntityCategory.DIAGNOSTIC),
     ],
 )
 def test_entity_category_schema(value, expected) -> None:
@@ -946,7 +947,7 @@ def test_entity_category_schema(value, expected) -> None:
     schema = vol.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
     result = schema(value)
     assert result == expected
-    assert isinstance(result, entity.EntityCategory)
+    assert isinstance(result, EntityCategory)
 
 
 @pytest.mark.parametrize("value", [None, "non_existing"])

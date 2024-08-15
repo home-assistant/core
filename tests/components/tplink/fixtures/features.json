@@ -73,7 +73,7 @@
     "value": 121.1,
     "type": "Sensor",
     "category": "Primary",
-    "unit": "v",
+    "unit": "V",
     "precision_hint": 1
   },
   "device_id": {

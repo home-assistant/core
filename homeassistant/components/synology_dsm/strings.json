@@ -173,7 +173,7 @@
   "services": {
     "reboot": {
       "name": "Reboot",
-      "description": "Reboots the NAS. This service is deprecated and will be removed in future release. Please use the corresponding button entity.",
+      "description": "Reboots the NAS. This action is deprecated and will be removed in future release. Please use the corresponding button entity.",
       "fields": {
         "serial": {
           "name": "Serial",
@@ -183,7 +183,7 @@
     },
     "shutdown": {
       "name": "Shutdown",
-      "description": "Shutdowns the NAS. This service is deprecated and will be removed in future release. Please use the corresponding button entity.",
+      "description": "Shutdowns the NAS. This action is deprecated and will be removed in future release. Please use the corresponding button entity.",
       "fields": {
         "serial": {
           "name": "[%key:component::synology_dsm::services::reboot::fields::serial::name%]",

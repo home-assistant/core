@@ -22,7 +22,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -30,7 +29,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
-from . import TadoConnector
+from . import TadoConfigEntry, TadoConnector
 from .const import (
     CONST_EXCLUSIVE_OVERLAY_GROUP,
     CONST_FAN_AUTO,
@@ -42,7 +41,6 @@ from .const import (
     CONST_MODE_SMART_SCHEDULE,
     CONST_OVERLAY_MANUAL,
     CONST_OVERLAY_TADO_OPTIONS,
-    DATA,
     DOMAIN,
     HA_TERMINATION_DURATION,
     HA_TERMINATION_TYPE,
@@ -100,11 +98,11 @@ CLIMATE_TEMP_OFFSET_SCHEMA: VolDictType = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: TadoConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Tado climate platform."""
 
-    tado = hass.data[DOMAIN][entry.entry_id][DATA]
+    tado: TadoConnector = entry.runtime_data.tadoconnector
     entities = await hass.async_add_executor_job(_generate_entities, tado)
 
     platform = entity_platform.async_get_current_platform()

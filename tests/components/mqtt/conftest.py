@@ -1,12 +1,12 @@
 """Test fixtures for mqtt component."""
 
 import asyncio
+from collections.abc import AsyncGenerator, Generator
 from random import getrandbits
 from typing import Any
 from unittest.mock import patch
 
 import pytest
-from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt.models import MessageCallbackType, ReceiveMessage

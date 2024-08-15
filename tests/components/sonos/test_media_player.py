@@ -2,6 +2,7 @@
 
 import logging
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 
@@ -12,9 +13,23 @@ from homeassistant.components.media_player import (
     SERVICE_SELECT_SOURCE,
     MediaPlayerEnqueue,
 )
-from homeassistant.components.sonos.const import SOURCE_LINEIN, SOURCE_TV
-from homeassistant.components.sonos.media_player import LONG_SERVICE_TIMEOUT
-from homeassistant.const import STATE_IDLE
+from homeassistant.components.sonos.const import (
+    DOMAIN as SONOS_DOMAIN,
+    SOURCE_LINEIN,
+    SOURCE_TV,
+)
+from homeassistant.components.sonos.media_player import (
+    LONG_SERVICE_TIMEOUT,
+    SERVICE_RESTORE,
+    SERVICE_SNAPSHOT,
+    VOLUME_INCREMENT,
+)
+from homeassistant.const import (
+    SERVICE_VOLUME_DOWN,
+    SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_UP,
+    STATE_IDLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import (
@@ -22,8 +37,9 @@ from homeassistant.helpers.device_registry import (
     CONNECTION_UPNP,
     DeviceRegistry,
 )
+from homeassistant.setup import async_setup_component
 
-from .conftest import MockMusicServiceItem, SoCoMockFactory
+from .conftest import MockMusicServiceItem, MockSoCo, SoCoMockFactory
 
 
 async def test_device_registry(
@@ -707,3 +723,92 @@ async def test_play_media_favorite_item_id(
             blocking=True,
         )
     assert "UNKNOWN_ID" in str(sve.value)
+
+
+async def _setup_hass(hass: HomeAssistant):
+    await async_setup_component(
+        hass,
+        SONOS_DOMAIN,
+        {
+            "sonos": {
+                "media_player": {
+                    "interface_addr": "127.0.0.1",
+                    "hosts": ["10.10.10.1", "10.10.10.2"],
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+
+async def test_service_snapshot_restore(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+) -> None:
+    """Test the snapshot and restore services."""
+    soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
+    soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+    await _setup_hass(hass)
+    with patch(
+        "homeassistant.components.sonos.speaker.Snapshot.snapshot"
+    ) as mock_snapshot:
+        await hass.services.async_call(
+            SONOS_DOMAIN,
+            SERVICE_SNAPSHOT,
+            {
+                "entity_id": ["media_player.living_room", "media_player.bedroom"],
+            },
+            blocking=True,
+        )
+    assert mock_snapshot.call_count == 2
+
+    with patch(
+        "homeassistant.components.sonos.speaker.Snapshot.restore"
+    ) as mock_restore:
+        await hass.services.async_call(
+            SONOS_DOMAIN,
+            SERVICE_RESTORE,
+            {
+                "entity_id": ["media_player.living_room", "media_player.bedroom"],
+            },
+            blocking=True,
+        )
+    assert mock_restore.call_count == 2
+
+
+async def test_volume(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+) -> None:
+    """Test the media player volume services."""
+    initial_volume = soco.volume
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_VOLUME_UP,
+        {
+            "entity_id": "media_player.zone_a",
+        },
+        blocking=True,
+    )
+    assert soco.volume == initial_volume + VOLUME_INCREMENT
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_VOLUME_DOWN,
+        {
+            "entity_id": "media_player.zone_a",
+        },
+        blocking=True,
+    )
+    assert soco.volume == initial_volume
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_VOLUME_SET,
+        {"entity_id": "media_player.zone_a", "volume_level": 0.30},
+        blocking=True,
+    )
+    # SoCo uses 0..100 for its range.
+    assert soco.volume == 30

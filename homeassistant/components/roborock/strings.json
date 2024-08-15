@@ -152,6 +152,9 @@
       "clean_percent": {
         "name": "Cleaning progress"
       },
+      "countdown": {
+        "name": "Countdown"
+      },
       "dock_error": {
         "name": "Dock error",
         "state": {
@@ -214,7 +217,8 @@
           "unknown": "Unknown",
           "locked": "Locked",
           "air_drying_stopping": "Air drying stopping",
-          "egg_attack": "Cupid mode"
+          "egg_attack": "Cupid mode",
+          "mapping": "Mapping"
         }
       },
       "total_cleaning_time": {
@@ -272,6 +276,47 @@
           "mopping_roller_2": "[%key:component::roborock::entity::sensor::vacuum_error::state::mopping_roller_1%]",
           "temperature_protection": "Unit temperature protection"
         }
+      },
+      "washing_left": {
+        "name": "Washing left"
+      },
+      "zeo_error": {
+        "name": "Error",
+        "state": {
+          "none": "[%key:component::roborock::entity::sensor::vacuum_error::state::none%]",
+          "refill_error": "Refill error",
+          "drain_error": "Drain error",
+          "door_lock_error": "Door lock error",
+          "water_level_error": "Water level error",
+          "inverter_error": "Inverter error",
+          "heating_error": "Heating error",
+          "temperature_error": "Temperature error",
+          "communication_error": "Communication error",
+          "drying_error": "Drying error",
+          "drying_error_e_12": "Drying error E12",
+          "drying_error_e_13": "Drying error E13",
+          "drying_error_e_14": "Drying error E14",
+          "drying_error_e_15": "Drying error E15",
+          "drying_error_e_16": "Drying error E16",
+          "drying_error_water_flow": "Check water flow",
+          "drying_error_restart": "Restart the washer",
+          "spin_error": "Re-arrange clothes"
+        }
+      },
+      "zeo_state": {
+        "name": "State",
+        "state": {
+          "standby": "Standby",
+          "weighing": "Weighing",
+          "soaking": "Soaking",
+          "washing": "Washing",
+          "rinsing": "Rinsing",
+          "spinning": "Spinning",
+          "drying": "Drying",
+          "cooling": "Cooling",
+          "under_delay_start": "Delayed start",
+          "done": "Done"
+        }
       }
     },
     "select": {
@@ -282,7 +327,8 @@
           "deep": "Deep",
           "deep_plus": "Deep+",
           "custom": "Custom",
-          "fast": "Fast"
+          "fast": "Fast",
+          "smart_mode": "SmartPlan"
         }
       },
       "mop_intensity": {
@@ -293,11 +339,16 @@
           "mild": "Mild",
           "medium": "Medium",
           "moderate": "Moderate",
+          "max": "Max",
           "high": "High",
           "intense": "Intense",
           "custom": "[%key:component::roborock::entity::select::mop_mode::state::custom%]",
-          "custom_water_flow": "Custom water flow"
+          "custom_water_flow": "Custom water flow",
+          "smart_mode": "[%key:component::roborock::entity::select::mop_mode::state::smart_mode%]"
         }
+      },
+      "selected_map": {
+        "name": "Selected map"
       }
     },
     "switch": {
@@ -338,13 +389,14 @@
               "custom": "[%key:component::roborock::entity::select::mop_mode::state::custom%]",
               "gentle": "Gentle",
               "off": "[%key:common::state::off%]",
-              "max": "Max",
+              "max": "[%key:component::roborock::entity::select::mop_intensity::state::max%]",
               "max_plus": "Max plus",
               "medium": "Medium",
               "quiet": "Quiet",
               "silent": "Silent",
               "standard": "[%key:component::roborock::entity::select::mop_mode::state::standard%]",
-              "turbo": "Turbo"
+              "turbo": "Turbo",
+              "smart_mode": "[%key:component::roborock::entity::select::mop_mode::state::smart_mode%]"
             }
           }
         }

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Callable, Coroutine, Iterable
+from collections.abc import AsyncGenerator, Callable, Coroutine, Iterable
 import contextlib
 from dataclasses import dataclass
 from functools import lru_cache, partial
@@ -18,7 +18,6 @@ from typing import TYPE_CHECKING, Any
 import uuid
 
 import certifi
-from typing_extensions import AsyncGenerator
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -428,12 +427,12 @@ class MQTT:
         await self.async_init_client()
 
     @property
-    def subscriptions(self) -> list[Subscription]:
+    def subscriptions(self) -> set[Subscription]:
         """Return the tracked subscriptions."""
-        return [
+        return {
             *chain.from_iterable(self._simple_subscriptions.values()),
             *self._wildcard_subscriptions,
-        ]
+        }
 
     def cleanup(self) -> None:
         """Clean up listeners."""
@@ -736,7 +735,7 @@ class MQTT:
 
     @callback
     def async_restore_tracked_subscriptions(
-        self, subscriptions: list[Subscription]
+        self, subscriptions: set[Subscription]
     ) -> None:
         """Restore tracked subscriptions after reload."""
         for subscription in subscriptions:

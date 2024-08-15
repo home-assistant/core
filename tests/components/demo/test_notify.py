@@ -1,9 +1,9 @@
 """The tests for the notify demo platform."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import notify
 from homeassistant.components.demo import DOMAIN

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
@@ -145,8 +145,9 @@ class RingCam(RingEntity[RingDoorBell], Camera):
             self._attr_motion_detection_enabled = self._device.motion_detection
             self.async_write_ha_state()
 
-        if self._last_event is None:
-            return
+        if TYPE_CHECKING:
+            # _last_event is set before calling update so will never be None
+            assert self._last_event
 
         if self._last_event["recording"]["status"] != "ready":
             return
@@ -165,8 +166,9 @@ class RingCam(RingEntity[RingDoorBell], Camera):
 
     @exception_wrap
     def _get_video(self) -> str | None:
-        if self._last_event is None:
-            return None
+        if TYPE_CHECKING:
+            # _last_event is set before calling update so will never be None
+            assert self._last_event
         event_id = self._last_event.get("id")
         assert event_id and isinstance(event_id, int)
         return self._device.recording_url(event_id)

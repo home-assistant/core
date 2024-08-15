@@ -230,14 +230,15 @@ def test_temperature_to_states() -> None:
 def test_density_to_air_quality() -> None:
     """Test map PM2.5 density to HomeKit AirQuality level."""
     assert density_to_air_quality(0) == 1
-    assert density_to_air_quality(12) == 1
-    assert density_to_air_quality(12.1) == 2
+    assert density_to_air_quality(9) == 1
+    assert density_to_air_quality(9.1) == 2
+    assert density_to_air_quality(12) == 2
     assert density_to_air_quality(35.4) == 2
     assert density_to_air_quality(35.5) == 3
     assert density_to_air_quality(55.4) == 3
     assert density_to_air_quality(55.5) == 4
-    assert density_to_air_quality(150.4) == 4
-    assert density_to_air_quality(150.5) == 5
+    assert density_to_air_quality(125.4) == 4
+    assert density_to_air_quality(125.5) == 5
     assert density_to_air_quality(200) == 5
 
 
@@ -256,7 +257,12 @@ async def test_async_show_setup_msg(hass: HomeAssistant, hk_driver) -> None:
             hass, entry.entry_id, "bridge_name", pincode, "X-HM://0"
         )
         await hass.async_block_till_done()
-    entry_data: HomeKitEntryData = hass.data[DOMAIN][entry.entry_id]
+
+    # New tests should not access runtime data.
+    # Do not use this pattern for new tests.
+    entry_data: HomeKitEntryData = hass.config_entries.async_get_entry(
+        entry.entry_id
+    ).runtime_data
     assert entry_data.pairing_qr_secret
     assert entry_data.pairing_qr
 

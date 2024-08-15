@@ -13,6 +13,7 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
     MediaType,
     async_process_play_media_url,
 )
@@ -72,6 +73,7 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
     )
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_device_class = MediaPlayerDeviceClass.TV
 
     def __init__(self, remote, name, device_info):
         """Initialize the entity."""
@@ -88,12 +90,7 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
             self._attr_name = name
 
     @property
-    def device_class(self):
-        """Return the device class of the device."""
-        return MediaPlayerDeviceClass.TV
-
-    @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         return self._remote.state
 
@@ -103,12 +100,12 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
         return self._remote.available
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         return self._remote.volume
 
     @property
-    def is_volume_muted(self):
+    def is_volume_muted(self) -> bool | None:
         """Boolean if volume is currently muted."""
         return self._remote.muted
 

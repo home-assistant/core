@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from itertools import chain
 from typing import Any
 
-from tesla_fleet_api.const import Scope, Trunk, WindowCommand
+from tesla_fleet_api.const import Scope, SunRoofCommand, Trunk, WindowCommand
 
 from homeassistant.components.cover import (
     CoverDeviceClass,
@@ -34,29 +33,20 @@ async def async_setup_entry(
     """Set up the Teslemetry cover platform from a config entry."""
 
     async_add_entities(
-        chain(
-            (
-                TeslemetryWindowEntity(vehicle, entry.runtime_data.scopes)
-                for vehicle in entry.runtime_data.vehicles
-            ),
-            (
-                TeslemetryChargePortEntity(vehicle, entry.runtime_data.scopes)
-                for vehicle in entry.runtime_data.vehicles
-            ),
-            (
-                TeslemetryFrontTrunkEntity(vehicle, entry.runtime_data.scopes)
-                for vehicle in entry.runtime_data.vehicles
-            ),
-            (
-                TeslemetryRearTrunkEntity(vehicle, entry.runtime_data.scopes)
-                for vehicle in entry.runtime_data.vehicles
-            ),
+        klass(vehicle, entry.runtime_data.scopes)
+        for (klass) in (
+            TeslemetryWindowEntity,
+            TeslemetryChargePortEntity,
+            TeslemetryFrontTrunkEntity,
+            TeslemetryRearTrunkEntity,
+            TeslemetrySunroofEntity,
         )
+        for vehicle in entry.runtime_data.vehicles
     )
 
 
 class TeslemetryWindowEntity(TeslemetryVehicleEntity, CoverEntity):
-    """Cover entity for current charge."""
+    """Cover entity for the windows."""
 
     _attr_device_class = CoverDeviceClass.WINDOW
 
@@ -148,7 +138,7 @@ class TeslemetryChargePortEntity(TeslemetryVehicleEntity, CoverEntity):
 
 
 class TeslemetryFrontTrunkEntity(TeslemetryVehicleEntity, CoverEntity):
-    """Cover entity for the charge port."""
+    """Cover entity for the front trunk."""
 
     _attr_device_class = CoverDeviceClass.DOOR
 
@@ -175,7 +165,7 @@ class TeslemetryFrontTrunkEntity(TeslemetryVehicleEntity, CoverEntity):
 
 
 class TeslemetryRearTrunkEntity(TeslemetryVehicleEntity, CoverEntity):
-    """Cover entity for the charge port."""
+    """Cover entity for the rear trunk."""
 
     _attr_device_class = CoverDeviceClass.DOOR
 
@@ -217,3 +207,57 @@ class TeslemetryRearTrunkEntity(TeslemetryVehicleEntity, CoverEntity):
             await handle_vehicle_command(self.api.actuate_trunk(Trunk.REAR))
             self._attr_is_closed = True
             self.async_write_ha_state()
+
+
+class TeslemetrySunroofEntity(TeslemetryVehicleEntity, CoverEntity):
+    """Cover entity for the sunroof."""
+
+    _attr_device_class = CoverDeviceClass.WINDOW
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+    )
+    _attr_entity_registry_enabled_default = False
+
+    def __init__(self, vehicle: TeslemetryVehicleData, scopes: list[Scope]) -> None:
+        """Initialize the sensor."""
+        super().__init__(vehicle, "vehicle_state_sun_roof_state")
+
+        self.scoped = Scope.VEHICLE_CMDS in scopes
+        if not self.scoped:
+            self._attr_supported_features = CoverEntityFeature(0)
+
+    def _async_update_attrs(self) -> None:
+        """Update the entity attributes."""
+        value = self._value
+        if value in (None, "unknown"):
+            self._attr_is_closed = None
+        else:
+            self._attr_is_closed = value == "closed"
+
+        self._attr_current_cover_position = self.get(
+            "vehicle_state_sun_roof_percent_open"
+        )
+
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open sunroof."""
+        self.raise_for_scope()
+        await self.wake_up_if_asleep()
+        await handle_vehicle_command(self.api.sun_roof_control(SunRoofCommand.VENT))
+        self._attr_is_closed = False
+        self.async_write_ha_state()
+
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close sunroof."""
+        self.raise_for_scope()
+        await self.wake_up_if_asleep()
+        await handle_vehicle_command(self.api.sun_roof_control(SunRoofCommand.CLOSE))
+        self._attr_is_closed = True
+        self.async_write_ha_state()
+
+    async def async_stop_cover(self, **kwargs: Any) -> None:
+        """Close sunroof."""
+        self.raise_for_scope()
+        await self.wake_up_if_asleep()
+        await handle_vehicle_command(self.api.sun_roof_control(SunRoofCommand.STOP))
+        self._attr_is_closed = False
+        self.async_write_ha_state()

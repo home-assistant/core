@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.opengarage.const import CONF_DEVICE_KEY, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_VERIFY_SSL

@@ -1,6 +1,6 @@
 """Test the Everything but the Kitchen Sink config flow."""
 
-from collections.abc import AsyncGenerator
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-async def no_platforms() -> AsyncGenerator[None, None]:
+def no_platforms() -> Generator[None]:
     """Don't enable any platforms."""
     with patch(
         "homeassistant.components.kitchen_sink.COMPONENTS_WITH_DEMO_PLATFORM",

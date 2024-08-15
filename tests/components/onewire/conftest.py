@@ -1,10 +1,10 @@
 """Provide common 1-Wire fixtures."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyownet.protocol import ConnError
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.onewire.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntry

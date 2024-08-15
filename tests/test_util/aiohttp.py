@@ -1,6 +1,7 @@
 """Aiohttp test utils."""
 
 import asyncio
+from collections.abc import Iterator
 from contextlib import contextmanager
 from http import HTTPStatus
 import re
@@ -36,7 +37,7 @@ def mock_stream(data):
 class AiohttpClientMocker:
     """Mock Aiohttp client requests."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the request mocker."""
         self._mocks = []
         self._cookies = {}
@@ -173,7 +174,7 @@ class AiohttpClientMockResponse:
         headers=None,
         side_effect=None,
         closing=None,
-    ):
+    ) -> None:
         """Initialize a fake response."""
         if json is not None:
             text = json_dumps(json)
@@ -296,7 +297,7 @@ class AiohttpClientMockResponse:
 
 
 @contextmanager
-def mock_aiohttp_client():
+def mock_aiohttp_client() -> Iterator[AiohttpClientMocker]:
     """Context manager to mock aiohttp client."""
     mocker = AiohttpClientMocker()
 
@@ -326,7 +327,7 @@ class MockLongPollSideEffect:
     If queue is empty, will await until done.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the queue."""
         self.semaphore = asyncio.Semaphore(0)
         self.response_list = []

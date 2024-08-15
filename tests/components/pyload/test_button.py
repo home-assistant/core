@@ -1,6 +1,6 @@
 """The tests for the button component."""
 
-from collections.abc import AsyncGenerator
+from collections.abc import Generator
 from unittest.mock import AsyncMock, call, patch
 
 from pyloadapi import CannotConnect, InvalidAuth
@@ -26,7 +26,7 @@ API_CALL = {
 
 
 @pytest.fixture(autouse=True)
-async def button_only() -> AsyncGenerator[None, None]:
+def button_only() -> Generator[None]:
     """Enable only the button platform."""
     with patch(
         "homeassistant.components.pyload.PLATFORMS",

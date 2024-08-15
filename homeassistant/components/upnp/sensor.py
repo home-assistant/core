@@ -33,6 +33,7 @@ from .const import (
     PACKETS_PER_SEC_SENT,
     PACKETS_RECEIVED,
     PACKETS_SENT,
+    PORT_MAPPING_NUMBER_OF_ENTRIES_IPV4,
     ROUTER_IP,
     ROUTER_UPTIME,
     WAN_STATUS,
@@ -96,6 +97,12 @@ SENSOR_DESCRIPTIONS: tuple[UpnpSensorEntityDescription, ...] = (
     UpnpSensorEntityDescription(
         key=WAN_STATUS,
         translation_key="wan_status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    UpnpSensorEntityDescription(
+        key=PORT_MAPPING_NUMBER_OF_ENTRIES_IPV4,
+        translation_key="port_mapping_number_of_entries_ipv4",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),

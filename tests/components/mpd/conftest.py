@@ -1,7 +1,7 @@
 """Fixtures for Music Player Daemon integration tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -22,7 +22,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.mpd.async_setup_entry", return_value=True
@@ -31,7 +31,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_mpd_client() -> Generator[AsyncMock, None, None]:
+def mock_mpd_client() -> Generator[MagicMock]:
     """Return a mock for Music Player Daemon client."""
 
     with patch(

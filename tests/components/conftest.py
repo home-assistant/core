@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
+from importlib.util import find_spec
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -21,9 +21,9 @@ if TYPE_CHECKING:
     from .switch.common import MockSwitch
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=find_spec("zeroconf") is not None)
 def patch_zeroconf_multiple_catcher() -> Generator[None]:
-    """Patch zeroconf wrapper that detects if multiple instances are used."""
+    """If installed, patch zeroconf wrapper that detects if multiple instances are used."""
     with patch(
         "homeassistant.components.zeroconf.install_multiple_zeroconf_catcher",
         side_effect=lambda zc: None,
@@ -124,9 +124,9 @@ def mock_conversation_agent_fixture(hass: HomeAssistant) -> MockAgent:
     return mock_conversation_agent_fixture_helper(hass)
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session", autouse=find_spec("ffmpeg") is not None)
 def prevent_ffmpeg_subprocess() -> Generator[None]:
-    """Prevent ffmpeg from creating a subprocess."""
+    """If installed, prevent ffmpeg from creating a subprocess."""
     with patch(
         "homeassistant.components.ffmpeg.FFVersion.get_version", return_value="6.0"
     ):

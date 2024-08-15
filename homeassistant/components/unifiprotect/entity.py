@@ -9,14 +9,7 @@ import logging
 from operator import attrgetter
 from typing import TYPE_CHECKING
 
-from uiprotect.data import (
-    NVR,
-    Event,
-    ModelType,
-    ProtectAdoptableDeviceModel,
-    ProtectModelWithId,
-    StateType,
-)
+from uiprotect.data import NVR, Event, ModelType, ProtectAdoptableDeviceModel, StateType
 
 from homeassistant.core import callback
 import homeassistant.helpers.device_registry as dr
@@ -30,7 +23,7 @@ from .const import (
     DEFAULT_BRAND,
     DOMAIN,
 )
-from .data import ProtectData
+from .data import ProtectData, ProtectDeviceType
 from .models import PermRequired, ProtectEntityDescription, ProtectEventMixin
 
 _LOGGER = logging.getLogger(__name__)
@@ -160,7 +153,7 @@ def async_all_device_entities(
 class BaseProtectEntity(Entity):
     """Base class for UniFi protect entities."""
 
-    device: ProtectAdoptableDeviceModel | NVR
+    device: ProtectDeviceType
 
     _attr_should_poll = False
     _attr_attribution = DEFAULT_ATTRIBUTION
@@ -171,7 +164,7 @@ class BaseProtectEntity(Entity):
     def __init__(
         self,
         data: ProtectData,
-        device: ProtectAdoptableDeviceModel | NVR,
+        device: ProtectDeviceType,
         description: EntityDescription | None = None,
     ) -> None:
         """Initialize the entity."""
@@ -189,7 +182,6 @@ class BaseProtectEntity(Entity):
                 self._async_get_ufp_enabled = description.get_ufp_enabled
 
         self._async_set_device_info()
-        self._async_update_device_from_protect(device)
         self._state_getters = tuple(
             partial(attrgetter(attr), self) for attr in self._state_attrs
         )
@@ -203,37 +195,32 @@ class BaseProtectEntity(Entity):
 
     @callback
     def _async_set_device_info(self) -> None:
-        self._attr_device_info = DeviceInfo(
-            name=self.device.display_name,
-            manufacturer=DEFAULT_BRAND,
-            model=self.device.type,
-            via_device=(DOMAIN, self.data.api.bootstrap.nvr.mac),
-            sw_version=self.device.firmware_version,
-            connections={(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
-            configuration_url=self.device.protect_url,
-        )
+        """Set device info."""
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         """Update Entity object from Protect device."""
-        if TYPE_CHECKING:
-            assert isinstance(device, ProtectAdoptableDeviceModel)
-
-        if last_update_success := self.data.last_update_success:
+        was_available = self._attr_available
+        if last_updated_success := self.data.last_update_success:
             self.device = device
 
-        async_get_ufp_enabled = self._async_get_ufp_enabled
-        self._attr_available = (
-            last_update_success
-            and (
-                device.state is StateType.CONNECTED
-                or (not device.is_adopted_by_us and device.can_adopt)
+        if device.model is ModelType.NVR:
+            available = last_updated_success
+        else:
+            if TYPE_CHECKING:
+                assert isinstance(device, ProtectAdoptableDeviceModel)
+            connected = device.state is StateType.CONNECTED or (
+                not device.is_adopted_by_us and device.can_adopt
             )
-            and (not async_get_ufp_enabled or async_get_ufp_enabled(device))
-        )
+            async_get_ufp_enabled = self._async_get_ufp_enabled
+            enabled = not async_get_ufp_enabled or async_get_ufp_enabled(device)
+            available = last_updated_success and connected and enabled
+
+        if available != was_available:
+            self._attr_available = available
 
     @callback
-    def _async_updated_event(self, device: ProtectAdoptableDeviceModel | NVR) -> None:
+    def _async_updated_event(self, device: ProtectDeviceType) -> None:
         """When device is updated from Protect."""
         previous_attrs = [getter() for getter in self._state_getters]
         self._async_update_device_from_protect(device)
@@ -264,12 +251,39 @@ class BaseProtectEntity(Entity):
         self.async_on_remove(
             self.data.async_subscribe(self.device.mac, self._async_updated_event)
         )
+        self._async_update_device_from_protect(self.device)
+
+
+class ProtectIsOnEntity(BaseProtectEntity):
+    """Base class for entities with is_on property."""
+
+    _state_attrs: tuple[str, ...] = ("_attr_available", "_attr_is_on")
+    _attr_is_on: bool | None
+    entity_description: ProtectEntityDescription
+
+    def _async_update_device_from_protect(
+        self, device: ProtectAdoptableDeviceModel | NVR
+    ) -> None:
+        super()._async_update_device_from_protect(device)
+        was_on = self._attr_is_on
+        if was_on != (is_on := self.entity_description.get_ufp_value(device) is True):
+            self._attr_is_on = is_on
 
 
 class ProtectDeviceEntity(BaseProtectEntity):
     """Base class for UniFi protect entities."""
 
-    device: ProtectAdoptableDeviceModel
+    @callback
+    def _async_set_device_info(self) -> None:
+        self._attr_device_info = DeviceInfo(
+            name=self.device.display_name,
+            manufacturer=DEFAULT_BRAND,
+            model=self.device.type,
+            via_device=(DOMAIN, self.data.api.bootstrap.nvr.mac),
+            sw_version=self.device.firmware_version,
+            connections={(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
+            configuration_url=self.device.protect_url,
+        )
 
 
 class ProtectNVREntity(BaseProtectEntity):
@@ -288,14 +302,6 @@ class ProtectNVREntity(BaseProtectEntity):
             sw_version=str(self.device.version),
             configuration_url=self.device.api.base_url,
         )
-
-    @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        data = self.data
-        if last_update_success := data.last_update_success:
-            self.device = data.api.bootstrap.nvr
-
-        self._attr_available = last_update_success
 
 
 class EventEntityMixin(ProtectDeviceEntity):
@@ -338,9 +344,8 @@ class EventEntityMixin(ProtectDeviceEntity):
         event object so we need to check the datetime object that was
         saved from the last time the entity was updated.
         """
-        event = self._event
         return bool(
-            event
+            (event := self._event)
             and event.end
             and prev_event
             and prev_event_end

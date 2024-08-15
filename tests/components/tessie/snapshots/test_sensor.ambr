@@ -2120,7 +2120,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.wall_connector_power_2-entry]
@@ -2177,7 +2177,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.wall_connector_state-entry]
@@ -2249,7 +2249,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'disconnected',
   })
 # ---
 # name: test_sensors[sensor.wall_connector_state_2-entry]
@@ -2321,7 +2321,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'disconnected',
   })
 # ---
 # name: test_sensors[sensor.wall_connector_vehicle-entry]

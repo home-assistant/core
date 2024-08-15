@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from ipaddress import ip_address
 from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, MagicMock, call, patch
 
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
 import pytest
-from typing_extensions import Generator
 
 from homeassistant import config_entries
 from homeassistant.components.hassio import HassioAPIError, HassioServiceInfo
