@@ -24,10 +24,10 @@ from tests.common import MockConfigEntry
 
 @pytest.mark.parametrize(("select", "args"), [(ATTR_SPEED, MotionSpeedLevel.HIGH)])
 async def test_select(
+    hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_motion_device: Mock,
     name: str,
-    hass: HomeAssistant,
     select: str,
     args: Any,
 ) -> None:
@@ -58,10 +58,10 @@ async def test_select(
     ],
 )
 async def test_select_update(
+    hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_motion_device: Mock,
     name: str,
-    hass: HomeAssistant,
     select: str,
     register_callback: Callable[[MotionDevice], Callable[..., None]],
     value: type[Enum],

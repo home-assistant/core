@@ -87,10 +87,10 @@ from tests.common import MockConfigEntry
     ],
 )
 async def test_sensor(
+    hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_motion_device: Mock,
     name: str,
-    hass: HomeAssistant,
     sensor: str,
     register_callback: Callable[[MotionDevice], Callable[..., None]],
     initial_value: str,
