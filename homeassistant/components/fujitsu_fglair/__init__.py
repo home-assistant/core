@@ -12,14 +12,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
 from .const import API_TIMEOUT, CONF_EUROPE, FGLAIR_APP_ID, FGLAIR_APP_SECRET
-from .coordinator import FujitsuHVACCoordinator
+from .coordinator import FGLairCoordinator
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
-type FujitsuHVACConfigEntry = ConfigEntry[FujitsuHVACCoordinator]
+type FGLairConfigEntry = ConfigEntry[FGLairCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FujitsuHVACConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FGLairConfigEntry) -> bool:
     """Set up Fujitsu HVAC (based on Ayla IOT) from a config entry."""
     api = new_ayla_api(
         entry.data[CONF_USERNAME],
@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FujitsuHVACConfigEntry) 
         timeout=API_TIMEOUT,
     )
 
-    coordinator = FujitsuHVACCoordinator(hass, api)
+    coordinator = FGLairCoordinator(hass, api)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
@@ -40,9 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FujitsuHVACConfigEntry) 
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: FujitsuHVACConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FGLairConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     with suppress(TimeoutError):

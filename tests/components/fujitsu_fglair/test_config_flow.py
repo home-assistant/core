@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 from ayla_iot_unofficial import AylaAuthError
 import pytest
 
-from homeassistant.components.fujitsu_hvac.const import CONF_EUROPE, DOMAIN
+from homeassistant.components.fujitsu_fglair.const import CONF_EUROPE, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -41,7 +41,7 @@ async def test_full_flow(
     mock_ayla_api.async_sign_in.assert_called_once()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Fujitsu HVAC ({TEST_USERNAME})"
+    assert result["title"] == f"FGLair ({TEST_USERNAME})"
     assert result["data"] == {
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
@@ -99,7 +99,7 @@ async def test_form_exceptions(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Fujitsu HVAC ({TEST_USERNAME})"
+    assert result["title"] == f"FGLair ({TEST_USERNAME})"
     assert result["data"] == {
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,

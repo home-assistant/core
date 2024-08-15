@@ -24,7 +24,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class FujitsuHVACConfigFlow(ConfigFlow, domain=DOMAIN):
+class FGLairConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fujitsu HVAC (based on Ayla IOT)."""
 
     async def _async_validate_credentials(
@@ -64,7 +64,7 @@ class FujitsuHVACConfigFlow(ConfigFlow, domain=DOMAIN):
             errors = await self._async_validate_credentials(user_input)
             if len(errors) == 0:
                 return self.async_create_entry(
-                    title=f"Fujitsu HVAC ({user_input[CONF_USERNAME]})",
+                    title=f"FGLair ({user_input[CONF_USERNAME]})",
                     data=user_input,
                 )
 

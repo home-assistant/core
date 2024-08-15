@@ -23,7 +23,7 @@ from homeassistant.components.climate import (
 API_TIMEOUT = 10
 API_REFRESH = timedelta(minutes=5)
 
-DOMAIN = "fujitsu_hvac"
+DOMAIN = "fujitsu_fglair"
 
 CONF_EUROPE = "is_europe"
 

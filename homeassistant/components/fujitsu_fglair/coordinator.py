@@ -14,7 +14,7 @@ from .const import API_REFRESH
 _LOGGER = logging.getLogger(__name__)
 
 
-class FujitsuHVACCoordinator(DataUpdateCoordinator[dict[str, FujitsuHVAC]]):
+class FGLairCoordinator(DataUpdateCoordinator[dict[str, FujitsuHVAC]]):
     """Coordinator for Fujitsu HVAC integration."""
 
     def __init__(self, hass: HomeAssistant, api: AylaApi) -> None:

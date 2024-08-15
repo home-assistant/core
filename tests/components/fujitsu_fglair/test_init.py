@@ -1,4 +1,4 @@
-"""Test the initialization of fujitsu_hvac entities."""
+"""Test the initialization of fujitsu_fglair entities."""
 
 from unittest.mock import AsyncMock
 
@@ -6,7 +6,7 @@ from ayla_iot_unofficial import AylaAuthError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.fujitsu_hvac.const import API_REFRESH, DOMAIN
+from homeassistant.components.fujitsu_fglair.const import API_REFRESH, DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er

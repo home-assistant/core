@@ -15,7 +15,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FujitsuHVACConfigEntry
+from . import FGLairConfigEntry
 from .const import (
     DOMAIN,
     FUJI_TO_HA_FAN,
@@ -25,22 +25,22 @@ from .const import (
     HA_TO_FUJI_HVAC,
     HA_TO_FUJI_SWING,
 )
-from .coordinator import FujitsuHVACCoordinator
+from .coordinator import FGLairCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: FujitsuHVACConfigEntry,
+    entry: FGLairConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up one Fujitsu HVAC device."""
     async_add_entities(
-        FujitsuHVACDevice(entry.runtime_data, device)
+        FGLairDevice(entry.runtime_data, device)
         for device in entry.runtime_data.data.values()
     )
 
 
-class FujitsuHVACDevice(CoordinatorEntity[FujitsuHVACCoordinator], ClimateEntity):
+class FGLairDevice(CoordinatorEntity[FGLairCoordinator], ClimateEntity):
     """Represent a Fujitsu HVAC device."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -51,9 +51,7 @@ class FujitsuHVACDevice(CoordinatorEntity[FujitsuHVACCoordinator], ClimateEntity
 
     _enable_turn_on_off_backwards_compatibility: bool = False
 
-    def __init__(
-        self, coordinator: FujitsuHVACCoordinator, device: FujitsuHVAC
-    ) -> None:
+    def __init__(self, coordinator: FGLairCoordinator, device: FujitsuHVAC) -> None:
         """Store the representation of the device and set the static attributes."""
         super().__init__(coordinator, context=device.device_serial_number)
 

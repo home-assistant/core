@@ -200,7 +200,7 @@ FLOWS = {
         "fritzbox_callmonitor",
         "fronius",
         "frontier_silicon",
-        "fujitsu_hvac",
+        "fujitsu_fglair",
         "fully_kiosk",
         "fyta",
         "garages_amsterdam",

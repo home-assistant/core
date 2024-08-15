@@ -7,7 +7,7 @@ from ayla_iot_unofficial import AylaApi
 from ayla_iot_unofficial.fujitsu_hvac import FanSpeed, FujitsuHVAC, OpMode, SwingMode
 import pytest
 
-from homeassistant.components.fujitsu_hvac.const import CONF_EUROPE, DOMAIN
+from homeassistant.components.fujitsu_fglair.const import CONF_EUROPE, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry
@@ -33,7 +33,7 @@ TEST_PROPERTY_VALUES = {
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.fujitsu_hvac.async_setup_entry", return_value=True
+        "homeassistant.components.fujitsu_fglair.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -45,10 +45,10 @@ def mock_ayla_api(mock_devices: list[AsyncMock]) -> Generator[AsyncMock]:
 
     with (
         patch(
-            "homeassistant.components.fujitsu_hvac.new_ayla_api", return_value=my_mock
+            "homeassistant.components.fujitsu_fglair.new_ayla_api", return_value=my_mock
         ),
         patch(
-            "homeassistant.components.fujitsu_hvac.config_flow.new_ayla_api",
+            "homeassistant.components.fujitsu_fglair.config_flow.new_ayla_api",
             return_value=my_mock,
         ),
     ):
