@@ -580,6 +580,7 @@ def _modify_columns(
                 _LOGGER.exception(
                     "Could not modify column %s in table %s", column_def, table_name
                 )
+                raise
 
 
 def _update_states_table_with_foreign_key_options(
