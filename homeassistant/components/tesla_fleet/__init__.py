@@ -7,7 +7,9 @@ import jwt
 from tesla_fleet_api import EnergySpecific, TeslaFleetApi, VehicleSpecific
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
+    InvalidRegion,
     InvalidToken,
+    LibraryError,
     LoginRequired,
     OAuthExpired,
     TeslaFleetError,
@@ -75,7 +77,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
         region=region,
         charging_scope=False,
         partner_scope=False,
-        user_scope=False,
         energy_scope=Scope.ENERGY_DEVICE_DATA in scopes,
         vehicle_scope=Scope.VEHICLE_DEVICE_DATA in scopes,
         refresh_hook=_refresh_token,
@@ -84,6 +85,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
         products = (await tesla.products())["response"]
     except (InvalidToken, OAuthExpired, LoginRequired) as e:
         raise ConfigEntryAuthFailed from e
+    except InvalidRegion:
+        try:
+            LOGGER.info("Region is invalid, trying to find the correct region")
+            await tesla.find_server()
+            try:
+                products = (await tesla.products())["response"]
+            except TeslaFleetError as e:
+                raise ConfigEntryNotReady from e
+        except LibraryError as e:
+            raise ConfigEntryAuthFailed from e
     except TeslaFleetError as e:
         raise ConfigEntryNotReady from e
 
