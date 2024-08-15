@@ -17,11 +17,7 @@ _LOGGER: logging.Logger = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
 
-
-class DeakoConfigEntry(ConfigEntry):
-    """Typed config entry."""
-
-    runtime_data: Deako | None
+type DeakoConfigEntry = ConfigEntry[Deako]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: DeakoConfigEntry) -> bool:

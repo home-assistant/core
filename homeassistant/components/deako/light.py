@@ -1,6 +1,5 @@
 """Binary sensor platform for integration_blueprint."""
 
-import logging
 from typing import Any
 
 from pydeako.deako import Deako
@@ -17,8 +16,6 @@ from .const import DOMAIN
 MODEL_SMART = "smart"
 MODEL_DIMMER = "dimmer"
 
-_LOGGER: logging.Logger = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -28,10 +25,7 @@ async def async_setup_entry(
     """Configure the platform."""
     client = config.runtime_data
 
-    if client is not None:
-        add_entities([DeakoLightEntity(client, uuid) for uuid in client.get_devices()])
-    else:
-        _LOGGER.error("Deako client not set in config entry")
+    add_entities([DeakoLightEntity(client, uuid) for uuid in client.get_devices()])
 
 
 class DeakoLightEntity(LightEntity):
@@ -74,11 +68,6 @@ class DeakoLightEntity(LightEntity):
         self.update()
         self.schedule_update_ha_state()
 
-    def get_state(self) -> dict[str, bool | int]:
-        """Return state of entity from client."""
-        assert self._attr_unique_id is not None
-        return self.client.get_state(self._attr_unique_id) or {}
-
     async def control_device(self, power: bool, dim: int | None = None) -> None:
         """Control entity state via client."""
         assert self._attr_unique_id is not None
@@ -97,7 +86,8 @@ class DeakoLightEntity(LightEntity):
 
     def update(self) -> None:
         """Call to update state."""
-        state = self.get_state()
+        assert self._attr_unique_id is not None
+        state = self.client.get_state(self._attr_unique_id) or {}
         self._attr_is_on = bool(state.get("power", False))
         if (
             self._attr_supported_color_modes is not None
