@@ -5549,7 +5549,7 @@
     },
     "smart_meter_b_route": {
       "name": "Smart Meter B Route",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },

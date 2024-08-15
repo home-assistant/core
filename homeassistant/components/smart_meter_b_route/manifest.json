@@ -3,8 +3,20 @@
   "name": "Smart Meter B Route",
   "codeowners": ["@SeraphicRav"],
   "config_flow": true,
+  "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/smart_meter_b_route",
+  "integration_type": "device",
   "iot_class": "local_polling",
-  "loggers": ["momonga"],
-  "requirements": ["momonga==0.1.1"]
+  "loggers": [
+    "momonga.momonga",
+    "momonga.momonga_session_manager",
+    "momonga.sk_wrapper_logger"
+  ],
+  "requirements": ["pyserial==3.5", "momonga==0.1.1"],
+  "usb": [
+    {
+      "vid": "1027",
+      "pid": "24597"
+    }
+  ]
 }

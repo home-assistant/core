@@ -40,6 +40,11 @@ USB = [
         "vid": "04B4",
     },
     {
+        "domain": "smart_meter_b_route",
+        "pid": "24597",
+        "vid": "1027",
+    },
+    {
         "domain": "velbus",
         "pid": "0B1B",
         "vid": "10CF",
