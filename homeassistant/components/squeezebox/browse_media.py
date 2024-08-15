@@ -198,17 +198,24 @@ async def library_payload(hass, player):
 
     for item in LIBRARY:
         media_class = CONTENT_TYPE_MEDIA_CLASS[item]
+        _library_contents_exist = False
         if item == "Favorites":
-            library_info["children"].append(
-                BrowseMedia(
-                    title=item,
-                    media_class=media_class["children"],
-                    media_content_id=item,
-                    media_content_type=item,
-                    thumbnail=_lms_prefix(player) + LIBRARY_ICONS[item],
-                    can_play=False,
-                    can_expand=True,
-                )
+            _command = ["favorites"]
+            _command.extend(["items"])
+
+            result = await player.async_query(*_command)
+            if result is not None and result.get("count",0) > 0:
+                _library_contents_exist = True            
+                library_info["children"].append(
+                    BrowseMedia(
+                        title=item,
+                        media_class=media_class["children"],
+                        media_content_id=item,
+                        media_content_type=item,
+                        thumbnail=_lms_prefix(player) + LIBRARY_ICONS[item],
+                        can_play=False,
+                        can_expand=True,
+                    )
             )
         else:
             result = await player.async_browse(
@@ -216,17 +223,19 @@ async def library_payload(hass, player):
                 limit=1,
             )
             if result is not None and result.get("items") is not None:
-                library_info["children"].append(
-                    BrowseMedia(
-                        title=item,
-                        media_class=media_class["children"],
-                        media_content_id=item,
-                        media_content_type=item,
-                        can_play=True,
-                        can_expand=True,
-                        thumbnail=_lms_prefix(player) + LIBRARY_ICONS[item],
-                    )
+                _library_contents_exist = True 
+
+            library_info["children"].append(
+                BrowseMedia(
+                    title=item,
+                    media_class=media_class["children"],
+                    media_content_id=item,
+                    media_content_type=item,
+                    can_play=True,
+                    can_expand=True,
+                    thumbnail=_lms_prefix(player) + LIBRARY_ICONS[item],
                 )
+            )
 
     with contextlib.suppress(media_source.BrowseError):
         item = await media_source.async_browse_media(
