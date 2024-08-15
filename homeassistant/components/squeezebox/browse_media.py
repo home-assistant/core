@@ -199,39 +199,29 @@ async def library_payload(hass, player):
     for item in LIBRARY:
         media_class = CONTENT_TYPE_MEDIA_CLASS[item]
         _library_contents_exist = False
+
         if item == "Favorites":
             _command = ["favorites"]
             _command.extend(["items"])
-
             result = await player.async_query(*_command)
-            if result is not None and result.get("count",0) > 0:
-                _library_contents_exist = True            
-                library_info["children"].append(
-                    BrowseMedia(
-                        title=item,
-                        media_class=media_class["children"],
-                        media_content_id=item,
-                        media_content_type=item,
-                        thumbnail=_lms_prefix(player) + LIBRARY_ICONS[item],
-                        can_play=False,
-                        can_expand=True,
-                    )
-            )
+            if result is not None and result.get("count", 0) > 0:
+                _library_contents_exist = True
         else:
             result = await player.async_browse(
                 MEDIA_TYPE_TO_SQUEEZEBOX[item],
                 limit=1,
             )
             if result is not None and result.get("items") is not None:
-                _library_contents_exist = True 
+                _library_contents_exist = True
 
+        if _library_contents_exist:
             library_info["children"].append(
                 BrowseMedia(
                     title=item,
                     media_class=media_class["children"],
                     media_content_id=item,
                     media_content_type=item,
-                    can_play=True,
+                    can_play=item != "Favorites",
                     can_expand=True,
                     thumbnail=_lms_prefix(player) + LIBRARY_ICONS[item],
                 )
