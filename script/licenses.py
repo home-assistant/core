@@ -159,7 +159,6 @@ EXCEPTIONS = {
     "pyTibber",  # https://github.com/Danielhiversen/pyTibber/pull/294
     "pybbox",  # https://github.com/HydrelioxGitHub/pybbox/pull/5
     "pyeconet",  # https://github.com/w1ll1am23/pyeconet/pull/41
-    "pylutron-caseta",  # https://github.com/gurumitts/pylutron-caseta/pull/168
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
     "pyvera",  # https://github.com/maximvelichko/pyvera/pull/164
     "pyxeoma",  # https://github.com/jeradM/pyxeoma/pull/11
@@ -179,7 +178,6 @@ TODO = {
     "aiocache": AwesomeVersion(
         "0.12.2"
     ),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
-    "pyflic": AwesomeVersion("2.0.3"),  # No OSI approved license CC0-1.0 Universal)
 }
 
 

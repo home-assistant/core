@@ -60,7 +60,7 @@ import homeassistant.util.dt as dt_util
 
 from . import config_validation as cv, entity_registry as er
 from .sun import get_astral_event_date
-from .template import Template, attach as template_attach, render_complex
+from .template import Template, render_complex
 from .trace import (
     TraceElement,
     trace_append_element,
@@ -510,9 +510,6 @@ def async_numeric_state_from_config(config: ConfigType) -> ConditionCheckerType:
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
         """Test numeric state condition."""
-        if value_template is not None:
-            value_template.hass = hass
-
         errors = []
         for index, entity_id in enumerate(entity_ids):
             try:
@@ -630,7 +627,6 @@ def state_from_config(config: ConfigType) -> ConditionCheckerType:
     @trace_condition_function
     def if_state(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Test if condition."""
-        template_attach(hass, for_period)
         errors = []
         result: bool = match != ENTITY_MATCH_ANY
         for index, entity_id in enumerate(entity_ids):
@@ -792,8 +788,6 @@ def async_template_from_config(config: ConfigType) -> ConditionCheckerType:
     @trace_condition_function
     def template_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Validate template based if-condition."""
-        value_template.hass = hass
-
         return async_template(hass, value_template, variables)
 
     return template_if

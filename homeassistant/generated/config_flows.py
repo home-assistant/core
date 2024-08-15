@@ -325,7 +325,6 @@ FLOWS = {
         "local_ip",
         "local_todo",
         "locative",
-        "logi_circle",
         "lookin",
         "loqed",
         "luftdaten",

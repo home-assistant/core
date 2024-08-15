@@ -1760,6 +1760,34 @@ async def test_register_entity_service_limited_to_matching_platforms(
     }
 
 
+async def test_register_entity_service_none_schema(
+    hass: HomeAssistant,
+) -> None:
+    """Test registering a service with schema set to None."""
+    entity_platform = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity1 = SlowEntity(name="entity_1")
+    entity2 = SlowEntity(name="entity_1")
+    await entity_platform.async_add_entities([entity1, entity2])
+
+    entities = []
+
+    @callback
+    def handle_service(entity, *_):
+        entities.append(entity)
+
+    entity_platform.async_register_entity_service("hello", None, handle_service)
+
+    await hass.services.async_call(
+        "mock_platform", "hello", {"entity_id": "all"}, blocking=True
+    )
+
+    assert len(entities) == 2
+    assert entity1 in entities
+    assert entity2 in entities
+
+
 @pytest.mark.parametrize("update_before_add", [True, False])
 async def test_invalid_entity_id(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, update_before_add: bool

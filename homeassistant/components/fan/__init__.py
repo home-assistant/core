@@ -139,11 +139,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         [FanEntityFeature.TURN_ON],
     )
     component.async_register_entity_service(
-        SERVICE_TURN_OFF, {}, "async_turn_off", [FanEntityFeature.TURN_OFF]
+        SERVICE_TURN_OFF, None, "async_turn_off", [FanEntityFeature.TURN_OFF]
     )
     component.async_register_entity_service(
         SERVICE_TOGGLE,
-        {},
+        None,
         "async_toggle",
         [FanEntityFeature.TURN_OFF, FanEntityFeature.TURN_ON],
     )
