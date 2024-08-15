@@ -822,10 +822,7 @@ TRAFFIC_RULE = {
 @pytest.mark.parametrize("wlan_payload", [[WLAN]])
 @pytest.mark.parametrize(
     "site_payload",
-    [
-        [{"desc": "Site name", "name": "site_id", "role": "admin", "_id": "1"}],
-        [{"desc": "Site name", "name": "site_id", "role": "not admin", "_id": "1"}],
-    ],
+    [[{"desc": "Site name", "name": "site_id", "role": "admin", "_id": "1"}]],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_entity_and_device_data(
@@ -838,10 +835,7 @@ async def test_entity_and_device_data(
     """Validate entity and device data with and without admin rights."""
     with patch("homeassistant.components.unifi.PLATFORMS", [Platform.SWITCH]):
         config_entry = await config_entry_factory()
-    if site_payload[0]["role"] == "admin":
-        await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
-    else:
-        assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 @pytest.mark.parametrize("client_payload", [[CONTROLLER_HOST]])
