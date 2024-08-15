@@ -201,79 +201,24 @@ async def test_database_migration_failed(
 
 @pytest.mark.parametrize(
     (
+        "patch_version",
         "func_to_patch",
         "expected_setup_result",
         "expected_pn_create",
         "expected_pn_dismiss",
     ),
     [
-        ("DropConstraint", False, 1, 0),  # This makes migration to step 11 fail
+        (11, "DropConstraint", False, 1, 0),
+        (44, "DropConstraint", False, 2, 1),
     ],
 )
 @pytest.mark.skip_on_db_engine(["sqlite"])
 @pytest.mark.usefixtures("skip_by_db_engine")
-async def test_database_migration_failed_step_11(
-    hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
-    func_to_patch: str,
-    expected_setup_result: bool,
-    expected_pn_create: int,
-    expected_pn_dismiss: int,
-) -> None:
-    """Test we notify if the migration fails."""
-    assert recorder.util.async_migration_in_progress(hass) is False
-
-    with (
-        patch(
-            "homeassistant.components.recorder.core.create_engine",
-            new=create_engine_test,
-        ),
-        patch(
-            f"homeassistant.components.recorder.migration.{func_to_patch}",
-            side_effect=OperationalError(
-                None, None, OSError("No space left on device")
-            ),
-        ),
-        patch(
-            "homeassistant.components.persistent_notification.create",
-            side_effect=pn.create,
-        ) as mock_create,
-        patch(
-            "homeassistant.components.persistent_notification.dismiss",
-            side_effect=pn.dismiss,
-        ) as mock_dismiss,
-    ):
-        await async_setup_recorder_instance(
-            hass, wait_recorder=False, expected_setup_result=expected_setup_result
-        )
-        hass.states.async_set("my.entity", "on", {})
-        hass.states.async_set("my.entity", "off", {})
-        await hass.async_block_till_done()
-        await hass.async_add_executor_job(recorder.get_instance(hass).join)
-        await hass.async_block_till_done()
-
-    assert recorder.util.async_migration_in_progress(hass) is False
-    assert len(mock_create.mock_calls) == expected_pn_create
-    assert len(mock_dismiss.mock_calls) == expected_pn_dismiss
-
-
-@pytest.mark.parametrize(
-    (
-        "func_to_patch",
-        "expected_setup_result",
-        "expected_pn_create",
-        "expected_pn_dismiss",
-    ),
-    [
-        ("DropConstraint", False, 2, 1),  # This makes migration to step 44 fail
-    ],
-)
-@pytest.mark.skip_on_db_engine(["sqlite"])
-@pytest.mark.usefixtures("skip_by_db_engine")
-async def test_database_migration_failed_step_44(
+async def test_database_migration_failed_non_sqlite(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
     instrument_migration: InstrumentedMigration,
+    patch_version: int,
     func_to_patch: str,
     expected_setup_result: bool,
     expected_pn_create: int,
@@ -281,7 +226,7 @@ async def test_database_migration_failed_step_44(
 ) -> None:
     """Test we notify if the migration fails."""
     assert recorder.util.async_migration_in_progress(hass) is False
-    instrument_migration.stall_on_schema_version = 44
+    instrument_migration.stall_on_schema_version = patch_version
 
     with (
         patch(
@@ -303,7 +248,7 @@ async def test_database_migration_failed_step_44(
             wait_recorder_setup=False,
             expected_setup_result=expected_setup_result,
         )
-        # Wait for migration to reach schema version 44
+        # Wait for migration to reach the schema version we want to break
         await hass.async_add_executor_job(
             instrument_migration.apply_update_stalled.wait
         )
