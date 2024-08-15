@@ -1800,7 +1800,7 @@ async def test_register_entity_service_non_entity_service_schema(
     with pytest.raises(
         HomeAssistantError,
         match=(
-            "The schema does not have all of keys entity_id, device_id, area_id, "
+            "The schema does not include all required keys: entity_id, device_id, area_id, "
             "floor_id, label_id"
         ),
     ):

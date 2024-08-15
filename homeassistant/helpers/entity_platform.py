@@ -1012,7 +1012,7 @@ class EntityPlatform:
             and any(key not in schema.schema for key in cv.ENTITY_SERVICE_FIELDS)
         ):
             raise HomeAssistantError(
-                "The schema does not have all of keys "
+                "The schema does not include all required keys: "
                 f"{", ".join(str(key) for key in cv.ENTITY_SERVICE_FIELDS)}"
             )
 
