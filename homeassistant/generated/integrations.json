@@ -4029,6 +4029,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "nice_go": {
+      "name": "Nice G.O.",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "nightscout": {
       "name": "Nightscout",
       "integration_type": "hub",
