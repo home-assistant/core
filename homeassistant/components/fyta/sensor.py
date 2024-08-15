@@ -157,7 +157,7 @@ class FytaPlantSensor(FytaPlantEntity, SensorEntity):
     entity_description: FytaSensorEntityDescription
 
     @property
-    def native_value(self) -> str | int | float | datetime | None:
+    def native_value(self) -> StateType | datetime:
         """Return the state for this sensor."""
 
         return self.entity_description.value_fn(self.plant)
