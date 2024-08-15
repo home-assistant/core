@@ -10,8 +10,8 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 
-from .const import CONF_TOKEN, CONF_USERNAME, DATA_DISCOVERY, DOMAIN
-from .utils import async_discover_devices, validate_input
+from .const import CONF_TOKEN, CONF_USERNAME, DOMAIN
+from .utils import async_has_devices, validate_input
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,28 +32,12 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
         if self._async_current_entries(True):
             return self.async_abort(reason="single_instance_allowed")
 
-        self.hass.data.setdefault(DOMAIN, {})
-        if DATA_DISCOVERY not in self.hass.data[DOMAIN]:
-            self.hass.data[DOMAIN][DATA_DISCOVERY] = self.hass.async_create_task(
-                async_discover_devices()
-            )
-
         return self.async_show_form(step_id="confirm")
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle user-confirmation of the config flow."""
-        discovered_devices = await self.hass.data[DOMAIN][DATA_DISCOVERY]
-
-        if len(discovered_devices) == 0:
-            self.hass.data[DOMAIN].pop(DATA_DISCOVERY)
-            return self.async_abort(reason="no_devices_found")
-
-        for device_id, device in discovered_devices.items():
-            if device.token_needed:
-                _LOGGER.info("Device with ID %s requires a token", device_id)
-                return await self.async_step_credentials()
 
         return await self._create_entry()
 

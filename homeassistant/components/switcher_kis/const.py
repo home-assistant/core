@@ -1,7 +1,7 @@
 """Constants for the Switcher integration."""
 
 DOMAIN = "switcher_kis"
-DATA_DISCOVERY = "discovery"
+
 DISCOVERY_TIME_SEC = 12
 
 SIGNAL_DEVICE_ADD = "switcher_device_add"
