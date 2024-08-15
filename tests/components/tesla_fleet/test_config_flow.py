@@ -261,7 +261,7 @@ async def test_reauth_account_mismatch(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    access_token,
+    access_token: str,
 ) -> None:
     """Test Tesla Fleet reauthentication with different account."""
     old_entry = MockConfigEntry(domain=DOMAIN, unique_id="baduid", version=1, data={})
