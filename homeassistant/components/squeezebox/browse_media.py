@@ -94,7 +94,7 @@ async def build_item_response(entity, player, payload):
 
     if search_type == "Favorites":
         _command = ["favorites"]
-        _command.extend(["items", "0", "100"])
+        _command.extend(["items", "0", str(BROWSE_LIMIT)])
 
         result = await player.async_query(*_command)
 
