@@ -64,6 +64,15 @@ CONTENT_TYPE_TO_CHILD_TYPE = {
     "Favorites": MediaType.TRACK,
 }
 
+LIBRARY_ICONS = {
+    "Artists": "html/images/artists.png",
+    "Albums": "html/images/albums.png",
+    "Tracks": "html/images/musicfolder.png",
+    "Playlists": "html/images/playlists.png",
+    "Genres": "html/images/genres.png",
+    "Favorites": "html/images/favorites.png",
+}
+
 BROWSE_LIMIT = 1000
 
 
@@ -196,7 +205,7 @@ async def library_payload(hass, player):
                     media_class=media_class["children"],
                     media_content_id=item,
                     media_content_type=item,
-                    thumbnail=_lms_prefix(player) + "html/images/favorites.png",
+                    thumbnail=_lms_prefix(player) + LIBRARY_ICONS[item],
                     can_play=False,
                     can_expand=True,
                 )
@@ -215,6 +224,7 @@ async def library_payload(hass, player):
                         media_content_type=item,
                         can_play=True,
                         can_expand=True,
+                        thumbnail=_lms_prefix(player) + LIBRARY_ICONS[item],
                     )
                 )
 
