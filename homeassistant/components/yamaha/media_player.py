@@ -8,6 +8,7 @@ from typing import Any
 
 import requests
 import rxv
+from rxv import RXV
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -95,7 +96,7 @@ class YamahaConfigInfo:
         self, config: ConfigType, discovery_info: DiscoveryInfoType | None
     ) -> None:
         """Initialize the Configuration Info for Yamaha Receiver."""
-        self.name = config.get(CONF_NAME)
+        self.name = config.get(CONF_NAME, DEFAULT_NAME)
         self.host = config.get(CONF_HOST)
         self.ctrl_url: str | None = f"http://{self.host}:80/YamahaRemoteControl/ctrl"
         self.source_ignore = config.get(CONF_SOURCE_IGNORE)
@@ -113,7 +114,7 @@ class YamahaConfigInfo:
             self.from_discovery = True
 
 
-def _discovery(config_info):
+def _discovery(config_info: YamahaConfigInfo) -> list[RXV]:
     """Discover list of zone controllers from configuration in the network."""
     if config_info.from_discovery:
         _LOGGER.debug("Discovery Zones")
@@ -234,16 +235,24 @@ async def async_setup_platform(
 class YamahaDeviceZone(MediaPlayerEntity):
     """Representation of a Yamaha device zone."""
 
-    def __init__(self, name, zctrl, source_ignore, source_names, zone_names):
+    _reverse_mapping: dict[str, str]
+
+    def __init__(
+        self,
+        name: str,
+        zctrl: RXV,
+        source_ignore: list[str] | None,
+        source_names: dict[str, str] | None,
+        zone_names: dict[str, str] | None,
+    ) -> None:
         """Initialize the Yamaha Receiver."""
         self.zctrl = zctrl
         self._attr_is_volume_muted = False
         self._attr_volume_level = 0
         self._attr_state = MediaPlayerState.OFF
-        self._source_ignore = source_ignore or []
-        self._source_names = source_names or {}
-        self._zone_names = zone_names or {}
-        self._reverse_mapping = None
+        self._source_ignore: list[str] = source_ignore or []
+        self._source_names: dict[str, str] = source_names or {}
+        self._zone_names: dict[str, str] = zone_names or {}
         self._playback_support = None
         self._is_playback_supported = False
         self._play_status = None
@@ -295,7 +304,7 @@ class YamahaDeviceZone(MediaPlayerEntity):
             self._attr_sound_mode = None
             self._attr_sound_mode_list = None
 
-    def build_source_list(self):
+    def build_source_list(self) -> None:
         """Build the source list."""
         self._reverse_mapping = {
             alias: source for source, alias in self._source_names.items()
@@ -308,7 +317,7 @@ class YamahaDeviceZone(MediaPlayerEntity):
         )
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         name = self._name
         zone_name = self._zone_names.get(self._zone, self._zone)
@@ -318,7 +327,7 @@ class YamahaDeviceZone(MediaPlayerEntity):
         return name
 
     @property
-    def zone_id(self):
+    def zone_id(self) -> str:
         """Return a zone_id to ensure 1 media player per zone."""
         return f"{self.zctrl.ctrl_url}:{self._zone}"
 
@@ -415,15 +424,15 @@ class YamahaDeviceZone(MediaPlayerEntity):
         if media_type == "NET RADIO":
             self.zctrl.net_radio(media_id)
 
-    def enable_output(self, port, enabled):
+    def enable_output(self, port: str, enabled: bool) -> None:
         """Enable or disable an output port.."""
         self.zctrl.enable_output(port, enabled)
 
-    def menu_cursor(self, cursor):
+    def menu_cursor(self, cursor: str) -> None:
         """Press a menu cursor button."""
         getattr(self.zctrl, CURSOR_TYPE_MAP[cursor])()
 
-    def set_scene(self, scene):
+    def set_scene(self, scene: str) -> None:
         """Set the current scene."""
         try:
             self.zctrl.scene = scene
