@@ -5,38 +5,69 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from http import HTTPStatus
 import logging
-from typing import Any
+from uuid import uuid4
 
 from aiohttp import web
 from aiohttp.abc import AbstractStreamWriter, BaseRequest
-import voluptuous as vol
 
 from homeassistant.components.ffmpeg import FFmpegManager
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 
 from .const import DATA_FFMPEG_PROXY
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def async_allow_proxy_url(hass: HomeAssistant, device_id: str, url: str) -> None:
+def async_allow_proxy_url(
+    hass: HomeAssistant,
+    device_id: str,
+    url: str,
+    media_format: str,
+    rate: int | None = None,
+    channels: int | None = None,
+) -> str:
     """Mark a URL as allowed for conversion by a specific device.
 
     The URL will be removed from the allow list once it is requested in the HTTP
     view.
     """
     data: FFmpegProxyData = hass.data[DATA_FFMPEG_PROXY]
-    data.device_urls[device_id].add(url)
-    _LOGGER.debug("URL allowed for device %s: %s", device_id, url)
+
+    convert_id = str(uuid4())
+    data.conversions[device_id][convert_id] = FFmpegConversionInfo(
+        url, media_format, rate, channels
+    )
+    _LOGGER.debug("URL allowed by proxy: %s", url)
+
+    return convert_id
+
+
+@dataclass
+class FFmpegConversionInfo:
+    """Information for ffmpeg conversion."""
+
+    url: str
+    """Source URL of media to convert."""
+
+    media_format: str
+    """Target format for media (mp3, flac, etc.)"""
+
+    rate: int | None
+    """Target sample rate (None to keep source rate)."""
+
+    channels: int | None
+    """Target number of channels (None to keep source channels)."""
 
 
 @dataclass
 class FFmpegProxyData:
     """Data for ffmpeg proxy conversion."""
 
-    device_urls: dict[str, set[str]] = field(default_factory=lambda: defaultdict(set))
+    # device_id -> convert_id -> info
+    conversions: dict[str, dict[str, FFmpegConversionInfo]] = field(
+        default_factory=lambda: defaultdict(dict)
+    )
 
 
 class FFmpegConvertResponse(web.StreamResponse):
@@ -45,10 +76,7 @@ class FFmpegConvertResponse(web.StreamResponse):
     def __init__(
         self,
         manager: FFmpegManager,
-        url: str,
-        fmt: str,
-        rate: int | None,
-        channels: int | None,
+        convert_info: FFmpegConversionInfo,
         chunk_size: int = 2048,
     ) -> None:
         """Initialize response.
@@ -57,24 +85,15 @@ class FFmpegConvertResponse(web.StreamResponse):
         ----------
         manager: FFmpegManager
             ffmpeg manager
-        url: str
-            URL of source audio stream
-        fmt: str
-            Target format of audio (flac, mp3, wav, etc.)
-        rate: int, optional
-            Target sample rate in hertz (None = same as source)
-        channels: int, optional
-            Target number of channels (None = same as source)
+        convert_info: FFmpegConversionInfo
+            Information necessary to do the conversion
         chunk_size: int
             Number of bytes to read from ffmpeg process at a time
 
         """
         super().__init__(status=200)
         self.manager = manager
-        self.url = url
-        self.fmt = fmt
-        self.rate = rate
-        self.channels = channels
+        self.convert_info = convert_info
         self.chunk_size = chunk_size
 
     async def prepare(self, request: BaseRequest) -> AbstractStreamWriter | None:
@@ -82,15 +101,20 @@ class FFmpegConvertResponse(web.StreamResponse):
         writer = await super().prepare(request)
         assert writer is not None
 
-        command_args = ["-i", self.url, "-f", self.fmt]
+        command_args = [
+            "-i",
+            self.convert_info.url,
+            "-f",
+            self.convert_info.media_format,
+        ]
 
-        if self.rate is not None:
+        if self.convert_info.rate is not None:
             # Sample rate
-            command_args.extend(["-ar", str(self.rate)])
+            command_args.extend(["-ar", str(self.convert_info.rate)])
 
-        if self.channels is not None:
+        if self.convert_info.channels is not None:
             # Number of channels
-            command_args.extend(["-ac", str(self.channels)])
+            command_args.extend(["-ac", str(self.convert_info.channels)])
 
         # Output to stdout
         command_args.append("pipe:")
@@ -107,13 +131,20 @@ class FFmpegConvertResponse(web.StreamResponse):
         assert proc.stderr is not None
         try:
             # Pull audio chunks from ffmpeg and pass them to the HTTP client
-            while chunk := await proc.stdout.read(self.chunk_size):
+            while (
+                (request.transport is not None)
+                and (not request.transport.is_closing())
+                and (proc.returncode is None)
+                and (chunk := await proc.stdout.read(self.chunk_size))
+            ):
                 await writer.write(chunk)
-
+                await writer.drain()
+        finally:
             # Try to gracefully stop
             proc.terminate()
             await proc.wait()
-        finally:
+
+            # Close connection
             await writer.write_eof()
 
             if proc.returncode != 0:
@@ -123,7 +154,7 @@ class FFmpegConvertResponse(web.StreamResponse):
                     stderr_text += line.decode()
                 _LOGGER.error(stderr_text)
             else:
-                _LOGGER.debug("Conversion completed: %s", self.url)
+                _LOGGER.debug("Conversion completed: %s", self.convert_info)
 
         return writer
 
@@ -132,47 +163,31 @@ class FFmpegProxyView(HomeAssistantView):
     """FFmpeg web view to convert audio and stream back to client."""
 
     requires_auth = False
-    url = "/api/esphome/ffmpeg_proxy"
+    url = "/api/esphome/ffmpeg_proxy/{device_id}/{filename}"
     name = "api:esphome:ffmpeg_proxy"
-
-    schema = vol.Schema(
-        {
-            vol.Required("device_id"): cv.string,
-            vol.Required("url"): cv.string,
-            vol.Required("format"): cv.string,
-            vol.Optional("rate"): cv.positive_int,
-            vol.Optional("channels"): cv.positive_int,
-        }
-    )
 
     def __init__(self, manager: FFmpegManager, data: FFmpegProxyData) -> None:
         """Initialize an ffmpeg view."""
         self.manager = manager
         self.data = data
 
-    async def get(self, request: web.Request) -> web.StreamResponse:
+    async def get(
+        self, request: web.Request, device_id: str, filename: str
+    ) -> web.StreamResponse:
         """Start a get request."""
 
-        try:
-            query: dict[str, Any] = self.schema(dict(request.query))
-        except vol.Invalid as err:
-            _LOGGER.error("Query does not match schema: %s", err)
-            return web.Response(body=str(err), status=HTTPStatus.BAD_REQUEST)
-
-        device_id = query["device_id"]
-        url = query["url"]
-        fmt = query["format"]
-
-        rate: int | None = query.get("rate")
-        channels: int | None = query.get("channels")
+        # {id}.mp3 -> id
+        convert_id = filename.rsplit(".")[0]
 
         try:
-            self.data.device_urls[device_id].remove(url)
+            convert_info = self.data.conversions[device_id].pop(convert_id)
         except KeyError:
-            _LOGGER.error("URL is not allowed for device %s: %s", device_id, url)
-            return web.Response(body="URL not allowed", status=HTTPStatus.BAD_REQUEST)
+            _LOGGER.error(
+                "Unrecognized convert id %s for device: %s", convert_id, device_id
+            )
+            return web.Response(
+                body="Convert id not recognized", status=HTTPStatus.BAD_REQUEST
+            )
 
         # Stream converted audio back to client
-        return FFmpegConvertResponse(
-            self.manager, url=url, fmt=fmt, rate=rate, channels=channels
-        )
+        return FFmpegConvertResponse(self.manager, convert_info)
