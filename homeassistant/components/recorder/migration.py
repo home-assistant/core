@@ -644,7 +644,7 @@ def _update_states_table_with_foreign_key_options(
 
 def _drop_foreign_key_constraints(
     session_maker: Callable[[], Session], engine: Engine, table: str, column: str
-) -> tuple[bool, list[tuple[str, str, ReflectedForeignKeyConstraint]]]:
+) -> list[tuple[str, str, ReflectedForeignKeyConstraint]]:
     """Drop foreign key constraints for a table on specific columns.
 
     This is not supported for SQLite because it does not support
@@ -671,7 +671,6 @@ def _drop_foreign_key_constraints(
         if foreign_key["name"] and foreign_key["constrained_columns"] == [column]
     ]
 
-    fk_remove_ok = True
     for drop in drops:
         with session_scope(session=session_maker()) as session:
             try:
@@ -683,9 +682,9 @@ def _drop_foreign_key_constraints(
                     TABLE_STATES,
                     column,
                 )
-                fk_remove_ok = False
+                raise
 
-    return fk_remove_ok, dropped_constraints
+    return dropped_constraints
 
 
 def _restore_foreign_key_constraints(
@@ -2183,9 +2182,14 @@ def cleanup_legacy_states_event_ids(instance: Recorder) -> bool:
             # so we have to rebuild the table
             fk_remove_ok = rebuild_sqlite_table(session_maker, instance.engine, States)
         else:
-            fk_remove_ok, _ = _drop_foreign_key_constraints(
-                session_maker, instance.engine, TABLE_STATES, "event_id"
-            )
+            try:
+                _drop_foreign_key_constraints(
+                    session_maker, instance.engine, TABLE_STATES, "event_id"
+                )
+            except (InternalError, OperationalError):
+                fk_remove_ok = False
+            else:
+                fk_remove_ok = True
         if fk_remove_ok:
             _drop_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
             instance.use_legacy_events_index = False
