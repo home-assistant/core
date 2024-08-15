@@ -1,7 +1,7 @@
 {
   "domain": "iotmeter",
   "name": "IoTMeter",
-  "codeowners": ["@vase-uzivatelske-jmeno"],
+  "codeowners": ["@lipic"],
   "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/iotmeter",
   "iot_class": "local_polling",
