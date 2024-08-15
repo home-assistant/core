@@ -329,7 +329,7 @@ aiorecollect==2023.09.0
 aioridwell==2024.01.0
 
 # homeassistant.components.ruckus_unleashed
-aioruckus==0.34
+aioruckus==0.40
 
 # homeassistant.components.russound_rio
 aiorussound==2.2.3
