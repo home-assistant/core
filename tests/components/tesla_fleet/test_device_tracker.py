@@ -1,5 +1,7 @@
 """Test the Tesla Fleet device tracker platform."""
 
+from unittest.mock import AsyncMock
+
 from syrupy import SnapshotAssertion
 from tesla_fleet_api.exceptions import VehicleOffline
 
@@ -26,7 +28,7 @@ async def test_device_tracker(
 
 async def test_device_tracker_offline(
     hass: HomeAssistant,
-    mock_vehicle_data,
+    mock_vehicle_data: AsyncMock,
     normal_config_entry: MockConfigEntry,
 ) -> None:
     """Tests that the device tracker entities are correct when offline."""

@@ -106,7 +106,7 @@ def mock_wake_up() -> Generator[AsyncMock]:
 
 @pytest.fixture(autouse=True)
 def mock_live_status() -> Generator[AsyncMock]:
-    """Mock Teslemetry Energy Specific live_status method."""
+    """Mock Tesla Fleet API Energy Specific live_status method."""
     with patch(
         "homeassistant.components.tesla_fleet.EnergySpecific.live_status",
         side_effect=lambda: deepcopy(LIVE_STATUS),
@@ -116,7 +116,7 @@ def mock_live_status() -> Generator[AsyncMock]:
 
 @pytest.fixture(autouse=True)
 def mock_site_info() -> Generator[AsyncMock]:
-    """Mock Teslemetry Energy Specific site_info method."""
+    """Mock Tesla Fleet API Energy Specific site_info method."""
     with patch(
         "homeassistant.components.tesla_fleet.EnergySpecific.site_info",
         side_effect=lambda: deepcopy(SITE_INFO),
