@@ -36,7 +36,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from . import EvoChild, EvoDevice
 from .const import (
     ATTR_DURATION_DAYS,
     ATTR_DURATION_HOURS,
@@ -56,6 +55,7 @@ from .const import (
     EVO_TEMPOVER,
     EvoService,
 )
+from .entity import EvoChild, EvoDevice
 
 if TYPE_CHECKING:
     from . import EvoBroker

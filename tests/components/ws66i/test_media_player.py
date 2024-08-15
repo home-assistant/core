@@ -73,7 +73,7 @@ class AttrDict(dict):
 class MockWs66i:
     """Mock for pyws66i object."""
 
-    def __init__(self, fail_open=False, fail_zone_check=None):
+    def __init__(self, fail_open=False, fail_zone_check=None) -> None:
         """Init mock object."""
         self.zones = defaultdict(
             lambda: AttrDict(

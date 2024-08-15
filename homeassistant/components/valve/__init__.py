@@ -223,7 +223,8 @@ class ValveEntity(Entity):
     async def async_handle_open_valve(self) -> None:
         """Open the valve."""
         if self.supported_features & ValveEntityFeature.SET_POSITION:
-            return await self.async_set_valve_position(100)
+            await self.async_set_valve_position(100)
+            return
         await self.async_open_valve()
 
     def close_valve(self) -> None:
@@ -238,7 +239,8 @@ class ValveEntity(Entity):
     async def async_handle_close_valve(self) -> None:
         """Close the valve."""
         if self.supported_features & ValveEntityFeature.SET_POSITION:
-            return await self.async_set_valve_position(0)
+            await self.async_set_valve_position(0)
+            return
         await self.async_close_valve()
 
     async def async_toggle(self) -> None:

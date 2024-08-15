@@ -87,7 +87,7 @@ async def fake_post_request(*args: Any, **kwargs: Any):
     )
 
 
-async def fake_get_image(*args: Any, **kwargs: Any) -> bytes | str:
+async def fake_get_image(*args: Any, **kwargs: Any) -> bytes | str | None:
     """Return fake data."""
     if "endpoint" not in kwargs:
         return "{}"
@@ -96,6 +96,7 @@ async def fake_get_image(*args: Any, **kwargs: Any) -> bytes | str:
 
     if endpoint in "snapshot_720.jpg":
         return b"test stream image bytes"
+    return None
 
 
 async def simulate_webhook(hass: HomeAssistant, webhook_id: str, response) -> None:

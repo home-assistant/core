@@ -43,6 +43,9 @@
       "clean_count": {
         "default": "mdi:counter"
       },
+      "cut_direction": {
+        "default": "mdi:angle-acute"
+      },
       "volume": {
         "default": "mdi:volume-high",
         "state": {

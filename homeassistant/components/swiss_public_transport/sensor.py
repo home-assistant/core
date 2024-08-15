@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, SENSOR_CONNECTIONS_COUNT
+from .const import CONNECTIONS_COUNT, DOMAIN
 from .coordinator import DataConnection, SwissPublicTransportDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,7 +46,7 @@ SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
             value_fn=lambda data_connection: data_connection["departure"],
             index=i,
         )
-        for i in range(SENSOR_CONNECTIONS_COUNT)
+        for i in range(CONNECTIONS_COUNT)
     ],
     SwissPublicTransportSensorEntityDescription(
         key="duration",

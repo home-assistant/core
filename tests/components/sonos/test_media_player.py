@@ -22,8 +22,14 @@ from homeassistant.components.sonos.media_player import (
     LONG_SERVICE_TIMEOUT,
     SERVICE_RESTORE,
     SERVICE_SNAPSHOT,
+    VOLUME_INCREMENT,
 )
-from homeassistant.const import STATE_IDLE
+from homeassistant.const import (
+    SERVICE_VOLUME_DOWN,
+    SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_UP,
+    STATE_IDLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import (
@@ -768,3 +774,41 @@ async def test_service_snapshot_restore(
             blocking=True,
         )
     assert mock_restore.call_count == 2
+
+
+async def test_volume(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+) -> None:
+    """Test the media player volume services."""
+    initial_volume = soco.volume
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_VOLUME_UP,
+        {
+            "entity_id": "media_player.zone_a",
+        },
+        blocking=True,
+    )
+    assert soco.volume == initial_volume + VOLUME_INCREMENT
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_VOLUME_DOWN,
+        {
+            "entity_id": "media_player.zone_a",
+        },
+        blocking=True,
+    )
+    assert soco.volume == initial_volume
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_VOLUME_SET,
+        {"entity_id": "media_player.zone_a", "volume_level": 0.30},
+        blocking=True,
+    )
+    # SoCo uses 0..100 for its range.
+    assert soco.volume == 30
