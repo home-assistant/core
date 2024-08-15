@@ -48,9 +48,6 @@ class SynologyPhotosMediaSourceIdentifier:
         self.is_shared = False
         self.passphrase = ""
 
-        if not parts:
-            return
-
         self.unique_id = parts[0]
 
         if len(parts) > 1:
