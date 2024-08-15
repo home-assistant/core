@@ -1279,9 +1279,6 @@ phone-modem==0.1.1
 # homeassistant.components.pilight
 pilight==0.1.1
 
-# homeassistant.components.tis_control
-pillow==10.4.0
-
 # homeassistant.components.plex
 plexauth==0.0.6
 

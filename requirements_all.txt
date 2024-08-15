@@ -1569,9 +1569,6 @@ pigpio==1.78
 # homeassistant.components.pilight
 pilight==0.1.1
 
-# homeassistant.components.tis_control
-pillow==10.4.0
-
 # homeassistant.components.dominos
 pizzapi==0.0.6
 
