@@ -180,6 +180,7 @@ class FritzDeviceLightMock(FritzEntityBaseMock):
     level = 100
     present = True
     state = True
+    color_temp = None
 
 
 class FritzDeviceCoverMock(FritzEntityBaseMock):

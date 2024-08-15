@@ -10,6 +10,7 @@ from homeassistant.components.tasmota.const import (
     DEFAULT_PREFIX,
     DOMAIN,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
@@ -55,6 +56,6 @@ async def setup_tasmota_helper(hass):
 
 
 @pytest.fixture
-async def setup_tasmota(hass):
+async def setup_tasmota(hass: HomeAssistant) -> None:
     """Set up Tasmota."""
     await setup_tasmota_helper(hass)
