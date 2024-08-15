@@ -19,6 +19,11 @@ from tests.common import MockConfigEntry
 from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 
+@pytest.fixture(autouse=True)
+def mock_bluetooth(enable_bluetooth: None) -> None:
+    """Auto mock bluetooth."""
+
+
 @pytest.fixture
 def address() -> str:
     """Address fixture."""
@@ -131,7 +136,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def motionblinds_ble_connect(
-    enable_bluetooth: None, local_name: str, address: str
+    local_name: str, address: str
 ) -> Generator[tuple[AsyncMock, Mock]]:
     """Mock motion blinds ble connection and entry setup."""
     device = Mock()

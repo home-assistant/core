@@ -46,10 +46,10 @@ from tests.common import MockConfigEntry
     ],
 )
 async def test_cover_service(
+    hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_motion_device: Mock,
     name: str,
-    hass: HomeAssistant,
     service: str,
     method: str,
     kwargs: dict[str, Any],
@@ -77,10 +77,10 @@ async def test_cover_service(
     ],
 )
 async def test_cover_update_running(
+    hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_motion_device: Mock,
     name: str,
-    hass: HomeAssistant,
     running_type: str | None,
     state: str,
 ) -> None:
@@ -104,10 +104,10 @@ async def test_cover_update_running(
     ],
 )
 async def test_cover_update_position(
+    hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_motion_device: Mock,
     name: str,
-    hass: HomeAssistant,
     position: int,
     tilt: int,
     state: str,
