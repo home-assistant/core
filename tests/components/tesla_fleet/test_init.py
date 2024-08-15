@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import (
     InvalidToken,
     LoginRequired,
@@ -59,9 +59,9 @@ async def test_load_unload(
 async def test_init_error(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
-    mock_products,
-    side_effect,
-    state,
+    mock_products: AsyncMock,
+    side_effect: TeslaFleetError,
+    state: ConfigEntryState,
 ) -> None:
     """Test init with errors."""
 
@@ -91,8 +91,8 @@ async def test_devices(
 async def test_vehicle_refresh_offline(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
-    mock_vehicle_state,
-    mock_vehicle_data,
+    mock_vehicle_state: AsyncMock,
+    mock_vehicle_data: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator refresh with an error."""
@@ -148,7 +148,7 @@ async def test_vehicle_refresh_error(
 async def test_vehicle_refresh_ratelimited(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
-    mock_vehicle_data,
+    mock_vehicle_data: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator refresh handles 429."""
@@ -179,7 +179,7 @@ async def test_vehicle_refresh_ratelimited(
 async def test_vehicle_sleep(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
-    mock_vehicle_data,
+    mock_vehicle_data: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator refresh with an error."""
@@ -241,9 +241,9 @@ async def test_vehicle_sleep(
 async def test_energy_live_refresh_error(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
-    mock_live_status,
-    side_effect,
-    state,
+    mock_live_status: AsyncMock,
+    side_effect: TeslaFleetError,
+    state: ConfigEntryState,
 ) -> None:
     """Test coordinator refresh with an error."""
     mock_live_status.side_effect = side_effect
@@ -256,9 +256,9 @@ async def test_energy_live_refresh_error(
 async def test_energy_site_refresh_error(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
-    mock_site_info,
-    side_effect,
-    state,
+    mock_site_info: AsyncMock,
+    side_effect: TeslaFleetError,
+    state: ConfigEntryState,
 ) -> None:
     """Test coordinator refresh with an error."""
     mock_site_info.side_effect = side_effect
@@ -300,7 +300,7 @@ async def test_energy_live_refresh_ratelimited(
 async def test_energy_info_refresh_ratelimited(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
-    mock_site_info,
+    mock_site_info: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator refresh handles 429."""
