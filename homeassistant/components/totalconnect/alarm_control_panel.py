@@ -103,7 +103,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
     @property
     def state(self) -> str | None:
         """Return the state of the device."""
-        # State attributes can be removed in 2025.2
+        # State attributes can be removed in 2025.3
         attr = {
             "location_id": self._location.location_id,
             "partition": self._partition_id,
