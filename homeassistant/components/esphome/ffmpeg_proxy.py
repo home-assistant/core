@@ -5,7 +5,6 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from http import HTTPStatus
 import logging
-from uuid import uuid4
 
 from aiohttp import web
 from aiohttp.abc import AbstractStreamWriter, BaseRequest
@@ -13,6 +12,7 @@ from aiohttp.abc import AbstractStreamWriter, BaseRequest
 from homeassistant.components.ffmpeg import FFmpegManager
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant
+from homeassistant.util import ulid
 
 from .const import DATA_FFMPEG_PROXY
 
@@ -34,7 +34,7 @@ def async_allow_proxy_url(
     """
     data: FFmpegProxyData = hass.data[DATA_FFMPEG_PROXY]
 
-    convert_id = str(uuid4())
+    convert_id = ulid.ulid()
     data.conversions[device_id][convert_id] = FFmpegConversionInfo(
         url, media_format, rate, channels
     )
@@ -69,6 +69,9 @@ class FFmpegProxyData:
         default_factory=lambda: defaultdict(dict)
     )
 
+    # device_id -> process
+    processes: dict[str, asyncio.subprocess.Process] = field(default_factory=dict)
+
 
 class FFmpegConvertResponse(web.StreamResponse):
     """HTTP streaming response that uses ffmpeg to convert audio from a URL."""
@@ -77,6 +80,8 @@ class FFmpegConvertResponse(web.StreamResponse):
         self,
         manager: FFmpegManager,
         convert_info: FFmpegConversionInfo,
+        device_id: str,
+        proxy_data: FFmpegProxyData,
         chunk_size: int = 2048,
     ) -> None:
         """Initialize response.
@@ -87,6 +92,10 @@ class FFmpegConvertResponse(web.StreamResponse):
             ffmpeg manager
         convert_info: FFmpegConversionInfo
             Information necessary to do the conversion
+        device_id: str
+            ESPHome device id
+        proxy_data: FFmpegProxyData
+            Data object to store ffmpeg process
         chunk_size: int
             Number of bytes to read from ffmpeg process at a time
 
@@ -94,6 +103,8 @@ class FFmpegConvertResponse(web.StreamResponse):
         super().__init__(status=200)
         self.manager = manager
         self.convert_info = convert_info
+        self.device_id = device_id
+        self.proxy_data = proxy_data
         self.chunk_size = chunk_size
 
     async def prepare(self, request: BaseRequest) -> AbstractStreamWriter | None:
@@ -129,6 +140,10 @@ class FFmpegConvertResponse(web.StreamResponse):
 
         assert proc.stdout is not None
         assert proc.stderr is not None
+
+        # Only one conversion process per device is allowed
+        self.proxy_data.processes[self.device_id] = proc
+
         try:
             # Pull audio chunks from ffmpeg and pass them to the HTTP client
             while (
@@ -140,12 +155,11 @@ class FFmpegConvertResponse(web.StreamResponse):
                 await writer.write(chunk)
                 await writer.drain()
         finally:
-            # Try to gracefully stop
-            proc.terminate()
-            await proc.wait()
-
             # Close connection
             await writer.write_eof()
+
+            # Terminate hangs, so kill is used
+            proc.kill()
 
             if proc.returncode != 0:
                 # Process did not exit successfully
@@ -166,10 +180,10 @@ class FFmpegProxyView(HomeAssistantView):
     url = "/api/esphome/ffmpeg_proxy/{device_id}/{filename}"
     name = "api:esphome:ffmpeg_proxy"
 
-    def __init__(self, manager: FFmpegManager, data: FFmpegProxyData) -> None:
+    def __init__(self, manager: FFmpegManager, proxy_data: FFmpegProxyData) -> None:
         """Initialize an ffmpeg view."""
         self.manager = manager
-        self.data = data
+        self.proxy_data = proxy_data
 
     async def get(
         self, request: web.Request, device_id: str, filename: str
@@ -180,7 +194,7 @@ class FFmpegProxyView(HomeAssistantView):
         convert_id = filename.rsplit(".")[0]
 
         try:
-            convert_info = self.data.conversions[device_id].pop(convert_id)
+            convert_info = self.proxy_data.conversions[device_id].pop(convert_id)
         except KeyError:
             _LOGGER.error(
                 "Unrecognized convert id %s for device: %s", convert_id, device_id
@@ -189,5 +203,15 @@ class FFmpegProxyView(HomeAssistantView):
                 body="Convert id not recognized", status=HTTPStatus.BAD_REQUEST
             )
 
+        # Stop any existing process
+        proc = self.proxy_data.processes.pop(device_id, None)
+        if proc is not None:
+            _LOGGER.debug("Stopping existing ffmpeg process for device: %s", device_id)
+
+            # Terminate hangs, so kill is used
+            proc.kill()
+
         # Stream converted audio back to client
-        return FFmpegConvertResponse(self.manager, convert_info)
+        return FFmpegConvertResponse(
+            self.manager, convert_info, device_id, self.proxy_data
+        )
