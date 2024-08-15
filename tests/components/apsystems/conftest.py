@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from APsystemsEZ1 import ReturnDeviceInfo, ReturnOutputData, Status
+from APsystemsEZ1 import ReturnAlarmInfo, ReturnDeviceInfo, ReturnOutputData, Status
 import pytest
 
 from homeassistant.components.apsystems.const import DOMAIN
@@ -51,6 +51,12 @@ def mock_apsystems() -> Generator[MagicMock]:
             p2=5.0,
             e2=6.0,
             te2=7.0,
+        )
+        mock_api.get_alarm_info.return_value = ReturnAlarmInfo(
+            og=Status.normal,
+            isce1=Status.alarm,
+            isce2=Status.normal,
+            oe=Status.alarm,
         )
         mock_api.get_device_power_status.return_value = Status.normal
         yield mock_api

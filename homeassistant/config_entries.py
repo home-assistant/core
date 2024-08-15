@@ -1245,10 +1245,10 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
     @callback
     def _async_has_other_discovery_flows(self, flow_id: str) -> bool:
         """Check if there are any other discovery flows in progress."""
-        return any(
-            flow.context["source"] in DISCOVERY_SOURCES and flow.flow_id != flow_id
-            for flow in self._progress.values()
-        )
+        for flow in self._progress.values():
+            if flow.flow_id != flow_id and flow.context["source"] in DISCOVERY_SOURCES:
+                return True
+        return False
 
     async def async_init(
         self, handler: str, *, context: dict[str, Any] | None = None, data: Any = None
@@ -1699,12 +1699,12 @@ class ConfigEntries:
         entries = self._entries.get_entries_for_domain(domain)
         if include_ignore and include_disabled:
             return bool(entries)
-        return any(
-            entry
-            for entry in entries
-            if (include_ignore or entry.source != SOURCE_IGNORE)
-            and (include_disabled or not entry.disabled_by)
-        )
+        for entry in entries:
+            if (include_ignore or entry.source != SOURCE_IGNORE) and (
+                include_disabled or not entry.disabled_by
+            ):
+                return True
+        return False
 
     @callback
     def async_entries(
