@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from math import ceil
 from typing import Any
 
@@ -72,7 +73,7 @@ class TISSwitch(SwitchEntity):
         self.device_id = device_id
         self.gateway = gateway
         self.channel_number = int(channel_number)
-        self.listener = None
+        self.listener: Callable | None = None
         self.on_packet: TISPacket = protocol_handler.generate_control_on_packet(self)
         self.off_packet: TISPacket = protocol_handler.generate_control_off_packet(self)
         self.update_packet: TISPacket = protocol_handler.generate_control_update_packet(
@@ -120,7 +121,6 @@ class TISSwitch(SwitchEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove the listener when the entity is removed."""
-        self.listener()
         self.listener = None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -168,4 +168,4 @@ class TISSwitch(SwitchEntity):
 
         elif self._state == STATE_OFF:  # noqa: RET505
             return False
-        return None
+        return False
