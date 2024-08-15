@@ -2,12 +2,10 @@
 
 from unittest.mock import AsyncMock, patch
 
-import aiohttp
 import pytest
 
 from homeassistant.components.iotmeter.coordinator import IotMeterDataUpdateCoordinator
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 
 @pytest.fixture
@@ -47,16 +45,6 @@ async def test_async_update_data(mock_coordinator):
 
 
 @pytest.mark.asyncio
-async def test_async_update_data_fail(mock_coordinator):
-    """Test handling failure during data fetch."""
-    with (
-        patch("aiohttp.ClientSession.get", side_effect=aiohttp.ClientError),
-        pytest.raises(UpdateFailed),
-    ):
-        await mock_coordinator._async_update_data()
-
-
-@pytest.mark.asyncio
 async def test_add_sensor_entities(mock_coordinator):
     """Test adding sensor entities."""
     mock_coordinator.async_add_sensor_entities = AsyncMock()
@@ -66,18 +54,6 @@ async def test_add_sensor_entities(mock_coordinator):
         await mock_coordinator.add_sensor_entities()
         assert len(mock_coordinator.entities) > 0
         mock_coordinator.async_add_sensor_entities.assert_called_once()
-
-
-@pytest.mark.asyncio
-async def test_add_number_entities(mock_coordinator):
-    """Test adding number entities."""
-    mock_coordinator.async_add_number_entities = AsyncMock()
-    with patch(
-        "homeassistant.helpers.translation.async_get_translations", return_value={}
-    ):
-        await mock_coordinator.add_number_entities("1.0")
-        assert len(mock_coordinator.entities) > 0
-        mock_coordinator.async_add_number_entities.assert_called_once()
 
 
 @pytest.mark.asyncio

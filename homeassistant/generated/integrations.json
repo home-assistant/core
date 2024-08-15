@@ -2860,7 +2860,7 @@
     "iotmeter": {
       "name": "IoTMeter",
       "integration_type": "hub",
-      "config_flow": true,
+      "config_flow": false,
       "iot_class": "local_polling"
     },
     "iotty": {
