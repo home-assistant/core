@@ -199,5 +199,5 @@ async def test_options_flow(
     assert result["data"] == new_options
 
     entry = hass.config_entries.async_get_entry(entry.entry_id)
-    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert entry.state is config_entries.ConfigEntryState.LOADED
     assert entry.options == new_options

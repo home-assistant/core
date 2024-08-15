@@ -23,12 +23,15 @@ async def test_migration_to_version_2(
     }
 
     entry = MockConfigEntry(
-        domain=DOMAIN, data=data, title=f"test [{data['file_path']}]"
+        domain=DOMAIN,
+        version=1,
+        data=data,
+        title=f"test [{data['file_path']}]",
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.version == 2
     assert entry.data == {
         "platform": "sensor",
@@ -59,4 +62,4 @@ async def test_migration_from_future_version(
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
 
-    assert entry.state == ConfigEntryState.MIGRATION_ERROR
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
