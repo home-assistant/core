@@ -66,7 +66,7 @@ class TISSwitch(SwitchEntity):
         self.api = tis_api
         self._name = switch_name
         self._attr_unique_id = f"switch_{self.name}"
-        self._attr_state = STATE_UNKNOWN
+        self._state = STATE_UNKNOWN
         self._attr_is_on = None
         self.name = switch_name
         self.device_id = device_id
@@ -91,7 +91,7 @@ class TISSwitch(SwitchEntity):
                     channel_value = event.data["additional_bytes"][2]
                     channel_number = event.data["channel_number"]
                     if int(channel_number) == self.channel_number:
-                        self._attr_state = (
+                        self.state = (
                             STATE_ON if int(channel_value) == 100 else STATE_OFF
                         )
                 elif event.data["feedback_type"] == "binary_feedback":
@@ -100,7 +100,7 @@ class TISSwitch(SwitchEntity):
                         int_to_8_bit_binary(event.data["additional_bytes"][i])
                         for i in range(1, n_bytes + 1)
                     )
-                    self._attr_state = (
+                    self._state = (
                         STATE_ON
                         if channels_status[self.channel_number - 1] == "1"
                         else STATE_OFF
@@ -108,9 +108,9 @@ class TISSwitch(SwitchEntity):
                 elif event.data["feedback_type"] == "update_response":
                     additional_bytes = event.data["additional_bytes"]
                     channel_status = int(additional_bytes[self.channel_number])
-                    self._attr_state = STATE_ON if channel_status > 0 else STATE_OFF
+                    self._state = STATE_ON if channel_status > 0 else STATE_OFF
                 elif event.data["feedback_type"] == "offline_device":
-                    self._attr_state = STATE_UNKNOWN
+                    self._state = STATE_UNKNOWN
 
             await self.async_update_ha_state(True)
             # self.schedule_update_ha_state()
@@ -129,9 +129,9 @@ class TISSwitch(SwitchEntity):
             self.on_packet,
         )
         if ack_status:
-            self._attr_state = STATE_ON
+            self._state = STATE_ON
         else:
-            self._attr_state = STATE_UNKNOWN
+            self._state = STATE_UNKNOWN
             event_data = {
                 "device_id": self.device_id,
                 "feedback_type": "offline_device",
@@ -145,9 +145,9 @@ class TISSwitch(SwitchEntity):
             self.off_packet
         )
         if ack_status:
-            self._attr_state = STATE_OFF
+            self._state = STATE_OFF
         else:
-            self._attr_state = STATE_UNKNOWN
+            self._state = STATE_UNKNOWN
         self.schedule_update_ha_state()
 
     @property
@@ -163,9 +163,9 @@ class TISSwitch(SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the switch."""
-        if self._attr_state == STATE_ON:
+        if self._state == STATE_ON:
             return True
 
-        elif self._attr_state == STATE_OFF:  # noqa: RET505
+        elif self._state == STATE_OFF:  # noqa: RET505
             return False
         return None
