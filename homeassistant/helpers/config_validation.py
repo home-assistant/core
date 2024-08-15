@@ -132,10 +132,6 @@ _hass = _Hass()
 """Set when doing async friendly schema validation."""
 
 
-_validating_async: ContextVar[bool] = ContextVar("_validating_async", default=False)
-"""Set to True when doing async friendly schema validation."""
-
-
 def _async_get_hass_or_none() -> HomeAssistant | None:
     """Return the HomeAssistant instance or None.
 
@@ -145,8 +141,16 @@ def _async_get_hass_or_none() -> HomeAssistant | None:
     return async_get_hass_or_none() or _hass.hass
 
 
+_validating_async: ContextVar[bool] = ContextVar("_validating_async", default=False)
+"""Set to True when doing async friendly schema validation."""
+
+
 def not_async_friendly[**_P, _R](validator: Callable[_P, _R]) -> Callable[_P, _R]:
-    """Mark a validator as not async friendly."""
+    """Mark a validator as not async friendly.
+
+    This makes validation happen in an executor thread if validation is done by
+    async_validate, otherwise does nothing.
+    """
 
     @functools.wraps(validator)
     def _not_async_friendly(*args: _P.args, **kwargs: _P.kwargs) -> _R:
@@ -1975,7 +1979,8 @@ async def async_validate(
 ) -> Any:
     """Async friendly schema validation.
 
-    If a validator doing I/O is called, validation will be executed in an executor.
+    If a validator decorated with @not_async_friendly is called, validation will be
+    deferred to an executor. If not, validation will happen in the event loop.
     """
     _validating_async.set(True)
     try:
