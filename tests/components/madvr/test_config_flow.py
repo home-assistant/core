@@ -140,7 +140,7 @@ async def test_reconfigure_flow(
         context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
     assert result["errors"] == {}
 
@@ -155,7 +155,7 @@ async def test_reconfigure_flow(
     )
 
     # should get the abort with success result
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
     # Verify that the config entry was updated
@@ -167,24 +167,35 @@ async def test_reconfigure_flow(
     mock_madvr_client.async_add_tasks.assert_called()
     mock_madvr_client.async_cancel_tasks.assert_called()
 
+
+async def test_reconfigure_new_device(
+    hass: HomeAssistant,
+    mock_madvr_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow."""
+    mock_config_entry.add_to_hass(hass)
     # test reconfigure with a new device (should fail)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
     )
+
+    # define new host
+    new_host = "192.168.1.100"
+    # make sure setting port works
+    new_port = 44078
+
     # modify test_connection so it returns new_mac
-    with patch(
-        "homeassistant.components.madvr.config_flow.test_connection",
-        new=AsyncMock(return_value=MOCK_MAC_NEW),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: new_host, CONF_PORT: new_port},
-        )
+    mock_madvr_client.mac_address = MOCK_MAC_NEW
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: new_host, CONF_PORT: new_port},
+    )
 
     # unique id should remain unchanged with new device, should fail
     assert mock_config_entry.unique_id == MOCK_MAC
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "set_up_new_device"
 
 
