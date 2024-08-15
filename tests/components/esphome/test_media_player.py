@@ -1,13 +1,17 @@
 """Test ESPHome media_players."""
 
 from unittest.mock import AsyncMock, Mock, call, patch
+from urllib.parse import urlparse
 
 from aioesphomeapi import (
     APIClient,
     MediaPlayerCommand,
     MediaPlayerEntityState,
+    MediaPlayerFormatPurpose,
     MediaPlayerInfo,
     MediaPlayerState,
+    MediaPlayerSupportedFormat,
+    UserService,
 )
 import pytest
 
@@ -55,7 +59,7 @@ async def test_media_player_entity(
             key=1, volume=50, muted=True, state=MediaPlayerState.PAUSED
         )
     ]
-    user_service = []
+    user_service: list[UserService] = []
     await mock_generic_device_entry(
         mock_client=mock_client,
         entity_info=entity_info,
@@ -200,7 +204,7 @@ async def test_media_player_entity_with_source(
             key=1, volume=50, muted=True, state=MediaPlayerState.PLAYING
         )
     ]
-    user_service = []
+    user_service: list[UserService] = []
     await mock_generic_device_entry(
         mock_client=mock_client,
         entity_info=entity_info,
@@ -277,3 +281,109 @@ async def test_media_player_entity_with_source(
     mock_client.media_player_command.assert_has_calls(
         [call(1, media_url="media-source://tts?message=hello", announcement=True)]
     )
+
+
+async def test_media_player_proxy(
+    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+) -> None:
+    """Test a media_player entity with a proxy URL."""
+    entity_info = [
+        MediaPlayerInfo(
+            object_id="mymedia_player",
+            key=1,
+            name="my media_player",
+            unique_id="my_media_player",
+            supports_pause=True,
+            supported_formats=[
+                MediaPlayerSupportedFormat(
+                    format="flac",
+                    sample_rate=48000,
+                    num_channels=2,
+                    purpose=MediaPlayerFormatPurpose.DEFAULT,
+                ),
+                MediaPlayerSupportedFormat(
+                    format="wav",
+                    sample_rate=16000,
+                    num_channels=1,
+                    purpose=MediaPlayerFormatPurpose.ANNOUNCEMENT,
+                ),
+                MediaPlayerSupportedFormat(
+                    format="mp3",
+                    sample_rate=48000,
+                    num_channels=2,
+                    purpose=MediaPlayerFormatPurpose.DEFAULT,
+                ),
+            ],
+        )
+    ]
+    states = [
+        MediaPlayerEntityState(
+            key=1, volume=50, muted=False, state=MediaPlayerState.PAUSED
+        )
+    ]
+    user_service: list[UserService] = []
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("media_player.test_mymedia_player")
+    assert state is not None
+    assert state.state == "paused"
+
+    media_url = "http://127.0.0.1/test.mp3"
+    with (
+        patch(
+            "homeassistant.components.esphome.media_player.async_allow_proxy_url",
+            return_value="test-id",
+        ) as mock_async_allow_proxy_url,
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                ATTR_MEDIA_CONTENT_ID: media_url,
+            },
+            blocking=True,
+        )
+
+        # Should be the default format
+        device_id = mock_async_allow_proxy_url.call_args[0][1]
+        mock_async_allow_proxy_url.assert_called_once_with(
+            hass, device_id, media_url, media_format="flac", rate=48000, channels=2
+        )
+
+        media_args = mock_client.media_player_command.call_args.kwargs
+        proxy_url = urlparse(media_args["media_url"])
+        assert proxy_url.path == f"/api/esphome/ffmpeg_proxy/{device_id}/test-id.flac"
+        assert not media_args["announcement"]
+
+        # Reset
+        mock_async_allow_proxy_url.reset_mock()
+
+        # Set announcement flag
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                ATTR_MEDIA_CONTENT_ID: media_url,
+                ATTR_MEDIA_ANNOUNCE: True,
+            },
+            blocking=True,
+        )
+
+        # Should be the announcement format
+        device_id = mock_async_allow_proxy_url.call_args[0][1]
+        mock_async_allow_proxy_url.assert_called_once_with(
+            hass, device_id, media_url, media_format="wav", rate=16000, channels=1
+        )
+
+        media_args = mock_client.media_player_command.call_args.kwargs
+        proxy_url = urlparse(media_args["media_url"])
+        assert proxy_url.path == f"/api/esphome/ffmpeg_proxy/{device_id}/test-id.wav"
+        assert media_args["announcement"]

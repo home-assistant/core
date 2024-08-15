@@ -117,36 +117,13 @@ class EsphomeMediaPlayer(
         media_id = async_process_play_media_url(self.hass, media_id)
         announcement = kwargs.get(ATTR_MEDIA_ANNOUNCE)
 
-        if self.supported_formats and _is_url(media_id):
-            format_to_use: MediaPlayerSupportedFormat | None = None
-            for supported_format in self.supported_formats:
-                if (format_to_use is None) and (
-                    supported_format.purpose == MediaPlayerFormatPurpose.DEFAULT
-                ):
-                    format_to_use = supported_format
-                elif supported_format.purpose == MediaPlayerFormatPurpose.ANNOUNCEMENT:
-                    format_to_use = supported_format
-                    break
-
-            if format_to_use is not None:
-                assert self.device_entry is not None
-                _LOGGER.debug(
-                    "Proxying media url %s with format %s", media_id, format_to_use
-                )
-                device_id = self.device_entry.id
-                media_format = format_to_use.format
-                convert_id = async_allow_proxy_url(
-                    self.hass,
-                    device_id,
-                    media_id,
-                    media_format=media_format,
-                    rate=format_to_use.sample_rate,
-                    channels=format_to_use.num_channels,
-                )
-                proxy_url = (
-                    f"/api/esphome/ffmpeg_proxy/{device_id}/{convert_id}.{media_format}"
-                )
-                media_id = async_process_play_media_url(self.hass, proxy_url)
+        if (
+            self.supported_formats
+            and _is_url(media_id)
+            and (proxy_url := self._get_proxy_url(media_id, announcement is True))
+        ):
+            # Substitute proxy URL
+            media_id = proxy_url
 
         self._client.media_player_command(
             self._key, media_url=media_id, announcement=announcement
@@ -156,6 +133,50 @@ class EsphomeMediaPlayer(
         """Handle entity being removed."""
         await super().async_will_remove_from_hass()
         self._entry_data.media_player_formats.pop(self.entity_id, None)
+    def _get_proxy_url(self, url: str, announcement: bool) -> str | None:
+        """Get URL for ffmpeg proxy."""
+        if self.device_entry is None:
+            # Device id is required
+            return None
+
+        # Choose the first default or announcement supported format
+        format_to_use: MediaPlayerSupportedFormat | None = None
+        for supported_format in self.supported_formats:
+            if (format_to_use is None) and (
+                supported_format.purpose == MediaPlayerFormatPurpose.DEFAULT
+            ):
+                # First default format
+                format_to_use = supported_format
+            elif announcement and (
+                supported_format.purpose == MediaPlayerFormatPurpose.ANNOUNCEMENT
+            ):
+                # First announcement format
+                format_to_use = supported_format
+                break
+
+        if format_to_use is None:
+            # No format for conversion
+            return None
+
+        # Replace the media URL with a proxy URL pointing to Home
+        # Assistant. When requested, Home Assistant will use ffmpeg to
+        # convert the source URL to the supported format.
+        _LOGGER.debug("Proxying media url %s with format %s", url, format_to_use)
+        device_id = self.device_entry.id
+        media_format = format_to_use.format
+        convert_id = async_allow_proxy_url(
+            self.hass,
+            device_id,
+            url,
+            media_format=media_format,
+            rate=format_to_use.sample_rate,
+            channels=format_to_use.num_channels,
+        )
+
+        # Ensure the URL has a file extension for devices that use it to
+        # identify the file type.
+        proxy_url = f"/api/esphome/ffmpeg_proxy/{device_id}/{convert_id}.{media_format}"
+        return async_process_play_media_url(self.hass, proxy_url)
 
     async def async_browse_media(
         self,
