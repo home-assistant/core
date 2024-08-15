@@ -230,9 +230,9 @@
       "name": "Publish",
       "description": "Publishes a message to an MQTT topic.",
       "fields": {
-        "evaluate_bytes": {
-          "name": "Evaluate bytes",
-          "description": "When `payload` is a bytes literal, then evaluate the lieral and publish the raw data."
+        "evaluate_payload": {
+          "name": "Evaluate payload",
+          "description": "When `payload` is a bytes literal, then evaluate the literal to publish the raw data."
         },
         "topic": {
           "name": "Topic",

@@ -12,7 +12,7 @@ publish:
       example: "The temperature is {{ states('sensor.temperature') }}"
       selector:
         template:
-    evaluate_bytes:
+    evaluate_payload:
       advanced: true
       default: false
       selector:
