@@ -13,7 +13,7 @@ from fyta_cli.fyta_exceptions import (
     FytaPasswordError,
     FytaPlantError,
 )
-from fyta_cli.fyta_models import Credentials, Plant
+from fyta_cli.fyta_models import Plant
 
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
@@ -61,7 +61,6 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, Plant]]):
 
     async def renew_authentication(self) -> bool:
         """Renew access token for FYTA API."""
-        credentials: Credentials
 
         try:
             credentials = await self.fyta.login()
