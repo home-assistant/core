@@ -1,5 +1,6 @@
 """Test weather."""
 
+import copy
 from typing import Any
 
 from syrupy.assertion import SnapshotAssertion
@@ -19,9 +20,10 @@ async def test_forecast_daily(
     """Test basic forecast."""
 
     # First entry in test data is a half day; we don't want that for this test
-    del ec_data["daily_forecasts"][0]
+    local_ec_data = copy.deepcopy(ec_data)
+    del local_ec_data["daily_forecasts"][0]
 
-    await init_integration(hass, ec_data)
+    await init_integration(hass, local_ec_data)
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
