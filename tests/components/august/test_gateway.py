@@ -50,5 +50,5 @@ async def _patched_refresh_access_token(
     )
     await august_gateway.async_refresh_access_token_if_needed()
     refresh_access_token_mock.assert_called()
-    assert august_gateway.access_token == new_token
+    assert await august_gateway.async_get_access_token() == new_token
     assert august_gateway.authentication.access_token_expires == new_token_expire_time

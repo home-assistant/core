@@ -100,7 +100,10 @@
   },
   "exceptions": {
     "delete_todos_failed": {
-      "message": "Unable to delete {count} Habitica to-do(s), please try again"
+      "message": "Unable to delete item from Habitica to-do list, please try again"
+    },
+    "delete_completed_todos_failed": {
+      "message": "Unable to delete completed to-do items from Habitica to-do list, please try again"
     },
     "move_todos_item_failed": {
       "message": "Unable to move the Habitica to-do to position {pos}, please try again"
