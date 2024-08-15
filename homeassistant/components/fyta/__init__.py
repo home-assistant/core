@@ -6,7 +6,6 @@ from datetime import datetime
 import logging
 
 from fyta_cli.fyta_connector import FytaConnector
-from fyta_cli.fyta_models import Credentials
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
