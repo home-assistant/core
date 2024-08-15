@@ -341,7 +341,7 @@ async def test_init_region_issue(
     mock_products.side_effect = InvalidRegion
     await setup_platform(hass, normal_config_entry)
     mock_find_server.assert_called_once()
-    assert normal_config_entry.state is ConfigEntryState.LOADED
+    assert normal_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_init_region_issue_failed(

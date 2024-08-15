@@ -128,6 +128,6 @@ def mock_site_info() -> Generator[AsyncMock]:
 def mock_find_server() -> Generator[AsyncMock]:
     """Mock Tesla Fleet find server method."""
     with patch(
-        "homeassistant.components.tesla_fleet.find_server",
+        "homeassistant.components.tesla_fleet.TeslaFleetApi.find_server",
     ) as mock_find_server:
         yield mock_find_server
