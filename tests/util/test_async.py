@@ -14,7 +14,9 @@ from tests.common import extract_stack_to_frame
 
 @patch("concurrent.futures.Future")
 @patch("threading.get_ident")
-def test_run_callback_threadsafe_from_inside_event_loop(mock_ident, _) -> None:
+def test_run_callback_threadsafe_from_inside_event_loop(
+    mock_ident: MagicMock, mock_future: MagicMock
+) -> None:
     """Testing calling run_callback_threadsafe from inside an event loop."""
     callback = MagicMock()
 
@@ -197,3 +199,17 @@ async def test_create_eager_task_from_thread_in_integration(
         "from a thread at homeassistant/components/hue/light.py, line 23: "
         "self.light.is_on"
     ) in caplog.text
+
+
+async def test_get_scheduled_timer_handles(hass: HomeAssistant) -> None:
+    """Test get_scheduled_timer_handles returns all scheduled timer handles."""
+    loop = hass.loop
+    timer_handle = loop.call_later(10, lambda: None)
+    timer_handle2 = loop.call_later(5, lambda: None)
+    timer_handle3 = loop.call_later(15, lambda: None)
+
+    handles = hasync.get_scheduled_timer_handles(loop)
+    assert set(handles).issuperset({timer_handle, timer_handle2, timer_handle3})
+    timer_handle.cancel()
+    timer_handle2.cancel()
+    timer_handle3.cancel()

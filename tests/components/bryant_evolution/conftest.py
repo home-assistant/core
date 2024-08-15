@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.bryant_evolution.async_setup_entry", return_value=True
@@ -31,7 +31,7 @@ for the Bryant Evolution integration.
 
 
 @pytest.fixture(autouse=True)
-def mock_evolution_client_factory() -> Generator[AsyncMock, None, None]:
+def mock_evolution_client_factory() -> Generator[AsyncMock]:
     """Mock an Evolution client."""
     with patch(
         "evolutionhttp.BryantEvolutionLocalClient.get_client",

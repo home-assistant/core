@@ -281,19 +281,20 @@ async def _async_setup_component(
         integration = await loader.async_get_integration(hass, domain)
     except loader.IntegrationNotFound:
         _log_error_setup_error(hass, domain, None, "Integration not found.")
-        ir.async_create_issue(
-            hass,
-            HOMEASSISTANT_DOMAIN,
-            f"integration_not_found.{domain}",
-            is_fixable=True,
-            issue_domain=HOMEASSISTANT_DOMAIN,
-            severity=IssueSeverity.ERROR,
-            translation_key="integration_not_found",
-            translation_placeholders={
-                "domain": domain,
-            },
-            data={"domain": domain},
-        )
+        if not hass.config.safe_mode:
+            ir.async_create_issue(
+                hass,
+                HOMEASSISTANT_DOMAIN,
+                f"integration_not_found.{domain}",
+                is_fixable=True,
+                issue_domain=HOMEASSISTANT_DOMAIN,
+                severity=IssueSeverity.ERROR,
+                translation_key="integration_not_found",
+                translation_placeholders={
+                    "domain": domain,
+                },
+                data={"domain": domain},
+            )
         return False
 
     log_error = partial(_log_error_setup_error, hass, domain, integration)

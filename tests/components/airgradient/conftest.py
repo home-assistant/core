@@ -44,6 +44,7 @@ def mock_airgradient_client() -> Generator[AsyncMock]:
         client.get_config.return_value = Config.from_json(
             load_fixture("get_config_local.json", DOMAIN)
         )
+        client.get_latest_firmware_version.return_value = "3.1.4"
         yield client
 
 

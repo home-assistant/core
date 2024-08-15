@@ -136,7 +136,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 # Tuple to hold data needed for notification
-NotificationItem = namedtuple(
+NotificationItem = namedtuple(  # noqa: PYI024
     "NotificationItem", "hnotify huser name plc_datatype callback"
 )
 

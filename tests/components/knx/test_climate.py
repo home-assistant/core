@@ -80,12 +80,6 @@ async def test_climate_on_off(
             )
         }
     )
-
-    await hass.async_block_till_done()
-    # read heat/cool state
-    if heat_cool_ga:
-        await knx.assert_read("1/2/11")
-        await knx.receive_response("1/2/11", 0)  # cool
     # read temperature state
     await knx.assert_read("1/2/3")
     await knx.receive_response("1/2/3", RAW_FLOAT_20_0)
@@ -95,6 +89,10 @@ async def test_climate_on_off(
     # read on/off state
     await knx.assert_read("1/2/9")
     await knx.receive_response("1/2/9", 1)
+    # read heat/cool state
+    if heat_cool_ga:
+        await knx.assert_read("1/2/11")
+        await knx.receive_response("1/2/11", 0)  # cool
 
     # turn off
     await hass.services.async_call(
@@ -171,18 +169,15 @@ async def test_climate_hvac_mode(
             )
         }
     )
-
-    await hass.async_block_till_done()
     # read states state updater
-    await knx.assert_read("1/2/7")
-    await knx.assert_read("1/2/3")
-    # StateUpdater initialize state
-    await knx.receive_response("1/2/7", (0x01,))
-    await knx.receive_response("1/2/3", RAW_FLOAT_20_0)
     # StateUpdater semaphore allows 2 concurrent requests
-    # read target temperature state
+    await knx.assert_read("1/2/3")
     await knx.assert_read("1/2/5")
+    # StateUpdater initialize state
+    await knx.receive_response("1/2/3", RAW_FLOAT_20_0)
     await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
+    await knx.assert_read("1/2/7")
+    await knx.receive_response("1/2/7", (0x01,))
 
     # turn hvac mode to off - set_hvac_mode() doesn't send to on_off if dedicated hvac mode is available
     await hass.services.async_call(
@@ -236,6 +231,90 @@ async def test_climate_hvac_mode(
     assert hass.states.get("climate.test").state == "cool"
 
 
+async def test_climate_heat_cool_read_only(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """Test KNX climate hvac mode."""
+    heat_cool_state_ga = "3/3/3"
+    await knx.setup_integration(
+        {
+            ClimateSchema.PLATFORM: {
+                CONF_NAME: "test",
+                ClimateSchema.CONF_TEMPERATURE_ADDRESS: "1/2/3",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS: "1/2/4",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
+                ClimateSchema.CONF_HEAT_COOL_STATE_ADDRESS: heat_cool_state_ga,
+            }
+        }
+    )
+    # read states state updater
+    # StateUpdater semaphore allows 2 concurrent requests
+    await knx.assert_read("1/2/3")
+    await knx.assert_read("1/2/5")
+    # StateUpdater initialize state
+    await knx.receive_response("1/2/3", RAW_FLOAT_20_0)
+    await knx.receive_response("1/2/5", RAW_FLOAT_20_0)
+    await knx.assert_read(heat_cool_state_ga)
+    await knx.receive_response(heat_cool_state_ga, True)  # heat
+
+    state = hass.states.get("climate.test")
+    assert state.state == "heat"
+    assert state.attributes["hvac_modes"] == ["heat"]
+    assert state.attributes["hvac_action"] == "heating"
+
+    await knx.receive_write(heat_cool_state_ga, False)  # cool
+    state = hass.states.get("climate.test")
+    assert state.state == "cool"
+    assert state.attributes["hvac_modes"] == ["cool"]
+    assert state.attributes["hvac_action"] == "cooling"
+
+
+async def test_climate_heat_cool_read_only_on_off(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """Test KNX climate hvac mode."""
+    on_off_ga = "2/2/2"
+    heat_cool_state_ga = "3/3/3"
+    await knx.setup_integration(
+        {
+            ClimateSchema.PLATFORM: {
+                CONF_NAME: "test",
+                ClimateSchema.CONF_TEMPERATURE_ADDRESS: "1/2/3",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS: "1/2/4",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
+                ClimateSchema.CONF_ON_OFF_ADDRESS: on_off_ga,
+                ClimateSchema.CONF_HEAT_COOL_STATE_ADDRESS: heat_cool_state_ga,
+            }
+        }
+    )
+    # read states state updater
+    # StateUpdater semaphore allows 2 concurrent requests
+    await knx.assert_read("1/2/3")
+    await knx.assert_read("1/2/5")
+    # StateUpdater initialize state
+    await knx.receive_response("1/2/3", RAW_FLOAT_20_0)
+    await knx.receive_response("1/2/5", RAW_FLOAT_20_0)
+    await knx.assert_read(heat_cool_state_ga)
+    await knx.receive_response(heat_cool_state_ga, True)  # heat
+
+    state = hass.states.get("climate.test")
+    assert state.state == "off"
+    assert set(state.attributes["hvac_modes"]) == {"off", "heat"}
+    assert state.attributes["hvac_action"] == "off"
+
+    await knx.receive_write(heat_cool_state_ga, False)  # cool
+    state = hass.states.get("climate.test")
+    assert state.state == "off"
+    assert set(state.attributes["hvac_modes"]) == {"off", "cool"}
+    assert state.attributes["hvac_action"] == "off"
+
+    await knx.receive_write(on_off_ga, True)
+    state = hass.states.get("climate.test")
+    assert state.state == "cool"
+    assert set(state.attributes["hvac_modes"]) == {"off", "cool"}
+    assert state.attributes["hvac_action"] == "cooling"
+
+
 async def test_climate_preset_mode(
     hass: HomeAssistant, knx: KNXTestKit, entity_registry: er.EntityRegistry
 ) -> None:
@@ -254,17 +333,14 @@ async def test_climate_preset_mode(
     )
     events = async_capture_events(hass, "state_changed")
 
-    await hass.async_block_till_done()
-    # read states state updater
-    await knx.assert_read("1/2/7")
-    await knx.assert_read("1/2/3")
     # StateUpdater initialize state
-    await knx.receive_response("1/2/7", (0x01,))
-    await knx.receive_response("1/2/3", RAW_FLOAT_21_0)
     # StateUpdater semaphore allows 2 concurrent requests
-    # read target temperature state
+    await knx.assert_read("1/2/3")
     await knx.assert_read("1/2/5")
+    await knx.receive_response("1/2/3", RAW_FLOAT_21_0)
     await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
+    await knx.assert_read("1/2/7")
+    await knx.receive_response("1/2/7", (0x01,))
     events.clear()
 
     # set preset mode
@@ -294,8 +370,6 @@ async def test_climate_preset_mode(
     assert len(knx.xknx.devices[1].device_updated_cbs) == 2
     # test removing also removes hooks
     entity_registry.async_remove("climate.test")
-    await hass.async_block_till_done()
-
     # If we remove the entity the underlying devices should disappear too
     assert len(knx.xknx.devices) == 0
 
@@ -315,18 +389,15 @@ async def test_update_entity(hass: HomeAssistant, knx: KNXTestKit) -> None:
         }
     )
     assert await async_setup_component(hass, "homeassistant", {})
-    await hass.async_block_till_done()
 
-    await hass.async_block_till_done()
     # read states state updater
-    await knx.assert_read("1/2/7")
     await knx.assert_read("1/2/3")
-    # StateUpdater initialize state
-    await knx.receive_response("1/2/7", (0x01,))
-    await knx.receive_response("1/2/3", RAW_FLOAT_21_0)
-    # StateUpdater semaphore allows 2 concurrent requests
     await knx.assert_read("1/2/5")
+    # StateUpdater initialize state
+    await knx.receive_response("1/2/3", RAW_FLOAT_21_0)
     await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
+    await knx.assert_read("1/2/7")
+    await knx.receive_response("1/2/7", (0x01,))
 
     # verify update entity retriggers group value reads to the bus
     await hass.services.async_call(
@@ -354,8 +425,6 @@ async def test_command_value_idle_mode(hass: HomeAssistant, knx: KNXTestKit) -> 
             }
         }
     )
-
-    await hass.async_block_till_done()
     # read states state updater
     await knx.assert_read("1/2/3")
     await knx.assert_read("1/2/5")
