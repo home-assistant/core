@@ -65,7 +65,7 @@ async def async_setup_entry(
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_RAW_GET_POSITIONS,
-        {},
+        None,
         "async_raw_get_positions",
         supports_response=SupportsResponse.ONLY,
     )

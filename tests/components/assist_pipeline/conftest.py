@@ -153,7 +153,7 @@ class MockTTSPlatform(MockPlatform):
 
     PLATFORM_SCHEMA = tts.PLATFORM_SCHEMA
 
-    def __init__(self, *, async_get_engine, **kwargs):
+    def __init__(self, *, async_get_engine, **kwargs: Any) -> None:
         """Initialize the tts platform."""
         super().__init__(**kwargs)
         self.async_get_engine = async_get_engine
@@ -180,7 +180,7 @@ def mock_stt_provider_entity() -> MockSttProviderEntity:
 class MockSttPlatform(MockPlatform):
     """Provide a fake STT platform."""
 
-    def __init__(self, *, async_get_engine, **kwargs):
+    def __init__(self, *, async_get_engine, **kwargs: Any) -> None:
         """Initialize the stt platform."""
         super().__init__(**kwargs)
         self.async_get_engine = async_get_engine
