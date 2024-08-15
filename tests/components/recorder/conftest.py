@@ -70,6 +70,7 @@ class InstrumentedMigration:
     apply_update_mock: Mock
     stall_on_schema_version: int | None
     apply_update_stalled: threading.Event
+    apply_update_version: int | None
 
 
 @pytest.fixture(name="instrument_migration")
@@ -147,6 +148,7 @@ def instrument_migration(
         old_version: int,
     ):
         """Control migration progress."""
+        instrumented_migration.apply_update_version = new_version
         stall_version = instrumented_migration.stall_on_schema_version
         if stall_version is None or stall_version == new_version:
             instrumented_migration.apply_update_stalled.set()
@@ -182,6 +184,7 @@ def instrument_migration(
             apply_update_mock=apply_update_mock,
             stall_on_schema_version=None,
             apply_update_stalled=threading.Event(),
+            apply_update_version=None,
         )
 
         instrumented_migration.live_migration_done_stall.set()
