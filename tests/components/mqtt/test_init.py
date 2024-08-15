@@ -430,9 +430,10 @@ async def test_mqtt_publish_action_call_with_raw_data(
     attr_payload: str,
     payload: str | bytes,
 ) -> None:
-    """Test the mqtt publish action call with a previous rendered template.
+    """Test the mqtt publish action call raw data.
 
-    When a template rendered to a binary we try literal_eval to obtain the raw value.
+    When `payload` represents a `bytes` object, it should be published
+    as raw data.
     """
     mqtt_mock = await mqtt_mock_entry()
     await hass.services.async_call(
