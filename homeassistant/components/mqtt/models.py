@@ -55,7 +55,7 @@ def convert_outgoing_mqtt_payload(
     payload: PublishPayloadType,
 ) -> PublishPayloadType:
     """Ensure correct raw MQTT payload is passed as bytes for publishing."""
-    if isinstance(payload, str):
+    if isinstance(payload, str) and payload.startswith(("b'", 'b"')):
         try:
             native_object = literal_eval(payload)
         except (ValueError, TypeError, SyntaxError, MemoryError):
