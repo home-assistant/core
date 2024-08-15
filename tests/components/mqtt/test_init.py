@@ -421,25 +421,35 @@ async def test_mqtt_publish_action_call_with_template_payload_renders_template(
 
 
 @pytest.mark.parametrize(
-    ("attr_payload", "payload"),
-    [("b'\\xde\\xad\\xbe\\xef'", b"\xde\xad\xbe\xef"), ("DEADBEEF", "DEADBEEF")],
+    ("attr_payload", "payload", "evaluate_bytes"),
+    [
+        ("b'\\xde\\xad\\xbe\\xef'", b"\xde\xad\xbe\xef", True),
+        ("b'\\xde\\xad\\xbe\\xef'", "b'\\xde\\xad\\xbe\\xef'", False),
+        ("DEADBEEF", "DEADBEEF", False),
+        ("b'\\xde", "b'\\xde", True),  # Bytes literal is invalid, fall back to string
+    ],
 )
 async def test_mqtt_publish_action_call_with_raw_data(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     attr_payload: str,
     payload: str | bytes,
+    evaluate_bytes: bool,
 ) -> None:
     """Test the mqtt publish action call raw data.
 
     When `payload` represents a `bytes` object, it should be published
-    as raw data.
+    as raw data if `evaluate_bytes` is set.
     """
     mqtt_mock = await mqtt_mock_entry()
     await hass.services.async_call(
         mqtt.DOMAIN,
         mqtt.SERVICE_PUBLISH,
-        {mqtt.ATTR_TOPIC: "test/topic", mqtt.ATTR_PAYLOAD: attr_payload},
+        {
+            mqtt.ATTR_TOPIC: "test/topic",
+            mqtt.ATTR_PAYLOAD: attr_payload,
+            mqtt.ATTR_EVALUATE_BYTES: evaluate_bytes,
+        },
         blocking=True,
     )
     assert mqtt_mock.async_publish.called
