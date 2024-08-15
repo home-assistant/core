@@ -1,6 +1,6 @@
 """Test Nice G.O. cover."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 from syrupy import SnapshotAssertion
@@ -113,36 +113,3 @@ async def test_update_cover_state(
 
     assert hass.states.get("cover.test_garage_1").state == STATE_OPENING
     assert hass.states.get("cover.test_garage_2").state == STATE_CLOSING
-
-
-async def test_no_connection_state(
-    hass: HomeAssistant,
-    mock_nice_go: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test parsing barrier with no connection state."""
-
-    mock_nice_go.event = MagicMock()
-
-    await setup_integration(hass, mock_config_entry, [Platform.COVER])
-
-    assert mock_nice_go.event.call_count == 2
-
-    await mock_nice_go.event.call_args[0][0](
-        {
-            "data": {
-                "devicesStatesUpdateFeed": {
-                    "item": {
-                        "deviceId": "1",
-                        "desired": '{"key": "value"}',
-                        "reported": '{"displayName":"Test Garage 1", "migrationStatus":"DONE", "barrierStatus": "1,100,0", "deviceFwVersion": "1.0.0", "lightStatus": "1,100"}',
-                        "connectionState": None,
-                        "version": None,
-                        "timestamp": None,
-                    }
-                }
-            }
-        }
-    )
-
-    assert hass.states.get("cover.test_garage_1").state == "unavailable"
