@@ -7,7 +7,9 @@ import sys
 from unittest.mock import ANY, Mock, PropertyMock, call, patch
 
 import pytest
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, inspect, text
+from sqlalchemy.engine import Engine
+from sqlalchemy.engine.interfaces import ReflectedForeignKeyConstraint
 from sqlalchemy.exc import (
     DatabaseError,
     InternalError,
@@ -201,79 +203,28 @@ async def test_database_migration_failed(
 
 @pytest.mark.parametrize(
     (
+        "patch_version",
         "func_to_patch",
         "expected_setup_result",
         "expected_pn_create",
         "expected_pn_dismiss",
     ),
     [
-        ("DropConstraint", False, 1, 0),  # This makes migration to step 11 fail
+        # Test error handling in _update_states_table_with_foreign_key_options
+        (11, "homeassistant.components.recorder.migration.DropConstraint", False, 1, 0),
+        # Test error handling in _modify_columns
+        (12, "sqlalchemy.engine.base.Connection.execute", False, 1, 0),
+        # Test error handling in _drop_foreign_key_constraints
+        (44, "homeassistant.components.recorder.migration.DropConstraint", False, 2, 1),
     ],
 )
 @pytest.mark.skip_on_db_engine(["sqlite"])
 @pytest.mark.usefixtures("skip_by_db_engine")
-async def test_database_migration_failed_step_11(
-    hass: HomeAssistant,
-    async_setup_recorder_instance: RecorderInstanceGenerator,
-    func_to_patch: str,
-    expected_setup_result: bool,
-    expected_pn_create: int,
-    expected_pn_dismiss: int,
-) -> None:
-    """Test we notify if the migration fails."""
-    assert recorder.util.async_migration_in_progress(hass) is False
-
-    with (
-        patch(
-            "homeassistant.components.recorder.core.create_engine",
-            new=create_engine_test,
-        ),
-        patch(
-            f"homeassistant.components.recorder.migration.{func_to_patch}",
-            side_effect=OperationalError(
-                None, None, OSError("No space left on device")
-            ),
-        ),
-        patch(
-            "homeassistant.components.persistent_notification.create",
-            side_effect=pn.create,
-        ) as mock_create,
-        patch(
-            "homeassistant.components.persistent_notification.dismiss",
-            side_effect=pn.dismiss,
-        ) as mock_dismiss,
-    ):
-        await async_setup_recorder_instance(
-            hass, wait_recorder=False, expected_setup_result=expected_setup_result
-        )
-        hass.states.async_set("my.entity", "on", {})
-        hass.states.async_set("my.entity", "off", {})
-        await hass.async_block_till_done()
-        await hass.async_add_executor_job(recorder.get_instance(hass).join)
-        await hass.async_block_till_done()
-
-    assert recorder.util.async_migration_in_progress(hass) is False
-    assert len(mock_create.mock_calls) == expected_pn_create
-    assert len(mock_dismiss.mock_calls) == expected_pn_dismiss
-
-
-@pytest.mark.parametrize(
-    (
-        "func_to_patch",
-        "expected_setup_result",
-        "expected_pn_create",
-        "expected_pn_dismiss",
-    ),
-    [
-        ("DropConstraint", False, 2, 1),  # This makes migration to step 44 fail
-    ],
-)
-@pytest.mark.skip_on_db_engine(["sqlite"])
-@pytest.mark.usefixtures("skip_by_db_engine")
-async def test_database_migration_failed_step_44(
+async def test_database_migration_failed_non_sqlite(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
     instrument_migration: InstrumentedMigration,
+    patch_version: int,
     func_to_patch: str,
     expected_setup_result: bool,
     expected_pn_create: int,
@@ -281,7 +232,7 @@ async def test_database_migration_failed_step_44(
 ) -> None:
     """Test we notify if the migration fails."""
     assert recorder.util.async_migration_in_progress(hass) is False
-    instrument_migration.stall_on_schema_version = 44
+    instrument_migration.stall_on_schema_version = patch_version
 
     with (
         patch(
@@ -303,14 +254,14 @@ async def test_database_migration_failed_step_44(
             wait_recorder_setup=False,
             expected_setup_result=expected_setup_result,
         )
-        # Wait for migration to reach schema version 44
+        # Wait for migration to reach the schema version we want to break
         await hass.async_add_executor_job(
             instrument_migration.apply_update_stalled.wait
         )
 
         # Make it fail
         with patch(
-            f"homeassistant.components.recorder.migration.{func_to_patch}",
+            func_to_patch,
             side_effect=OperationalError(
                 None, None, OSError("No space left on device")
             ),
@@ -322,6 +273,7 @@ async def test_database_migration_failed_step_44(
             await hass.async_add_executor_job(recorder.get_instance(hass).join)
             await hass.async_block_till_done()
 
+    assert instrument_migration.apply_update_version == patch_version
     assert recorder.util.async_migration_in_progress(hass) is False
     assert len(mock_create.mock_calls) == expected_pn_create
     assert len(mock_dismiss.mock_calls) == expected_pn_dismiss
@@ -1023,31 +975,40 @@ def test_drop_restore_foreign_key_constraints(recorder_db_url: str) -> None:
         ],
     }
 
+    def find_constraints(
+        engine: Engine, table: str, column: str
+    ) -> list[tuple[str, str, ReflectedForeignKeyConstraint]]:
+        inspector = inspect(engine)
+        return [
+            (table, column, foreign_key)
+            for foreign_key in inspector.get_foreign_keys(table)
+            if foreign_key["name"] and foreign_key["constrained_columns"] == [column]
+        ]
+
     engine = create_engine(recorder_db_url)
     db_schema.Base.metadata.create_all(engine)
 
+    matching_constraints_1 = [
+        dropped_constraint
+        for table, column, _, _ in constraints_to_recreate
+        for dropped_constraint in find_constraints(engine, table, column)
+    ]
+    assert matching_constraints_1 == expected_dropped_constraints[db_engine]
+
     with Session(engine) as session:
         session_maker = Mock(return_value=session)
-        dropped_constraints_1 = [
-            dropped_constraint
-            for table, column, _, _ in constraints_to_recreate
-            for dropped_constraint in migration._drop_foreign_key_constraints(
+        for table, column, _, _ in constraints_to_recreate:
+            migration._drop_foreign_key_constraints(
                 session_maker, engine, table, column
             )
-        ]
-    assert dropped_constraints_1 == expected_dropped_constraints[db_engine]
 
     # Check we don't find the constrained columns again (they are removed)
-    with Session(engine) as session:
-        session_maker = Mock(return_value=session)
-        dropped_constraints_2 = [
-            dropped_constraint
-            for table, column, _, _ in constraints_to_recreate
-            for dropped_constraint in migration._drop_foreign_key_constraints(
-                session_maker, engine, table, column
-            )
-        ]
-    assert dropped_constraints_2 == []
+    matching_constraints_2 = [
+        dropped_constraint
+        for table, column, _, _ in constraints_to_recreate
+        for dropped_constraint in find_constraints(engine, table, column)
+    ]
+    assert matching_constraints_2 == []
 
     # Restore the constraints
     with Session(engine) as session:
@@ -1057,16 +1018,12 @@ def test_drop_restore_foreign_key_constraints(recorder_db_url: str) -> None:
         )
 
     # Check we do find the constrained columns again (they are restored)
-    with Session(engine) as session:
-        session_maker = Mock(return_value=session)
-        dropped_constraints_3 = [
-            dropped_constraint
-            for table, column, _, _ in constraints_to_recreate
-            for dropped_constraint in migration._drop_foreign_key_constraints(
-                session_maker, engine, table, column
-            )
-        ]
-    assert dropped_constraints_3 == expected_dropped_constraints[db_engine]
+    matching_constraints_3 = [
+        dropped_constraint
+        for table, column, _, _ in constraints_to_recreate
+        for dropped_constraint in find_constraints(engine, table, column)
+    ]
+    assert matching_constraints_3 == expected_dropped_constraints[db_engine]
 
     engine.dispose()
 

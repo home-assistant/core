@@ -15,7 +15,6 @@ from uuid import UUID
 import sqlalchemy
 from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text, update
 from sqlalchemy.engine import CursorResult, Engine
-from sqlalchemy.engine.interfaces import ReflectedForeignKeyConstraint
 from sqlalchemy.exc import (
     DatabaseError,
     IntegrityError,
@@ -580,6 +579,7 @@ def _modify_columns(
                 _LOGGER.exception(
                     "Could not modify column %s in table %s", column_def, table_name
                 )
+                raise
 
 
 def _update_states_table_with_foreign_key_options(
@@ -607,7 +607,7 @@ def _update_states_table_with_foreign_key_options(
             "columns": foreign_key["constrained_columns"],
         }
         for foreign_key in inspector.get_foreign_keys(TABLE_STATES)
-        if foreign_key["name"]
+        if foreign_key["name"]  # It's not possible to drop an unnamed constraint
         and (
             # MySQL/MariaDB will have empty options
             not foreign_key.get("options")
@@ -644,7 +644,7 @@ def _update_states_table_with_foreign_key_options(
 
 def _drop_foreign_key_constraints(
     session_maker: Callable[[], Session], engine: Engine, table: str, column: str
-) -> list[tuple[str, str, ReflectedForeignKeyConstraint]]:
+) -> None:
     """Drop foreign key constraints for a table on specific columns.
 
     This is not supported for SQLite because it does not support
@@ -657,13 +657,8 @@ def _drop_foreign_key_constraints(
         )
 
     inspector = sqlalchemy.inspect(engine)
-    dropped_constraints = [
-        (table, column, foreign_key)
-        for foreign_key in inspector.get_foreign_keys(table)
-        if foreign_key["name"] and foreign_key["constrained_columns"] == [column]
-    ]
 
-    ## Bind the ForeignKeyConstraints to the table
+    ## Find matching named constraints and bind the ForeignKeyConstraints to the table
     tmp_table = Table(table, MetaData())
     drops = [
         ForeignKeyConstraint((), (), name=foreign_key["name"], table=tmp_table)
@@ -683,8 +678,6 @@ def _drop_foreign_key_constraints(
                     column,
                 )
                 raise
-
-    return dropped_constraints
 
 
 def _restore_foreign_key_constraints(
@@ -829,9 +822,9 @@ def _delete_foreign_key_violations(
                 result = session.connection().execute(
                     # We don't use an alias for the table we're deleting from,
                     # support of the form `DELETE FROM table AS t1` was added in
-                    # MariaDB 11.6 and is not supported by MySQL. Those engines
-                    # instead support the from `DELETE t1 from table AS t1` which
-                    # is not supported by PostgreSQL and undocumented for MariaDB.
+                    # MariaDB 11.6 and is not supported by MySQL. MySQL and older
+                    # MariaDB instead support the from `DELETE t1 from table AS t1`
+                    # which is undocumented for MariaDB.
                     text(
                         f"DELETE FROM {table} "  # noqa: S608
                         "WHERE ("

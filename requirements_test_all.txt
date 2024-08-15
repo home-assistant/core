@@ -332,7 +332,7 @@ aioridwell==2024.01.0
 aioruckus==0.34
 
 # homeassistant.components.russound_rio
-aiorussound==2.3.1
+aiorussound==2.3.2
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -1179,6 +1179,9 @@ nextdns==3.1.0
 # homeassistant.components.nibe_heatpump
 nibe==2.11.0
 
+# homeassistant.components.nice_go
+nice-go==0.1.6
+
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
 
@@ -1354,7 +1357,7 @@ py-nightscout==1.2.2
 py-sucks==0.9.10
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.4.5
+py-synologydsm-api==2.5.2
 
 # homeassistant.components.hdmi_cec
 pyCEC==0.5.2
@@ -1523,7 +1526,7 @@ pyhiveapi==0.5.16
 pyhomematic==0.1.77
 
 # homeassistant.components.homeworks
-pyhomeworks==1.1.0
+pyhomeworks==1.1.1
 
 # homeassistant.components.ialarm
 pyialarm==2.2.0

@@ -95,12 +95,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_SKIP,
-        {},
+        None,
         async_skip,
     )
     component.async_register_entity_service(
         "clear_skipped",
-        {},
+        None,
         async_clear_skipped,
     )
 
