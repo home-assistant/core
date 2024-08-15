@@ -96,7 +96,7 @@ class YamahaConfigInfo:
         self, config: ConfigType, discovery_info: DiscoveryInfoType | None
     ) -> None:
         """Initialize the Configuration Info for Yamaha Receiver."""
-        self.name = config[CONF_NAME]
+        self.name = config.get(CONF_NAME)
         self.host = config.get(CONF_HOST)
         self.ctrl_url: str | None = f"http://{self.host}:80/YamahaRemoteControl/ctrl"
         self.source_ignore = config.get(CONF_SOURCE_IGNORE)
@@ -192,6 +192,7 @@ async def async_setup_platform(
             _LOGGER.debug("Ignore receiver zone: %s %s", config_info.name, zctrl.zone)
             continue
 
+        assert config_info.name
         entity = YamahaDeviceZone(
             config_info.name,
             zctrl,
