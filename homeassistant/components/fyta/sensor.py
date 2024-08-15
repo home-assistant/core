@@ -23,6 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import FytaConfigEntry
 from .coordinator import FytaCoordinator
@@ -33,7 +34,7 @@ from .entity import FytaPlantEntity
 class FytaSensorEntityDescription(SensorEntityDescription):
     """Describes Fyta sensor entity."""
 
-    value_fn: Callable[[Plant], str | int | float | datetime | None]
+    value_fn: Callable[[Plant], StateType | datetime] = lambda value: value.name
 
 
 PLANT_STATUS_LIST: list[str] = ["deleted", "doing_great", "need_attention", "no_sensor"]
