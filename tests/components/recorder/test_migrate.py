@@ -208,8 +208,12 @@ async def test_database_migration_failed(
         "expected_pn_dismiss",
     ),
     [
-        (11, "DropConstraint", False, 1, 0),
-        (44, "DropConstraint", False, 2, 1),
+        # Test error handling in _update_states_table_with_foreign_key_options
+        (11, "homeassistant.components.recorder.migration.DropConstraint", False, 1, 0),
+        # Test error handling in _modify_columns
+        (12, "sqlalchemy.engine.base.Connection.execute", False, 1, 0),
+        # Test error handling in _drop_foreign_key_constraints
+        (44, "homeassistant.components.recorder.migration.DropConstraint", False, 2, 1),
     ],
 )
 @pytest.mark.skip_on_db_engine(["sqlite"])
@@ -255,7 +259,7 @@ async def test_database_migration_failed_non_sqlite(
 
         # Make it fail
         with patch(
-            f"homeassistant.components.recorder.migration.{func_to_patch}",
+            func_to_patch,
             side_effect=OperationalError(
                 None, None, OSError("No space left on device")
             ),
@@ -267,6 +271,7 @@ async def test_database_migration_failed_non_sqlite(
             await hass.async_add_executor_job(recorder.get_instance(hass).join)
             await hass.async_block_till_done()
 
+    assert instrument_migration.apply_update_version == patch_version
     assert recorder.util.async_migration_in_progress(hass) is False
     assert len(mock_create.mock_calls) == expected_pn_create
     assert len(mock_dismiss.mock_calls) == expected_pn_dismiss
