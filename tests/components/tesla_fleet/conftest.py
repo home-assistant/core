@@ -122,3 +122,12 @@ def mock_site_info() -> Generator[AsyncMock]:
         side_effect=lambda: deepcopy(SITE_INFO),
     ) as mock_live_status:
         yield mock_live_status
+
+
+@pytest.fixture(autouse=True)
+def mock_find_server() -> Generator[AsyncMock]:
+    """Mock Tesla Fleet find server method."""
+    with patch(
+        "homeassistant.components.tesla_fleet.find_server",
+    ) as mock_find_server:
+        yield mock_find_server

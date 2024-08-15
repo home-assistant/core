@@ -6,7 +6,9 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 from tesla_fleet_api.exceptions import (
+    InvalidRegion,
     InvalidToken,
+    LibraryError,
     LoginRequired,
     OAuthExpired,
     RateLimited,
@@ -326,3 +328,32 @@ async def test_energy_info_refresh_ratelimited(
     await hass.async_block_till_done()
 
     assert mock_site_info.call_count == 3
+
+
+async def test_init_region_issue(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_products: AsyncMock,
+    mock_find_server: AsyncMock,
+) -> None:
+    """Test init with region issue."""
+
+    mock_products.side_effect = InvalidRegion
+    await setup_platform(hass, normal_config_entry)
+    mock_find_server.assert_called_once()
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_init_region_issue_failed(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_products: AsyncMock,
+    mock_find_server: AsyncMock,
+) -> None:
+    """Test init with unresolvable region issue."""
+
+    mock_products.side_effect = InvalidRegion
+    mock_find_server.side_effect = LibraryError
+    await setup_platform(hass, normal_config_entry)
+    mock_find_server.assert_called_once()
+    assert normal_config_entry.state is ConfigEntryState.SETUP_ERROR
