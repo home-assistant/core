@@ -317,7 +317,6 @@ async def test_async_turn_on_no_feedback(
             None,
         )
         assert entity is not None
-        # will turn the switch however no feedback would be recieved so should not update the state
         await entity.async_turn_on()
         state = hass.states.get(SWITCH_DETAILS["unique_id"])
         assert state.state != STATE_ON
@@ -358,7 +357,6 @@ async def test_async_turn_on_with_feedback(
             None,
         )
         assert entity is not None
-        # will turn the switch however no feedback would be recieved so should not update the state
         await entity.async_turn_on()
         assert entity.state == STATE_ON
 
@@ -398,7 +396,6 @@ async def test_async_turn_off_with_feedback(
             None,
         )
         assert entity is not None
-        # will turn the switch however no feedback would be recieved so should not update the state
         await entity.async_turn_off()
         assert entity.state == STATE_OFF
 
@@ -440,7 +437,6 @@ async def test_async_turn_off_no_feedback(
         # turn switch on because it's off by default
         mock_send_packet_with_ack.return_value = True
         await entity.async_turn_on()
-        # will turn the switch however no feedback would be recieved so should not update the state
         mock_send_packet_with_ack.return_value = False
         await entity.async_turn_off()
         assert entity.state != STATE_OFF
