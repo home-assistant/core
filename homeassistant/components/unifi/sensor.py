@@ -44,6 +44,7 @@ from homeassistant.core import Event as core_Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
 from . import UnifiConfigEntry
@@ -247,8 +248,9 @@ def make_wan_latency_sensors() -> tuple[UnifiSensorEntityDescription, ...]:
     def make_wan_latency_entity_description(
         wan: Literal["WAN", "WAN2"], name: str, monitor_target: str
     ) -> UnifiSensorEntityDescription:
+        name_wan = f"{name} {wan}"
         return UnifiSensorEntityDescription[Devices, Device](
-            key=f"{name} {wan} latency",
+            key=f"{name_wan} latency",
             entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfTime.MILLISECONDS,
             state_class=SensorStateClass.MEASUREMENT,
@@ -257,13 +259,12 @@ def make_wan_latency_sensors() -> tuple[UnifiSensorEntityDescription, ...]:
             api_handler_fn=lambda api: api.devices,
             available_fn=async_device_available_fn,
             device_info_fn=async_device_device_info_fn,
-            name_fn=lambda _: f"{name} {wan} latency",
+            name_fn=lambda device: f"{name_wan} latency",
             object_fn=lambda api, obj_id: api.devices[obj_id],
             supported_fn=partial(
                 async_device_wan_latency_supported_fn, wan, monitor_target
             ),
-            unique_id_fn=lambda hub,
-            obj_id: f"{name.lower}_{wan.lower}_latency-{obj_id}",
+            unique_id_fn=lambda hub, obj_id: f"{slugify(name_wan)}_latency-{obj_id}",
             value_fn=partial(async_device_wan_latency_value_fn, wan, monitor_target),
         )
 

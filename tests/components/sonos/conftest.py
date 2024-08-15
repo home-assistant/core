@@ -1,9 +1,10 @@
 """Configuration for Sonos tests."""
 
 import asyncio
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Coroutine, Generator
 from copy import copy
 from ipaddress import ip_address
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
@@ -79,7 +80,7 @@ class SonosMockService:
 class SonosMockEvent:
     """Mock a sonos Event used in callbacks."""
 
-    def __init__(self, soco, service, variables):
+    def __init__(self, soco, service, variables) -> None:
         """Initialize the instance."""
         self.sid = f"{soco.uid}_sub0000000001"
         self.seq = "0"
@@ -120,7 +121,9 @@ async def async_autosetup_sonos(async_setup_sonos):
 
 
 @pytest.fixture
-def async_setup_sonos(hass, config_entry, fire_zgs_event):
+def async_setup_sonos(
+    hass: HomeAssistant, config_entry: MockConfigEntry, fire_zgs_event
+) -> Callable[[], Coroutine[Any, Any, None]]:
     """Return a coroutine to set up a Sonos integration instance on demand."""
 
     async def _wrapper():
@@ -136,7 +139,7 @@ def async_setup_sonos(hass, config_entry, fire_zgs_event):
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture():
+def config_entry_fixture() -> MockConfigEntry:
     """Create a mock Sonos config entry."""
     return MockConfigEntry(domain=DOMAIN, title="Sonos")
 
@@ -650,7 +653,9 @@ def zgs_discovery_fixture():
 
 
 @pytest.fixture(name="fire_zgs_event")
-def zgs_event_fixture(hass: HomeAssistant, soco: SoCo, zgs_discovery: str):
+def zgs_event_fixture(
+    hass: HomeAssistant, soco: SoCo, zgs_discovery: str
+) -> Callable[[], Coroutine[Any, Any, None]]:
     """Create alarm_event fixture."""
     variables = {"ZoneGroupState": zgs_discovery}
 

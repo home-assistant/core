@@ -30,7 +30,7 @@ from .const import (
     DOMAIN,
     KNX_ADDRESS,
 )
-from .knx_entity import KnxEntity
+from .knx_entity import KnxYamlEntity
 
 
 async def async_setup_entry(
@@ -57,7 +57,7 @@ def _create_notification(xknx: XKNX, config: ConfigType) -> XknxNotification:
     )
 
 
-class KNXText(KnxEntity, TextEntity, RestoreEntity):
+class KNXText(KnxYamlEntity, TextEntity, RestoreEntity):
     """Representation of a KNX text."""
 
     _device: XknxNotification

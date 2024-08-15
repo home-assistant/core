@@ -100,7 +100,7 @@ def mock_stream_settings(hass: HomeAssistant) -> None:
 class FakeAvInputStream:
     """A fake pyav Stream."""
 
-    def __init__(self, name, time_base):
+    def __init__(self, name, time_base) -> None:
         """Initialize the stream."""
         self.name = name
         self.time_base = time_base
@@ -142,7 +142,7 @@ class PacketSequence:
     exercise corner cases.
     """
 
-    def __init__(self, num_packets):
+    def __init__(self, num_packets) -> None:
         """Initialize the sequence with the number of packets it provides."""
         self.packet = 0
         self.num_packets = num_packets
@@ -160,7 +160,7 @@ class PacketSequence:
 
         class FakePacket(bytearray):
             # Be a bytearray so that memoryview works
-            def __init__(self):
+            def __init__(self) -> None:
                 super().__init__(3)
 
             time_base = VIDEO_TIME_BASE
@@ -181,7 +181,7 @@ class PacketSequence:
 class FakePyAvContainer:
     """A fake container returned by mock av.open for a stream."""
 
-    def __init__(self, video_stream, audio_stream):
+    def __init__(self, video_stream, audio_stream) -> None:
         """Initialize the fake container."""
         # Tests can override this to trigger different worker behavior
         self.packets = PacketSequence(0)
@@ -209,7 +209,7 @@ class FakePyAvContainer:
 class FakePyAvBuffer:
     """Holds outputs of the decoded stream for tests to assert on results."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the FakePyAvBuffer."""
         self.segments = []
         self.audio_packets = []
@@ -220,7 +220,7 @@ class FakePyAvBuffer:
         """Create an output buffer that captures packets for test to examine."""
 
         class FakeAvOutputStream:
-            def __init__(self, capture_packets):
+            def __init__(self, capture_packets) -> None:
                 self.capture_packets = capture_packets
                 self.type = "ignored-type"
 
@@ -266,7 +266,7 @@ class FakePyAvBuffer:
 class MockPyAv:
     """Mocks out av.open."""
 
-    def __init__(self, video=True, audio=False):
+    def __init__(self, video=True, audio=False) -> None:
         """Initialize the MockPyAv."""
         video_stream = VIDEO_STREAM if video else None
         audio_stream = AUDIO_STREAM if audio else None

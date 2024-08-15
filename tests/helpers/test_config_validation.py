@@ -33,7 +33,7 @@ def test_boolean() -> None:
         "T",
         "negative",
         "lock",
-        "tr  ue",
+        "tr  ue",  # codespell:ignore ue
         [],
         [1, 2],
         {"one": "two"},
@@ -1492,7 +1492,7 @@ def test_whitespace() -> None:
         "T",
         "negative",
         "lock",
-        "tr  ue",
+        "tr  ue",  # codespell:ignore ue
         [],
         [1, 2],
         {"one": "two"},
