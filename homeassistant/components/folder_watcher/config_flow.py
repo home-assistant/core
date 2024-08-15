@@ -34,7 +34,7 @@ async def validate_setup(
     """Check path is a folder."""
     value: str = user_input[CONF_FOLDER]
     dir_in = os.path.expanduser(str(value))
-    handler.parent_handler._async_abort_entries_match({CONF_FOLDER: value})  # pylint: disable=protected-access
+    handler.parent_handler._async_abort_entries_match({CONF_FOLDER: value})  # noqa: SLF001
 
     if not os.path.isdir(dir_in):
         raise SchemaFlowError("not_dir")

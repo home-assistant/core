@@ -108,8 +108,7 @@ def mock_router_bridge_mode(mock_device_registry_devices, router):
 
     router().lan.get_hosts_list = AsyncMock(
         side_effect=HttpRequestError(
-            "Request failed (APIResponse: %s)"
-            % json.dumps(DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE)
+            f"Request failed (APIResponse: {json.dumps(DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE)})"
         )
     )
 

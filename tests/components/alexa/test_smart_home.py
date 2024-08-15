@@ -882,7 +882,7 @@ async def test_direction_fan(hass: HomeAssistant) -> None:
             payload={},
             instance=None,
         )
-        assert call.data
+    assert call.data
 
 
 async def test_preset_mode_fan(
@@ -1823,12 +1823,6 @@ async def test_media_player_seek_error(hass: HomeAssistant) -> None:
             payload={"deltaPositionMilliseconds": 30000},
         )
 
-        assert "event" in msg
-        msg = msg["event"]
-        assert msg["header"]["name"] == "ErrorResponse"
-        assert msg["header"]["namespace"] == "Alexa.Video"
-        assert msg["payload"]["type"] == "ACTION_NOT_PERMITTED_FOR_CONTENT"
-
 
 @pytest.mark.freeze_time("2022-04-19 07:53:05")
 async def test_alert(hass: HomeAssistant) -> None:
@@ -1985,7 +1979,7 @@ async def test_cover_position(
             "friendly_name": "Test cover range",
             "device_class": "blind",
             "supported_features": supported_features,
-            "position": position,
+            "current_position": position,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -2302,7 +2296,7 @@ async def test_cover_position_range(
             "friendly_name": "Test cover range",
             "device_class": "blind",
             "supported_features": 7,
-            "position": 30,
+            "current_position": 30,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -3827,7 +3821,6 @@ async def test_disabled(hass: HomeAssistant) -> None:
         await smart_home.async_handle_message(
             hass, get_default_config(hass), request, enabled=False
         )
-        await hass.async_block_till_done()
 
 
 async def test_endpoint_good_health(hass: HomeAssistant) -> None:
@@ -4665,7 +4658,7 @@ async def test_cover_semantics_position_and_tilt(hass: HomeAssistant) -> None:
             "friendly_name": "Test cover semantics",
             "device_class": "blind",
             "supported_features": 255,
-            "position": 30,
+            "current_position": 30,
             "tilt_position": 30,
         },
     )
@@ -5650,6 +5643,6 @@ async def test_alexa_config(
     with patch.object(test_config, "_auth", AsyncMock()):
         test_config._auth.async_invalidate_access_token = MagicMock()
         test_config.async_invalidate_access_token()
-        assert len(test_config._auth.async_invalidate_access_token.mock_calls)
+        assert len(test_config._auth.async_invalidate_access_token.mock_calls) == 1
         await test_config.async_accept_grant("grant_code")
         test_config._auth.async_do_auth.assert_called_once_with("grant_code")

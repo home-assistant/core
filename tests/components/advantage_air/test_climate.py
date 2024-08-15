@@ -254,13 +254,14 @@ async def test_climate_async_failed_update(
 ) -> None:
     """Test climate change failure."""
 
+    mock_update.side_effect = ApiError
+    await add_mock_config(hass)
     with pytest.raises(HomeAssistantError):
-        mock_update.side_effect = ApiError
-        await add_mock_config(hass)
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {ATTR_ENTITY_ID: ["climate.myzone"], ATTR_TEMPERATURE: 25},
             blocking=True,
         )
-        mock_update.assert_called_once()
+
+    mock_update.assert_called_once()

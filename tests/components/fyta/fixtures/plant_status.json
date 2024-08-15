@@ -1,0 +1,14 @@
+{
+  "0": {
+    "name": "Gummibaum",
+    "scientific_name": "Ficus elastica",
+    "status": 1,
+    "sw_version": "1.0"
+  },
+  "1": {
+    "name": "Kakaobaum",
+    "scientific_name": "Theobroma cacao",
+    "status": 2,
+    "sw_version": "1.0"
+  }
+}

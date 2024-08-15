@@ -33,7 +33,7 @@ async def async_setup_entry(
     platform = async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_CAPTURE_SMARTCAM,
-        {},
+        None,
         VerisureSmartcam.capture_smartcam.__name__,
     )
 

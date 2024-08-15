@@ -14,8 +14,8 @@ from homeassistant.const import ATTR_VOLTAGE, PERCENTAGE, EntityCategory, UnitOf
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SurePetcareDataCoordinator
 from .const import DOMAIN, SURE_BATT_VOLTAGE_DIFF, SURE_BATT_VOLTAGE_LOW
+from .coordinator import SurePetcareDataCoordinator
 from .entity import SurePetcareEntity
 
 

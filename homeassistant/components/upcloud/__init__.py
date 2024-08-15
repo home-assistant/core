@@ -27,12 +27,10 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONFIG_ENTRY_UPDATE_SIGNAL_TEMPLATE, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .coordinator import UpCloudDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,40 +52,6 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SWITCH]
 SIGNAL_UPDATE_UPCLOUD = "upcloud_update"
 
 STATE_MAP = {"error": STATE_PROBLEM, "started": STATE_ON, "stopped": STATE_OFF}
-
-
-class UpCloudDataUpdateCoordinator(
-    DataUpdateCoordinator[dict[str, upcloud_api.Server]]
-):  # pylint: disable=hass-enforce-coordinator-module
-    """UpCloud data update coordinator."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        *,
-        cloud_manager: upcloud_api.CloudManager,
-        update_interval: timedelta,
-        username: str,
-    ) -> None:
-        """Initialize coordinator."""
-        super().__init__(
-            hass, _LOGGER, name=f"{username}@UpCloud", update_interval=update_interval
-        )
-        self.cloud_manager = cloud_manager
-
-    async def async_update_config(self, config_entry: ConfigEntry) -> None:
-        """Handle config update."""
-        self.update_interval = timedelta(
-            seconds=config_entry.options[CONF_SCAN_INTERVAL]
-        )
-
-    async def _async_update_data(self) -> dict[str, upcloud_api.Server]:
-        return {
-            x.uuid: x
-            for x in await self.hass.async_add_executor_job(
-                self.cloud_manager.get_servers
-            )
-        }
 
 
 @dataclasses.dataclass

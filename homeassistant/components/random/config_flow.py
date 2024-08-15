@@ -107,7 +107,7 @@ def _validate_unit(options: dict[str, Any]) -> None:
         and (unit := options.get(CONF_UNIT_OF_MEASUREMENT)) not in units
     ):
         sorted_units = sorted(
-            [f"'{str(unit)}'" if unit else "no unit of measurement" for unit in units],
+            [f"'{unit!s}'" if unit else "no unit of measurement" for unit in units],
             key=str.casefold,
         )
         if len(sorted_units) == 1:

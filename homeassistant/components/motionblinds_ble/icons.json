@@ -15,6 +15,14 @@
       "speed": {
         "default": "mdi:run-fast"
       }
+    },
+    "sensor": {
+      "calibration": {
+        "default": "mdi:tune"
+      },
+      "connection": {
+        "default": "mdi:bluetooth-connect"
+      }
     }
   }
 }

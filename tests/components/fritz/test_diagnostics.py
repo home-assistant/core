@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from homeassistant.components.diagnostics import REDACTED
-from homeassistant.components.fritz.common import AvmWrapper
 from homeassistant.components.fritz.const import DOMAIN
+from homeassistant.components.fritz.coordinator import AvmWrapper
 from homeassistant.components.fritz.diagnostics import TO_REDACT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant

@@ -17,11 +17,12 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.sensor import (
     DEVICE_CLASS_STATE_CLASSES,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -42,6 +43,7 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
@@ -229,7 +231,7 @@ def valid_keep_last_sample(config: dict[str, Any]) -> dict[str, Any]:
     return config
 
 
-_PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend(
+_PLATFORM_SCHEMA_BASE = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -267,6 +269,7 @@ async def async_setup_platform(
     async_add_entities(
         new_entities=[
             StatisticsSensor(
+                hass=hass,
                 source_entity_id=config[CONF_ENTITY_ID],
                 name=config[CONF_NAME],
                 unique_id=config.get(CONF_UNIQUE_ID),
@@ -282,11 +285,52 @@ async def async_setup_platform(
     )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Statistics sensor entry."""
+    sampling_size = entry.options.get(CONF_SAMPLES_MAX_BUFFER_SIZE)
+    if sampling_size:
+        sampling_size = int(sampling_size)
+
+    max_age = None
+    if max_age_input := entry.options.get(CONF_MAX_AGE):
+        max_age = timedelta(
+            hours=max_age_input["hours"],
+            minutes=max_age_input["minutes"],
+            seconds=max_age_input["seconds"],
+        )
+
+    async_add_entities(
+        [
+            StatisticsSensor(
+                hass=hass,
+                source_entity_id=entry.options[CONF_ENTITY_ID],
+                name=entry.options[CONF_NAME],
+                unique_id=entry.entry_id,
+                state_characteristic=entry.options[CONF_STATE_CHARACTERISTIC],
+                samples_max_buffer_size=sampling_size,
+                samples_max_age=max_age,
+                samples_keep_last=entry.options[CONF_KEEP_LAST_SAMPLE],
+                precision=int(entry.options[CONF_PRECISION]),
+                percentile=int(entry.options[CONF_PERCENTILE]),
+            )
+        ],
+        True,
+    )
+
+
 class StatisticsSensor(SensorEntity):
     """Representation of a Statistics sensor."""
 
+    _attr_should_poll = False
+    _attr_icon = ICON
+
     def __init__(
         self,
+        hass: HomeAssistant,
         source_entity_id: str,
         name: str,
         unique_id: str | None,
@@ -298,11 +342,13 @@ class StatisticsSensor(SensorEntity):
         percentile: int,
     ) -> None:
         """Initialize the Statistics sensor."""
-        self._attr_icon: str = ICON
         self._attr_name: str = name
-        self._attr_should_poll: bool = False
         self._attr_unique_id: str | None = unique_id
         self._source_entity_id: str = source_entity_id
+        self._attr_device_info = async_device_info_to_link_from_entity(
+            hass,
+            source_entity_id,
+        )
         self.is_binary: bool = (
             split_entity_id(self._source_entity_id)[0] == BINARY_SENSOR_DOMAIN
         )
@@ -326,35 +372,37 @@ class StatisticsSensor(SensorEntity):
 
         self._update_listener: CALLBACK_TYPE | None = None
 
+    @callback
+    def _async_stats_sensor_state_listener(
+        self,
+        event: Event[EventStateChangedData],
+    ) -> None:
+        """Handle the sensor state changes."""
+        if (new_state := event.data["new_state"]) is None:
+            return
+        self._add_state_to_queue(new_state)
+        self._async_purge_update_and_schedule()
+        self.async_write_ha_state()
+
+    @callback
+    def _async_stats_sensor_startup(self, _: HomeAssistant) -> None:
+        """Add listener and get recorded state."""
+        _LOGGER.debug("Startup for %s", self.entity_id)
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass,
+                [self._source_entity_id],
+                self._async_stats_sensor_state_listener,
+            )
+        )
+        if "recorder" in self.hass.config.components:
+            self.hass.async_create_task(self._initialize_from_database())
+
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-
-        @callback
-        def async_stats_sensor_state_listener(
-            event: Event[EventStateChangedData],
-        ) -> None:
-            """Handle the sensor state changes."""
-            if (new_state := event.data["new_state"]) is None:
-                return
-            self._add_state_to_queue(new_state)
-            self.async_schedule_update_ha_state(True)
-
-        async def async_stats_sensor_startup(_: HomeAssistant) -> None:
-            """Add listener and get recorded state."""
-            _LOGGER.debug("Startup for %s", self.entity_id)
-
-            self.async_on_remove(
-                async_track_state_change_event(
-                    self.hass,
-                    [self._source_entity_id],
-                    async_stats_sensor_state_listener,
-                )
-            )
-
-            if "recorder" in self.hass.config.components:
-                self.hass.async_create_task(self._initialize_from_database())
-
-        self.async_on_remove(async_at_start(self.hass, async_stats_sensor_startup))
+        self.async_on_remove(
+            async_at_start(self.hass, self._async_stats_sensor_startup)
+        )
 
     def _add_state_to_queue(self, new_state: State) -> None:
         """Add the state to the queue."""
@@ -499,7 +547,8 @@ class StatisticsSensor(SensorEntity):
             self.ages.popleft()
             self.states.popleft()
 
-    def _next_to_purge_timestamp(self) -> datetime | None:
+    @callback
+    def _async_next_to_purge_timestamp(self) -> datetime | None:
         """Find the timestamp when the next purge would occur."""
         if self.ages and self._samples_max_age:
             if self.samples_keep_last and len(self.ages) == 1:
@@ -521,6 +570,10 @@ class StatisticsSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Get the latest data and updates the states."""
+        self._async_purge_update_and_schedule()
+
+    def _async_purge_update_and_schedule(self) -> None:
+        """Purge old states, update the sensor and schedule the next update."""
         _LOGGER.debug("%s: updating statistics", self.entity_id)
         if self._samples_max_age is not None:
             self._purge_old_states(self._samples_max_age)
@@ -531,22 +584,27 @@ class StatisticsSensor(SensorEntity):
         # If max_age is set, ensure to update again after the defined interval.
         # By basing updates off the timestamps of sampled data we avoid updating
         # when none of the observed entities change.
-        if timestamp := self._next_to_purge_timestamp():
+        if timestamp := self._async_next_to_purge_timestamp():
             _LOGGER.debug("%s: scheduling update at %s", self.entity_id, timestamp)
-            if self._update_listener:
-                self._update_listener()
-                self._update_listener = None
-
-            @callback
-            def _scheduled_update(now: datetime) -> None:
-                """Timer callback for sensor update."""
-                _LOGGER.debug("%s: executing scheduled update", self.entity_id)
-                self.async_schedule_update_ha_state(True)
-                self._update_listener = None
-
+            self._async_cancel_update_listener()
             self._update_listener = async_track_point_in_utc_time(
-                self.hass, _scheduled_update, timestamp
+                self.hass, self._async_scheduled_update, timestamp
             )
+
+    @callback
+    def _async_cancel_update_listener(self) -> None:
+        """Cancel the scheduled update listener."""
+        if self._update_listener:
+            self._update_listener()
+            self._update_listener = None
+
+    @callback
+    def _async_scheduled_update(self, now: datetime) -> None:
+        """Timer callback for sensor update."""
+        _LOGGER.debug("%s: executing scheduled update", self.entity_id)
+        self._async_cancel_update_listener()
+        self._async_purge_update_and_schedule()
+        self.async_write_ha_state()
 
     def _fetch_states_from_database(self) -> list[State]:
         """Fetch the states from the database."""
@@ -589,8 +647,8 @@ class StatisticsSensor(SensorEntity):
             for state in reversed(states):
                 self._add_state_to_queue(state)
 
-        self.async_schedule_update_ha_state(True)
-
+        self._async_purge_update_and_schedule()
+        self.async_write_ha_state()
         _LOGGER.debug("%s: initializing from database completed", self.entity_id)
 
     def _update_attributes(self) -> None:

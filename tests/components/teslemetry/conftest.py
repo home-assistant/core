@@ -2,12 +2,30 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from copy import deepcopy
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from .const import LIVE_STATUS, PRODUCTS, RESPONSE_OK, VEHICLE_DATA, WAKE_UP_ONLINE
+from .const import (
+    COMMAND_OK,
+    LIVE_STATUS,
+    METADATA,
+    PRODUCTS,
+    SITE_INFO,
+    VEHICLE_DATA,
+    WAKE_UP_ONLINE,
+)
+
+
+@pytest.fixture(autouse=True)
+def mock_metadata():
+    """Mock Tesla Fleet Api metadata method."""
+    with patch(
+        "homeassistant.components.teslemetry.Teslemetry.metadata", return_value=METADATA
+    ) as mock_products:
+        yield mock_products
 
 
 @pytest.fixture(autouse=True)
@@ -20,7 +38,7 @@ def mock_products():
 
 
 @pytest.fixture(autouse=True)
-def mock_vehicle_data():
+def mock_vehicle_data() -> Generator[AsyncMock]:
     """Mock Tesla Fleet API Vehicle Specific vehicle_data method."""
     with patch(
         "homeassistant.components.teslemetry.VehicleSpecific.vehicle_data",
@@ -40,7 +58,7 @@ def mock_wake_up():
 
 
 @pytest.fixture(autouse=True)
-def mock_vehicle():
+def mock_vehicle() -> Generator[AsyncMock]:
     """Mock Tesla Fleet API Vehicle Specific vehicle method."""
     with patch(
         "homeassistant.components.teslemetry.VehicleSpecific.vehicle",
@@ -54,7 +72,7 @@ def mock_request():
     """Mock Tesla Fleet API Vehicle Specific class."""
     with patch(
         "homeassistant.components.teslemetry.Teslemetry._request",
-        return_value=RESPONSE_OK,
+        return_value=COMMAND_OK,
     ) as mock_request:
         yield mock_request
 
@@ -65,5 +83,15 @@ def mock_live_status():
     with patch(
         "homeassistant.components.teslemetry.EnergySpecific.live_status",
         side_effect=lambda: deepcopy(LIVE_STATUS),
+    ) as mock_live_status:
+        yield mock_live_status
+
+
+@pytest.fixture(autouse=True)
+def mock_site_info():
+    """Mock Teslemetry Energy Specific site_info method."""
+    with patch(
+        "homeassistant.components.teslemetry.EnergySpecific.site_info",
+        side_effect=lambda: deepcopy(SITE_INFO),
     ) as mock_live_status:
         yield mock_live_status

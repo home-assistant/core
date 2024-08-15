@@ -75,7 +75,7 @@ class MotionBlindsFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the Motionblinds flow."""
         self._host: str | None = None
         self._ips: list[str] = []
-        self._config_settings = None
+        self._config_settings: vol.Schema | None = None
 
     @staticmethod
     @callback
@@ -97,7 +97,7 @@ class MotionBlindsFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             # key not needed for GetDeviceList request
             await self.hass.async_add_executor_job(gateway.GetDeviceList)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             return self.async_abort(reason="not_motionblinds")
 
         if not gateway.available:

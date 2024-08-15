@@ -94,7 +94,7 @@ class HueBridge:
             raise ConfigEntryNotReady(
                 f"Error connecting to the Hue bridge at {self.host}"
             ) from err
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             self.logger.exception("Unknown error connecting to Hue bridge")
             return False
         finally:

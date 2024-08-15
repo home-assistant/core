@@ -346,7 +346,7 @@ async def test_entity_assumed_and_available(
     light = get_aqualink_device(
         system, name="aux_1", cls=IaquaLightSwitch, data={"state": "1"}
     )
-    devices = {d.name: d for d in [light]}
+    devices = {light.name: light}
     system.get_devices = AsyncMock(return_value=devices)
     system.update = AsyncMock()
 

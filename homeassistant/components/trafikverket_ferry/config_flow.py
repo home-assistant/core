@@ -85,7 +85,7 @@ class TVFerryConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except NoFerryFound:
                 errors["base"] = "invalid_route"
-            except Exception:  # pylint: disable=broad-exception-caught
+            except Exception:  # noqa: BLE001
                 errors["base"] = "cannot_connect"
             else:
                 self.hass.config_entries.async_update_entry(
@@ -121,7 +121,7 @@ class TVFerryConfigFlow(ConfigFlow, domain=DOMAIN):
             if ferry_to:
                 name = name + f" to {ferry_to}"
             if ferry_time != "00:00:00":
-                name = name + f" at {str(ferry_time)}"
+                name = name + f" at {ferry_time!s}"
 
             try:
                 await self.validate_input(api_key, ferry_from, ferry_to)
@@ -129,7 +129,7 @@ class TVFerryConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except NoFerryFound:
                 errors["base"] = "invalid_route"
-            except Exception:  # pylint: disable=broad-exception-caught
+            except Exception:  # noqa: BLE001
                 errors["base"] = "cannot_connect"
             else:
                 if not errors:

@@ -32,7 +32,9 @@ MOCK_CONFIG_ENTRY = MockConfigEntry(
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
-async def test_device_registry_insert(hass: HomeAssistant) -> None:
+async def test_device_registry_insert(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test that the device registry is initialized correctly."""
     MOCK_CONFIG_ENTRY.add_to_hass(hass)
 
@@ -46,8 +48,6 @@ async def test_device_registry_insert(hass: HomeAssistant) -> None:
         await setup.async_setup_component(hass, DOMAIN, {})
 
     await hass.async_block_till_done()
-
-    device_registry = dr.async_get(hass)
 
     gw_dev = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_GATEWAY_ID)})
     assert gw_dev.sw_version == VERSION_OLD

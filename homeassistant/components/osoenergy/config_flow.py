@@ -64,7 +64,7 @@ class OSOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
             websession = aiohttp_client.async_get_clientsession(self.hass)
             client = OSOEnergy(subscription_key, websession)
             return await client.get_user_email()
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unknown error occurred")
         return None
 

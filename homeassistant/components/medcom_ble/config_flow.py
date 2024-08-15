@@ -136,7 +136,7 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
         except AbortFlow:
             raise
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Error occurred reading information from %s",
                 self._discovery_info.address,

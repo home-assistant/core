@@ -60,7 +60,7 @@ class MuteSyncConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             errors["base"] = "unknown"
         else:
             return self.async_create_entry(

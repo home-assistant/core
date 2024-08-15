@@ -277,6 +277,11 @@ ZEROCONF = {
             "domain": "romy",
         },
     ],
+    "_airgradient._tcp.local.": [
+        {
+            "domain": "airgradient",
+        },
+    ],
     "_airplay._tcp.local.": [
         {
             "domain": "apple_tv",
@@ -397,6 +402,12 @@ ZEROCONF = {
     "_companion-link._tcp.local.": [
         {
             "domain": "apple_tv",
+        },
+    ],
+    "_czc._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "czc*",
         },
     ],
     "_daap._tcp.local.": [
@@ -578,6 +589,11 @@ ZEROCONF = {
             "name": "gateway*",
         },
     ],
+    "_linkplay._tcp.local.": [
+        {
+            "domain": "linkplay",
+        },
+    ],
     "_lookin._tcp.local.": [
         {
             "domain": "lookin",
@@ -608,6 +624,11 @@ ZEROCONF = {
             "domain": "matter",
         },
     ],
+    "_matterc._udp.local.": [
+        {
+            "domain": "matter",
+        },
+    ],
     "_mediaremotetv._tcp.local.": [
         {
             "domain": "apple_tv",
@@ -628,6 +649,11 @@ ZEROCONF = {
         {
             "domain": "yeelight",
             "name": "yeelink-*",
+        },
+    ],
+    "_musc._tcp.local.": [
+        {
+            "domain": "bluesound",
         },
     ],
     "_nanoleafapi._tcp.local.": [
@@ -799,6 +825,12 @@ ZEROCONF = {
     "_xbmc-jsonrpc-h._tcp.local.": [
         {
             "domain": "kodi",
+        },
+    ],
+    "_xzg._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "xzg*",
         },
     ],
     "_zigate-zigbee-gateway._tcp.local.": [

@@ -89,6 +89,16 @@ BROADLINK_DEVICES = {
         57,
         5,
     ),
+    "Guest room": (
+        "192.168.0.66",
+        "34ea34b61d2e",
+        "HY02/HY03",
+        "Hysen",
+        "HYS",
+        0x4EAD,
+        10024,
+        5,
+    ),
 }
 
 
@@ -168,6 +178,31 @@ class BroadlinkDevice:
         }
 
 
+class BroadlinkMP1BG1Device(BroadlinkDevice):
+    """Mock device for MP1 and BG1 with special mocking of api return values."""
+
+    def get_mock_api(self):
+        """Return a mock device (API) with support for check_power calls."""
+        mock_api = super().get_mock_api()
+        mock_api.check_power.return_value = {"s1": 0, "s2": 0, "s3": 0, "s4": 0}
+        return mock_api
+
+
+class BroadlinkSP4BDevice(BroadlinkDevice):
+    """Mock device for SP4b with special mocking of api return values."""
+
+    def get_mock_api(self):
+        """Return a mock device (API) with support for get_state calls."""
+        mock_api = super().get_mock_api()
+        mock_api.get_state.return_value = {"pwr": 0}
+        return mock_api
+
+
 def get_device(name):
     """Get a device by name."""
+    dev_type = BROADLINK_DEVICES[name][5]
+    if dev_type in {0x4EB5}:
+        return BroadlinkMP1BG1Device(name, *BROADLINK_DEVICES[name])
+    if dev_type in {0x5115}:
+        return BroadlinkSP4BDevice(name, *BROADLINK_DEVICES[name])
     return BroadlinkDevice(name, *BROADLINK_DEVICES[name])

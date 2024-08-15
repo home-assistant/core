@@ -29,7 +29,7 @@ async def flow_id(hass: HomeAssistant) -> str:
 
 
 @pytest.fixture
-def mock_flexit_bacnet() -> Generator[AsyncMock, None, None]:
+def mock_flexit_bacnet() -> Generator[AsyncMock]:
     """Mock data from the device."""
     flexit_bacnet = AsyncMock(spec=FlexitBACnet)
     with (
@@ -83,7 +83,7 @@ def mock_flexit_bacnet() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.flexit_bacnet.async_setup_entry", return_value=True

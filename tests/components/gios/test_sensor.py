@@ -51,7 +51,7 @@ async def test_availability(hass: HomeAssistant) -> None:
 
     future = utcnow() + timedelta(minutes=60)
     with patch(
-        "homeassistant.components.gios.Gios._get_all_sensors",
+        "homeassistant.components.gios.coordinator.Gios._get_all_sensors",
         side_effect=ApiError("Unexpected error"),
     ):
         async_fire_time_changed(hass, future)
@@ -74,11 +74,11 @@ async def test_availability(hass: HomeAssistant) -> None:
     future = utcnow() + timedelta(minutes=120)
     with (
         patch(
-            "homeassistant.components.gios.Gios._get_all_sensors",
+            "homeassistant.components.gios.coordinator.Gios._get_all_sensors",
             return_value=incomplete_sensors,
         ),
         patch(
-            "homeassistant.components.gios.Gios._get_indexes",
+            "homeassistant.components.gios.coordinator.Gios._get_indexes",
             return_value={},
         ),
     ):
@@ -103,10 +103,11 @@ async def test_availability(hass: HomeAssistant) -> None:
     future = utcnow() + timedelta(minutes=180)
     with (
         patch(
-            "homeassistant.components.gios.Gios._get_all_sensors", return_value=sensors
+            "homeassistant.components.gios.coordinator.Gios._get_all_sensors",
+            return_value=sensors,
         ),
         patch(
-            "homeassistant.components.gios.Gios._get_indexes",
+            "homeassistant.components.gios.coordinator.Gios._get_indexes",
             return_value=indexes,
         ),
     ):

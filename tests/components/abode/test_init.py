@@ -8,12 +8,7 @@ from jaraco.abode.exceptions import (
     Exception as AbodeException,
 )
 
-from homeassistant.components.abode import (
-    DOMAIN as ABODE_DOMAIN,
-    SERVICE_CAPTURE_IMAGE,
-    SERVICE_SETTINGS,
-    SERVICE_TRIGGER_AUTOMATION,
-)
+from homeassistant.components.abode import DOMAIN as ABODE_DOMAIN, SERVICE_SETTINGS
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_USERNAME
@@ -62,12 +57,8 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         patch("jaraco.abode.event_controller.EventController.stop") as mock_events_stop,
     ):
         assert await hass.config_entries.async_unload(mock_entry.entry_id)
-        mock_logout.assert_called_once()
-        mock_events_stop.assert_called_once()
-
-        assert not hass.services.has_service(ABODE_DOMAIN, SERVICE_SETTINGS)
-        assert not hass.services.has_service(ABODE_DOMAIN, SERVICE_CAPTURE_IMAGE)
-        assert not hass.services.has_service(ABODE_DOMAIN, SERVICE_TRIGGER_AUTOMATION)
+    mock_logout.assert_called_once()
+    mock_events_stop.assert_called_once()
 
 
 async def test_invalid_credentials(hass: HomeAssistant) -> None:

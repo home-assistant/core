@@ -111,7 +111,7 @@ class GoalZeroFlowHandler(ConfigFlow, domain=DOMAIN):
             return None, "cannot_connect"
         except exceptions.InvalidHost:
             return None, "invalid_host"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return None, "unknown"
         return str(api.sysdata["macAddress"]), None

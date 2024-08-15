@@ -1,7 +1,7 @@
 """Utilities for Plugwise."""
 
 from collections.abc import Awaitable, Callable, Coroutine
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 from plugwise.exceptions import PlugwiseException
 
@@ -9,12 +9,8 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .entity import PlugwiseEntity
 
-_PlugwiseEntityT = TypeVar("_PlugwiseEntityT", bound=PlugwiseEntity)
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
 
-
-def plugwise_command(
+def plugwise_command[_PlugwiseEntityT: PlugwiseEntity, **_P, _R](
     func: Callable[Concatenate[_PlugwiseEntityT, _P], Awaitable[_R]],
 ) -> Callable[Concatenate[_PlugwiseEntityT, _P], Coroutine[Any, Any, _R]]:
     """Decorate Plugwise calls that send commands/make changes to the device.

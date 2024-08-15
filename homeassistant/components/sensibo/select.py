@@ -9,11 +9,11 @@ from typing import TYPE_CHECKING, Any
 from pysensibo.model import SensiboDevice
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import SensiboConfigEntry
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity, async_handle_api_call
@@ -52,11 +52,13 @@ DEVICE_SELECT_TYPES = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SensiboConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Sensibo number platform."""
 
-    coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         SensiboSelect(coordinator, device_id, description)

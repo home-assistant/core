@@ -1,9 +1,9 @@
 """Tests for the Rain Bird config flow."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -40,13 +40,13 @@ def mock_responses() -> list[AiohttpClientMockResponse]:
 
 
 @pytest.fixture(autouse=True)
-async def config_entry_data() -> None:
+async def config_entry_data() -> dict[str, Any] | None:
     """Fixture to disable config entry setup for exercising config flow."""
     return None
 
 
 @pytest.fixture(autouse=True)
-async def mock_setup() -> Generator[Mock, None, None]:
+async def mock_setup() -> AsyncGenerator[AsyncMock]:
     """Fixture for patching out integration setup."""
 
     with patch(

@@ -36,14 +36,12 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     ATTR_WEATHER_WIND_SPEED_UNIT,
     DOMAIN as WEATHER_DOMAIN,
-    LEGACY_SERVICE_GET_FORECAST,
     SERVICE_GET_FORECASTS,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY, SOURCE_USER
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_FRIENDLY_NAME, CONF_NAME
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import dt as dt_util
 
 from .const import API_V4_ENTRY_DATA
@@ -55,7 +53,7 @@ from tests.typing import WebSocketGenerator
 @callback
 def _enable_entity(hass: HomeAssistant, entity_name: str) -> None:
     """Enable disabled entity."""
-    ent_reg = async_get(hass)
+    ent_reg = er.async_get(hass)
     entry = ent_reg.async_get(entity_name)
     updated_entry = ent_reg.async_update_entity(entry.entity_id, disabled_by=None)
     assert updated_entry != entry
@@ -116,22 +114,24 @@ async def _setup_legacy(hass: HomeAssistant, config: dict[str, Any]) -> State:
     return hass.states.get("weather.tomorrow_io_daily")
 
 
-async def test_new_config_entry(hass: HomeAssistant) -> None:
+async def test_new_config_entry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test the expected entities are created."""
-    registry = er.async_get(hass)
     await _setup(hass, API_V4_ENTRY_DATA)
     assert len(hass.states.async_entity_ids("weather")) == 1
 
     entry = hass.config_entries.async_entries()[0]
-    assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 28
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 28
 
 
-async def test_legacy_config_entry(hass: HomeAssistant) -> None:
+async def test_legacy_config_entry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test the expected entities are created."""
-    registry = er.async_get(hass)
     data = _get_config_schema(hass, SOURCE_USER)(API_V4_ENTRY_DATA)
     for entity_name in ("hourly", "nowcast"):
-        registry.async_get_or_create(
+        entity_registry.async_get_or_create(
             WEATHER_DOMAIN,
             DOMAIN,
             f"{_get_unique_id(hass, data)}_{entity_name}",
@@ -140,7 +140,7 @@ async def test_legacy_config_entry(hass: HomeAssistant) -> None:
     assert len(hass.states.async_entity_ids("weather")) == 3
 
     entry = hass.config_entries.async_entries()[0]
-    assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == 30
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 30
 
 
 async def test_v4_weather(hass: HomeAssistant, tomorrowio_config_entry_update) -> None:
@@ -242,10 +242,7 @@ async def test_v4_weather_legacy_entities(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("service"),
-    [
-        SERVICE_GET_FORECASTS,
-        LEGACY_SERVICE_GET_FORECAST,
-    ],
+    [SERVICE_GET_FORECASTS],
 )
 @freeze_time(datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC))
 async def test_v4_forecast_service(
@@ -269,37 +266,6 @@ async def test_v4_forecast_service(
             return_response=True,
         )
         assert response == snapshot
-
-
-async def test_legacy_v4_bad_forecast(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    tomorrowio_config_entry_update,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test bad forecast data."""
-    freezer.move_to(datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC))
-
-    weather_state = await _setup(hass, API_V4_ENTRY_DATA)
-    entity_id = weather_state.entity_id
-    hourly_forecast = tomorrowio_config_entry_update.return_value["forecasts"]["hourly"]
-    hourly_forecast[0]["values"]["precipitationProbability"] = "blah"
-
-    # Trigger data refetch
-    freezer.tick(timedelta(minutes=32) + timedelta(seconds=1))
-    await hass.async_block_till_done()
-
-    response = await hass.services.async_call(
-        WEATHER_DOMAIN,
-        LEGACY_SERVICE_GET_FORECAST,
-        {
-            "entity_id": entity_id,
-            "type": "hourly",
-        },
-        blocking=True,
-        return_response=True,
-    )
-    assert response["forecast"][0]["precipitation_probability"] is None
 
 
 async def test_v4_bad_forecast(

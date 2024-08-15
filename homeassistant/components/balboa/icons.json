@@ -20,6 +20,11 @@
         }
       }
     },
+    "climate": {
+      "balboa": {
+        "default": "mdi:hot-tub"
+      }
+    },
     "fan": {
       "pump": {
         "default": "mdi:pump",

@@ -89,10 +89,10 @@ async def test_config_flow_auth_success_with_multiple_students(
     mock_account.return_value = fake_account
     mock_student.return_value = [
         Student.load(student)
-        for student in [
+        for student in (
             load_fixture("fake_student_1.json", "vulcan"),
             load_fixture("fake_student_2.json", "vulcan"),
-        ]
+        )
     ]
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}

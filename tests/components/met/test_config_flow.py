@@ -1,5 +1,7 @@
 """Tests for Met.no config flow."""
 
+from collections.abc import Generator
+from typing import Any
 from unittest.mock import ANY, patch
 
 import pytest
@@ -17,7 +19,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="met_setup", autouse=True)
-def met_setup_fixture(request):
+def met_setup_fixture(request: pytest.FixtureRequest) -> Generator[Any]:
     """Patch met setup entry."""
     if "disable_autouse_fixture" in request.keywords:
         yield

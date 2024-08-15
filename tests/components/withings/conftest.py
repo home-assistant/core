@@ -16,14 +16,15 @@ from homeassistant.components.withings.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_json_array_fixture
-from tests.components.withings import (
+from . import (
     load_activity_fixture,
     load_goals_fixture,
     load_measurements_fixture,
     load_sleep_fixture,
     load_workout_fixture,
 )
+
+from tests.common import MockConfigEntry, load_json_array_fixture
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"

@@ -47,7 +47,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             new=VenstarColorTouchMock.get_runtimes,
         ),
         patch(
-            "homeassistant.components.venstar.VENSTAR_SLEEP",
+            "homeassistant.components.venstar.coordinator.VENSTAR_SLEEP",
             new=0,
         ),
     ):

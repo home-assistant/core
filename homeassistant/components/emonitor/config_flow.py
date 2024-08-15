@@ -46,7 +46,7 @@ class EmonitorConfigFlow(ConfigFlow, domain=DOMAIN):
                 info = await fetch_mac_and_title(self.hass, user_input[CONF_HOST])
             except aiohttp.ClientError:
                 errors[CONF_HOST] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -77,7 +77,7 @@ class EmonitorConfigFlow(ConfigFlow, domain=DOMAIN):
             self.discovered_info = await fetch_mac_and_title(
                 self.hass, self.discovered_ip
             )
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception as ex:  # noqa: BLE001
             _LOGGER.debug(
                 "Unable to fetch status, falling back to manual entry", exc_info=ex
             )

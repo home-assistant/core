@@ -142,7 +142,9 @@ async def async_setup_entry(
 
 
 class RuuvitagBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[float | int | None]],
+    PassiveBluetoothProcessorEntity[
+        PassiveBluetoothDataProcessor[float | int | None, SensorUpdate]
+    ],
     SensorEntity,
 ):
     """Representation of a Ruuvitag BLE sensor."""

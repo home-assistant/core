@@ -27,6 +27,21 @@ class RoborockHassDeviceInfo:
 
 
 @dataclass
+class RoborockA01HassDeviceInfo:
+    """A model to describe A01 roborock devices."""
+
+    device: HomeDataDevice
+    product: HomeDataProduct
+
+    def as_dict(self) -> dict[str, dict[str, Any]]:
+        """Turn RoborockA01HassDeviceInfo into a dictionary."""
+        return {
+            "device": self.device.as_dict(),
+            "product": self.product.as_dict(),
+        }
+
+
+@dataclass
 class RoborockMapInfo:
     """A model to describe all information about a map we may want."""
 

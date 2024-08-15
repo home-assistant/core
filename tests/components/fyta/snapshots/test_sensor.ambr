@@ -1,0 +1,213 @@
+# serializer version: 1
+# name: test_all_entities[sensor.gummibaum_plant_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'deleted',
+        'doing_great',
+        'need_attention',
+        'no_sensor',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gummibaum_plant_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Plant state',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'plant_status',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_plant_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Gummibaum Plant state',
+      'options': list([
+        'deleted',
+        'doing_great',
+        'need_attention',
+        'no_sensor',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gummibaum_plant_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'doing_great',
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_scientific_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gummibaum_scientific_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Scientific name',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'scientific_name',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-scientific_name',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.gummibaum_scientific_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Gummibaum Scientific name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gummibaum_scientific_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Ficus elastica',
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_plant_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'deleted',
+        'doing_great',
+        'need_attention',
+        'no_sensor',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kakaobaum_plant_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Plant state',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'plant_status',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_plant_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Kakaobaum Plant state',
+      'options': list([
+        'deleted',
+        'doing_great',
+        'need_attention',
+        'no_sensor',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kakaobaum_plant_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'need_attention',
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_scientific_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kakaobaum_scientific_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Scientific name',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'scientific_name',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-scientific_name',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.kakaobaum_scientific_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kakaobaum Scientific name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kakaobaum_scientific_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Theobroma cacao',
+  })
+# ---

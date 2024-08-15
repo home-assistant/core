@@ -31,6 +31,7 @@ def fake_service_info(name, service_uuid, manufacturer_data):
             tx_power=-127,
             platform_data=(),
         ),
+        tx_power=-127,
     )
 
 
@@ -71,5 +72,13 @@ VALID_ARANET2_DATA_SERVICE_INFO = fake_service_info(
     "0000fce0-0000-1000-8000-00805f9b34fb",
     {
         1794: b"\x01!\x04\x04\x01\x00\x00\x00\x00\x00\xf0\x01\x00\x00\x0c\x02\x00O\x00<\x00\x01\x00\x80"
+    },
+)
+
+VALID_ARANET_RADIATION_DATA_SERVICE_INFO = fake_service_info(
+    "Aranet\u2622 12345",
+    "0000fce0-0000-1000-8000-00805f9b34fb",
+    {
+        1794: b"\x02!&\x04\x01\x00`-\x00\x00\x08\x98\x05\x00n\x00\x00d\x00,\x01\xfd\x00\xc7"
     },
 )

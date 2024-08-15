@@ -901,7 +901,7 @@ async def test_virtual_sensor(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_do_cycle, expected
 ) -> None:
     """Run test for sensor."""
-    for i in range(len(expected)):
+    for i, expected_value in enumerate(expected):
         entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
         unique_id = f"{SLAVE_UNIQUE_ID}"
         if i:
@@ -909,7 +909,7 @@ async def test_virtual_sensor(
             unique_id = f"{unique_id}_{i}"
         entry = entity_registry.async_get(entity_id)
         state = hass.states.get(entity_id).state
-        assert state == expected[i]
+        assert state == expected_value
         assert entry.unique_id == unique_id
 
 
@@ -1071,12 +1071,12 @@ async def test_virtual_swap_sensor(
     hass: HomeAssistant, mock_do_cycle, expected
 ) -> None:
     """Run test for sensor."""
-    for i in range(len(expected)):
+    for i, expected_value in enumerate(expected):
         entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
         if i:
             entity_id = f"{entity_id}_{i}"
         state = hass.states.get(entity_id).state
-        assert state == expected[i]
+        assert state == expected_value
 
 
 @pytest.mark.parametrize(
@@ -1335,7 +1335,7 @@ async def test_wrap_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None
 
 
 @pytest.fixture(name="mock_restore")
-async def mock_restore(hass):
+async def mock_restore(hass: HomeAssistant) -> None:
     """Mock restore cache."""
     mock_restore_cache_with_extra_data(
         hass,

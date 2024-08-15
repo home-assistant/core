@@ -11,7 +11,7 @@ from tests.components.bluetooth import generate_ble_device
 
 
 @pytest.fixture(autouse=True)
-def mock_bluetooth(enable_bluetooth):
+def mock_bluetooth(enable_bluetooth: None) -> None:
     """Auto mock bluetooth."""
 
 
@@ -38,4 +38,5 @@ def fake_service_info():
             tx_power=-127,
             platform_data=(),
         ),
+        tx_power=-127,
     )

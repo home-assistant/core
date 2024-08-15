@@ -16,14 +16,19 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MAX_RETRIES_AFTER_STARTUP
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
+AirthingsBLEDataUpdateCoordinator = DataUpdateCoordinator[AirthingsDevice]
+AirthingsBLEConfigEntry = ConfigEntry[AirthingsBLEDataUpdateCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: AirthingsBLEConfigEntry
+) -> bool:
     """Set up Airthings BLE device from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     address = entry.unique_id
@@ -51,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         return data
 
-    coordinator = DataUpdateCoordinator(
+    coordinator: AirthingsBLEDataUpdateCoordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name=DOMAIN,
@@ -61,16 +66,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    # Once its setup and we know we are not going to delay
+    # the startup of Home Assistant, we can set the max attempts
+    # to a higher value. If the first connection attempt fails,
+    # Home Assistant's built-in retry logic will take over.
+    airthings.set_max_attempts(MAX_RETRIES_AFTER_STARTUP)
+
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: AirthingsBLEConfigEntry
+) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

@@ -4,14 +4,16 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_config_entry(hass):
+def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Mock a config entry."""
     entry = MockConfigEntry(
         title="OpenAI",
@@ -25,7 +27,20 @@ def mock_config_entry(hass):
 
 
 @pytest.fixture
-async def mock_init_component(hass, mock_config_entry):
+def mock_config_entry_with_assist(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> MockConfigEntry:
+    """Mock a config entry with assist."""
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_LLM_HASS_API: llm.LLM_API_ASSIST}
+    )
+    return mock_config_entry
+
+
+@pytest.fixture
+async def mock_init_component(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Initialize integration."""
     with patch(
         "openai.resources.models.AsyncModels.list",

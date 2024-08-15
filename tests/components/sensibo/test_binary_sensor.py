@@ -15,9 +15,9 @@ from homeassistant.util import dt as dt_util
 from tests.common import async_fire_time_changed
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_binary_sensor(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,

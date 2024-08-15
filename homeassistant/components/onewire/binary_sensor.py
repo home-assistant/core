@@ -10,18 +10,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    DEVICE_KEYS_0_3,
-    DEVICE_KEYS_0_7,
-    DEVICE_KEYS_A_B,
-    DOMAIN,
-    READ_MODE_BOOL,
-)
+from . import OneWireConfigEntry
+from .const import DEVICE_KEYS_0_3, DEVICE_KEYS_0_7, DEVICE_KEYS_A_B, READ_MODE_BOOL
 from .onewire_entities import OneWireEntity, OneWireEntityDescription
 from .onewirehub import OneWireHub
 
@@ -95,13 +89,13 @@ def get_sensor_types(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: OneWireConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up 1-Wire platform."""
-    onewire_hub = hass.data[DOMAIN][config_entry.entry_id]
-
-    entities = await hass.async_add_executor_job(get_entities, onewire_hub)
+    entities = await hass.async_add_executor_job(
+        get_entities, config_entry.runtime_data
+    )
     async_add_entities(entities, True)
 
 
@@ -117,7 +111,7 @@ def get_entities(onewire_hub: OneWireHub) -> list[OneWireBinarySensor]:
         device_type = device.type
         device_info = device.device_info
         device_sub_type = "std"
-        if "EF" in family:
+        if device_type and "EF" in family:
             device_sub_type = "HobbyBoard"
             family = device_type
 

@@ -11,7 +11,6 @@ from homeassistant.components.conversation.models import (
 )
 from homeassistant.components.homeassistant.exposed_entities import (
     DATA_EXPOSED_ENTITIES,
-    ExposedEntities,
     async_expose_entity,
 )
 from homeassistant.core import HomeAssistant
@@ -45,12 +44,12 @@ class MockAgent(conversation.AbstractConversationAgent):
         )
 
 
-def expose_new(hass: HomeAssistant, expose_new: bool):
+def expose_new(hass: HomeAssistant, expose_new: bool) -> None:
     """Enable exposing new entities to the default agent."""
-    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
     exposed_entities.async_set_expose_new_entities(conversation.DOMAIN, expose_new)
 
 
-def expose_entity(hass: HomeAssistant, entity_id: str, should_expose: bool):
+def expose_entity(hass: HomeAssistant, entity_id: str, should_expose: bool) -> None:
     """Expose an entity to the default agent."""
     async_expose_entity(hass, conversation.DOMAIN, entity_id, should_expose)

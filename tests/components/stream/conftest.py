@@ -16,6 +16,7 @@ import asyncio
 from collections.abc import Generator
 import logging
 import threading
+from typing import Any
 from unittest.mock import Mock, patch
 
 from aiohttp import web
@@ -32,7 +33,7 @@ TEST_TIMEOUT = 7.0  # Lower than 9s home assistant timeout
 class WorkerSync:
     """Test fixture that intercepts stream worker calls to StreamOutput."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize WorkerSync."""
         self._event = None
         self._original = StreamState.discontinuity
@@ -60,7 +61,7 @@ class WorkerSync:
 
 
 @pytest.fixture
-def stream_worker_sync(hass):
+def stream_worker_sync() -> Generator[WorkerSync]:
     """Patch StreamOutput to allow test to synchronize worker stream end."""
     sync = WorkerSync()
     with patch(
@@ -74,7 +75,7 @@ def stream_worker_sync(hass):
 class HLSSync:
     """Test fixture that intercepts stream worker calls to StreamOutput."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize HLSSync."""
         self._request_event = asyncio.Event()
         self._original_recv = StreamOutput.recv
@@ -91,7 +92,7 @@ class HLSSync:
             self.check_requests_ready()
 
         class SyncResponse(web.Response):
-            def __init__(self, *args, **kwargs) -> None:
+            def __init__(self, *args: Any, **kwargs: Any) -> None:
                 super().__init__(*args, **kwargs)
                 on_resp()
 
@@ -175,7 +176,7 @@ def hls_sync():
 
 
 @pytest.fixture(autouse=True)
-def should_retry() -> Generator[Mock, None, None]:
+def should_retry() -> Generator[Mock]:
     """Fixture to disable stream worker retries in tests by default."""
     with patch(
         "homeassistant.components.stream._should_retry", return_value=False

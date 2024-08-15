@@ -23,7 +23,6 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
     CONF_FALLBACK,
-    CONF_HOME_ID,
     CONST_OVERLAY_TADO_DEFAULT,
     CONST_OVERLAY_TADO_OPTIONS,
     DOMAIN,
@@ -74,6 +73,7 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Tado."""
 
     VERSION = 1
+    config_entry: ConfigEntry | None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -89,7 +89,7 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except NoHomes:
                 errors["base"] = "no_homes"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
@@ -116,46 +116,53 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         return await self.async_step_user()
 
-    async def async_step_import(
-        self, import_config: dict[str, Any]
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Import a config entry from configuration.yaml."""
-        _LOGGER.debug("Importing Tado from configuration.yaml")
-        username = import_config[CONF_USERNAME]
-        password = import_config[CONF_PASSWORD]
-        imported_home_id = import_config[CONF_HOME_ID]
-
-        self._async_abort_entries_match(
-            {
-                CONF_USERNAME: username,
-                CONF_PASSWORD: password,
-                CONF_HOME_ID: imported_home_id,
-            }
+        """Handle a reconfiguration flow initialized by the user."""
+        self.config_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
         )
+        return await self.async_step_reconfigure_confirm()
 
-        try:
-            validate_result = await validate_input(
-                self.hass,
+    async def async_step_reconfigure_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        errors: dict[str, str] = {}
+        assert self.config_entry
+
+        if user_input is not None:
+            user_input[CONF_USERNAME] = self.config_entry.data[CONF_USERNAME]
+            try:
+                await validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except PyTado.exceptions.TadoWrongCredentialsException:
+                errors["base"] = "invalid_auth"
+            except NoHomes:
+                errors["base"] = "no_homes"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    self.config_entry,
+                    data={**self.config_entry.data, **user_input},
+                    reason="reconfigure_successful",
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure_confirm",
+            data_schema=vol.Schema(
                 {
-                    CONF_USERNAME: username,
-                    CONF_PASSWORD: password,
-                },
-            )
-        except HomeAssistantError:
-            return self.async_abort(reason="import_failed")
-        except PyTado.exceptions.TadoWrongCredentialsException:
-            return self.async_abort(reason="import_failed_invalid_auth")
-
-        home_id = validate_result[UNIQUE_ID]
-        await self.async_set_unique_id(home_id)
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=import_config[CONF_USERNAME],
-            data={
-                CONF_USERNAME: username,
-                CONF_PASSWORD: password,
-                CONF_HOME_ID: home_id,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
+            description_placeholders={
+                CONF_USERNAME: self.config_entry.data[CONF_USERNAME]
             },
         )
 

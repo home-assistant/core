@@ -8,6 +8,7 @@ from homeassistant.const import (
     CONF_DEFAULT,
     CONF_DESCRIPTION,
     CONF_DOMAIN,
+    CONF_ICON,
     CONF_NAME,
     CONF_PATH,
     CONF_SELECTOR,
@@ -18,6 +19,7 @@ from homeassistant.helpers import config_validation as cv, selector
 from .const import (
     CONF_AUTHOR,
     CONF_BLUEPRINT,
+    CONF_COLLAPSED,
     CONF_HOMEASSISTANT,
     CONF_INPUT,
     CONF_MIN_VERSION,
@@ -46,6 +48,23 @@ def version_validator(value: Any) -> str:
     return value
 
 
+def unique_input_validator(inputs: Any) -> Any:
+    """Validate the inputs don't have duplicate keys under different sections."""
+    all_inputs = set()
+    for key, value in inputs.items():
+        if value and CONF_INPUT in value:
+            for key in value[CONF_INPUT]:
+                if key in all_inputs:
+                    raise vol.Invalid(f"Duplicate use of input key {key} in blueprint.")
+                all_inputs.add(key)
+        else:
+            if key in all_inputs:
+                raise vol.Invalid(f"Duplicate use of input key {key} in blueprint.")
+            all_inputs.add(key)
+
+    return inputs
+
+
 @callback
 def is_blueprint_config(config: Any) -> bool:
     """Return if it is a blueprint config."""
@@ -67,6 +86,21 @@ BLUEPRINT_INPUT_SCHEMA = vol.Schema(
     }
 )
 
+BLUEPRINT_INPUT_SECTION_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME): str,
+        vol.Optional(CONF_ICON): str,
+        vol.Optional(CONF_DESCRIPTION): str,
+        vol.Optional(CONF_COLLAPSED): bool,
+        vol.Required(CONF_INPUT, default=dict): {
+            str: vol.Any(
+                None,
+                BLUEPRINT_INPUT_SCHEMA,
+            )
+        },
+    }
+)
+
 BLUEPRINT_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_BLUEPRINT): vol.Schema(
@@ -79,12 +113,16 @@ BLUEPRINT_SCHEMA = vol.Schema(
                 vol.Optional(CONF_HOMEASSISTANT): {
                     vol.Optional(CONF_MIN_VERSION): version_validator
                 },
-                vol.Optional(CONF_INPUT, default=dict): {
-                    str: vol.Any(
-                        None,
-                        BLUEPRINT_INPUT_SCHEMA,
-                    )
-                },
+                vol.Optional(CONF_INPUT, default=dict): vol.All(
+                    {
+                        str: vol.Any(
+                            None,
+                            BLUEPRINT_INPUT_SCHEMA,
+                            BLUEPRINT_INPUT_SECTION_SCHEMA,
+                        )
+                    },
+                    unique_input_validator,
+                ),
             }
         ),
     },

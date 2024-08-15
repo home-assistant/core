@@ -85,7 +85,7 @@ def mock_diffuser_v2_no_battery_no_cartridge() -> MagicMock:
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_diffusers: list[MagicMock] = [mock_diffuser(hublot="lot123")],
+    mock_diffusers: list[MagicMock],
 ) -> None:
     """Initialize the Rituals Perfume Genie integration with the given Config Entry and Diffuser list."""
     mock_config_entry.add_to_hass(hass)

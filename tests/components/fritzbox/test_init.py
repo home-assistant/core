@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
     STATE_UNAVAILABLE,
     UnitOfTemperature,
 )
@@ -199,6 +200,35 @@ async def test_unload_remove(hass: HomeAssistant, fritz: Mock) -> None:
     assert state is None
 
 
+async def test_logout_on_stop(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test we log out from fritzbox when Home Assistants stops."""
+    fritz().get_devices.return_value = [FritzDeviceSwitchMock()]
+    entity_id = f"{SWITCH_DOMAIN}.{CONF_FAKE_NAME}"
+
+    entry = MockConfigEntry(
+        domain=FB_DOMAIN,
+        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+        unique_id=entity_id,
+    )
+    entry.add_to_hass(hass)
+
+    config_entries = hass.config_entries.async_entries(FB_DOMAIN)
+    assert len(config_entries) == 1
+    assert entry is config_entries[0]
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    state = hass.states.get(entity_id)
+    assert state
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    assert fritz().logout.call_count == 1
+
+
 async def test_remove_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -233,30 +263,14 @@ async def test_remove_device(
 
     # try to delete good_device
     ws_client = await hass_ws_client(hass)
-    await ws_client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": entry.entry_id,
-            "device_id": good_device.id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(good_device.id, entry.entry_id)
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
     await hass.async_block_till_done()
 
     # try to delete orphan_device
     ws_client = await hass_ws_client(hass)
-    await ws_client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": entry.entry_id,
-            "device_id": orphan_device.id,
-        }
-    )
-    response = await ws_client.receive_json()
+    response = await ws_client.remove_device(orphan_device.id, entry.entry_id)
     assert response["success"]
     await hass.async_block_till_done()
 
@@ -270,7 +284,7 @@ async def test_raise_config_entry_not_ready_when_offline(hass: HomeAssistant) ->
     )
     entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.fritzbox.Fritzhome.login",
+        "homeassistant.components.fritzbox.coordinator.Fritzhome.login",
         side_effect=RequestConnectionError(),
     ) as mock_login:
         await hass.config_entries.async_setup(entry.entry_id)
@@ -291,7 +305,7 @@ async def test_raise_config_entry_error_when_login_fail(hass: HomeAssistant) -> 
     )
     entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.fritzbox.Fritzhome.login",
+        "homeassistant.components.fritzbox.coordinator.Fritzhome.login",
         side_effect=LoginError("user"),
     ) as mock_login:
         await hass.config_entries.async_setup(entry.entry_id)

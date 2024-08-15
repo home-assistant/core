@@ -82,7 +82,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
                 raise err from None
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
 
             if errors:
@@ -120,7 +120,7 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         except OctoprintException:
             _LOGGER.exception("Failed to get an application key")
             return self.async_show_progress_done(next_step_id="auth_failed")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Failed to get an application key")
             return self.async_show_progress_done(next_step_id="auth_failed")
         finally:

@@ -113,8 +113,8 @@ class FakeConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
 
 @pytest.fixture(autouse=True)
 def config_flow_handler(
-    hass: HomeAssistant, current_request_with_host: Any
-) -> Generator[FakeConfigFlow, None, None]:
+    hass: HomeAssistant, current_request_with_host: None
+) -> Generator[None]:
     """Fixture for a test config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
     with mock_config_flow(TEST_DOMAIN, FakeConfigFlow):
@@ -124,7 +124,12 @@ def config_flow_handler(
 class OAuthFixture:
     """Fixture to facilitate testing an OAuth flow."""
 
-    def __init__(self, hass, hass_client, aioclient_mock):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        hass_client: ClientSessionGenerator,
+        aioclient_mock: AiohttpClientMocker,
+    ) -> None:
         """Initialize OAuthFixture."""
         self.hass = hass
         self.hass_client = hass_client
@@ -175,7 +180,7 @@ class OAuthFixture:
 async def oauth_fixture(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: Any,
+    aioclient_mock: AiohttpClientMocker,
 ) -> OAuthFixture:
     """Fixture for testing the OAuth flow."""
     return OAuthFixture(hass, hass_client_no_auth, aioclient_mock)
@@ -184,7 +189,7 @@ async def oauth_fixture(
 class Client:
     """Test client with helper methods for application credentials websocket."""
 
-    def __init__(self, client):
+    def __init__(self, client) -> None:
         """Initialize Client."""
         self.client = client
         self.id = 0
@@ -213,7 +218,7 @@ class Client:
         return resp.get("result")
 
 
-ClientFixture = Callable[[], Client]
+type ClientFixture = Callable[[], Client]
 
 
 @pytest.fixture

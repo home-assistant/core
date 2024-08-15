@@ -8,7 +8,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_flow_works(hass: HomeAssistant, mock_get_source_ip) -> None:
+async def test_flow_works(hass: HomeAssistant) -> None:
     """Test that config flow works."""
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
@@ -21,9 +21,7 @@ async def test_flow_works(hass: HomeAssistant, mock_get_source_ip) -> None:
     assert result["data"] == {"name": "Emulated Roku Test", "listen_port": 8060}
 
 
-async def test_flow_already_registered_entry(
-    hass: HomeAssistant, mock_get_source_ip
-) -> None:
+async def test_flow_already_registered_entry(hass: HomeAssistant) -> None:
     """Test that config flow doesn't allow existing names."""
     MockConfigEntry(
         domain="emulated_roku", data={"name": "Emulated Roku Test", "listen_port": 8062}

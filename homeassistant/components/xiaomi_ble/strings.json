@@ -83,7 +83,7 @@
       "button_fan": "Button Fan \"{subtype}\"",
       "button_swing": "Button Swing \"{subtype}\"",
       "button_decrease_speed": "Button Decrease Speed \"{subtype}\"",
-      "button_increase_speed": "Button Inrease Speed \"{subtype}\"",
+      "button_increase_speed": "Button Increase Speed \"{subtype}\"",
       "button_stop": "Button Stop \"{subtype}\"",
       "button_light": "Button Light \"{subtype}\"",
       "button_wind_speed": "Button Wind Speed \"{subtype}\"",

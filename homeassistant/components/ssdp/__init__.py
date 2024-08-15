@@ -126,7 +126,7 @@ class SsdpServiceInfo(BaseServiceInfo):
 
 
 SsdpChange = Enum("SsdpChange", "ALIVE BYEBYE UPDATE")
-SsdpHassJobCallback = HassJob[
+type SsdpHassJobCallback = HassJob[
     [SsdpServiceInfo, SsdpChange], Coroutine[Any, Any, None] | None
 ]
 
@@ -148,7 +148,7 @@ def _format_err(name: str, *args: Any) -> str:
 async def async_register_callback(
     hass: HomeAssistant,
     callback: Callable[[SsdpServiceInfo, SsdpChange], Coroutine[Any, Any, None] | None],
-    match_dict: None | dict[str, str] = None,
+    match_dict: dict[str, str] | None = None,
 ) -> Callable[[], None]:
     """Register to receive a callback on ssdp broadcast.
 
@@ -234,7 +234,7 @@ def _async_process_callbacks(
             hass.async_run_hass_job(
                 callback, discovery_info, ssdp_change, background=True
             )
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Failed to callback info: %s", discovery_info)
 
 
@@ -317,7 +317,7 @@ class Scanner:
         return list(self._device_tracker.devices.values())
 
     async def async_register_callback(
-        self, callback: SsdpHassJobCallback, match_dict: None | dict[str, str] = None
+        self, callback: SsdpHassJobCallback, match_dict: dict[str, str] | None = None
     ) -> Callable[[], None]:
         """Register a callback."""
         if match_dict is None:

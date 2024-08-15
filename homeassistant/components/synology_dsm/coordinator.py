@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable, Coroutine
 from datetime import timedelta
 import logging
-from typing import Any, TypeVar
+from typing import Any, Concatenate
 
 from synology_dsm.api.surveillance_station.camera import SynoCamera
 from synology_dsm.exceptions import (
@@ -27,10 +28,35 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-_DataT = TypeVar("_DataT")
 
 
-class SynologyDSMUpdateCoordinator(DataUpdateCoordinator[_DataT]):
+def async_re_login_on_expired[_T: SynologyDSMUpdateCoordinator[Any], **_P, _R](
+    func: Callable[Concatenate[_T, _P], Awaitable[_R]],
+) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, _R]]:
+    """Define a wrapper to re-login when expired."""
+
+    async def _async_wrap(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> _R:
+        for attempts in range(2):
+            try:
+                return await func(self, *args, **kwargs)
+            except SynologyDSMNotLoggedInException:
+                # If login is expired, try to login again
+                _LOGGER.debug("login is expired, try to login again")
+                try:
+                    await self.api.async_login()
+                except SYNOLOGY_AUTH_FAILED_EXCEPTIONS as err:
+                    raise_config_entry_auth_error(err)
+                if attempts == 0:
+                    continue
+            except SYNOLOGY_CONNECTION_EXCEPTIONS as err:
+                raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+        raise UpdateFailed("Unknown error when communicating with API")
+
+    return _async_wrap
+
+
+class SynologyDSMUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """DataUpdateCoordinator base class for synology_dsm."""
 
     def __init__(
@@ -72,6 +98,7 @@ class SynologyDSMSwitchUpdateCoordinator(
         assert info is not None
         self.version = info["data"]["CMSMinVersion"]
 
+    @async_re_login_on_expired
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Fetch all data from api."""
         surveillance_station = self.api.surveillance_station
@@ -102,21 +129,10 @@ class SynologyDSMCentralUpdateCoordinator(SynologyDSMUpdateCoordinator[None]):
             ),
         )
 
+    @async_re_login_on_expired
     async def _async_update_data(self) -> None:
         """Fetch all data from api."""
-        for attempts in range(2):
-            try:
-                await self.api.async_update()
-            except SynologyDSMNotLoggedInException:
-                # If login is expired, try to login again
-                try:
-                    await self.api.dsm.login()
-                except SYNOLOGY_AUTH_FAILED_EXCEPTIONS as err:
-                    raise_config_entry_auth_error(err)
-                if attempts == 0:
-                    continue
-            except SYNOLOGY_CONNECTION_EXCEPTIONS as err:
-                raise UpdateFailed(f"Error communicating with API: {err}") from err
+        await self.api.async_update()
 
 
 class SynologyDSMCameraUpdateCoordinator(
@@ -133,6 +149,7 @@ class SynologyDSMCameraUpdateCoordinator(
         """Initialize DataUpdateCoordinator for cameras."""
         super().__init__(hass, entry, api, timedelta(seconds=30))
 
+    @async_re_login_on_expired
     async def _async_update_data(self) -> dict[str, dict[int, SynoCamera]]:
         """Fetch all camera data from api."""
         surveillance_station = self.api.surveillance_station

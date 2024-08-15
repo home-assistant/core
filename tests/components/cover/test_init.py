@@ -17,12 +17,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from .common import MockCover
+
 from tests.common import (
     help_test_all,
     import_and_test_deprecated_constant_enum,
     setup_test_component_platform,
 )
-from tests.components.cover.common import MockCover
 
 
 async def test_services(
@@ -155,7 +156,7 @@ def is_closing(hass, ent):
     return hass.states.is_state(ent.entity_id, STATE_CLOSING)
 
 
-def _create_tuples(enum: Enum, constant_prefix: str) -> list[tuple[Enum, str]]:
+def _create_tuples(enum: type[Enum], constant_prefix: str) -> list[tuple[Enum, str]]:
     return [(enum_field, constant_prefix) for enum_field in enum]
 
 

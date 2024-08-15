@@ -132,7 +132,9 @@ async def test_circular_import(hass: HomeAssistant) -> None:
     # dependencies are only set in component level
     # since we are using manifest to hold them
     mock_integration(hass, MockModule("test_circular", dependencies=["test_component"]))
-    mock_platform(hass, "test_circular.switch", MockPlatform(setup_platform))
+    mock_platform(
+        hass, "test_circular.switch", MockPlatform(setup_platform=setup_platform)
+    )
 
     await setup.async_setup_component(
         hass,

@@ -68,7 +68,7 @@ class SlackFlowHandler(ConfigFlow, domain=DOMAIN):
             if ex.response["error"] == "invalid_auth":
                 return "invalid_auth", None
             return "cannot_connect", None
-        except Exception:  # pylint:disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return "unknown", None
         return None, info

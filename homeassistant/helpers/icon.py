@@ -11,22 +11,14 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import Integration, async_get_integrations
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import load_json_object
 
 from .translation import build_resources
 
-ICON_CACHE = "icon_cache"
+ICON_CACHE: HassKey[_IconsCache] = HassKey("icon_cache")
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@callback
-def _component_icons_path(integration: Integration) -> pathlib.Path:
-    """Return the icons json file location for a component.
-
-    Ex: components/hue/icons.json
-    """
-    return integration.file_path / "icons.json"
 
 
 def _load_icons_files(
@@ -49,7 +41,7 @@ async def _async_get_component_icons(
 
     # Determine files to load
     files_to_load = {
-        comp: _component_icons_path(integrations[comp]) for comp in components
+        comp: integrations[comp].file_path / "icons.json" for comp in components
     }
 
     # Load files
@@ -142,7 +134,7 @@ async def async_get_icons(
         components = hass.config.top_level_components
 
     if ICON_CACHE in hass.data:
-        cache: _IconsCache = hass.data[ICON_CACHE]
+        cache = hass.data[ICON_CACHE]
     else:
         cache = hass.data[ICON_CACHE] = _IconsCache(hass)
 

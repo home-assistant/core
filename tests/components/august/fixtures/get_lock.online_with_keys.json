@@ -3,7 +3,7 @@
   "Type": 2,
   "Created": "2017-12-10T03:12:09.210Z",
   "Updated": "2017-12-10T03:12:09.210Z",
-  "LockID": "A6697750D607098BAE8D6BAA11EF8063",
+  "LockID": "A6697750D607098BAE8D6BAA11EF8064",
   "HouseID": "000000000000",
   "HouseName": "My House",
   "Calibrated": false,
@@ -30,9 +30,9 @@
     "operative": true
   },
   "keypad": {
-    "_id": "5bc65c24e6ef2a263e1450a8",
-    "serialNumber": "K1GXB0054Z",
-    "lockID": "92412D1B44004595B5DEB134E151A8D3",
+    "_id": "5bc65c24e6ef2a263e1450a9",
+    "serialNumber": "K1GXB0054L",
+    "lockID": "92412D1B44004595B5DEB134E151A8D4",
     "currentFirmwareVersion": "2.27.0",
     "battery": {},
     "batteryLevel": "Medium",

@@ -25,7 +25,7 @@ from devolo_home_control_api.publisher.publisher import Publisher
 class BinarySensorPropertyMock(BinarySensorProperty):
     """devolo Home Control binary sensor mock."""
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self, **kwargs: Any) -> None:  # pylint: disable=super-init-not-called
         """Initialize the mock."""
         self._logger = MagicMock()
         self.element_uid = "Test"
@@ -38,7 +38,7 @@ class BinarySensorPropertyMock(BinarySensorProperty):
 class BinarySwitchPropertyMock(BinarySwitchProperty):
     """devolo Home Control binary sensor mock."""
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self, **kwargs: Any) -> None:  # pylint: disable=super-init-not-called
         """Initialize the mock."""
         self._logger = MagicMock()
         self.element_uid = "Test"
@@ -48,7 +48,7 @@ class BinarySwitchPropertyMock(BinarySwitchProperty):
 class ConsumptionPropertyMock(ConsumptionProperty):
     """devolo Home Control binary sensor mock."""
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self, **kwargs: Any) -> None:  # pylint: disable=super-init-not-called
         """Initialize the mock."""
         self._logger = MagicMock()
         self.element_uid = "devolo.Meter:Test"
@@ -61,7 +61,7 @@ class ConsumptionPropertyMock(ConsumptionProperty):
 class MultiLevelSensorPropertyMock(MultiLevelSensorProperty):
     """devolo Home Control multi level sensor mock."""
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self, **kwargs: Any) -> None:  # pylint: disable=super-init-not-called
         """Initialize the mock."""
         self.element_uid = "Test"
         self.sensor_type = "temperature"
@@ -73,7 +73,7 @@ class MultiLevelSensorPropertyMock(MultiLevelSensorProperty):
 class MultiLevelSwitchPropertyMock(MultiLevelSwitchProperty):
     """devolo Home Control multi level switch mock."""
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self, **kwargs: Any) -> None:  # pylint: disable=super-init-not-called
         """Initialize the mock."""
         self.element_uid = "Test"
         self.min = 4
@@ -85,7 +85,7 @@ class MultiLevelSwitchPropertyMock(MultiLevelSwitchProperty):
 class SirenPropertyMock(MultiLevelSwitchProperty):
     """devolo Home Control siren mock."""
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self, **kwargs: Any) -> None:  # pylint: disable=super-init-not-called
         """Initialize the mock."""
         self.element_uid = "Test"
         self.max = 0
@@ -98,7 +98,7 @@ class SirenPropertyMock(MultiLevelSwitchProperty):
 class SettingsMock(SettingsProperty):
     """devolo Home Control settings mock."""
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self, **kwargs: Any) -> None:  # pylint: disable=super-init-not-called
         """Initialize the mock."""
         self._logger = MagicMock()
         self.name = "Test"
@@ -109,7 +109,7 @@ class SettingsMock(SettingsProperty):
 class DeviceMock(Zwave):
     """devolo Home Control device mock."""
 
-    def __init__(self) -> None:
+    def __init__(self) -> None:  # pylint: disable=super-init-not-called
         """Initialize the mock."""
         self.status = 0
         self.brand = "devolo"
@@ -117,6 +117,7 @@ class DeviceMock(Zwave):
         self.uid = "Test"
         self.device_model_uid = "Test"
         self.device_type = "Test"
+        self.identifier = "MT01234"
         self.settings_property = {"general_device_settings": SettingsMock()}
         self.href = "https://www.mydevolo.com"
 
@@ -250,16 +251,14 @@ class SwitchMock(DeviceMock):
 class HomeControlMock(HomeControl):
     """devolo Home Control gateway mock."""
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self, **kwargs: Any) -> None:  # pylint: disable=super-init-not-called
         """Initialize the mock."""
         self.devices = {}
         self.publisher = MagicMock()
         self.gateway = MagicMock()
         self.gateway.local_connection = True
         self.gateway.firmware_version = "8.94.0"
-
-    def websocket_disconnect(self, event: str = "") -> None:
-        """Mock disconnect of the websocket."""
+        self.websocket_disconnect = MagicMock()
 
 
 class HomeControlMockBinarySensor(HomeControlMock):

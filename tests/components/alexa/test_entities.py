@@ -130,7 +130,7 @@ async def test_serialize_discovery_partly_fails(
     }
     assert all(
         entity in endpoint_ids
-        for entity in ["switch#bla", "fan#bla", "humidifier#bla", "sensor#bla"]
+        for entity in ("switch#bla", "fan#bla", "humidifier#bla", "sensor#bla")
     )
 
     # Simulate fetching the interfaces fails for fan entity
@@ -147,7 +147,7 @@ async def test_serialize_discovery_partly_fails(
         }
         assert all(
             entity in endpoint_ids
-            for entity in ["switch#bla", "humidifier#bla", "sensor#bla"]
+            for entity in ("switch#bla", "humidifier#bla", "sensor#bla")
         )
         assert "Unable to serialize fan.bla for discovery" in caplog.text
         caplog.clear()
@@ -166,7 +166,7 @@ async def test_serialize_discovery_partly_fails(
         }
         assert all(
             entity in endpoint_ids
-            for entity in ["switch#bla", "humidifier#bla", "fan#bla"]
+            for entity in ("switch#bla", "humidifier#bla", "fan#bla")
         )
         assert "Unable to serialize sensor.bla for discovery" in caplog.text
         caplog.clear()

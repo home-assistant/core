@@ -1,6 +1,7 @@
 """Test the UPB Control config flow."""
 
-from unittest.mock import MagicMock, PropertyMock, patch
+from asyncio import TimeoutError
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.upb.const import DOMAIN
@@ -14,11 +15,12 @@ def mocked_upb(sync_complete=True, config_ok=True):
     def _upb_lib_connect(callback):
         callback()
 
-    upb_mock = MagicMock()
+    upb_mock = AsyncMock()
     type(upb_mock).network_id = PropertyMock(return_value="42")
     type(upb_mock).config_ok = PropertyMock(return_value=config_ok)
+    type(upb_mock).disconnect = MagicMock()
     if sync_complete:
-        upb_mock.connect.side_effect = _upb_lib_connect
+        upb_mock.async_connect.side_effect = _upb_lib_connect
     return patch(
         "homeassistant.components.upb.config_flow.upb_lib.UpbPim", return_value=upb_mock
     )
@@ -84,7 +86,6 @@ async def test_form_user_with_tcp_upb(hass: HomeAssistant) -> None:
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
-    from asyncio import TimeoutError
 
     with patch(
         "homeassistant.components.upb.config_flow.asyncio.timeout",

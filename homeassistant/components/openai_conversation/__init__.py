@@ -5,7 +5,6 @@ from __future__ import annotations
 import openai
 import voluptuous as vol
 
-from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import (
@@ -14,12 +13,12 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
-from homeassistant.helpers import (
-    config_validation as cv,
-    issue_registry as ir,
-    selector,
+from homeassistant.exceptions import (
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    ServiceValidationError,
 )
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER
@@ -28,35 +27,31 @@ SERVICE_GENERATE_IMAGE = "generate_image"
 PLATFORMS = (Platform.CONVERSATION,)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
+type OpenAIConfigEntry = ConfigEntry[openai.AsyncClient]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up OpenAI Conversation."""
 
     async def render_image(call: ServiceCall) -> ServiceResponse:
         """Render an image with dall-e."""
-        client = hass.data[DOMAIN][call.data["config_entry"]]
+        entry_id = call.data["config_entry"]
+        entry = hass.config_entries.async_get_entry(entry_id)
 
-        if call.data["size"] in ("256", "512", "1024"):
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                "image_size_deprecated_format",
-                breaks_in_ha_version="2024.7.0",
-                is_fixable=False,
-                is_persistent=True,
-                learn_more_url="https://www.home-assistant.io/integrations/openai_conversation/",
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="image_size_deprecated_format",
+        if entry is None or entry.domain != DOMAIN:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_config_entry",
+                translation_placeholders={"config_entry": entry_id},
             )
-            size = "1024x1024"
-        else:
-            size = call.data["size"]
+
+        client: openai.AsyncClient = entry.runtime_data
 
         try:
             response = await client.images.generate(
                 model="dall-e-3",
                 prompt=call.data["prompt"],
-                size=size,
+                size=call.data["size"],
                 quality=call.data["quality"],
                 style=call.data["style"],
                 response_format="url",
@@ -80,7 +75,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 ),
                 vol.Required("prompt"): cv.string,
                 vol.Optional("size", default="1024x1024"): vol.In(
-                    ("1024x1024", "1024x1792", "1792x1024", "256", "512", "1024")
+                    ("1024x1024", "1024x1792", "1792x1024")
                 ),
                 vol.Optional("quality", default="standard"): vol.In(("standard", "hd")),
                 vol.Optional("style", default="vivid"): vol.In(("vivid", "natural")),
@@ -91,7 +86,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bool:
     """Set up OpenAI Conversation from a config entry."""
     client = openai.AsyncOpenAI(api_key=entry.data[CONF_API_KEY])
     try:
@@ -102,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except openai.OpenAIError as err:
         raise ConfigEntryNotReady(err) from err
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = client
+    entry.runtime_data = client
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -111,9 +106,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload OpenAI."""
-    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        return False
-
-    hass.data[DOMAIN].pop(entry.entry_id)
-    conversation.async_unset_agent(hass, entry)
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

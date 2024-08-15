@@ -26,7 +26,7 @@ from homeassistant.components.notify import (
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import ATTR_NAME, URL_ROOT
@@ -61,7 +61,7 @@ def gcm_api_deprecated(value):
     return value
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Optional("gcm_sender_id"): vol.All(cv.string, gcm_api_deprecated),
         vol.Optional("gcm_api_key"): cv.string,
@@ -165,7 +165,7 @@ HTML5_SHOWNOTIFICATION_PARAMETERS = (
 )
 
 
-def get_service(
+async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
@@ -173,7 +173,7 @@ def get_service(
     """Get the HTML5 push notification service."""
     json_path = hass.config.path(REGISTRATIONS_FILE)
 
-    registrations = _load_config(json_path)
+    registrations = await hass.async_add_executor_job(_load_config, json_path)
 
     vapid_pub_key = config[ATTR_VAPID_PUB_KEY]
     vapid_prv_key = config[ATTR_VAPID_PRV_KEY]
@@ -426,10 +426,7 @@ class HTML5NotificationService(BaseNotificationService):
     @property
     def targets(self):
         """Return a dictionary of registered targets."""
-        targets = {}
-        for registration in self.registrations:
-            targets[registration] = registration
-        return targets
+        return {registration: registration for registration in self.registrations}
 
     def dismiss(self, **kwargs):
         """Dismisses a notification."""
@@ -536,7 +533,7 @@ class HTML5NotificationService(BaseNotificationService):
             elif response.status_code > 399:
                 _LOGGER.error(
                     "There was an issue sending the notification %s: %s",
-                    response.status,
+                    response.status_code,
                     response.text,
                 )
 

@@ -43,6 +43,7 @@ ATTR_TARIFF = "tariff"
 ATTR_TARIFFS = "tariffs"
 ATTR_VALUE = "value"
 ATTR_CRON_PATTERN = "cron pattern"
+ATTR_NEXT_RESET = "next_reset"
 
 SIGNAL_START_PAUSE_METER = "utility_meter_start_pause"
 SIGNAL_RESET_METER = "utility_meter_reset"

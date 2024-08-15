@@ -21,7 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.helpers.typing import DiscoveryInfoType, VolDictType
 from homeassistant.util import slugify
 from homeassistant.util.network import is_ip_address
 
@@ -52,7 +52,7 @@ PROTOCOL_MAP = {
 
 VALIDATE_TIMEOUT = 35
 
-BASE_SCHEMA = {
+BASE_SCHEMA: VolDictType = {
     vol.Optional(CONF_USERNAME, default=""): str,
     vol.Optional(CONF_PASSWORD, default=""): str,
 }
@@ -248,7 +248,7 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "cannot_connect"}, None
         except InvalidAuth:
             return {CONF_PASSWORD: "invalid_auth"}, None
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return {"base": "unknown"}, None
 

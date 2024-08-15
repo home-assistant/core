@@ -7,7 +7,10 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
@@ -17,7 +20,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    issue_registry as ir,
+)
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
@@ -37,8 +45,8 @@ from .const import (
     ATTRIBUTION,
     CONF_SHOW_ARCHIVED,
     CONF_SHOW_DELIVERED,
+    DEPRECATED_KEY,
     DOMAIN,
-    ENTITY_ID_TEMPLATE,
     LOGGER,
     NOTIFICATION_DELIVERED_MESSAGE,
     NOTIFICATION_DELIVERED_TITLE,
@@ -46,7 +54,7 @@ from .const import (
     VALUE_DELIVERED,
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
@@ -110,8 +118,12 @@ async def async_setup_entry(
     coordinator: SeventeenTrackCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     previous_tracking_numbers: set[str] = set()
 
+    # This has been deprecated in 2024.8, will be removed in 2025.2
     @callback
     def _async_create_remove_entities():
+        if config_entry.data.get(DEPRECATED_KEY):
+            remove_packages(hass, coordinator.account_id, previous_tracking_numbers)
+            return
         live_tracking_numbers = set(coordinator.data.live_packages.keys())
 
         new_tracking_numbers = live_tracking_numbers - previous_tracking_numbers
@@ -150,37 +162,49 @@ async def async_setup_entry(
         )
 
     async_add_entities(
-        SeventeenTrackSummarySensor(status, summary_data["status_name"], coordinator)
+        SeventeenTrackSummarySensor(status, coordinator)
         for status, summary_data in coordinator.data.summary.items()
     )
 
-    _async_create_remove_entities()
+    if not config_entry.data.get(DEPRECATED_KEY):
+        deprecate_sensor_issue(hass, config_entry.entry_id)
+        _async_create_remove_entities()
+        config_entry.async_on_unload(
+            coordinator.async_add_listener(_async_create_remove_entities)
+        )
 
-    config_entry.async_on_unload(
-        coordinator.async_add_listener(_async_create_remove_entities)
-    )
 
-
-class SeventeenTrackSummarySensor(
-    CoordinatorEntity[SeventeenTrackCoordinator], SensorEntity
-):
-    """Define a summary sensor."""
+class SeventeenTrackSensor(CoordinatorEntity[SeventeenTrackCoordinator], SensorEntity):
+    """Define a 17Track sensor."""
 
     _attr_attribution = ATTRIBUTION
-    _attr_icon = "mdi:package"
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: SeventeenTrackCoordinator) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.account_id)},
+            entry_type=DeviceEntryType.SERVICE,
+            name="17Track",
+        )
+
+
+class SeventeenTrackSummarySensor(SeventeenTrackSensor):
+    """Define a summary sensor."""
+
     _attr_native_unit_of_measurement = "packages"
 
     def __init__(
         self,
         status: str,
-        status_name: str,
         coordinator: SeventeenTrackCoordinator,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._status = status
-        self._attr_name = f"Seventeentrack Packages {status_name}"
-        self._attr_unique_id = f"summary_{coordinator.account_id}_{self._status}"
+        self._attr_translation_key = status
+        self._attr_unique_id = f"summary_{coordinator.account_id}_{status}"
 
     @property
     def available(self) -> bool:
@@ -192,6 +216,7 @@ class SeventeenTrackSummarySensor(
         """Return the state of the sensor."""
         return self.coordinator.data.summary[self._status]["quantity"]
 
+    # This has been deprecated in 2024.8, will be removed in 2025.2
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
@@ -211,13 +236,11 @@ class SeventeenTrackSummarySensor(
         }
 
 
-class SeventeenTrackPackageSensor(
-    CoordinatorEntity[SeventeenTrackCoordinator], SensorEntity
-):
+# The dynamic package sensors have been replaced by the seventeentrack.get_packages service
+class SeventeenTrackPackageSensor(SeventeenTrackSensor):
     """Define an individual package sensor."""
 
-    _attr_attribution = ATTRIBUTION
-    _attr_icon = "mdi:package"
+    _attr_translation_key = "package"
 
     def __init__(
         self,
@@ -228,23 +251,18 @@ class SeventeenTrackPackageSensor(
         super().__init__(coordinator)
         self._tracking_number = tracking_number
         self._previous_status = coordinator.data.live_packages[tracking_number].status
-        self.entity_id = ENTITY_ID_TEMPLATE.format(tracking_number)
         self._attr_unique_id = UNIQUE_ID_TEMPLATE.format(
             coordinator.account_id, tracking_number
         )
+        package = coordinator.data.live_packages[tracking_number]
+        if not (name := package.friendly_name):
+            name = tracking_number
+        self._attr_translation_placeholders = {"name": name}
 
     @property
     def available(self) -> bool:
         """Return whether the entity is available."""
         return self._tracking_number in self.coordinator.data.live_packages
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        package = self.coordinator.data.live_packages.get(self._tracking_number)
-        if package is None or not (name := package.friendly_name):
-            name = self._tracking_number
-        return f"Seventeentrack Package: {name}"
 
     @property
     def native_value(self) -> StateType:
@@ -291,4 +309,21 @@ def notify_delivered(hass: HomeAssistant, friendly_name: str, tracking_number: s
 
     persistent_notification.create(
         hass, message, title=title, notification_id=notification_id
+    )
+
+
+@callback
+def deprecate_sensor_issue(hass: HomeAssistant, entry_id: str) -> None:
+    """Ensure an issue is registered."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecate_sensor_{entry_id}",
+        breaks_in_ha_version="2025.2.0",
+        issue_domain=DOMAIN,
+        is_fixable=True,
+        is_persistent=True,
+        translation_key="deprecate_sensor",
+        severity=ir.IssueSeverity.WARNING,
+        data={"entry_id": entry_id},
     )

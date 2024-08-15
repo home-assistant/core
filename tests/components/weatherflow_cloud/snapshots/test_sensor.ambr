@@ -1,0 +1,806 @@
+# serializer version: 1
+# name: test_all_entities[sensor.my_home_station_air_density-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_air_density',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 5,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Air density',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'air_density',
+    'unique_id': '24432_air_density',
+    'unit_of_measurement': 'kg/m³',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_air_density-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'friendly_name': 'My Home Station Air density',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'kg/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_air_density',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.96139',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_dew_point-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_dew_point',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Dew point',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'dew_point',
+    'unique_id': '24432_dew_point',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_dew_point-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'device_class': 'temperature',
+      'friendly_name': 'My Home Station Dew point',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_dew_point',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-10.4',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_feels_like-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_feels_like',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Feels like',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'feels_like',
+    'unique_id': '24432_feels_like',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_feels_like-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'device_class': 'temperature',
+      'friendly_name': 'My Home Station Feels like',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_feels_like',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.5',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_heat_index-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_heat_index',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Heat index',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'heat_index',
+    'unique_id': '24432_heat_index',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_heat_index-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'device_class': 'temperature',
+      'friendly_name': 'My Home Station Heat index',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_heat_index',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.5',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_lightning_count-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_lightning_count',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lightning count',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lightning_strike_count',
+    'unique_id': '24432_lightning_strike_count',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_lightning_count-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'friendly_name': 'My Home Station Lightning count',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_lightning_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_lightning_count_last_1_hr-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_lightning_count_last_1_hr',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lightning count last 1 hr',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lightning_strike_count_last_1hr',
+    'unique_id': '24432_lightning_strike_count_last_1hr',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_lightning_count_last_1_hr-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'friendly_name': 'My Home Station Lightning count last 1 hr',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_lightning_count_last_1_hr',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_lightning_count_last_3_hr-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_lightning_count_last_3_hr',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lightning count last 3 hr',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lightning_strike_count_last_3hr',
+    'unique_id': '24432_lightning_strike_count_last_3hr',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_lightning_count_last_3_hr-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'friendly_name': 'My Home Station Lightning count last 3 hr',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_lightning_count_last_3_hr',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_lightning_last_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_lightning_last_distance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Lightning last distance',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lightning_strike_last_distance',
+    'unique_id': '24432_lightning_strike_last_distance',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_lightning_last_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'device_class': 'distance',
+      'friendly_name': 'My Home Station Lightning last distance',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_lightning_last_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '26',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_lightning_last_strike-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_lightning_last_strike',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Lightning last strike',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lightning_strike_last_epoch',
+    'unique_id': '24432_lightning_strike_last_epoch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_lightning_last_strike-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'device_class': 'timestamp',
+      'friendly_name': 'My Home Station Lightning last strike',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_lightning_last_strike',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-02-07T23:01:15+00:00',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_pressure_barometric-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_pressure_barometric',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
+    'original_icon': None,
+    'original_name': 'Pressure barometric',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'barometric_pressure',
+    'unique_id': '24432_barometric_pressure',
+    'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_pressure_barometric-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'device_class': 'atmospheric_pressure',
+      'friendly_name': 'My Home Station Pressure barometric',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_pressure_barometric',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '782.8',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_pressure_sea_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_pressure_sea_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
+    'original_icon': None,
+    'original_name': 'Pressure sea level',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'sea_level_pressure',
+    'unique_id': '24432_sea_level_pressure',
+    'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_pressure_sea_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'device_class': 'atmospheric_pressure',
+      'friendly_name': 'My Home Station Pressure sea level',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_pressure_sea_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1006.2',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'air_temperature',
+    'unique_id': '24432_air_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'device_class': 'temperature',
+      'friendly_name': 'My Home Station Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.5',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_wet_bulb_globe_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_wet_bulb_globe_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Wet bulb globe temperature',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wet_bulb_globe_temperature',
+    'unique_id': '24432_wet_bulb_globe_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_wet_bulb_globe_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'device_class': 'temperature',
+      'friendly_name': 'My Home Station Wet bulb globe temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_wet_bulb_globe_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4.6',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_wet_bulb_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_wet_bulb_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Wet bulb temperature',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wet_bulb_temperature',
+    'unique_id': '24432_wet_bulb_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_wet_bulb_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'device_class': 'temperature',
+      'friendly_name': 'My Home Station Wet bulb temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_wet_bulb_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.1',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_wind_chill-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_wind_chill',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Wind chill',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wind_chill',
+    'unique_id': '24432_wind_chill',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_wind_chill-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'device_class': 'temperature',
+      'friendly_name': 'My Home Station Wind chill',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_wind_chill',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.5',
+  })
+# ---

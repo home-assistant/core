@@ -51,6 +51,7 @@ class HiveAlarmControlPanelEntity(HiveEntity, AlarmControlPanelEntity):
         | AlarmControlPanelEntityFeature.ARM_AWAY
         | AlarmControlPanelEntityFeature.TRIGGER
     )
+    _attr_code_arm_required = False
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""

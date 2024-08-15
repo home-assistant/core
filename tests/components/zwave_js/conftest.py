@@ -1,9 +1,11 @@
 """Provide common Z-Wave JS fixtures."""
 
 import asyncio
+from collections.abc import Generator
 import copy
 import io
 import json
+from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, patch
 
 import pytest
@@ -20,13 +22,13 @@ from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(name="addon_info_side_effect")
-def addon_info_side_effect_fixture():
+def addon_info_side_effect_fixture() -> Any | None:
     """Return the add-on info side effect."""
     return None
 
 
 @pytest.fixture(name="addon_info")
-def mock_addon_info(addon_info_side_effect):
+def mock_addon_info(addon_info_side_effect: Any | None) -> Generator[AsyncMock]:
     """Mock Supervisor add-on info."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_get_addon_info",
@@ -44,13 +46,15 @@ def mock_addon_info(addon_info_side_effect):
 
 
 @pytest.fixture(name="addon_store_info_side_effect")
-def addon_store_info_side_effect_fixture():
+def addon_store_info_side_effect_fixture() -> Any | None:
     """Return the add-on store info side effect."""
     return None
 
 
 @pytest.fixture(name="addon_store_info")
-def mock_addon_store_info(addon_store_info_side_effect):
+def mock_addon_store_info(
+    addon_store_info_side_effect: Any | None,
+) -> Generator[AsyncMock]:
     """Mock Supervisor add-on info."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_get_addon_store_info",
@@ -66,7 +70,7 @@ def mock_addon_store_info(addon_store_info_side_effect):
 
 
 @pytest.fixture(name="addon_running")
-def mock_addon_running(addon_store_info, addon_info):
+def mock_addon_running(addon_store_info: AsyncMock, addon_info: AsyncMock) -> AsyncMock:
     """Mock add-on already running."""
     addon_store_info.return_value = {
         "available": True,
@@ -81,7 +85,9 @@ def mock_addon_running(addon_store_info, addon_info):
 
 
 @pytest.fixture(name="addon_installed")
-def mock_addon_installed(addon_store_info, addon_info):
+def mock_addon_installed(
+    addon_store_info: AsyncMock, addon_info: AsyncMock
+) -> AsyncMock:
     """Mock add-on already installed but not running."""
     addon_store_info.return_value = {
         "available": True,
@@ -96,23 +102,27 @@ def mock_addon_installed(addon_store_info, addon_info):
 
 
 @pytest.fixture(name="addon_not_installed")
-def mock_addon_not_installed(addon_store_info, addon_info):
+def mock_addon_not_installed(
+    addon_store_info: AsyncMock, addon_info: AsyncMock
+) -> AsyncMock:
     """Mock add-on not installed."""
     addon_store_info.return_value["available"] = True
     return addon_info
 
 
 @pytest.fixture(name="addon_options")
-def mock_addon_options(addon_info):
+def mock_addon_options(addon_info: AsyncMock):
     """Mock add-on options."""
     return addon_info.return_value["options"]
 
 
 @pytest.fixture(name="set_addon_options_side_effect")
-def set_addon_options_side_effect_fixture(addon_options):
+def set_addon_options_side_effect_fixture(
+    addon_options: dict[str, Any],
+) -> Any | None:
     """Return the set add-on options side effect."""
 
-    async def set_addon_options(hass: HomeAssistant, slug, options):
+    async def set_addon_options(hass: HomeAssistant, slug: str, options: dict) -> None:
         """Mock set add-on options."""
         addon_options.update(options["options"])
 
@@ -120,7 +130,9 @@ def set_addon_options_side_effect_fixture(addon_options):
 
 
 @pytest.fixture(name="set_addon_options")
-def mock_set_addon_options(set_addon_options_side_effect):
+def mock_set_addon_options(
+    set_addon_options_side_effect: Any | None,
+) -> Generator[AsyncMock]:
     """Mock set add-on options."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_set_addon_options",
@@ -130,7 +142,9 @@ def mock_set_addon_options(set_addon_options_side_effect):
 
 
 @pytest.fixture(name="install_addon_side_effect")
-def install_addon_side_effect_fixture(addon_store_info, addon_info):
+def install_addon_side_effect_fixture(
+    addon_store_info: AsyncMock, addon_info: AsyncMock
+) -> Any | None:
     """Return the install add-on side effect."""
 
     async def install_addon(hass: HomeAssistant, slug):
@@ -149,7 +163,7 @@ def install_addon_side_effect_fixture(addon_store_info, addon_info):
 
 
 @pytest.fixture(name="install_addon")
-def mock_install_addon(install_addon_side_effect):
+def mock_install_addon(install_addon_side_effect: Any | None) -> Generator[AsyncMock]:
     """Mock install add-on."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_install_addon",
@@ -159,7 +173,7 @@ def mock_install_addon(install_addon_side_effect):
 
 
 @pytest.fixture(name="update_addon")
-def mock_update_addon():
+def mock_update_addon() -> Generator[AsyncMock]:
     """Mock update add-on."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_update_addon"
@@ -168,7 +182,9 @@ def mock_update_addon():
 
 
 @pytest.fixture(name="start_addon_side_effect")
-def start_addon_side_effect_fixture(addon_store_info, addon_info):
+def start_addon_side_effect_fixture(
+    addon_store_info: AsyncMock, addon_info: AsyncMock
+) -> Any | None:
     """Return the start add-on options side effect."""
 
     async def start_addon(hass: HomeAssistant, slug):
@@ -186,7 +202,7 @@ def start_addon_side_effect_fixture(addon_store_info, addon_info):
 
 
 @pytest.fixture(name="start_addon")
-def mock_start_addon(start_addon_side_effect):
+def mock_start_addon(start_addon_side_effect: Any | None) -> Generator[AsyncMock]:
     """Mock start add-on."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_start_addon",
@@ -196,7 +212,7 @@ def mock_start_addon(start_addon_side_effect):
 
 
 @pytest.fixture(name="stop_addon")
-def stop_addon_fixture():
+def stop_addon_fixture() -> Generator[AsyncMock]:
     """Mock stop add-on."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_stop_addon"
@@ -205,13 +221,13 @@ def stop_addon_fixture():
 
 
 @pytest.fixture(name="restart_addon_side_effect")
-def restart_addon_side_effect_fixture():
+def restart_addon_side_effect_fixture() -> Any | None:
     """Return the restart add-on options side effect."""
     return None
 
 
 @pytest.fixture(name="restart_addon")
-def mock_restart_addon(restart_addon_side_effect):
+def mock_restart_addon(restart_addon_side_effect: Any | None) -> Generator[AsyncMock]:
     """Mock restart add-on."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_restart_addon",
@@ -221,7 +237,7 @@ def mock_restart_addon(restart_addon_side_effect):
 
 
 @pytest.fixture(name="uninstall_addon")
-def uninstall_addon_fixture():
+def uninstall_addon_fixture() -> Generator[AsyncMock]:
     """Mock uninstall add-on."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_uninstall_addon"
@@ -230,7 +246,7 @@ def uninstall_addon_fixture():
 
 
 @pytest.fixture(name="create_backup")
-def create_backup_fixture():
+def create_backup_fixture() -> Generator[AsyncMock]:
     """Mock create backup."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_create_backup"
@@ -241,19 +257,19 @@ def create_backup_fixture():
 # State fixtures
 
 
-@pytest.fixture(name="controller_state", scope="session")
+@pytest.fixture(name="controller_state", scope="package")
 def controller_state_fixture():
     """Load the controller state fixture data."""
     return json.loads(load_fixture("zwave_js/controller_state.json"))
 
 
-@pytest.fixture(name="controller_node_state", scope="session")
+@pytest.fixture(name="controller_node_state", scope="package")
 def controller_node_state_fixture():
     """Load the controller node state fixture data."""
     return json.loads(load_fixture("zwave_js/controller_node_state.json"))
 
 
-@pytest.fixture(name="version_state", scope="session")
+@pytest.fixture(name="version_state", scope="package")
 def version_state_fixture():
     """Load the version state fixture data."""
     return {
@@ -276,67 +292,67 @@ def log_config_state_fixture():
     }
 
 
-@pytest.fixture(name="config_entry_diagnostics", scope="session")
+@pytest.fixture(name="config_entry_diagnostics", scope="package")
 def config_entry_diagnostics_fixture():
     """Load the config entry diagnostics fixture data."""
     return json.loads(load_fixture("zwave_js/config_entry_diagnostics.json"))
 
 
-@pytest.fixture(name="config_entry_diagnostics_redacted", scope="session")
+@pytest.fixture(name="config_entry_diagnostics_redacted", scope="package")
 def config_entry_diagnostics_redacted_fixture():
     """Load the redacted config entry diagnostics fixture data."""
     return json.loads(load_fixture("zwave_js/config_entry_diagnostics_redacted.json"))
 
 
-@pytest.fixture(name="multisensor_6_state", scope="session")
+@pytest.fixture(name="multisensor_6_state", scope="package")
 def multisensor_6_state_fixture():
     """Load the multisensor 6 node state fixture data."""
     return json.loads(load_fixture("zwave_js/multisensor_6_state.json"))
 
 
-@pytest.fixture(name="ecolink_door_sensor_state", scope="session")
+@pytest.fixture(name="ecolink_door_sensor_state", scope="package")
 def ecolink_door_sensor_state_fixture():
     """Load the Ecolink Door/Window Sensor node state fixture data."""
     return json.loads(load_fixture("zwave_js/ecolink_door_sensor_state.json"))
 
 
-@pytest.fixture(name="hank_binary_switch_state", scope="session")
+@pytest.fixture(name="hank_binary_switch_state", scope="package")
 def binary_switch_state_fixture():
     """Load the hank binary switch node state fixture data."""
     return json.loads(load_fixture("zwave_js/hank_binary_switch_state.json"))
 
 
-@pytest.fixture(name="bulb_6_multi_color_state", scope="session")
+@pytest.fixture(name="bulb_6_multi_color_state", scope="package")
 def bulb_6_multi_color_state_fixture():
     """Load the bulb 6 multi-color node state fixture data."""
     return json.loads(load_fixture("zwave_js/bulb_6_multi_color_state.json"))
 
 
-@pytest.fixture(name="light_color_null_values_state", scope="session")
+@pytest.fixture(name="light_color_null_values_state", scope="package")
 def light_color_null_values_state_fixture():
     """Load the light color null values node state fixture data."""
     return json.loads(load_fixture("zwave_js/light_color_null_values_state.json"))
 
 
-@pytest.fixture(name="eaton_rf9640_dimmer_state", scope="session")
+@pytest.fixture(name="eaton_rf9640_dimmer_state", scope="package")
 def eaton_rf9640_dimmer_state_fixture():
     """Load the eaton rf9640 dimmer node state fixture data."""
     return json.loads(load_fixture("zwave_js/eaton_rf9640_dimmer_state.json"))
 
 
-@pytest.fixture(name="lock_schlage_be469_state", scope="session")
+@pytest.fixture(name="lock_schlage_be469_state", scope="package")
 def lock_schlage_be469_state_fixture():
     """Load the schlage lock node state fixture data."""
     return json.loads(load_fixture("zwave_js/lock_schlage_be469_state.json"))
 
 
-@pytest.fixture(name="lock_august_asl03_state", scope="session")
+@pytest.fixture(name="lock_august_asl03_state", scope="package")
 def lock_august_asl03_state_fixture():
     """Load the August Pro lock node state fixture data."""
     return json.loads(load_fixture("zwave_js/lock_august_asl03_state.json"))
 
 
-@pytest.fixture(name="climate_radio_thermostat_ct100_plus_state", scope="session")
+@pytest.fixture(name="climate_radio_thermostat_ct100_plus_state", scope="package")
 def climate_radio_thermostat_ct100_plus_state_fixture():
     """Load the climate radio thermostat ct100 plus node state fixture data."""
     return json.loads(
@@ -346,7 +362,7 @@ def climate_radio_thermostat_ct100_plus_state_fixture():
 
 @pytest.fixture(
     name="climate_radio_thermostat_ct100_plus_different_endpoints_state",
-    scope="session",
+    scope="package",
 )
 def climate_radio_thermostat_ct100_plus_different_endpoints_state_fixture():
     """Load the thermostat fixture state with values on different endpoints.
@@ -360,13 +376,13 @@ def climate_radio_thermostat_ct100_plus_different_endpoints_state_fixture():
     )
 
 
-@pytest.fixture(name="climate_adc_t3000_state", scope="session")
+@pytest.fixture(name="climate_adc_t3000_state", scope="package")
 def climate_adc_t3000_state_fixture():
     """Load the climate ADC-T3000 node state fixture data."""
     return json.loads(load_fixture("zwave_js/climate_adc_t3000_state.json"))
 
 
-@pytest.fixture(name="climate_airzone_aidoo_control_hvac_unit_state", scope="session")
+@pytest.fixture(name="climate_airzone_aidoo_control_hvac_unit_state", scope="package")
 def climate_airzone_aidoo_control_hvac_unit_state_fixture():
     """Load the climate Airzone Aidoo Control HVAC Unit state fixture data."""
     return json.loads(
@@ -374,37 +390,37 @@ def climate_airzone_aidoo_control_hvac_unit_state_fixture():
     )
 
 
-@pytest.fixture(name="climate_danfoss_lc_13_state", scope="session")
+@pytest.fixture(name="climate_danfoss_lc_13_state", scope="package")
 def climate_danfoss_lc_13_state_fixture():
     """Load Danfoss (LC-13) electronic radiator thermostat node state fixture data."""
     return json.loads(load_fixture("zwave_js/climate_danfoss_lc_13_state.json"))
 
 
-@pytest.fixture(name="climate_eurotronic_spirit_z_state", scope="session")
+@pytest.fixture(name="climate_eurotronic_spirit_z_state", scope="package")
 def climate_eurotronic_spirit_z_state_fixture():
     """Load the climate Eurotronic Spirit Z thermostat node state fixture data."""
     return json.loads(load_fixture("zwave_js/climate_eurotronic_spirit_z_state.json"))
 
 
-@pytest.fixture(name="climate_heatit_z_trm6_state", scope="session")
+@pytest.fixture(name="climate_heatit_z_trm6_state", scope="package")
 def climate_heatit_z_trm6_state_fixture():
     """Load the climate HEATIT Z-TRM6 thermostat node state fixture data."""
     return json.loads(load_fixture("zwave_js/climate_heatit_z_trm6_state.json"))
 
 
-@pytest.fixture(name="climate_heatit_z_trm3_state", scope="session")
+@pytest.fixture(name="climate_heatit_z_trm3_state", scope="package")
 def climate_heatit_z_trm3_state_fixture():
     """Load the climate HEATIT Z-TRM3 thermostat node state fixture data."""
     return json.loads(load_fixture("zwave_js/climate_heatit_z_trm3_state.json"))
 
 
-@pytest.fixture(name="climate_heatit_z_trm2fx_state", scope="session")
+@pytest.fixture(name="climate_heatit_z_trm2fx_state", scope="package")
 def climate_heatit_z_trm2fx_state_fixture():
     """Load the climate HEATIT Z-TRM2fx thermostat node state fixture data."""
     return json.loads(load_fixture("zwave_js/climate_heatit_z_trm2fx_state.json"))
 
 
-@pytest.fixture(name="climate_heatit_z_trm3_no_value_state", scope="session")
+@pytest.fixture(name="climate_heatit_z_trm3_no_value_state", scope="package")
 def climate_heatit_z_trm3_no_value_state_fixture():
     """Load the climate HEATIT Z-TRM3 thermostat node w/no value state fixture data."""
     return json.loads(
@@ -412,134 +428,146 @@ def climate_heatit_z_trm3_no_value_state_fixture():
     )
 
 
-@pytest.fixture(name="nortek_thermostat_state", scope="session")
+@pytest.fixture(name="nortek_thermostat_state", scope="package")
 def nortek_thermostat_state_fixture():
     """Load the nortek thermostat node state fixture data."""
     return json.loads(load_fixture("zwave_js/nortek_thermostat_state.json"))
 
 
-@pytest.fixture(name="srt321_hrt4_zw_state", scope="session")
+@pytest.fixture(name="srt321_hrt4_zw_state", scope="package")
 def srt321_hrt4_zw_state_fixture():
     """Load the climate HRT4-ZW / SRT321 / SRT322 thermostat node state fixture data."""
     return json.loads(load_fixture("zwave_js/srt321_hrt4_zw_state.json"))
 
 
-@pytest.fixture(name="chain_actuator_zws12_state", scope="session")
+@pytest.fixture(name="chain_actuator_zws12_state", scope="package")
 def window_cover_state_fixture():
     """Load the window cover node state fixture data."""
     return json.loads(load_fixture("zwave_js/chain_actuator_zws12_state.json"))
 
 
-@pytest.fixture(name="fan_generic_state", scope="session")
+@pytest.fixture(name="fan_generic_state", scope="package")
 def fan_generic_state_fixture():
     """Load the fan node state fixture data."""
     return json.loads(load_fixture("zwave_js/fan_generic_state.json"))
 
 
-@pytest.fixture(name="hs_fc200_state", scope="session")
+@pytest.fixture(name="hs_fc200_state", scope="package")
 def hs_fc200_state_fixture():
     """Load the HS FC200+ node state fixture data."""
     return json.loads(load_fixture("zwave_js/fan_hs_fc200_state.json"))
 
 
-@pytest.fixture(name="leviton_zw4sf_state", scope="session")
+@pytest.fixture(name="leviton_zw4sf_state", scope="package")
 def leviton_zw4sf_state_fixture():
     """Load the Leviton ZW4SF node state fixture data."""
     return json.loads(load_fixture("zwave_js/leviton_zw4sf_state.json"))
 
 
-@pytest.fixture(name="fan_honeywell_39358_state", scope="session")
+@pytest.fixture(name="fan_honeywell_39358_state", scope="package")
 def fan_honeywell_39358_state_fixture():
     """Load the fan node state fixture data."""
     return json.loads(load_fixture("zwave_js/fan_honeywell_39358_state.json"))
 
 
-@pytest.fixture(name="gdc_zw062_state", scope="session")
+@pytest.fixture(name="gdc_zw062_state", scope="package")
 def motorized_barrier_cover_state_fixture():
     """Load the motorized barrier cover node state fixture data."""
     return json.loads(load_fixture("zwave_js/cover_zw062_state.json"))
 
 
-@pytest.fixture(name="iblinds_v2_state", scope="session")
+@pytest.fixture(name="iblinds_v2_state", scope="package")
 def iblinds_v2_state_fixture():
     """Load the iBlinds v2 node state fixture data."""
     return json.loads(load_fixture("zwave_js/cover_iblinds_v2_state.json"))
 
 
-@pytest.fixture(name="iblinds_v3_state", scope="session")
+@pytest.fixture(name="iblinds_v3_state", scope="package")
 def iblinds_v3_state_fixture():
     """Load the iBlinds v3 node state fixture data."""
     return json.loads(load_fixture("zwave_js/cover_iblinds_v3_state.json"))
 
 
-@pytest.fixture(name="qubino_shutter_state", scope="session")
+@pytest.fixture(name="zvidar_state", scope="package")
+def zvidar_state_fixture():
+    """Load the ZVIDAR node state fixture data."""
+    return json.loads(load_fixture("zwave_js/cover_zvidar_state.json"))
+
+
+@pytest.fixture(name="qubino_shutter_state", scope="package")
 def qubino_shutter_state_fixture():
     """Load the Qubino Shutter node state fixture data."""
     return json.loads(load_fixture("zwave_js/cover_qubino_shutter_state.json"))
 
 
-@pytest.fixture(name="aeotec_nano_shutter_state", scope="session")
+@pytest.fixture(name="aeotec_nano_shutter_state", scope="package")
 def aeotec_nano_shutter_state_fixture():
     """Load the Aeotec Nano Shutter node state fixture data."""
     return json.loads(load_fixture("zwave_js/cover_aeotec_nano_shutter_state.json"))
 
 
-@pytest.fixture(name="fibaro_fgr222_shutter_state", scope="session")
+@pytest.fixture(name="fibaro_fgr222_shutter_state", scope="package")
 def fibaro_fgr222_shutter_state_fixture():
     """Load the Fibaro FGR222 node state fixture data."""
     return json.loads(load_fixture("zwave_js/cover_fibaro_fgr222_state.json"))
 
 
-@pytest.fixture(name="fibaro_fgr223_shutter_state", scope="session")
+@pytest.fixture(name="fibaro_fgr223_shutter_state", scope="package")
 def fibaro_fgr223_shutter_state_fixture():
     """Load the Fibaro FGR223 node state fixture data."""
     return json.loads(load_fixture("zwave_js/cover_fibaro_fgr223_state.json"))
 
 
-@pytest.fixture(name="merten_507801_state", scope="session")
+@pytest.fixture(name="shelly_europe_ltd_qnsh_001p10_state", scope="package")
+def shelly_europe_ltd_qnsh_001p10_state_fixture():
+    """Load the Shelly QNSH 001P10 node state fixture data."""
+    return json.loads(load_fixture("zwave_js/shelly_europe_ltd_qnsh_001p10_state.json"))
+
+
+@pytest.fixture(name="merten_507801_state", scope="package")
 def merten_507801_state_fixture():
     """Load the Merten 507801 Shutter node state fixture data."""
     return json.loads(load_fixture("zwave_js/cover_merten_507801_state.json"))
 
 
-@pytest.fixture(name="aeon_smart_switch_6_state", scope="session")
+@pytest.fixture(name="aeon_smart_switch_6_state", scope="package")
 def aeon_smart_switch_6_state_fixture():
     """Load the AEON Labs (ZW096) Smart Switch 6 node state fixture data."""
     return json.loads(load_fixture("zwave_js/aeon_smart_switch_6_state.json"))
 
 
-@pytest.fixture(name="ge_12730_state", scope="session")
+@pytest.fixture(name="ge_12730_state", scope="package")
 def ge_12730_state_fixture():
     """Load the GE 12730 node state fixture data."""
     return json.loads(load_fixture("zwave_js/fan_ge_12730_state.json"))
 
 
-@pytest.fixture(name="aeotec_radiator_thermostat_state", scope="session")
+@pytest.fixture(name="aeotec_radiator_thermostat_state", scope="package")
 def aeotec_radiator_thermostat_state_fixture():
     """Load the Aeotec Radiator Thermostat node state fixture data."""
     return json.loads(load_fixture("zwave_js/aeotec_radiator_thermostat_state.json"))
 
 
-@pytest.fixture(name="inovelli_lzw36_state", scope="session")
+@pytest.fixture(name="inovelli_lzw36_state", scope="package")
 def inovelli_lzw36_state_fixture():
     """Load the Inovelli LZW36 node state fixture data."""
     return json.loads(load_fixture("zwave_js/inovelli_lzw36_state.json"))
 
 
-@pytest.fixture(name="null_name_check_state", scope="session")
+@pytest.fixture(name="null_name_check_state", scope="package")
 def null_name_check_state_fixture():
     """Load the null name check node state fixture data."""
     return json.loads(load_fixture("zwave_js/null_name_check_state.json"))
 
 
-@pytest.fixture(name="lock_id_lock_as_id150_state", scope="session")
+@pytest.fixture(name="lock_id_lock_as_id150_state", scope="package")
 def lock_id_lock_as_id150_state_fixture():
     """Load the id lock id-150 lock node state fixture data."""
     return json.loads(load_fixture("zwave_js/lock_id_lock_as_id150_state.json"))
 
 
 @pytest.fixture(
-    name="climate_radio_thermostat_ct101_multiple_temp_units_state", scope="session"
+    name="climate_radio_thermostat_ct101_multiple_temp_units_state", scope="package"
 )
 def climate_radio_thermostat_ct101_multiple_temp_units_state_fixture():
     """Load the climate multiple temp units node state fixture data."""
@@ -554,7 +582,7 @@ def climate_radio_thermostat_ct101_multiple_temp_units_state_fixture():
     name=(
         "climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state"
     ),
-    scope="session",
+    scope="package",
 )
 def climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state_fixture():
     """Load climate device w/ mode+setpoint on diff endpoints node state fixture data."""
@@ -565,37 +593,37 @@ def climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_stat
     )
 
 
-@pytest.fixture(name="vision_security_zl7432_state", scope="session")
+@pytest.fixture(name="vision_security_zl7432_state", scope="package")
 def vision_security_zl7432_state_fixture():
     """Load the vision security zl7432 switch node state fixture data."""
     return json.loads(load_fixture("zwave_js/vision_security_zl7432_state.json"))
 
 
-@pytest.fixture(name="zen_31_state", scope="session")
+@pytest.fixture(name="zen_31_state", scope="package")
 def zem_31_state_fixture():
     """Load the zen_31 node state fixture data."""
     return json.loads(load_fixture("zwave_js/zen_31_state.json"))
 
 
-@pytest.fixture(name="wallmote_central_scene_state", scope="session")
+@pytest.fixture(name="wallmote_central_scene_state", scope="package")
 def wallmote_central_scene_state_fixture():
     """Load the wallmote central scene node state fixture data."""
     return json.loads(load_fixture("zwave_js/wallmote_central_scene_state.json"))
 
 
-@pytest.fixture(name="ge_in_wall_dimmer_switch_state", scope="session")
+@pytest.fixture(name="ge_in_wall_dimmer_switch_state", scope="package")
 def ge_in_wall_dimmer_switch_state_fixture():
     """Load the ge in-wall dimmer switch node state fixture data."""
     return json.loads(load_fixture("zwave_js/ge_in_wall_dimmer_switch_state.json"))
 
 
-@pytest.fixture(name="aeotec_zw164_siren_state", scope="session")
+@pytest.fixture(name="aeotec_zw164_siren_state", scope="package")
 def aeotec_zw164_siren_state_fixture():
     """Load the aeotec zw164 siren node state fixture data."""
     return json.loads(load_fixture("zwave_js/aeotec_zw164_siren_state.json"))
 
 
-@pytest.fixture(name="lock_popp_electric_strike_lock_control_state", scope="session")
+@pytest.fixture(name="lock_popp_electric_strike_lock_control_state", scope="package")
 def lock_popp_electric_strike_lock_control_state_fixture():
     """Load the popp electric strike lock control node state fixture data."""
     return json.loads(
@@ -603,76 +631,88 @@ def lock_popp_electric_strike_lock_control_state_fixture():
     )
 
 
-@pytest.fixture(name="fortrezz_ssa1_siren_state", scope="session")
+@pytest.fixture(name="fortrezz_ssa1_siren_state", scope="package")
 def fortrezz_ssa1_siren_state_fixture():
     """Load the fortrezz ssa1 siren node state fixture data."""
     return json.loads(load_fixture("zwave_js/fortrezz_ssa1_siren_state.json"))
 
 
-@pytest.fixture(name="fortrezz_ssa3_siren_state", scope="session")
+@pytest.fixture(name="fortrezz_ssa3_siren_state", scope="package")
 def fortrezz_ssa3_siren_state_fixture():
     """Load the fortrezz ssa3 siren node state fixture data."""
     return json.loads(load_fixture("zwave_js/fortrezz_ssa3_siren_state.json"))
 
 
-@pytest.fixture(name="zp3111_not_ready_state", scope="session")
+@pytest.fixture(name="zp3111_not_ready_state", scope="package")
 def zp3111_not_ready_state_fixture():
     """Load the zp3111 4-in-1 sensor not-ready node state fixture data."""
     return json.loads(load_fixture("zwave_js/zp3111-5_not_ready_state.json"))
 
 
-@pytest.fixture(name="zp3111_state", scope="session")
+@pytest.fixture(name="zp3111_state", scope="package")
 def zp3111_state_fixture():
     """Load the zp3111 4-in-1 sensor node state fixture data."""
     return json.loads(load_fixture("zwave_js/zp3111-5_state.json"))
 
 
-@pytest.fixture(name="express_controls_ezmultipli_state", scope="session")
+@pytest.fixture(name="express_controls_ezmultipli_state", scope="package")
 def light_express_controls_ezmultipli_state_fixture():
     """Load the Express Controls EZMultiPli node state fixture data."""
     return json.loads(load_fixture("zwave_js/express_controls_ezmultipli_state.json"))
 
 
-@pytest.fixture(name="lock_home_connect_620_state", scope="session")
+@pytest.fixture(name="lock_home_connect_620_state", scope="package")
 def lock_home_connect_620_state_fixture():
     """Load the Home Connect 620 lock node state fixture data."""
     return json.loads(load_fixture("zwave_js/lock_home_connect_620_state.json"))
 
 
-@pytest.fixture(name="switch_zooz_zen72_state", scope="session")
+@pytest.fixture(name="switch_zooz_zen72_state", scope="package")
 def switch_zooz_zen72_state_fixture():
     """Load the Zooz Zen72 switch node state fixture data."""
     return json.loads(load_fixture("zwave_js/switch_zooz_zen72_state.json"))
 
 
-@pytest.fixture(name="indicator_test_state", scope="session")
+@pytest.fixture(name="indicator_test_state", scope="package")
 def indicator_test_state_fixture():
     """Load the indicator CC test node state fixture data."""
     return json.loads(load_fixture("zwave_js/indicator_test_state.json"))
 
 
-@pytest.fixture(name="energy_production_state", scope="session")
+@pytest.fixture(name="energy_production_state", scope="package")
 def energy_production_state_fixture():
     """Load a mock node with energy production CC state fixture data."""
     return json.loads(load_fixture("zwave_js/energy_production_state.json"))
 
 
-@pytest.fixture(name="nice_ibt4zwave_state", scope="session")
+@pytest.fixture(name="nice_ibt4zwave_state", scope="package")
 def nice_ibt4zwave_state_fixture():
     """Load a Nice IBT4ZWAVE cover node state fixture data."""
     return json.loads(load_fixture("zwave_js/cover_nice_ibt4zwave_state.json"))
 
 
-@pytest.fixture(name="logic_group_zdb5100_state", scope="session")
+@pytest.fixture(name="logic_group_zdb5100_state", scope="package")
 def logic_group_zdb5100_state_fixture():
     """Load the Logic Group ZDB5100 node state fixture data."""
     return json.loads(load_fixture("zwave_js/logic_group_zdb5100_state.json"))
 
 
-@pytest.fixture(name="central_scene_node_state", scope="session")
+@pytest.fixture(name="central_scene_node_state", scope="package")
 def central_scene_node_state_fixture():
     """Load node with Central Scene CC node state fixture data."""
     return json.loads(load_fixture("zwave_js/central_scene_node_state.json"))
+
+
+@pytest.fixture(name="light_device_class_is_null_state", scope="package")
+def light_device_class_is_null_state_fixture():
+    """Load node with device class is None state fixture data."""
+    return json.loads(load_fixture("zwave_js/light_device_class_is_null_state.json"))
+
+
+@pytest.fixture(name="basic_cc_sensor_state", scope="package")
+def basic_cc_sensor_state_fixture():
+    """Load node with Basic CC sensor fixture data."""
+    return json.loads(load_fixture("zwave_js/basic_cc_sensor_state.json"))
 
 
 # model fixtures
@@ -1063,6 +1103,14 @@ def iblinds_v3_cover_fixture(client, iblinds_v3_state):
     return node
 
 
+@pytest.fixture(name="zvidar")
+def zvidar_cover_fixture(client, zvidar_state):
+    """Mock a ZVIDAR window cover node."""
+    node = Node(client, copy.deepcopy(zvidar_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="qubino_shutter")
 def qubino_shutter_cover_fixture(client, qubino_shutter_state):
     """Mock a Qubino flush shutter node."""
@@ -1091,6 +1139,16 @@ def fibaro_fgr222_shutter_cover_fixture(client, fibaro_fgr222_shutter_state):
 def fibaro_fgr223_shutter_cover_fixture(client, fibaro_fgr223_shutter_state):
     """Mock a Fibaro FGR223 Shutter node."""
     node = Node(client, copy.deepcopy(fibaro_fgr223_shutter_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="shelly_qnsh_001P10_shutter")
+def shelly_qnsh_001P10_cover_shutter_fixture(
+    client, shelly_europe_ltd_qnsh_001p10_state
+):
+    """Mock a Shelly QNSH 001P10 Shutter node."""
+    node = Node(client, copy.deepcopy(shelly_europe_ltd_qnsh_001p10_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
@@ -1323,5 +1381,21 @@ def logic_group_zdb5100_fixture(client, logic_group_zdb5100_state):
 def central_scene_node_fixture(client, central_scene_node_state):
     """Mock a node with the Central Scene CC."""
     node = Node(client, copy.deepcopy(central_scene_node_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="light_device_class_is_null")
+def light_device_class_is_null_fixture(client, light_device_class_is_null_state):
+    """Mock a node when device class is null."""
+    node = Node(client, copy.deepcopy(light_device_class_is_null_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="basic_cc_sensor")
+def basic_cc_sensor_fixture(client, basic_cc_sensor_state):
+    """Mock a node with a Basic CC."""
+    node = Node(client, copy.deepcopy(basic_cc_sensor_state))
     client.driver.controller.nodes[node.node_id] = node
     return node

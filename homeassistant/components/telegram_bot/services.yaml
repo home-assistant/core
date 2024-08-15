@@ -22,6 +22,7 @@ send_message:
             - "html"
             - "markdown"
             - "markdownv2"
+            - "plain_text"
     disable_notification:
       selector:
         boolean:
@@ -50,6 +51,10 @@ send_message:
       selector:
         text:
     reply_to_message_id:
+      selector:
+        number:
+          mode: box
+    message_thread_id:
       selector:
         number:
           mode: box
@@ -94,6 +99,7 @@ send_photo:
             - "html"
             - "markdown"
             - "markdownv2"
+            - "plain_text"
     disable_notification:
       selector:
         boolean:
@@ -121,6 +127,10 @@ send_photo:
       selector:
         text:
     reply_to_message_id:
+      selector:
+        number:
+          mode: box
+    message_thread_id:
       selector:
         number:
           mode: box
@@ -188,6 +198,10 @@ send_sticker:
       selector:
         number:
           mode: box
+    message_thread_id:
+      selector:
+        number:
+          mode: box
 
 send_animation:
   fields:
@@ -229,6 +243,7 @@ send_animation:
             - "html"
             - "markdown"
             - "markdownv2"
+            - "plain_text"
     disable_notification:
       selector:
         boolean:
@@ -256,6 +271,10 @@ send_animation:
       selector:
         text:
     reply_to_message_id:
+      selector:
+        number:
+          mode: box
+    message_thread_id:
       selector:
         number:
           mode: box
@@ -300,6 +319,7 @@ send_video:
             - "html"
             - "markdown"
             - "markdownv2"
+            - "plain_text"
     disable_notification:
       selector:
         boolean:
@@ -327,6 +347,10 @@ send_video:
       selector:
         text:
     reply_to_message_id:
+      selector:
+        number:
+          mode: box
+    message_thread_id:
       selector:
         number:
           mode: box
@@ -394,6 +418,10 @@ send_voice:
       selector:
         number:
           mode: box
+    message_thread_id:
+      selector:
+        number:
+          mode: box
 
 send_document:
   fields:
@@ -435,6 +463,7 @@ send_document:
             - "html"
             - "markdown"
             - "markdownv2"
+            - "plain_text"
     disable_notification:
       selector:
         boolean:
@@ -462,6 +491,10 @@ send_document:
       selector:
         text:
     reply_to_message_id:
+      selector:
+        number:
+          mode: box
+    message_thread_id:
       selector:
         number:
           mode: box
@@ -515,6 +548,10 @@ send_location:
       selector:
         number:
           mode: box
+    message_thread_id:
+      selector:
+        number:
+          mode: box
 
 send_poll:
   fields:
@@ -559,6 +596,10 @@ send_poll:
       selector:
         number:
           mode: box
+    message_thread_id:
+      selector:
+        number:
+          mode: box
 
 edit_message:
   fields:
@@ -587,6 +628,7 @@ edit_message:
             - "html"
             - "markdown"
             - "markdownv2"
+            - "plain_text"
     disable_web_page_preview:
       selector:
         boolean:

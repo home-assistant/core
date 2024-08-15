@@ -42,5 +42,20 @@
       "title": "The Folder Watcher configuration for {path} could not start",
       "description": "The path {path} is not accessible or not allowed to be accessed.\n\nPlease check the path is accessible and add it to `{config_variable}` in config.yaml and restart Home Assistant to fix this issue."
     }
+  },
+  "entity": {
+    "sensor": {
+      "folder_watcher": {
+        "state_attributes": {
+          "event_type": { "name": "Event type" },
+          "path": { "name": "Path" },
+          "file": { "name": "File" },
+          "folder": { "name": "Folder" },
+          "dest_path": { "name": "Destination path" },
+          "dest_file": { "name": "Destination file" },
+          "dest_folder": { "name": "Destination folder" }
+        }
+      }
+    }
   }
 }

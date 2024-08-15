@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .bridge import RefossDataUpdateCoordinator
 from .const import COORDINATORS, DISPATCH_DEVICE_DISCOVERED, DOMAIN
 from .entity import RefossEntity
 
@@ -47,6 +48,15 @@ async def async_setup_entry(
 
 class RefossSwitch(RefossEntity, SwitchEntity):
     """Refoss Switch Device."""
+
+    def __init__(
+        self,
+        coordinator: RefossDataUpdateCoordinator,
+        channel: int,
+    ) -> None:
+        """Init Refoss switch."""
+        super().__init__(coordinator, channel)
+        self._attr_name = str(channel)
 
     @property
     def is_on(self) -> bool | None:

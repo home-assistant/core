@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from functools import partial
-from typing import TYPE_CHECKING, Any, Final, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Final
 
 from aioshelly.const import RPC_GENERATIONS
 
@@ -14,7 +14,6 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -24,16 +23,14 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from .const import LOGGER, SHELLY_GAS_MODELS
-from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
+from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .utils import get_device_entry_gen
-
-_ShellyCoordinatorT = TypeVar(
-    "_ShellyCoordinatorT", bound=ShellyBlockCoordinator | ShellyRpcCoordinator
-)
 
 
 @dataclass(frozen=True, kw_only=True)
-class ShellyButtonDescription(ButtonEntityDescription, Generic[_ShellyCoordinatorT]):
+class ShellyButtonDescription[
+    _ShellyCoordinatorT: ShellyBlockCoordinator | ShellyRpcCoordinator
+](ButtonEntityDescription):
     """Class to describe a Button entity."""
 
     press_action: Callable[[_ShellyCoordinatorT], Coroutine[Any, Any, None]]
@@ -108,11 +105,11 @@ def async_migrate_unique_ids(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set buttons for device."""
-    entry_data = get_entry_data(hass)[config_entry.entry_id]
+    entry_data = config_entry.runtime_data
     coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator | None
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
         coordinator = entry_data.rpc

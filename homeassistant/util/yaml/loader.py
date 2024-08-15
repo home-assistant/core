@@ -215,7 +215,7 @@ class SafeLineLoader(PythonSafeLoader):
         )
 
 
-LoaderType = FastSafeLoader | PythonSafeLoader
+type LoaderType = FastSafeLoader | PythonSafeLoader
 
 
 def load_yaml(
@@ -313,6 +313,33 @@ def _add_reference(
         obj = NodeStrClass(obj)
     elif isinstance(obj, dict):
         obj = NodeDictClass(obj)
+    return _add_reference_to_node_class(obj, loader, node)
+
+
+@overload
+def _add_reference_to_node_class(
+    obj: NodeListClass, loader: LoaderType, node: yaml.nodes.Node
+) -> NodeListClass: ...
+
+
+@overload
+def _add_reference_to_node_class(
+    obj: NodeStrClass, loader: LoaderType, node: yaml.nodes.Node
+) -> NodeStrClass: ...
+
+
+@overload
+def _add_reference_to_node_class(
+    obj: NodeDictClass, loader: LoaderType, node: yaml.nodes.Node
+) -> NodeDictClass: ...
+
+
+def _add_reference_to_node_class(
+    obj: NodeDictClass | NodeListClass | NodeStrClass,
+    loader: LoaderType,
+    node: yaml.nodes.Node,
+) -> NodeDictClass | NodeListClass | NodeStrClass:
+    """Add file reference information to a node class object."""
     try:  # suppress is much slower
         obj.__config_file__ = loader.get_name
         obj.__line__ = node.start_mark.line + 1
@@ -369,7 +396,7 @@ def _include_dir_named_yaml(loader: LoaderType, node: yaml.nodes.Node) -> NodeDi
             # as an empty dictionary
             loaded_yaml = NodeDictClass()
         mapping[filename] = loaded_yaml
-    return _add_reference(mapping, loader, node)
+    return _add_reference_to_node_class(mapping, loader, node)
 
 
 def _include_dir_merge_named_yaml(
@@ -384,7 +411,7 @@ def _include_dir_merge_named_yaml(
         loaded_yaml = load_yaml(fname, loader.secrets)
         if isinstance(loaded_yaml, dict):
             mapping.update(loaded_yaml)
-    return _add_reference(mapping, loader, node)
+    return _add_reference_to_node_class(mapping, loader, node)
 
 
 def _include_dir_list_yaml(
@@ -453,7 +480,7 @@ def _handle_mapping_tag(
             )
         seen[key] = line
 
-    return _add_reference(NodeDictClass(nodes), loader, node)
+    return _add_reference_to_node_class(NodeDictClass(nodes), loader, node)
 
 
 def _construct_seq(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
@@ -469,7 +496,7 @@ def _handle_scalar_tag(
     obj = node.value
     if not isinstance(obj, str):
         return obj
-    return _add_reference(obj, loader, node)
+    return _add_reference_to_node_class(NodeStrClass(obj), loader, node)
 
 
 def _env_var_yaml(loader: LoaderType, node: yaml.nodes.Node) -> str:

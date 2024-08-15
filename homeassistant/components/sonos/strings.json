@@ -173,5 +173,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "invalid_favorite": {
+      "message": "Could not find a Sonos favorite: {name}"
+    }
   }
 }

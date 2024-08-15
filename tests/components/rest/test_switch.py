@@ -450,7 +450,9 @@ async def test_update_timeout(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_entity_config(hass: HomeAssistant) -> None:
+async def test_entity_config(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test entity configuration."""
 
     respx.get(RESOURCE) % HTTPStatus.OK
@@ -471,7 +473,6 @@ async def test_entity_config(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_get("switch.rest_switch").unique_id == "very_unique"
 
     state = hass.states.get("switch.rest_switch")

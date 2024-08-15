@@ -9,9 +9,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .conftest import MOCK_CONFIG_DATA
-
-from tests.components.matrix.conftest import TEST_BAD_ROOM, TEST_JOINABLE_ROOMS
+from .conftest import MOCK_CONFIG_DATA, TEST_BAD_ROOM, TEST_JOINABLE_ROOMS
 
 
 async def test_join(

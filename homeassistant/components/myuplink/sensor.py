@@ -8,8 +8,8 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    REVOLUTIONS_PER_MINUTE,
     Platform,
     UnitOfElectricCurrent,
     UnitOfEnergy,
@@ -24,8 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import MyUplinkDataCoordinator
-from .const import DOMAIN
+from . import MyUplinkConfigEntry, MyUplinkDataCoordinator
 from .entity import MyUplinkEntity
 from .helpers import find_matching_platform, skip_entity
 
@@ -54,8 +53,22 @@ DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.BAR,
     ),
+    "days": SensorEntityDescription(
+        key="days",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.DAYS,
+        suggested_display_precision=0,
+    ),
     "h": SensorEntityDescription(
         key="hours",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_display_precision=1,
+    ),
+    "hrs": SensorEntityDescription(
+        key="hours_hrs",
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.HOURS,
@@ -86,8 +99,36 @@ DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
     ),
+    "min": SensorEntityDescription(
+        key="minutes",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
+    ),
+    "Pa": SensorEntityDescription(
+        key="pressure_pa",
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPressure.PA,
+        suggested_display_precision=0,
+    ),
+    "rpm": SensorEntityDescription(
+        key="rpm",
+        translation_key="rpm",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+        suggested_display_precision=0,
+    ),
     "s": SensorEntityDescription(
         key="seconds",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_display_precision=0,
+    ),
+    "sec": SensorEntityDescription(
+        key="seconds_sec",
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -144,13 +185,13 @@ def get_description(device_point: DevicePoint) -> SensorEntityDescription | None
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MyUplinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up myUplink sensor."""
 
     entities: list[SensorEntity] = []
-    coordinator: MyUplinkDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     # Setup device point sensors
     for device_id, point_data in coordinator.data.points.items():
@@ -160,6 +201,11 @@ async def async_setup_entry(
             if find_matching_platform(device_point) == Platform.SENSOR:
                 description = get_description(device_point)
                 entity_class = MyUplinkDevicePointSensor
+                # Ignore sensors without a description that provide non-numeric values
+                if description is None and not isinstance(
+                    device_point.value, (int, float)
+                ):
+                    continue
                 if (
                     description is not None
                     and description.device_class == SensorDeviceClass.ENUM

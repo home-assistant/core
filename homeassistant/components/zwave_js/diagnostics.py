@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DATA_CLIENT, DOMAIN, USER_AGENT
+from .const import DATA_CLIENT, USER_AGENT
 from .helpers import (
     ZwaveValueMatcher,
     get_home_and_node_id_from_device_entry,
@@ -148,7 +148,7 @@ async def async_get_device_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry, device: dr.DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
-    client: Client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client: Client = config_entry.runtime_data[DATA_CLIENT]
     identifiers = get_home_and_node_id_from_device_entry(device)
     node_id = identifiers[1] if identifiers else None
     driver = client.driver

@@ -92,13 +92,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     platform.get_handler, hass, p_config, discovery_info
                 )
             else:
-                raise HomeAssistantError("Invalid mailbox platform.")
+                raise HomeAssistantError("Invalid mailbox platform.")  # noqa: TRY301
 
             if mailbox is None:
                 _LOGGER.error("Failed to initialize mailbox platform %s", p_type)
                 return
 
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Error setting up platform %s", p_type)
             return
 

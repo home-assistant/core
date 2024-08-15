@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Generator
 from datetime import UTC, date, datetime
 from decimal import Decimal
-import logging
 from types import ModuleType
 from typing import Any
 
@@ -51,6 +50,8 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
+from .common import MockRestoreSensor, MockSensor
+
 from tests.common import (
     MockConfigEntry,
     MockEntityPlatform,
@@ -65,7 +66,6 @@ from tests.common import (
     mock_restore_cache_with_extra_data,
     setup_test_component_platform,
 )
-from tests.components.sensor.common import MockRestoreSensor, MockSensor
 
 TEST_DOMAIN = "test"
 
@@ -418,7 +418,7 @@ async def test_restore_sensor_save_state(
     assert state["entity_id"] == entity0.entity_id
     extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
     assert extra_data == expected_extra_data
-    assert type(extra_data["native_value"]) == native_value_type
+    assert type(extra_data["native_value"]) is native_value_type
 
 
 @pytest.mark.parametrize(
@@ -479,7 +479,7 @@ async def test_restore_sensor_restore_state(
     assert hass.states.get(entity0.entity_id)
 
     assert entity0.native_value == native_value
-    assert type(entity0.native_value) == native_value_type
+    assert type(entity0.native_value) is native_value_type
     assert entity0.native_unit_of_measurement == uom
 
 
@@ -603,6 +603,7 @@ async def test_restore_sensor_restore_state(
 )
 async def test_custom_unit(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_class,
     native_unit,
     custom_unit,
@@ -611,8 +612,6 @@ async def test_custom_unit(
     custom_state,
 ) -> None:
     """Test custom unit."""
-    entity_registry = er.async_get(hass)
-
     entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
     entity_registry.async_update_entity_options(
         entry.entity_id, "sensor", {"unit_of_measurement": custom_unit}
@@ -863,6 +862,7 @@ async def test_custom_unit(
 )
 async def test_custom_unit_change(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     native_unit,
     custom_unit,
     state_unit,
@@ -872,7 +872,6 @@ async def test_custom_unit_change(
     device_class,
 ) -> None:
     """Test custom unit changes are picked up."""
-    entity_registry = er.async_get(hass)
     entity0 = MockSensor(
         name="Test",
         native_value=str(native_value),
@@ -943,11 +942,26 @@ async def test_custom_unit_change(
             "1000000",
             "1093613",
             SensorDeviceClass.DISTANCE,
-        )
+        ),
+        # Volume Storage (subclass of Volume)
+        (
+            US_CUSTOMARY_SYSTEM,
+            UnitOfVolume.LITERS,
+            UnitOfVolume.GALLONS,
+            UnitOfVolume.GALLONS,
+            UnitOfVolume.FLUID_OUNCES,
+            1000,
+            "1000",
+            "264",
+            "264",
+            "33814",
+            SensorDeviceClass.VOLUME_STORAGE,
+        ),
     ],
 )
 async def test_unit_conversion_priority(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     unit_system,
     native_unit,
     automatic_unit,
@@ -963,8 +977,6 @@ async def test_unit_conversion_priority(
     """Test priority of unit conversion."""
 
     hass.config.units = unit_system
-
-    entity_registry = er.async_get(hass)
 
     entity0 = MockSensor(
         name="Test",
@@ -1095,6 +1107,7 @@ async def test_unit_conversion_priority(
 )
 async def test_unit_conversion_priority_precision(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     unit_system,
     native_unit,
     automatic_unit,
@@ -1111,8 +1124,6 @@ async def test_unit_conversion_priority_precision(
     """Test priority of unit conversion for sensors with suggested_display_precision."""
 
     hass.config.units = unit_system
-
-    entity_registry = er.async_get(hass)
 
     entity0 = MockSensor(
         name="Test",
@@ -1146,6 +1157,14 @@ async def test_unit_conversion_priority_precision(
         suggested_display_precision=suggested_precision,
         suggested_unit_of_measurement=suggested_unit,
     )
+    entity4 = MockSensor(
+        name="Test",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        suggested_display_precision=None,
+        unique_id="very_unique_4",
+    )
     setup_test_component_platform(
         hass,
         sensor.DOMAIN,
@@ -1154,6 +1173,7 @@ async def test_unit_conversion_priority_precision(
             entity1,
             entity2,
             entity3,
+            entity4,
         ],
     )
 
@@ -1230,6 +1250,21 @@ async def test_unit_conversion_priority_precision(
         round(custom_state, 4)
     )
 
+    # Set a display_precision without having suggested_display_precision
+    entity_registry.async_update_entity_options(
+        entity4.entity_id,
+        "sensor",
+        {"display_precision": 4},
+    )
+    entry4 = entity_registry.async_get(entity4.entity_id)
+    assert "suggested_display_precision" not in entry4.options["sensor"]
+    assert entry4.options["sensor"]["display_precision"] == 4
+    await hass.async_block_till_done()
+    state = hass.states.get(entity4.entity_id)
+    assert float(async_rounded_state(hass, entity4.entity_id, state)) == pytest.approx(
+        round(automatic_state, 4)
+    )
+
 
 @pytest.mark.parametrize(
     (
@@ -1256,6 +1291,7 @@ async def test_unit_conversion_priority_precision(
 )
 async def test_unit_conversion_priority_suggested_unit_change(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     unit_system,
     native_unit,
     original_unit,
@@ -1267,8 +1303,6 @@ async def test_unit_conversion_priority_suggested_unit_change(
     """Test priority of unit conversion."""
 
     hass.config.units = unit_system
-
-    entity_registry = er.async_get(hass)
 
     # Pre-register entities
     entry = entity_registry.async_get_or_create(
@@ -1363,6 +1397,7 @@ async def test_unit_conversion_priority_suggested_unit_change(
 )
 async def test_unit_conversion_priority_suggested_unit_change_2(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     native_unit_1,
     native_unit_2,
     suggested_unit,
@@ -1373,8 +1408,6 @@ async def test_unit_conversion_priority_suggested_unit_change_2(
     """Test priority of unit conversion."""
 
     hass.config.units = METRIC_SYSTEM
-
-    entity_registry = er.async_get(hass)
 
     # Pre-register entities
     entity_registry.async_get_or_create(
@@ -1462,6 +1495,7 @@ async def test_unit_conversion_priority_suggested_unit_change_2(
 )
 async def test_suggested_precision_option(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     unit_system,
     native_unit,
     integration_suggested_precision,
@@ -1474,7 +1508,6 @@ async def test_suggested_precision_option(
 
     hass.config.units = unit_system
 
-    entity_registry = er.async_get(hass)
     entity0 = MockSensor(
         name="Test",
         device_class=device_class,
@@ -1536,6 +1569,7 @@ async def test_suggested_precision_option(
 )
 async def test_suggested_precision_option_update(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     unit_system,
     native_unit,
     suggested_unit,
@@ -1549,8 +1583,6 @@ async def test_suggested_precision_option_update(
     """Test suggested precision stored in the registry is updated."""
 
     hass.config.units = unit_system
-
-    entity_registry = er.async_get(hass)
 
     # Pre-register entities
     entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
@@ -1594,6 +1626,39 @@ async def test_suggested_precision_option_update(
     }
 
 
+async def test_suggested_precision_option_removal(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test suggested precision stored in the registry is removed."""
+    # Pre-register entities
+    entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
+    entity_registry.async_update_entity_options(
+        entry.entity_id,
+        "sensor",
+        {
+            "suggested_display_precision": 1,
+        },
+    )
+
+    entity0 = MockSensor(
+        name="Test",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        native_value="1.5",
+        suggested_display_precision=None,
+        unique_id="very_unique",
+    )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    # Assert the suggested precision is no longer stored in the registry
+    entry = entity_registry.async_get(entity0.entity_id)
+    assert entry.options.get("sensor", {}).get("suggested_display_precision") is None
+
+
 @pytest.mark.parametrize(
     (
         "unit_system",
@@ -1625,6 +1690,7 @@ async def test_suggested_precision_option_update(
 )
 async def test_unit_conversion_priority_legacy_conversion_removed(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     unit_system,
     native_unit,
     original_unit,
@@ -1635,8 +1701,6 @@ async def test_unit_conversion_priority_legacy_conversion_removed(
     """Test priority of unit conversion."""
 
     hass.config.units = unit_system
-
-    entity_registry = er.async_get(hass)
 
     # Pre-register entities
     entity_registry.async_get_or_create(
@@ -2128,6 +2192,7 @@ async def test_numeric_state_expected_helper(
 )
 async def test_unit_conversion_update(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     unit_system_1,
     unit_system_2,
     native_unit,
@@ -2145,8 +2210,6 @@ async def test_unit_conversion_update(
     """Test suggested unit can be updated."""
 
     hass.config.units = unit_system_1
-
-    entity_registry = er.async_get(hass)
 
     entity0 = MockSensor(
         name="Test 0",
@@ -2335,7 +2398,7 @@ class MockFlow(ConfigFlow):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -2350,7 +2413,9 @@ async def test_name(hass: HomeAssistant) -> None:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, SENSOR_DOMAIN)
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [SENSOR_DOMAIN]
+        )
         return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
@@ -2432,13 +2497,12 @@ def test_async_rounded_state_unregistered_entity_is_passthrough(
 
 def test_async_rounded_state_registered_entity_with_display_precision(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test async_rounded_state on registered with display precision.
 
     The -0 should be dropped.
     """
-    entity_registry = er.async_get(hass)
-
     entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
     entity_registry.async_update_entity_options(
         entry.entity_id,
@@ -2559,6 +2623,7 @@ def test_deprecated_constants_sensor_device_class(
 )
 async def test_suggested_unit_guard_invalid_unit(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
     device_class: SensorDeviceClass,
     native_unit: str,
@@ -2567,8 +2632,6 @@ async def test_suggested_unit_guard_invalid_unit(
 
     An invalid suggested unit creates a log entry and the suggested unit will be ignored.
     """
-    entity_registry = er.async_get(hass)
-
     state_value = 10
     invalid_suggested_unit = "invalid_unit"
 
@@ -2584,25 +2647,13 @@ async def test_suggested_unit_guard_invalid_unit(
     assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
     await hass.async_block_till_done()
 
-    # Unit of measurement should be native one
-    state = hass.states.get(entity.entity_id)
-    assert int(state.state) == state_value
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == native_unit
+    assert not hass.states.get("sensor.invalid")
+    assert not entity_registry.async_get("sensor.invalid")
 
-    # Assert the suggested unit is ignored and not stored in the entity registry
-    entry = entity_registry.async_get(entity.entity_id)
-    assert entry.unit_of_measurement == native_unit
-    assert entry.options == {}
     assert (
-        "homeassistant.components.sensor",
-        logging.WARNING,
-        (
-            "<class 'tests.components.sensor.common.MockSensor'> sets an"
-            " invalid suggested_unit_of_measurement. Please create a bug report at "
-            "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+test%22."
-            " This warning will become an error in Home Assistant Core 2024.5"
-        ),
-    ) in caplog.record_tuples
+        "Entity <class 'tests.components.sensor.common.MockSensor'> suggest an incorrect unit of measurement: invalid_unit"
+        in caplog.text
+    )
 
 
 @pytest.mark.parametrize(
@@ -2626,6 +2677,7 @@ async def test_suggested_unit_guard_invalid_unit(
 )
 async def test_suggested_unit_guard_valid_unit(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device_class: SensorDeviceClass,
     native_unit: str,
     native_value: int,
@@ -2637,8 +2689,6 @@ async def test_suggested_unit_guard_valid_unit(
     Suggested unit is valid and therefore should be used for unit conversion and stored
     in the entity registry.
     """
-    entity_registry = er.async_get(hass)
-
     entity = MockSensor(
         name="Valid",
         device_class=device_class,

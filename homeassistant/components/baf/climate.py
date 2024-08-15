@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant import config_entries
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
@@ -15,20 +14,19 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import BAFConfigEntry
 from .entity import BAFEntity
-from .models import BAFData
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: BAFConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up BAF fan auto comfort."""
-    data: BAFData = hass.data[DOMAIN][entry.entry_id]
-    if data.device.has_fan and data.device.has_auto_comfort:
-        async_add_entities([BAFAutoComfort(data.device)])
+    device = entry.runtime_data
+    if device.has_fan and device.has_auto_comfort:
+        async_add_entities([BAFAutoComfort(device)])
 
 
 class BAFAutoComfort(BAFEntity, ClimateEntity):

@@ -1,5 +1,42 @@
 {
   "title": "Light",
+  "common": {
+    "field_brightness_description": "Number indicating brightness, where 0 turns the light off, 1 is the minimum brightness, and 255 is the maximum brightness.",
+    "field_brightness_name": "Brightness value",
+    "field_brightness_pct_description": "Number indicating the percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness, and 100 is the maximum brightness.",
+    "field_brightness_pct_name": "Brightness",
+    "field_brightness_step_description": "Change brightness by an amount.",
+    "field_brightness_step_name": "Brightness step value",
+    "field_brightness_step_pct_description": "Change brightness by a percentage.",
+    "field_brightness_step_pct_name": "Brightness step",
+    "field_color_name_description": "A human-readable color name.",
+    "field_color_name_name": "Color name",
+    "field_color_temp_description": "Color temperature in mireds.",
+    "field_color_temp_name": "Color temperature",
+    "field_effect_description": "Light effect.",
+    "field_effect_name": "Effect",
+    "field_flash_description": "Tell light to flash, can be either value short or long.",
+    "field_flash_name": "Flash",
+    "field_hs_color_description": "Color in hue/sat format. A list of two integers. Hue is 0-360 and Sat is 0-100.",
+    "field_hs_color_name": "Hue/Sat color",
+    "field_kelvin_description": "Color temperature in Kelvin.",
+    "field_kelvin_name": "Color temperature",
+    "field_profile_description": "Name of a light profile to use.",
+    "field_profile_name": "Profile",
+    "field_rgb_color_description": "The color in RGB format. A list of three integers between 0 and 255 representing the values of red, green, and blue.",
+    "field_rgb_color_name": "Color",
+    "field_rgbw_color_description": "The color in RGBW format. A list of four integers between 0 and 255 representing the values of red, green, blue, and white.",
+    "field_rgbw_color_name": "RGBW-color",
+    "field_rgbww_color_description": "The color in RGBWW format. A list of five integers between 0 and 255 representing the values of red, green, blue, cold white, and warm white.",
+    "field_rgbww_color_name": "RGBWW-color",
+    "field_transition_description": "Duration it takes to get to next state.",
+    "field_transition_name": "Transition",
+    "field_white_description": "Set the light to white mode.",
+    "field_white_name": "White",
+    "field_xy_color_description": "Color in XY-format. A list of two decimal numbers between 0 and 1.",
+    "field_xy_color_name": "XY-color",
+    "section_advanced_fields_name": "Advanced options"
+  },
   "device_automation": {
     "action_type": {
       "brightness_decrease": "Decrease {entity_name} brightness",
@@ -17,6 +54,10 @@
       "changed_states": "[%key:common::device_automation::trigger_type::changed_states%]",
       "turned_on": "[%key:common::device_automation::trigger_type::turned_on%]",
       "turned_off": "[%key:common::device_automation::trigger_type::turned_off%]"
+    },
+    "extra_fields": {
+      "brightness_pct": "Brightness",
+      "flash": "Flash"
     }
   },
   "entity_component": {
@@ -247,72 +288,77 @@
       "description": "Turn on one or more lights and adjust properties of the light, even when they are turned on already.",
       "fields": {
         "transition": {
-          "name": "Transition",
-          "description": "Duration it takes to get to next state."
+          "name": "[%key:component::light::common::field_transition_name%]",
+          "description": "[%key:component::light::common::field_transition_description%]"
         },
         "rgb_color": {
-          "name": "Color",
-          "description": "The color in RGB format. A list of three integers between 0 and 255 representing the values of red, green, and blue."
+          "name": "[%key:component::light::common::field_rgb_color_name%]",
+          "description": "[%key:component::light::common::field_rgb_color_description%]"
         },
         "rgbw_color": {
-          "name": "RGBW-color",
-          "description": "The color in RGBW format. A list of four integers between 0 and 255 representing the values of red, green, blue, and white."
+          "name": "[%key:component::light::common::field_rgbw_color_name%]",
+          "description": "[%key:component::light::common::field_rgbw_color_description%]"
         },
         "rgbww_color": {
-          "name": "RGBWW-color",
-          "description": "The color in RGBWW format. A list of five integers between 0 and 255 representing the values of red, green, blue, cold white, and warm white."
+          "name": "[%key:component::light::common::field_rgbww_color_name%]",
+          "description": "[%key:component::light::common::field_rgbww_color_description%]"
         },
         "color_name": {
-          "name": "Color name",
-          "description": "A human-readable color name."
+          "name": "[%key:component::light::common::field_color_name_name%]",
+          "description": "[%key:component::light::common::field_color_name_description%]"
         },
         "hs_color": {
-          "name": "Hue/Sat color",
-          "description": "Color in hue/sat format. A list of two integers. Hue is 0-360 and Sat is 0-100."
+          "name": "[%key:component::light::common::field_hs_color_name%]",
+          "description": "[%key:component::light::common::field_hs_color_description%]"
         },
         "xy_color": {
-          "name": "XY-color",
-          "description": "Color in XY-format. A list of two decimal numbers between 0 and 1."
+          "name": "[%key:component::light::common::field_xy_color_name%]",
+          "description": "[%key:component::light::common::field_xy_color_description%]"
         },
         "color_temp": {
-          "name": "Color temperature",
-          "description": "Color temperature in mireds."
+          "name": "[%key:component::light::common::field_color_temp_name%]",
+          "description": "[%key:component::light::common::field_color_temp_description%]"
         },
         "kelvin": {
-          "name": "Color temperature",
-          "description": "Color temperature in Kelvin."
+          "name": "[%key:component::light::common::field_kelvin_name%]",
+          "description": "[%key:component::light::common::field_kelvin_description%]"
         },
         "brightness": {
-          "name": "Brightness value",
-          "description": "Number indicating brightness, where 0 turns the light off, 1 is the minimum brightness, and 255 is the maximum brightness."
+          "name": "[%key:component::light::common::field_brightness_name%]",
+          "description": "[%key:component::light::common::field_brightness_description%]"
         },
         "brightness_pct": {
-          "name": "Brightness",
-          "description": "Number indicating the percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness, and 100 is the maximum brightness."
+          "name": "[%key:component::light::common::field_brightness_pct_name%]",
+          "description": "[%key:component::light::common::field_brightness_pct_description%]"
         },
         "brightness_step": {
-          "name": "Brightness step value",
-          "description": "Change brightness by an amount."
+          "name": "[%key:component::light::common::field_brightness_step_name%]",
+          "description": "[%key:component::light::common::field_brightness_step_description%]"
         },
         "brightness_step_pct": {
-          "name": "Brightness step",
-          "description": "Change brightness by a percentage."
+          "name": "[%key:component::light::common::field_brightness_step_pct_name%]",
+          "description": "[%key:component::light::common::field_brightness_step_pct_description%]"
         },
         "white": {
-          "name": "White",
-          "description": "Set the light to white mode."
+          "name": "[%key:component::light::common::field_white_name%]",
+          "description": "[%key:component::light::common::field_white_description%]"
         },
         "profile": {
-          "name": "Profile",
-          "description": "Name of a light profile to use."
+          "name": "[%key:component::light::common::field_profile_name%]",
+          "description": "[%key:component::light::common::field_profile_description%]"
         },
         "flash": {
-          "name": "Flash",
-          "description": "Tell light to flash, can be either value short or long."
+          "name": "[%key:component::light::common::field_flash_name%]",
+          "description": "[%key:component::light::common::field_flash_description%]"
         },
         "effect": {
-          "name": "Effect",
-          "description": "Light effect."
+          "name": "[%key:component::light::common::field_effect_name%]",
+          "description": "[%key:component::light::common::field_effect_description%]"
+        }
+      },
+      "sections": {
+        "advanced_fields": {
+          "name": "[%key:component::light::common::section_advanced_fields_name%]"
         }
       }
     },
@@ -321,12 +367,17 @@
       "description": "Turn off one or more lights.",
       "fields": {
         "transition": {
-          "name": "[%key:component::light::services::turn_on::fields::transition::name%]",
-          "description": "[%key:component::light::services::turn_on::fields::transition::description%]"
+          "name": "[%key:component::light::common::field_transition_name%]",
+          "description": "[%key:component::light::common::field_transition_description%]"
         },
         "flash": {
-          "name": "[%key:component::light::services::turn_on::fields::flash::name%]",
-          "description": "[%key:component::light::services::turn_on::fields::flash::description%]"
+          "name": "[%key:component::light::common::field_flash_name%]",
+          "description": "[%key:component::light::common::field_flash_description%]"
+        }
+      },
+      "sections": {
+        "advanced_fields": {
+          "name": "[%key:component::light::common::section_advanced_fields_name%]"
         }
       }
     },
@@ -335,56 +386,69 @@
       "description": "Toggles one or more lights, from on to off, or, off to on, based on their current state.",
       "fields": {
         "transition": {
-          "name": "[%key:component::light::services::turn_on::fields::transition::name%]",
-          "description": "[%key:component::light::services::turn_on::fields::transition::description%]"
+          "name": "[%key:component::light::common::field_transition_name%]",
+          "description": "[%key:component::light::common::field_transition_description%]"
         },
         "rgb_color": {
-          "name": "[%key:component::light::services::turn_on::fields::rgb_color::name%]",
-          "description": "[%key:component::light::services::turn_on::fields::rgb_color::description%]"
+          "name": "[%key:component::light::common::field_rgb_color_name%]",
+          "description": "[%key:component::light::common::field_rgb_color_description%]"
+        },
+        "rgbw_color": {
+          "name": "[%key:component::light::common::field_rgbw_color_name%]",
+          "description": "[%key:component::light::common::field_rgbw_color_description%]"
+        },
+        "rgbww_color": {
+          "name": "[%key:component::light::common::field_rgbww_color_name%]",
+          "description": "[%key:component::light::common::field_rgbww_color_description%]"
         },
         "color_name": {
-          "name": "[%key:component::light::services::turn_on::fields::color_name::name%]",
-          "description": "[%key:component::light::services::turn_on::fields::color_name::description%]"
+          "name": "[%key:component::light::common::field_color_name_name%]",
+          "description": "[%key:component::light::common::field_color_name_description%]"
         },
         "hs_color": {
-          "name": "[%key:component::light::services::turn_on::fields::hs_color::name%]",
-          "description": "[%key:component::light::services::turn_on::fields::hs_color::description%]"
+          "name": "[%key:component::light::common::field_hs_color_name%]",
+          "description": "[%key:component::light::common::field_hs_color_description%]"
         },
         "xy_color": {
-          "name": "[%key:component::light::services::turn_on::fields::xy_color::name%]",
-          "description": "[%key:component::light::services::turn_on::fields::xy_color::description%]"
+          "name": "[%key:component::light::common::field_xy_color_name%]",
+          "description": "[%key:component::light::common::field_xy_color_description%]"
         },
         "color_temp": {
-          "name": "[%key:component::light::services::turn_on::fields::color_temp::name%]",
-          "description": "[%key:component::light::services::turn_on::fields::color_temp::description%]"
+          "name": "[%key:component::light::common::field_color_temp_name%]",
+          "description": "[%key:component::light::common::field_color_temp_description%]"
         },
         "kelvin": {
-          "name": "[%key:component::light::services::turn_on::fields::kelvin::name%]",
-          "description": "[%key:component::light::services::turn_on::fields::kelvin::description%]"
+          "name": "[%key:component::light::common::field_kelvin_name%]",
+          "description": "[%key:component::light::common::field_kelvin_description%]"
         },
         "brightness": {
-          "name": "[%key:component::light::services::turn_on::fields::brightness::name%]",
-          "description": "[%key:component::light::services::turn_on::fields::brightness::description%]"
+          "name": "[%key:component::light::common::field_brightness_name%]",
+          "description": "[%key:component::light::common::field_brightness_description%]"
         },
         "brightness_pct": {
-          "name": "[%key:component::light::services::turn_on::fields::brightness_pct::name%]",
-          "description": "[%key:component::light::services::turn_on::fields::brightness_pct::description%]"
+          "name": "[%key:component::light::common::field_brightness_pct_name%]",
+          "description": "[%key:component::light::common::field_brightness_pct_description%]"
         },
         "white": {
-          "name": "[%key:component::light::services::turn_on::fields::white::name%]",
-          "description": "[%key:component::light::services::turn_on::fields::white::description%]"
+          "name": "[%key:component::light::common::field_white_name%]",
+          "description": "[%key:component::light::common::field_white_description%]"
         },
         "profile": {
-          "name": "[%key:component::light::services::turn_on::fields::profile::name%]",
-          "description": "[%key:component::light::services::turn_on::fields::profile::description%]"
+          "name": "[%key:component::light::common::field_profile_name%]",
+          "description": "[%key:component::light::common::field_profile_description%]"
         },
         "flash": {
-          "name": "[%key:component::light::services::turn_on::fields::flash::name%]",
-          "description": "[%key:component::light::services::turn_on::fields::flash::description%]"
+          "name": "[%key:component::light::common::field_flash_name%]",
+          "description": "[%key:component::light::common::field_flash_description%]"
         },
         "effect": {
-          "name": "[%key:component::light::services::turn_on::fields::effect::name%]",
-          "description": "[%key:component::light::services::turn_on::fields::effect::description%]"
+          "name": "[%key:component::light::common::field_effect_name%]",
+          "description": "[%key:component::light::common::field_effect_description%]"
+        }
+      },
+      "sections": {
+        "advanced_fields": {
+          "name": "[%key:component::light::common::section_advanced_fields_name%]"
         }
       }
     }
