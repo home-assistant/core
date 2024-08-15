@@ -6,6 +6,7 @@ from typing import Any, Concatenate
 
 from aiorussound import Controller
 
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -68,3 +69,17 @@ class RussoundBaseEntity(Entity):
             self._attr_device_info["connections"] = {
                 (CONNECTION_NETWORK_MAC, controller.mac_address)
             }
+
+    @callback
+    def _is_connected_updated(self, connected: bool) -> None:
+        """Update the state when the device is ready to receive commands or is unavailable."""
+        self._attr_available = connected
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        self._instance.add_connection_callback(self._is_connected_updated)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove callbacks."""
+        self._instance.remove_connection_callback(self._is_connected_updated)
