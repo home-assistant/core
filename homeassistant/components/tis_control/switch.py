@@ -13,7 +13,7 @@ from TISControlProtocol.Protocols.udp.ProtocolHandler import (
 )
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import MATCH_ALL, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import MATCH_ALL, STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -48,7 +48,7 @@ async def async_setup_entry(
             TISSwitch(tis_api, switch_name, channel_number, device_id, gateway)
             for switch_name, channel_number, device_id, is_protected, gateway in switch_entities
         ]
-        async_add_devices(tis_switches)
+        async_add_devices(tis_switches, update_before_add=True)
 
 
 class TISSwitch(SwitchEntity):
@@ -66,6 +66,8 @@ class TISSwitch(SwitchEntity):
         self.api = tis_api
         self._name = switch_name
         self._attr_unique_id = f"switch_{self.name}"
+        self._attr_state = STATE_UNKNOWN
+        self._attr_is_on = None
         self.name = switch_name
         self.device_id = device_id
         self.gateway = gateway
@@ -107,10 +109,14 @@ class TISSwitch(SwitchEntity):
                     additional_bytes = event.data["additional_bytes"]
                     channel_status = int(additional_bytes[self.channel_number])
                     self._attr_state = STATE_ON if channel_status > 0 else STATE_OFF
+                elif event.data["feedback_type"] == "offline_device":
+                    self._attr_state = STATE_UNKNOWN
 
             await self.async_update_ha_state(True)
+            # self.schedule_update_ha_state()
 
         self.listener = self.hass.bus.async_listen(MATCH_ALL, handle_event)
+        _ = await self.api.protocol.sender.send_packet(self.update_packet)
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove the listener when the entity is removed."""
@@ -124,6 +130,13 @@ class TISSwitch(SwitchEntity):
         )
         if ack_status:
             self._attr_state = STATE_ON
+        else:
+            self._attr_state = STATE_UNKNOWN
+            event_data = {
+                "device_id": self.device_id,
+                "feedback_type": "offline_device",
+            }
+            self.hass.bus.async_fire(str(self.device_id), event_data)
         self.schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -133,6 +146,8 @@ class TISSwitch(SwitchEntity):
         )
         if ack_status:
             self._attr_state = STATE_OFF
+        else:
+            self._attr_state = STATE_UNKNOWN
         self.schedule_update_ha_state()
 
     @property
@@ -148,4 +163,9 @@ class TISSwitch(SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the switch."""
-        return self._attr_state == STATE_ON
+        if self._attr_state == STATE_ON:
+            return True
+
+        elif self._attr_state == STATE_OFF:  # noqa: RET505
+            return False
+        return None
