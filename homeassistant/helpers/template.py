@@ -2128,49 +2128,60 @@ def merge_response(
     {
         "entity_id": {str: dict[str, Any]},
     }
-    If response is a list, it will extend the list with the items.
+    If response is a single list, it will extend the list with the items
+        and add the entity_id and value_key to each dictionary for reference.
+    If response is a dictionary or multiple lists,
+        it will append the dictionary/lists to the list
+        and add the entity_id to each dictionary for reference.
     """
     if not isinstance(value, dict):
         raise TypeError("Response is not a dictionary")
     if not value:
-        # Bail out early if response is empty empty
+        # Bail out early if response is an empty dictionary
         return []
 
-    is_list = False
+    is_single_list = False
     response_items: list = []
     for entity_id, entity_response in value.items():
         if not isinstance(entity_response, dict):
             raise TypeError("Response is not a dictionary")
         for value_key, type_response in entity_response.items():
             if len(entity_response) == 1 and isinstance(type_response, list):
-                is_list = True
+                # Provides special handling for responses such as calendar events
+                # and weather forecasts where the response contains a single list with multiple
+                # dictionaries inside.
+                is_single_list = True
                 for dict_in_list in type_response:
                     if isinstance(dict_in_list, dict):
                         dict_in_list["entity_id"] = entity_id
                         dict_in_list["value_key"] = value_key
                 response_items.extend(type_response)
             else:
-                break  # Don't continue looping if not a list
+                # Break the loop if not a single list as the logic is then managed in the outer loop
+                # which handles both dictionaries and in the case of multiple lists.
+                break
 
-        if not is_list:
+        if not is_single_list:
             _response = entity_response.copy()
             _response["entity_id"] = entity_id
             response_items.append(_response)
 
     # Allows to sort the response items by a key within the list
-    if sort_by and isinstance(response_items[0], dict):
+    if sort_by:
+        # Check that response items are a list of dictionaries has already been done
         if sort_by not in response_items[0]:
             raise ValueError("Sort by key is incorrect")
         response_items = sorted(response_items, key=lambda x: x[sort_by])
 
     # Allows to select a specific key from the response items (second level)
-    if selected_key and isinstance(response_items[0], dict):
+    if selected_key:
+        # Check that response items are a list of dictionaries has already been done
         new_list = []
         for sub_dict in response_items:
             try:
                 new_dict = sub_dict[selected_key]
             except KeyError as err:
-                raise ValueError("Selected key is incorrect") from err
+                raise ValueError(f"Key '{selected_key}' missing in response") from err
             new_dict["entity_id"] = sub_dict["entity_id"]
             new_list.append(new_dict)
         response_items = new_list

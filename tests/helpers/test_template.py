@@ -6449,7 +6449,8 @@ async def test_merge_response(
     _template = "{{ merge_response(" + str(service_response) + ") }}"
 
     tpl = template.Template(_template, hass)
-    assert tpl.async_render() == snapshot
+    assert service_response == snapshot(name="a_response")
+    assert tpl.async_render() == snapshot(name="b_rendered")
 
 
 @pytest.mark.parametrize(
@@ -6553,7 +6554,8 @@ async def test_merge_response_with_sorting(
     _template = "{{ merge_response(" + str(service_response) + ", 'datetime') }}"
 
     tpl = template.Template(_template, hass)
-    assert tpl.async_render() == snapshot
+    assert service_response == snapshot(name="a_response")
+    assert tpl.async_render() == snapshot(name="b_rendered")
 
 
 @pytest.mark.parametrize(
@@ -6621,7 +6623,8 @@ async def test_merge_response_with_selected_key(
     )
 
     tpl = template.Template(_template, hass)
-    assert tpl.async_render() == snapshot
+    assert service_response == snapshot(name="a_response")
+    assert tpl.async_render() == snapshot(name="b_rendered")
 
 
 @pytest.mark.parametrize(
@@ -6666,7 +6669,9 @@ async def test_merge_response_with_selected_key_missing(
     )
 
     tpl = template.Template(_template, hass)
-    with pytest.raises(TemplateError, match="ValueError: 'Selected key is incorrect'"):
+    with pytest.raises(
+        TemplateError, match="ValueError: Key 'not_exist' missing in response"
+    ):
         tpl.async_render()
 
 
@@ -6683,7 +6688,8 @@ async def test_merge_response_with_empty_response(
     }
     _template = "{{ merge_response(" + str(service_response) + ") }}"
     tpl = template.Template(_template, hass)
-    assert tpl.async_render() == snapshot(name="empty_response")
+    assert service_response == snapshot(name="a_response")
+    assert tpl.async_render() == snapshot(name="b_rendered")
 
 
 async def test_merge_response_with_incorrect_response(hass: HomeAssistant) -> None:
