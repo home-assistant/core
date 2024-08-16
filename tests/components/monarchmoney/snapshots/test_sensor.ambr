@@ -1,4 +1,152 @@
 # serializer version: 1
+# name: test_all_entities[sensor.manual_entry_wallet_balance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.manual_entry_wallet_balance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': 'mdi:cash',
+    'original_name': 'Balance',
+    'platform': 'monarchmoney',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'balance',
+    'unique_id': 'Manual entry_Wallet_balance',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.manual_entry_wallet_balance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Monarch Money API via ',
+      'device_class': 'monetary',
+      'friendly_name': 'Manual entry Wallet Balance',
+      'icon': 'mdi:cash',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.manual_entry_wallet_balance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.0',
+  })
+# ---
+# name: test_all_entities[sensor.manual_entry_wallet_data_age-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.manual_entry_wallet_data_age',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Data age',
+    'platform': 'monarchmoney',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'age',
+    'unique_id': 'Manual entry_Wallet_age',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.manual_entry_wallet_data_age-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Monarch Money API via ',
+      'device_class': 'timestamp',
+      'friendly_name': 'Manual entry Wallet Data age',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.manual_entry_wallet_data_age',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-08-16T14:22:10+00:00',
+  })
+# ---
+# name: test_all_entities[sensor.manual_entry_wallet_first_sync-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.manual_entry_wallet_first_sync',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'First sync',
+    'platform': 'monarchmoney',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'created',
+    'unique_id': 'Manual entry_Wallet_created',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.manual_entry_wallet_first_sync-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Monarch Money API via ',
+      'device_class': 'timestamp',
+      'friendly_name': 'Manual entry Wallet First sync',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.manual_entry_wallet_first_sync',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-08-16T14:22:10+00:00',
+  })
+# ---
 # name: test_all_entities[sensor.rando_bank_checking_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

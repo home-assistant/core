@@ -419,6 +419,47 @@
         "__typename": "Institution"
       },
       "__typename": "Account"
+    },
+
+    {
+      "id": "186321412999033223",
+      "displayName": "Wallet",
+      "syncDisabled": false,
+      "deactivatedAt": null,
+      "isHidden": false,
+      "isAsset": true,
+      "mask": null,
+      "createdAt": "2024-08-16T14:22:10.440514+00:00",
+      "updatedAt": "2024-08-16T14:22:10.512731+00:00",
+      "displayLastUpdatedAt": "2024-08-16T14:22:10.512731+00:00",
+      "currentBalance": 20.0,
+      "displayBalance": 20.0,
+      "includeInNetWorth": true,
+      "hideFromList": false,
+      "hideTransactionsFromReports": false,
+      "includeBalanceInNetWorth": true,
+      "includeInGoalBalance": true,
+      "dataProvider": "",
+      "dataProviderAccountId": null,
+      "isManual": true,
+      "transactionsCount": 0,
+      "holdingsCount": 0,
+      "manualInvestmentsTrackingMethod": null,
+      "order": 14,
+      "logoUrl": null,
+      "type": {
+        "name": "depository",
+        "display": "Cash",
+        "__typename": "AccountType"
+      },
+      "subtype": {
+        "name": "prepaid",
+        "display": "Prepaid",
+        "__typename": "AccountSubtype"
+      },
+      "credential": null,
+      "institution": null,
+      "__typename": "Account"
     }
   ],
   "householdPreferences": {

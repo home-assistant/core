@@ -28,7 +28,11 @@ class MonarchMoneyEntity(CoordinatorEntity[MonarchMoneyDataUpdateCoordinator]):
         self._account_id = account["id"]
 
         # Parse out some fields
-        institution = account["institution"]["name"]
+        institution = "Manual entry"
+        configuration_url = "http://monarchmoney.com"
+        if account.get("institution") is not None:
+            institution = account["institution"].get("name", "Manual entry")
+            configuration_url = account["institution"]["url"]
 
         provider = account.get("dataProvider", "Manual input")
         if account.get("credential") is not None:
@@ -36,7 +40,6 @@ class MonarchMoneyEntity(CoordinatorEntity[MonarchMoneyDataUpdateCoordinator]):
 
         self._attr_attribution = f"Data provided by Monarch Money API via {provider}"
 
-        configuration_url = account["institution"]["url"]
         if not configuration_url.startswith(("http://", "https://")):
             configuration_url = f"http://{configuration_url}"
 
