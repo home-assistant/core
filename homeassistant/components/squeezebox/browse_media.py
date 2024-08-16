@@ -94,7 +94,14 @@ async def build_item_response(entity, player, payload):
 
     if search_type == "Favorites":
         _command = ["favorites"]
-        _command.extend(["items", "0", str(BROWSE_LIMIT)])
+        _command.extend(
+            [
+                "items",
+                "0",
+                str(BROWSE_LIMIT),
+                f"item_id:{search_id if search_id != "Favorites" else ""}",
+            ]
+        )
 
         result = await player.async_query(*_command)
 
@@ -104,13 +111,15 @@ async def build_item_response(entity, player, payload):
             child_media_class = CONTENT_TYPE_MEDIA_CLASS[item_type]
 
             for item in result["loop_loop"]:
-                if item.get("type") != "audio":
+                if item.get("type") != "audio" and item.get("hasitems") != 1:
                     continue
 
                 if item["image"].startswith("/imageproxy/"):
                     _icon = unquote(
                         item["image"].split("/imageproxy/")[1].split("/image.png")[0]
                     )
+                elif item.get("hasitems") == 1:
+                    _icon = _lms_prefix(player) + "html/images/musicfolder.png"
                 else:
                     _icon = _lms_prefix(player) + item["image"]
 
@@ -119,9 +128,11 @@ async def build_item_response(entity, player, payload):
                         title=item["name"],
                         media_class=child_media_class["item"],
                         media_content_id=item["id"],
-                        media_content_type="favorite",
-                        can_play=True,
-                        can_expand=False,
+                        media_content_type=(
+                            "favorite" if item.get("hasitems") != 1 else "Favorites"
+                        ),
+                        can_play=item.get("hasitems") != 1,
+                        can_expand=item.get("hasitems") == 1,
                         thumbnail=_icon,
                     )
                 )
