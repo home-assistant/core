@@ -24,7 +24,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Please how you want to connect to the MQTT broker:",
+        "description": "Please choose how you want to connect to the MQTT broker:",
         "menu_options": {
           "addon": "Install and configure the official {addon} add-on.",
           "broker": "Manual enter the MQTT connection details"
