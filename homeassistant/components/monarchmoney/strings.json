@@ -12,10 +12,9 @@
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "mfa_required": "Multi-factor authentication required."
+      "mfa_required": "Multi-factor authentication required.",
+      "bad_mfa": "Your code was invalid, please try again or use a recovery token."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"

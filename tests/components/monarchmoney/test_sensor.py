@@ -25,31 +25,3 @@ async def test_all_entities(
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-# @pytest.mark.asyncio
-# async def test_login(mock_api):
-#     """Test the login method of the MonarchMoney class."""
-#     # Arrange
-#     monarch_client = mock_api
-#
-#     # Act
-#     try:
-#         await monarch_client.login(
-#             email="test@example.com",
-#             password="password",
-#             save_session=False,
-#             use_saved_session=False,
-#             mfa_secret_key="mfa_secret_key",
-#         )
-#     except LoginFailedException as exc:
-#         raise LoginFailedException from exc
-#
-#     # Assert
-#     monarch_client.login.assert_awaited_once_with(
-#         email="test@example.com",
-#         password="password",
-#         save_session=False,
-#         use_saved_session=False,
-#         mfa_secret_key="mfa_secret_key",
-#     )

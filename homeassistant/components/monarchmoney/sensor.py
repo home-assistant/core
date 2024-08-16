@@ -83,7 +83,7 @@ MONARCH_MONEY_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.MONETARY,
         value_fn=lambda account: account["currentBalance"],
         picture_fn=lambda account: account["logoUrl"],
-        icon_fn=lambda account: _type_to_icon(account),
+        icon_fn=_type_to_icon,
     ),
     MonarchMoneySensorEntityDescription(
         key="age",

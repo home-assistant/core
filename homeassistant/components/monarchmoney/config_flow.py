@@ -13,6 +13,11 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import CONF_MFA_CODE, DOMAIN, LOGGER
 
@@ -21,8 +26,16 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_EMAIL): str,
-        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_EMAIL): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.EMAIL,
+            ),
+        ),
+        vol.Required(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+            ),
+        ),
     }
 )
 
@@ -43,7 +56,7 @@ async def validate_login(
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user. Upon success a session will be saved
     """
-    # mfa_secret_key = data.get(CONF_MFA_SECRET, "")
+
     if not email:
         email = data[CONF_EMAIL]
     if not password:
@@ -52,11 +65,15 @@ async def validate_login(
     if CONF_MFA_CODE in data:
         mfa_code = data[CONF_MFA_CODE]
         try:
+            LOGGER.debug("Attempting to authenticate with MFA code")
             await monarch_client.multi_factor_authenticate(email, password, mfa_code)
-        except LoginFailedException as err:
-            raise InvalidAuth from err
+        except KeyError:
+            # A bug in the backing lib that I don't control throws a KeyError if the MFA code is wrong
+            LOGGER.debug("Bad MFA Code")
+            raise BadMFA from None
     else:
         try:
+            LOGGER.debug("Attempting to authenticate")
             await monarch_client.login(
                 email=email,
                 password=password,
@@ -68,10 +85,7 @@ async def validate_login(
         except LoginFailedException as err:
             raise InvalidAuth from err
 
-    # monarch_client.token
     LOGGER.debug(f"Connection successful - saving session to file {SESSION_FILE}")
-
-    # Return info that you want to store in the config entry.
     return {"title": "Monarch Money", CONF_TOKEN: monarch_client.token}
 
 
@@ -105,11 +119,14 @@ class MonarchMoneyConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_schema=STEP_MFA_DATA_SCHEMA,
                     errors={"base": "mfa_required"},
                 )
+            except BadMFA:
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=STEP_MFA_DATA_SCHEMA,
+                    errors={"base": "bad_mfa"},
+                )
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
                     title=info["title"], data={CONF_TOKEN: info[CONF_TOKEN]}
@@ -120,29 +137,9 @@ class MonarchMoneyConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-#
-# async def old_async_step_user(
-#         self, user_input: dict[str, Any] | None = None
-#     ) -> ConfigFlowResult:
-#         """Handle the initial step."""
-#         errors: dict[str, str] = {}
-#         if user_input is not None:
-#             try:
-#                 info = await validate_input(self.hass, user_input)
-#             except InvalidAuth:
-#                 errors["base"] = "invalid_auth"
-#             except Exception:
-#                 _LOGGER.exception("Unexpected exception")
-#                 errors["base"] = "unknown"
-#             else:
-#                 return self.async_create_entry(
-#                     title=info["title"], data={CONF_TOKEN: info[CONF_TOKEN]}
-#                 )
-#
-#         return self.async_show_form(
-#             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-#         )
-
-
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class BadMFA(HomeAssistantError):
+    """Error to indicate the MFA code was bad."""
