@@ -47,9 +47,10 @@ async def test_webhook_callback(
     signal_all.assert_called_once()
 
     # test webhook callback all channels with failure to read motion_state
+    signal_all.reset_mock()
     reolink_connect.get_motion_state_all_ch.return_value = False
     await client.post(f"/api/webhook/{webhook_id}")
-    signal_all.assert_called_once()
+    signal_all.assert_not_called()
 
     # test webhook callback success single channel
     reolink_connect.ONVIF_event_callback.return_value = [0]
@@ -57,11 +58,12 @@ async def test_webhook_callback(
     signal_ch.assert_called_once()
 
     # test webhook callback single channel with error in event callback
+    signal_ch.reset_mock()
     reolink_connect.ONVIF_event_callback = AsyncMock(
         side_effect=Exception("Test error")
     )
     await client.post(f"/api/webhook/{webhook_id}", data="test_data")
-    signal_ch.assert_called_once()
+    signal_ch.assert_not_called()
 
     # test failure to read date from webhook post
     request = MockRequest(
@@ -71,13 +73,13 @@ async def test_webhook_callback(
     )
     request.read = AsyncMock(side_effect=ConnectionResetError("Test error"))
     await async_handle_webhook(hass, webhook_id, request)
-    signal_all.assert_called_once()
+    signal_all.assert_not_called()
 
     request.read = AsyncMock(side_effect=ClientResponseError("Test error", "Test"))
     await async_handle_webhook(hass, webhook_id, request)
-    signal_all.assert_called_once()
+    signal_all.assert_not_called()
 
     request.read = AsyncMock(side_effect=CancelledError("Test error"))
     with pytest.raises(CancelledError):
         await async_handle_webhook(hass, webhook_id, request)
-    signal_all.assert_called_once()
+    signal_all.assert_not_called()
