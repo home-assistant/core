@@ -7,7 +7,7 @@ from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
 from pysmlight.web import Api2, Info, Sensors
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -27,23 +27,22 @@ class SmData:
 
 class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData]):
     """Class to manage fetching SMLIGHT data."""
+
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, host: str) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             LOGGER,
-            name=f"{DOMAIN}_{entry.data[CONF_HOST]}",
+            name=f"{DOMAIN}_{host}",
             update_interval=SCAN_INTERVAL,
         )
 
-        self.hostname: str | None = self.get_hostname(entry.data[CONF_HOST])
+        self.hostname = self.get_hostname(host)
         self.unique_id: str | None = None
 
-        self.client = Api2(
-            host=entry.data[CONF_HOST], session=async_get_clientsession(hass)
-        )
+        self.client = Api2(host=host, session=async_get_clientsession(hass))
 
     def get_hostname(self, host: str) -> str:
         """Get hostname. Fallback to IP if not available."""
