@@ -124,6 +124,53 @@
       },
       "__typename": "Account"
     },
+
+    {
+      "id": "121212192626186051",
+      "displayName": "2050 Toyota RAV8",
+      "syncDisabled": false,
+      "deactivatedAt": null,
+      "isHidden": false,
+      "isAsset": true,
+      "mask": null,
+      "createdAt": "2024-08-16T17:37:21.885036+00:00",
+      "updatedAt": "2024-08-16T17:37:21.885057+00:00",
+      "displayLastUpdatedAt": "2024-08-16T17:37:21.885057+00:00",
+      "currentBalance": 11075.58,
+      "displayBalance": 11075.58,
+      "includeInNetWorth": true,
+      "hideFromList": false,
+      "hideTransactionsFromReports": false,
+      "includeBalanceInNetWorth": true,
+      "includeInGoalBalance": false,
+      "dataProvider": "vin_audit",
+      "dataProviderAccountId": "1111111v5cw252004",
+      "isManual": false,
+      "transactionsCount": 0,
+      "holdingsCount": 0,
+      "manualInvestmentsTrackingMethod": null,
+      "order": 0,
+      "logoUrl": "https://api.monarchmoney.com/cdn-cgi/image/width=128/images/institution/159427559853802644",
+      "type": {
+        "name": "vehicle",
+        "display": "Vehicles",
+        "__typename": "AccountType"
+      },
+      "subtype": {
+        "name": "car",
+        "display": "Car",
+        "__typename": "AccountSubtype"
+      },
+      "credential": null,
+      "institution": {
+        "id": "123456789853802644",
+        "name": "VinAudit",
+        "primaryColor": "#74ab16",
+        "url": "https://www.vinaudit.com/",
+        "__typename": "Institution"
+      },
+      "__typename": "Account"
+    },
     {
       "id": "9000000007",
       "displayName": "Credit Card",
@@ -420,7 +467,6 @@
       },
       "__typename": "Account"
     },
-
     {
       "id": "186321412999033223",
       "displayName": "Wallet",

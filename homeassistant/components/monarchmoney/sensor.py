@@ -35,7 +35,15 @@ def _type_to_icon(account: Any) -> str:
             "st_403b": "mdi:chart-bell-curve-cumulative",
             "st_529": "mdi:school-outline",
         },
-        "credit": {"credit_card": "mdi:credit-card-outline"},
+        "vehicle": {
+            "car": "mdi:car",
+            "boat": "mdi:sail-boat",
+            "motorcycle": "mdi:motorbike",
+            "snowmobile": "mdi:snowmobile",
+            "bicycle": "mdi:bicycle",
+            "other": "mdi:car",
+        },
+        "credit": {"credit_card": "mdi:credit-card"},
         "depository": {
             "cash_management": "mdi:cash",
             "checking": "mdi:checkbook",
@@ -43,7 +51,7 @@ def _type_to_icon(account: Any) -> str:
             "money_market": "mdi:piggy-bank-outline",
         },
         "loan": {
-            "line_of_credit": "mdi:credit-card-plus-outline",
+            "line_of_credit": "mdi:credit-card-plus",
             "loan": "mdi:bank-outline",
             "mortgage": "mdi:home-city-outline",
         },
@@ -51,9 +59,10 @@ def _type_to_icon(account: Any) -> str:
 
     default_icons = {
         "brokerage": "mdi:chart-line",
-        "credit": "mdi:credit-card-outline",
+        "credit": "mdi:credit-card",
         "depository": "mdi:cash",
         "loan": "mdi:bank-outline",
+        "vehicle": "mdi:car",
     }
     if account_subtype not in icon_mapping.get(account_type, {}):
         LOGGER.info(
@@ -61,8 +70,9 @@ def _type_to_icon(account: Any) -> str:
         )
         return default_icons.get(account_type, "mdi:cash")
 
-    return icon_mapping.get(account_type, {}).get(
-        account_subtype, default_icons.get(account_type, "mdi:cash")
+    account_type_icons = icon_mapping.get(account_type, {})
+    return account_type_icons.get(
+        account_subtype, default_icons.get(account_type, "mdi:help")
     )
 
 

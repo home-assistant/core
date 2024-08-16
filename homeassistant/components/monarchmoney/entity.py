@@ -47,13 +47,17 @@ class MonarchMoneyEntity(CoordinatorEntity[MonarchMoneyDataUpdateCoordinator]):
             f"{institution}_{account["displayName"]}_{description.translation_key}"
         )
 
+        atype = account["type"]["display"]
+        asubtype = account["subtype"]["display"]
+
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, account["id"])},
             name=f"{institution} {account["displayName"]}",
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=provider,
-            model=institution,
+            model=f"{institution} - {atype} - {asubtype}",
             configuration_url=configuration_url,
+            suggested_area="Banking/Finance",
         )
 
     @property
