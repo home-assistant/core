@@ -1285,7 +1285,8 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
             self._pending_import_flows[handler][flow_id] = loop.create_future()
 
         cancel_init_future = loop.create_future()
-        self._initialize_futures[handler].add(cancel_init_future)
+        handler_init_futures = self._initialize_futures[handler]
+        handler_init_futures.add(cancel_init_future)
         try:
             async with interrupt(
                 cancel_init_future,
@@ -1296,8 +1297,13 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         except FlowCancelledError as ex:
             raise asyncio.CancelledError from ex
         finally:
-            self._initialize_futures[handler].remove(cancel_init_future)
-            self._pending_import_flows[handler].pop(flow_id, None)
+            handler_init_futures.remove(cancel_init_future)
+            if not handler_init_futures:
+                del self._initialize_futures[handler]
+            if handler in self._pending_import_flows:
+                self._pending_import_flows[handler].pop(flow_id, None)
+                if not self._pending_import_flows[handler]:
+                    del self._pending_import_flows[handler]
 
         if result["type"] != data_entry_flow.FlowResultType.ABORT:
             await self.async_post_init(flow, result)
