@@ -7,6 +7,7 @@ from collections.abc import Collection
 from dataclasses import dataclass, field
 import logging
 from typing import Any
+import uuid
 
 from thinqconnect.thinq_api import ThinQApiResponse
 import voluptuous as vol
@@ -31,6 +32,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.json import JsonValueType
 
 from .const import (
+    CLIENT_PREFIX,
     CONF_CONNECT_CLIENT_ID,
     DEFAULT_COUNTRY,
     DOMAIN,
@@ -72,6 +74,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> boo
 
     # Validate entry data.
     client_id = entry.data.get(CONF_CONNECT_CLIENT_ID)
+    if not isinstance(client_id, str):
+        client_id = f"{CLIENT_PREFIX}-{uuid.uuid4()!s}"
     access_token = entry.data.get(CONF_ACCESS_TOKEN)
     if not isinstance(access_token, str):
         raise ConfigEntryAuthFailed(f"Invalid PAT: {access_token}")
