@@ -25,10 +25,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up button platform."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        AutomowerButtonEntity(mower_id, coordinator) for mower_id in coordinator.data
-    )
-
     entities: list[ButtonEntity] = []
     entities.extend(
         AutomowerButtonEntity(mower_id, coordinator)
