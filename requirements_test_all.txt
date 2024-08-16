@@ -2289,7 +2289,7 @@ wallbox==0.7.0
 watchdog==2.3.1
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==0.2.21
+weatherflow4py==0.2.23
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
