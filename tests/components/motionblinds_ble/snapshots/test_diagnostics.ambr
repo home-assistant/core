@@ -3,7 +3,7 @@
   dict({
     'device': dict({
       '__type': "<class 'motionblindsble.device.MotionDevice'>",
-      'repr': '<motionblindsble.device.MotionDevice object at 0xffff63cd16d0>',
+      'repr': '<motionblindsble.device.MotionDevice object at 0xffff8bb8bb60>',
     }),
     'device_attributes': dict({
       '_battery_callbacks': list([
@@ -19,12 +19,12 @@
       '_connection_callbacks': list([
         dict({
           '__type': "<class 'function'>",
-          'repr': '<function MotionblindsBLESensorEntity.async_added_to_hass.<locals>.async_callback at 0xffff63d1d760>',
+          'repr': '<function MotionblindsBLESensorEntity.async_added_to_hass.<locals>.async_callback at 0xffffa872d940>',
         }),
       ]),
       '_connection_queue': dict({
         '__type': "<class 'motionblindsble.device.ConnectionQueue'>",
-        'repr': '<motionblindsble.device.ConnectionQueue object at 0xffff63cd2fc0>',
+        'repr': '<motionblindsble.device.ConnectionQueue object at 0xffff88deb8c0>',
       }),
       '_connection_type': dict({
         '__type': "<enum 'MotionConnectionType'>",
@@ -51,7 +51,7 @@
       ]),
       '_received_end_position_info_event': dict({
         '__type': "<class 'asyncio.locks.Event'>",
-        'repr': '<asyncio.locks.Event object at 0xffff63cd3ef0 [unset]>',
+        'repr': '<asyncio.locks.Event object at 0xffff8bb88bf0 [unset]>',
       }),
       '_running_callbacks': list([
         dict({
@@ -62,7 +62,7 @@
       '_signal_strength_callbacks': list([
         dict({
           '__type': "<class 'function'>",
-          'repr': '<function MotionblindsBLESensorEntity.async_added_to_hass.<locals>.async_callback at 0xffff7022dd00>',
+          'repr': '<function MotionblindsBLESensorEntity.async_added_to_hass.<locals>.async_callback at 0xffffa872d1c0>',
         }),
       ]),
       '_speed_callbacks': list([
@@ -87,7 +87,6 @@
       'timezone': None,
     }),
     'entry': dict({
-      'created_at': '2024-08-16T09:05:17.018610+00:00',
       'data': dict({
         'address': 'cc:cc:cc:cc:cc:cc',
         'blind_type': 'roller',
@@ -96,9 +95,8 @@
       }),
       'disabled_by': None,
       'domain': 'motionblinds_ble',
-      'entry_id': '01J5D6Y76T0S633ST89WBHET11',
+      'entry_id': '01J5DH66FB0S633ST89WBHET11',
       'minor_version': 1,
-      'modified_at': '2024-08-16T09:05:17.018611+00:00',
       'options': dict({
       }),
       'pref_disable_new_entities': False,

@@ -1,6 +1,7 @@
 """Test Motionblinds Bluetooth diagnostics."""
 
 from syrupy import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
 
@@ -21,7 +22,6 @@ async def test_diagnostics(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert (
-        await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
-        == snapshot
-    )
+    assert await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
+    ) == snapshot(exclude=props("created_at", "modified_at"))
