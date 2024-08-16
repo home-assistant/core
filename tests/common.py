@@ -204,11 +204,9 @@ def get_test_home_assistant() -> Generator[HomeAssistant]:
         hass.start = start_hass
         hass.stop = stop_hass
 
-        loop._thread_ident = threading.get_ident()
-
         hass_created_event.set()
 
-        hass.loop_thread_id = loop._thread_ident
+        hass.loop_thread_id = threading.get_ident()
         loop.run_forever()
         loop_stop_event.set()
 
