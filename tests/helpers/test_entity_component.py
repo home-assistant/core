@@ -570,10 +570,17 @@ async def test_register_entity_service_non_entity_service_schema(
         ),
     ):
         component.async_register_entity_service(
-            "hello",
-            vol.Schema({"some": str}),
-            Mock(),
+            "hello", vol.Schema({"some": str}), Mock()
         )
+
+    # The check currently does not recurse into vol.All or vol.Any allowing these
+    # non-compliatn schemas to pass
+    component.async_register_entity_service(
+        "hello", vol.All(vol.Schema({"some": str})), Mock()
+    )
+    component.async_register_entity_service(
+        "hello", vol.Any(vol.Schema({"some": str})), Mock()
+    )
 
 
 async def test_register_entity_service_response_data(hass: HomeAssistant) -> None:
