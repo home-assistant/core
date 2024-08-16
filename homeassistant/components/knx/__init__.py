@@ -62,6 +62,7 @@ from .const import (
     DATA_HASS_CONFIG,
     DOMAIN,
     KNX_ADDRESS,
+    KNX_MODULE_KEY,
     SUPPORTED_PLATFORMS_UI,
     SUPPORTED_PLATFORMS_YAML,
     TELEGRAM_LOG_DEFAULT,
@@ -173,7 +174,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except XKNXException as ex:
         raise ConfigEntryNotReady from ex
 
-    hass.data[DOMAIN] = knx_module
+    hass.data[KNX_MODULE_KEY] = knx_module
 
     if CONF_KNX_EXPOSE in config:
         for expose_config in config[CONF_KNX_EXPOSE]:
@@ -207,11 +208,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unloading the KNX platforms."""
-    #  if not loaded directly return
-    if not hass.data.get(DOMAIN):
+    knx_module = hass.data.get(KNX_MODULE_KEY)
+    if not knx_module:
+        #  if not loaded directly return
         return True
 
-    knx_module: KNXModule = hass.data[DOMAIN]
     for exposure in knx_module.exposures:
         exposure.async_remove()
 
@@ -264,7 +265,7 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
-    knx_module: KNXModule = hass.data[DOMAIN]
+    knx_module = hass.data[KNX_MODULE_KEY]
     if not device_entry.identifiers.isdisjoint(
         knx_module.interface_device.device_info["identifiers"]
     ):

@@ -27,8 +27,8 @@ from .const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
-    DOMAIN,
     KNX_ADDRESS,
+    KNX_MODULE_KEY,
 )
 from .knx_entity import KnxYamlEntity
 
@@ -39,7 +39,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entities for KNX platform."""
-    knx_module: KNXModule = hass.data[DOMAIN]
+    knx_module = hass.data[KNX_MODULE_KEY]
     config: list[ConfigType] = knx_module.config_yaml[Platform.DATE]
 
     async_add_entities(

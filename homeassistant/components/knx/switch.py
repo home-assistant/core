@@ -33,6 +33,7 @@ from .const import (
     CONF_SYNC_STATE,
     DOMAIN,
     KNX_ADDRESS,
+    KNX_MODULE_KEY,
 )
 from .knx_entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
 from .schema import SwitchSchema
@@ -52,7 +53,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switch(es) for KNX platform."""
-    knx_module: KNXModule = hass.data[DOMAIN]
+    knx_module = hass.data[KNX_MODULE_KEY]
     platform = async_get_current_platform()
     knx_module.config_store.add_platform(
         platform=Platform.SWITCH,

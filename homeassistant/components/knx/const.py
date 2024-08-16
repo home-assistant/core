@@ -4,15 +4,20 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from enum import Enum
-from typing import Final, TypedDict
+from typing import TYPE_CHECKING, Final, TypedDict
 
 from xknx.dpt.dpt_20 import HVACControllerMode
 from xknx.telegram import Telegram
 
 from homeassistant.components.climate import HVACAction, HVACMode
 from homeassistant.const import Platform
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from . import KNXModule
 
 DOMAIN: Final = "knx"
+KNX_MODULE_KEY: HassKey[KNXModule] = HassKey(DOMAIN)
 
 # Address is used for configuration and services by the same functions so the key has to match
 KNX_ADDRESS: Final = "address"
