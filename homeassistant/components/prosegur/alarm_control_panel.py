@@ -69,7 +69,7 @@ class ProsegurAlarm(AlarmControlPanelEntity):
             manufacturer="Prosegur",
             model="smart",
             identifiers={(DOMAIN, contract)},
-            configuration_url="https://smart.prosegur.com",
+            configuration_url="https://https://api-smart.prosegur.cloud",
         )
 
     async def async_update(self) -> None:
