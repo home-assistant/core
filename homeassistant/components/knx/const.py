@@ -68,8 +68,6 @@ CONF_RESPOND_TO_READ: Final = "respond_to_read"
 CONF_STATE_ADDRESS: Final = "state_address"
 CONF_SYNC_STATE: Final = "sync_state"
 
-# yaml config merged with config entry data
-DATA_KNX_CONFIG: Final = "knx_config"
 # original hass yaml config
 DATA_HASS_CONFIG: Final = "knx_hass_config"
 

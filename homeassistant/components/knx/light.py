@@ -29,7 +29,7 @@ from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.color as color_util
 
 from . import KNXModule
-from .const import CONF_SYNC_STATE, DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS, ColorTempModes
+from .const import CONF_SYNC_STATE, DOMAIN, KNX_ADDRESS, ColorTempModes
 from .knx_entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
 from .schema import LightSchema
 from .storage.const import (
@@ -77,7 +77,7 @@ async def async_setup_entry(
     )
 
     entities: list[KnxYamlEntity | KnxUiEntity] = []
-    if yaml_platform_config := hass.data[DATA_KNX_CONFIG].get(Platform.LIGHT):
+    if yaml_platform_config := knx_module.config_yaml.get(Platform.LIGHT):
         entities.extend(
             KnxYamlLight(knx_module, entity_config)
             for entity_config in yaml_platform_config

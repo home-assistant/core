@@ -31,7 +31,6 @@ from .const import (
     CONF_INVERT,
     CONF_RESPOND_TO_READ,
     CONF_SYNC_STATE,
-    DATA_KNX_CONFIG,
     DOMAIN,
     KNX_ADDRESS,
 )
@@ -65,7 +64,7 @@ async def async_setup_entry(
     )
 
     entities: list[KnxYamlEntity | KnxUiEntity] = []
-    if yaml_platform_config := hass.data[DATA_KNX_CONFIG].get(Platform.SWITCH):
+    if yaml_platform_config := knx_module.config_yaml.get(Platform.SWITCH):
         entities.extend(
             KnxYamlSwitch(knx_module, entity_config)
             for entity_config in yaml_platform_config

@@ -23,7 +23,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
 from . import KNXModule
-from .const import ATTR_COUNTER, ATTR_SOURCE, DATA_KNX_CONFIG, DOMAIN
+from .const import ATTR_COUNTER, ATTR_SOURCE, DOMAIN
 from .knx_entity import KnxYamlEntity
 from .schema import BinarySensorSchema
 
@@ -35,11 +35,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the KNX binary sensor platform."""
     knx_module: KNXModule = hass.data[DOMAIN]
-    config: ConfigType = hass.data[DATA_KNX_CONFIG]
+    config: list[ConfigType] = knx_module.config_yaml[Platform.BINARY_SENSOR]
 
     async_add_entities(
-        KNXBinarySensor(knx_module, entity_config)
-        for entity_config in config[Platform.BINARY_SENSOR]
+        KNXBinarySensor(knx_module, entity_config) for entity_config in config
     )
 
 

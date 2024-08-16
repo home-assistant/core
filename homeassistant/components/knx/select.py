@@ -26,7 +26,6 @@ from .const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
-    DATA_KNX_CONFIG,
     DOMAIN,
     KNX_ADDRESS,
 )
@@ -41,7 +40,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up select(s) for KNX platform."""
     knx_module: KNXModule = hass.data[DOMAIN]
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.SELECT]
+    config: list[ConfigType] = knx_module.config_yaml[Platform.SELECT]
 
     async_add_entities(KNXSelect(knx_module, entity_config) for entity_config in config)
 
