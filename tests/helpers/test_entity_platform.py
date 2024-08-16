@@ -10,6 +10,7 @@ from unittest.mock import ANY, AsyncMock, Mock, patch
 import pytest
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, PERCENTAGE, EntityCategory
 from homeassistant.core import (
     CoreState,
@@ -33,6 +34,7 @@ from homeassistant.helpers.entity_component import (
     DEFAULT_SCAN_INTERVAL,
     EntityComponent,
 )
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
@@ -855,10 +857,13 @@ async def test_setup_entry(
 ) -> None:
     """Test we can setup an entry."""
 
-    async def async_setup_entry(hass, config_entry, async_add_entities):
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
         """Mock setup entry method."""
         async_add_entities([MockEntity(name="test1", unique_id="unique")])
-        return True
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
     config_entry = MockConfigEntry(entry_id="super-mock-id")
@@ -1138,7 +1143,11 @@ async def test_device_info_called(
         model="via",
     )
 
-    async def async_setup_entry(hass, config_entry, async_add_entities):
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
         """Mock setup entry method."""
         async_add_entities(
             [
@@ -1163,7 +1172,6 @@ async def test_device_info_called(
                 ),
             ]
         )
-        return True
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
     entity_platform = MockEntityPlatform(
@@ -1207,7 +1215,11 @@ async def test_device_info_not_overrides(
     assert device.manufacturer == "test-manufacturer"
     assert device.model == "test-model"
 
-    async def async_setup_entry(hass, config_entry, async_add_entities):
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
         """Mock setup entry method."""
         async_add_entities(
             [
@@ -1222,7 +1234,6 @@ async def test_device_info_not_overrides(
                 )
             ]
         )
-        return True
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
     entity_platform = MockEntityPlatform(
@@ -1257,7 +1268,11 @@ async def test_device_info_homeassistant_url(
         model="via",
     )
 
-    async def async_setup_entry(hass, config_entry, async_add_entities):
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
         """Mock setup entry method."""
         async_add_entities(
             [
@@ -1271,7 +1286,6 @@ async def test_device_info_homeassistant_url(
                 ),
             ]
         )
-        return True
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
     entity_platform = MockEntityPlatform(
@@ -1306,7 +1320,11 @@ async def test_device_info_change_to_no_url(
         configuration_url="homeassistant://config/mqtt",
     )
 
-    async def async_setup_entry(hass, config_entry, async_add_entities):
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
         """Mock setup entry method."""
         async_add_entities(
             [
@@ -1320,7 +1338,6 @@ async def test_device_info_change_to_no_url(
                 ),
             ]
         )
-        return True
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
     entity_platform = MockEntityPlatform(
@@ -1375,10 +1392,13 @@ async def test_entity_disabled_by_device(
         unique_id="disabled", device_info=DeviceInfo(connections=connections)
     )
 
-    async def async_setup_entry(hass, config_entry, async_add_entities):
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
         """Mock setup entry method."""
         async_add_entities([entity_disabled])
-        return True
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
     config_entry = MockConfigEntry(entry_id="super-mock-id", domain=DOMAIN)
@@ -1847,13 +1867,16 @@ async def test_setup_entry_with_entities_that_block_forever(
 ) -> None:
     """Test we cancel adding entities when we reach the timeout."""
 
-    async def async_setup_entry(hass, config_entry, async_add_entities):
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
         """Mock setup entry method."""
         async_add_entities(
             [MockBlockingEntity(name="test1", unique_id="unique")],
             update_before_add=update_before_add,
         )
-        return True
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
     config_entry = MockConfigEntry(entry_id="super-mock-id")
@@ -1892,13 +1915,16 @@ async def test_cancellation_is_not_blocked(
 ) -> None:
     """Test cancellation is not blocked while adding entities."""
 
-    async def async_setup_entry(hass, config_entry, async_add_entities):
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
         """Mock setup entry method."""
         async_add_entities(
             [MockCancellingEntity(name="test1", unique_id="unique")],
             update_before_add=update_before_add,
         )
-        return True
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
     config_entry = MockConfigEntry(entry_id="super-mock-id")
@@ -1986,7 +2012,11 @@ async def test_entity_name_influences_entity_id(
 ) -> None:
     """Test entity_id is influenced by entity name."""
 
-    async def async_setup_entry(hass, config_entry, async_add_entities):
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
         """Mock setup entry method."""
         async_add_entities(
             [
@@ -2003,7 +2033,6 @@ async def test_entity_name_influences_entity_id(
             ],
             update_before_add=update_before_add,
         )
-        return True
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
     config_entry = MockConfigEntry(entry_id="super-mock-id")
@@ -2071,12 +2100,15 @@ async def test_translated_entity_name_influences_entity_id(
         """Return all backend translations."""
         return translations[language]
 
-    async def async_setup_entry(hass, config_entry, async_add_entities):
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
         """Mock setup entry method."""
         async_add_entities(
             [TranslatedEntity(has_entity_name)], update_before_add=update_before_add
         )
-        return True
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
     config_entry = MockConfigEntry(entry_id="super-mock-id")
@@ -2156,10 +2188,13 @@ async def test_translated_device_class_name_influences_entity_id(
         """Return all backend translations."""
         return translations[language]
 
-    async def async_setup_entry(hass, config_entry, async_add_entities):
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
         """Mock setup entry method."""
         async_add_entities([TranslatedDeviceClassEntity(device_class, has_entity_name)])
-        return True
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
     config_entry = MockConfigEntry(entry_id="super-mock-id")
@@ -2215,10 +2250,13 @@ async def test_device_name_defaulting_config_entry(
         _attr_unique_id = "qwer"
         _attr_device_info = device_info
 
-    async def async_setup_entry(hass, config_entry, async_add_entities):
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
         """Mock setup entry method."""
         async_add_entities([DeviceNameEntity()])
-        return True
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
     config_entry = MockConfigEntry(title=config_entry_title, entry_id="super-mock-id")
@@ -2268,10 +2306,13 @@ async def test_device_type_error_checking(
         _attr_unique_id = "qwer"
         _attr_device_info = device_info
 
-    async def async_setup_entry(hass, config_entry, async_add_entities):
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
         """Mock setup entry method."""
         async_add_entities([DeviceNameEntity()])
-        return True
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
     config_entry = MockConfigEntry(
