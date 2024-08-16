@@ -16,9 +16,9 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.setup import async_setup_component, setup_component
+from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component, get_test_home_assistant
+from tests.common import assert_setup_component
 
 
 @callback
@@ -54,7 +54,12 @@ def async_restart(hass, entity_id=None):
 class MockFFmpegDev(ffmpeg.FFmpegBase):
     """FFmpeg device mock."""
 
-    def __init__(self, hass, initial_state=True, entity_id="test.ffmpeg_device"):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        initial_state: bool = True,
+        entity_id: str = "test.ffmpeg_device",
+    ) -> None:
         """Initialize mock."""
         super().__init__(None, initial_state)
 
@@ -77,26 +82,22 @@ class MockFFmpegDev(ffmpeg.FFmpegBase):
         self.called_entities = entity_ids
 
 
-def test_setup_component() -> None:
+async def test_setup_component(hass: HomeAssistant) -> None:
     """Set up ffmpeg component."""
-    with get_test_home_assistant() as hass:
-        with assert_setup_component(1):
-            setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    with assert_setup_component(1):
+        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
 
-        assert hass.data[ffmpeg.DATA_FFMPEG].binary == "ffmpeg"
-        hass.stop()
+    assert hass.data[ffmpeg.DATA_FFMPEG].binary == "ffmpeg"
 
 
-def test_setup_component_test_service() -> None:
+async def test_setup_component_test_service(hass: HomeAssistant) -> None:
     """Set up ffmpeg component test services."""
-    with get_test_home_assistant() as hass:
-        with assert_setup_component(1):
-            setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    with assert_setup_component(1):
+        await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
 
-        assert hass.services.has_service(ffmpeg.DOMAIN, "start")
-        assert hass.services.has_service(ffmpeg.DOMAIN, "stop")
-        assert hass.services.has_service(ffmpeg.DOMAIN, "restart")
-        hass.stop()
+    assert hass.services.has_service(ffmpeg.DOMAIN, "start")
+    assert hass.services.has_service(ffmpeg.DOMAIN, "stop")
+    assert hass.services.has_service(ffmpeg.DOMAIN, "restart")
 
 
 async def test_setup_component_test_register(hass: HomeAssistant) -> None:
