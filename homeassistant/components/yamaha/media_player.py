@@ -147,7 +147,6 @@ def _discovery(config_info, data):
                     recv.serial_number,
                     recv.ctrl_url,
                 )
-                break
                 if recv.ctrl_url == config_info.ctrl_url:
                     _LOGGER.debug(
                         "Config Zones Matched with Serial %s: %s",
