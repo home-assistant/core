@@ -16,8 +16,20 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     data: HomeAssistantBSBLANData = hass.data[DOMAIN][entry.entry_id]
+
+    # Helper function to safely get dict from potentially async methods
+    async def safe_to_dict(obj):
+        if callable(getattr(obj, "to_dict", None)):
+            result = obj.to_dict()
+            return await result if hasattr(result, "__await__") else result
+        return obj
+
     return {
-        "info": data.info.to_dict(),
-        "device": data.device.to_dict(),
-        "state": data.coordinator.data.to_dict(),
+        "info": await safe_to_dict(data.info),
+        "device": await safe_to_dict(data.device),
+        "coordinator_data": {
+            "state": await safe_to_dict(data.coordinator.data["state"]),
+            "sensor": await safe_to_dict(data.coordinator.data["sensor"]),
+        },
+        "static": await safe_to_dict(data.static),
     }
