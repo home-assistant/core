@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
 from typing import Any
 
@@ -30,6 +31,7 @@ from .const import (
     CURSOR_TYPE_RIGHT,
     CURSOR_TYPE_SELECT,
     CURSOR_TYPE_UP,
+    DISCOVER_TIMEOUT,
     DOMAIN,
     KNOWN_ZONES,
     SERVICE_ENABLE_OUTPUT,
@@ -124,16 +126,35 @@ def _discovery(config_info):
     elif config_info.host is None:
         _LOGGER.debug("Config No Host Supplied Zones")
         zones = []
-        for recv in rxv.find():
+        for recv in rxv.find(DISCOVER_TIMEOUT):
             zones.extend(recv.zone_controllers())
     else:
         _LOGGER.debug("Config Zones")
         zones = None
-        for recv in rxv.find():
-            if recv.ctrl_url == config_info.ctrl_url:
-                _LOGGER.debug("Config Zones Matched %s", config_info.ctrl_url)
-                zones = recv.zone_controllers()
-                break
+
+        # Fix for upstream issues in rxv.find() with some hardware.
+        with contextlib.suppress(AttributeError, ValueError):
+            for recv in rxv.find(DISCOVER_TIMEOUT):
+                _LOGGER.debug(
+                    "Found Serial %s %s %s",
+                    recv.serial_number,
+                    recv.ctrl_url,
+                    recv.zone,
+                )
+                if recv.ctrl_url == config_info.ctrl_url:
+                    _LOGGER.debug(
+                        "Config Zones Matched Serial %s: %s",
+                        recv.ctrl_url,
+                        recv.serial_number,
+                    )
+                    zones = rxv.RXV(
+                        config_info.ctrl_url,
+                        friendly_name=config_info.name,
+                        serial_number=recv.serial_number,
+                        model_name=recv.model_name,
+                    ).zone_controllers()
+                    break
+
         if not zones:
             _LOGGER.debug("Config Zones Fallback")
             zones = rxv.RXV(config_info.ctrl_url, config_info.name).zone_controllers()
@@ -165,7 +186,7 @@ async def async_setup_platform(
 
     entities = []
     for zctrl in zone_ctrls:
-        _LOGGER.debug("Receiver zone: %s", zctrl.zone)
+        _LOGGER.debug("Receiver zone: %s serial %s", zctrl.zone, zctrl.serial_number)
         if config_info.zone_ignore and zctrl.zone in config_info.zone_ignore:
             _LOGGER.debug("Ignore receiver zone: %s %s", config_info.name, zctrl.zone)
             continue
@@ -233,19 +254,6 @@ class YamahaDeviceZone(MediaPlayerEntity):
             # the default name of the integration may not be changed
             # to avoid a breaking change.
             self._attr_unique_id = f"{self.zctrl.serial_number}_{self._zone}"
-            _LOGGER.debug(
-                "Receiver zone: %s zone %s uid %s",
-                self._name,
-                self._zone,
-                self._attr_unique_id,
-            )
-        else:
-            _LOGGER.info(
-                "Receiver zone: %s zone %s no uid %s",
-                self._name,
-                self._zone,
-                self._attr_unique_id,
-            )
 
     def update(self) -> None:
         """Get the latest details from the device."""
@@ -427,19 +435,21 @@ class YamahaDeviceZone(MediaPlayerEntity):
         self.zctrl.surround_program = sound_mode
 
     @property
-    def media_artist(self):
+    def media_artist(self) -> str | None:
         """Artist of current playing media."""
         if self._play_status is not None:
             return self._play_status.artist
+        return None
 
     @property
-    def media_album_name(self):
+    def media_album_name(self) -> str | None:
         """Album of current playing media."""
         if self._play_status is not None:
             return self._play_status.album
+        return None
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> MediaType | None:
         """Content type of current playing media."""
         # Loose assumption that if playback is supported, we are playing music
         if self._is_playback_supported:
@@ -447,7 +457,7 @@ class YamahaDeviceZone(MediaPlayerEntity):
         return None
 
     @property
-    def media_title(self):
+    def media_title(self) -> str | None:
         """Artist of current playing media."""
         if self._play_status is not None:
             song = self._play_status.song
@@ -459,3 +469,4 @@ class YamahaDeviceZone(MediaPlayerEntity):
                 return f"{station}: {song}"
 
             return song or station
+        return None

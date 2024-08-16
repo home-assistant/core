@@ -16,7 +16,6 @@ from homeassistant.components.update import (
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -28,7 +27,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import snapshot_platform
+from .conftest import (
+    ConfigEntryFactoryType,
+    WebsocketMessageMock,
+    WebsocketStateManager,
+)
+
+from tests.common import MockConfigEntry, snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 # Device with new firmware available
@@ -74,7 +79,7 @@ DEVICE_2 = {
 async def test_entity_and_device_data(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    config_entry_factory,
+    config_entry_factory: ConfigEntryFactoryType,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Validate entity and device data with and without admin rights."""
@@ -85,7 +90,9 @@ async def test_entity_and_device_data(
 
 @pytest.mark.parametrize("device_payload", [[DEVICE_1]])
 @pytest.mark.usefixtures("config_entry_setup")
-async def test_device_updates(hass: HomeAssistant, mock_websocket_message) -> None:
+async def test_device_updates(
+    hass: HomeAssistant, mock_websocket_message: WebsocketMessageMock
+) -> None:
     """Test the update_items function with some devices."""
     device_1_state = hass.states.get("update.device_1")
     assert device_1_state.state == STATE_ON
@@ -122,7 +129,7 @@ async def test_device_updates(hass: HomeAssistant, mock_websocket_message) -> No
 async def test_install(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Test the device update install call."""
     device_state = hass.states.get("update.device_1")
@@ -154,7 +161,9 @@ async def test_install(
 
 @pytest.mark.parametrize("device_payload", [[DEVICE_1]])
 @pytest.mark.usefixtures("config_entry_setup")
-async def test_hub_state_change(hass: HomeAssistant, mock_websocket_state) -> None:
+async def test_hub_state_change(
+    hass: HomeAssistant, mock_websocket_state: WebsocketStateManager
+) -> None:
     """Verify entities state reflect on hub becoming unavailable."""
     assert hass.states.get("update.device_1").state == STATE_ON
 

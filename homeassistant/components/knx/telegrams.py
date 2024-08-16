@@ -7,6 +7,7 @@ from typing import Final, TypedDict
 
 from xknx import XKNX
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
+from xknx.dpt.dpt import DPTComplexData, DPTEnumData
 from xknx.exceptions import XKNXException
 from xknx.telegram import Telegram
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
@@ -34,7 +35,7 @@ class DecodedTelegramPayload(TypedDict):
     dpt_sub: int | None
     dpt_name: str | None
     unit: str | None
-    value: str | int | float | bool | None
+    value: bool | str | int | float | dict[str, str | int | float | bool] | None
 
 
 class TelegramDict(DecodedTelegramPayload):
@@ -93,7 +94,7 @@ class Telegrams:
         if self.recent_telegrams:
             await self._history_store.async_save(list(self.recent_telegrams))
 
-    async def _xknx_telegram_cb(self, telegram: Telegram) -> None:
+    def _xknx_telegram_cb(self, telegram: Telegram) -> None:
         """Handle incoming and outgoing telegrams from xknx."""
         telegram_dict = self.telegram_to_dict(telegram)
         self.recent_telegrams.append(telegram_dict)
@@ -105,7 +106,7 @@ class Telegrams:
         payload_data: int | tuple[int, ...] | None = None
         src_name = ""
         transcoder = None
-        decoded_payload: DecodedTelegramPayload | None = None
+        value = None
 
         if (
             ga_info := self.project.group_addresses.get(
@@ -113,7 +114,6 @@ class Telegrams:
             )
         ) is not None:
             dst_name = ga_info.name
-            transcoder = ga_info.transcoder
 
         if (
             device := self.project.devices.get(f"{telegram.source_address}")
@@ -122,40 +122,49 @@ class Telegrams:
 
         if isinstance(telegram.payload, (GroupValueWrite, GroupValueResponse)):
             payload_data = telegram.payload.value.value
-            if transcoder is not None:
-                decoded_payload = decode_telegram_payload(
-                    payload=telegram.payload.value, transcoder=transcoder
-                )
+
+        if telegram.decoded_data is not None:
+            transcoder = telegram.decoded_data.transcoder
+            value = _serializable_decoded_data(telegram.decoded_data.value)
 
         return TelegramDict(
             destination=f"{telegram.destination_address}",
             destination_name=dst_name,
             direction=telegram.direction.value,
-            dpt_main=decoded_payload["dpt_main"]
-            if decoded_payload is not None
-            else None,
-            dpt_sub=decoded_payload["dpt_sub"] if decoded_payload is not None else None,
-            dpt_name=decoded_payload["dpt_name"]
-            if decoded_payload is not None
-            else None,
+            dpt_main=transcoder.dpt_main_number if transcoder is not None else None,
+            dpt_sub=transcoder.dpt_sub_number if transcoder is not None else None,
+            dpt_name=transcoder.value_type if transcoder is not None else None,
             payload=payload_data,
             source=f"{telegram.source_address}",
             source_name=src_name,
             telegramtype=telegram.payload.__class__.__name__,
             timestamp=dt_util.now().isoformat(),
-            unit=decoded_payload["unit"] if decoded_payload is not None else None,
-            value=decoded_payload["value"] if decoded_payload is not None else None,
+            unit=transcoder.unit if transcoder is not None else None,
+            value=value,
         )
+
+
+def _serializable_decoded_data(
+    value: bool | float | str | DPTComplexData | DPTEnumData,
+) -> bool | str | int | float | dict[str, str | int | float | bool]:
+    """Return a serializable representation of decoded data."""
+    if isinstance(value, DPTComplexData):
+        return value.as_dict()
+    if isinstance(value, DPTEnumData):
+        return value.name.lower()
+    return value
 
 
 def decode_telegram_payload(
     payload: DPTArray | DPTBinary, transcoder: type[DPTBase]
 ) -> DecodedTelegramPayload:
-    """Decode the payload of a KNX telegram."""
+    """Decode the payload of a KNX telegram with custom transcoder."""
     try:
         value = transcoder.from_knx(payload)
     except XKNXException:
         value = "Error decoding value"
+
+    value = _serializable_decoded_data(value)
 
     return DecodedTelegramPayload(
         dpt_main=transcoder.dpt_main_number,
