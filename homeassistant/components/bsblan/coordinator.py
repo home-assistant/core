@@ -6,7 +6,7 @@ from datetime import timedelta
 from random import randint
 
 from bsblan import BSBLAN, BSBLANConnectionError
-from bsblan.models import State
+from bsblan.models import Sensor, State
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
 
-class BSBLanUpdateCoordinator(DataUpdateCoordinator[State]):
+class BSBLanUpdateCoordinator(DataUpdateCoordinator[dict[str, State | Sensor]]):
     """The BSB-Lan update coordinator."""
 
     config_entry: ConfigEntry
@@ -30,7 +30,6 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[State]):
         """Initialize the BSB-Lan coordinator."""
 
         self.client = client
-
         super().__init__(
             hass,
             LOGGER,
@@ -38,20 +37,23 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[State]):
             # use the default scan interval and add a random number of seconds to avoid timeouts when
             # the BSB-Lan device is already/still busy retrieving data,
             # e.g. for MQTT or internal logging.
-            update_interval=SCAN_INTERVAL + timedelta(seconds=randint(1, 8)),
+            update_interval=SCAN_INTERVAL + timedelta(seconds=randint(1, 4)),
         )
 
-    async def _async_update_data(self) -> State:
-        """Get state from BSB-Lan device."""
+    async def _async_update_data(self) -> dict[str, State | Sensor]:
+        """Get state and sensor data from BSB-Lan device."""
 
         # use the default scan interval and add a random number of seconds to avoid timeouts when
         # the BSB-Lan device is already/still busy retrieving data, e.g. for MQTT or internal logging.
         self.update_interval = SCAN_INTERVAL + timedelta(seconds=randint(1, 8))
 
         try:
-            return await self.client.state()
+            state = await self.client.state()
+            sensor = await self.client.sensor()
         except BSBLANConnectionError as err:
             raise UpdateFailed(
                 f"Error while establishing connection with "
                 f"BSB-Lan device at {self.config_entry.data[CONF_HOST]}"
             ) from err
+        else:
+            return {"state": state, "sensor": sensor}
