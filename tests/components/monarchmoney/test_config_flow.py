@@ -1,22 +1,17 @@
 """Test the Monarch Money config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
+
+from monarchmoney import LoginFailedException, RequireMFAException
 
 from homeassistant import config_entries
-from homeassistant.components.monarchmoney.config_flow import InvalidAuth
-from homeassistant.components.monarchmoney.const import CONF_MFA_SECRET, DOMAIN
-from homeassistant.const import (
-    CONF_EMAIL,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_TOKEN,
-    CONF_USERNAME,
-)
+from homeassistant.components.monarchmoney.const import CONF_MFA_CODE, DOMAIN
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-async def test_form(
+async def test_form_simple(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_config_api: AsyncMock
 ) -> None:
     """Test we get the form."""
@@ -31,7 +26,95 @@ async def test_form(
         {
             CONF_EMAIL: "test-username",
             CONF_PASSWORD: "test-password",
-            CONF_MFA_SECRET: "test-mfa",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Monarch Money"
+    assert result["data"] == {
+        CONF_TOKEN: "mocked_token",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_invalid_auth(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_config_api: AsyncMock
+) -> None:
+    """Test we get the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {}
+
+    # Change the login mock to raise an MFA required error
+    mock_config_api.return_value.login.side_effect = LoginFailedException(
+        "Invalid Auth"
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    mock_config_api.return_value.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Monarch Money"
+    assert result["data"] == {
+        CONF_TOKEN: "mocked_token",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_mfa(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_config_api: AsyncMock
+) -> None:
+    """Test we get the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {}
+
+    # Change the login mock to raise an MFA required error
+    mock_config_api.return_value.login.side_effect = RequireMFAException("mfa_required")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "mfa_required"}
+    assert result["step_id"] == "user"
+
+    # Clear the mock now
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_MFA_CODE: "123456",
         },
     )
     await hass.async_block_till_done()
@@ -73,57 +156,57 @@ async def test_form(
 #
 #     }
 #     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_invalid_auth(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test we handle invalid auth."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.monarchmoney.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidAuth,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
-    with patch(
-        "homeassistant.components.monarchmoney.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Name of the device"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+#
+#
+# async def test_form_invalid_auth(
+#     hass: HomeAssistant, mock_setup_entry: AsyncMock
+# ) -> None:
+#     """Test we handle invalid auth."""
+#     result = await hass.config_entries.flow.async_init(
+#         DOMAIN, context={"source": config_entries.SOURCE_USER}
+#     )
+#
+#     with patch(
+#         "homeassistant.components.monarchmoney.config_flow.PlaceholderHub.authenticate",
+#         side_effect=InvalidAuth,
+#     ):
+#         result = await hass.config_entries.flow.async_configure(
+#             result["flow_id"],
+#             {
+#                 CONF_HOST: "1.1.1.1",
+#                 CONF_USERNAME: "test-username",
+#                 CONF_PASSWORD: "test-password",
+#             },
+#         )
+#
+#     assert result["type"] == FlowResultType.FORM
+#     assert result["errors"] == {"base": "invalid_auth"}
+#
+#     # Make sure the config flow tests finish with either an
+#     # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
+#     # we can show the config flow is able to recover from an error.
+#     with patch(
+#         "homeassistant.components.monarchmoney.config_flow.PlaceholderHub.authenticate",
+#         return_value=True,
+#     ):
+#         result = await hass.config_entries.flow.async_configure(
+#             result["flow_id"],
+#             {
+#                 CONF_HOST: "1.1.1.1",
+#                 CONF_USERNAME: "test-username",
+#                 CONF_PASSWORD: "test-password",
+#             },
+#         )
+#         await hass.async_block_till_done()
+#
+#     assert result["type"] == FlowResultType.CREATE_ENTRY
+#     assert result["title"] == "Name of the device"
+#     assert result["data"] == {
+#         CONF_HOST: "1.1.1.1",
+#         CONF_USERNAME: "test-username",
+#         CONF_PASSWORD: "test-password",
+#     }
+#     assert len(mock_setup_entry.mock_calls) == 1
 
 
 # async def test_form_cannot_connect(

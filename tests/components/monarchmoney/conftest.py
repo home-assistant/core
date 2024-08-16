@@ -48,6 +48,7 @@ def mock_config_api() -> Generator[AsyncMock]:
         instance = mock_class.return_value
         type(instance).token = PropertyMock(return_value="mocked_token")
         instance.login = AsyncMock(return_value=None)
+        instance.multi_factor_authenticate = AsyncMock(return_value=None)
         instance.get_subscription_details = AsyncMock(
             return_value={
                 "subscription": {
