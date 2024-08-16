@@ -23,6 +23,16 @@
   },
   "config": {
     "step": {
+      "user": {
+        "description": "Please how you want to connect to the MQTT broker:",
+        "menu_options": {
+          "addon": "Install and configure the official {addon} add-on.",
+          "broker": "Manual enter the MQTT connection details"
+        }
+      },
+      "addon_setup_confirm": {
+        "description": "This will install the official {addon} add-on, and configure it as the MQTT broker. Additional logins can be configured using the [Configuration tab of the {addon} add-on]({url})."
+      },
       "broker": {
         "description": "Please enter the connection information of your MQTT broker.",
         "data": {
@@ -63,6 +73,12 @@
           "ws_path": "The WebSocket path to be used for the connection to your MQTT broker."
         }
       },
+      "install_addon": {
+        "title": "Installing add-on"
+      },
+      "start_addon": {
+        "title": "Starting add-on"
+      },
       "hassio_confirm": {
         "title": "MQTT Broker via Home Assistant add-on",
         "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the add-on {addon}?",
@@ -87,6 +103,9 @@
       }
     },
     "abort": {
+      "addon_wrong_state": "The {addon} add-on cannot be installed and configured, because it is installing or updating.",
+      "addon_install_failed": "Failed to install the {addon} add-on.",
+      "addon_start_failed": "Failed to start the {addon} add-on.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
