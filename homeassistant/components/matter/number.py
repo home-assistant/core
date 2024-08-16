@@ -137,4 +137,22 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterNumber,
         required_attributes=(clusters.LevelControl.Attributes.OnOffTransitionTime,),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="altitude",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="altitude",
+            native_max_value=255,
+            native_min_value=0,
+            mode=NumberMode.BOX,
+            # use 255 to indicate that the value should revert to the default
+            measurement_to_ha=lambda x: 255 if x is None else x,
+            ha_to_native_value=lambda x: None if x == 255 else int(x),
+            native_step=1,
+            native_unit_of_measurement=None,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(clusters.EveCluster.Attributes.Altitude,),
+    ),
 ]
