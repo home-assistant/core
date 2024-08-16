@@ -4,17 +4,34 @@
     'device': dict({
       'blind_type': 'Roller blind',
       'callbacks': dict({
-        '_battery_callbacks': 1,
-        '_calibration_callbacks': 0,
-        '_connection_callbacks': 1,
-        '_disabled_connection_callbacks': 0,
-        '_end_position_callbacks': 0,
-        '_feedback_callbacks': 0,
-        '_position_callbacks': 1,
-        '_running_callbacks': 1,
-        '_signal_strength_callbacks': 1,
-        '_speed_callbacks': 1,
-        '_status_callbacks': 0,
+        '_battery_callbacks': list([
+          'BatterySensor.async_update_battery',
+        ]),
+        '_calibration_callbacks': list([
+        ]),
+        '_connection_callbacks': list([
+          'async_callback',
+        ]),
+        '_disabled_connection_callbacks': list([
+        ]),
+        '_end_position_callbacks': list([
+        ]),
+        '_feedback_callbacks': list([
+        ]),
+        '_position_callbacks': list([
+          'PositionCover.async_update_position',
+        ]),
+        '_running_callbacks': list([
+          'PositionCover.async_update_running',
+        ]),
+        '_signal_strength_callbacks': list([
+          'async_callback',
+        ]),
+        '_speed_callbacks': list([
+          'SpeedSelect.async_update_speed',
+        ]),
+        '_status_callbacks': list([
+        ]),
       }),
       'connection': dict({
         '_connect_status_query_time': None,

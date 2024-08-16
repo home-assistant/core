@@ -70,7 +70,12 @@ async def async_get_config_entry_diagnostics(
                     },
                 },
                 "callbacks": {
-                    callback: len(getattr(device, callback))
+                    callback: [
+                        f"{method.__self__.__class__.__name__}.{method.__name__}"
+                        if hasattr(method, "__self__")
+                        else method.__name__
+                        for method in getattr(device, callback)
+                    ]
                     for callback in (
                         "_battery_callbacks",
                         "_calibration_callbacks",
