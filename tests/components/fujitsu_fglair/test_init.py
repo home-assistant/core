@@ -11,7 +11,7 @@ from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
+from . import entity_id, setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -21,6 +21,7 @@ async def test_auth_failure(
     freezer: FrozenDateTimeFactory,
     mock_ayla_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    mock_devices: list[AsyncMock],
 ) -> None:
     """Test entities become unavailable after auth failure."""
     await setup_integration(hass, mock_config_entry)
@@ -30,8 +31,8 @@ async def test_auth_failure(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("climate.testserial123").state == STATE_UNAVAILABLE
-    assert hass.states.get("climate.testserial345").state == STATE_UNAVAILABLE
+    assert hass.states.get(entity_id(mock_devices[0])).state == STATE_UNAVAILABLE
+    assert hass.states.get(entity_id(mock_devices[1])).state == STATE_UNAVAILABLE
 
 
 async def test_device_auth_failure(
@@ -39,6 +40,7 @@ async def test_device_auth_failure(
     freezer: FrozenDateTimeFactory,
     mock_ayla_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    mock_devices: list[AsyncMock],
 ) -> None:
     """Test entities become unavailable after auth failure with updating devices."""
     await setup_integration(hass, mock_config_entry)
@@ -50,8 +52,8 @@ async def test_device_auth_failure(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("climate.testserial123").state == STATE_UNAVAILABLE
-    assert hass.states.get("climate.testserial345").state == STATE_UNAVAILABLE
+    assert hass.states.get(entity_id(mock_devices[0])).state == STATE_UNAVAILABLE
+    assert hass.states.get(entity_id(mock_devices[1])).state == STATE_UNAVAILABLE
 
 
 async def test_token_expired(
