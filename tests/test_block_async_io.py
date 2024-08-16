@@ -295,7 +295,7 @@ async def test_protect_path_write_bytes(caplog: pytest.LogCaptureFixture) -> Non
 
 
 async def test_protect_path_write_text(caplog: pytest.LogCaptureFixture) -> None:
-    """Test write file text in the event loop logs."""
+    """Test writing file text in the event loop logs."""
     with patch.object(block_async_io, "_IN_TESTS", False):
         block_async_io.enable()
     with (
