@@ -1355,8 +1355,11 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         # We do this to avoid a circular dependency where async_finish_flow sets up a
         # new entry, which needs the integration to be set up, which is waiting for
         # init to be done.
-        init_done = self._pending_import_flows[flow.handler].get(flow.flow_id)
-        if init_done and not init_done.done():
+        if (
+            (handler_import_flows := self._pending_import_flows.get(flow.handler))
+            and (init_done := handler_import_flows.get(flow.flow_id))
+            and not init_done.done()
+        ):
             init_done.set_result(None)
 
         # Remove notification if no other discovery config entries in progress
