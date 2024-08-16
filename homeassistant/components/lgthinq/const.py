@@ -44,9 +44,9 @@ THINQ_DEFAULT_NAME: Final = "LG ThinQ"
 THINQ_PAT_URL: Final = "https://connect-pat.lgthinq.com"
 
 # Config Flow
-CLIENT_PREFIX: Final[str] = "home-assistant"
-CONF_CONNECT_CLIENT_ID: Final[str] = "connect_client_id"
-DEFAULT_COUNTRY: Final[str] = "US"
+CLIENT_PREFIX: Final = "home-assistant"
+CONF_CONNECT_CLIENT_ID: Final = "connect_client_id"
+DEFAULT_COUNTRY: Final = "US"
 
 # Device
 DEFAULT_TEMP_STEP: int = 1
