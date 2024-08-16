@@ -51,6 +51,22 @@ ATTR_THIS = "this"
 type PublishPayloadType = str | bytes | int | float | None
 
 
+def convert_outgoing_mqtt_payload(
+    payload: PublishPayloadType,
+) -> PublishPayloadType:
+    """Ensure correct raw MQTT payload is passed as bytes for publishing."""
+    if isinstance(payload, str) and payload.startswith(("b'", 'b"')):
+        try:
+            native_object = literal_eval(payload)
+        except (ValueError, TypeError, SyntaxError, MemoryError):
+            pass
+        else:
+            if isinstance(native_object, bytes):
+                return native_object
+
+    return payload
+
+
 @dataclass
 class PublishMessage:
     """MQTT Message for publishing."""
@@ -173,22 +189,6 @@ class MqttCommandTemplate:
         variables: TemplateVarsType = None,
     ) -> PublishPayloadType:
         """Render or convert the command template with given value or variables."""
-
-        def _convert_outgoing_payload(
-            payload: PublishPayloadType,
-        ) -> PublishPayloadType:
-            """Ensure correct raw MQTT payload is passed as bytes for publishing."""
-            if isinstance(payload, str):
-                try:
-                    native_object = literal_eval(payload)
-                    if isinstance(native_object, bytes):
-                        return native_object
-
-                except (ValueError, TypeError, SyntaxError, MemoryError):
-                    pass
-
-            return payload
-
         if self._command_template is None:
             return value
 
@@ -210,7 +210,7 @@ class MqttCommandTemplate:
             self._command_template,
         )
         try:
-            return _convert_outgoing_payload(
+            return convert_outgoing_mqtt_payload(
                 self._command_template.async_render(values, parse_result=False)
             )
         except TemplateError as exc:
