@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from viam.app.viam_client import ViamClient
 
-from homeassistant import config_entries
 from homeassistant.components.viam.config_flow import CannotConnect
 from homeassistant.components.viam.const import (
     CONF_API_ID,
@@ -18,6 +17,7 @@ from homeassistant.components.viam.const import (
     CRED_TYPE_LOCATION_SECRET,
     DOMAIN,
 )
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_ADDRESS, CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -34,10 +34,10 @@ async def test_user_form(
 ) -> None:
     """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "user"
 
@@ -47,7 +47,7 @@ async def test_user_form(
             CONF_CREDENTIAL_TYPE: CRED_TYPE_API_KEY,
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth_api_key"
     assert result["errors"] == {}
 
@@ -60,7 +60,7 @@ async def test_user_form(
             CONF_API_KEY: "randomSecureAPIKey",
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "robot"
 
@@ -70,9 +70,8 @@ async def test_user_form(
             CONF_ROBOT: mock_robot.id,
         },
     )
-    await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "home"
     assert result["data"] == {
         CONF_API_ID: "someTestId",
@@ -91,10 +90,10 @@ async def test_user_form_with_location_secret(
 ) -> None:
     """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "user"
 
@@ -104,7 +103,7 @@ async def test_user_form_with_location_secret(
             CONF_CREDENTIAL_TYPE: CRED_TYPE_LOCATION_SECRET,
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth_robot_location"
     assert result["errors"] == {}
 
@@ -115,7 +114,7 @@ async def test_user_form_with_location_secret(
             CONF_SECRET: "randomSecreteForRobot",
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "robot"
 
@@ -127,9 +126,8 @@ async def test_user_form_with_location_secret(
             CONF_ROBOT: mock_robot.id,
         },
     )
-    await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "home"
     assert result["data"] == {
         CONF_ADDRESS: "my.robot.cloud",
@@ -141,16 +139,10 @@ async def test_user_form_with_location_secret(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@patch(
-    "viam.app.viam_client.ViamClient.create_from_dial_options",
-    side_effect=CannotConnect,
-)
-async def test_form_missing_secret(
-    _mock_create_client: AsyncMock, hass: HomeAssistant
-) -> None:
+async def test_form_missing_secret(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -159,30 +151,31 @@ async def test_form_missing_secret(
             CONF_CREDENTIAL_TYPE: CRED_TYPE_API_KEY,
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth_api_key"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_API_ID: "someTestId",
-            CONF_API_KEY: "",
-        },
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "auth_api_key"
-    assert result["errors"] == {"base": "cannot_connect"}
+    with patch(
+        "viam.app.viam_client.ViamClient.create_from_dial_options",
+        side_effect=CannotConnect,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_ID: "someTestId",
+                CONF_API_KEY: "",
+            },
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "auth_api_key"
+        assert result["errors"] == {"base": "cannot_connect"}
 
 
-@patch.object(ViamClient, "create_from_dial_options", return_value=None)
 async def test_form_cannot_connect(
-    _mock_create_client: AsyncMock,
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -191,30 +184,26 @@ async def test_form_cannot_connect(
             CONF_CREDENTIAL_TYPE: CRED_TYPE_API_KEY,
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth_api_key"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_API_ID: "someTestId",
-            CONF_API_KEY: "randomSecureAPIKey",
-        },
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "auth_api_key"
-    assert result["errors"] == {"base": "cannot_connect"}
+    with patch.object(ViamClient, "create_from_dial_options", return_value=None):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_ID: "someTestId",
+                CONF_API_KEY: "randomSecureAPIKey",
+            },
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "auth_api_key"
+        assert result["errors"] == {"base": "cannot_connect"}
 
 
-@patch(
-    "viam.app.viam_client.ViamClient.create_from_dial_options", side_effect=Exception
-)
-async def test_form_exception(
-    _mock_create_client: AsyncMock, hass: HomeAssistant
-) -> None:
+async def test_form_exception(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -223,16 +212,20 @@ async def test_form_exception(
             CONF_CREDENTIAL_TYPE: CRED_TYPE_API_KEY,
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth_api_key"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_API_ID: "someTestId",
-            CONF_API_KEY: "randomSecureAPIKey",
-        },
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "auth_api_key"
-    assert result["errors"] == {"base": "unknown"}
+    with patch(
+        "viam.app.viam_client.ViamClient.create_from_dial_options",
+        side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_ID: "someTestId",
+                CONF_API_KEY: "randomSecureAPIKey",
+            },
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "auth_api_key"
+        assert result["errors"] == {"base": "unknown"}
