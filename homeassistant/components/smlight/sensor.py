@@ -29,7 +29,7 @@ from .entity import SmEntity
 class SmSensorEntityDescription(SensorEntityDescription):
     """Class describing SMLIGHT sensor entities."""
 
-    entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
+    entity_category = EntityCategory.DIAGNOSTIC
     value_fn: Callable[[Sensors], float | None]
 
 
@@ -91,7 +91,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up SMLIGHT sensor based on a config entry."""
-    coordinator: SmDataUpdateCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
 
     async_add_entities(
         SmSensorEntity(coordinator, description) for description in SENSORS
@@ -101,6 +101,8 @@ async def async_setup_entry(
 class SmSensorEntity(SmEntity, SensorEntity):
     """Representation of a slzb sensor."""
 
+    entity_description: SmSensorEntityDescription
+
     def __init__(
         self,
         coordinator: SmDataUpdateCoordinator,
@@ -109,7 +111,7 @@ class SmSensorEntity(SmEntity, SensorEntity):
         """Initiate slzb sensor."""
         super().__init__(coordinator)
 
-        self.entity_description: SmSensorEntityDescription = description
+        self.entity_description = description
         self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
         self._last_uptime: datetime | None = None
 

@@ -27,10 +27,10 @@ class SmData:
 
 class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData]):
     """Class to manage fetching SMLIGHT data."""
+    config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the coordinator."""
-        self.config_entry: ConfigEntry
         super().__init__(
             hass,
             LOGGER,

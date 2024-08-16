@@ -22,8 +22,7 @@ class SmEntity(CoordinatorEntity[SmDataUpdateCoordinator]):
         """Initialize entity with device."""
         super().__init__(coordinator)
         mac = format_mac(coordinator.data.info.MAC)
-        self._attr_device_info: DeviceInfo = DeviceInfo(
-            identifiers={(DOMAIN, mac)},
+        self._attr_device_info = DeviceInfo(
             configuration_url=f"http://{coordinator.client.host}",
             connections={(CONNECTION_NETWORK_MAC, mac)},
             manufacturer=ATTR_MANUFACTURER,
