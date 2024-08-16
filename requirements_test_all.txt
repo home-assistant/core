@@ -1238,7 +1238,7 @@ openerz-api==0.3.0
 openhomedevice==2.2.0
 
 # homeassistant.components.enigma2
-openwebifpy==4.2.5
+openwebifpy==4.2.7
 
 # homeassistant.components.opower
 opower==0.6.0
