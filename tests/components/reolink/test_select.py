@@ -39,7 +39,7 @@ async def test_floodlight_mode_select(
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.SELECT}.{TEST_NVR_NAME}_floodlight_mode"
-    assert hass.states.is_state(entity_id, "auto")
+    assert hass.states.get(entity_id).state == "auto"
 
     reolink_connect.set_whiteled = AsyncMock()
     await hass.services.async_call(
@@ -76,7 +76,7 @@ async def test_floodlight_mode_select(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.is_state(entity_id, STATE_UNKNOWN)
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
 async def test_play_quick_reply_message(
@@ -93,7 +93,7 @@ async def test_play_quick_reply_message(
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.SELECT}.{TEST_NVR_NAME}_play_quick_reply_message"
-    assert hass.states.is_state(entity_id, STATE_UNKNOWN)
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
     reolink_connect.play_quick_reply = AsyncMock()
     await hass.services.async_call(
@@ -120,7 +120,7 @@ async def test_chime_select(
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.SELECT}.test_chime_visitor_ringtone"
-    assert hass.states.is_state(entity_id, "pianokey")
+    assert hass.states.get(entity_id).state == "pianokey"
 
     test_chime.set_tone = AsyncMock()
     await hass.services.async_call(
@@ -155,4 +155,4 @@ async def test_chime_select(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.is_state(entity_id, STATE_UNKNOWN)
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN

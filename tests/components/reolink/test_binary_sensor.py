@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL, const
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
@@ -39,7 +39,7 @@ async def test_motion_sensor(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.is_state(entity_id, "off")
+    assert hass.states.get(entity_id).state == STATE_OFF
 
     # test webhook callback
     reolink_connect.motion_detected.return_value = True
@@ -48,4 +48,4 @@ async def test_motion_sensor(
     client = await hass_client_no_auth()
     await client.post(f"/api/webhook/{webhook_id}", data="test_data")
 
-    assert hass.states.is_state(entity_id, "on")
+    assert hass.states.get(entity_id).state == STATE_ON

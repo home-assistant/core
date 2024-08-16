@@ -118,14 +118,14 @@ async def test_firmware_error_twice(
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.UPDATE}.{TEST_NVR_NAME}_firmware"
-    assert hass.states.is_state(entity_id, STATE_OFF)
+    assert hass.states.get(entity_id).state == STATE_OFF
 
     async_fire_time_changed(
         hass, utcnow() + FIRMWARE_UPDATE_INTERVAL + timedelta(minutes=1)
     )
     await hass.async_block_till_done()
 
-    assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 async def test_credential_error_three(
