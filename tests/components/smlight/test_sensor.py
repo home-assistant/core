@@ -18,8 +18,8 @@ pytestmark = [
 @pytest.mark.parametrize(
     "entity_id",
     [
-        "sensor.slzb_06_core_soc_temp",
-        "sensor.slzb_06_zigbee_soc_temp",
+        "sensor.slzb_06_core_chip_temp",
+        "sensor.slzb_06_zigbee_chip_temp",
         "sensor.slzb_06_ram_usage",
         "sensor.slzb_06_filesystem_usage",
     ],
