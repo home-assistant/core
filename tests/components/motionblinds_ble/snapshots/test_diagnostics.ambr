@@ -3,7 +3,7 @@
   dict({
     'device': dict({
       '__type': "<class 'motionblindsble.device.MotionDevice'>",
-      'repr': '<motionblindsble.device.MotionDevice object at 0xffff8bb8bb60>',
+      'repr': '<motionblindsble.device.MotionDevice object at 0xffff90efd490>',
     }),
     'device_attributes': dict({
       '_battery_callbacks': list([
@@ -19,12 +19,12 @@
       '_connection_callbacks': list([
         dict({
           '__type': "<class 'function'>",
-          'repr': '<function MotionblindsBLESensorEntity.async_added_to_hass.<locals>.async_callback at 0xffffa872d940>',
+          'repr': '<function MotionblindsBLESensorEntity.async_added_to_hass.<locals>.async_callback at 0xffff91524680>',
         }),
       ]),
       '_connection_queue': dict({
         '__type': "<class 'motionblindsble.device.ConnectionQueue'>",
-        'repr': '<motionblindsble.device.ConnectionQueue object at 0xffff88deb8c0>',
+        'repr': '<motionblindsble.device.ConnectionQueue object at 0xffff90efddf0>',
       }),
       '_connection_type': dict({
         '__type': "<enum 'MotionConnectionType'>",
@@ -51,7 +51,7 @@
       ]),
       '_received_end_position_info_event': dict({
         '__type': "<class 'asyncio.locks.Event'>",
-        'repr': '<asyncio.locks.Event object at 0xffff8bb88bf0 [unset]>',
+        'repr': '<asyncio.locks.Event object at 0xffff90eff7a0 [unset]>',
       }),
       '_running_callbacks': list([
         dict({
@@ -62,7 +62,7 @@
       '_signal_strength_callbacks': list([
         dict({
           '__type': "<class 'function'>",
-          'repr': '<function MotionblindsBLESensorEntity.async_added_to_hass.<locals>.async_callback at 0xffffa872d1c0>',
+          'repr': '<function MotionblindsBLESensorEntity.async_added_to_hass.<locals>.async_callback at 0xffff91168ae0>',
         }),
       ]),
       '_speed_callbacks': list([
@@ -95,7 +95,7 @@
       }),
       'disabled_by': None,
       'domain': 'motionblinds_ble',
-      'entry_id': '01J5DH66FB0S633ST89WBHET11',
+      'entry_id': 'mock_entry_id',
       'minor_version': 1,
       'options': dict({
       }),
