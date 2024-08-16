@@ -2,76 +2,39 @@
 # name: test_diagnostics
   dict({
     'device': dict({
-      '__type': "<class 'motionblindsble.device.MotionDevice'>",
-    }),
-    'device_attributes': dict({
-      '_battery_callbacks': list([
-        dict({
-          '__type': "<class 'method'>",
-        }),
-      ]),
-      '_calibration_callbacks': list([
-      ]),
-      '_calibration_type': None,
-      '_connect_status_query_time': None,
-      '_connection_callbacks': list([
-        dict({
-          '__type': "<class 'function'>",
-        }),
-      ]),
-      '_connection_queue': dict({
-        '__type': "<class 'motionblindsble.device.ConnectionQueue'>",
+      'blind_type': 'Roller blind',
+      'callbacks': dict({
+        '_battery_callbacks': 1,
+        '_calibration_callbacks': 0,
+        '_connection_callbacks': 1,
+        '_disabled_connection_callbacks': 0,
+        '_end_position_callbacks': 0,
+        '_feedback_callbacks': 0,
+        '_position_callbacks': 1,
+        '_running_callbacks': 1,
+        '_signal_strength_callbacks': 1,
+        '_speed_callbacks': 1,
+        '_status_callbacks': 0,
       }),
-      '_connection_type': dict({
-        '__type': "<enum 'MotionConnectionType'>",
-      }),
-      '_current_bleak_client': None,
-      '_custom_setting_disconnect_time': None,
-      '_disabled_connection_callbacks': list([
-      ]),
-      '_disconnect_time': None,
-      '_disconnect_timer': None,
-      '_end_position_callbacks': list([
-      ]),
-      '_end_position_info': None,
-      '_feedback_callbacks': list([
-      ]),
-      '_permanent_connection': False,
-      '_position': None,
-      '_position_callbacks': list([
-        dict({
-          '__type': "<class 'method'>",
-        }),
-      ]),
-      '_received_end_position_info_event': dict({
-        '__type': "<class 'asyncio.locks.Event'>",
-      }),
-      '_running_callbacks': list([
-        dict({
-          '__type': "<class 'method'>",
-        }),
-      ]),
-      '_signal_strength_callbacks': list([
-        dict({
-          '__type': "<class 'function'>",
-        }),
-      ]),
-      '_speed_callbacks': list([
-        dict({
-          '__type': "<class 'method'>",
-        }),
-      ]),
-      '_status_callbacks': list([
-      ]),
-      '_tilt': None,
-      'ble_device': dict({
-        '__type': "<class 'bleak.backends.device.BLEDevice'>",
-      }),
-      'blind_type': dict({
-        '__type': "<enum 'MotionBlindType'>",
+      'connection': dict({
+        '_connect_status_query_time': None,
+        '_connection_type': 'disconnected',
+        '_custom_setting_disconnect_time': None,
+        '_disconnect_time': None,
+        '_permanent_connection': False,
+        'has_ble_device': True,
+        'has_bleak_client': False,
+        'has_disconnect_timer': False,
+        'is_set_received_end_position_info_event': False,
+        'rssi': None,
       }),
       'display_name': 'Motionblind cccc',
-      'rssi': None,
+      'states': dict({
+        '_calibration_type': None,
+        '_end_position_info': None,
+        '_position': None,
+        '_tilt': None,
+      }),
       'timezone': None,
     }),
     'entry': dict({
