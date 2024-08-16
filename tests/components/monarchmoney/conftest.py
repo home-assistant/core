@@ -1,13 +1,17 @@
 """Common fixtures for the Monarch Money tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch, PropertyMock
+import json
+from typing import Any
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
 
-from homeassistant.const import CONF_TOKEN
-from tests.common import MockConfigEntry
 from homeassistant.components.monarchmoney.const import DOMAIN
+from homeassistant.const import CONF_TOKEN
+
+from tests.common import MockConfigEntry, load_fixture
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
@@ -16,6 +20,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         "homeassistant.components.monarchmoney.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
+
 
 @pytest.fixture
 async def mock_config_entry() -> MockConfigEntry:
@@ -28,20 +33,32 @@ async def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_api() -> Generator[AsyncMock]:
+def mock_config_api() -> Generator[AsyncMock]:
     """Mock the MonarchMoney class."""
-    with patch("homeassistant.components.monarchmoney.config_flow.MonarchMoney", autospec=True) as mock_class:
+
+    account_data: dict[str, Any] = json.loads(load_fixture("get_accounts.json", DOMAIN))
+
+    with (
+        patch(
+            "homeassistant.components.monarchmoney.config_flow.MonarchMoney",
+            autospec=True,
+        ) as mock_class,
+        patch("homeassistant.components.monarchmoney.MonarchMoney", new=mock_class),
+    ):
         instance = mock_class.return_value
         type(instance).token = PropertyMock(return_value="mocked_token")
         instance.login = AsyncMock(return_value=None)
-        instance.get_subscription_details = AsyncMock(return_value={
-            'subscription': {
-                'id': '123456789',
-                'paymentSource': 'STRIPE',
-                'referralCode': 'go3dpvrdmw',
-                'isOnFreeTrial': False,
-                'hasPremiumEntitlement': True,
-                '__typename': 'HouseholdSubscription'
+        instance.get_subscription_details = AsyncMock(
+            return_value={
+                "subscription": {
+                    "id": "123456789",
+                    "paymentSource": "STRIPE",
+                    "referralCode": "go3dpvrdmw",
+                    "isOnFreeTrial": False,
+                    "hasPremiumEntitlement": True,
+                    "__typename": "HouseholdSubscription",
+                }
             }
-        })
+        )
+        instance.get_accounts = AsyncMock(return_value=account_data)
         yield mock_class

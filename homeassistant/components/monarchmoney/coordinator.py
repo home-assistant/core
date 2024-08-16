@@ -36,6 +36,7 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[AccountData]):
     @property
     def accounts(self) -> Any:
         """Return accounts."""
+
         return self.data["accounts"]
 
     def get_account_for_id(self, account_id: str) -> Any | None:

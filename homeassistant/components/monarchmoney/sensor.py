@@ -19,8 +19,6 @@ from homeassistant.helpers.typing import StateType
 from . import MonarchMoneyConfigEntry
 from .const import LOGGER
 from .entity import MonarchMoneyEntity
-from ..tuya.const import unit_alias
-from ...helpers.config_validation import currency
 
 
 def _type_to_icon(account: Any) -> str:

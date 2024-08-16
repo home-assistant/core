@@ -29,7 +29,10 @@ class MonarchMoneyEntity(CoordinatorEntity[MonarchMoneyDataUpdateCoordinator]):
 
         # Parse out some fields
         institution = account["institution"]["name"]
-        provider = account["credential"]["dataProvider"]
+
+        provider = account.get("dataProvider", "Manual input")
+        if account.get("credential") is not None:
+            provider = account["credential"].get("dataProvider", provider)
 
         self._attr_attribution = f"Data provided by Monarch Money API via {provider}"
 
