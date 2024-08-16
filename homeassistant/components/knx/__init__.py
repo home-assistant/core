@@ -149,16 +149,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_HASS_CONFIG] = config
     conf: ConfigType | None = config.get(DOMAIN)
 
-    if conf is None:
+    if conf:
+        hass.data[DATA_KNX_CONFIG] = dict(conf)
+    elif not hass.config_entries.async_entries(DOMAIN):
         # If we have a config entry, setup is done by that config entry.
-        # If there is no config entry, this should fail.
-        return bool(hass.config_entries.async_entries(DOMAIN))
-
-    conf = dict(conf)
-    hass.data[DATA_KNX_CONFIG] = conf
+        # If there is no config entry and no yaml config, setup should fail.
+        return False
 
     register_knx_services(hass)
-
     return True
 
 
