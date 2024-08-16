@@ -33,10 +33,10 @@
   "entity": {
     "sensor": {
       "zigbee_temperature": {
-        "name": "Zigbee SoC temp"
+        "name": "Zigbee chip temp"
       },
       "core_temperature": {
-        "name": "Core SoC temp"
+        "name": "Core chip temp"
       },
       "fs_usage": {
         "name": "Filesystem usage"
@@ -49,9 +49,6 @@
       },
       "socket_uptime": {
         "name": "Zigbee uptime"
-      },
-      "wifi_status": {
-        "name": "Wi-Fi status"
       }
     }
   }

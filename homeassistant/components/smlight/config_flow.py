@@ -45,9 +45,9 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self.host = user_input[CONF_HOST]
-            assert self.host is not None
-            self.client = Api2(self.host, session=async_get_clientsession(self.hass))
+            host = user_input[CONF_HOST]
+            self.client = Api2(host, session=async_get_clientsession(self.hass))
+            self.host = host
 
             try:
                 if not await self._async_check_auth_required(user_input):
@@ -66,7 +66,6 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle authentication to SLZB-06 device."""
         errors: dict[str, str] = {}
-        self.context["confirm_only"] = False
 
         if user_input is not None:
             try:
