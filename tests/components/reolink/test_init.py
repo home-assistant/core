@@ -112,7 +112,7 @@ async def test_firmware_error_twice(
         side_effect=ReolinkError("Test error")
     )
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.UPDATE]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
@@ -136,7 +136,7 @@ async def test_credential_error_three(
 ) -> None:
     """Test when the update gives credential error 3 times."""
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 

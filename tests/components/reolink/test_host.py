@@ -28,7 +28,7 @@ async def test_webhook_callback(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test webhook callback with motion sensor."""
-    assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
