@@ -1,6 +1,6 @@
 """Tests for the Smart Meter B-Route sensor."""
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import Mock
 
 import pytest
 
@@ -9,9 +9,9 @@ from homeassistant.components.smart_meter_b_route.coordinator import (
 )
 from homeassistant.components.smart_meter_b_route.sensor import (
     SENSOR_DESCRIPTIONS,
-    SmartMeterBRouteSensor,
     async_setup_entry,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import configure_integration
@@ -32,50 +32,41 @@ async def test_async_setup_entry(hass: HomeAssistant, mock_momonga) -> None:
 
 
 @pytest.mark.parametrize(
-    ("index"),
+    ("index", "entity_id"),
     [
-        (0),
-        (1),
-        (2),
-        (3),
+        (0, "sensor.smart_meter_b_route_current_r_phase"),
+        (1, "sensor.smart_meter_b_route_current_t_phase"),
+        (2, "sensor.smart_meter_b_route_power"),
+        (3, "sensor.smart_meter_b_route_total_consumption"),
     ],
 )
 async def test_smart_meter_b_route_sensor_update(
-    hass: HomeAssistant, index: int, mock_momonga
+    hass: HomeAssistant, index: int, entity_id: str, mock_momonga
 ) -> None:
     """Test SmartMeterBRouteSensor update."""
     config_entry = configure_integration(hass)
+    assert config_entry.state is ConfigEntryState.LOADED
     coordinator: BRouteUpdateCoordinator = config_entry.runtime_data
     await coordinator.async_refresh()
-
-    description = SENSOR_DESCRIPTIONS[index]
-    sensor = SmartMeterBRouteSensor(coordinator, description)
-    sensor.async_write_ha_state = AsyncMock()
-
-    sensor._handle_coordinator_update()
     await hass.async_block_till_done()
 
-    assert sensor.state == index + 1
-    assert sensor.native_unit_of_measurement == description.native_unit_of_measurement
-    assert sensor.device_class == description.device_class
-
-    sensor.async_write_ha_state.assert_called()
+    entity = hass.states.get(entity_id)
+    assert entity.state == index + 1
+    mock_momonga.assert_called()
 
 
 async def test_smart_meter_b_route_sensor_no_update(
     hass: HomeAssistant, mock_momonga
 ) -> None:
     """Test SmartMeterBRouteSensor with no update."""
+    entity_id = "sensor.smart_meter_b_route_current_r_phase"
     config_entry = configure_integration(hass)
-    coordinator = config_entry.runtime_data
-
-    sensor = SmartMeterBRouteSensor(coordinator, SENSOR_DESCRIPTIONS[0])
-    sensor.async_write_ha_state = AsyncMock()
+    assert config_entry.state is ConfigEntryState.LOADED
+    coordinator: BRouteUpdateCoordinator = config_entry.runtime_data
 
     coordinator.data = {}
-    sensor._handle_coordinator_update()
     await hass.async_block_till_done()
 
-    assert sensor.state is None
-
-    sensor.async_write_ha_state.assert_not_called()
+    entity = hass.states.get(entity_id)
+    assert entity.state is None
+    mock_momonga.assert_not_called()
