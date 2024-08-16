@@ -666,7 +666,7 @@ class PlexServer:
         """Return active session information for use in activity sensor."""
         return {x.sensor_user: x.sensor_title for x in self.active_sessions.values()}
 
-    def set_plex_server(self, plex_server: PlexServer):
+    def set_plex_server(self, plex_server: PlexServer) -> None:
         """Set the PlexServer instance."""
         self._plex_server = plex_server
 
