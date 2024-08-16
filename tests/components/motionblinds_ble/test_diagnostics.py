@@ -10,10 +10,6 @@ from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
-# import logging
-
-# logger = logging.getLogger(__name__)
-
 
 async def test_diagnostics(
     hass: HomeAssistant,
