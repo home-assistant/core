@@ -61,7 +61,7 @@ class LGDevice:
         # The device name is usually set to 'alias'.
         # But, if the sub_id exists, it will be set to 'alias {sub_id}'.
         # e.g. alias='MyWashTower', sub_id='dryer' then 'MyWashTower dryer'.
-        self._name = f"{api.alias} {self._sub_id}" if self._sub_id else f"{api.alias}"
+        self._name = f"{api.alias} {self._sub_id}" if self._sub_id else api.alias
 
         # The unique id is usually set to 'device_id'.
         # But, if the sub_id exists, it will be set to 'device_id_{sub_id}'.
