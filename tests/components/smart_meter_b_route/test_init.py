@@ -40,5 +40,5 @@ async def test_async_setup_entry_error(
         await hass.async_block_till_done()
         assert entry.state is ConfigEntryState.SETUP_ERROR
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-        await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
