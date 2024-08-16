@@ -9,27 +9,15 @@ import logging
 import uuid
 
 from thinqconnect.thinq_api import ThinQApiResponse
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_DEVICE_ID,
-    CONF_ACCESS_TOKEN,
-    CONF_COUNTRY,
-    Platform,
-)
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_COUNTRY, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    CLIENT_PREFIX,
-    CONF_CONNECT_CLIENT_ID,
-    DEFAULT_COUNTRY,
-    DOMAIN,
-    SERVICE_ATTR_VALUE,
-)
+from .const import CLIENT_PREFIX, CONF_CONNECT_CLIENT_ID, DEFAULT_COUNTRY, DOMAIN
 from .device import LGDevice, async_setup_lg_device
 from .thinq import ThinQ
 

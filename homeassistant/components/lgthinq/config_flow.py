@@ -62,7 +62,7 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _validate_and_create_entry(self) -> ConfigFlowResult:
         """Create an entry for the flow."""
-        connect_client_id: str = f"{CLIENT_PREFIX}-{uuid.uuid4()!s}"
+        connect_client_id = f"{CLIENT_PREFIX}-{uuid.uuid4()!s}"
 
         # To verify PAT, create an api to retrieve the device list.
         api = ThinQApi(
@@ -122,7 +122,7 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_region(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the seleting the country and language."""
+        """Handle the selecting the country and language."""
         if user_input is None:
             return self.async_show_form(
                 step_id="region",
