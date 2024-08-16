@@ -219,7 +219,7 @@ async def test_protect_loop_open(caplog: pytest.LogCaptureFixture) -> None:
 
 
 async def test_protect_loop_path_open(caplog: pytest.LogCaptureFixture) -> None:
-    """Test open of a file in /proc is not reported."""
+    """Test opening a file in /proc is not reported."""
     block_async_io.enable()
     with (
         contextlib.suppress(FileNotFoundError),
