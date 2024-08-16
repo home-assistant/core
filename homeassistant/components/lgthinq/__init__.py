@@ -69,7 +69,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> bool:
     """Set up an entry."""
-    _LOGGER.warning("Starting set up entry")
 
     # Validate entry data.
     client_id = entry.data.get(CONF_CONNECT_CLIENT_ID)
