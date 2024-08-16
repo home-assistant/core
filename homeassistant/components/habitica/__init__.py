@@ -82,7 +82,7 @@ INSTANCE_LIST_SCHEMA = vol.All(
 )
 CONFIG_SCHEMA = vol.Schema({DOMAIN: INSTANCE_LIST_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.BUTTON, Platform.SENSOR, Platform.SWITCH, Platform.TODO]
 
 SERVICE_API_CALL_SCHEMA = vol.Schema(
     {

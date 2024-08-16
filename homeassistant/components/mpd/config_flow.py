@@ -32,7 +32,9 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input:
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
             client = MPDClient()
             client.timeout = 30
             client.idletimeout = 10

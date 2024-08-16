@@ -145,4 +145,20 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(clusters.BooleanState.Attributes.StateValue,),
         device_type=(device_types.RainSensor,),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="LockDoorStateSensor",
+            device_class=BinarySensorDeviceClass.DOOR,
+            # pylint: disable=unnecessary-lambda
+            measurement_to_ha=lambda x: {
+                clusters.DoorLock.Enums.DoorStateEnum.kDoorOpen: True,
+                clusters.DoorLock.Enums.DoorStateEnum.kDoorJammed: True,
+                clusters.DoorLock.Enums.DoorStateEnum.kDoorForcedOpen: True,
+                clusters.DoorLock.Enums.DoorStateEnum.kDoorClosed: False,
+            }.get(x),
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.DoorLock.Attributes.DoorState,),
+    ),
 ]

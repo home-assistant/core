@@ -25,7 +25,7 @@ from yalexs.activity import (
     DoorOperationActivity,
     LockOperationActivity,
 )
-from yalexs.authenticator import AuthenticationState
+from yalexs.authenticator_common import AuthenticationState
 from yalexs.const import Brand
 from yalexs.doorbell import Doorbell, DoorbellDetail
 from yalexs.lock import Lock, LockDetail
@@ -56,6 +56,10 @@ def _mock_authenticator(auth_state):
     authenticator = MagicMock()
     type(authenticator).state = PropertyMock(return_value=auth_state)
     return authenticator
+
+
+def _timetoken():
+    return str(time.time_ns())[:-2]
 
 
 @patch("yalexs.manager.gateway.ApiAsync")

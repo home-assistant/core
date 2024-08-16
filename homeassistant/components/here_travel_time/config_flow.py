@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from here_routing import (
     HERERoutingApi,
@@ -104,6 +104,8 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Init Config Flow."""
         self._config: dict[str, Any] = {}
+        self._entry: ConfigEntry | None = None
+        self._is_reconfigure_flow: bool = False
 
     @staticmethod
     @callback
@@ -119,20 +121,35 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         user_input = user_input or {}
-        if user_input:
-            try:
-                await async_validate_api_key(user_input[CONF_API_KEY])
-            except HERERoutingUnauthorizedError:
-                errors["base"] = "invalid_auth"
-            except (HERERoutingError, HERETransitError):
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            if not errors:
-                self._config = user_input
-                return await self.async_step_origin_menu()
+        if not self._is_reconfigure_flow:  # Always show form first for reconfiguration
+            if user_input:
+                try:
+                    await async_validate_api_key(user_input[CONF_API_KEY])
+                except HERERoutingUnauthorizedError:
+                    errors["base"] = "invalid_auth"
+                except (HERERoutingError, HERETransitError):
+                    _LOGGER.exception("Unexpected exception")
+                    errors["base"] = "unknown"
+                if not errors:
+                    self._config[CONF_NAME] = user_input[CONF_NAME]
+                    self._config[CONF_API_KEY] = user_input[CONF_API_KEY]
+                    self._config[CONF_MODE] = user_input[CONF_MODE]
+                    return await self.async_step_origin_menu()
+        self._is_reconfigure_flow = False
         return self.async_show_form(
             step_id="user", data_schema=get_user_step_schema(user_input), errors=errors
         )
+
+    async def async_step_reconfigure(
+        self, _: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        self._is_reconfigure_flow = True
+        self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        if TYPE_CHECKING:
+            assert self._entry
+        self._config = self._entry.data.copy()
+        return await self.async_step_user(self._config)
 
     async def async_step_origin_menu(self, _: None = None) -> ConfigFlowResult:
         """Show the origin menu."""
@@ -150,26 +167,27 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
             self._config[CONF_ORIGIN_LONGITUDE] = user_input[CONF_ORIGIN][
                 CONF_LONGITUDE
             ]
+            # Remove possible previous configuration using an entity_id
+            self._config.pop(CONF_ORIGIN_ENTITY_ID, None)
             return await self.async_step_destination_menu()
-        schema = vol.Schema(
+        schema = self.add_suggested_values_to_schema(
+            vol.Schema(
+                {
+                    vol.Required(
+                        CONF_ORIGIN,
+                    ): LocationSelector()
+                }
+            ),
             {
-                vol.Required(
-                    CONF_ORIGIN,
-                    default={
-                        CONF_LATITUDE: self.hass.config.latitude,
-                        CONF_LONGITUDE: self.hass.config.longitude,
-                    },
-                ): LocationSelector()
-            }
+                CONF_ORIGIN: {
+                    CONF_LATITUDE: self._config.get(CONF_ORIGIN_LATITUDE)
+                    or self.hass.config.latitude,
+                    CONF_LONGITUDE: self._config.get(CONF_ORIGIN_LONGITUDE)
+                    or self.hass.config.longitude,
+                }
+            },
         )
         return self.async_show_form(step_id="origin_coordinates", data_schema=schema)
-
-    async def async_step_destination_menu(self, _: None = None) -> ConfigFlowResult:
-        """Show the destination menu."""
-        return self.async_show_menu(
-            step_id="destination_menu",
-            menu_options=["destination_coordinates", "destination_entity"],
-        )
 
     async def async_step_origin_entity(
         self, user_input: dict[str, Any] | None = None
@@ -177,9 +195,28 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
         """Configure origin by using an entity."""
         if user_input is not None:
             self._config[CONF_ORIGIN_ENTITY_ID] = user_input[CONF_ORIGIN_ENTITY_ID]
+            # Remove possible previous configuration using coordinates
+            self._config.pop(CONF_ORIGIN_LATITUDE, None)
+            self._config.pop(CONF_ORIGIN_LONGITUDE, None)
             return await self.async_step_destination_menu()
-        schema = vol.Schema({vol.Required(CONF_ORIGIN_ENTITY_ID): EntitySelector()})
+        schema = self.add_suggested_values_to_schema(
+            vol.Schema(
+                {
+                    vol.Required(
+                        CONF_ORIGIN_ENTITY_ID,
+                    ): EntitySelector()
+                }
+            ),
+            {CONF_ORIGIN_ENTITY_ID: self._config.get(CONF_ORIGIN_ENTITY_ID)},
+        )
         return self.async_show_form(step_id="origin_entity", data_schema=schema)
+
+    async def async_step_destination_menu(self, _: None = None) -> ConfigFlowResult:
+        """Show the destination menu."""
+        return self.async_show_menu(
+            step_id="destination_menu",
+            menu_options=["destination_coordinates", "destination_entity"],
+        )
 
     async def async_step_destination_coordinates(
         self,
@@ -193,21 +230,36 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
             self._config[CONF_DESTINATION_LONGITUDE] = user_input[CONF_DESTINATION][
                 CONF_LONGITUDE
             ]
+            # Remove possible previous configuration using an entity_id
+            self._config.pop(CONF_DESTINATION_ENTITY_ID, None)
+            if self._entry:
+                return self.async_update_reload_and_abort(
+                    self._entry,
+                    title=self._config[CONF_NAME],
+                    data=self._config,
+                    reason="reconfigure_successful",
+                )
             return self.async_create_entry(
                 title=self._config[CONF_NAME],
                 data=self._config,
                 options=DEFAULT_OPTIONS,
             )
-        schema = vol.Schema(
+        schema = self.add_suggested_values_to_schema(
+            vol.Schema(
+                {
+                    vol.Required(
+                        CONF_DESTINATION,
+                    ): LocationSelector()
+                }
+            ),
             {
-                vol.Required(
-                    CONF_DESTINATION,
-                    default={
-                        CONF_LATITUDE: self.hass.config.latitude,
-                        CONF_LONGITUDE: self.hass.config.longitude,
-                    },
-                ): LocationSelector()
-            }
+                CONF_DESTINATION: {
+                    CONF_LATITUDE: self._config.get(CONF_DESTINATION_LATITUDE)
+                    or self.hass.config.latitude,
+                    CONF_LONGITUDE: self._config.get(CONF_DESTINATION_LONGITUDE)
+                    or self.hass.config.longitude,
+                },
+            },
         )
         return self.async_show_form(
             step_id="destination_coordinates", data_schema=schema
@@ -222,13 +274,27 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
             self._config[CONF_DESTINATION_ENTITY_ID] = user_input[
                 CONF_DESTINATION_ENTITY_ID
             ]
+            # Remove possible previous configuration using coordinates
+            self._config.pop(CONF_DESTINATION_LATITUDE, None)
+            self._config.pop(CONF_DESTINATION_LONGITUDE, None)
+            if self._entry:
+                return self.async_update_reload_and_abort(
+                    self._entry, data=self._config, reason="reconfigure_successful"
+                )
             return self.async_create_entry(
                 title=self._config[CONF_NAME],
                 data=self._config,
                 options=DEFAULT_OPTIONS,
             )
-        schema = vol.Schema(
-            {vol.Required(CONF_DESTINATION_ENTITY_ID): EntitySelector()}
+        schema = self.add_suggested_values_to_schema(
+            vol.Schema(
+                {
+                    vol.Required(
+                        CONF_DESTINATION_ENTITY_ID,
+                    ): EntitySelector()
+                }
+            ),
+            {CONF_DESTINATION_ENTITY_ID: self._config.get(CONF_DESTINATION_ENTITY_ID)},
         )
         return self.async_show_form(step_id="destination_entity", data_schema=schema)
 
@@ -249,15 +315,22 @@ class HERETravelTimeOptionsFlow(OptionsFlow):
             self._config = user_input
             return await self.async_step_time_menu()
 
-        schema = vol.Schema(
+        schema = self.add_suggested_values_to_schema(
+            vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_ROUTE_MODE,
+                        default=self.config_entry.options.get(
+                            CONF_ROUTE_MODE, DEFAULT_OPTIONS[CONF_ROUTE_MODE]
+                        ),
+                    ): vol.In(ROUTE_MODES),
+                }
+            ),
             {
-                vol.Optional(
-                    CONF_ROUTE_MODE,
-                    default=self.config_entry.options.get(
-                        CONF_ROUTE_MODE, DEFAULT_OPTIONS[CONF_ROUTE_MODE]
-                    ),
-                ): vol.In(ROUTE_MODES),
-            }
+                CONF_ROUTE_MODE: self.config_entry.options.get(
+                    CONF_ROUTE_MODE, DEFAULT_OPTIONS[CONF_ROUTE_MODE]
+                ),
+            },
         )
 
         return self.async_show_form(step_id="init", data_schema=schema)
@@ -283,8 +356,11 @@ class HERETravelTimeOptionsFlow(OptionsFlow):
             self._config[CONF_ARRIVAL_TIME] = user_input[CONF_ARRIVAL_TIME]
             return self.async_create_entry(title="", data=self._config)
 
-        schema = vol.Schema(
-            {vol.Required(CONF_ARRIVAL_TIME, default="00:00:00"): TimeSelector()}
+        schema = self.add_suggested_values_to_schema(
+            vol.Schema(
+                {vol.Required(CONF_ARRIVAL_TIME, default="00:00:00"): TimeSelector()}
+            ),
+            {CONF_ARRIVAL_TIME: "00:00:00"},
         )
 
         return self.async_show_form(step_id="arrival_time", data_schema=schema)
@@ -297,8 +373,11 @@ class HERETravelTimeOptionsFlow(OptionsFlow):
             self._config[CONF_DEPARTURE_TIME] = user_input[CONF_DEPARTURE_TIME]
             return self.async_create_entry(title="", data=self._config)
 
-        schema = vol.Schema(
-            {vol.Required(CONF_DEPARTURE_TIME, default="00:00:00"): TimeSelector()}
+        schema = self.add_suggested_values_to_schema(
+            vol.Schema(
+                {vol.Required(CONF_DEPARTURE_TIME, default="00:00:00"): TimeSelector()}
+            ),
+            {CONF_DEPARTURE_TIME: "00:00:00"},
         )
 
         return self.async_show_form(step_id="departure_time", data_schema=schema)

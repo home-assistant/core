@@ -9,15 +9,15 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.util.uuid import random_uuid_hex
 
+from . import JellyfinConfigEntry
 from .client_wrapper import CannotConnect, InvalidAuth, create_client, validate_input
 from .const import CONF_CLIENT_DEVICE_ID, DOMAIN, SUPPORTED_AUDIO_CODECS
 
@@ -56,7 +56,7 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the Jellyfin config flow."""
         self.client_device_id: str | None = None
-        self.entry: ConfigEntry | None = None
+        self.entry: JellyfinConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -97,7 +97,11 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
+            ),
+            errors=errors,
         )
 
     async def async_step_reauth(
@@ -142,17 +146,15 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(
+        config_entry: JellyfinConfigEntry,
+    ) -> OptionsFlowWithConfigEntry:
         """Create the options flow."""
         return OptionsFlowHandler(config_entry)
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithConfigEntry):
     """Handle an option flow for jellyfin."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

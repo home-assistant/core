@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
     "error": {
       "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -235,6 +238,9 @@
       },
       "vehicle_state_rt": {
         "name": "Trunk"
+      },
+      "vehicle_state_sun_roof_state": {
+        "name": "Sunroof"
       }
     },
     "select": {
@@ -294,6 +300,24 @@
       },
       "climate_state_seat_heater_third_row_right": {
         "name": "Seat heater third row right",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+        }
+      },
+      "climate_state_seat_fan_front_left": {
+        "name": "Seat cooler left",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+        }
+      },
+      "climate_state_seat_fan_front_right": {
+        "name": "Seat cooler right",
         "state": {
           "off": "[%key:common::state::off%]",
           "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",

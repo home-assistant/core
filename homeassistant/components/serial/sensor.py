@@ -93,9 +93,7 @@ async def async_setup_platform(
     xonxoff = config.get(CONF_XONXOFF)
     rtscts = config.get(CONF_RTSCTS)
     dsrdtr = config.get(CONF_DSRDTR)
-
-    if (value_template := config.get(CONF_VALUE_TEMPLATE)) is not None:
-        value_template.hass = hass
+    value_template = config.get(CONF_VALUE_TEMPLATE)
 
     sensor = SerialSensor(
         name,

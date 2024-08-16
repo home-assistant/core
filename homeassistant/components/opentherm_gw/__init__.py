@@ -470,3 +470,8 @@ class OpenThermGatewayDevice:
             async_dispatcher_send(self.hass, self.update_signal, status)
 
         self.gateway.subscribe(handle_report)
+
+    @property
+    def connected(self):
+        """Report whether or not we are connected to the gateway."""
+        return self.gateway.connection.connected

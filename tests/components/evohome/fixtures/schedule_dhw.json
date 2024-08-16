@@ -1,0 +1,81 @@
+{
+  "dailySchedules": [
+    {
+      "dayOfWeek": "Monday",
+      "switchpoints": [
+        { "dhwState": "On", "timeOfDay": "06:30:00" },
+        { "dhwState": "Off", "timeOfDay": "08:30:00" },
+        { "dhwState": "On", "timeOfDay": "12:00:00" },
+        { "dhwState": "Off", "timeOfDay": "13:00:00" },
+        { "dhwState": "On", "timeOfDay": "16:30:00" },
+        { "dhwState": "Off", "timeOfDay": "22:30:00" }
+      ]
+    },
+    {
+      "dayOfWeek": "Tuesday",
+      "switchpoints": [
+        { "dhwState": "On", "timeOfDay": "06:30:00" },
+        { "dhwState": "Off", "timeOfDay": "08:30:00" },
+        { "dhwState": "On", "timeOfDay": "12:00:00" },
+        { "dhwState": "Off", "timeOfDay": "13:00:00" },
+        { "dhwState": "On", "timeOfDay": "16:30:00" },
+        { "dhwState": "Off", "timeOfDay": "22:30:00" }
+      ]
+    },
+    {
+      "dayOfWeek": "Wednesday",
+      "switchpoints": [
+        { "dhwState": "On", "timeOfDay": "06:30:00" },
+        { "dhwState": "Off", "timeOfDay": "08:30:00" },
+        { "dhwState": "On", "timeOfDay": "12:00:00" },
+        { "dhwState": "Off", "timeOfDay": "13:00:00" },
+        { "dhwState": "On", "timeOfDay": "16:30:00" },
+        { "dhwState": "Off", "timeOfDay": "22:30:00" }
+      ]
+    },
+    {
+      "dayOfWeek": "Thursday",
+      "switchpoints": [
+        { "dhwState": "On", "timeOfDay": "06:30:00" },
+        { "dhwState": "Off", "timeOfDay": "08:30:00" },
+        { "dhwState": "On", "timeOfDay": "12:00:00" },
+        { "dhwState": "Off", "timeOfDay": "13:00:00" },
+        { "dhwState": "On", "timeOfDay": "16:30:00" },
+        { "dhwState": "Off", "timeOfDay": "22:30:00" }
+      ]
+    },
+    {
+      "dayOfWeek": "Friday",
+      "switchpoints": [
+        { "dhwState": "On", "timeOfDay": "06:30:00" },
+        { "dhwState": "Off", "timeOfDay": "08:30:00" },
+        { "dhwState": "On", "timeOfDay": "12:00:00" },
+        { "dhwState": "Off", "timeOfDay": "13:00:00" },
+        { "dhwState": "On", "timeOfDay": "16:30:00" },
+        { "dhwState": "Off", "timeOfDay": "22:30:00" }
+      ]
+    },
+    {
+      "dayOfWeek": "Saturday",
+      "switchpoints": [
+        { "dhwState": "On", "timeOfDay": "06:30:00" },
+        { "dhwState": "Off", "timeOfDay": "09:30:00" },
+        { "dhwState": "On", "timeOfDay": "12:00:00" },
+        { "dhwState": "Off", "timeOfDay": "13:00:00" },
+        { "dhwState": "On", "timeOfDay": "16:30:00" },
+        { "dhwState": "Off", "timeOfDay": "23:00:00" }
+      ]
+    },
+    {
+      "dayOfWeek": "Sunday",
+      "switchpoints": [
+        { "dhwState": "On", "timeOfDay": "06:30:00" },
+        { "dhwState": "Off", "timeOfDay": "09:30:00" },
+        { "dhwState": "On", "timeOfDay": "12:00:00" },
+        { "dhwState": "Off", "timeOfDay": "13:00:00" },
+        { "dhwState": "On", "timeOfDay": "16:30:00" },
+        { "dhwState": "Off", "timeOfDay": "23:00:00" }
+      ]
+    }
+  ]
+}

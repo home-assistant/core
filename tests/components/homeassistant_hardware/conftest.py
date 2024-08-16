@@ -11,7 +11,7 @@ import pytest
 def mock_zha_config_flow_setup() -> Generator[None]:
     """Mock the radio connection and probing of the ZHA config flow."""
 
-    def mock_probe(config: dict[str, Any]) -> None:
+    def mock_probe(config: dict[str, Any]) -> dict[str, Any]:
         # The radio probing will return the correct baudrate
         return {**config, "baudrate": 115200}
 

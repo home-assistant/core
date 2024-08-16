@@ -35,7 +35,7 @@ async def test_scene(
     assert test_entity.attributes["group_type"] == "zone"
     assert test_entity.attributes["name"] == "Dynamic Test Scene"
     assert test_entity.attributes["speed"] == 0.6269841194152832
-    assert test_entity.attributes["brightness"] == 46.85
+    assert test_entity.attributes["brightness"] == 119
     assert test_entity.attributes["is_dynamic"] is True
 
     # test (regular) scene for a hue room
@@ -47,7 +47,7 @@ async def test_scene(
     assert test_entity.attributes["group_type"] == "room"
     assert test_entity.attributes["name"] == "Regular Test Scene"
     assert test_entity.attributes["speed"] == 0.5
-    assert test_entity.attributes["brightness"] == 100.0
+    assert test_entity.attributes["brightness"] == 255
     assert test_entity.attributes["is_dynamic"] is False
 
     # test smart scene
@@ -170,7 +170,7 @@ async def test_scene_updates(
     assert test_entity is not None
     assert test_entity.state == STATE_UNKNOWN
     assert test_entity.name == "Test Room Mocked Scene"
-    assert test_entity.attributes["brightness"] == 65.0
+    assert test_entity.attributes["brightness"] == 166
 
     # test update
     updated_resource = {**FAKE_SCENE}
@@ -179,7 +179,7 @@ async def test_scene_updates(
     await hass.async_block_till_done()
     test_entity = hass.states.get(test_entity_id)
     assert test_entity is not None
-    assert test_entity.attributes["brightness"] == 35.0
+    assert test_entity.attributes["brightness"] == 89
 
     # # test entity name changes on group name change
     mock_bridge_v2.api.emit_event(
