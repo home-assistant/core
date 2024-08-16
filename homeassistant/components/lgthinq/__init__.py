@@ -6,7 +6,6 @@ import asyncio
 from collections.abc import Collection
 from dataclasses import dataclass, field
 import logging
-from typing import Any
 import uuid
 
 from thinqconnect.thinq_api import ThinQApiResponse
@@ -19,25 +18,16 @@ from homeassistant.const import (
     CONF_COUNTRY,
     Platform,
 )
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util.json import JsonValueType
 
 from .const import (
     CLIENT_PREFIX,
     CONF_CONNECT_CLIENT_ID,
     DEFAULT_COUNTRY,
     DOMAIN,
-    SERVICE_ATTR_DEVICE_INFO,
-    SERVICE_ATTR_RESULT,
     SERVICE_ATTR_VALUE,
 )
 from .device import LGDevice, async_setup_lg_device
@@ -96,9 +86,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> boo
 
     # Set up all platforms for this device/entry.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    # Set up custom services.
-    async_setup_hass_services(hass, entry)
 
     # Clean up devices they are no longer in use.
     async_cleanup_device_registry(
@@ -187,139 +174,6 @@ def async_cleanup_device_registry(
         if old_unique_id not in new_device_unique_ids:
             device_registry.async_remove_device(old_entry.id)
             _LOGGER.warning("Remove device_registry: device_id=%s", old_entry.id)
-
-
-@callback
-def async_setup_hass_services(hass: HomeAssistant, entry: ThinqConfigEntry) -> None:
-    """Set up services."""
-
-    async def async_handle_reload_device_list(call: ServiceCall) -> None:
-        """Handle 'reload_device_list' service call."""
-        await hass.config_entries.async_reload(entry.entry_id)
-
-    async def async_handle_refresh_device_status(call: ServiceCall) -> None:
-        """Handle 'refresh_device_status' service call."""
-        device_id = call.data.get(ATTR_DEVICE_ID)
-
-        if device_id:
-            device = entry.runtime_data.device_map.get(device_id)
-            if device is not None:
-                await device.coordinator.async_refresh()
-        else:
-            # If device_id is not specified, refresh for all devices.
-            task_list = [
-                hass.async_create_task(device.coordinator.async_refresh())
-                for device in entry.runtime_data.device_map.values()
-            ]
-            await asyncio.gather(*task_list)
-
-    async def async_handle_get_device_profile(
-        call: ServiceCall,
-    ) -> ServiceResponse:
-        """Handle 'get_device_profile' service call."""
-        device_id = call.data.get(ATTR_DEVICE_ID)
-        if not device_id:
-            return async_create_service_response(None, None, None)
-
-        device = entry.runtime_data.device_map.get(device_id)
-        if device is None:
-            return async_create_service_response(device_id, None, None)
-
-        result = await device.async_get_device_profile()
-        return async_create_service_response(device_id, device, result)
-
-    async def async_handle_get_device_status(
-        call: ServiceCall,
-    ) -> ServiceResponse:
-        """Handle 'get_device_status' service call."""
-        device_id = call.data.get(ATTR_DEVICE_ID)
-        if not device_id:
-            return async_create_service_response(None, None, None)
-
-        device = entry.runtime_data.device_map.get(device_id)
-        if device is None:
-            return async_create_service_response(device_id, None, None)
-
-        result = await device.async_get_device_status()
-        return async_create_service_response(device_id, device, result)
-
-    async def async_handle_post_device_status(
-        call: ServiceCall,
-    ) -> ServiceResponse:
-        """Handle 'post_device_status' service call."""
-        device_id = call.data.get(ATTR_DEVICE_ID)
-        if not device_id:
-            return async_create_service_response(None, None, None)
-
-        device = entry.runtime_data.device_map.get(device_id)
-        if device is None:
-            return async_create_service_response(device_id, None, None)
-
-        value = call.data.get(SERVICE_ATTR_VALUE)
-        result = await device.async_post_device_status(value)
-        return async_create_service_response(device_id, device, result)
-
-    hass.services.async_register(
-        domain=DOMAIN,
-        service="reload_device_list",
-        service_func=async_handle_reload_device_list,
-    )
-    hass.services.async_register(
-        domain=DOMAIN,
-        service="refresh_device_status",
-        service_func=async_handle_refresh_device_status,
-    )
-    hass.services.async_register(
-        domain=DOMAIN,
-        service="get_device_profile",
-        service_func=async_handle_get_device_profile,
-        schema=SERVICE_GET_DEVICE_PROFILE_SCHEMA,
-        supports_response=SupportsResponse.ONLY,
-    )
-    hass.services.async_register(
-        domain=DOMAIN,
-        service="get_device_status",
-        service_func=async_handle_get_device_status,
-        schema=SERVICE_GET_DEVICE_STATUS_SCHEMA,
-        supports_response=SupportsResponse.ONLY,
-    )
-    hass.services.async_register(
-        domain=DOMAIN,
-        service="post_device_status",
-        service_func=async_handle_post_device_status,
-        schema=SERVICE_POST_DEVICE_STATUS_SCHEMA,
-        supports_response=SupportsResponse.ONLY,
-    )
-
-
-@callback
-def async_create_service_response(
-    device_id: str | None,
-    device: LGDevice | None,
-    result: dict[str, Any] | str | None,
-) -> ServiceResponse:
-    """Create a service response from the result of service call."""
-    if result is None:
-        if device_id is None:
-            result = "error: No device_id specified."
-        elif device is None:
-            result = "error: Device not found."
-        else:
-            result = "error: Operation failed."
-
-    device_info: dict[str, JsonValueType] = {}
-    if device is not None:
-        device_info["id"] = device.id
-        device_info["sub_id"] = device.sub_id
-        device_info["type"] = device.type
-        device_info["name"] = device.name
-        device_info["model"] = device.model
-
-    return {
-        ATTR_DEVICE_ID: device_id,
-        SERVICE_ATTR_DEVICE_INFO: device_info,
-        SERVICE_ATTR_RESULT: result,
-    }
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> bool:
