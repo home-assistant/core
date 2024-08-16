@@ -45,17 +45,6 @@ class ThinqData:
 
 PLATFORMS = [Platform.SWITCH]
 
-SERVICE_GET_DEVICE_PROFILE_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_DEVICE_ID): cv.string}
-)
-SERVICE_GET_DEVICE_STATUS_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_ID): cv.string})
-SERVICE_POST_DEVICE_STATUS_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Required(SERVICE_ATTR_VALUE): vol.Any(cv.string, dict),
-    }
-)
-
 _LOGGER = logging.getLogger(__name__)
 
 
