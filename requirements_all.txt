@@ -386,7 +386,7 @@ aiotankerkoenig==0.4.1
 aiotractive==0.6.0
 
 # homeassistant.components.unifi
-aiounifi==79
+aiounifi==80
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.3.2
@@ -591,7 +591,7 @@ bluemaestro-ble==0.2.3
 # bluepy==1.3.0
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.19.3
+bluetooth-adapters==0.19.4
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.4.2
@@ -1321,7 +1321,7 @@ melnor-bluetooth==0.0.25
 messagebird==1.2.0
 
 # homeassistant.components.meteoalarm
-meteoalertapi==0.3.0
+meteoalertapi==0.3.1
 
 # homeassistant.components.meteo_france
 meteofrance-api==1.3.0
@@ -1505,7 +1505,7 @@ openhomedevice==2.2.0
 opensensemap-api==0.2.0
 
 # homeassistant.components.enigma2
-openwebifpy==4.2.5
+openwebifpy==4.2.7
 
 # homeassistant.components.luci
 openwrt-luci-rpc==1.1.17
@@ -2100,7 +2100,7 @@ pyownet==0.10.0.post1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.7.20
+pypck==0.7.21
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1

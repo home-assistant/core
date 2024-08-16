@@ -368,7 +368,7 @@ aiotankerkoenig==0.4.1
 aiotractive==0.6.0
 
 # homeassistant.components.unifi
-aiounifi==79
+aiounifi==80
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.3.2
@@ -515,7 +515,7 @@ bluecurrent-api==1.2.3
 bluemaestro-ble==0.2.3
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.19.3
+bluetooth-adapters==0.19.4
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.4.2
@@ -1241,7 +1241,7 @@ openerz-api==0.3.0
 openhomedevice==2.2.0
 
 # homeassistant.components.enigma2
-openwebifpy==4.2.5
+openwebifpy==4.2.7
 
 # homeassistant.components.opower
 opower==0.6.0
@@ -1681,7 +1681,7 @@ pyoverkiz==1.13.14
 pyownet==0.10.0.post1
 
 # homeassistant.components.lcn
-pypck==0.7.20
+pypck==0.7.21
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
