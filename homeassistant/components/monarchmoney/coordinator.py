@@ -31,17 +31,19 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[AccountData]):
     async def _async_update_data(self) -> Any:
         """Fetch data for all accounts."""
 
-        return await self.client.get_accounts()
+        account_data = await self.client.get_accounts()
+        cashflow_summary = await self.client.get_cashflow_summary()
+        return {"account_data": account_data, "cashflow_summary": cashflow_summary}
 
     @property
     def accounts(self) -> Any:
         """Return accounts."""
 
-        return self.data["accounts"]
+        return self.data["account_data"]["accounts"]
 
     def get_account_for_id(self, account_id: str) -> Any | None:
         """Get account for id."""
-        for account in self.data["accounts"]:
+        for account in self.data["account_data"]["accounts"]:
             if account["id"] == account_id:
                 return account
         return None
