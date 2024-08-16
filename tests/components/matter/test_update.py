@@ -313,17 +313,15 @@ async def test_update_state_save_and_restore(
     # Check that the extra data has the format we expect.
     assert extra_data == {
         "software_update": {
-            "software_update": {
-                "vid": 65521,
-                "pid": 32768,
-                "software_version": 2,
-                "software_version_string": "v2.0",
-                "firmware_information": "",
-                "min_applicable_software_version": 0,
-                "max_applicable_software_version": 1,
-                "release_notes_url": "http://home-assistant.io/non-existing-product",
-                "update_source": "local",
-            }
+            "vid": 65521,
+            "pid": 32768,
+            "software_version": 2,
+            "software_version_string": "v2.0",
+            "firmware_information": "",
+            "min_applicable_software_version": 0,
+            "max_applicable_software_version": 1,
+            "release_notes_url": "http://home-assistant.io/non-existing-product",
+            "update_source": "local",
         }
     }
 
