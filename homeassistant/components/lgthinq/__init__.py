@@ -138,9 +138,7 @@ def async_cleanup_device_registry(
 ) -> None:
     """Clean up device registry."""
     new_device_unique_ids: list[str] = [device.unique_id for device in lg_devices]
-    existing_entries: list[dr.DeviceEntry] = dr.async_entries_for_config_entry(
-        device_registry, entry_id
-    )
+    existing_entries = dr.async_entries_for_config_entry(device_registry, entry_id)
 
     # Remove devices that are no longer exist.
     for old_entry in existing_entries:
