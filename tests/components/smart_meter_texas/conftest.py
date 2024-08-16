@@ -19,6 +19,7 @@ from homeassistant.components.homeassistant import (
 )
 from homeassistant.components.smart_meter_texas.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
@@ -91,7 +92,7 @@ def mock_connection(
 
 
 @pytest.fixture(name="config_entry")
-def mock_config_entry(hass):
+def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return a mock config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

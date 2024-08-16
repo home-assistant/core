@@ -160,7 +160,7 @@ def _check_state(hass, category, entity_id):
 
 
 @pytest.fixture
-async def _set_utc_time_zone(hass):
+async def _set_utc_time_zone(hass: HomeAssistant) -> None:
     await hass.config.async_set_time_zone("UTC")
 
 

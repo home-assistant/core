@@ -54,7 +54,12 @@ def async_restart(hass, entity_id=None):
 class MockFFmpegDev(ffmpeg.FFmpegBase):
     """FFmpeg device mock."""
 
-    def __init__(self, hass, initial_state=True, entity_id="test.ffmpeg_device"):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        initial_state: bool = True,
+        entity_id: str = "test.ffmpeg_device",
+    ) -> None:
         """Initialize mock."""
         super().__init__(None, initial_state)
 

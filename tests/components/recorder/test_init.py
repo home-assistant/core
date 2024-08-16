@@ -2322,7 +2322,7 @@ async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
         __bases__ = []
         _has_events = False
 
-        def __init__(*args, **kwargs): ...
+        def __init__(self, *args: Any, **kwargs: Any) -> None: ...
 
         @property
         def is_async(self):
