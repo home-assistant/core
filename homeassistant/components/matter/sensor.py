@@ -26,6 +26,7 @@ from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
     Platform,
+    UnitOfLength,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
