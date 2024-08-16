@@ -34,7 +34,7 @@ async def test_floodlight_mode_select(
 ) -> None:
     """Test select entity with floodlight_mode."""
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SELECT]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -88,7 +88,7 @@ async def test_play_quick_reply_message(
     """Test select play_quick_reply_message entity."""
     reolink_connect.quick_reply_dict.return_value = {0: "off", 1: "test message"}
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SELECT]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -114,7 +114,7 @@ async def test_chime_select(
 ) -> None:
     """Test chime select entity."""
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SELECT]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
