@@ -98,7 +98,7 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         # Get the PAT(Personal Access Token) and validate it.
-        if user_input is None or CONF_ACCESS_TOKEN not in user_input:
+        if user_input is None:
             return self.async_show_form(
                 step_id="user",
                 data_schema=vol.Schema(
