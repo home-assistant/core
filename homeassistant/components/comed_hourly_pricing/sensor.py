@@ -11,7 +11,7 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -57,7 +57,7 @@ SENSORS_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_MONITORED_FEEDS): [SENSORS_SCHEMA]}
 )
 

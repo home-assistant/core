@@ -3,21 +3,22 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.components.humidifier import (
     ATTR_HUMIDITY,
     MODE_AWAY,
     MODE_NORMAL,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as HUMIDIFIER_PLATFORM_SCHEMA,
     HumidifierAction,
     HumidifierDeviceClass,
     HumidifierEntity,
     HumidifierEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -32,14 +33,15 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import (
-    DOMAIN as HA_DOMAIN,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     Event,
     EventStateChangedData,
     HomeAssistant,
     State,
     callback,
 )
-from homeassistant.helpers import condition
+from homeassistant.helpers import condition, config_validation as cv
+from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_state_change_event,
@@ -71,7 +73,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_SAVED_HUMIDITY = "saved_humidity"
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(HYGROSTAT_SCHEMA.schema)
+PLATFORM_SCHEMA = HUMIDIFIER_PLATFORM_SCHEMA.extend(HYGROSTAT_SCHEMA.schema)
 
 
 async def async_setup_platform(
@@ -83,6 +85,38 @@ async def async_setup_platform(
     """Set up the generic hygrostat platform."""
     if discovery_info:
         config = discovery_info
+    await _async_setup_config(
+        hass, config, config.get(CONF_UNIQUE_ID), async_add_entities
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+
+    await _async_setup_config(
+        hass,
+        config_entry.options,
+        config_entry.entry_id,
+        async_add_entities,
+    )
+
+
+def _time_period_or_none(value: Any) -> timedelta | None:
+    if value is None:
+        return None
+    return cast(timedelta, cv.time_period(value))
+
+
+async def _async_setup_config(
+    hass: HomeAssistant,
+    config: Mapping[str, Any],
+    unique_id: str | None,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     name: str = config[CONF_NAME]
     switch_entity_id: str = config[CONF_HUMIDIFIER]
     sensor_entity_id: str = config[CONF_SENSOR]
@@ -90,19 +124,23 @@ async def async_setup_platform(
     max_humidity: float | None = config.get(CONF_MAX_HUMIDITY)
     target_humidity: float | None = config.get(CONF_TARGET_HUMIDITY)
     device_class: HumidifierDeviceClass | None = config.get(CONF_DEVICE_CLASS)
-    min_cycle_duration: timedelta | None = config.get(CONF_MIN_DUR)
-    sensor_stale_duration: timedelta | None = config.get(CONF_STALE_DURATION)
+    min_cycle_duration: timedelta | None = _time_period_or_none(
+        config.get(CONF_MIN_DUR)
+    )
+    sensor_stale_duration: timedelta | None = _time_period_or_none(
+        config.get(CONF_STALE_DURATION)
+    )
     dry_tolerance: float = config[CONF_DRY_TOLERANCE]
     wet_tolerance: float = config[CONF_WET_TOLERANCE]
-    keep_alive: timedelta | None = config.get(CONF_KEEP_ALIVE)
+    keep_alive: timedelta | None = _time_period_or_none(config.get(CONF_KEEP_ALIVE))
     initial_state: bool | None = config.get(CONF_INITIAL_STATE)
     away_humidity: int | None = config.get(CONF_AWAY_HUMIDITY)
     away_fixed: bool | None = config.get(CONF_AWAY_FIXED)
-    unique_id: str | None = config.get(CONF_UNIQUE_ID)
 
     async_add_entities(
         [
             GenericHygrostat(
+                hass,
                 name,
                 switch_entity_id,
                 sensor_entity_id,
@@ -131,6 +169,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         name: str,
         switch_entity_id: str,
         sensor_entity_id: str,
@@ -152,6 +191,10 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self._name = name
         self._switch_entity_id = switch_entity_id
         self._sensor_entity_id = sensor_entity_id
+        self._attr_device_info = async_device_info_to_link_from_entity(
+            hass,
+            switch_entity_id,
+        )
         self._device_class = device_class or HumidifierDeviceClass.HUMIDIFIER
         self._min_cycle_duration = min_cycle_duration
         self._dry_tolerance = dry_tolerance
@@ -511,12 +554,14 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
     async def _async_device_turn_on(self) -> None:
         """Turn humidifier toggleable device on."""
         data = {ATTR_ENTITY_ID: self._switch_entity_id}
-        await self.hass.services.async_call(HA_DOMAIN, SERVICE_TURN_ON, data)
+        await self.hass.services.async_call(HOMEASSISTANT_DOMAIN, SERVICE_TURN_ON, data)
 
     async def _async_device_turn_off(self) -> None:
         """Turn humidifier toggleable device off."""
         data = {ATTR_ENTITY_ID: self._switch_entity_id}
-        await self.hass.services.async_call(HA_DOMAIN, SERVICE_TURN_OFF, data)
+        await self.hass.services.async_call(
+            HOMEASSISTANT_DOMAIN, SERVICE_TURN_OFF, data
+        )
 
     async def async_set_mode(self, mode: str) -> None:
         """Set new mode.

@@ -7,7 +7,11 @@ import logging
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
+from homeassistant.components.tts import (
+    CONF_LANG,
+    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
+    Provider,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -64,7 +68,7 @@ DEFAULT_VOICE = "zahar"
 DEFAULT_EMOTION = "neutral"
 DEFAULT_SPEED = 1
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),

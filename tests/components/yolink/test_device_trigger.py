@@ -1,6 +1,5 @@
 """The tests for YoLink device triggers."""
 
-import pytest
 from pytest_unordered import unordered
 from yolink.const import ATTR_DEVICE_DIMMER, ATTR_DEVICE_SMART_REMOTER
 
@@ -11,17 +10,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    MockConfigEntry,
-    async_get_device_automations,
-    async_mock_service,
-)
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "yolink", "automation")
+from tests.common import MockConfigEntry, async_get_device_automations
 
 
 async def test_get_triggers(
@@ -120,7 +109,9 @@ async def test_get_triggers_exception(
 
 
 async def test_if_fires_on_event(
-    hass: HomeAssistant, calls: list[ServiceCall], device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for event triggers firing."""
     mac_address = "12:34:56:AB:CD:EF"
@@ -166,5 +157,5 @@ async def test_if_fires_on_event(
         },
     )
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["message"] == "service called"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["message"] == "service called"

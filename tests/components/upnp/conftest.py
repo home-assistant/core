@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 import copy
 from datetime import datetime
+import socket
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, create_autospec, patch
 from urllib.parse import urlparse
 
+from async_upnp_client.aiohttp import AiohttpNotifyServer
 from async_upnp_client.client import UpnpDevice
-from async_upnp_client.profiles.igd import IgdDevice, IgdState, StatusInfo
+from async_upnp_client.profiles.igd import IgdDevice, IgdState
 import pytest
 
 from homeassistant.components import ssdp
@@ -87,21 +90,35 @@ def mock_igd_device(mock_async_create_device) -> IgdDevice:
         bytes_sent=0,
         packets_received=0,
         packets_sent=0,
-        status_info=StatusInfo(
-            "Connected",
-            "",
-            10,
-        ),
+        connection_status="Connected",
+        last_connection_error="",
+        uptime=10,
         external_ip_address="8.9.10.11",
         kibibytes_per_sec_received=None,
         kibibytes_per_sec_sent=None,
         packets_per_sec_received=None,
         packets_per_sec_sent=None,
+        port_mapping_number_of_entries=0,
     )
 
-    with patch(
-        "homeassistant.components.upnp.device.IgdDevice.__new__",
-        return_value=mock_igd_device,
+    mock_igd_device.async_subscribe_services = AsyncMock()
+
+    mock_notify_server = create_autospec(AiohttpNotifyServer)
+    mock_notify_server.event_handler = MagicMock()
+
+    with (
+        patch(
+            "homeassistant.components.upnp.device.async_get_local_ip",
+            return_value=(socket.AF_INET, "127.0.0.1"),
+        ),
+        patch(
+            "homeassistant.components.upnp.device.IgdDevice.__new__",
+            return_value=mock_igd_device,
+        ),
+        patch(
+            "homeassistant.components.upnp.device.AiohttpNotifyServer.__new__",
+            return_value=mock_notify_server,
+        ),
     ):
         yield mock_igd_device
 
@@ -137,7 +154,7 @@ def mock_setup_entry():
 
 
 @pytest.fixture(autouse=True)
-async def silent_ssdp_scanner(hass):
+def silent_ssdp_scanner() -> Generator[None]:
     """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
     with (
         patch("homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"),
@@ -231,7 +248,7 @@ async def mock_config_entry(
     ssdp_instant_discovery,
     mock_igd_device: IgdDevice,
     mock_mac_address_from_host,
-):
+) -> MockConfigEntry:
     """Create an initialized integration."""
     entry = MockConfigEntry(
         domain=DOMAIN,

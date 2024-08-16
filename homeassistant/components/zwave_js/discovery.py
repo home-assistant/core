@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any, cast
 
 from awesomeversion import AwesomeVersion
-from typing_extensions import Generator
 from zwave_js_server.const import (
     CURRENT_STATE_PROPERTY,
     CURRENT_VALUE_PROPERTY,
@@ -578,6 +578,15 @@ DISCOVERY_SCHEMAS = [
             type={ValueType.NUMBER},
         ),
         entity_registry_enabled_default=False,
+    ),
+    # ZVIDAR Z-CM-V01 (SmartWings/Deyi WM25L/V Z-Wave Motor for Roller Shade)
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="shade",
+        manufacturer_id={0x045A},
+        product_id={0x0507},
+        product_type={0x0904},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # Vision Security ZL7432 In Wall Dual Relay Switch
     ZWaveDiscoverySchema(

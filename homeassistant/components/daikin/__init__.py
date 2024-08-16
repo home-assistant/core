@@ -9,6 +9,7 @@ from typing import Any
 
 from aiohttp import ClientConnectionError
 from pydaikin.daikin_base import Appliance
+from pydaikin.factory import DaikinFactory
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -22,7 +23,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.util import Throttle
 
@@ -34,8 +34,6 @@ PARALLEL_UPDATES = 0
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -84,7 +82,7 @@ async def daikin_api_setup(
     session = async_get_clientsession(hass)
     try:
         async with asyncio.timeout(TIMEOUT):
-            device = await Appliance.factory(
+            device: Appliance = await DaikinFactory(
                 host, session, key=key, uuid=uuid, password=password
             )
         _LOGGER.debug("Connection to %s successful", host)

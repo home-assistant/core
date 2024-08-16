@@ -1,7 +1,10 @@
 """Provide a base class for registries that use a normalized name index."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime
 from functools import lru_cache
+
+from homeassistant.util import dt as dt_util
 
 from .registry import BaseRegistryItems
 
@@ -12,6 +15,8 @@ class NormalizedNameBaseRegistryEntry:
 
     name: str
     normalized_name: str
+    created_at: datetime = field(default_factory=dt_util.utcnow)
+    modified_at: datetime = field(default_factory=dt_util.utcnow)
 
 
 @lru_cache(maxsize=1024)

@@ -9,6 +9,7 @@ from lmcloud.lm_machine import LaMarzoccoMachine
 from lmcloud.models import LaMarzoccoMachineConfig
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -105,6 +106,7 @@ class LaMarzoccoAutoOnOffSwitchEntity(LaMarzoccoBaseEntity, SwitchEntity):
         super().__init__(coordinator, f"auto_on_off_{identifier}")
         self._identifier = identifier
         self._attr_translation_placeholders = {"id": identifier}
+        self.entity_category = EntityCategory.CONFIG
 
     async def _async_enable(self, state: bool) -> None:
         """Enable or disable the auto on/off schedule."""

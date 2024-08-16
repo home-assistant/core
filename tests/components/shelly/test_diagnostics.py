@@ -1,9 +1,10 @@
 """Tests for Shelly diagnostics platform."""
 
-from unittest.mock import ANY, Mock
+from unittest.mock import ANY, Mock, PropertyMock
 
 from aioshelly.ble.const import BLE_SCAN_RESULT_EVENT
 from aioshelly.const import MODEL_25
+from aioshelly.exceptions import DeviceConnectionError
 import pytest
 
 from homeassistant.components.diagnostics import REDACTED
@@ -36,6 +37,10 @@ async def test_block_config_entry_diagnostics(
         {key: REDACTED for key in TO_REDACT if key in entry_dict["data"]}
     )
 
+    type(mock_block_device).last_error = PropertyMock(
+        return_value=DeviceConnectionError()
+    )
+
     result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
     assert result == {
@@ -48,6 +53,7 @@ async def test_block_config_entry_diagnostics(
         },
         "device_settings": {"coiot": {"update_period": 15}},
         "device_status": MOCK_STATUS_COAP,
+        "last_error": "DeviceConnectionError()",
     }
 
 
@@ -89,6 +95,10 @@ async def test_rpc_config_entry_diagnostics(
     entry_dict = entry.as_dict()
     entry_dict["data"].update(
         {key: REDACTED for key in TO_REDACT if key in entry_dict["data"]}
+    )
+
+    type(mock_rpc_device).last_error = PropertyMock(
+        return_value=DeviceConnectionError()
     )
 
     result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
@@ -152,4 +162,5 @@ async def test_rpc_config_entry_diagnostics(
             },
             "wifi": {"rssi": -63},
         },
+        "last_error": "DeviceConnectionError()",
     }

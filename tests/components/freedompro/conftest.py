@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from copy import deepcopy
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.freedompro.const import DOMAIN
 from homeassistant.core import HomeAssistant

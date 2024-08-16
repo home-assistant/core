@@ -16,7 +16,10 @@ from tests.common import MockConfigEntry
 
 
 async def test_dashboard_storage(
-    hass: HomeAssistant, init_integration, mock_dashboard, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    init_integration,
+    mock_dashboard: dict[str, Any],
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test dashboard storage."""
     assert hass_storage[dashboard.STORAGE_KEY]["data"] == {
@@ -197,7 +200,9 @@ async def test_new_dashboard_fix_reauth(
     assert mock_config_entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
 
 
-async def test_dashboard_supports_update(hass: HomeAssistant, mock_dashboard) -> None:
+async def test_dashboard_supports_update(
+    hass: HomeAssistant, mock_dashboard: dict[str, Any]
+) -> None:
     """Test dashboard supports update."""
     dash = dashboard.async_get_dashboard(hass)
 

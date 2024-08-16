@@ -1,11 +1,11 @@
 """Fixtures for Roku integration tests."""
 
+from collections.abc import Generator
 import json
 from unittest.mock import MagicMock, patch
 
 import pytest
 from rokuecp import Device as RokuDevice
-from typing_extensions import Generator
 
 from homeassistant.components.roku.const import DOMAIN
 from homeassistant.const import CONF_HOST

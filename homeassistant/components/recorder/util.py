@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Generator, Sequence
 import contextlib
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
@@ -25,15 +25,18 @@ from sqlalchemy.exc import OperationalError, SQLAlchemyError, StatementError
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
-from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.recorder import (  # noqa: F401
+    DATA_INSTANCE,
+    get_instance,
+    session_scope,
+)
 import homeassistant.util.dt as dt_util
 
 from .const import (
-    DATA_INSTANCE,
     DEFAULT_MAX_BIND_VARS,
     DOMAIN,
     SQLITE_MAX_BIND_VARS,
@@ -93,6 +96,7 @@ MARIADB_WITH_FIXED_IN_QUERIES_108 = _simple_version("10.8.4")
 MIN_VERSION_MYSQL = _simple_version("8.0.0")
 MIN_VERSION_PGSQL = _simple_version("12.0")
 MIN_VERSION_SQLITE = _simple_version("3.31.0")
+UPCOMING_MIN_VERSION_SQLITE = _simple_version("3.40.1")
 MIN_VERSION_SQLITE_MODERN_BIND_VARS = _simple_version("3.32.0")
 
 
@@ -110,42 +114,6 @@ RETRYABLE_MYSQL_ERRORS = (1205, 1206, 1213)
 FIRST_POSSIBLE_SUNDAY = 8
 SUNDAY_WEEKDAY = 6
 DAYS_IN_WEEK = 7
-
-
-@contextmanager
-def session_scope(
-    *,
-    hass: HomeAssistant | None = None,
-    session: Session | None = None,
-    exception_filter: Callable[[Exception], bool] | None = None,
-    read_only: bool = False,
-) -> Generator[Session]:
-    """Provide a transactional scope around a series of operations.
-
-    read_only is used to indicate that the session is only used for reading
-    data and that no commit is required. It does not prevent the session
-    from writing and is not a security measure.
-    """
-    if session is None and hass is not None:
-        session = get_instance(hass).get_session()
-
-    if session is None:
-        raise RuntimeError("Session required")
-
-    need_rollback = False
-    try:
-        yield session
-        if not read_only and session.get_transaction():
-            need_rollback = True
-            session.commit()
-    except Exception as err:
-        _LOGGER.exception("Error executing query")
-        if need_rollback:
-            session.rollback()
-        if not exception_filter or not exception_filter(err):
-            raise
-    finally:
-        session.close()
 
 
 def execute(
@@ -389,7 +357,7 @@ def _fail_unsupported_dialect(dialect_name: str) -> NoReturn:
     raise UnsupportedDialect
 
 
-def _fail_unsupported_version(
+def _raise_if_version_unsupported(
     server_version: str, dialect_name: str, minimum_version: str
 ) -> NoReturn:
     """Warn about unsupported database version."""
@@ -406,16 +374,54 @@ def _fail_unsupported_version(
     raise UnsupportedDialect
 
 
+@callback
+def _async_delete_issue_deprecated_version(
+    hass: HomeAssistant, dialect_name: str
+) -> None:
+    """Delete the issue about upcoming unsupported database version."""
+    ir.async_delete_issue(hass, DOMAIN, f"{dialect_name}_too_old")
+
+
+@callback
+def _async_create_issue_deprecated_version(
+    hass: HomeAssistant,
+    server_version: AwesomeVersion,
+    dialect_name: str,
+    min_version: AwesomeVersion,
+) -> None:
+    """Warn about upcoming unsupported database version."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"{dialect_name}_too_old",
+        is_fixable=False,
+        severity=ir.IssueSeverity.CRITICAL,
+        translation_key=f"{dialect_name}_too_old",
+        translation_placeholders={
+            "server_version": str(server_version),
+            "min_version": str(min_version),
+        },
+        breaks_in_ha_version="2025.2.0",
+    )
+
+
+def _extract_version_from_server_response_or_raise(
+    server_response: str,
+) -> AwesomeVersion:
+    """Extract version from server response."""
+    return AwesomeVersion(
+        server_response,
+        ensure_strategy=AwesomeVersionStrategy.SIMPLEVER,
+        find_first_match=True,
+    )
+
+
 def _extract_version_from_server_response(
     server_response: str,
 ) -> AwesomeVersion | None:
     """Attempt to extract version from server response."""
     try:
-        return AwesomeVersion(
-            server_response,
-            ensure_strategy=AwesomeVersionStrategy.SIMPLEVER,
-            find_first_match=True,
-        )
+        return _extract_version_from_server_response_or_raise(server_response)
     except AwesomeVersionException:
         return None
 
@@ -508,11 +514,25 @@ def setup_connection_for_dialect(
             # as its persistent and isn't free to call every time.
             result = query_on_connection(dbapi_connection, "SELECT sqlite_version()")
             version_string = result[0][0]
-            version = _extract_version_from_server_response(version_string)
+            version = _extract_version_from_server_response_or_raise(version_string)
 
-            if not version or version < MIN_VERSION_SQLITE:
-                _fail_unsupported_version(
+            if version < MIN_VERSION_SQLITE:
+                _raise_if_version_unsupported(
                     version or version_string, "SQLite", MIN_VERSION_SQLITE
+                )
+
+            # No elif here since _raise_if_version_unsupported raises
+            if version < UPCOMING_MIN_VERSION_SQLITE:
+                instance.hass.add_job(
+                    _async_create_issue_deprecated_version,
+                    instance.hass,
+                    version or version_string,
+                    dialect_name,
+                    UPCOMING_MIN_VERSION_SQLITE,
+                )
+            else:
+                instance.hass.add_job(
+                    _async_delete_issue_deprecated_version, instance.hass, dialect_name
                 )
 
             if version and version > MIN_VERSION_SQLITE_MODERN_BIND_VARS:
@@ -546,7 +566,7 @@ def setup_connection_for_dialect(
 
             if is_maria_db:
                 if not version or version < MIN_VERSION_MARIA_DB:
-                    _fail_unsupported_version(
+                    _raise_if_version_unsupported(
                         version or version_string, "MariaDB", MIN_VERSION_MARIA_DB
                     )
                 if version and (
@@ -562,7 +582,7 @@ def setup_connection_for_dialect(
                     )
 
             elif not version or version < MIN_VERSION_MYSQL:
-                _fail_unsupported_version(
+                _raise_if_version_unsupported(
                     version or version_string, "MySQL", MIN_VERSION_MYSQL
                 )
 
@@ -584,7 +604,7 @@ def setup_connection_for_dialect(
             version_string = result[0][0]
             version = _extract_version_from_server_response(version_string)
             if not version or version < MIN_VERSION_PGSQL:
-                _fail_unsupported_version(
+                _raise_if_version_unsupported(
                     version or version_string, "PostgreSQL", MIN_VERSION_PGSQL
                 )
 
@@ -768,12 +788,6 @@ def second_sunday(year: int, month: int) -> date:
 def is_second_sunday(date_time: datetime) -> bool:
     """Check if a time is the second sunday of the month."""
     return bool(second_sunday(date_time.year, date_time.month).day == date_time.day)
-
-
-@functools.lru_cache(maxsize=1)
-def get_instance(hass: HomeAssistant) -> Recorder:
-    """Get the recorder instance."""
-    return hass.data[DATA_INSTANCE]
 
 
 PERIOD_SCHEMA = vol.Schema(

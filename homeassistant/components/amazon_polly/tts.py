@@ -10,7 +10,7 @@ import botocore
 import voluptuous as vol
 
 from homeassistant.components.tts import (
-    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
     Provider,
     TtsAudioType,
 )
@@ -49,7 +49,7 @@ from .const import (
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA: Final = BASE_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA: Final = TTS_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_REGION, default=DEFAULT_REGION): vol.In(SUPPORTED_REGIONS),
         vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,

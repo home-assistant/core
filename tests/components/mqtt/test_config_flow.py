@@ -1,6 +1,6 @@
 """Test config flow."""
 
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from ssl import SSLError
@@ -9,7 +9,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
-from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -187,11 +186,11 @@ def mock_process_uploaded_file(
         yield mock_upload
 
 
+@pytest.mark.usefixtures("mqtt_client_mock")
 async def test_user_connection_works(
     hass: HomeAssistant,
     mock_try_connection: MagicMock,
     mock_finish_setup: MagicMock,
-    mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test we can finish a config flow."""
     mock_try_connection.return_value = True
@@ -217,11 +216,11 @@ async def test_user_connection_works(
     assert len(mock_finish_setup.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mqtt_client_mock")
 async def test_user_v5_connection_works(
     hass: HomeAssistant,
     mock_try_connection: MagicMock,
     mock_finish_setup: MagicMock,
-    mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test we can finish a config flow."""
     mock_try_connection.return_value = True
@@ -664,11 +663,11 @@ async def test_bad_certificate(
         ("100", False),
     ],
 )
+@pytest.mark.usefixtures("mock_reload_after_entry_update")
 async def test_keepalive_validation(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     mock_try_connection: MagicMock,
-    mock_reload_after_entry_update: MagicMock,
     input_value: str,
     error: bool,
 ) -> None:
@@ -851,16 +850,17 @@ async def test_invalid_discovery_prefix(
     assert mock_reload_after_entry_update.call_count == 0
 
 
-def get_default(schema: vol.Schema, key: str) -> Any:
+def get_default(schema: vol.Schema, key: str) -> Any | None:
     """Get default value for key in voluptuous schema."""
     for schema_key in schema:
         if schema_key == key:
             if schema_key.default == vol.UNDEFINED:
                 return None
             return schema_key.default()
+    return None
 
 
-def get_suggested(schema: vol.Schema, key: str) -> Any:
+def get_suggested(schema: vol.Schema, key: str) -> Any | None:
     """Get suggested value for key in voluptuous schema."""
     for schema_key in schema:
         if schema_key == key:
@@ -870,13 +870,14 @@ def get_suggested(schema: vol.Schema, key: str) -> Any:
             ):
                 return None
             return schema_key.description["suggested_value"]
+    return None
 
 
+@pytest.mark.usefixtures("mock_reload_after_entry_update")
 async def test_option_flow_default_suggested_values(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     mock_try_connection_success: MqttMockPahoClient,
-    mock_reload_after_entry_update: MagicMock,
 ) -> None:
     """Test config flow options has default/suggested values."""
     await mqtt_mock_entry()
@@ -1030,11 +1031,11 @@ async def test_option_flow_default_suggested_values(
 @pytest.mark.parametrize(
     ("advanced_options", "step_id"), [(False, "options"), (True, "broker")]
 )
+@pytest.mark.usefixtures("mock_reload_after_entry_update")
 async def test_skipping_advanced_options(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     mock_try_connection: MagicMock,
-    mock_reload_after_entry_update: MagicMock,
     advanced_options: bool,
     step_id: str,
 ) -> None:
@@ -1102,12 +1103,11 @@ async def test_skipping_advanced_options(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_reload_after_entry_update")
 async def test_step_reauth(
     hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
     mqtt_client_mock: MqttMockPahoClient,
     mock_try_connection: MagicMock,
-    mock_reload_after_entry_update: MagicMock,
     test_input: dict[str, Any],
     user_input: dict[str, Any],
     new_password: str,
@@ -1115,12 +1115,9 @@ async def test_step_reauth(
     """Test that the reauth step works."""
 
     # Prepare the config entry
-    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    hass.config_entries.async_update_entry(
-        config_entry,
-        data=test_input,
-    )
-    await mqtt_mock_entry()
+    config_entry = MockConfigEntry(domain=mqtt.DOMAIN, data=test_input)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     # Start reauth flow
     config_entry.async_start_reauth(hass)
@@ -1288,12 +1285,9 @@ async def test_options_bad_will_message_fails(
 @pytest.mark.parametrize(
     "hass_config", [{"mqtt": {"sensor": [{"state_topic": "some-topic"}]}}]
 )
+@pytest.mark.usefixtures("mock_ssl_context", "mock_process_uploaded_file")
 async def test_try_connection_with_advanced_parameters(
-    hass: HomeAssistant,
-    mock_try_connection_success: MqttMockPahoClient,
-    tmp_path: Path,
-    mock_ssl_context: dict[str, MagicMock],
-    mock_process_uploaded_file: MagicMock,
+    hass: HomeAssistant, mock_try_connection_success: MqttMockPahoClient
 ) -> None:
     """Test config flow with advanced parameters from config."""
     config_entry = MockConfigEntry(domain=mqtt.DOMAIN)
@@ -1406,10 +1400,10 @@ async def test_try_connection_with_advanced_parameters(
     await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("mock_ssl_context")
 async def test_setup_with_advanced_settings(
     hass: HomeAssistant,
     mock_try_connection: MagicMock,
-    mock_ssl_context: dict[str, MagicMock],
     mock_process_uploaded_file: MagicMock,
 ) -> None:
     """Test config flow setup with advanced parameters."""
@@ -1568,11 +1562,9 @@ async def test_setup_with_advanced_settings(
     }
 
 
+@pytest.mark.usefixtures("mock_ssl_context", "mock_process_uploaded_file")
 async def test_change_websockets_transport_to_tcp(
-    hass: HomeAssistant,
-    mock_try_connection,
-    mock_ssl_context: dict[str, MagicMock],
-    mock_process_uploaded_file: MagicMock,
+    hass: HomeAssistant, mock_try_connection: MagicMock
 ) -> None:
     """Test option flow setup with websockets transport settings."""
     config_entry = MockConfigEntry(domain=mqtt.DOMAIN)

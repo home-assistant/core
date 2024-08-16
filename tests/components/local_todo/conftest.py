@@ -1,11 +1,11 @@
 """Common fixtures for the local_todo tests."""
 
+from collections.abc import Generator
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.local_todo import LocalTodoListStore
 from homeassistant.components.local_todo.const import (

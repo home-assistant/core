@@ -104,7 +104,7 @@ async def test_config_flow_data(client: AprilaireClient, hass: HomeAssistant) ->
     abort_if_unique_id_configured_mock.assert_called_once()
 
     create_entry_mock.assert_called_once_with(
-        title="Aprilaire",
+        title="AprilAire",
         data={
             "host": "localhost",
             "port": 7000,

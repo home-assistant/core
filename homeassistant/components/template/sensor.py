@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASSES_SCHEMA,
     DOMAIN as SENSOR_DOMAIN,
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
@@ -88,7 +88,6 @@ SENSOR_SCHEMA = vol.All(
         {
             vol.Required(CONF_STATE): cv.template,
             vol.Optional(ATTR_LAST_RESET): cv.template,
-            vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
         }
     )
     .extend(TEMPLATE_SENSOR_BASE_SCHEMA.schema)
@@ -96,6 +95,15 @@ SENSOR_SCHEMA = vol.All(
     validate_last_reset,
 )
 
+
+SENSOR_CONFIG_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required(CONF_STATE): cv.template,
+            vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
+        }
+    ).extend(TEMPLATE_SENSOR_BASE_SCHEMA.schema),
+)
 
 LEGACY_SENSOR_SCHEMA = vol.All(
     cv.deprecated(ATTR_ENTITY_ID),
@@ -134,17 +142,21 @@ def extra_validation_checks(val):
     return val
 
 
-def rewrite_legacy_to_modern_conf(cfg: dict[str, dict]) -> list[dict]:
+def rewrite_legacy_to_modern_conf(
+    hass: HomeAssistant, cfg: dict[str, dict]
+) -> list[dict]:
     """Rewrite legacy sensor definitions to modern ones."""
     sensors = []
 
     for object_id, entity_cfg in cfg.items():
         entity_cfg = {**entity_cfg, CONF_OBJECT_ID: object_id}
 
-        entity_cfg = rewrite_common_legacy_to_modern_conf(entity_cfg, LEGACY_FIELDS)
+        entity_cfg = rewrite_common_legacy_to_modern_conf(
+            hass, entity_cfg, LEGACY_FIELDS
+        )
 
         if CONF_NAME not in entity_cfg:
-            entity_cfg[CONF_NAME] = template.Template(object_id)
+            entity_cfg[CONF_NAME] = template.Template(object_id, hass)
 
         sensors.append(entity_cfg)
 
@@ -152,7 +164,7 @@ def rewrite_legacy_to_modern_conf(cfg: dict[str, dict]) -> list[dict]:
 
 
 PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA.extend(
+    SENSOR_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_TRIGGER): cv.match_all,  # to raise custom warning
             vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(LEGACY_SENSOR_SCHEMA),
@@ -202,7 +214,7 @@ async def async_setup_platform(
         _async_create_template_tracking_entities(
             async_add_entities,
             hass,
-            rewrite_legacy_to_modern_conf(config[CONF_SENSORS]),
+            rewrite_legacy_to_modern_conf(hass, config[CONF_SENSORS]),
             None,
         )
         return
@@ -230,7 +242,7 @@ async def async_setup_entry(
     """Initialize config entry."""
     _options = dict(config_entry.options)
     _options.pop("template_type")
-    validated_config = SENSOR_SCHEMA(_options)
+    validated_config = SENSOR_CONFIG_SCHEMA(_options)
     async_add_entities([SensorTemplate(hass, validated_config, config_entry.entry_id)])
 
 
@@ -239,7 +251,7 @@ def async_create_preview_sensor(
     hass: HomeAssistant, name: str, config: dict[str, Any]
 ) -> SensorTemplate:
     """Create a preview sensor."""
-    validated_config = SENSOR_SCHEMA(config | {CONF_NAME: name})
+    validated_config = SENSOR_CONFIG_SCHEMA(config | {CONF_NAME: name})
     return SensorTemplate(hass, validated_config, None)
 
 

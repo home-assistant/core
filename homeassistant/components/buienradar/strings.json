@@ -19,9 +19,9 @@
     "step": {
       "init": {
         "data": {
-          "country_code": "Country code of the country to display camera images.",
-          "delta": "Time interval in seconds between camera image updates",
-          "timeframe": "Minutes to look ahead for precipitation forecast"
+          "country_code": "Country to display camera images for.",
+          "delta": "Interval between camera image updates",
+          "timeframe": "Time to look ahead for precipitation forecast"
         }
       }
     }

@@ -1,11 +1,11 @@
 """Test the SFR Box buttons."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
 from sfrbox_api.exceptions import SFRBoxError
 from syrupy.assertion import SnapshotAssertion
-from typing_extensions import Generator
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.config_entries import ConfigEntry

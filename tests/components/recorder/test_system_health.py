@@ -15,13 +15,15 @@ from tests.common import get_system_health_info
 from tests.typing import RecorderInstanceGenerator
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_recorder_system_health(
     recorder_mock: Recorder, hass: HomeAssistant, recorder_db_url: str
 ) -> None:
-    """Test recorder system health."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test is specific for SQLite
-        return
+    """Test recorder system health.
+
+    This test is specific for SQLite.
+    """
 
     assert await async_setup_component(hass, "system_health", {})
     await async_wait_recording_done(hass)
@@ -100,15 +102,17 @@ async def test_recorder_system_health_db_url_missing_host(
     }
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_recorder_system_health_crashed_recorder_runs_table(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
     recorder_db_url: str,
 ) -> None:
-    """Test recorder system health with crashed recorder runs table."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test is specific for SQLite
-        return
+    """Test recorder system health with crashed recorder runs table.
+
+    This test is specific for SQLite.
+    """
 
     with patch(
         "homeassistant.components.recorder.table_managers.recorder_runs.RecorderRunsManager.load_from_db"

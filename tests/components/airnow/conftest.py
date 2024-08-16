@@ -1,10 +1,10 @@
 """Define fixtures for AirNow tests."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.airnow import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS

@@ -29,7 +29,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.requirements import (
     RequirementsNotFound,
@@ -340,7 +340,7 @@ def async_get_entity_registry_entry_or_raise(
 
 @callback
 def async_validate_entity_schema(
-    hass: HomeAssistant, config: ConfigType, schema: vol.Schema
+    hass: HomeAssistant, config: ConfigType, schema: VolSchemaType
 ) -> ConfigType:
     """Validate schema and resolve entity registry entry id to entity_id."""
     config = schema(config)

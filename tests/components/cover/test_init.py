@@ -156,7 +156,7 @@ def is_closing(hass, ent):
     return hass.states.is_state(ent.entity_id, STATE_CLOSING)
 
 
-def _create_tuples(enum: Enum, constant_prefix: str) -> list[tuple[Enum, str]]:
+def _create_tuples(enum: type[Enum], constant_prefix: str) -> list[tuple[Enum, str]]:
     return [(enum_field, constant_prefix) for enum_field in enum]
 
 

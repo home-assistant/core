@@ -33,7 +33,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from homeassistant.util import dt as dt_util
 
 from . import subscription
@@ -185,7 +185,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
         await MqttEntity.async_will_remove_from_hass(self)
 
     @staticmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
@@ -260,7 +260,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
             return
         try:
             if (payload_datetime := dt_util.parse_datetime(payload)) is None:
-                raise ValueError
+                raise ValueError  # noqa: TRY301
         except ValueError:
             _LOGGER.warning("Invalid state message '%s' from '%s'", payload, msg.topic)
             self._attr_native_value = None
@@ -280,7 +280,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
         try:
             last_reset = dt_util.parse_datetime(str(payload))
             if last_reset is None:
-                raise ValueError
+                raise ValueError  # noqa: TRY301
             self._attr_last_reset = last_reset
         except ValueError:
             _LOGGER.warning(

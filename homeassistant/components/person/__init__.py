@@ -50,7 +50,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
 
 from .const import DOMAIN
@@ -165,7 +165,7 @@ def entities_in_person(hass: HomeAssistant, entity_id: str) -> list[str]:
     return person_entity.device_trackers
 
 
-CREATE_FIELDS = {
+CREATE_FIELDS: VolDictType = {
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Optional(CONF_USER_ID): vol.Any(str, None),
     vol.Optional(CONF_DEVICE_TRACKERS, default=list): vol.All(
@@ -175,7 +175,7 @@ CREATE_FIELDS = {
 }
 
 
-UPDATE_FIELDS = {
+UPDATE_FIELDS: VolDictType = {
     vol.Optional(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Optional(CONF_USER_ID): vol.Any(str, None),
     vol.Optional(CONF_DEVICE_TRACKERS, default=list): vol.All(

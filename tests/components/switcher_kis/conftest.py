@@ -1,9 +1,9 @@
 """Common fixtures and objects for the Switcher integration tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
-from typing_extensions import Generator
 
 
 @pytest.fixture

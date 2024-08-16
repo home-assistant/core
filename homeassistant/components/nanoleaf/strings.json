@@ -52,5 +52,11 @@
         }
       }
     }
+  },
+  "issues": {
+    "deprecated_device_trigger": {
+      "title": "Nanoleaf device trigger is deprecated",
+      "description": "The Nanoleaf device trigger is deprecated and will be removed in a future release. You can now use the gesture event entity to build automations."
+    }
   }
 }

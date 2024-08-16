@@ -52,8 +52,10 @@ from .const import (  # noqa: F401
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-SCAN_INTERVAL: Final = timedelta(seconds=30)
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
+PLATFORM_SCHEMA: Final = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE: Final = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL: Final = timedelta(seconds=30)
 
 CONF_DEFAULT_CODE = "default_code"
 
@@ -61,8 +63,6 @@ ALARM_SERVICE_SCHEMA: Final = make_entity_service_schema(
     {vol.Optional(ATTR_CODE): cv.string}
 )
 
-PLATFORM_SCHEMA: Final = cv.PLATFORM_SCHEMA
-PLATFORM_SCHEMA_BASE: Final = cv.PLATFORM_SCHEMA_BASE
 
 # mypy: disallow-any-generics
 

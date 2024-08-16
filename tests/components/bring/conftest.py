@@ -1,11 +1,11 @@
 """Common fixtures for the Bring! tests."""
 
+from collections.abc import Generator
 from typing import cast
 from unittest.mock import AsyncMock, patch
 
 from bring_api.types import BringAuthResponse
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.bring import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD

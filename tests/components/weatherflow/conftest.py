@@ -1,12 +1,12 @@
 """Fixtures for Weatherflow integration tests."""
 
 import asyncio
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from pyweatherflowudp.client import EVENT_DEVICE_DISCOVERED
 from pyweatherflowudp.device import WeatherFlowDevice
-from typing_extensions import Generator
 
 from homeassistant.components.weatherflow.const import DOMAIN
 

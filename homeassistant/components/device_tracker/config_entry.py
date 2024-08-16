@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from functools import cached_property
 from typing import final
 
 from homeassistant.components import zone
@@ -168,7 +169,7 @@ class BaseTrackerEntity(Entity):
     _attr_device_info: None = None
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    @property
+    @cached_property
     def battery_level(self) -> int | None:
         """Return the battery level of the device.
 
@@ -195,7 +196,7 @@ class BaseTrackerEntity(Entity):
 class TrackerEntity(BaseTrackerEntity):
     """Base class for a tracked device."""
 
-    @property
+    @cached_property
     def should_poll(self) -> bool:
         """No polling for entities that have location pushed."""
         return False
@@ -205,7 +206,7 @@ class TrackerEntity(BaseTrackerEntity):
         """All updates need to be written to the state machine if we're not polling."""
         return not self.should_poll
 
-    @property
+    @cached_property
     def location_accuracy(self) -> int:
         """Return the location accuracy of the device.
 
@@ -213,17 +214,17 @@ class TrackerEntity(BaseTrackerEntity):
         """
         return 0
 
-    @property
+    @cached_property
     def location_name(self) -> str | None:
         """Return a location name for the current location of the device."""
         return None
 
-    @property
+    @cached_property
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
         return None
 
-    @property
+    @cached_property
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
         return None
@@ -266,17 +267,17 @@ class TrackerEntity(BaseTrackerEntity):
 class ScannerEntity(BaseTrackerEntity):
     """Base class for a tracked device that is on a scanned network."""
 
-    @property
+    @cached_property
     def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         return None
 
-    @property
+    @cached_property
     def mac_address(self) -> str | None:
         """Return the mac address of the device."""
         return None
 
-    @property
+    @cached_property
     def hostname(self) -> str | None:
         """Return hostname of the device."""
         return None

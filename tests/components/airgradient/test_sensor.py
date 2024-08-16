@@ -27,7 +27,7 @@ from tests.common import (
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    mock_airgradient_client: AsyncMock,
+    airgradient_devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -53,7 +53,7 @@ async def test_create_entities(
 
     assert len(hass.states.async_all()) == 0
     mock_airgradient_client.get_current_measures.return_value = Measures.from_json(
-        load_fixture("current_measures.json", DOMAIN)
+        load_fixture("current_measures_indoor.json", DOMAIN)
     )
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)

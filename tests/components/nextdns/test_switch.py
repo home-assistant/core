@@ -8,6 +8,7 @@ from aiohttp.client_exceptions import ClientConnectorError
 from nextdns import ApiError
 import pytest
 from syrupy import SnapshotAssertion
+from tenacity import RetryError
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -94,7 +95,15 @@ async def test_switch_off(hass: HomeAssistant) -> None:
         mock_switch_on.assert_called_once()
 
 
-async def test_availability(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "exc",
+    [
+        ApiError("API Error"),
+        RetryError("Retry Error"),
+        TimeoutError,
+    ],
+)
+async def test_availability(hass: HomeAssistant, exc: Exception) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
     await init_integration(hass)
 
@@ -106,7 +115,7 @@ async def test_availability(hass: HomeAssistant) -> None:
     future = utcnow() + timedelta(minutes=10)
     with patch(
         "homeassistant.components.nextdns.NextDns.get_settings",
-        side_effect=ApiError("API Error"),
+        side_effect=exc,
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done(wait_background_tasks=True)

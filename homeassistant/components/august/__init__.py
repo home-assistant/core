@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import cast
 
 from aiohttp import ClientResponseError
-from path import Path
 from yalexs.exceptions import AugustApiAIOHTTPError
 from yalexs.manager.exceptions import CannotConnect, InvalidAuth, RequireValidation
 from yalexs.manager.gateway import Config as YaleXSConfig

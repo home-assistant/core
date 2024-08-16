@@ -22,7 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 
 from . import subscription
 from .config import MQTT_RW_SCHEMA
@@ -121,7 +121,7 @@ class MqttTextEntity(MqttEntity, TextEntity):
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     @staticmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 

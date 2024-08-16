@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import binascii
 import logging
+from re import sub
 from typing import Any
 
 import pyotp
@@ -47,6 +48,7 @@ class TOTPConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             if user_input.get(CONF_TOKEN) and not user_input.get(CONF_NEW_TOKEN):
+                user_input[CONF_TOKEN] = sub(r"\s+", "", user_input[CONF_TOKEN])
                 try:
                     await self.hass.async_add_executor_job(
                         pyotp.TOTP(user_input[CONF_TOKEN]).now

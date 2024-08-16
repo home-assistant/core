@@ -1,10 +1,10 @@
 """Common fixtures for the Traccar Server tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from pytraccar import ApiClient, SubscriptionStatus
-from typing_extensions import Generator
 
 from homeassistant.components.traccar_server.const import (
     CONF_CUSTOM_ATTRIBUTES,

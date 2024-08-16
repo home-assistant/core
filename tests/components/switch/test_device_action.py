@@ -7,7 +7,7 @@ from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.switch import DOMAIN
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
@@ -22,12 +22,6 @@ from tests.common import (
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
 def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
     """Stub copying the blueprints to the config folder."""
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 async def test_get_actions(
@@ -115,7 +109,6 @@ async def test_action(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off actions."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -190,7 +183,6 @@ async def test_action_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off actions."""
     config_entry = MockConfigEntry(domain="test", data={})
