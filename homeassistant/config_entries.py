@@ -1330,10 +1330,17 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         try:
             result = await self._async_handle_step(flow, flow.init_step, data)
         finally:
-            init_done = self._pending_import_flows[handler].get(flow_id)
-            if init_done and not init_done.done():
-                init_done.set_result(None)
+            self._set_pending_import_done(flow)
         return flow, result
+
+    def _set_pending_import_done(self, flow: ConfigFlow) -> None:
+        """Set pending import flow as done."""
+        if (
+            (handler_import_flows := self._pending_import_flows.get(flow.handler))
+            and (init_done := handler_import_flows.get(flow.flow_id))
+            and not init_done.done()
+        ):
+            init_done.set_result(None)
 
     @callback
     def async_shutdown(self) -> None:
@@ -1355,12 +1362,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         # We do this to avoid a circular dependency where async_finish_flow sets up a
         # new entry, which needs the integration to be set up, which is waiting for
         # init to be done.
-        if (
-            (handler_import_flows := self._pending_import_flows.get(flow.handler))
-            and (init_done := handler_import_flows.get(flow.flow_id))
-            and not init_done.done()
-        ):
-            init_done.set_result(None)
+        self._set_pending_import_done(flow)
 
         # Remove notification if no other discovery config entries in progress
         if not self._async_has_other_discovery_flows(flow.flow_id):
