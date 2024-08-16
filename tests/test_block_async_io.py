@@ -256,7 +256,7 @@ async def test_protect_path_open(caplog: pytest.LogCaptureFixture) -> None:
 
 
 async def test_protect_path_read_bytes(caplog: pytest.LogCaptureFixture) -> None:
-    """Test reading a file bytes a file in the event loop logs."""
+    """Test reading file bytes in the event loop logs."""
     with patch.object(block_async_io, "_IN_TESTS", False):
         block_async_io.enable()
     with (
@@ -269,7 +269,7 @@ async def test_protect_path_read_bytes(caplog: pytest.LogCaptureFixture) -> None
 
 
 async def test_protect_path_read_text(caplog: pytest.LogCaptureFixture) -> None:
-    """Test reading a file text a file in the event loop logs."""
+    """Test reading file text in the event loop logs."""
     with patch.object(block_async_io, "_IN_TESTS", False):
         block_async_io.enable()
     with (
@@ -282,7 +282,7 @@ async def test_protect_path_read_text(caplog: pytest.LogCaptureFixture) -> None:
 
 
 async def test_protect_path_write_bytes(caplog: pytest.LogCaptureFixture) -> None:
-    """Test write a file bytes a file in the event loop logs."""
+    """Test write file bytes in the event loop logs."""
     with patch.object(block_async_io, "_IN_TESTS", False):
         block_async_io.enable()
     with (
@@ -295,7 +295,7 @@ async def test_protect_path_write_bytes(caplog: pytest.LogCaptureFixture) -> Non
 
 
 async def test_protect_path_write_text(caplog: pytest.LogCaptureFixture) -> None:
-    """Test writing a file text a file in the event loop logs."""
+    """Test write file text in the event loop logs."""
     with patch.object(block_async_io, "_IN_TESTS", False):
         block_async_io.enable()
     with (
