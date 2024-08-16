@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
+from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL, const
 from homeassistant.config_entries import ConfigEntryState
@@ -19,6 +20,7 @@ from tests.typing import ClientSessionGenerator
 async def test_motion_sensor(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
     config_entry: MockConfigEntry,
     reolink_connect: MagicMock,
     entity_registry: er.EntityRegistry,

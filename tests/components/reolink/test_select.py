@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from reolink_aio.api import Chime
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
+from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
@@ -28,6 +29,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def test_floodlight_mode_select(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     config_entry: MockConfigEntry,
     reolink_connect: MagicMock,
     entity_registry: er.EntityRegistry,
@@ -71,9 +73,8 @@ async def test_floodlight_mode_select(
         )
 
     reolink_connect.whiteled_mode.return_value = -99  # invalid value
-    async_fire_time_changed(
-        hass, utcnow() + DEVICE_UPDATE_INTERVAL + timedelta(seconds=30)
-    )
+    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
@@ -107,6 +108,7 @@ async def test_play_quick_reply_message(
 
 async def test_chime_select(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     config_entry: MockConfigEntry,
     reolink_connect: MagicMock,
     test_chime: Chime,
@@ -150,9 +152,8 @@ async def test_chime_select(
         )
 
     test_chime.event_info = {}
-    async_fire_time_changed(
-        hass, utcnow() + DEVICE_UPDATE_INTERVAL + timedelta(seconds=30)
-    )
+    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNKNOWN

@@ -4,6 +4,7 @@ import asyncio
 from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from freezegun.api import FrozenDateTimeFactory
 
 import pytest
 from reolink_aio.api import Chime
@@ -104,6 +105,7 @@ async def test_failures_parametrized(
 
 async def test_firmware_error_twice(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     reolink_connect: MagicMock,
     config_entry: MockConfigEntry,
 ) -> None:
@@ -120,9 +122,8 @@ async def test_firmware_error_twice(
     entity_id = f"{Platform.UPDATE}.{TEST_NVR_NAME}_firmware"
     assert hass.states.get(entity_id).state == STATE_OFF
 
-    async_fire_time_changed(
-        hass, utcnow() + FIRMWARE_UPDATE_INTERVAL + timedelta(minutes=1)
-    )
+    freezer.tick(FIRMWARE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
@@ -130,6 +131,7 @@ async def test_firmware_error_twice(
 
 async def test_credential_error_three(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     reolink_connect: MagicMock,
     config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
@@ -147,9 +149,8 @@ async def test_credential_error_three(
     issue_id = f"config_entry_reauth_{const.DOMAIN}_{config_entry.entry_id}"
     for _ in range(NUM_CRED_ERRORS):
         assert (HOMEASSISTANT_DOMAIN, issue_id) not in issue_registry.issues
-        async_fire_time_changed(
-            hass, utcnow() + DEVICE_UPDATE_INTERVAL + timedelta(seconds=30)
-        )
+        freezer.tick(DEVICE_UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     assert (HOMEASSISTANT_DOMAIN, issue_id) in issue_registry.issues
