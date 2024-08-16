@@ -102,8 +102,6 @@ async def async_setup_devices(
     entry: ThinqConfigEntry,
 ) -> None:
     """Set up and register devices."""
-    _LOGGER.warning("Starting set up devices")
-
     entry.runtime_data.device_map.clear()
 
     # Get a device list from the server.
