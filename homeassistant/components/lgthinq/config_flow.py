@@ -84,12 +84,14 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason=reason_str)
 
         # If verification is success, create entry.
-        data = {
-            CONF_ACCESS_TOKEN: self._access_token,
-            CONF_CONNECT_CLIENT_ID: connect_client_id,
-            CONF_COUNTRY: self._country_code,
-        }
-        return self.async_create_entry(title=self._entry_name, data=data)
+        return self.async_create_entry(
+            title=self._entry_name,
+            data={
+                CONF_ACCESS_TOKEN: self._access_token,
+                CONF_CONNECT_CLIENT_ID: connect_client_id,
+                CONF_COUNTRY: self._country_code,
+            }
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
