@@ -22,6 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -51,6 +52,9 @@ CONF_SOURCE_IGNORE = "source_ignore"
 CONF_SOURCE_NAMES = "source_names"
 CONF_ZONE_IGNORE = "zone_ignore"
 CONF_ZONE_NAMES = "zone_names"
+
+STORAGE_KEY = f"{DOMAIN}.discovery"
+STORAGE_VERSION = 1
 
 CURSOR_TYPE_MAP = {
     CURSOR_TYPE_DOWN: rxv.RXV.menu_down.__name__,
@@ -113,7 +117,7 @@ class YamahaConfigInfo:
             self.from_discovery = True
 
 
-def _discovery(config_info):
+def _discovery(config_info, data):
     """Discover list of zone controllers from configuration in the network."""
     if config_info.from_discovery:
         _LOGGER.debug("Discovery Zones")
@@ -136,17 +140,24 @@ def _discovery(config_info):
         with contextlib.suppress(AttributeError, ValueError):
             for recv in rxv.find(DISCOVER_TIMEOUT):
                 _LOGGER.debug(
-                    "Found Serial %s %s %s",
+                    "Found %s(%s) Model: %s Serial: %s Url: %s",
+                    config_info.name,
+                    recv.friendly_name,
+                    recv.model_name,
                     recv.serial_number,
                     recv.ctrl_url,
-                    recv.zone,
                 )
+                break
                 if recv.ctrl_url == config_info.ctrl_url:
                     _LOGGER.debug(
-                        "Config Zones Matched Serial %s: %s",
+                        "Config Zones Matched with Serial %s: %s",
                         recv.ctrl_url,
                         recv.serial_number,
                     )
+                    data[config_info.ctrl_url] = {
+                        "serial_number": recv.serial_number,
+                        "model_name": recv.model_name,
+                    }
                     zones = rxv.RXV(
                         config_info.ctrl_url,
                         friendly_name=config_info.name,
@@ -154,6 +165,23 @@ def _discovery(config_info):
                         model_name=recv.model_name,
                     ).zone_controllers()
                     break
+
+        if not zones:
+            _LOGGER.debug("Discovery Store Fallback")
+            # Fix for rxv.find being flakey we cache info and check that also. To be removed after ssdp and config flow sorted.
+            if config_info.ctrl_url in data:
+                _LOGGER.debug(
+                    "Discovery store data matched with Serial %s %s %s",
+                    config_info.ctrl_url,
+                    data[config_info.ctrl_url]["serial_number"],
+                    data[config_info.ctrl_url]["model_name"],
+                )
+                zones = rxv.RXV(
+                    config_info.ctrl_url,
+                    friendly_name=config_info.name,
+                    serial_number=data[config_info.ctrl_url]["serial_number"],
+                    model_name=data[config_info.ctrl_url]["model_name"],
+                ).zone_controllers()
 
         if not zones:
             _LOGGER.debug("Config Zones Fallback")
@@ -179,10 +207,18 @@ async def async_setup_platform(
     # Get the Infos for configuration from config (YAML) or Discovery
     config_info = YamahaConfigInfo(config=config, discovery_info=discovery_info)
     # Async check if the Receivers are there in the network
+    store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
+    data = await store.async_load()
+    if not data:
+        data = {}
+    _LOGGER.debug("Discovery data store %s", data)
+
     try:
-        zone_ctrls = await hass.async_add_executor_job(_discovery, config_info)
+        zone_ctrls = await hass.async_add_executor_job(_discovery, config_info, data)
     except requests.exceptions.ConnectionError as ex:
         raise PlatformNotReady(f"Issue while connecting to {config_info.name}") from ex
+
+    await store.async_save(data)
 
     entities = []
     for zctrl in zone_ctrls:
