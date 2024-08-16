@@ -11,6 +11,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.network import is_ip_address
 
@@ -69,6 +70,9 @@ class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData]):
                 except SmlightAuthError as err:
                     LOGGER.error("Failed to authenticate: %s", err)
                     raise ConfigEntryError from err
+
+        info = await self.client.get_info()
+        self.unique_id = format_mac(info.MAC)
 
     async def _async_update_data(self) -> SmData:
         """Fetch data from the SMLIGHT device."""
