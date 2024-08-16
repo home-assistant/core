@@ -1809,6 +1809,14 @@ async def test_register_entity_service_non_entity_service_schema(
             vol.Schema({"some": str}),
             Mock(),
         )
+    # The check currently does not recurse into vol.All or vol.Any allowing these
+    # non-compliant schemas to pass
+    entity_platform.async_register_entity_service(
+        "hello", vol.All(vol.Schema({"some": str})), Mock()
+    )
+    entity_platform.async_register_entity_service(
+        "hello", vol.Any(vol.Schema({"some": str})), Mock()
+    )
 
 
 @pytest.mark.parametrize("update_before_add", [True, False])
