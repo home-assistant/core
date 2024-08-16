@@ -31,11 +31,18 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_ADS_FACTOR): cv.positive_int,
         vol.Optional(CONF_ADS_TYPE, default=ads.ADSTYPE_INT): vol.In(
             [
+                ads.ADSTYPE_WORD,
+                ads.ADSTYPE_DWORD,
+                ads.ADSTYPE_SINT,
+                ads.ADSTYPE_USINT,
                 ads.ADSTYPE_INT,
                 ads.ADSTYPE_UINT,
+                ads.ADSTYPE_BOOL,
                 ads.ADSTYPE_BYTE,
                 ads.ADSTYPE_DINT,
                 ads.ADSTYPE_UDINT,
+                ads.ADSTYPE_LREAL,
+                ads.ADSTYPE_REAL,
             ]
         ),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

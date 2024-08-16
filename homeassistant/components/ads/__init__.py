@@ -29,18 +29,34 @@ DATA_ADS = "data_ads"
 # Supported Types
 ADSTYPE_BOOL = "bool"
 ADSTYPE_BYTE = "byte"
-ADSTYPE_DINT = "dint"
+ADSTYPE_WORD = "word"
+ADSTYPE_DWORD = "dword"
+ADSTYPE_SINT = "sint"
+ADSTYPE_USINT = "usint"
 ADSTYPE_INT = "int"
+ADSTYPE_DINT = "dint"
 ADSTYPE_UDINT = "udint"
 ADSTYPE_UINT = "uint"
+ADSTYPE_LREAL = "lreal"
+ADSTYPE_REAL = "real"
+ADSTYPE_STRING = "string"
+ADSTYPE_TIME = "time"
 
 ADS_TYPEMAP = {
     ADSTYPE_BOOL: pyads.PLCTYPE_BOOL,
     ADSTYPE_BYTE: pyads.PLCTYPE_BYTE,
-    ADSTYPE_DINT: pyads.PLCTYPE_DINT,
+    ADSTYPE_WORD: pyads.PLCTYPE_WORD,
+    ADSTYPE_DWORD: pyads.PLCTYPE_DWORD,
     ADSTYPE_INT: pyads.PLCTYPE_INT,
+    ADSTYPE_SINT: pyads.PLCTYPE_SINT,
+    ADSTYPE_USINT: pyads.PLCTYPE_USINT,
+    ADSTYPE_DINT: pyads.PLCTYPE_DINT,
     ADSTYPE_UDINT: pyads.PLCTYPE_UDINT,
     ADSTYPE_UINT: pyads.PLCTYPE_UINT,
+    ADSTYPE_LREAL: pyads.PLCTYPE_LREAL,
+    ADSTYPE_REAL: pyads.PLCTYPE_REAL,
+    ADSTYPE_STRING: pyads.PLCTYPE_STRING,
+    ADSTYPE_TIME: pyads.PLCTYPE_TIME,
 }
 
 CONF_ADS_FACTOR = "factor"
@@ -79,8 +95,16 @@ SCHEMA_SERVICE_WRITE_DATA_BY_NAME = vol.Schema(
                 ADSTYPE_UINT,
                 ADSTYPE_BYTE,
                 ADSTYPE_BOOL,
+                ADSTYPE_WORD,
+                ADSTYPE_DWORD,
                 ADSTYPE_DINT,
                 ADSTYPE_UDINT,
+                ADSTYPE_SINT,
+                ADSTYPE_USINT,
+                ADSTYPE_REAL,
+                ADSTYPE_LREAL,
+                ADSTYPE_STRING,
+                ADSTYPE_TIME,
             ]
         ),
         vol.Required(CONF_ADS_VALUE): vol.Coerce(int),
@@ -243,16 +267,24 @@ class AdsHub:
         # Parse data to desired datatype
         if notification_item.plc_datatype == pyads.PLCTYPE_BOOL:
             value = bool(struct.unpack("<?", bytearray(data))[0])
+        elif notification_item.plc_datatype == pyads.PLCTYPE_BYTE:
+            value = struct.unpack("<b", bytearray(data))[0]
+        # elif notification_item.plc_datatype == pyads.PLCTYPE_BYTE:
+        #     value = struct.unpack("<B", bytearray(data))[0]
+        elif notification_item.plc_datatype == pyads.PLCTYPE_SINT:
+            value = struct.unpack("<B", bytearray(data))[0]
         elif notification_item.plc_datatype == pyads.PLCTYPE_INT:
             value = struct.unpack("<h", bytearray(data))[0]
-        elif notification_item.plc_datatype == pyads.PLCTYPE_BYTE:
-            value = struct.unpack("<B", bytearray(data))[0]
         elif notification_item.plc_datatype == pyads.PLCTYPE_UINT:
             value = struct.unpack("<H", bytearray(data))[0]
         elif notification_item.plc_datatype == pyads.PLCTYPE_DINT:
             value = struct.unpack("<i", bytearray(data))[0]
         elif notification_item.plc_datatype == pyads.PLCTYPE_UDINT:
             value = struct.unpack("<I", bytearray(data))[0]
+        elif notification_item.plc_datatype == pyads.PLCTYPE_LREAL:
+            value = struct.unpack("<d", bytearray(data))[0]
+        elif notification_item.plc_datatype == pyads.PLCTYPE_REAL:
+            value = struct.unpack("<f", bytearray(data))[0]
         else:
             value = bytearray(data)
             _LOGGER.warning("No callback available for this datatype")
