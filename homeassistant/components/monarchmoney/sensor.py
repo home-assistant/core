@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import CURRENCY_DOLLAR, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -84,6 +84,7 @@ MONARCH_MONEY_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
         value_fn=lambda account: account["currentBalance"],
         picture_fn=lambda account: account["logoUrl"],
         icon_fn=_type_to_icon,
+        native_unit_of_measurement=CURRENCY_DOLLAR,
     ),
     MonarchMoneySensorEntityDescription(
         key="age",
