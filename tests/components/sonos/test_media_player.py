@@ -27,6 +27,7 @@ from homeassistant.components.sonos.media_player import (
     VOLUME_INCREMENT,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -987,7 +988,7 @@ async def test_media_transport(
         MP_DOMAIN,
         service,
         {
-            "entity_id": "media_player.zone_a",
+            ATTR_ENTITY_ID: "media_player.zone_a",
         },
         blocking=True,
     )
