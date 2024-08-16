@@ -109,6 +109,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "enable_custom_integrations": "None",
     "enable_nightly_purge": "bool",
     "enable_statistics": "bool",
+    "enable_missing_statistics": "bool",
     "enable_schema_validation": "bool",
     "entity_registry": "EntityRegistry",
     "entity_registry_enabled_by_default": "None",

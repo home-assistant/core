@@ -1366,7 +1366,7 @@ async def test_statistics_runs_initiated(
 
 @pytest.mark.freeze_time("2022-09-13 09:00:00+02:00")
 @pytest.mark.parametrize("persistent_database", [True])
-@pytest.mark.parametrize("enable_statistics", [True])
+@pytest.mark.parametrize("enable_mising_statistics", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_compile_missing_statistics(
     async_test_recorder: RecorderInstanceGenerator, freezer: FrozenDateTimeFactory
