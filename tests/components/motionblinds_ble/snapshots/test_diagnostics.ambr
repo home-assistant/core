@@ -3,13 +3,11 @@
   dict({
     'device': dict({
       '__type': "<class 'motionblindsble.device.MotionDevice'>",
-      'repr': '<motionblindsble.device.MotionDevice object at 0xffff90efd490>',
     }),
     'device_attributes': dict({
       '_battery_callbacks': list([
         dict({
           '__type': "<class 'method'>",
-          'repr': '<bound method BatterySensor.async_update_battery of <entity sensor.motionblind_cccc_battery=unknown>>',
         }),
       ]),
       '_calibration_callbacks': list([
@@ -19,16 +17,13 @@
       '_connection_callbacks': list([
         dict({
           '__type': "<class 'function'>",
-          'repr': '<function MotionblindsBLESensorEntity.async_added_to_hass.<locals>.async_callback at 0xffff91524680>',
         }),
       ]),
       '_connection_queue': dict({
         '__type': "<class 'motionblindsble.device.ConnectionQueue'>",
-        'repr': '<motionblindsble.device.ConnectionQueue object at 0xffff90efddf0>',
       }),
       '_connection_type': dict({
         '__type': "<enum 'MotionConnectionType'>",
-        'repr': "<MotionConnectionType.DISCONNECTED: 'disconnected'>",
       }),
       '_current_bleak_client': None,
       '_custom_setting_disconnect_time': None,
@@ -46,29 +41,24 @@
       '_position_callbacks': list([
         dict({
           '__type': "<class 'method'>",
-          'repr': '<bound method MotionblindsBLECoverEntity.async_update_position of <entity cover.motionblind_cccc=unknown>>',
         }),
       ]),
       '_received_end_position_info_event': dict({
         '__type': "<class 'asyncio.locks.Event'>",
-        'repr': '<asyncio.locks.Event object at 0xffff90eff7a0 [unset]>',
       }),
       '_running_callbacks': list([
         dict({
           '__type': "<class 'method'>",
-          'repr': '<bound method MotionblindsBLECoverEntity.async_update_running of <entity cover.motionblind_cccc=unknown>>',
         }),
       ]),
       '_signal_strength_callbacks': list([
         dict({
           '__type': "<class 'function'>",
-          'repr': '<function MotionblindsBLESensorEntity.async_added_to_hass.<locals>.async_callback at 0xffff91168ae0>',
         }),
       ]),
       '_speed_callbacks': list([
         dict({
           '__type': "<class 'method'>",
-          'repr': '<bound method SpeedSelect.async_update_speed of <entity select.motionblind_cccc_speed=unknown>>',
         }),
       ]),
       '_status_callbacks': list([
@@ -76,11 +66,9 @@
       '_tilt': None,
       'ble_device': dict({
         '__type': "<class 'bleak.backends.device.BLEDevice'>",
-        'repr': 'BLEDevice(cc:cc:cc:cc:cc:cc, cc:cc:cc:cc:cc:cc)',
       }),
       'blind_type': dict({
         '__type': "<enum 'MotionBlindType'>",
-        'repr': "<MotionBlindType.ROLLER: 'Roller blind'>",
       }),
       'display_name': 'Motionblind cccc',
       'rssi': None,
