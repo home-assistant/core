@@ -120,7 +120,9 @@ async def test_wrong_version(hass: HomeAssistant) -> None:
         await smart_home.async_handle_message(hass, get_default_config(hass), msg)
 
 
-async def discovery_test(device, hass: HomeAssistant, expected_endpoints: int = 1):
+async def discovery_test(
+    device, hass: HomeAssistant, expected_endpoints: int = 1
+) -> dict[str, Any] | list[dict[str, Any]] | None:
     """Test alexa discovery request."""
     request = get_new_request("Alexa.Discovery", "Discover")
 
