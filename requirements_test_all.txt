@@ -515,7 +515,7 @@ bluecurrent-api==1.2.3
 bluemaestro-ble==0.2.3
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.19.3
+bluetooth-adapters==0.19.4
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.4.2
@@ -1241,7 +1241,7 @@ openerz-api==0.3.0
 openhomedevice==2.2.0
 
 # homeassistant.components.enigma2
-openwebifpy==4.2.5
+openwebifpy==4.2.7
 
 # homeassistant.components.opower
 opower==0.6.0
