@@ -160,7 +160,7 @@ def async_cleanup_device_registry(
         old_unique_id = next(iter(old_entry.identifiers))[1]
         if old_unique_id not in new_device_unique_ids:
             device_registry.async_remove_device(old_entry.id)
-            _LOGGER.warning("Remove device_registry: device_id=%s", old_entry.id)
+            _LOGGER.debug("Remove device_registry: device_id=%s", old_entry.id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> bool:
