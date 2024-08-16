@@ -1,6 +1,6 @@
 """Test the Bang & Olufsen WebSocket listener."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from mozart_api.models import SoftwareUpdateState
 import pytest
@@ -15,9 +15,13 @@ from homeassistant.core import HomeAssistant
 
 from .const import TEST_NAME
 
+from tests.common import MockConfigEntry
+
 
 async def test_connection(
-    hass: HomeAssistant, mock_config_entry, mock_mozart_client
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_mozart_client: AsyncMock,
 ) -> None:
     """Test on_connection and on_connection_lost logs and calls correctly."""
     mock_mozart_client.websocket_connected = True
@@ -49,7 +53,9 @@ async def test_connection(
 
 
 async def test_connection_lost(
-    hass: HomeAssistant, mock_config_entry, mock_mozart_client
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_mozart_client: AsyncMock,
 ) -> None:
     """Test on_connection_lost logs and calls correctly."""
     mock_config_entry.add_to_hass(hass)
@@ -84,7 +90,10 @@ async def test_connection_lost(
     ],
 )
 async def test_on_software_update_state(
-    initial_device, hass: HomeAssistant, mock_config_entry, mock_mozart_client
+    hass: HomeAssistant,
+    initial_device: bool,
+    mock_config_entry: MockConfigEntry,
+    mock_mozart_client: AsyncMock,
 ) -> None:
     """Test software version is updated through on_software_update_state."""
 
@@ -119,7 +128,10 @@ async def test_on_software_update_state(
     ],
 )
 async def test_on_all_notifications_raw(
-    initial_device, hass: HomeAssistant, mock_config_entry, mock_mozart_client
+    hass: HomeAssistant,
+    initial_device: bool,
+    mock_config_entry: MockConfigEntry,
+    mock_mozart_client: AsyncMock,
 ) -> None:
     """Test on_all_notifications_raw logs and fires as expected."""
 
