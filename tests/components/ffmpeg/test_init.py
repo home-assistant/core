@@ -22,7 +22,7 @@ from tests.common import assert_setup_component
 
 
 @callback
-def async_start(hass, entity_id=None):
+def async_start(hass: HomeAssistant, entity_id: str | None = None) -> None:
     """Start a FFmpeg process on entity.
 
     This is a legacy helper method. Do not use it for new tests.
@@ -32,7 +32,7 @@ def async_start(hass, entity_id=None):
 
 
 @callback
-def async_stop(hass, entity_id=None):
+def async_stop(hass: HomeAssistant, entity_id: str | None = None) -> None:
     """Stop a FFmpeg process on entity.
 
     This is a legacy helper method. Do not use it for new tests.
@@ -42,7 +42,7 @@ def async_stop(hass, entity_id=None):
 
 
 @callback
-def async_restart(hass, entity_id=None):
+def async_restart(hass: HomeAssistant, entity_id: str | None = None) -> None:
     """Restart a FFmpeg process on entity.
 
     This is a legacy helper method. Do not use it for new tests.
