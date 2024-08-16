@@ -72,9 +72,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> boo
 
     # Validate entry data.
     client_id = entry.data.get(CONF_CONNECT_CLIENT_ID)
-    if not isinstance(client_id, str):
-        raise ConfigEntryError(f"Invalid client id: {client_id}")
-
     access_token = entry.data.get(CONF_ACCESS_TOKEN)
     if not isinstance(access_token, str):
         raise ConfigEntryAuthFailed(f"Invalid PAT: {access_token}")
