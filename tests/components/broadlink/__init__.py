@@ -115,18 +115,27 @@ class BroadlinkDevice:
     """Representation of a Broadlink device."""
 
     def __init__(
-        self, name, host, mac, model, manufacturer, type_, devtype, fwversion, timeout
-    ):
+        self,
+        name: str,
+        host: str,
+        mac: str,
+        model: str,
+        manufacturer: str,
+        type_: str,
+        devtype: int,
+        fwversion: int,
+        timeout: int,
+    ) -> None:
         """Initialize the device."""
-        self.name: str = name
-        self.host: str = host
-        self.mac: str = mac
-        self.model: str = model
-        self.manufacturer: str = manufacturer
-        self.type: str = type_
-        self.devtype: int = devtype
-        self.timeout: int = timeout
-        self.fwversion: int = fwversion
+        self.name = name
+        self.host = host
+        self.mac = mac
+        self.model = model
+        self.manufacturer = manufacturer
+        self.type = type_
+        self.devtype = devtype
+        self.timeout = timeout
+        self.fwversion = fwversion
 
     async def setup_entry(self, hass, mock_api=None, mock_entry=None):
         """Set up the device."""

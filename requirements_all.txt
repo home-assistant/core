@@ -386,7 +386,7 @@ aiotankerkoenig==0.4.1
 aiotractive==0.6.0
 
 # homeassistant.components.unifi
-aiounifi==79
+aiounifi==80
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.3.2
@@ -2100,7 +2100,7 @@ pyownet==0.10.0.post1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.7.20
+pypck==0.7.21
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
