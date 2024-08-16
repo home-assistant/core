@@ -472,6 +472,6 @@ DISCOVERY_SCHEMAS = [
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
-        required_attributes=(EveCluster.Attributes.Pressure),
+        required_attributes=(EveCluster.Attributes.Pressure,),
     ),
 ]
