@@ -616,6 +616,7 @@ boschshcpy==0.2.91
 boto3==1.34.131
 
 # homeassistant.components.aws
+# homeassistant.components.aws_data
 botocore==1.34.131
 
 # homeassistant.components.bring

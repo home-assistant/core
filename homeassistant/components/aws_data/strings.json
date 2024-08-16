@@ -1,0 +1,41 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add Service Monitor of AWS Data",
+        "description": "Set up AWS Region Monitor for Services.",
+        "data": {
+          "aws_key": "AWS Client Key ID",
+          "aws_secret": "AWS Client Key Secret"
+        }
+      },
+      "service": {
+        "title": "Add Service Monitor of AWS Data",
+        "description": "Set up AWS Region Monitor for Services.",
+        "data": {
+          "aws_region": "AWS Region",
+          "aws_region_str": "AWS Region",
+          "aws_services": "Supported Services",
+          "aws_scan_regions": "Monitor All Regions.",
+          "aws_general_region": "Add General Region"
+        },
+        "data_description": {
+          "aws_region": "Separated by comma (,)",
+          "aws_region_str": "Choose multiples from list",
+          "aws_services": "Available services for monitoring",
+          "aws_general_region": "Gets only cost. Multiple Entries for different accounts.",
+          "aws_scan_regions": "Account Read Permisions Required."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "access_denied": "No Permissions To Service",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "AWS Account with Region Already Configured"
+    }
+  }
+}
