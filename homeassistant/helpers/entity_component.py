@@ -11,6 +11,7 @@ from types import ModuleType
 from typing import Any, Generic
 
 from typing_extensions import TypeVar
+import voluptuous as vol
 
 from homeassistant import config as conf_util
 from homeassistant.config_entries import ConfigEntry
@@ -266,6 +267,20 @@ class EntityComponent(Generic[_EntityT]):
         """Register an entity service."""
         if schema is None or isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
+        # Do a sanity check to check this is a valid entity service schema,
+        # the check could be extended to require All/Any to have sub schema(s)
+        # with all entity service fields
+        elif (
+            # Don't check All/Any
+            not isinstance(schema, (vol.All, vol.Any))
+            # Don't check All/Any wrapped in schema
+            and not isinstance(schema.schema, (vol.All, vol.Any))
+            and any(key not in schema.schema for key in cv.ENTITY_SERVICE_FIELDS)
+        ):
+            raise HomeAssistantError(
+                "The schema does not include all required keys: "
+                f"{", ".join(str(key) for key in cv.ENTITY_SERVICE_FIELDS)}"
+            )
 
         service_func: str | HassJob[..., Any]
         service_func = func if isinstance(func, str) else HassJob(func)
