@@ -27,17 +27,16 @@ async def test_motion_sensor(
     reolink_connect.model = "Reolink Duo PoE"
     reolink_connect.motion_detected.return_value = True
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.BINARY_SENSOR]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.BINARY_SENSOR}.{TEST_NVR_NAME}_motion_lens_0"
-    assert hass.states.is_state(entity_id, "on")
+    assert hass.states.get(entity_id).state == STATE_ON
 
     reolink_connect.motion_detected.return_value = False
-    async_fire_time_changed(
-        hass, utcnow() + DEVICE_UPDATE_INTERVAL + timedelta(seconds=30)
-    )
+    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.is_state(entity_id, "off")
