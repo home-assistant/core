@@ -20,8 +20,13 @@
           "aws_general_region": "Add General Region"
         },
         "data_description": {
+<<<<<<< HEAD
           "aws_region": "Separated by comma (,)",
           "aws_region_str": "Choose multiples from list",
+=======
+          "aws_region_str": "Separated by comma (,)",
+          "aws_region": "Choose multiples from list",
+>>>>>>> 833ac3afab (Setup Coordinates)
           "aws_services": "Available services for monitoring",
           "aws_general_region": "Gets only cost. Multiple Entries for different accounts.",
           "aws_scan_regions": "Account Read Permisions Required."
@@ -31,6 +36,10 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "access_denied": "No Permissions To Service",
+<<<<<<< HEAD
+=======
+      "unauthorized_operation": "Specific Operation Has No Permissions",
+>>>>>>> 833ac3afab (Setup Coordinates)
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },

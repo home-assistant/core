@@ -1,0 +1,8 @@
+﻿# StreamsList is a UTF-8 encoded .txt file that helps you specify alternate streams,
+# xattrs and resource forks white list. It supports "?" and "*" wildcard symbols.
+#
+#
+#
+com.apple.metadata:_kMDItemUserTags
+com.apple.ResourceFork
+com.apple.metadata:kMDItemFinderComment

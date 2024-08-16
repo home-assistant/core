@@ -7,7 +7,11 @@
   "documentation": "https://www.home-assistant.io/integrations/aws_data",
   "homekit": {},
   "iot_class": "cloud_polling",
+<<<<<<< HEAD
   "requirements": ["botocore==1.34.131"],
+=======
+  "requirements": ["boto3==1.34.131", "botocore==1.34.131"],
+>>>>>>> 833ac3afab (Setup Coordinates)
   "ssdp": [],
   "zeroconf": []
 }
