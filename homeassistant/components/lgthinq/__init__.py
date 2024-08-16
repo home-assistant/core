@@ -178,6 +178,4 @@ def async_cleanup_device_registry(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> bool:
     """Unload the entry."""
-    _LOGGER.warning("Starting unload entry")
-
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
