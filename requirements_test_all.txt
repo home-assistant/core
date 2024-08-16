@@ -270,7 +270,7 @@ aiolookin==1.0.0
 aiolyric==1.1.0
 
 # homeassistant.components.mealie
-aiomealie==0.8.0
+aiomealie==0.8.1
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -368,7 +368,7 @@ aiotankerkoenig==0.4.1
 aiotractive==0.6.0
 
 # homeassistant.components.unifi
-aiounifi==79
+aiounifi==80
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.3.2
@@ -518,7 +518,7 @@ bluecurrent-api==1.2.3
 bluemaestro-ble==0.2.3
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.19.3
+bluetooth-adapters==0.19.4
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.4.2
@@ -777,7 +777,7 @@ freebox-api==1.1.0
 fritzconnection[qr]==1.13.2
 
 # homeassistant.components.fyta
-fyta_cli==0.4.1
+fyta_cli==0.6.0
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
@@ -1244,7 +1244,7 @@ openerz-api==0.3.0
 openhomedevice==2.2.0
 
 # homeassistant.components.enigma2
-openwebifpy==4.2.5
+openwebifpy==4.2.7
 
 # homeassistant.components.opower
 opower==0.6.0
@@ -1684,7 +1684,7 @@ pyoverkiz==1.13.14
 pyownet==0.10.0.post1
 
 # homeassistant.components.lcn
-pypck==0.7.20
+pypck==0.7.21
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
