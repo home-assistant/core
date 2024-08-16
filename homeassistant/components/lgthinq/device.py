@@ -67,7 +67,7 @@ class LGDevice:
         # But, if the sub_id exists, it will be set to 'device_id_{sub_id}'.
         # e.g. device_id='TQSXXXX', sub_id='dryer' then 'TQSXXXX_dryer'.
         self._unique_id: str = (
-            f"{api.device_id}_{self._sub_id}" if self._sub_id else f"{api.device_id}"
+            f"{api.device_id}_{self._sub_id}" if self._sub_id else api.device_id
         )
 
         # Get the api instance.
