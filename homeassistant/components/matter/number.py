@@ -5,9 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from chip.clusters import Objects as clusters
-from matter_server.common.custom_clusters import (
-    EveCluster,
-)
+from matter_server.common.custom_clusters import EveCluster
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
 from homeassistant.components.number import (
@@ -16,7 +14,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, Platform, UnitOfTime, UnitOfLength
+from homeassistant.const import EntityCategory, Platform, UnitOfLength, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
