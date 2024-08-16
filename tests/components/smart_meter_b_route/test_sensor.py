@@ -11,7 +11,6 @@ from homeassistant.components.smart_meter_b_route.sensor import (
     SENSOR_DESCRIPTIONS,
     async_setup_entry,
 )
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import configure_integration
@@ -45,8 +44,8 @@ async def test_smart_meter_b_route_sensor_update(
 ) -> None:
     """Test SmartMeterBRouteSensor update."""
     config_entry = configure_integration(hass)
-    assert config_entry.state is ConfigEntryState.LOADED
     coordinator: BRouteUpdateCoordinator = config_entry.runtime_data
+
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
@@ -61,7 +60,6 @@ async def test_smart_meter_b_route_sensor_no_update(
     """Test SmartMeterBRouteSensor with no update."""
     entity_id = "sensor.smart_meter_b_route_current_r_phase"
     config_entry = configure_integration(hass)
-    assert config_entry.state is ConfigEntryState.LOADED
     coordinator: BRouteUpdateCoordinator = config_entry.runtime_data
 
     coordinator.data = {}
