@@ -5,11 +5,9 @@ from __future__ import annotations
 from viam.app.viam_client import ViamClient
 from viam.rpc.dial import Credentials, DialOptions
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_API_ID,
@@ -18,21 +16,21 @@ from .const import (
     CRED_TYPE_API_KEY,
     DOMAIN,
 )
-from .manager import ViamManager
+from .manager import ViamConfigEntry, ViamManager
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ViamConfigEntry) -> bool:
     """Set up the Viam services."""
 
-    async_setup_services(hass)
+    async_setup_services(hass, config)
 
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ViamConfigEntry) -> bool:
     """Set up viam from a config entry."""
     credential_type = entry.data[CONF_CREDENTIAL_TYPE]
     payload = entry.data[CONF_SECRET]
@@ -46,14 +44,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     viam_client = await ViamClient.create_from_dial_options(dial_options=dial_options)
     manager = ViamManager(hass, viam_client, entry.entry_id, dict(entry.data))
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = manager
+    entry.runtime_data = manager
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ViamConfigEntry) -> bool:
     """Unload a config entry."""
-    manager: ViamManager = hass.data[DOMAIN].pop(entry.entry_id)
+    manager: ViamManager = entry.runtime_data
     manager.unload()
 
     return True
