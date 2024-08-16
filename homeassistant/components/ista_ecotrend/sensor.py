@@ -7,7 +7,6 @@ from dataclasses import dataclass
 import datetime
 from enum import StrEnum
 import logging
-from typing import TYPE_CHECKING
 
 from homeassistant.components.recorder.models.statistics import (
     StatisticData,
@@ -26,7 +25,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.device_registry import (
+    DeviceEntry,
+    DeviceEntryType,
+    DeviceInfo,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -167,6 +170,7 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
 
     entity_description: IstaSensorEntityDescription
     _attr_has_entity_name = True
+    device_entry: DeviceEntry
 
     def __init__(
         self,
@@ -212,11 +216,9 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
 
     async def update_statistics(self) -> None:
         """Import ista EcoTrend historical statistics."""
-        if TYPE_CHECKING:
-            assert self.coordinator.config_entry
 
         # Remember the statistic_id that was initially created
-        # so in case the entity gets renamed, because we cannot
+        # in case the entity gets renamed, because we cannot
         # change the statistic_id
         name = self.coordinator.config_entry.options.get(
             f"lts_{self.entity_description.key}_{self.consumption_unit}"
@@ -267,8 +269,6 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
                 if statistics_since is None or consumptions["date"] > statistics_since
             ]
 
-            if TYPE_CHECKING:
-                assert self.device_entry
             metadata: StatisticMetaData = {
                 "has_mean": False,
                 "has_sum": True,
