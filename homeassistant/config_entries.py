@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections import UserDict
+from collections import UserDict, defaultdict
 from collections.abc import (
     Callable,
     Coroutine,
@@ -1224,8 +1224,12 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         super().__init__(hass)
         self.config_entries = config_entries
         self._hass_config = hass_config
-        self._pending_import_flows: dict[str, dict[str, asyncio.Future[None]]] = {}
-        self._initialize_futures: dict[str, list[asyncio.Future[None]]] = {}
+        self._pending_import_flows: defaultdict[
+            str, dict[str, asyncio.Future[None]]
+        ] = defaultdict(dict)
+        self._initialize_futures: defaultdict[str, set[asyncio.Future[None]]] = (
+            defaultdict(set)
+        )
         self._discovery_debouncer = Debouncer[None](
             hass,
             _LOGGER,
@@ -1278,12 +1282,10 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         loop = self.hass.loop
 
         if context["source"] == SOURCE_IMPORT:
-            self._pending_import_flows.setdefault(handler, {})[flow_id] = (
-                loop.create_future()
-            )
+            self._pending_import_flows[handler][flow_id] = loop.create_future()
 
         cancel_init_future = loop.create_future()
-        self._initialize_futures.setdefault(handler, []).append(cancel_init_future)
+        self._initialize_futures[handler].add(cancel_init_future)
         try:
             async with interrupt(
                 cancel_init_future,
@@ -1295,7 +1297,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
             raise asyncio.CancelledError from ex
         finally:
             self._initialize_futures[handler].remove(cancel_init_future)
-            self._pending_import_flows.get(handler, {}).pop(flow_id, None)
+            self._pending_import_flows[handler].pop(flow_id, None)
 
         if result["type"] != data_entry_flow.FlowResultType.ABORT:
             await self.async_post_init(flow, result)
@@ -1322,7 +1324,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         try:
             result = await self._async_handle_step(flow, flow.init_step, data)
         finally:
-            init_done = self._pending_import_flows.get(handler, {}).get(flow_id)
+            init_done = self._pending_import_flows[handler].get(flow_id)
             if init_done and not init_done.done():
                 init_done.set_result(None)
         return flow, result
@@ -1347,7 +1349,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         # We do this to avoid a circular dependency where async_finish_flow sets up a
         # new entry, which needs the integration to be set up, which is waiting for
         # init to be done.
-        init_done = self._pending_import_flows.get(flow.handler, {}).get(flow.flow_id)
+        init_done = self._pending_import_flows[flow.handler].get(flow.flow_id)
         if init_done and not init_done.done():
             init_done.set_result(None)
 
