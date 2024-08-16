@@ -289,9 +289,9 @@ async def test_feed_in_forecast_sensor(hass: HomeAssistant) -> None:
     assert first_forecast["renewables"] == 50
     assert first_forecast["spike_status"] == "none"
     assert first_forecast["descriptor"] == "very_low"
-    assert first_forecast["advanced_price_low"] == 0.1
-    assert first_forecast["advanced_price_predicted"] == 0.15
-    assert first_forecast["advanced_price_high"] == 0.2
+    assert first_forecast["advanced_price_low"] == -0.1
+    assert first_forecast["advanced_price_predicted"] == -0.15
+    assert first_forecast["advanced_price_high"] == -0.2
 
 
 @pytest.mark.usefixtures("setup_general")
