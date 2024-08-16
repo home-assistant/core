@@ -1,17 +1,17 @@
 {
   "data": [
     {
-      "bHeatEnabled": "False",
-      "bIsActive": "False",
-      "bOutRequestHeat": "False",
-      "bOverrideLimitingAllowed": "False",
-      "bPrimaryZone": "True",
+      "bHeatEnabled": false,
+      "bIsActive": false,
+      "bOutRequestHeat": false,
+      "bOverrideLimitingAllowed": false,
+      "bPrimaryZone": true,
       "datapoints": [
         {
           "addr": "SwitchBinary",
           "path": "site/0xEC0BBD04/2",
           "type": "Int",
-          "val": "None"
+          "val": null
         },
         {
           "addr": "SwitchBinary",
@@ -39,22 +39,51 @@
       "iPriority": 0,
       "iType": 1,
       "lOptions": 3,
-      "log": [],
+      "log": [
+        "2024-08-16 18:11:44.296 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/2)\n - RETURN VAL: EDATAPOINT_STATE_AWAITING_SYNCHRONISATION\n",
+        "2024-08-16 18:11:44.296 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/22)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:11:54.298 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/2)\n - RETURN VAL: EDATAPOINT_STATE_AWAITING_SYNCHRONISATION\n",
+        "2024-08-16 18:11:54.299 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/22)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:12:04.299 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/2)\n - RETURN VAL: EDATAPOINT_STATE_AWAITING_SYNCHRONISATION\n",
+        "2024-08-16 18:12:04.300 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/22)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:12:14.301 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/2)\n - RETURN VAL: EDATAPOINT_STATE_AWAITING_SYNCHRONISATION\n",
+        "2024-08-16 18:12:14.301 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/22)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:12:24.302 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/2)\n - RETURN VAL: EDATAPOINT_STATE_AWAITING_SYNCHRONISATION\n",
+        "2024-08-16 18:12:24.303 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/22)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:12:34.303 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/2)\n - RETURN VAL: EDATAPOINT_STATE_AWAITING_SYNCHRONISATION\n",
+        "2024-08-16 18:12:34.303 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/22)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:12:44.305 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/2)\n - RETURN VAL: EDATAPOINT_STATE_AWAITING_SYNCHRONISATION\n",
+        "2024-08-16 18:12:44.305 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/22)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:12:54.305 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/2)\n - RETURN VAL: EDATAPOINT_STATE_AWAITING_SYNCHRONISATION\n",
+        "2024-08-16 18:12:54.306 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/22)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:13:04.322 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/2)\n - RETURN VAL: EDATAPOINT_STATE_AWAITING_SYNCHRONISATION\n",
+        "2024-08-16 18:13:04.322 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/22)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:13:14.316 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/2)\n - RETURN VAL: EDATAPOINT_STATE_AWAITING_SYNCHRONISATION\n",
+        "2024-08-16 18:13:14.317 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/22)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:13:25.100 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/2)\n - RETURN VAL: EDATAPOINT_STATE_AWAITING_SYNCHRONISATION\n",
+        "2024-08-16 18:13:25.100 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/22)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:13:34.313 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/2)\n - RETURN VAL: EDATAPOINT_STATE_AWAITING_SYNCHRONISATION\n",
+        "2024-08-16 18:13:34.314 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/22)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:13:44.316 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/2)\n - RETURN VAL: EDATAPOINT_STATE_AWAITING_SYNCHRONISATION\n",
+        "2024-08-16 18:13:44.317 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/22)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:13:54.314 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/2)\n - RETURN VAL: EDATAPOINT_STATE_AWAITING_SYNCHRONISATION\n",
+        "2024-08-16 18:13:54.315 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/22)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:14:04.315 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/2)\n - RETURN VAL: EDATAPOINT_STATE_AWAITING_SYNCHRONISATION\n",
+        "2024-08-16 18:14:04.316 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/22)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:14:14.316 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/2)\n - RETURN VAL: EDATAPOINT_STATE_AWAITING_SYNCHRONISATION\n",
+        "2024-08-16 18:14:14.317 DBG ZoneWholeHouse(00) retrieving state for data point device (site/0xEC0BBD04/22)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n"
+      ],
       "lstIssues": [
         {
           "data": {
-            "location": "Duxford Close",
+            "location": "<Duxford Close>",
             "nodeHash": "0x0000005900010003",
             "nodeID": "2"
           },
           "id": "node:not_seen",
           "level": 2
         },
-        {
-          "data": { "msg": "", "location": "Duxford Close" },
-          "id": "manager:weather",
-          "level": 1
-        }
+        { "data": { "msg": "" }, "id": "manager:weather", "level": 1 }
       ],
       "mappings": {
         "0": ["site/0xEC0BBD04/3", "site/0xEC0BBD04/2", "site/0xEC0BBD04/22"],
@@ -123,7 +152,7 @@
               "addr": "SwitchBinary",
               "path": "site/0xEC0BBD04/2",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "hash": {
               "addr": "hash",
@@ -201,7 +230,7 @@
               "addr": "lastComms",
               "path": "site/0xEC0BBD04/22",
               "type": "Int",
-              "val": 1722858790
+              "val": 1723828445
             },
             "location": {
               "addr": "location",
@@ -213,7 +242,7 @@
               "addr": "lostFromModule",
               "path": "site/0xEC0BBD04/22",
               "type": "Bool",
-              "val": "False"
+              "val": false
             },
             "manfID": {
               "addr": "manfID",
@@ -227,8 +256,8 @@
       ],
       "strBuildDate": "Jun 11 2024",
       "strName": "Duxford Close",
-      "strTime": "12:53:08",
-      "tmLastTick": 1722858788,
+      "strTime": "18:14:14",
+      "tmLastTick": 1723828454,
       "trigger": {
         "boost": 0,
         "linkChildActive": 0,
@@ -240,26 +269,26 @@
         "test": 0
       },
       "weatherData": {
-        "feels_like": "None",
-        "humidity": "None",
-        "message": "None",
-        "precipitation": "None",
+        "feels_like": null,
+        "humidity": null,
+        "message": null,
+        "precipitation": null,
         "status": 16,
-        "temperature": "None",
-        "uv": "None",
-        "weather_type": "None"
+        "temperature": null,
+        "uv": null,
+        "weather_type": null
       },
       "zoneSubType": 0
     },
     {
       "activeTemperatureDevices": ["AssumedTemperature"],
       "assumedTemp": 20.0,
-      "bInHeatEnabled": "False",
-      "bIsActive": "False",
-      "bOutRequestHeat": "False",
-      "bOverrideLimitingAllowed": "True",
-      "bPrimaryZone": "True",
-      "bTriggerWarmup": "False",
+      "bInHeatEnabled": false,
+      "bIsActive": false,
+      "bOutRequestHeat": false,
+      "bOverrideLimitingAllowed": true,
+      "bPrimaryZone": true,
+      "bTriggerWarmup": false,
       "calibration": {
         "last_device_status": {},
         "last_result": "",
@@ -273,19 +302,19 @@
           "addr": "TEMPERATURE",
           "path": "site/WeatherData",
           "type": "Float",
-          "val": "None"
+          "val": null
         },
         {
           "addr": "TEMPERATURE",
           "path": "site/0xEC0BBD04/53",
           "type": "Float",
-          "val": "None"
+          "val": null
         },
         {
           "addr": "LUMINANCE",
           "path": "site/0xEC0BBD04/53",
           "type": "Float",
-          "val": "None"
+          "val": null
         },
         {
           "addr": "HEATING_1",
@@ -297,13 +326,13 @@
           "addr": "RELATIVE_HUMIDITY",
           "path": "site/WeatherData",
           "type": "Float",
-          "val": "None"
+          "val": null
         },
         {
           "addr": "Motion",
           "path": "site/0xEC0BBD04/53",
           "type": "Int",
-          "val": "None"
+          "val": null
         },
         {
           "addr": "Battery",
@@ -344,27 +373,56 @@
       "iType": 3,
       "lOptions": 24,
       "linkedSettings": {
-        "bFollowActive": "True",
-        "bFollowOutput": "False",
+        "bFollowActive": true,
+        "bFollowOutput": false,
         "fLinkSP": 21.0,
         "lstLinkedTo": []
       },
-      "log": [],
+      "log": [
+        "2024-08-16 18:09:04.269 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:09:14.270 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:09:24.271 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:09:34.272 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:09:44.273 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:09:54.275 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:10:04.276 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:10:14.277 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:10:24.278 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:10:34.279 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:10:44.280 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:10:54.282 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:11:04.283 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:11:14.285 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:11:24.286 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:11:34.287 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:11:44.288 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:11:54.291 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:12:04.292 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:12:14.293 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:12:24.294 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:12:34.295 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:12:44.296 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:12:54.297 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:13:04.301 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:13:14.302 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:13:25.085 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:13:34.306 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:13:44.306 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:13:54.307 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:14:04.308 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)",
+        "2024-08-16 18:14:14.309 DBG ZoneControlSP(01) failed to determine device setpoint limits for data point (site/0xEC0BBD04/11/HEATING_1) - using zone specific default/s; gotDeviceMinSP (false), deviceMinimumSP (4.000000), gotDeviceMaxSP (false), deviceMaximumSP (28.000000), deviceSetpoint (4.000000)"
+      ],
       "lstIssues": [
         {
           "data": {
             "location": "Lounge",
             "nodeHash": "0x0000013C00020002",
-            "nodeID": 53
+            "nodeID": "53"
           },
           "id": "node:not_seen",
           "level": 2
         },
-        {
-          "id": "zone:using_assumed_temp",
-          "level": 1,
-          "data": { "location": "Lounge" }
-        }
+        { "id": "zone:using_assumed_temp", "level": 1 }
       ],
       "lstNodes": [
         { "addr": "11", "type": "" },
@@ -393,19 +451,19 @@
               "addr": "ClockHour",
               "path": "site/0xEC0BBD04/11",
               "type": "Int",
-              "val": 12
+              "val": 10
             },
             "ClockMinute": {
               "addr": "ClockMinute",
               "path": "site/0xEC0BBD04/11",
               "type": "Int",
-              "val": 54
+              "val": 48
             },
             "ClockWeekday": {
               "addr": "ClockWeekday",
               "path": "site/0xEC0BBD04/11",
               "type": "Int",
-              "val": 1
+              "val": 5
             },
             "HEATING_1": {
               "addr": "HEATING_1",
@@ -459,7 +517,7 @@
               "addr": "lastComms",
               "path": "site/0xEC0BBD04/11",
               "type": "Int",
-              "val": 1722858659
+              "val": 1723828294
             },
             "location": {
               "addr": "location",
@@ -471,7 +529,7 @@
               "addr": "lostFromModule",
               "path": "site/0xEC0BBD04/11",
               "type": "Bool",
-              "val": "False"
+              "val": false
             },
             "manfID": {
               "addr": "manfID",
@@ -501,7 +559,7 @@
               "addr": "BasicValue",
               "path": "site/0xEC0BBD04/53",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "Battery": {
               "addr": "Battery",
@@ -513,7 +571,7 @@
               "addr": "LUMINANCE",
               "path": "site/0xEC0BBD04/53",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "LibraryType": {
               "addr": "LibraryType",
@@ -525,7 +583,7 @@
               "addr": "Motion",
               "path": "site/0xEC0BBD04/53",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "ProtocolVersion": {
               "addr": "ProtocolVersion",
@@ -537,13 +595,13 @@
               "addr": "TEMPERATURE",
               "path": "site/0xEC0BBD04/53",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "Tamper": {
               "addr": "Tamper",
               "path": "site/0xEC0BBD04/53",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "WakeUp_Interval": {
               "addr": "WakeUp_Interval",
@@ -585,7 +643,7 @@
               "addr": "lostFromModule",
               "path": "site/0xEC0BBD04/53",
               "type": "Bool",
-              "val": "False"
+              "val": false
             },
             "manfID": {
               "addr": "manfID",
@@ -603,37 +661,37 @@
               "addr": "PRECIPITATION",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "RELATIVE_HUMIDITY": {
               "addr": "RELATIVE_HUMIDITY",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "TEMPERATURE": {
               "addr": "TEMPERATURE",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "TEMPERATURE_FEELS_LIKE": {
               "addr": "TEMPERATURE_FEELS_LIKE",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "UV": {
               "addr": "UV",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "WEATHER_TYPE": {
               "addr": "WEATHER_TYPE",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "health": {
               "addr": "health",
@@ -645,14 +703,14 @@
               "addr": "message",
               "path": "site/WeatherData",
               "type": "String",
-              "val": "None"
+              "val": null
             }
           },
           "type": ""
         }
       ],
       "objFootprint": {
-        "bIsNight": "True",
+        "bIsNight": true,
         "fFootprintActiveSP": 21.0,
         "fFootprintAwaySP": 17.0,
         "fFootprintNightSP": 4.0,
@@ -687,8 +745,8 @@
           { "fSP": 4.0, "iDay": 6, "iTm": 80100 }
         ],
         "objReactive": {
-          "bTriggerOff": "True",
-          "bTriggerOn": "False",
+          "bTriggerOff": true,
+          "bTriggerOn": false,
           "fActivityLevel": 0.0,
           "fThreshold": 1.0,
           "iReactiveMinutesTriggerOff": 6,
@@ -737,7 +795,7 @@
         { "bReactive": 0.0, "fSP": 14.5, "iDay": 6, "iTm": 81000 }
       ],
       "strName": "Lounge",
-      "tmLastTick": 1722858788,
+      "tmLastTick": 1723828454,
       "tmMaxTimeAtSP": 1800,
       "tmTimeAtSP": 0,
       "trigger": {
@@ -751,16 +809,16 @@
         "test": 0
       },
       "warmupDuration": {
-        "bEnable": "True",
-        "bEnableCalcs": "False",
+        "bEnable": true,
+        "bEnableCalcs": false,
         "fRiseRate": 2.0,
         "iLagTime": 1958,
         "iRiseTime": 1800,
         "iTotalTime": 1827
       },
       "zoneReactive": {
-        "bTriggerOff": "True",
-        "bTriggerOn": "False",
+        "bTriggerOff": true,
+        "bTriggerOn": false,
         "fActivityLevel": 0.0,
         "fThreshold": 1.0,
         "iReactiveMinutesTriggerOff": 6,
@@ -775,12 +833,12 @@
     {
       "activeTemperatureDevices": ["site/0xEC0BBD04/21/TEMPERATURE"],
       "assumedTemp": 18.0,
-      "bInHeatEnabled": "False",
-      "bIsActive": "False",
-      "bOutRequestHeat": "False",
-      "bOverrideLimitingAllowed": "True",
-      "bPrimaryZone": "True",
-      "bTriggerWarmup": "False",
+      "bInHeatEnabled": false,
+      "bIsActive": false,
+      "bOutRequestHeat": false,
+      "bOverrideLimitingAllowed": true,
+      "bPrimaryZone": true,
+      "bTriggerWarmup": false,
       "calibration": {
         "last_device_status": {},
         "last_result": "",
@@ -794,13 +852,13 @@
           "addr": "TEMPERATURE",
           "path": "site/WeatherData",
           "type": "Float",
-          "val": "None"
+          "val": null
         },
         {
           "addr": "TEMPERATURE",
           "path": "site/0xEC0BBD04/21",
           "type": "Float",
-          "val": 22.0
+          "val": 21.5
         },
         {
           "addr": "min_sp",
@@ -818,7 +876,7 @@
           "addr": "LUMINANCE",
           "path": "site/0xEC0BBD04/21",
           "type": "Float",
-          "val": 27.0
+          "val": 70.0
         },
         {
           "addr": "HEATING_1",
@@ -830,7 +888,7 @@
           "addr": "RELATIVE_HUMIDITY",
           "path": "site/WeatherData",
           "type": "Float",
-          "val": "None"
+          "val": null
         },
         {
           "addr": "Motion",
@@ -865,7 +923,7 @@
       "fMinSP": 4.0,
       "fOutput": 0.0,
       "fOverrideTemp": 20.0,
-      "fPV": 22.0,
+      "fPV": 21.5,
       "fPV_offset": 0.0,
       "fSP": 4.0,
       "iActivity": 0,
@@ -883,16 +941,49 @@
       "iType": 3,
       "lOptions": 24,
       "linkedSettings": {
-        "bFollowActive": "True",
-        "bFollowOutput": "False",
+        "bFollowActive": true,
+        "bFollowOutput": false,
         "fLinkSP": 21.0,
         "lstLinkedTo": []
       },
-      "log": [],
+      "log": [
+        "2024-08-16 10:55:35.704 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 10:55:39.308 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 11:17:27.824 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 11:17:29.471 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 11:52:24.183 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 11:52:29.765 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 11:56:48.318 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 11:56:49.828 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 12:32:25.037 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 12:32:30.350 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 12:33:52.185 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 12:34:00.371 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 12:35:31.753 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 12:35:40.396 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 12:45:59.538 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 12:46:00.549 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 12:52:21.187 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 12:52:30.643 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 14:02:00.721 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 14:02:01.631 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 14:03:35.082 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 14:03:41.654 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 14:45:44.213 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 14:45:52.264 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 14:47:37.153 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 14:47:42.291 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 15:27:42.066 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 15:27:42.865 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 15:52:11.281 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 15:52:13.214 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 16:23:12.141 INFO ZoneControlSP(02) Motion detected",
+        "2024-08-16 16:23:13.510 INFO ZoneControlSP(02) Motion detected"
+      ],
       "lstIssues": [
         {
           "data": {
-            "location": "Hall",
+            "location": "<Hall>",
             "nodeHash": "0x0000000200040005",
             "nodeID": "59"
           },
@@ -928,19 +1019,19 @@
               "addr": "ClockHour",
               "path": "site/0xEC0BBD04/59",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "ClockMinute": {
               "addr": "ClockMinute",
               "path": "site/0xEC0BBD04/59",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "ClockWeekday": {
               "addr": "ClockWeekday",
               "path": "site/0xEC0BBD04/59",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "LibraryType": {
               "addr": "LibraryType",
@@ -952,7 +1043,7 @@
               "addr": "ProtectionState",
               "path": "site/0xEC0BBD04/59",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "ProtocolVersion": {
               "addr": "ProtocolVersion",
@@ -1030,19 +1121,19 @@
               "addr": "ClockHour",
               "path": "site/0xEC0BBD04/68",
               "type": "Int",
-              "val": 11
+              "val": 12
             },
             "ClockMinute": {
               "addr": "ClockMinute",
               "path": "site/0xEC0BBD04/68",
               "type": "Int",
-              "val": 15
+              "val": 18
             },
             "ClockWeekday": {
               "addr": "ClockWeekday",
               "path": "site/0xEC0BBD04/68",
               "type": "Int",
-              "val": 1
+              "val": 5
             },
             "HEATING_1": {
               "addr": "HEATING_1",
@@ -1096,7 +1187,7 @@
               "addr": "lastComms",
               "path": "site/0xEC0BBD04/68",
               "type": "Int",
-              "val": 1722858671
+              "val": 1723828389
             },
             "location": {
               "addr": "location",
@@ -1108,7 +1199,7 @@
               "addr": "lostFromModule",
               "path": "site/0xEC0BBD04/68",
               "type": "Bool",
-              "val": "False"
+              "val": false
             },
             "manfID": {
               "addr": "manfID",
@@ -1150,7 +1241,7 @@
               "addr": "LUMINANCE",
               "path": "site/0xEC0BBD04/21",
               "type": "Float",
-              "val": 27.0
+              "val": 70.0
             },
             "LibraryType": {
               "addr": "LibraryType",
@@ -1174,13 +1265,13 @@
               "addr": "TEMPERATURE",
               "path": "site/0xEC0BBD04/21",
               "type": "Float",
-              "val": 22.0
+              "val": 21.5
             },
             "Tamper": {
               "addr": "Tamper",
               "path": "site/0xEC0BBD04/21",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "WakeUp_Interval": {
               "addr": "WakeUp_Interval",
@@ -1210,7 +1301,7 @@
               "addr": "lastComms",
               "path": "site/0xEC0BBD04/21",
               "type": "Int",
-              "val": 1722857058
+              "val": 1723827142
             },
             "location": {
               "addr": "location",
@@ -1222,7 +1313,7 @@
               "addr": "lostFromModule",
               "path": "site/0xEC0BBD04/21",
               "type": "Bool",
-              "val": "False"
+              "val": false
             },
             "manfID": {
               "addr": "manfID",
@@ -1240,37 +1331,37 @@
               "addr": "PRECIPITATION",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "RELATIVE_HUMIDITY": {
               "addr": "RELATIVE_HUMIDITY",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "TEMPERATURE": {
               "addr": "TEMPERATURE",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "TEMPERATURE_FEELS_LIKE": {
               "addr": "TEMPERATURE_FEELS_LIKE",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "UV": {
               "addr": "UV",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "WEATHER_TYPE": {
               "addr": "WEATHER_TYPE",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "health": {
               "addr": "health",
@@ -1282,14 +1373,14 @@
               "addr": "message",
               "path": "site/WeatherData",
               "type": "String",
-              "val": "None"
+              "val": null
             }
           },
           "type": ""
         }
       ],
       "objFootprint": {
-        "bIsNight": "True",
+        "bIsNight": true,
         "fFootprintActiveSP": 20.0,
         "fFootprintAwaySP": 14.0,
         "fFootprintNightSP": 16.0,
@@ -1303,43 +1394,48 @@
         "lstSP": [
           { "fSP": 16.0, "iDay": 0, "iTm": 0 },
           { "fSP": 14.0, "iDay": 0, "iTm": 23400 },
+          { "fSP": 20.0, "iDay": 0, "iTm": 32400 },
+          { "fSP": 14.0, "iDay": 0, "iTm": 37800 },
+          { "fSP": 20.0, "iDay": 0, "iTm": 56700 },
           { "fSP": 16.0, "iDay": 0, "iTm": 75600 },
           { "fSP": 16.0, "iDay": 1, "iTm": 0 },
           { "fSP": 14.0, "iDay": 1, "iTm": 23400 },
+          { "fSP": 20.0, "iDay": 1, "iTm": 31800 },
+          { "fSP": 14.0, "iDay": 1, "iTm": 43500 },
           { "fSP": 16.0, "iDay": 1, "iTm": 75600 },
           { "fSP": 16.0, "iDay": 2, "iTm": 0 },
           { "fSP": 14.0, "iDay": 2, "iTm": 23400 },
-          { "fSP": 20.0, "iDay": 2, "iTm": 29700 },
+          { "fSP": 20.0, "iDay": 2, "iTm": 27300 },
           { "fSP": 14.0, "iDay": 2, "iTm": 34200 },
-          { "fSP": 20.0, "iDay": 2, "iTm": 66300 },
+          { "fSP": 20.0, "iDay": 2, "iTm": 60900 },
           { "fSP": 16.0, "iDay": 2, "iTm": 75600 },
           { "fSP": 16.0, "iDay": 3, "iTm": 0 },
           { "fSP": 14.0, "iDay": 3, "iTm": 23400 },
           { "fSP": 20.0, "iDay": 3, "iTm": 28800 },
-          { "fSP": 14.0, "iDay": 3, "iTm": 33900 },
+          { "fSP": 14.0, "iDay": 3, "iTm": 48300 },
+          { "fSP": 20.0, "iDay": 3, "iTm": 75300 },
           { "fSP": 16.0, "iDay": 3, "iTm": 75600 },
           { "fSP": 16.0, "iDay": 4, "iTm": 0 },
           { "fSP": 14.0, "iDay": 4, "iTm": 23400 },
           { "fSP": 20.0, "iDay": 4, "iTm": 28500 },
-          { "fSP": 14.0, "iDay": 4, "iTm": 36000 },
-          { "fSP": 20.0, "iDay": 4, "iTm": 55200 },
-          { "fSP": 14.0, "iDay": 4, "iTm": 68700 },
+          { "fSP": 14.0, "iDay": 4, "iTm": 42000 },
+          { "fSP": 20.0, "iDay": 4, "iTm": 53700 },
+          { "fSP": 14.0, "iDay": 4, "iTm": 70800 },
           { "fSP": 16.0, "iDay": 4, "iTm": 75600 },
           { "fSP": 16.0, "iDay": 5, "iTm": 0 },
           { "fSP": 14.0, "iDay": 5, "iTm": 23400 },
           { "fSP": 20.0, "iDay": 5, "iTm": 28500 },
-          { "fSP": 14.0, "iDay": 5, "iTm": 51300 },
-          { "fSP": 20.0, "iDay": 5, "iTm": 57600 },
+          { "fSP": 14.0, "iDay": 5, "iTm": 64500 },
           { "fSP": 16.0, "iDay": 5, "iTm": 75600 },
           { "fSP": 16.0, "iDay": 6, "iTm": 0 },
           { "fSP": 14.0, "iDay": 6, "iTm": 23400 },
-          { "fSP": 20.0, "iDay": 6, "iTm": 44400 },
-          { "fSP": 14.0, "iDay": 6, "iTm": 51900 },
+          { "fSP": 20.0, "iDay": 6, "iTm": 53100 },
+          { "fSP": 14.0, "iDay": 6, "iTm": 63900 },
           { "fSP": 16.0, "iDay": 6, "iTm": 75600 }
         ],
         "objReactive": {
-          "bTriggerOff": "True",
-          "bTriggerOn": "False",
+          "bTriggerOff": true,
+          "bTriggerOn": false,
           "fActivityLevel": 0.0,
           "fThreshold": 1.0,
           "iReactiveMinutesTriggerOff": 5,
@@ -1347,7 +1443,7 @@
           "iSensitivity": 80,
           "iTimeTillOff": 0,
           "iTimeTillOn": 5,
-          "tmLastActivity": 1722855437
+          "tmLastActivity": 1723821833
         }
       },
       "objTimer": [
@@ -1389,7 +1485,7 @@
         { "bReactive": 0.0, "fSP": 14.5, "iDay": 6, "iTm": 73800 }
       ],
       "strName": "Hall",
-      "tmLastTick": 1722858788,
+      "tmLastTick": 1723828454,
       "tmMaxTimeAtSP": 1800,
       "tmTimeAtSP": 0,
       "trigger": {
@@ -1403,16 +1499,16 @@
         "test": 0
       },
       "warmupDuration": {
-        "bEnable": "True",
-        "bEnableCalcs": "False",
+        "bEnable": true,
+        "bEnableCalcs": false,
         "fRiseRate": 0.5,
         "iLagTime": 2203,
         "iRiseTime": 1800,
         "iTotalTime": 1827
       },
       "zoneReactive": {
-        "bTriggerOff": "True",
-        "bTriggerOn": "False",
+        "bTriggerOff": true,
+        "bTriggerOn": false,
         "fActivityLevel": 0.0,
         "fThreshold": 1.0,
         "iReactiveMinutesTriggerOff": 5,
@@ -1420,19 +1516,19 @@
         "iSensitivity": 80,
         "iTimeTillOff": 0,
         "iTimeTillOn": 5,
-        "tmLastActivity": 1722855437
+        "tmLastActivity": 1723821833
       },
       "zoneSubType": 0
     },
     {
       "activeTemperatureDevices": ["site/0xEC0BBD04/20/TEMPERATURE"],
       "assumedTemp": 18.0,
-      "bInHeatEnabled": "False",
-      "bIsActive": "False",
-      "bOutRequestHeat": "False",
-      "bOverrideLimitingAllowed": "True",
-      "bPrimaryZone": "True",
-      "bTriggerWarmup": "False",
+      "bInHeatEnabled": false,
+      "bIsActive": false,
+      "bOutRequestHeat": false,
+      "bOverrideLimitingAllowed": true,
+      "bPrimaryZone": true,
+      "bTriggerWarmup": false,
       "calibration": {
         "last_device_status": {},
         "last_result": "",
@@ -1446,13 +1542,13 @@
           "addr": "TEMPERATURE",
           "path": "site/WeatherData",
           "type": "Float",
-          "val": "None"
+          "val": null
         },
         {
           "addr": "TEMPERATURE",
           "path": "site/0xEC0BBD04/20",
           "type": "Float",
-          "val": 22.0
+          "val": 21.5
         },
         {
           "addr": "min_sp",
@@ -1476,7 +1572,7 @@
           "addr": "LUMINANCE",
           "path": "site/0xEC0BBD04/20",
           "type": "Float",
-          "val": "None"
+          "val": 28.0
         },
         {
           "addr": "HEATING_1",
@@ -1494,7 +1590,7 @@
           "addr": "RELATIVE_HUMIDITY",
           "path": "site/WeatherData",
           "type": "Float",
-          "val": "None"
+          "val": null
         },
         {
           "addr": "Motion",
@@ -1535,13 +1631,13 @@
       "fMinSP": 4.0,
       "fOutput": 0.0,
       "fOverrideTemp": 21.0,
-      "fPV": 22.0,
+      "fPV": 21.5,
       "fPV_offset": 0.0,
       "fSP": 4.0,
       "iActivity": 0,
       "iBaseMode": 1,
       "iBoostTimeRemaining": 0,
-      "iFlagActualKit": 5,
+      "iFlagActualKit": 517,
       "iFlagExpectedKit": 517,
       "iFlags": 2047,
       "iID": 3,
@@ -1553,16 +1649,49 @@
       "iType": 3,
       "lOptions": 24,
       "linkedSettings": {
-        "bFollowActive": "True",
-        "bFollowOutput": "False",
+        "bFollowActive": true,
+        "bFollowOutput": false,
         "fLinkSP": 21.0,
         "lstLinkedTo": []
       },
-      "log": [],
+      "log": [
+        "2024-08-16 14:07:36.557 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 14:07:41.711 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 14:12:17.220 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 14:12:21.778 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 14:18:21.420 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 14:18:21.865 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 14:45:03.650 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 14:45:12.254 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 14:49:38.933 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 14:49:42.319 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 14:50:52.431 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 14:51:02.338 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 15:27:35.407 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 15:27:42.867 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 15:44:12.385 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 15:44:13.103 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 15:51:55.671 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 15:52:03.212 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 15:53:06.596 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 15:53:13.228 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 15:57:32.219 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 15:57:33.291 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 16:06:48.759 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 16:06:53.396 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 16:07:52.620 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 16:07:53.404 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 16:11:42.096 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 16:11:43.429 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 16:22:29.452 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 16:22:33.505 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 16:30:42.198 INFO ZoneControlSP(03) Motion detected",
+        "2024-08-16 16:30:43.563 INFO ZoneControlSP(03) Motion detected"
+      ],
       "lstIssues": [
         {
           "data": {
-            "location": "Kitchen",
+            "location": "<Kitchen>",
             "nodeHash": "0x0000000200040005",
             "nodeID": "12"
           },
@@ -1599,19 +1728,19 @@
               "addr": "ClockHour",
               "path": "site/0xEC0BBD04/12",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "ClockMinute": {
               "addr": "ClockMinute",
               "path": "site/0xEC0BBD04/12",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "ClockWeekday": {
               "addr": "ClockWeekday",
               "path": "site/0xEC0BBD04/12",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "LibraryType": {
               "addr": "LibraryType",
@@ -1623,7 +1752,7 @@
               "addr": "ProtectionState",
               "path": "site/0xEC0BBD04/12",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "ProtocolVersion": {
               "addr": "ProtocolVersion",
@@ -1701,19 +1830,19 @@
               "addr": "ClockHour",
               "path": "site/0xEC0BBD04/89",
               "type": "Int",
-              "val": 10
+              "val": 11
             },
             "ClockMinute": {
               "addr": "ClockMinute",
               "path": "site/0xEC0BBD04/89",
               "type": "Int",
-              "val": 16
+              "val": 56
             },
             "ClockWeekday": {
               "addr": "ClockWeekday",
               "path": "site/0xEC0BBD04/89",
               "type": "Int",
-              "val": 1
+              "val": 5
             },
             "HEATING_1": {
               "addr": "HEATING_1",
@@ -1767,7 +1896,7 @@
               "addr": "lastComms",
               "path": "site/0xEC0BBD04/89",
               "type": "Int",
-              "val": 1722858337
+              "val": 1723828424
             },
             "location": {
               "addr": "location",
@@ -1779,7 +1908,7 @@
               "addr": "lostFromModule",
               "path": "site/0xEC0BBD04/89",
               "type": "Bool",
-              "val": "False"
+              "val": false
             },
             "manfID": {
               "addr": "manfID",
@@ -1821,7 +1950,7 @@
               "addr": "LUMINANCE",
               "path": "site/0xEC0BBD04/20",
               "type": "Float",
-              "val": "None"
+              "val": 28.0
             },
             "LibraryType": {
               "addr": "LibraryType",
@@ -1845,13 +1974,13 @@
               "addr": "TEMPERATURE",
               "path": "site/0xEC0BBD04/20",
               "type": "Float",
-              "val": 22.0
+              "val": 21.5
             },
             "Tamper": {
               "addr": "Tamper",
               "path": "site/0xEC0BBD04/20",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "WakeUp_Interval": {
               "addr": "WakeUp_Interval",
@@ -1881,7 +2010,7 @@
               "addr": "lastComms",
               "path": "site/0xEC0BBD04/20",
               "type": "Int",
-              "val": 1722857639
+              "val": 1723827711
             },
             "location": {
               "addr": "location",
@@ -1893,7 +2022,7 @@
               "addr": "lostFromModule",
               "path": "site/0xEC0BBD04/20",
               "type": "Bool",
-              "val": "False"
+              "val": false
             },
             "manfID": {
               "addr": "manfID",
@@ -1929,13 +2058,13 @@
               "addr": "ClockMinute",
               "path": "site/0xEC0BBD04/56",
               "type": "Int",
-              "val": 4
+              "val": 35
             },
             "ClockWeekday": {
               "addr": "ClockWeekday",
               "path": "site/0xEC0BBD04/56",
               "type": "Int",
-              "val": 1
+              "val": 5
             },
             "HEATING_1": {
               "addr": "HEATING_1",
@@ -1989,7 +2118,7 @@
               "addr": "lastComms",
               "path": "site/0xEC0BBD04/56",
               "type": "Int",
-              "val": 1722858614
+              "val": 1723828168
             },
             "location": {
               "addr": "location",
@@ -2001,7 +2130,7 @@
               "addr": "lostFromModule",
               "path": "site/0xEC0BBD04/56",
               "type": "Bool",
-              "val": "False"
+              "val": false
             },
             "manfID": {
               "addr": "manfID",
@@ -2025,37 +2154,37 @@
               "addr": "PRECIPITATION",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "RELATIVE_HUMIDITY": {
               "addr": "RELATIVE_HUMIDITY",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "TEMPERATURE": {
               "addr": "TEMPERATURE",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "TEMPERATURE_FEELS_LIKE": {
               "addr": "TEMPERATURE_FEELS_LIKE",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "UV": {
               "addr": "UV",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "WEATHER_TYPE": {
               "addr": "WEATHER_TYPE",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "health": {
               "addr": "health",
@@ -2067,14 +2196,14 @@
               "addr": "message",
               "path": "site/WeatherData",
               "type": "String",
-              "val": "None"
+              "val": null
             }
           },
           "type": ""
         }
       ],
       "objFootprint": {
-        "bIsNight": "True",
+        "bIsNight": true,
         "fFootprintActiveSP": 20.0,
         "fFootprintAwaySP": 14.0,
         "fFootprintNightSP": 16.0,
@@ -2088,23 +2217,27 @@
         "lstSP": [
           { "fSP": 16.0, "iDay": 0, "iTm": 0 },
           { "fSP": 14.0, "iDay": 0, "iTm": 23400 },
-          { "fSP": 20.0, "iDay": 0, "iTm": 30600 },
-          { "fSP": 14.0, "iDay": 0, "iTm": 34200 },
+          { "fSP": 20.0, "iDay": 0, "iTm": 29100 },
+          { "fSP": 14.0, "iDay": 0, "iTm": 38100 },
+          { "fSP": 20.0, "iDay": 0, "iTm": 56700 },
           { "fSP": 16.0, "iDay": 0, "iTm": 75600 },
           { "fSP": 16.0, "iDay": 1, "iTm": 0 },
           { "fSP": 14.0, "iDay": 1, "iTm": 23400 },
+          { "fSP": 20.0, "iDay": 1, "iTm": 32400 },
+          { "fSP": 14.0, "iDay": 1, "iTm": 51600 },
+          { "fSP": 20.0, "iDay": 1, "iTm": 60600 },
+          { "fSP": 14.0, "iDay": 1, "iTm": 74400 },
           { "fSP": 16.0, "iDay": 1, "iTm": 75600 },
           { "fSP": 16.0, "iDay": 2, "iTm": 0 },
           { "fSP": 14.0, "iDay": 2, "iTm": 23400 },
-          { "fSP": 20.0, "iDay": 2, "iTm": 27600 },
+          { "fSP": 20.0, "iDay": 2, "iTm": 27300 },
           { "fSP": 14.0, "iDay": 2, "iTm": 33300 },
           { "fSP": 20.0, "iDay": 2, "iTm": 58800 },
-          { "fSP": 14.0, "iDay": 2, "iTm": 68400 },
           { "fSP": 16.0, "iDay": 2, "iTm": 75600 },
           { "fSP": 16.0, "iDay": 3, "iTm": 0 },
           { "fSP": 14.0, "iDay": 3, "iTm": 23400 },
           { "fSP": 20.0, "iDay": 3, "iTm": 28800 },
-          { "fSP": 14.0, "iDay": 3, "iTm": 33300 },
+          { "fSP": 14.0, "iDay": 3, "iTm": 48600 },
           { "fSP": 16.0, "iDay": 3, "iTm": 75600 },
           { "fSP": 16.0, "iDay": 4, "iTm": 0 },
           { "fSP": 14.0, "iDay": 4, "iTm": 23400 },
@@ -2113,19 +2246,18 @@
           { "fSP": 16.0, "iDay": 4, "iTm": 75600 },
           { "fSP": 16.0, "iDay": 5, "iTm": 0 },
           { "fSP": 14.0, "iDay": 5, "iTm": 23400 },
-          { "fSP": 20.0, "iDay": 5, "iTm": 39300 },
-          { "fSP": 14.0, "iDay": 5, "iTm": 56100 },
-          { "fSP": 20.0, "iDay": 5, "iTm": 65700 },
+          { "fSP": 20.0, "iDay": 5, "iTm": 40800 },
+          { "fSP": 14.0, "iDay": 5, "iTm": 74400 },
           { "fSP": 16.0, "iDay": 5, "iTm": 75600 },
           { "fSP": 16.0, "iDay": 6, "iTm": 0 },
           { "fSP": 14.0, "iDay": 6, "iTm": 23400 },
-          { "fSP": 20.0, "iDay": 6, "iTm": 34500 },
-          { "fSP": 14.0, "iDay": 6, "iTm": 63900 },
+          { "fSP": 20.0, "iDay": 6, "iTm": 29700 },
+          { "fSP": 14.0, "iDay": 6, "iTm": 63300 },
           { "fSP": 16.0, "iDay": 6, "iTm": 75600 }
         ],
         "objReactive": {
-          "bTriggerOff": "True",
-          "bTriggerOn": "False",
+          "bTriggerOff": true,
+          "bTriggerOn": false,
           "fActivityLevel": 0.0,
           "fThreshold": 1.0,
           "iReactiveMinutesTriggerOff": 5,
@@ -2133,7 +2265,7 @@
           "iSensitivity": 87,
           "iTimeTillOff": 0,
           "iTimeTillOn": 5,
-          "tmLastActivity": 1722857298
+          "tmLastActivity": 1723822253
         }
       },
       "objTimer": [
@@ -2175,7 +2307,7 @@
         { "bReactive": 0.0, "fSP": 14.5, "iDay": 6, "iTm": 73800 }
       ],
       "strName": "Kitchen",
-      "tmLastTick": 1722858788,
+      "tmLastTick": 1723828454,
       "tmMaxTimeAtSP": 1800,
       "tmTimeAtSP": 0,
       "trigger": {
@@ -2189,16 +2321,16 @@
         "test": 0
       },
       "warmupDuration": {
-        "bEnable": "True",
-        "bEnableCalcs": "False",
+        "bEnable": true,
+        "bEnableCalcs": false,
         "fRiseRate": 2.0,
         "iLagTime": 2625,
         "iRiseTime": 4500,
         "iTotalTime": 2171
       },
       "zoneReactive": {
-        "bTriggerOff": "True",
-        "bTriggerOn": "False",
+        "bTriggerOff": true,
+        "bTriggerOn": false,
         "fActivityLevel": 0.0,
         "fThreshold": 1.0,
         "iReactiveMinutesTriggerOff": 5,
@@ -2206,19 +2338,19 @@
         "iSensitivity": 87,
         "iTimeTillOff": 0,
         "iTimeTillOn": 5,
-        "tmLastActivity": 1722857298
+        "tmLastActivity": 1723822253
       },
       "zoneSubType": 0
     },
     {
       "activeTemperatureDevices": ["site/0xEC0BBD04/17/TEMPERATURE"],
       "assumedTemp": 18.0,
-      "bInHeatEnabled": "False",
-      "bIsActive": "False",
-      "bOutRequestHeat": "False",
-      "bOverrideLimitingAllowed": "True",
-      "bPrimaryZone": "True",
-      "bTriggerWarmup": "False",
+      "bInHeatEnabled": false,
+      "bIsActive": false,
+      "bOutRequestHeat": false,
+      "bOverrideLimitingAllowed": true,
+      "bPrimaryZone": true,
+      "bTriggerWarmup": false,
       "calibration": {
         "last_device_status": {},
         "last_result": "",
@@ -2232,7 +2364,7 @@
           "addr": "TEMPERATURE",
           "path": "site/WeatherData",
           "type": "Float",
-          "val": "None"
+          "val": null
         },
         {
           "addr": "TEMPERATURE",
@@ -2256,7 +2388,7 @@
           "addr": "LUMINANCE",
           "path": "site/0xEC0BBD04/17",
           "type": "Float",
-          "val": "None"
+          "val": 87.0
         },
         {
           "addr": "HEATING_1",
@@ -2268,7 +2400,7 @@
           "addr": "RELATIVE_HUMIDITY",
           "path": "site/WeatherData",
           "type": "Float",
-          "val": "None"
+          "val": null
         },
         {
           "addr": "Motion",
@@ -2309,7 +2441,7 @@
       "iActivity": 0,
       "iBaseMode": 1,
       "iBoostTimeRemaining": 0,
-      "iFlagActualKit": 5,
+      "iFlagActualKit": 517,
       "iFlagExpectedKit": 517,
       "iFlags": 2047,
       "iID": 5,
@@ -2321,16 +2453,49 @@
       "iType": 3,
       "lOptions": 24,
       "linkedSettings": {
-        "bFollowActive": "True",
-        "bFollowOutput": "False",
+        "bFollowActive": true,
+        "bFollowOutput": false,
         "fLinkSP": 21.0,
         "lstLinkedTo": []
       },
-      "log": [],
+      "log": [
+        "2024-08-16 07:40:16.296 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 07:40:17.241 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 07:43:44.586 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 07:43:47.292 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 07:44:45.845 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 07:44:47.307 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 07:47:23.585 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 07:47:27.345 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 07:56:39.706 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 07:56:47.479 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 07:57:41.219 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 07:57:47.492 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 07:58:40.465 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 07:58:47.506 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 07:59:46.141 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 07:59:47.522 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 08:01:05.607 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 08:01:07.543 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 08:08:25.697 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 08:08:27.649 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 08:35:49.424 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 08:35:58.048 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 08:37:34.777 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 08:37:38.069 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 08:38:58.106 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 08:39:08.091 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 08:50:47.591 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 08:50:48.259 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 08:57:54.569 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 08:57:58.367 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 09:13:56.265 INFO ZoneControlSP(05) Motion detected",
+        "2024-08-16 09:13:58.571 INFO ZoneControlSP(05) Motion detected"
+      ],
       "lstIssues": [
         {
           "data": {
-            "location": "Ensuite",
+            "location": "<Ensuite>",
             "nodeHash": "0x0000000200040005",
             "nodeID": "9"
           },
@@ -2366,19 +2531,19 @@
               "addr": "ClockHour",
               "path": "site/0xEC0BBD04/9",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "ClockMinute": {
               "addr": "ClockMinute",
               "path": "site/0xEC0BBD04/9",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "ClockWeekday": {
               "addr": "ClockWeekday",
               "path": "site/0xEC0BBD04/9",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "LibraryType": {
               "addr": "LibraryType",
@@ -2390,7 +2555,7 @@
               "addr": "ProtectionState",
               "path": "site/0xEC0BBD04/9",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "ProtocolVersion": {
               "addr": "ProtocolVersion",
@@ -2468,19 +2633,19 @@
               "addr": "ClockHour",
               "path": "site/0xEC0BBD04/88",
               "type": "Int",
-              "val": 10
+              "val": 11
             },
             "ClockMinute": {
               "addr": "ClockMinute",
               "path": "site/0xEC0BBD04/88",
               "type": "Int",
-              "val": 15
+              "val": 48
             },
             "ClockWeekday": {
               "addr": "ClockWeekday",
               "path": "site/0xEC0BBD04/88",
               "type": "Int",
-              "val": 1
+              "val": 5
             },
             "HEATING_1": {
               "addr": "HEATING_1",
@@ -2534,7 +2699,7 @@
               "addr": "lastComms",
               "path": "site/0xEC0BBD04/88",
               "type": "Int",
-              "val": 1722858318
+              "val": 1723828251
             },
             "location": {
               "addr": "location",
@@ -2546,7 +2711,7 @@
               "addr": "lostFromModule",
               "path": "site/0xEC0BBD04/88",
               "type": "Bool",
-              "val": "False"
+              "val": false
             },
             "manfID": {
               "addr": "manfID",
@@ -2576,7 +2741,7 @@
               "addr": "BasicValue",
               "path": "site/0xEC0BBD04/17",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "Battery": {
               "addr": "Battery",
@@ -2588,7 +2753,7 @@
               "addr": "LUMINANCE",
               "path": "site/0xEC0BBD04/17",
               "type": "Float",
-              "val": "None"
+              "val": 87.0
             },
             "LibraryType": {
               "addr": "LibraryType",
@@ -2618,7 +2783,7 @@
               "addr": "Tamper",
               "path": "site/0xEC0BBD04/17",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "WakeUp_Interval": {
               "addr": "WakeUp_Interval",
@@ -2648,7 +2813,7 @@
               "addr": "lastComms",
               "path": "site/0xEC0BBD04/17",
               "type": "Int",
-              "val": 1722857021
+              "val": 1723827088
             },
             "location": {
               "addr": "location",
@@ -2660,7 +2825,7 @@
               "addr": "lostFromModule",
               "path": "site/0xEC0BBD04/17",
               "type": "Bool",
-              "val": "False"
+              "val": false
             },
             "manfID": {
               "addr": "manfID",
@@ -2678,37 +2843,37 @@
               "addr": "PRECIPITATION",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "RELATIVE_HUMIDITY": {
               "addr": "RELATIVE_HUMIDITY",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "TEMPERATURE": {
               "addr": "TEMPERATURE",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "TEMPERATURE_FEELS_LIKE": {
               "addr": "TEMPERATURE_FEELS_LIKE",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "UV": {
               "addr": "UV",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "WEATHER_TYPE": {
               "addr": "WEATHER_TYPE",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "health": {
               "addr": "health",
@@ -2720,14 +2885,14 @@
               "addr": "message",
               "path": "site/WeatherData",
               "type": "String",
-              "val": "None"
+              "val": null
             }
           },
           "type": ""
         }
       ],
       "objFootprint": {
-        "bIsNight": "True",
+        "bIsNight": true,
         "fFootprintActiveSP": 20.0,
         "fFootprintAwaySP": 12.0,
         "fFootprintNightSP": 16.0,
@@ -2762,8 +2927,8 @@
           { "fSP": 16.0, "iDay": 6, "iTm": 81000 }
         ],
         "objReactive": {
-          "bTriggerOff": "True",
-          "bTriggerOn": "False",
+          "bTriggerOff": true,
+          "bTriggerOn": false,
           "fActivityLevel": 0.0,
           "fThreshold": 1.0,
           "iReactiveMinutesTriggerOff": 5,
@@ -2771,7 +2936,7 @@
           "iSensitivity": 80,
           "iTimeTillOff": 0,
           "iTimeTillOn": 5,
-          "tmLastActivity": 1722855677
+          "tmLastActivity": 1723796038
         }
       },
       "objTimer": [
@@ -2812,7 +2977,7 @@
         { "bReactive": 0.0, "fSP": 14.5, "iDay": 6, "iTm": 81000 }
       ],
       "strName": "Ensuite",
-      "tmLastTick": 1722858788,
+      "tmLastTick": 1723828454,
       "tmMaxTimeAtSP": 1800,
       "tmTimeAtSP": 0,
       "trigger": {
@@ -2826,16 +2991,16 @@
         "test": 0
       },
       "warmupDuration": {
-        "bEnable": "True",
-        "bEnableCalcs": "False",
+        "bEnable": true,
+        "bEnableCalcs": false,
         "fRiseRate": 3.0,
         "iLagTime": 1686,
         "iRiseTime": 1200,
         "iTotalTime": 1202
       },
       "zoneReactive": {
-        "bTriggerOff": "True",
-        "bTriggerOn": "False",
+        "bTriggerOff": true,
+        "bTriggerOn": false,
         "fActivityLevel": 0.0,
         "fThreshold": 1.0,
         "iReactiveMinutesTriggerOff": 5,
@@ -2843,19 +3008,19 @@
         "iSensitivity": 80,
         "iTimeTillOff": 0,
         "iTimeTillOn": 5,
-        "tmLastActivity": 1722855677
+        "tmLastActivity": 1723796038
       },
       "zoneSubType": 0
     },
     {
       "activeTemperatureDevices": [],
       "assumedTemp": 4.5,
-      "bInHeatEnabled": "False",
-      "bIsActive": "False",
-      "bOutRequestHeat": "False",
-      "bOverrideLimitingAllowed": "True",
-      "bPrimaryZone": "True",
-      "bTriggerWarmup": "False",
+      "bInHeatEnabled": false,
+      "bIsActive": false,
+      "bOutRequestHeat": false,
+      "bOverrideLimitingAllowed": true,
+      "bPrimaryZone": true,
+      "bTriggerWarmup": false,
       "calibration": {
         "last_device_status": {},
         "last_result": "",
@@ -2887,7 +3052,7 @@
           "addr": "LUMINANCE",
           "path": "site/0xEC0BBD04/16",
           "type": "Float",
-          "val": 11.0
+          "val": 33.0
         },
         {
           "addr": "HEATING_1",
@@ -2947,16 +3112,49 @@
       "iType": 3,
       "lOptions": 16,
       "linkedSettings": {
-        "bFollowActive": "True",
-        "bFollowOutput": "False",
+        "bFollowActive": true,
+        "bFollowOutput": false,
         "fLinkSP": 4.0,
         "lstLinkedTo": []
       },
-      "log": [],
+      "log": [
+        "2024-08-16 17:57:57.318 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 17:58:04.202 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 17:59:00.595 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 17:59:04.208 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:00:04.035 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:00:04.215 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:01:07.190 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:01:14.224 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:02:10.368 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:02:14.230 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:03:13.588 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:03:14.237 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:04:16.900 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:04:24.245 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:05:20.183 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:05:24.252 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:06:23.425 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:06:24.261 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:07:26.451 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:07:34.172 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:08:29.751 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:08:34.276 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:09:32.964 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:09:34.283 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:10:36.262 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:10:43.839 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:11:39.470 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:11:44.298 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:12:42.758 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:12:44.307 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:13:45.906 INFO ZoneControlSP(07) Motion detected",
+        "2024-08-16 18:13:53.492 INFO ZoneControlSP(07) Motion detected"
+      ],
       "lstIssues": [
         {
           "data": {
-            "location": "Guest room",
+            "location": "<Guest room>",
             "nodeHash": "0x0000000200040005",
             "nodeID": "8"
           },
@@ -2991,19 +3189,19 @@
               "addr": "ClockHour",
               "path": "site/0xEC0BBD04/8",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "ClockMinute": {
               "addr": "ClockMinute",
               "path": "site/0xEC0BBD04/8",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "ClockWeekday": {
               "addr": "ClockWeekday",
               "path": "site/0xEC0BBD04/8",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "LibraryType": {
               "addr": "LibraryType",
@@ -3015,7 +3213,7 @@
               "addr": "ProtectionState",
               "path": "site/0xEC0BBD04/8",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "ProtocolVersion": {
               "addr": "ProtocolVersion",
@@ -3099,13 +3297,13 @@
               "addr": "ClockMinute",
               "path": "site/0xEC0BBD04/90",
               "type": "Int",
-              "val": 5
+              "val": 6
             },
             "ClockWeekday": {
               "addr": "ClockWeekday",
               "path": "site/0xEC0BBD04/90",
               "type": "Int",
-              "val": 1
+              "val": 5
             },
             "HEATING_1": {
               "addr": "HEATING_1",
@@ -3159,7 +3357,7 @@
               "addr": "lastComms",
               "path": "site/0xEC0BBD04/90",
               "type": "Int",
-              "val": 1722858368
+              "val": 1723828379
             },
             "location": {
               "addr": "location",
@@ -3171,7 +3369,7 @@
               "addr": "lostFromModule",
               "path": "site/0xEC0BBD04/90",
               "type": "Bool",
-              "val": "False"
+              "val": false
             },
             "manfID": {
               "addr": "manfID",
@@ -3213,13 +3411,13 @@
               "addr": "GENERAL_PURPOSE_VALUE",
               "path": "site/0xEC0BBD04/16",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "LUMINANCE": {
               "addr": "LUMINANCE",
               "path": "site/0xEC0BBD04/16",
               "type": "Float",
-              "val": 11.0
+              "val": 33.0
             },
             "LibraryType": {
               "addr": "LibraryType",
@@ -3249,7 +3447,7 @@
               "addr": "Tamper",
               "path": "site/0xEC0BBD04/16",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "WakeUp_Interval": {
               "addr": "WakeUp_Interval",
@@ -3279,7 +3477,7 @@
               "addr": "lastComms",
               "path": "site/0xEC0BBD04/16",
               "type": "Int",
-              "val": 1722858746
+              "val": 1723828433
             },
             "location": {
               "addr": "location",
@@ -3291,7 +3489,7 @@
               "addr": "lostFromModule",
               "path": "site/0xEC0BBD04/16",
               "type": "Bool",
-              "val": "False"
+              "val": false
             },
             "manfID": {
               "addr": "manfID",
@@ -3304,7 +3502,7 @@
         }
       ],
       "objFootprint": {
-        "bIsNight": "True",
+        "bIsNight": true,
         "fFootprintActiveSP": 20.0,
         "fFootprintAwaySP": 14.0,
         "fFootprintNightSP": 16.0,
@@ -3339,16 +3537,16 @@
           { "fSP": 16.0, "iDay": 6, "iTm": 75600 }
         ],
         "objReactive": {
-          "bTriggerOff": "False",
-          "bTriggerOn": "True",
+          "bTriggerOff": false,
+          "bTriggerOn": true,
           "fActivityLevel": 0.0,
           "fThreshold": 1.0,
           "iReactiveMinutesTriggerOff": 5,
           "iReactiveMinutesTriggerOn": 5,
           "iSensitivity": 80,
           "iTimeTillOff": 5,
-          "iTimeTillOn": 4,
-          "tmLastActivity": 1722858738
+          "iTimeTillOn": 0,
+          "tmLastActivity": 1723828434
         }
       },
       "objTimer": [
@@ -3395,7 +3593,7 @@
         { "bReactive": 0.0, "fSP": 14.5, "iDay": 6, "iTm": 81000 }
       ],
       "strName": "Guest room",
-      "tmLastTick": 1722858788,
+      "tmLastTick": 1723828454,
       "tmMaxTimeAtSP": 1800,
       "tmTimeAtSP": 0,
       "trigger": {
@@ -3409,32 +3607,32 @@
         "test": 0
       },
       "warmupDuration": {
-        "bEnable": "False",
-        "bEnableCalcs": "True",
+        "bEnable": false,
+        "bEnableCalcs": true,
         "fRiseRate": 0.5,
         "iLagTime": 3600,
         "iRiseTime": 1800,
         "iTotalTime": 5400
       },
       "zoneReactive": {
-        "bTriggerOff": "False",
-        "bTriggerOn": "True",
+        "bTriggerOff": false,
+        "bTriggerOn": true,
         "fActivityLevel": 0.0,
         "fThreshold": 1.0,
         "iReactiveMinutesTriggerOff": 5,
         "iReactiveMinutesTriggerOn": 5,
         "iSensitivity": 80,
         "iTimeTillOff": 5,
-        "iTimeTillOn": 4,
-        "tmLastActivity": 1722858738
+        "iTimeTillOn": 0,
+        "tmLastActivity": 1723828434
       },
       "zoneSubType": 0
     },
     {
-      "bIsActive": "True",
-      "bOutRequestHeat": "True",
-      "bOverrideLimitingAllowed": "False",
-      "bPrimaryZone": "True",
+      "bIsActive": true,
+      "bOutRequestHeat": true,
+      "bOverrideLimitingAllowed": false,
+      "bPrimaryZone": true,
       "datapoints": [
         {
           "addr": "SwitchBinary",
@@ -3461,12 +3659,45 @@
       "iType": 2,
       "lOptions": 0,
       "linkedSettings": {
-        "bFollowActive": "False",
-        "bFollowOutput": "True",
+        "bFollowActive": false,
+        "bFollowOutput": true,
         "fLinkSP": 21.0,
         "lstLinkedTo": []
       },
-      "log": [],
+      "log": [
+        "2024-08-16 18:09:04.273 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:09:14.274 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:09:24.275 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:09:34.277 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:09:44.278 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:09:54.279 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:10:04.280 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:10:14.281 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:10:24.282 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:10:34.283 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:10:44.284 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:10:54.286 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:11:04.288 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:11:14.289 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:11:24.290 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:11:34.291 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:11:44.293 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:11:54.295 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:12:04.296 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:12:14.297 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:12:24.299 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:12:34.299 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:12:44.301 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:12:54.302 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:13:04.313 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:13:14.310 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:13:25.093 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:13:34.310 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:13:44.312 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:13:54.311 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:14:04.312 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:14:14.313 DBG ZoneTimer(27) retrieving state for data point device (site/0xEC0BBD04/4)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n"
+      ],
       "lstIssues": [],
       "maximumOverrideDuration": 86400,
       "nodes": [
@@ -3525,7 +3756,7 @@
               "addr": "lastComms",
               "path": "site/0xEC0BBD04/4",
               "type": "Int",
-              "val": 1722858771
+              "val": 1723828430
             },
             "location": {
               "addr": "location",
@@ -3537,7 +3768,7 @@
               "addr": "lostFromModule",
               "path": "site/0xEC0BBD04/4",
               "type": "Bool",
-              "val": "False"
+              "val": false
             },
             "manfID": {
               "addr": "manfID",
@@ -3573,7 +3804,7 @@
         { "bReactive": 0.0, "fSP": 0.0, "iDay": 6, "iTm": 86400 }
       ],
       "strName": "Bedroom Socket",
-      "tmLastTick": 1722858788,
+      "tmLastTick": 1723828454,
       "trigger": {
         "boost": 0,
         "linkChildActive": 0,
@@ -3585,8 +3816,8 @@
         "test": 0
       },
       "zoneReactive": {
-        "bTriggerOff": "True",
-        "bTriggerOn": "False",
+        "bTriggerOff": true,
+        "bTriggerOn": false,
         "fActivityLevel": 0.0,
         "fThreshold": 1.0,
         "iReactiveMinutesTriggerOff": 20,
@@ -3599,10 +3830,10 @@
       "zoneSubType": 0
     },
     {
-      "bIsActive": "True",
-      "bOutRequestHeat": "True",
-      "bOverrideLimitingAllowed": "False",
-      "bPrimaryZone": "True",
+      "bIsActive": true,
+      "bOutRequestHeat": true,
+      "bOverrideLimitingAllowed": false,
+      "bPrimaryZone": true,
       "datapoints": [
         {
           "addr": "SwitchBinary",
@@ -3629,12 +3860,45 @@
       "iType": 2,
       "lOptions": 0,
       "linkedSettings": {
-        "bFollowActive": "False",
-        "bFollowOutput": "True",
+        "bFollowActive": false,
+        "bFollowOutput": true,
         "fLinkSP": 21.0,
         "lstLinkedTo": []
       },
-      "log": [],
+      "log": [
+        "2024-08-16 18:09:04.273 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:09:14.275 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:09:24.276 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:09:34.277 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:09:44.278 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:09:54.279 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:10:04.280 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:10:14.282 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:10:24.282 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:10:34.284 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:10:44.285 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:10:54.287 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:11:04.288 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:11:14.289 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:11:24.290 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:11:34.292 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:11:44.293 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:11:54.295 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:12:04.296 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:12:14.298 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:12:24.299 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:12:34.300 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:12:44.302 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:12:54.302 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:13:04.315 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:13:14.310 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:13:25.093 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:13:34.310 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:13:44.313 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:13:54.312 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:14:04.312 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:14:14.313 DBG ZoneTimer(28) retrieving state for data point device (site/0xEC0BBD04/6)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n"
+      ],
       "lstIssues": [],
       "maximumOverrideDuration": 86400,
       "nodes": [
@@ -3693,7 +3957,7 @@
               "addr": "lastComms",
               "path": "site/0xEC0BBD04/6",
               "type": "Int",
-              "val": 1722858781
+              "val": 1723828440
             },
             "location": {
               "addr": "location",
@@ -3705,7 +3969,7 @@
               "addr": "lostFromModule",
               "path": "site/0xEC0BBD04/6",
               "type": "Bool",
-              "val": "False"
+              "val": false
             },
             "manfID": {
               "addr": "manfID",
@@ -3741,7 +4005,7 @@
         { "bReactive": 0.0, "fSP": 0.0, "iDay": 6, "iTm": 82800 }
       ],
       "strName": "Kitchen Socket",
-      "tmLastTick": 1722858788,
+      "tmLastTick": 1723828454,
       "trigger": {
         "boost": 0,
         "linkChildActive": 0,
@@ -3753,8 +4017,8 @@
         "test": 0
       },
       "zoneReactive": {
-        "bTriggerOff": "True",
-        "bTriggerOn": "False",
+        "bTriggerOff": true,
+        "bTriggerOn": false,
         "fActivityLevel": 0.0,
         "fThreshold": 1.0,
         "iReactiveMinutesTriggerOff": 20,
@@ -3769,12 +4033,12 @@
     {
       "activeTemperatureDevices": ["site/0xEC0BBD04/18/TEMPERATURE"],
       "assumedTemp": 13.5,
-      "bInHeatEnabled": "False",
-      "bIsActive": "False",
-      "bOutRequestHeat": "False",
-      "bOverrideLimitingAllowed": "True",
-      "bPrimaryZone": "True",
-      "bTriggerWarmup": "False",
+      "bInHeatEnabled": false,
+      "bIsActive": false,
+      "bOutRequestHeat": false,
+      "bOverrideLimitingAllowed": true,
+      "bPrimaryZone": true,
+      "bTriggerWarmup": false,
       "calibration": {
         "last_device_status": {},
         "last_result": "",
@@ -3788,13 +4052,13 @@
           "addr": "TEMPERATURE",
           "path": "site/WeatherData",
           "type": "Float",
-          "val": "None"
+          "val": null
         },
         {
           "addr": "TEMPERATURE",
           "path": "site/0xEC0BBD04/18",
           "type": "Float",
-          "val": 22.0
+          "val": 21.0
         },
         {
           "addr": "min_sp",
@@ -3806,7 +4070,7 @@
           "addr": "LUMINANCE",
           "path": "site/0xEC0BBD04/18",
           "type": "Float",
-          "val": "None"
+          "val": 2.0
         },
         {
           "addr": "HEATING_1",
@@ -3818,19 +4082,19 @@
           "addr": "RELATIVE_HUMIDITY",
           "path": "site/WeatherData",
           "type": "Float",
-          "val": "None"
+          "val": null
         },
         {
           "addr": "Motion",
           "path": "site/0xEC0BBD04/18",
           "type": "Int",
-          "val": "None"
+          "val": null
         },
         {
           "addr": "Battery",
           "path": "site/0xEC0BBD04/18",
           "type": "Int",
-          "val": 50
+          "val": 34
         },
         {
           "addr": "Battery",
@@ -3847,13 +4111,13 @@
       "fMinSP": 4.0,
       "fOutput": 0.0,
       "fOverrideTemp": 20.0,
-      "fPV": 22.0,
+      "fPV": 21.0,
       "fPV_offset": 0.0,
       "fSP": 4.0,
       "iActivity": 0,
       "iBaseMode": 1,
       "iBoostTimeRemaining": 0,
-      "iFlagActualKit": 1,
+      "iFlagActualKit": 513,
       "iFlagExpectedKit": 517,
       "iFlags": 2047,
       "iID": 29,
@@ -3865,12 +4129,26 @@
       "iType": 3,
       "lOptions": 24,
       "linkedSettings": {
-        "bFollowActive": "False",
-        "bFollowOutput": "True",
+        "bFollowActive": false,
+        "bFollowOutput": true,
         "fLinkSP": 21.0,
         "lstLinkedTo": []
       },
-      "log": [],
+      "log": [
+        "2024-08-12 10:11:51.850 INFO ZoneControlSP(29) applying wall clock correction of (113) seconds on restoring state",
+        "2024-08-12 10:12:03.286 INFO ZoneControlSP(29) Triggers: output: 0 setpoint: 0 reactive: 1 boost: 0 test: 0 linkChildActive: 0 linkChildOutput: 0, preheat: 0",
+        "2024-08-12 10:13:28.983 INFO ZoneControlSP(29) Reading historical footprint info for zone 29...",
+        "2024-08-12 10:13:28.993 INFO ZoneControlSP(29) Predicting footprint times for zone 29...",
+        "2024-08-12 10:13:28.995 INFO ZoneControlSP(29) Done updating footprint info for zone 29",
+        "2024-08-12 10:16:17.440 DBG ZoneControlSP(29) created data point device (site/0xEC0BBD04/78)",
+        "2024-08-12 10:16:17.440 INFO ZoneControlSP(29) setpoint: added device (site/0xEC0BBD04/78) to data points monitor",
+        "2024-08-12 10:16:17.442 INFO ZoneControlSP(29) successfully configured device setpoint override maximum (-100.000000); strDataProxyParent (site/0xEC0BBD04/78)",
+        "2024-08-12 10:16:17.456 DBG ZoneControlSP(29) handling reported value for data point device (site/0xEC0BBD04/78), reported current (4)\n - QUEUE: size (0)\n",
+        "2024-08-12 10:16:17.456 DBG ZoneControlSP(29) retrieving state for data point device (site/0xEC0BBD04/78)\n - RETURN VAL: EDATAPOINT_STATE_AWAITING_REQUESTED_VALUE\n",
+        "2024-08-12 10:16:17.456 DBG ZoneControlSP(29) setpoint: handled reported value (4) for device (site/0xEC0BBD04/78)",
+        "2024-08-12 10:16:22.602 DBG ZoneControlSP(29) handling requested value for data point device (site/0xEC0BBD04/78), requested (4)\n - ADDING: request to queue\n - QUEUE: size (1)\n",
+        "2024-08-12 10:16:22.602 DBG ZoneControlSP(29) setpoint: handled requested value (4) for device (site/0xEC0BBD04/78)"
+      ],
       "lstIssues": [],
       "lstNodes": [
         { "addr": "78", "type": "" },
@@ -3899,19 +4177,19 @@
               "addr": "ClockHour",
               "path": "site/0xEC0BBD04/78",
               "type": "Int",
-              "val": 12
+              "val": 11
             },
             "ClockMinute": {
               "addr": "ClockMinute",
               "path": "site/0xEC0BBD04/78",
               "type": "Int",
-              "val": 22
+              "val": 4
             },
             "ClockWeekday": {
               "addr": "ClockWeekday",
               "path": "site/0xEC0BBD04/78",
               "type": "Int",
-              "val": 1
+              "val": 5
             },
             "HEATING_1": {
               "addr": "HEATING_1",
@@ -3965,7 +4243,7 @@
               "addr": "lastComms",
               "path": "site/0xEC0BBD04/78",
               "type": "Int",
-              "val": 1722858655
+              "val": 1723828231
             },
             "location": {
               "addr": "location",
@@ -3977,7 +4255,7 @@
               "addr": "lostFromModule",
               "path": "site/0xEC0BBD04/78",
               "type": "Bool",
-              "val": "False"
+              "val": false
             },
             "manfID": {
               "addr": "manfID",
@@ -4007,7 +4285,7 @@
               "addr": "Aux",
               "path": "site/0xEC0BBD04/18",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "BasicValue": {
               "addr": "BasicValue",
@@ -4019,19 +4297,19 @@
               "addr": "Battery",
               "path": "site/0xEC0BBD04/18",
               "type": "Int",
-              "val": 50
+              "val": 34
             },
             "GlassBreak": {
               "addr": "GlassBreak",
               "path": "site/0xEC0BBD04/18",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "LUMINANCE": {
               "addr": "LUMINANCE",
               "path": "site/0xEC0BBD04/18",
               "type": "Float",
-              "val": "None"
+              "val": 2.0
             },
             "LibraryType": {
               "addr": "LibraryType",
@@ -4043,7 +4321,7 @@
               "addr": "Motion",
               "path": "site/0xEC0BBD04/18",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "ProtocolVersion": {
               "addr": "ProtocolVersion",
@@ -4055,13 +4333,13 @@
               "addr": "TEMPERATURE",
               "path": "site/0xEC0BBD04/18",
               "type": "Float",
-              "val": 22.0
+              "val": 21.0
             },
             "Tamper": {
               "addr": "Tamper",
               "path": "site/0xEC0BBD04/18",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "WakeUp_Interval": {
               "addr": "WakeUp_Interval",
@@ -4091,7 +4369,7 @@
               "addr": "lastComms",
               "path": "site/0xEC0BBD04/18",
               "type": "Int",
-              "val": 1722857621
+              "val": 1723826800
             },
             "location": {
               "addr": "location",
@@ -4103,7 +4381,7 @@
               "addr": "lostFromModule",
               "path": "site/0xEC0BBD04/18",
               "type": "Bool",
-              "val": "False"
+              "val": false
             },
             "manfID": {
               "addr": "manfID",
@@ -4121,37 +4399,37 @@
               "addr": "PRECIPITATION",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "RELATIVE_HUMIDITY": {
               "addr": "RELATIVE_HUMIDITY",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "TEMPERATURE": {
               "addr": "TEMPERATURE",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "TEMPERATURE_FEELS_LIKE": {
               "addr": "TEMPERATURE_FEELS_LIKE",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "UV": {
               "addr": "UV",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "WEATHER_TYPE": {
               "addr": "WEATHER_TYPE",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "health": {
               "addr": "health",
@@ -4163,14 +4441,14 @@
               "addr": "message",
               "path": "site/WeatherData",
               "type": "String",
-              "val": "None"
+              "val": null
             }
           },
           "type": ""
         }
       ],
       "objFootprint": {
-        "bIsNight": "True",
+        "bIsNight": true,
         "fFootprintActiveSP": 20.0,
         "fFootprintAwaySP": 14.0,
         "fFootprintNightSP": 16.0,
@@ -4205,8 +4483,8 @@
           { "fSP": 16.0, "iDay": 6, "iTm": 75600 }
         ],
         "objReactive": {
-          "bTriggerOff": "True",
-          "bTriggerOn": "False",
+          "bTriggerOff": true,
+          "bTriggerOn": false,
           "fActivityLevel": 0.0,
           "fThreshold": 1.0,
           "iReactiveMinutesTriggerOff": 20,
@@ -4255,7 +4533,7 @@
         { "bReactive": 0.0, "fSP": 14.5, "iDay": 6, "iTm": 81000 }
       ],
       "strName": "Bedroom",
-      "tmLastTick": 1722858788,
+      "tmLastTick": 1723828454,
       "tmMaxTimeAtSP": 1800,
       "tmTimeAtSP": 0,
       "trigger": {
@@ -4269,16 +4547,16 @@
         "test": 0
       },
       "warmupDuration": {
-        "bEnable": "False",
-        "bEnableCalcs": "False",
+        "bEnable": false,
+        "bEnableCalcs": false,
         "fRiseRate": 3.0,
         "iLagTime": 1320,
         "iRiseTime": 3000,
         "iTotalTime": 1217
       },
       "zoneReactive": {
-        "bTriggerOff": "True",
-        "bTriggerOn": "False",
+        "bTriggerOff": true,
+        "bTriggerOn": false,
         "fActivityLevel": 0.0,
         "fThreshold": 1.0,
         "iReactiveMinutesTriggerOff": 20,
@@ -4293,12 +4571,12 @@
     {
       "activeTemperatureDevices": ["site/0xEC0BBD04/50/TEMPERATURE"],
       "assumedTemp": 18.0,
-      "bInHeatEnabled": "False",
-      "bIsActive": "False",
-      "bOutRequestHeat": "False",
-      "bOverrideLimitingAllowed": "True",
-      "bPrimaryZone": "True",
-      "bTriggerWarmup": "False",
+      "bInHeatEnabled": false,
+      "bIsActive": false,
+      "bOutRequestHeat": false,
+      "bOverrideLimitingAllowed": true,
+      "bPrimaryZone": true,
+      "bTriggerWarmup": false,
       "calibration": {
         "last_device_status": {},
         "last_result": "",
@@ -4312,7 +4590,7 @@
           "addr": "TEMPERATURE",
           "path": "site/WeatherData",
           "type": "Float",
-          "val": "None"
+          "val": null
         },
         {
           "addr": "TEMPERATURE",
@@ -4330,7 +4608,7 @@
           "addr": "LUMINANCE",
           "path": "site/0xEC0BBD04/50",
           "type": "Float",
-          "val": 31.0
+          "val": 56.0
         },
         {
           "addr": "HEATING_1",
@@ -4342,7 +4620,7 @@
           "addr": "RELATIVE_HUMIDITY",
           "path": "site/WeatherData",
           "type": "Float",
-          "val": "None"
+          "val": null
         },
         {
           "addr": "Motion",
@@ -4389,12 +4667,45 @@
       "iType": 3,
       "lOptions": 24,
       "linkedSettings": {
-        "bFollowActive": "False",
-        "bFollowOutput": "True",
+        "bFollowActive": false,
+        "bFollowOutput": true,
         "fLinkSP": 21.0,
         "lstLinkedTo": []
       },
-      "log": [],
+      "log": [
+        "2024-08-14 09:24:25.226 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-14 09:24:27.331 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-14 10:10:32.586 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-14 10:10:37.990 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-14 10:33:09.865 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-14 10:33:18.329 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-14 18:51:42.402 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-14 18:51:43.139 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-15 08:57:42.245 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-15 08:57:51.037 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-15 09:35:32.455 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-15 09:35:41.560 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-15 09:55:38.169 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-15 09:55:41.844 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-15 10:28:45.159 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-15 10:28:52.323 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-15 13:10:59.355 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-15 13:11:03.597 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-15 13:33:11.159 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-15 13:33:13.872 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-15 13:55:48.978 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-15 13:55:54.200 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-15 15:11:39.100 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-15 15:11:45.048 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-15 18:00:09.314 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-15 18:00:16.577 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-15 18:06:32.201 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-15 18:06:36.664 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-15 21:12:31.585 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-15 21:12:39.329 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-16 16:23:28.447 INFO ZoneControlSP(30) Motion detected",
+        "2024-08-16 16:23:33.511 INFO ZoneControlSP(30) Motion detected"
+      ],
       "lstIssues": [],
       "lstNodes": [
         { "addr": "85", "type": "" },
@@ -4423,19 +4734,19 @@
               "addr": "ClockHour",
               "path": "site/0xEC0BBD04/85",
               "type": "Int",
-              "val": 13
+              "val": 11
             },
             "ClockMinute": {
               "addr": "ClockMinute",
               "path": "site/0xEC0BBD04/85",
               "type": "Int",
-              "val": 4
+              "val": 59
             },
             "ClockWeekday": {
               "addr": "ClockWeekday",
               "path": "site/0xEC0BBD04/85",
               "type": "Int",
-              "val": 1
+              "val": 5
             },
             "HEATING_1": {
               "addr": "HEATING_1",
@@ -4489,7 +4800,7 @@
               "addr": "lastComms",
               "path": "site/0xEC0BBD04/85",
               "type": "Int",
-              "val": 1722858436
+              "val": 1723828316
             },
             "location": {
               "addr": "location",
@@ -4501,7 +4812,7 @@
               "addr": "lostFromModule",
               "path": "site/0xEC0BBD04/85",
               "type": "Bool",
-              "val": "False"
+              "val": false
             },
             "manfID": {
               "addr": "manfID",
@@ -4543,7 +4854,7 @@
               "addr": "LUMINANCE",
               "path": "site/0xEC0BBD04/50",
               "type": "Float",
-              "val": 31.0
+              "val": 56.0
             },
             "LibraryType": {
               "addr": "LibraryType",
@@ -4573,7 +4884,7 @@
               "addr": "Tamper",
               "path": "site/0xEC0BBD04/50",
               "type": "Int",
-              "val": "None"
+              "val": null
             },
             "WakeUp_Interval": {
               "addr": "WakeUp_Interval",
@@ -4603,7 +4914,7 @@
               "addr": "lastComms",
               "path": "site/0xEC0BBD04/50",
               "type": "Int",
-              "val": 1722858016
+              "val": 1723826845
             },
             "location": {
               "addr": "location",
@@ -4615,7 +4926,7 @@
               "addr": "lostFromModule",
               "path": "site/0xEC0BBD04/50",
               "type": "Bool",
-              "val": "False"
+              "val": false
             },
             "manfID": {
               "addr": "manfID",
@@ -4633,37 +4944,37 @@
               "addr": "PRECIPITATION",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "RELATIVE_HUMIDITY": {
               "addr": "RELATIVE_HUMIDITY",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "TEMPERATURE": {
               "addr": "TEMPERATURE",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "TEMPERATURE_FEELS_LIKE": {
               "addr": "TEMPERATURE_FEELS_LIKE",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "UV": {
               "addr": "UV",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "WEATHER_TYPE": {
               "addr": "WEATHER_TYPE",
               "path": "site/WeatherData",
               "type": "Float",
-              "val": "None"
+              "val": null
             },
             "health": {
               "addr": "health",
@@ -4675,14 +4986,14 @@
               "addr": "message",
               "path": "site/WeatherData",
               "type": "String",
-              "val": "None"
+              "val": null
             }
           },
           "type": ""
         }
       ],
       "objFootprint": {
-        "bIsNight": "True",
+        "bIsNight": true,
         "fFootprintActiveSP": 20.0,
         "fFootprintAwaySP": 14.0,
         "fFootprintNightSP": 16.0,
@@ -4717,8 +5028,8 @@
           { "fSP": 16.0, "iDay": 6, "iTm": 75600 }
         ],
         "objReactive": {
-          "bTriggerOff": "True",
-          "bTriggerOn": "False",
+          "bTriggerOff": true,
+          "bTriggerOn": false,
           "fActivityLevel": 0.0,
           "fThreshold": 1.0,
           "iReactiveMinutesTriggerOff": 20,
@@ -4726,7 +5037,7 @@
           "iSensitivity": 80,
           "iTimeTillOff": 0,
           "iTimeTillOn": 2,
-          "tmLastActivity": 1722855677
+          "tmLastActivity": 1723821833
         }
       },
       "objTimer": [
@@ -4773,7 +5084,7 @@
         { "bReactive": 0.0, "fSP": 14.5, "iDay": 6, "iTm": 81000 }
       ],
       "strName": "Study",
-      "tmLastTick": 1722858788,
+      "tmLastTick": 1723828454,
       "tmMaxTimeAtSP": 1800,
       "tmTimeAtSP": 0,
       "trigger": {
@@ -4787,16 +5098,16 @@
         "test": 0
       },
       "warmupDuration": {
-        "bEnable": "False",
-        "bEnableCalcs": "True",
+        "bEnable": false,
+        "bEnableCalcs": true,
         "fRiseRate": 4.0,
         "iLagTime": 0,
         "iRiseTime": 0,
         "iTotalTime": 1852
       },
       "zoneReactive": {
-        "bTriggerOff": "True",
-        "bTriggerOn": "False",
+        "bTriggerOff": true,
+        "bTriggerOn": false,
         "fActivityLevel": 0.0,
         "fThreshold": 1.0,
         "iReactiveMinutesTriggerOff": 20,
@@ -4804,15 +5115,15 @@
         "iSensitivity": 80,
         "iTimeTillOff": 0,
         "iTimeTillOn": 2,
-        "tmLastActivity": 1722855677
+        "tmLastActivity": 1723821833
       },
       "zoneSubType": 0
     },
     {
-      "bIsActive": "False",
-      "bOutRequestHeat": "False",
-      "bOverrideLimitingAllowed": "False",
-      "bPrimaryZone": "True",
+      "bIsActive": false,
+      "bOutRequestHeat": false,
+      "bOverrideLimitingAllowed": false,
+      "bPrimaryZone": true,
       "datapoints": [
         {
           "addr": "SwitchBinary",
@@ -4821,13 +5132,13 @@
           "val": 0
         }
       ],
-      "fBoostSP": 1.0,
+      "fBoostSP": 0.0,
       "fMaxSP": 1,
       "fMinSP": 0,
       "fOutput": 0.0,
       "fSP": 0.0,
       "iBaseMode": 1,
-      "iBoostTimeRemaining": 1028,
+      "iBoostTimeRemaining": 0,
       "iFlagActualKit": 0,
       "iFlagExpectedKit": 0,
       "iFlags": 1023,
@@ -4839,12 +5150,45 @@
       "iType": 2,
       "lOptions": 0,
       "linkedSettings": {
-        "bFollowActive": "False",
-        "bFollowOutput": "True",
+        "bFollowActive": false,
+        "bFollowOutput": true,
         "fLinkSP": 21.0,
         "lstLinkedTo": []
       },
-      "log": [],
+      "log": [
+        "2024-08-16 18:09:04.276 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:09:14.277 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:09:24.278 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:09:34.280 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:09:44.281 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:09:54.282 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:10:04.283 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:10:14.284 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:10:24.287 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:10:34.286 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:10:44.287 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:10:54.289 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:11:04.290 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:11:14.292 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:11:24.293 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:11:34.294 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:11:44.295 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:11:54.298 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:12:04.299 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:12:14.300 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:12:24.302 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:12:34.303 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:12:44.304 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:12:54.305 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:13:04.321 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:13:14.316 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:13:25.099 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:13:34.313 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:13:44.315 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:13:54.314 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:14:04.315 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n",
+        "2024-08-16 18:14:14.316 DBG ZoneTimer(32) retrieving state for data point device (site/0xEC0BBD04/86)\n - RETURN VAL: EDATAPOINT_STATE_SYNCHRONISED\n"
+      ],
       "lstIssues": [],
       "maximumOverrideDuration": 86400,
       "nodes": [
@@ -4903,7 +5247,7 @@
               "addr": "lastComms",
               "path": "site/0xEC0BBD04/86",
               "type": "Int",
-              "val": 1722858761
+              "val": 1723828450
             },
             "location": {
               "addr": "location",
@@ -4915,7 +5259,7 @@
               "addr": "lostFromModule",
               "path": "site/0xEC0BBD04/86",
               "type": "Bool",
-              "val": "False"
+              "val": false
             },
             "manfID": {
               "addr": "manfID",
@@ -4951,9 +5295,9 @@
         { "bReactive": 0.0, "fSP": 0.0, "iDay": 6, "iTm": 86400 }
       ],
       "strName": "Study Socket",
-      "tmLastTick": 1722858788,
+      "tmLastTick": 1723828454,
       "trigger": {
-        "boost": 1,
+        "boost": 0,
         "linkChildActive": 0,
         "linkChildOutput": 0,
         "output": 0,
@@ -4963,8 +5307,8 @@
         "test": 0
       },
       "zoneReactive": {
-        "bTriggerOff": "True",
-        "bTriggerOn": "False",
+        "bTriggerOff": true,
+        "bTriggerOn": false,
         "fActivityLevel": 0.0,
         "fThreshold": 1.0,
         "iReactiveMinutesTriggerOff": 20,
@@ -4976,5 +5320,8 @@
       },
       "zoneSubType": 0
     }
-  ]
+  ],
+  "error": 0,
+  "tm": "2024-08-16T18:14:20+0100",
+  "ts": 1723828460
 }
