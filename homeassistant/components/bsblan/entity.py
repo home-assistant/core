@@ -31,11 +31,12 @@ class BSBLANEntity(Entity):
         self.client = client
 
         self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, format_mac(device.MAC))},
             identifiers={(DOMAIN, format_mac(device.MAC))},
+            connections={(CONNECTION_NETWORK_MAC, format_mac(device.MAC))},
+            name=device.name,
             manufacturer="BSBLAN Inc.",
             model=info.device_identification.value,
-            name=device.name,
-            sw_version=f"{device.version})",
+            sw_version=f"{device.version}",
+            hw_version=getattr(info, "hardware_version", None),
             configuration_url=f"http://{entry.data[CONF_HOST]}",
         )
