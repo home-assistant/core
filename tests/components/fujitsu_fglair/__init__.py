@@ -1,5 +1,8 @@
 """Tests for the Fujitsu HVAC (based on Ayla IOT) integration."""
 
+from ayla_iot_unofficial.fujitsu_hvac import FujitsuHVAC
+
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -11,3 +14,8 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) 
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
+
+def entity_id(device: FujitsuHVAC) -> str:
+    """Generate the entity id for the given serial."""
+    return f"{Platform.CLIMATE}.{device.device_serial_number}"
