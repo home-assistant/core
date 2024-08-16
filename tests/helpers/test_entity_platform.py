@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, PERCENTAGE, EntityCategory
 from homeassistant.core import (
@@ -1758,6 +1759,56 @@ async def test_register_entity_service_limited_to_matching_platforms(
             "response-key": "response-value-base_platform.entity2"
         },
     }
+
+
+async def test_register_entity_service_none_schema(
+    hass: HomeAssistant,
+) -> None:
+    """Test registering a service with schema set to None."""
+    entity_platform = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity1 = SlowEntity(name="entity_1")
+    entity2 = SlowEntity(name="entity_1")
+    await entity_platform.async_add_entities([entity1, entity2])
+
+    entities = []
+
+    @callback
+    def handle_service(entity, *_):
+        entities.append(entity)
+
+    entity_platform.async_register_entity_service("hello", None, handle_service)
+
+    await hass.services.async_call(
+        "mock_platform", "hello", {"entity_id": "all"}, blocking=True
+    )
+
+    assert len(entities) == 2
+    assert entity1 in entities
+    assert entity2 in entities
+
+
+async def test_register_entity_service_non_entity_service_schema(
+    hass: HomeAssistant,
+) -> None:
+    """Test attempting to register a service with an incomplete schema."""
+    entity_platform = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=(
+            "The schema does not include all required keys: entity_id, device_id, area_id, "
+            "floor_id, label_id"
+        ),
+    ):
+        entity_platform.async_register_entity_service(
+            "hello",
+            vol.Schema({"some": str}),
+            Mock(),
+        )
 
 
 @pytest.mark.parametrize("update_before_add", [True, False])

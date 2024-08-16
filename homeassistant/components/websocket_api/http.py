@@ -339,11 +339,11 @@ class WebSocketHandler:
                 raise Disconnect from err
 
             if msg.type in (WSMsgType.CLOSE, WSMsgType.CLOSED, WSMsgType.CLOSING):
-                raise Disconnect
+                raise Disconnect  # noqa: TRY301
 
             if msg.type != WSMsgType.TEXT:
                 disconnect_warn = "Received non-Text message."
-                raise Disconnect
+                raise Disconnect  # noqa: TRY301
 
             try:
                 auth_msg_data = json_loads(msg.data)

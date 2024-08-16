@@ -86,7 +86,7 @@ async def async_setup_platform(
     )
     if (
         result["type"] is FlowResultType.CREATE_ENTRY
-        or result["reason"] == "single_instance_allowed"
+        or result["reason"] == "already_configured"
     ):
         async_create_issue(
             hass,

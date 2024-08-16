@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "followers": {
+        "default": "mdi:account-multiple"
+      },
+      "following": {
+        "default": "mdi:account-multiple"
+      },
+      "posts": {
+        "default": "mdi:message-text"
+      }
+    }
+  }
+}

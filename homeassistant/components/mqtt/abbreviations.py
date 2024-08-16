@@ -267,6 +267,7 @@ DEVICE_ABBREVIATIONS = {
     "name": "name",
     "mf": "manufacturer",
     "mdl": "model",
+    "mdl_id": "model_id",
     "hw": "hw_version",
     "sw": "sw_version",
     "sa": "suggested_area",

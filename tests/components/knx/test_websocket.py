@@ -346,7 +346,7 @@ async def test_knx_subscribe_telegrams_command_project(
     assert res["event"]["destination"] == "0/1/1"
     assert res["event"]["destination_name"] == "percent"
     assert res["event"]["payload"] == 1
-    assert res["event"]["value"] == "Error decoding value"
+    assert res["event"]["value"] is None
     assert res["event"]["telegramtype"] == "GroupValueWrite"
     assert res["event"]["source"] == "1.1.6"
     assert (

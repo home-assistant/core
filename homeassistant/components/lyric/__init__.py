@@ -192,8 +192,8 @@ class LyricAccessoryEntity(LyricDeviceEntity):
     ) -> None:
         """Initialize the Honeywell Lyric accessory entity."""
         super().__init__(coordinator, location, device, key)
-        self._room = room
-        self._accessory = accessory
+        self._room_id = room.id
+        self._accessory_id = accessory.id
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -202,11 +202,25 @@ class LyricAccessoryEntity(LyricDeviceEntity):
             identifiers={
                 (
                     f"{dr.CONNECTION_NETWORK_MAC}_room_accessory",
-                    f"{self._mac_id}_room{self._room.id}_accessory{self._accessory.id}",
+                    f"{self._mac_id}_room{self._room_id}_accessory{self._accessory_id}",
                 )
             },
             manufacturer="Honeywell",
             model="RCHTSENSOR",
-            name=f"{self._room.roomName} Sensor",
+            name=f"{self.room.roomName} Sensor",
             via_device=(dr.CONNECTION_NETWORK_MAC, self._mac_id),
+        )
+
+    @property
+    def room(self) -> LyricRoom:
+        """Get the Lyric Device."""
+        return self.coordinator.data.rooms_dict[self._mac_id][self._room_id]
+
+    @property
+    def accessory(self) -> LyricAccessories:
+        """Get the Lyric Device."""
+        return next(
+            accessory
+            for accessory in self.room.accessories
+            if accessory.id == self._accessory_id
         )

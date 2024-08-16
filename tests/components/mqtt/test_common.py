@@ -45,6 +45,7 @@ DEFAULT_CONFIG_DEVICE_INFO_ID = {
     "manufacturer": "Whatever",
     "name": "Beer",
     "model": "Glass",
+    "model_id": "XYZ001",
     "hw_version": "rev1",
     "serial_number": "1234deadbeef",
     "sw_version": "0.1-beta",
@@ -57,6 +58,7 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
     "manufacturer": "Whatever",
     "name": "Beer",
     "model": "Glass",
+    "model_id": "XYZ001",
     "hw_version": "rev1",
     "serial_number": "1234deadbeef",
     "sw_version": "0.1-beta",
@@ -1005,6 +1007,7 @@ async def help_test_entity_device_info_with_identifier(
     assert device.manufacturer == "Whatever"
     assert device.name == "Beer"
     assert device.model == "Glass"
+    assert device.model_id == "XYZ001"
     assert device.hw_version == "rev1"
     assert device.sw_version == "0.1-beta"
     assert device.suggested_area == "default_area"
@@ -1041,6 +1044,7 @@ async def help_test_entity_device_info_with_connection(
     assert device.manufacturer == "Whatever"
     assert device.name == "Beer"
     assert device.model == "Glass"
+    assert device.model_id == "XYZ001"
     assert device.hw_version == "rev1"
     assert device.sw_version == "0.1-beta"
     assert device.suggested_area == "default_area"

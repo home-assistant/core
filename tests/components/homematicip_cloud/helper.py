@@ -132,7 +132,7 @@ class HomeTemplate(Home):
 
     def __init__(
         self, connection=None, home_name="", test_devices=None, test_groups=None
-    ):
+    ) -> None:
         """Init template with connection."""
         super().__init__(connection=connection)
         self.name = home_name
