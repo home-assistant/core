@@ -26,8 +26,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up an entry for switch platform."""
-    _LOGGER.warning("Starting set up switch platform")
-
     @callback
     def async_add_devices(devices: Collection[LGDevice]) -> None:
         """Add switch entities."""
