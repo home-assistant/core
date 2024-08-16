@@ -19,6 +19,7 @@ from homeassistant.core import Event, EventOrigin, State
 import homeassistant.util.dt as dt_util
 
 from .common import async_wait_recording_done
+from .conftest import instrument_migration
 
 from tests.common import async_test_home_assistant
 from tests.typing import RecorderInstanceGenerator
@@ -637,6 +638,10 @@ async def test_out_of_disk_space_while_removing_foreign_key(
 
     This case tests the migration still happens if
     ix_states_event_id is removed from the states table.
+
+    Note that the test is somewhat forced; the states.event_id foreign key constraint is
+    removed when migrating to schema version 44, inspecting the schema in
+    cleanup_legacy_states_event_ids is not likely to fail.
     """
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
@@ -737,36 +742,52 @@ async def test_out_of_disk_space_while_removing_foreign_key(
 
     assert "ix_states_entity_id_last_updated_ts" in states_index_names
 
-    # Simulate out of disk space while removing the foreign key from the states table by
-    # - patching DropConstraint to raise InternalError for MySQL and PostgreSQL
-    with (
-        patch(
-            "homeassistant.components.recorder.migration.DropConstraint",
-            side_effect=OperationalError(
-                None, None, OSError("No space left on device")
-            ),
-        ),
-    ):
-        async with (
-            async_test_home_assistant() as hass,
-            async_test_recorder(hass) as instance,
-        ):
-            await hass.async_block_till_done()
+    async with async_test_home_assistant() as hass:
+        with instrument_migration(hass) as instrumented_migration:
+            # Allow migration to start, but stall when live migration is completed
+            instrumented_migration.migration_stall.set()
+            instrumented_migration.live_migration_done_stall.clear()
 
-            # We need to wait for all the migration tasks to complete
-            # before we can check the database.
-            for _ in range(number_of_migrations):
-                await instance.async_block_till_done()
-                await async_wait_recording_done(hass)
+            async with async_test_recorder(hass, wait_recorder=False) as instance:
+                await hass.async_block_till_done()
 
-            states_indexes = await instance.async_add_executor_job(
-                _get_states_index_names
-            )
-            states_index_names = {index["name"] for index in states_indexes}
-            assert instance.use_legacy_events_index is True
-            assert await instance.async_add_executor_job(_get_event_id_foreign_keys)
+                # Wait for live migration to complete
+                await hass.async_add_executor_job(
+                    instrumented_migration.live_migration_done.wait
+                )
 
-            await hass.async_stop()
+                # Simulate out of disk space while removing the foreign key from the states table by
+                # - patching DropConstraint to raise InternalError for MySQL and PostgreSQL
+                with (
+                    patch(
+                        "homeassistant.components.recorder.migration.sqlalchemy.inspect",
+                        side_effect=OperationalError(
+                            None, None, OSError("No space left on device")
+                        ),
+                    ),
+                ):
+                    instrumented_migration.live_migration_done_stall.set()
+                    # We need to wait for all the migration tasks to complete
+                    # before we can check the database.
+                    for _ in range(number_of_migrations):
+                        await instance.async_block_till_done()
+                        await async_wait_recording_done(hass)
+
+                    states_indexes = await instance.async_add_executor_job(
+                        _get_states_index_names
+                    )
+                    states_index_names = {index["name"] for index in states_indexes}
+                    assert instance.use_legacy_events_index is True
+                    # The states.event_id foreign key constraint was removed when
+                    # migration to schema version 44
+                    assert (
+                        await instance.async_add_executor_job(
+                            _get_event_id_foreign_keys
+                        )
+                        is None
+                    )
+
+                    await hass.async_stop()
 
     # Now run it again to verify the table rebuild tries again
     caplog.clear()

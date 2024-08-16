@@ -273,7 +273,6 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
         self._attr_name = name
         if code_template:
             self._code = code_template
-            self._code.hass = hass
         else:
             self._code = code or None
         self._disarm_after_trigger = disarm_after_trigger

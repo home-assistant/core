@@ -826,8 +826,6 @@ build.json @home-assistant/supervisor
 /tests/components/logbook/ @home-assistant/core
 /homeassistant/components/logger/ @home-assistant/core
 /tests/components/logger/ @home-assistant/core
-/homeassistant/components/logi_circle/ @evanjd
-/tests/components/logi_circle/ @evanjd
 /homeassistant/components/london_underground/ @jpbede
 /tests/components/london_underground/ @jpbede
 /homeassistant/components/lookin/ @ANMalko @bdraco
@@ -970,6 +968,8 @@ build.json @home-assistant/supervisor
 /tests/components/nfandroidtv/ @tkdrob
 /homeassistant/components/nibe_heatpump/ @elupus
 /tests/components/nibe_heatpump/ @elupus
+/homeassistant/components/nice_go/ @IceBotYT
+/tests/components/nice_go/ @IceBotYT
 /homeassistant/components/nightscout/ @marciogranzotto
 /tests/components/nightscout/ @marciogranzotto
 /homeassistant/components/nilu/ @hfurubotten
