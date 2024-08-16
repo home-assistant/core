@@ -33,12 +33,19 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[AccountData]):
 
         account_data = await self.client.get_accounts()
         cashflow_summary = await self.client.get_cashflow_summary()
-        return {"account_data": account_data, "cashflow_summary": cashflow_summary}
+        return {
+            "account_data": account_data,
+            "cashflow_summary": cashflow_summary,
+        }
+
+    @property
+    def cashflow_summary(self) -> Any:
+        """Return cashflow summary."""
+        return self.data["cashflow_summary"]["summary"][0]["summary"]
 
     @property
     def accounts(self) -> Any:
         """Return accounts."""
-
         return self.data["account_data"]["accounts"]
 
     def get_account_for_id(self, account_id: str) -> Any | None:

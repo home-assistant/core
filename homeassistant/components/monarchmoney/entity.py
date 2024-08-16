@@ -10,7 +10,36 @@ from .const import DOMAIN
 from .coordinator import MonarchMoneyDataUpdateCoordinator
 
 
-class MonarchMoneyEntity(CoordinatorEntity[MonarchMoneyDataUpdateCoordinator]):
+class MonarchMoneyBaseEntity(CoordinatorEntity[MonarchMoneyDataUpdateCoordinator]):
+    """Custom entity for Cashflow sensors."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: MonarchMoneyDataUpdateCoordinator,
+        description: EntityDescription,
+        data: Any,
+    ) -> None:
+        """Initialize the Monarch Money Entity."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"monarch_money_cashflow_{description.key}"
+
+        self._data = data
+        self.entity_description = description
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, "monarch_money_cashflow")},
+            name="Cashflow",
+            suggested_area="Banking/Finance",
+        )
+
+    @property
+    def summary_data(self) -> Any:
+        """Return cashflow summary data."""
+        return self.coordinator.cashflow_summary
+
+
+class MonarchMoneyAccountEntity(CoordinatorEntity[MonarchMoneyDataUpdateCoordinator]):
     """Define a generic class for Entities."""
 
     _attr_has_entity_name = True
@@ -25,6 +54,7 @@ class MonarchMoneyEntity(CoordinatorEntity[MonarchMoneyDataUpdateCoordinator]):
         super().__init__(coordinator)
 
         self.entity_description = description
+
         self._account_id = account["id"]
 
         # Parse out some fields

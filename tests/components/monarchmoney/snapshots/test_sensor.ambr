@@ -1,4 +1,207 @@
 # serializer version: 1
+# name: test_all_entities[sensor.cashflow_expense_ytd-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.cashflow_expense_ytd',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Expense YTD',
+    'platform': 'monarchmoney',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'sum_expense',
+    'unique_id': 'monarch_money_cashflow_sum_expense',
+    'unit_of_measurement': '$',
+  })
+# ---
+# name: test_all_entities[sensor.cashflow_expense_ytd-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'monetary',
+      'friendly_name': 'Cashflow Expense YTD',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': '$',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cashflow_expense_ytd',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-9000.0',
+  })
+# ---
+# name: test_all_entities[sensor.cashflow_income_ytd-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.cashflow_income_ytd',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Income YTD',
+    'platform': 'monarchmoney',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'sum_income',
+    'unique_id': 'monarch_money_cashflow_sum_income',
+    'unit_of_measurement': '$',
+  })
+# ---
+# name: test_all_entities[sensor.cashflow_income_ytd-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'monetary',
+      'friendly_name': 'Cashflow Income YTD',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': '$',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cashflow_income_ytd',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '15000.0',
+  })
+# ---
+# name: test_all_entities[sensor.cashflow_savings_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.cashflow_savings_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Savings rate',
+    'platform': 'monarchmoney',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'savings_rate',
+    'unique_id': 'monarch_money_cashflow_savings_rate',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.cashflow_savings_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Cashflow Savings rate',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cashflow_savings_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.4',
+  })
+# ---
+# name: test_all_entities[sensor.cashflow_savings_ytd-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.cashflow_savings_ytd',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Savings YTD',
+    'platform': 'monarchmoney',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'savings',
+    'unique_id': 'monarch_money_cashflow_savings',
+    'unit_of_measurement': '$',
+  })
+# ---
+# name: test_all_entities[sensor.cashflow_savings_ytd-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'monetary',
+      'friendly_name': 'Cashflow Savings YTD',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': '$',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cashflow_savings_ytd',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6000.0',
+  })
+# ---
 # name: test_all_entities[sensor.manual_entry_wallet_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

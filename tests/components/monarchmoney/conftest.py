@@ -37,6 +37,9 @@ def mock_config_api() -> Generator[AsyncMock]:
     """Mock the MonarchMoney class."""
 
     account_data: dict[str, Any] = json.loads(load_fixture("get_accounts.json", DOMAIN))
+    cashflow_summary: dict[str, Any] = json.loads(
+        load_fixture("get_cashflow_summary.json", DOMAIN)
+    )
 
     with (
         patch(
@@ -62,4 +65,5 @@ def mock_config_api() -> Generator[AsyncMock]:
             }
         )
         instance.get_accounts = AsyncMock(return_value=account_data)
+        instance.get_cashflow_summary = AsyncMock(return_value=cashflow_summary)
         yield mock_class

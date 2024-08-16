@@ -26,6 +26,19 @@
       "age": {
         "name": "Data age"
       },
+
+      "sum_income": {
+        "name": "Income YTD"
+      },
+      "sum_expense": {
+        "name": "Expense YTD"
+      },
+      "savings": {
+        "name": "Savings YTD"
+      },
+      "savings_rate": {
+        "name": "Savings rate"
+      },
       "created": {
         "name": "First sync"
       }
