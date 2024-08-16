@@ -3,7 +3,6 @@
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_STOP, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.start import async_at_started
 
 from .const import CONF_AGENCY, CONF_ROUTE, DOMAIN
 from .coordinator import NextBusDataUpdateCoordinator
@@ -24,12 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator.add_stop_route(entry.data[CONF_STOP], entry.data[CONF_ROUTE])
 
-    async def _async_finish_startup(hass: HomeAssistant) -> None:
-        """Run this only when HA has finished its startup."""
-        await coordinator.async_config_entry_first_refresh()
-
-    # Don't call the NextBus API during startup
-    async_at_started(hass, _async_finish_startup)
+    await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
