@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import AsyncGenerator, Generator
 from random import getrandbits
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import DEFAULT, AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -121,3 +121,148 @@ def record_calls(recorded_calls: list[ReceiveMessage]) -> MessageCallbackType:
         recorded_calls.append(msg)
 
     return record_calls
+
+
+@pytest.fixture(name="supervisor")
+def supervisor_fixture() -> Generator[MagicMock]:
+    """Mock Supervisor."""
+    with patch(
+        "homeassistant.components.mqtt.config_flow.is_hassio", return_value=True
+    ) as is_hassio:
+        yield is_hassio
+
+
+@pytest.fixture(name="discovery_info")
+def discovery_info_fixture() -> Any:
+    """Return the discovery info from the supervisor."""
+    return DEFAULT
+
+
+@pytest.fixture(name="get_addon_discovery_info", autouse=True)
+def get_addon_discovery_info_fixture(discovery_info: Any) -> Generator[AsyncMock]:
+    """Mock get add-on discovery info."""
+    with patch(
+        "homeassistant.components.hassio.addon_manager.async_get_addon_discovery_info",
+        return_value=discovery_info,
+    ) as get_addon_discovery_info:
+        yield get_addon_discovery_info
+
+
+@pytest.fixture(name="addon_setup_time", autouse=True)
+def addon_setup_time_fixture() -> Generator[int]:
+    """Mock add-on setup sleep time."""
+    with patch(
+        "homeassistant.components.mqtt.config_flow.ADDON_SETUP_TIMEOUT", new=0
+    ) as addon_setup_time:
+        yield addon_setup_time
+
+
+@pytest.fixture(name="addon_store_info")
+def addon_store_info_fixture() -> Generator[AsyncMock]:
+    """Mock Supervisor add-on store info."""
+    with patch(
+        "homeassistant.components.hassio.addon_manager.async_get_addon_store_info"
+    ) as addon_store_info:
+        addon_store_info.return_value = {
+            "available": False,
+            "installed": None,
+            "state": None,
+            "version": "1.0.0",
+        }
+        yield addon_store_info
+
+
+@pytest.fixture(name="addon_info")
+def addon_info_fixture() -> Generator[AsyncMock]:
+    """Mock Supervisor add-on info."""
+    with patch(
+        "homeassistant.components.hassio.addon_manager.async_get_addon_info",
+    ) as addon_info:
+        addon_info.return_value = {
+            "available": False,
+            "hostname": None,
+            "options": {},
+            "state": None,
+            "update_available": False,
+            "version": None,
+        }
+        yield addon_info
+
+
+@pytest.fixture(name="addon_not_installed")
+def addon_not_installed_fixture(
+    addon_store_info: AsyncMock, addon_info: AsyncMock
+) -> AsyncMock:
+    """Mock add-on not installed."""
+    addon_store_info.return_value["available"] = True
+    return addon_info
+
+
+@pytest.fixture(name="addon_installed")
+def addon_installed_fixture(
+    addon_store_info: AsyncMock, addon_info: AsyncMock
+) -> AsyncMock:
+    """Mock add-on already installed but not running."""
+    addon_store_info.return_value = {
+        "available": True,
+        "installed": "1.0.0",
+        "state": "stopped",
+        "version": "1.0.0",
+    }
+    addon_info.return_value["available"] = True
+    addon_info.return_value["hostname"] = "core-matter-server"
+    addon_info.return_value["state"] = "stopped"
+    addon_info.return_value["version"] = "1.0.0"
+    return addon_info
+
+
+@pytest.fixture(name="addon_running")
+def addon_running_fixture(
+    addon_store_info: AsyncMock, addon_info: AsyncMock
+) -> AsyncMock:
+    """Mock add-on already running."""
+    addon_store_info.return_value = {
+        "available": True,
+        "installed": "1.0.0",
+        "state": "started",
+        "version": "1.0.0",
+    }
+    addon_info.return_value["available"] = True
+    addon_info.return_value["hostname"] = "core-mosquitto"
+    addon_info.return_value["state"] = "started"
+    addon_info.return_value["version"] = "1.0.0"
+    return addon_info
+
+
+@pytest.fixture(name="install_addon")
+def install_addon_fixture(
+    addon_store_info: AsyncMock, addon_info: AsyncMock
+) -> Generator[AsyncMock]:
+    """Mock install add-on."""
+
+    async def install_addon_side_effect(hass: HomeAssistant, slug: str) -> None:
+        """Mock install add-on."""
+        addon_store_info.return_value = {
+            "available": True,
+            "installed": "1.0.0",
+            "state": "stopped",
+            "version": "1.0.0",
+        }
+        addon_info.return_value["available"] = True
+        addon_info.return_value["state"] = "stopped"
+        addon_info.return_value["version"] = "1.0.0"
+
+    with patch(
+        "homeassistant.components.hassio.addon_manager.async_install_addon"
+    ) as install_addon:
+        install_addon.side_effect = install_addon_side_effect
+        yield install_addon
+
+
+@pytest.fixture(name="start_addon")
+def start_addon_fixture() -> Generator[AsyncMock]:
+    """Mock start add-on."""
+    with patch(
+        "homeassistant.components.hassio.addon_manager.async_start_addon"
+    ) as start_addon:
+        yield start_addon
