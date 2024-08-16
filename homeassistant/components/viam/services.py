@@ -13,7 +13,6 @@ from viam.services.vision import VisionClient
 import voluptuous as vol
 
 from homeassistant.components import camera
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -21,11 +20,10 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import selector
 
 from .const import DOMAIN
-from .manager import ViamManager
+from .manager import ViamConfigEntry, ViamManager
 
 ATTR_CONFIG_ENTRY = "config_entry"
 
@@ -120,47 +118,27 @@ def __encode_image(image: Image.Image | ViamImage) -> str:
 
 async def __get_image(
     hass: HomeAssistant, filepath: str | None, camera_entity: str | None
-) -> ViamImage | Image.Image | None:
+) -> ViamImage | None:
     """Retrieve image type from camera entity or file system."""
     if filepath is not None:
-        return await hass.async_add_executor_job(__fetch_image, filepath)
+        local_image = await hass.async_add_executor_job(__fetch_image, filepath)
+        if local_image is not None:
+            return ViamImage(
+                local_image.tobytes(),
+                CameraMimeType.from_string(Image.MIME[local_image.format or "JPEG"]),
+            )
     if camera_entity is not None:
-        image = await camera.async_get_image(hass, camera_entity)
-        return ViamImage(image.content, CameraMimeType.from_string(image.content_type))
+        camera_image = await camera.async_get_image(hass, camera_entity)
+        return ViamImage(
+            camera_image.content, CameraMimeType.from_string(camera_image.content_type)
+        )
 
     return None
 
 
-def __get_manager(hass: HomeAssistant, call: ServiceCall) -> ViamManager:
-    entry_id: str = call.data[ATTR_CONFIG_ENTRY]
-    entry: ConfigEntry | None = hass.config_entries.async_get_entry(entry_id)
-
-    if not entry:
-        raise ServiceValidationError(
-            f"Invalid config entry: {entry_id}",
-            translation_domain=DOMAIN,
-            translation_key="invalid_config_entry",
-            translation_placeholders={
-                "config_entry": entry_id,
-            },
-        )
-    if entry.state != ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            f"{entry.title} is not loaded",
-            translation_domain=DOMAIN,
-            translation_key="unloaded_config_entry",
-            translation_placeholders={
-                "config_entry": entry.title,
-            },
-        )
-
-    manager: ViamManager = hass.data[DOMAIN][entry_id]
-    return manager
-
-
-async def __capture_data(call: ServiceCall, *, hass: HomeAssistant) -> None:
+async def __capture_data(config: ViamConfigEntry, call: ServiceCall) -> None:
     """Accept input from service call to send to Viam."""
-    manager: ViamManager = __get_manager(hass, call)
+    manager: ViamManager = config.runtime_data
     parts: list[RobotPart] = await manager.get_robot_parts()
     values = [call.data.get(SERVICE_VALUES, {})]
     component_type = call.data.get(SERVICE_COMPONENT_TYPE, "sensor")
@@ -176,9 +154,11 @@ async def __capture_data(call: ServiceCall, *, hass: HomeAssistant) -> None:
     )
 
 
-async def __capture_image(call: ServiceCall, *, hass: HomeAssistant) -> None:
+async def __capture_image(
+    hass: HomeAssistant, config: ViamConfigEntry, call: ServiceCall
+) -> None:
     """Accept input from service call to send to Viam."""
-    manager: ViamManager = __get_manager(hass, call)
+    manager: ViamManager = config.runtime_data
     parts: list[RobotPart] = await manager.get_robot_parts()
     filepath = call.data.get(SERVICE_FILEPATH)
     camera_entity = call.data.get(SERVICE_CAMERA)
@@ -203,10 +183,13 @@ async def __capture_image(call: ServiceCall, *, hass: HomeAssistant) -> None:
 
 
 async def __get_service_values(
-    hass: HomeAssistant, call: ServiceCall, service_config_name: str
+    hass: HomeAssistant,
+    config: ViamConfigEntry,
+    call: ServiceCall,
+    service_config_name: str,
 ):
     """Create common values for vision services."""
-    manager: ViamManager = __get_manager(hass, call)
+    manager: ViamManager = config.runtime_data
     filepath = call.data.get(SERVICE_FILEPATH)
     camera_entity = call.data.get(SERVICE_CAMERA)
     service_name = call.data.get(service_config_name, "")
@@ -223,17 +206,17 @@ async def __get_service_values(
 
 
 async def __get_classifications(
-    call: ServiceCall, *, hass: HomeAssistant
+    hass: HomeAssistant, config: ViamConfigEntry, call: ServiceCall
 ) -> ServiceResponse:
     """Accept input configuration to request classifications."""
     (
-        manager,
+        _manager,
         classifier,
         image,
         filepath,
         confidence_threshold,
         count,
-    ) = await __get_service_values(hass, call, SERVICE_CLASSIFIER_NAME)
+    ) = await __get_service_values(hass, config, call, SERVICE_CLASSIFIER_NAME)
 
     if image is None:
         return {
@@ -255,17 +238,17 @@ async def __get_classifications(
 
 
 async def __get_detections(
-    call: ServiceCall, *, hass: HomeAssistant
+    hass: HomeAssistant, config: ViamConfigEntry, call: ServiceCall
 ) -> ServiceResponse:
     """Accept input configuration to request detections."""
     (
-        manager,
+        _manager,
         detector,
         image,
         filepath,
         confidence_threshold,
         _count,
-    ) = await __get_service_values(hass, call, SERVICE_DETECTOR_NAME)
+    ) = await __get_service_values(hass, config, call, SERVICE_DETECTOR_NAME)
 
     if image is None:
         return {
@@ -294,32 +277,32 @@ async def __get_detections(
 
 
 @callback
-def async_setup_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant, config: ViamConfigEntry) -> None:
     """Set up services for Viam integration."""
 
     hass.services.async_register(
         DOMAIN,
         DATA_CAPTURE_SERVICE_NAME,
-        partial(__capture_data, hass=hass),
+        partial(__capture_data, config),
         DATA_CAPTURE_SERVICE_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
         CAPTURE_IMAGE_SERVICE_NAME,
-        partial(__capture_image, hass=hass),
+        partial(__capture_image, hass, config),
         CAPTURE_IMAGE_SERVICE_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
         CLASSIFICATION_SERVICE_NAME,
-        partial(__get_classifications, hass=hass),
+        partial(__get_classifications, hass, config),
         CLASSIFICATION_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,
         DETECTIONS_SERVICE_NAME,
-        partial(__get_detections, hass=hass),
+        partial(__get_detections, hass, config),
         DETECTIONS_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )

@@ -7,6 +7,7 @@ from viam.app.viam_client import ViamClient
 from viam.robot.client import RobotClient
 from viam.rpc.dial import Credentials, DialOptions
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -20,6 +21,8 @@ from .const import (
     CRED_TYPE_LOCATION_SECRET,
     DOMAIN,
 )
+
+type ViamConfigEntry = ConfigEntry[ViamManager]
 
 
 class ViamManager:
