@@ -51,9 +51,7 @@ class ThinqData:
     device_map: dict[str, LGDevice] = field(default_factory=dict)
 
 
-PLATFORMS = [
-    Platform.SWITCH,
-]
+PLATFORMS = [Platform.SWITCH]
 
 SERVICE_GET_DEVICE_PROFILE_SCHEMA = vol.Schema(
     {vol.Required(ATTR_DEVICE_ID): cv.string}
