@@ -12,6 +12,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     MediaPlayerEnqueue,
+    RepeatMode,
 )
 from homeassistant.components.sonos.const import (
     DOMAIN as SONOS_DOMAIN,
@@ -25,6 +26,8 @@ from homeassistant.components.sonos.media_player import (
     VOLUME_INCREMENT,
 )
 from homeassistant.const import (
+    SERVICE_REPEAT_SET,
+    SERVICE_SHUFFLE_SET,
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
@@ -39,7 +42,7 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.setup import async_setup_component
 
-from .conftest import MockMusicServiceItem, MockSoCo, SoCoMockFactory
+from .conftest import MockMusicServiceItem, MockSoCo, SoCoMockFactory, SonosMockEvent
 
 
 async def test_device_registry(
@@ -681,6 +684,147 @@ async def test_select_source_error(
         )
     assert "invalid_source" in str(sve.value)
     assert "Could not find a Sonos favorite" in str(sve.value)
+
+
+async def test_shuffle_set(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+) -> None:
+    """Test the set shuffle method."""
+    assert soco.play_mode == "NORMAL"
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_SHUFFLE_SET,
+        {
+            "entity_id": "media_player.zone_a",
+            "shuffle": True,
+        },
+        blocking=True,
+    )
+    assert soco.play_mode == "SHUFFLE_NOREPEAT"
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_SHUFFLE_SET,
+        {
+            "entity_id": "media_player.zone_a",
+            "shuffle": False,
+        },
+        blocking=True,
+    )
+    assert soco.play_mode == "NORMAL"
+
+
+async def test_shuffle_get(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    no_media_event: SonosMockEvent,
+) -> None:
+    """Test the get shuffle attribute by simulating a Sonos Event."""
+    subscription = soco.avTransport.subscribe.return_value
+    sub_callback = subscription.callback
+
+    state = hass.states.get("media_player.zone_a")
+    assert state.attributes["shuffle"] is False
+
+    no_media_event.variables["current_play_mode"] = "SHUFFLE_NOREPEAT"
+    sub_callback(no_media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get("media_player.zone_a")
+    assert state.attributes["shuffle"] is True
+
+    # The integration keeps a copy of the last event to check for
+    # changes, so we create a new event.
+    no_media_event = SonosMockEvent(
+        soco, soco.avTransport, no_media_event.variables.copy()
+    )
+    no_media_event.variables["current_play_mode"] = "NORMAL"
+    sub_callback(no_media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get("media_player.zone_a")
+    assert state.attributes["shuffle"] is False
+
+
+async def test_repeat_set(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+) -> None:
+    """Test the set repeat method."""
+    assert soco.play_mode == "NORMAL"
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_REPEAT_SET,
+        {
+            "entity_id": "media_player.zone_a",
+            "repeat": RepeatMode.ALL,
+        },
+        blocking=True,
+    )
+    assert soco.play_mode == "REPEAT_ALL"
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_REPEAT_SET,
+        {
+            "entity_id": "media_player.zone_a",
+            "repeat": RepeatMode.ONE,
+        },
+        blocking=True,
+    )
+    assert soco.play_mode == "REPEAT_ONE"
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_REPEAT_SET,
+        {
+            "entity_id": "media_player.zone_a",
+            "repeat": RepeatMode.OFF,
+        },
+        blocking=True,
+    )
+    assert soco.play_mode == "NORMAL"
+
+
+async def test_repeat_get(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    no_media_event: SonosMockEvent,
+) -> None:
+    """Test the get repeat attribute by simulating a Sonos Event."""
+    subscription = soco.avTransport.subscribe.return_value
+    sub_callback = subscription.callback
+
+    state = hass.states.get("media_player.zone_a")
+    assert state.attributes["repeat"] == RepeatMode.OFF
+
+    no_media_event.variables["current_play_mode"] = "REPEAT_ALL"
+    sub_callback(no_media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get("media_player.zone_a")
+    assert state.attributes["repeat"] == RepeatMode.ALL
+
+    no_media_event = SonosMockEvent(
+        soco, soco.avTransport, no_media_event.variables.copy()
+    )
+    no_media_event.variables["current_play_mode"] = "REPEAT_ONE"
+    sub_callback(no_media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get("media_player.zone_a")
+    assert state.attributes["repeat"] == RepeatMode.ONE
+
+    no_media_event = SonosMockEvent(
+        soco, soco.avTransport, no_media_event.variables.copy()
+    )
+    no_media_event.variables["current_play_mode"] = "NORMAL"
+    sub_callback(no_media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get("media_player.zone_a")
+    assert state.attributes["repeat"] == RepeatMode.OFF
 
 
 async def test_play_media_favorite_item_id(
