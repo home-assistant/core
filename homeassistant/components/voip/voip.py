@@ -361,7 +361,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
             self._tts_done.set()
 
             # Update satellite state
-            self.satellite.response_finished()
+            self.satellite.tts_response_finished()
 
     async def _async_send_audio(self, audio_bytes: bytes, **kwargs):
         """Send audio in executor."""
