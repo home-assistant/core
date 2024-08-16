@@ -831,9 +831,9 @@ def test_drop_restore_foreign_key_constraints(recorder_db_url: str) -> None:
     """
 
     constraints_to_recreate = (
-        ("events", "data_id"),
-        ("states", "event_id"),  # This won't be found
-        ("states", "old_state_id"),
+        ("events", "data_id", "event_data", "data_id"),
+        ("states", "event_id", None, None),  # This won't be found
+        ("states", "old_state_id", "states", "state_id"),
     )
 
     db_engine = recorder_db_url.partition("://")[0]
@@ -902,7 +902,7 @@ def test_drop_restore_foreign_key_constraints(recorder_db_url: str) -> None:
         session_maker = Mock(return_value=session)
         dropped_constraints_1 = [
             dropped_constraint
-            for table, column in constraints_to_recreate
+            for table, column, _, _ in constraints_to_recreate
             for dropped_constraint in migration._drop_foreign_key_constraints(
                 session_maker, engine, table, column
             )[1]
@@ -914,7 +914,7 @@ def test_drop_restore_foreign_key_constraints(recorder_db_url: str) -> None:
         session_maker = Mock(return_value=session)
         dropped_constraints_2 = [
             dropped_constraint
-            for table, column in constraints_to_recreate
+            for table, column, _, _ in constraints_to_recreate
             for dropped_constraint in migration._drop_foreign_key_constraints(
                 session_maker, engine, table, column
             )[1]
@@ -925,7 +925,7 @@ def test_drop_restore_foreign_key_constraints(recorder_db_url: str) -> None:
     with Session(engine) as session:
         session_maker = Mock(return_value=session)
         migration._restore_foreign_key_constraints(
-            session_maker, engine, dropped_constraints_1
+            session_maker, engine, constraints_to_recreate
         )
 
     # Check we do find the constrained columns again (they are restored)
@@ -933,7 +933,7 @@ def test_drop_restore_foreign_key_constraints(recorder_db_url: str) -> None:
         session_maker = Mock(return_value=session)
         dropped_constraints_3 = [
             dropped_constraint
-            for table, column in constraints_to_recreate
+            for table, column, _, _ in constraints_to_recreate
             for dropped_constraint in migration._drop_foreign_key_constraints(
                 session_maker, engine, table, column
             )[1]
@@ -951,21 +951,7 @@ def test_restore_foreign_key_constraints_with_error(
     This is not supported on SQLite
     """
 
-    constraints_to_restore = [
-        (
-            "events",
-            "data_id",
-            {
-                "comment": None,
-                "constrained_columns": ["data_id"],
-                "name": "events_data_id_fkey",
-                "options": {},
-                "referred_columns": ["data_id"],
-                "referred_schema": None,
-                "referred_table": "event_data",
-            },
-        ),
-    ]
+    constraints_to_restore = [("events", "data_id", "event_data", "data_id")]
 
     connection = Mock()
     connection.execute = Mock(side_effect=InternalError(None, None, None))
@@ -981,3 +967,88 @@ def test_restore_foreign_key_constraints_with_error(
     )
 
     assert "Could not update foreign options in events table" in caplog.text
+
+
+@pytest.mark.skip_on_db_engine(["sqlite"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+def test_restore_foreign_key_constraints_with_integrity_error(
+    recorder_db_url: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test we can drop and then restore foreign keys.
+
+    This is not supported on SQLite
+    """
+
+    constraints = (
+        ("events", "data_id", "event_data", "data_id", Events),
+        ("states", "old_state_id", "states", "state_id", States),
+    )
+
+    engine = create_engine(recorder_db_url)
+    db_schema.Base.metadata.create_all(engine)
+
+    # Drop constraints
+    with Session(engine) as session:
+        session_maker = Mock(return_value=session)
+        for table, column, _, _, _ in constraints:
+            migration._drop_foreign_key_constraints(
+                session_maker, engine, table, column
+            )
+
+    # Add rows violating the constraints
+    with Session(engine) as session:
+        for _, column, _, _, table_class in constraints:
+            session.add(table_class(**{column: 123}))
+            session.add(table_class())
+        # Insert a States row referencing the row with an invalid foreign reference
+        session.add(States(old_state_id=1))
+        session.commit()
+
+    # Check we could insert the rows
+    with Session(engine) as session:
+        assert session.query(Events).count() == 2
+        assert session.query(States).count() == 3
+
+    # Restore constraints
+    to_restore = [
+        (table, column, foreign_table, foreign_column)
+        for table, column, foreign_table, foreign_column, _ in constraints
+    ]
+    with Session(engine) as session:
+        session_maker = Mock(return_value=session)
+        migration._restore_foreign_key_constraints(session_maker, engine, to_restore)
+
+    # Check the violating row has been deleted from the Events table
+    with Session(engine) as session:
+        assert session.query(Events).count() == 1
+        assert session.query(States).count() == 3
+
+    engine.dispose()
+
+    assert (
+        "Could not update foreign options in events table, "
+        "will delete violations and try again"
+    ) in caplog.text
+
+
+def test_delete_foreign_key_violations_unsupported_engine(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test calling _delete_foreign_key_violations with an unsupported engine."""
+
+    connection = Mock()
+    connection.execute = Mock(side_effect=InternalError(None, None, None))
+    session = Mock()
+    session.connection = Mock(return_value=connection)
+    instance = Mock()
+    instance.get_session = Mock(return_value=session)
+    engine = Mock()
+    engine.dialect = Mock()
+    engine.dialect.name = "sqlite"
+
+    session_maker = Mock(return_value=session)
+    with pytest.raises(
+        RuntimeError, match="_delete_foreign_key_violations not supported for sqlite"
+    ):
+        migration._delete_foreign_key_violations(session_maker, engine, "", "", "", "")
