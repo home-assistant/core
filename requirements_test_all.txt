@@ -515,7 +515,7 @@ bluecurrent-api==1.2.3
 bluemaestro-ble==0.2.3
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.19.3
+bluetooth-adapters==0.19.4
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.4.2
