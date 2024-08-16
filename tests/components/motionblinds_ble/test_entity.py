@@ -33,10 +33,10 @@ from tests.common import MockConfigEntry
     ],
 )
 async def test_entity_update(
+    hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_motion_device: Mock,
     name: str,
-    hass: HomeAssistant,
     platform: Platform,
     entity: str,
 ) -> None:

@@ -350,7 +350,7 @@ aioridwell==2024.01.0
 aioruckus==0.34
 
 # homeassistant.components.russound_rio
-aiorussound==2.3.1
+aiorussound==2.3.2
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -386,7 +386,7 @@ aiotankerkoenig==0.4.1
 aiotractive==0.6.0
 
 # homeassistant.components.unifi
-aiounifi==79
+aiounifi==80
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.3.2
@@ -1419,6 +1419,9 @@ nextdns==3.1.0
 # homeassistant.components.nibe_heatpump
 nibe==2.11.0
 
+# homeassistant.components.nice_go
+nice-go==0.1.6
+
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
 
@@ -1662,7 +1665,7 @@ py-schluter==0.1.7
 py-sucks==0.9.10
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.4.5
+py-synologydsm-api==2.5.2
 
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
