@@ -1,15 +1,14 @@
 """Test the Reolink binary sensor platform."""
 
-from datetime import timedelta
 from unittest.mock import MagicMock, patch
+
 from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL, const
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.dt import utcnow
 
 from .conftest import TEST_NVR_NAME, TEST_UID
 

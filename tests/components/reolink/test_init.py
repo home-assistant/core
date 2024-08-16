@@ -1,11 +1,10 @@
 """Test the Reolink init."""
 
 import asyncio
-from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
-from freezegun.api import FrozenDateTimeFactory
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from reolink_aio.api import Chime
 from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
@@ -26,7 +25,6 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
 
 from .conftest import (
     TEST_CAM_MODEL,

@@ -1,11 +1,10 @@
 """Test the Reolink config flow."""
 
-from datetime import timedelta
 import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call
-from freezegun.api import FrozenDateTimeFactory
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
 
@@ -26,7 +25,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.util.dt import utcnow
 
 from .conftest import (
     DHCP_FORMATTED_MAC,

@@ -1,12 +1,11 @@
 """Test the Reolink select platform."""
 
-from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from reolink_aio.api import Chime
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
-from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
@@ -20,7 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.dt import utcnow
 
 from .conftest import TEST_NVR_NAME
 
