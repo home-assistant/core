@@ -8,11 +8,12 @@ from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from . import AutomowerConfigEntry
 from .const import DOMAIN
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import AutomowerAvailableEntity
+from .entity import AutomowerAvailableEntity, AutomowerControlEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +28,18 @@ async def async_setup_entry(
     async_add_entities(
         AutomowerButtonEntity(mower_id, coordinator) for mower_id in coordinator.data
     )
+
+    entities: list[ButtonEntity] = []
+    entities.extend(
+        AutomowerButtonEntity(mower_id, coordinator)
+        for mower_id in coordinator.data
+        if coordinator.data[mower_id].capabilities.can_confirm_error
+    )
+    entities.extend(
+        AutomowerSetDateTimeButtonEntity(mower_id, coordinator)
+        for mower_id in coordinator.data
+    )
+    async_add_entities(entities)
 
 
 class AutomowerButtonEntity(AutomowerAvailableEntity, ButtonEntity):
@@ -53,6 +66,35 @@ class AutomowerButtonEntity(AutomowerAvailableEntity, ButtonEntity):
         """Handle the button press."""
         try:
             await self.coordinator.api.commands.error_confirm(self.mower_id)
+        except ApiException as exception:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_send_failed",
+                translation_placeholders={"exception": str(exception)},
+            ) from exception
+
+
+class AutomowerSetDateTimeButtonEntity(AutomowerControlEntity, ButtonEntity):
+    """Defining the AutomowerButtonEntity."""
+
+    _attr_translation_key = "sync_clock"
+
+    def __init__(
+        self,
+        mower_id: str,
+        coordinator: AutomowerDataUpdateCoordinator,
+    ) -> None:
+        """Set up button platform."""
+        super().__init__(mower_id, coordinator)
+        self._attr_unique_id = f"{mower_id}_sync_clock"
+
+    async def async_press(self) -> None:
+        """Handle the button press."""
+        try:
+            await self.coordinator.api.commands.set_datetime(
+                self.mower_id,
+                dt_util.as_utc(dt_util.now(dt_util.DEFAULT_TIME_ZONE)),
+            )
         except ApiException as exception:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

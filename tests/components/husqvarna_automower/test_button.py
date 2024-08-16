@@ -93,6 +93,52 @@ async def test_button_states_and_commands(
         )
 
 
+@pytest.mark.freeze_time(datetime.datetime(2024, 2, 29, 11, tzinfo=datetime.UTC))
+async def test_sync_clock(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test button commands."""
+    entity_id = "button.test_mower_1_sync_clock"
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get(entity_id)
+    assert state.name == "Test Mower 1 Sync clock"
+
+    values = mower_list_to_dictionary_dataclass(
+        load_json_value_fixture("mower.json", DOMAIN)
+    )
+    mock_automower_client.get_status.return_value = values
+
+    await hass.services.async_call(
+        domain="button",
+        service=SERVICE_PRESS,
+        target={ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mocked_method = getattr(mock_automower_client.commands, "set_datetime")
+    mocked_method.assert_called_once_with(
+        TEST_MOWER_ID, datetime.datetime(2024, 2, 29, 11, tzinfo=datetime.UTC)
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == "2024-02-29T11:00:00+00:00"
+    getattr(mock_automower_client.commands, "set_datetime").side_effect = ApiException(
+        "Test error"
+    )
+    with pytest.raises(
+        HomeAssistantError,
+        match="Failed to send command: Test error",
+    ):
+        await hass.services.async_call(
+            domain="button",
+            service=SERVICE_PRESS,
+            target={ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_button_snapshot(
     hass: HomeAssistant,
