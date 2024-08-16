@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-from homeassistant.core import callback
+from homeassistant.core import _LOGGER, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
@@ -21,12 +21,14 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    host: str
-    port: int
-    mac: str
-    passkey: str | None = None
-    username: str | None = None
-    password: str | None = None
+    def __init__(self):
+        """Initialize the BSBLAN flow."""
+        self.host: str
+        self.port: int
+        self.device_info: dict[str, str] | None = None
+        self.passkey: str | None = None
+        self.username: str | None = None
+        self.password: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -43,7 +45,8 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             await self._get_bsblan_info()
-        except BSBLANError:
+        except BSBLANError as err:
+            _LOGGER.error("Failed to get BSBLAN device info: %s", err)
             return self._show_setup_form({"base": "cannot_connect"})
 
         return self._async_create_entry()
@@ -67,8 +70,18 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @callback
     def _async_create_entry(self) -> ConfigFlowResult:
+        """Create the config entry."""
+
+        if not isinstance(self.device_info, dict):
+            raise TypeError("Device info is not available")
+
+        name = self.device_info.get("name", "Unknown")
+        mac_address = self.device_info.get("mac", "Unknown MAC")
+
+        title = f"{name} - {mac_address}"
+
         return self.async_create_entry(
-            title=format_mac(self.mac),
+            title=title,
             data={
                 CONF_HOST: self.host,
                 CONF_PORT: self.port,
@@ -89,11 +102,24 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         )
         session = async_get_clientsession(self.hass)
         bsblan = BSBLAN(config, session)
-        device = await bsblan.device()
-        self.mac = device.MAC
+
+        try:
+            device = await bsblan.device()
+            info = await bsblan.info()
+        except BSBLANError as err:
+            _LOGGER.error("Failed to get BSBLAN device info: %s", err)
+            raise
+
+        self.device_info = {
+            "name": device.name,
+            "controller_variant": info.controller_variant.value,
+            "firmware_version": device.version,
+            "host": self.host,
+            "mac": device.MAC,
+        }
 
         await self.async_set_unique_id(
-            format_mac(self.mac), raise_on_progress=raise_on_progress
+            format_mac(device.MAC), raise_on_progress=raise_on_progress
         )
         self._abort_if_unique_id_configured(
             updates={
