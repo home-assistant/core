@@ -24,18 +24,17 @@ _LOGGER = logging.getLogger(__name__)
 
 def activate_ascii_mode_if_needed(device: str) -> None:
     """Activate ASCII mode if needed."""
-    serial = Serial(device, 115200)
-    serial.write(b"ROPT\r")
-    _LOGGER.debug(serial.readline())
-    mode = serial.read_until(b"\r").strip()
-    _LOGGER.info("Mode: %s", mode)
-    if mode == b"OK 00":
-        _LOGGER.info("Activating ASCII mode")
-        serial.write(b"WOPT 01\r")
-    else:
-        _LOGGER.info("ASCII mode already active")
-    serial.flush()
-    serial.close()
+    with Serial(device, 115200) as serial:
+        serial.write(b"ROPT\r")
+        _LOGGER.debug(serial.readline())
+        mode = serial.read_until(b"\r").strip()
+        _LOGGER.info("Mode: %s", mode)
+        if mode == b"OK 00":
+            _LOGGER.info("Activating ASCII mode")
+            serial.write(b"WOPT 01\r")
+        else:
+            _LOGGER.info("ASCII mode already active")
+        serial.flush()
 
 
 def validate_input(device: str, id: str, password: str) -> None:

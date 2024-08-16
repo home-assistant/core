@@ -1,7 +1,5 @@
 """Smart Meter B Route."""
 
-import logging
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -23,8 +21,6 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import BRouteUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
