@@ -41,7 +41,7 @@ from thinqconnect.devices.connect_device import ConnectBaseDevice
 # Common
 DOMAIN = "lgthinq"
 THINQ_DEFAULT_NAME: Final = "LG ThinQ"
-THINQ_PAT_URL: Final[str] = "https://connect-pat.lgthinq.com"
+THINQ_PAT_URL: Final = "https://connect-pat.lgthinq.com"
 
 # Config Flow
 CLIENT_PREFIX: Final[str] = "home-assistant"
