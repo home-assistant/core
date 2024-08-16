@@ -5,6 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from chip.clusters import Objects as clusters
+from matter_server.common.custom_clusters import (
+    EveCluster,
+)
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
 from homeassistant.components.number import (
@@ -13,7 +16,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, Platform, UnitOfTime
+from homeassistant.const import EntityCategory, Platform, UnitOfTime, UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -140,19 +143,16 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
-            key="altitude",
+            key="EveWeatherAltitude",
             entity_category=EntityCategory.CONFIG,
             translation_key="altitude",
-            native_max_value=255,
+            native_max_value=9000,
             native_min_value=0,
-            mode=NumberMode.BOX,
-            # use 255 to indicate that the value should revert to the default
-            measurement_to_ha=lambda x: 255 if x is None else x,
-            ha_to_native_value=lambda x: None if x == 255 else int(x),
+            native_unit_of_measurement=UnitOfLength.METERS,
             native_step=1,
-            native_unit_of_measurement=None,
+            mode=NumberMode.BOX,
         ),
         entity_class=MatterNumber,
-        required_attributes=(clusters.EveCluster.Attributes.Altitude,),
+        required_attributes=(EveCluster.Attributes.Altitude,),
     ),
 ]
