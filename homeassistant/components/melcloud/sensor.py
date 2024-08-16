@@ -7,7 +7,17 @@ import dataclasses
 from typing import Any
 
 from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW
-from pymelcloud.atw_device import Zone
+from pymelcloud.atw_device import (
+    STATUS_COOL,
+    STATUS_DEFROST,
+    STATUS_HEAT_WATER,
+    STATUS_HEAT_ZONES,
+    STATUS_IDLE,
+    STATUS_LEGIONELLA,
+    STATUS_STANDBY,
+    STATUS_UNKNOWN,
+    Zone,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -69,6 +79,23 @@ ATW_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda x: x.device.tank_temperature,
+        enabled=lambda x: True,
+    ),
+    MelcloudSensorEntityDescription(
+        key="status",
+        translation_key="status",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            STATUS_IDLE,
+            STATUS_HEAT_WATER,
+            STATUS_HEAT_ZONES,
+            STATUS_COOL,
+            STATUS_DEFROST,
+            STATUS_STANDBY,
+            STATUS_LEGIONELLA,
+            STATUS_UNKNOWN,
+        ],
+        value_fn=lambda x: x.device.status,
         enabled=lambda x: True,
     ),
 )

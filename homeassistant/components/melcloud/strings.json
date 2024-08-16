@@ -87,6 +87,27 @@
       },
       "return_temperature": {
         "name": "Flow return temperature"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "idle": "Idle",
+          "heat_water": "Heating water",
+          "heat_zones": "Heating zones",
+          "cool": "Cooling",
+          "defrost": "Defrosting",
+          "standby": "Standby",
+          "legionella": "Legionella cycle",
+          "unknown": "Unknown"
+        }
+      }
+    },
+    "water_heater": {
+      "heat_pump": {
+        "state": {
+          "force_hot_water": "Heat now",
+          "auto": "Automatic"
+        }
       }
     }
   }
