@@ -90,7 +90,7 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_ACCESS_TOKEN: self._access_token,
                 CONF_CONNECT_CLIENT_ID: connect_client_id,
                 CONF_COUNTRY: self._country_code,
-            }
+            },
         )
 
     async def async_step_user(

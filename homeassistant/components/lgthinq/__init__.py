@@ -117,18 +117,17 @@ def async_register_devices(
     entry: ThinqConfigEntry,
 ) -> None:
     """Register devices to the device registry."""
-    if lg_device_list:
-        for lg_device in lg_device_list:
-            device_entry = device_registry.async_get_or_create(
-                config_entry_id=entry.entry_id,
-                **lg_device.device_info,
-            )
-            _LOGGER.debug(
-                "Register device: device_id=%s, device_entry_id=%s",
-                lg_device.id,
-                device_entry.id,
-            )
-            entry.runtime_data.device_map[device_entry.id] = lg_device
+    for lg_device in lg_device_list:
+        device_entry = device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            **lg_device.device_info,
+        )
+        _LOGGER.debug(
+            "Register device: device_id=%s, device_entry_id=%s",
+            lg_device.id,
+            device_entry.id,
+        )
+        entry.runtime_data.device_map[device_entry.id] = lg_device
 
 
 @callback
