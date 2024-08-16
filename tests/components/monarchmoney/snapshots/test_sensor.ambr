@@ -24,7 +24,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
-    'original_icon': None,
+    'original_icon': 'mdi:cash-minus',
     'original_name': 'Expense YTD',
     'platform': 'monarchmoney',
     'previous_unique_id': None,
@@ -39,6 +39,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'monetary',
       'friendly_name': 'Cashflow Expense YTD',
+      'icon': 'mdi:cash-minus',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': '$',
     }),
@@ -75,7 +76,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
-    'original_icon': None,
+    'original_icon': 'mdi:cash-plus',
     'original_name': 'Income YTD',
     'platform': 'monarchmoney',
     'previous_unique_id': None,
@@ -90,6 +91,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'monetary',
       'friendly_name': 'Cashflow Income YTD',
+      'icon': 'mdi:cash-plus',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': '$',
     }),
@@ -127,7 +129,7 @@
       }),
     }),
     'original_device_class': None,
-    'original_icon': None,
+    'original_icon': 'mdi:cash-sync',
     'original_name': 'Savings rate',
     'platform': 'monarchmoney',
     'previous_unique_id': None,
@@ -141,6 +143,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Cashflow Savings rate',
+      'icon': 'mdi:cash-sync',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -148,7 +151,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.4',
+    'state': '40.0',
   })
 # ---
 # name: test_all_entities[sensor.cashflow_savings_ytd-entry]
@@ -176,7 +179,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
-    'original_icon': None,
+    'original_icon': 'mdi:piggy-bank-outline',
     'original_name': 'Savings YTD',
     'platform': 'monarchmoney',
     'previous_unique_id': None,
@@ -191,6 +194,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'monetary',
       'friendly_name': 'Cashflow Savings YTD',
+      'icon': 'mdi:piggy-bank-outline',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': '$',
     }),

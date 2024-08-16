@@ -120,6 +120,7 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=CURRENCY_DOLLAR,
+        icon="mdi:cash-plus",
     ),
     MonarchMoneySensorEntityDescription(
         key="sum_expense",
@@ -128,6 +129,7 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=CURRENCY_DOLLAR,
+        icon="mdi:cash-minus",
     ),
     MonarchMoneySensorEntityDescription(
         key="savings",
@@ -136,13 +138,15 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=CURRENCY_DOLLAR,
+        icon="mdi:piggy-bank-outline",
     ),
     MonarchMoneySensorEntityDescription(
         key="savings_rate",
         translation_key="savings_rate",
-        value_fn=lambda summary: summary["savingsRate"],
+        value_fn=lambda summary: summary["savingsRate"] * 100,
         suggested_display_precision=1,
         native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:cash-sync",
     ),
 )
 
