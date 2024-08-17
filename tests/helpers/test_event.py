@@ -1476,7 +1476,7 @@ async def test_track_template_result_super_template_2(
     wildercard_runs = []
     wildercard_runs_availability = []
 
-    template_availability = Template(availability_template)
+    template_availability = Template(availability_template, hass)
     template_condition = Template("{{states.sensor.test.state}}", hass)
     template_condition_var = Template(
         "{{(states.sensor.test.state|int) + test }}", hass
@@ -1628,7 +1628,7 @@ async def test_track_template_result_super_template_2_initially_false(
     wildercard_runs = []
     wildercard_runs_availability = []
 
-    template_availability = Template(availability_template)
+    template_availability = Template(availability_template, hass)
     template_condition = Template("{{states.sensor.test.state}}", hass)
     template_condition_var = Template(
         "{{(states.sensor.test.state|int) + test }}", hass
@@ -3124,11 +3124,11 @@ async def test_async_track_template_result_multiple_templates(
 ) -> None:
     """Test tracking multiple templates."""
 
-    template_1 = Template("{{ states.switch.test.state == 'on' }}")
-    template_2 = Template("{{ states.switch.test.state == 'on' }}")
-    template_3 = Template("{{ states.switch.test.state == 'off' }}")
+    template_1 = Template("{{ states.switch.test.state == 'on' }}", hass)
+    template_2 = Template("{{ states.switch.test.state == 'on' }}", hass)
+    template_3 = Template("{{ states.switch.test.state == 'off' }}", hass)
     template_4 = Template(
-        "{{ states.binary_sensor | map(attribute='entity_id') | list }}"
+        "{{ states.binary_sensor | map(attribute='entity_id') | list }}", hass
     )
 
     refresh_runs = []
@@ -3188,11 +3188,12 @@ async def test_async_track_template_result_multiple_templates_mixing_domain(
 ) -> None:
     """Test tracking multiple templates when tracking entities and an entire domain."""
 
-    template_1 = Template("{{ states.switch.test.state == 'on' }}")
-    template_2 = Template("{{ states.switch.test.state == 'on' }}")
-    template_3 = Template("{{ states.switch.test.state == 'off' }}")
+    template_1 = Template("{{ states.switch.test.state == 'on' }}", hass)
+    template_2 = Template("{{ states.switch.test.state == 'on' }}", hass)
+    template_3 = Template("{{ states.switch.test.state == 'off' }}", hass)
     template_4 = Template(
-        "{{ states.switch | sort(attribute='entity_id') | map(attribute='entity_id') | list }}"
+        "{{ states.switch | sort(attribute='entity_id') | map(attribute='entity_id') | list }}",
+        hass,
     )
 
     refresh_runs = []
@@ -3417,8 +3418,8 @@ async def test_async_track_template_result_multiple_templates_mixing_listeners(
 ) -> None:
     """Test tracking multiple templates with mixing listener types."""
 
-    template_1 = Template("{{ states.switch.test.state == 'on' }}")
-    template_2 = Template("{{ now() and True }}")
+    template_1 = Template("{{ states.switch.test.state == 'on' }}", hass)
+    template_2 = Template("{{ now() and True }}", hass)
 
     refresh_runs = []
 
