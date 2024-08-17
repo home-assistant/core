@@ -151,47 +151,50 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 if isinstance(device.status.get(dpcode), str)
             ):
                 prefered_temperature_unit = UnitOfTemperature.FAHRENHEIT
-
-        # Default to System Temperature Unit
-        self._attr_temperature_unit = system_temperature_unit
+        else:
+            # Default to System Temperature Unit
+            prefered_temperature_unit = system_temperature_unit
 
         # Figure out current temperature, use preferred unit or what is available
-        celsius_type = self.find_dpcode(
+        # Note the TEMP_CURRENT property may be in celcius or fahrenheit
+        temperature_type = self.find_dpcode(
             (DPCode.TEMP_CURRENT, DPCode.UPPER_TEMP), dptype=DPType.INTEGER
         )
-        fahrenheit_type = self.find_dpcode(
+        # TEMP_CURRENT_F is explicitly fahrenheit
+        temperature_type_fahrenheit = self.find_dpcode(
             (DPCode.TEMP_CURRENT_F, DPCode.UPPER_TEMP_F), dptype=DPType.INTEGER
         )
-        if fahrenheit_type and (
+        if temperature_type_fahrenheit and (
             prefered_temperature_unit == UnitOfTemperature.FAHRENHEIT
             or (
                 prefered_temperature_unit == UnitOfTemperature.CELSIUS
-                and not celsius_type
+                and not temperature_type
             )
         ):
             self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
-            self._current_temperature = fahrenheit_type
-        elif celsius_type:
-            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
-            self._current_temperature = celsius_type
+            self._current_temperature = temperature_type_fahrenheit
+        elif temperature_type:
+            # We aren't explicitly FAHRENHEIT or CELCIUS. So Fallback to the prefered unit (Usually Celcius)
+            self._attr_temperature_unit = prefered_temperature_unit
+            self._current_temperature = temperature_type
 
         # Figure out setting temperature, use preferred unit or what is available
-        celsius_type = self.find_dpcode(
+        temperature_type = self.find_dpcode(
             DPCode.TEMP_SET, dptype=DPType.INTEGER, prefer_function=True
         )
-        fahrenheit_type = self.find_dpcode(
+        temperature_type_fahrenheit = self.find_dpcode(
             DPCode.TEMP_SET_F, dptype=DPType.INTEGER, prefer_function=True
         )
-        if fahrenheit_type and (
+        if temperature_type_fahrenheit and (
             prefered_temperature_unit == UnitOfTemperature.FAHRENHEIT
             or (
                 prefered_temperature_unit == UnitOfTemperature.CELSIUS
-                and not celsius_type
+                and not temperature_type
             )
         ):
-            self._set_temperature = fahrenheit_type
-        elif celsius_type:
-            self._set_temperature = celsius_type
+            self._set_temperature = temperature_type_fahrenheit
+        elif temperature_type:
+            self._set_temperature = temperature_type
 
         # Get integer type data for the dpcode to set temperature, use
         # it to define min, max & step temperatures
