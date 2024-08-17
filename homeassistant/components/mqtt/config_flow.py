@@ -293,7 +293,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         finally:
             self.start_task = None
 
-        return self.async_show_progress_done(next_step_id="addon")
+        return self.async_show_progress_done(next_step_id="setup_entry_from_discovery")
 
     async def _async_start_addon(self) -> None:
         """Start the Mosquitto Broker add-on."""
@@ -343,30 +343,38 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         # Start up a flow for manual setup
         return await self.async_step_broker()
 
+    async def async_step_setup_entry_from_discovery(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Set up mqtt entry from discovery info."""
+        addon_manager = self._addon_manager
+        addon_discovery_config = (
+            await addon_manager.async_get_addon_discovery_info()
+        ) | {"addon": addon_manager.addon_name}
+        return await self.async_step_hassio(
+            HassioServiceInfo(
+                config=addon_discovery_config,
+                name=addon_manager.addon_name,
+                slug=addon_manager.addon_slug,
+                uuid="",
+            )
+        )
+
     async def async_step_addon(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Install MQTT broker add-on."""
+        """Install and start MQTT broker add-on."""
         addon_manager = self._addon_manager
 
         try:
-            addon_info = await self._addon_manager.async_get_addon_info()
+            addon_info = await addon_manager.async_get_addon_info()
         except AddonError as err:
             raise AbortFlow("addon_info_failed") from err
 
         if addon_info.state == AddonState.RUNNING:
             # Finish setup using discovery info
-            addon_discovery_config = (
-                await addon_manager.async_get_addon_discovery_info()
-            ) | {"addon": addon_manager.addon_name}
-            return await self.async_step_hassio(
-                HassioServiceInfo(
-                    config=addon_discovery_config,
-                    name=addon_manager.addon_name,
-                    slug=addon_manager.addon_slug,
-                    uuid="",
-                )
-            )
+            return await self.async_step_setup_entry_from_discovery()
+
         if addon_info.state == AddonState.NOT_RUNNING:
             return await self.async_step_start_addon()
 
