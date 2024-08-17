@@ -103,7 +103,7 @@
       }
     },
     "abort": {
-      "addon_wrong_state": "The {addon} add-on cannot be installed and configured, because it is installing or updating.",
+      "addon_info_failed": "Failed get info for the {addon} add-on.",
       "addon_install_failed": "Failed to install the {addon} add-on.",
       "addon_start_failed": "Failed to start the {addon} add-on.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",

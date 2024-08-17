@@ -369,7 +369,10 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             addon_info = await addon_manager.async_get_addon_info()
         except AddonError as err:
-            raise AbortFlow("addon_info_failed") from err
+            raise AbortFlow(
+                "addon_info_failed",
+                description_placeholders={"addon": self._addon_manager.addon_name},
+            ) from err
 
         if addon_info.state == AddonState.RUNNING:
             # Finish setup using discovery info
@@ -378,14 +381,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         if addon_info.state == AddonState.NOT_RUNNING:
             return await self.async_step_start_addon()
 
-        if addon_info.state == AddonState.NOT_INSTALLED:
-            # Install the add-on and start it
-            return await self.async_step_install_addon()
-
-        raise AbortFlow(
-            "addon_wrong_state",
-            description_placeholders={"addon": addon_manager.addon_name},
-        )
+        # Install the add-on and start it
+        return await self.async_step_install_addon()
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]

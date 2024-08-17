@@ -14,6 +14,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import mqtt
 from homeassistant.components.hassio import HassioServiceInfo
+from homeassistant.components.hassio.addon_manager import AddonError
+from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.mqtt.config_flow import PWD_NOT_CHANGED
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -626,6 +628,126 @@ async def test_addon_flow_with_supervisor_addon_installed(
     "mqtt_client_mock",
     "supervisor",
     "addon_info",
+    "addon_installed",
+)
+async def test_addon_not_running_api_error(
+    hass: HomeAssistant,
+    start_addon: AsyncMock,
+) -> None:
+    """Test we perform an auto config flow with a supervised install.
+
+    Case: The Mosquitto add-on start fails on a API error.
+    """
+    start_addon.side_effect = HassioAPIError()
+
+    result = await hass.config_entries.flow.async_init(
+        "mqtt", context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["menu_options"] == ["addon", "broker"]
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "addon"},
+    )
+    # add-on not installed, so we wait for install
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["progress_action"] == "start_addon"
+    assert result["step_id"] == "start_addon"
+    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "install_addon"},
+    )
+
+    # add-on start-up failed
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "addon_start_failed"
+
+
+@pytest.mark.usefixtures(
+    "mqtt_client_mock",
+    "supervisor",
+    "start_addon",
+    "addon_installed",
+)
+async def test_addon_discovery_info_error(
+    hass: HomeAssistant,
+    addon_info: AsyncMock,
+    get_addon_discovery_info: AsyncMock,
+) -> None:
+    """Test we perform an auto config flow with a supervised install.
+
+    Case: The Mosquitto add-on start on a discovery error.
+    """
+    get_addon_discovery_info.side_effect = AddonError
+
+    result = await hass.config_entries.flow.async_init(
+        "mqtt", context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["menu_options"] == ["addon", "broker"]
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "addon"},
+    )
+    # Addon will retry
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["progress_action"] == "start_addon"
+    assert result["step_id"] == "start_addon"
+    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "start_addon"},
+    )
+
+    # add-on start-up failed
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "addon_start_failed"
+
+
+@pytest.mark.usefixtures(
+    "mqtt_client_mock",
+    "supervisor",
+    "start_addon",
+    "addon_installed",
+)
+async def test_addon_info_error(
+    hass: HomeAssistant,
+    addon_info: AsyncMock,
+) -> None:
+    """Test we perform an auto config flow with a supervised install.
+
+    Case: The Mosquitto add-on info could not be retrieved.
+    """
+    addon_info.side_effect = AddonError()
+
+    result = await hass.config_entries.flow.async_init(
+        "mqtt", context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["menu_options"] == ["addon", "broker"]
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "addon"},
+    )
+
+    # add-on info failed
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "addon_info_failed"
+
+
+@pytest.mark.usefixtures(
+    "mqtt_client_mock",
+    "supervisor",
+    "addon_info",
     "addon_not_installed",
     "install_addon",
     "start_addon",
@@ -696,6 +818,50 @@ async def test_addon_flow_with_supervisor_addon_not_installed(
     assert len(mock_try_connection_success.mock_calls)
     # Check config entry got setup
     assert len(mock_finish_setup.mock_calls) == 1
+
+
+@pytest.mark.usefixtures(
+    "mqtt_client_mock",
+    "supervisor",
+    "addon_info",
+    "addon_not_installed",
+    "start_addon",
+)
+async def test_addon_not_installed_failures(
+    hass: HomeAssistant,
+    install_addon: AsyncMock,
+) -> None:
+    """Test we perform an auto config flow with a supervised install.
+
+    Case: The Mosquitto add-on install fails.
+    """
+    install_addon.side_effect = HassioAPIError()
+
+    result = await hass.config_entries.flow.async_init(
+        "mqtt", context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["menu_options"] == ["addon", "broker"]
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "addon"},
+    )
+    # add-on not installed, so we wait for install
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["progress_action"] == "install_addon"
+    assert result["step_id"] == "install_addon"
+    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "install_addon"},
+    )
+
+    # add-on install failed
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "addon_install_failed"
 
 
 async def test_option_flow(
