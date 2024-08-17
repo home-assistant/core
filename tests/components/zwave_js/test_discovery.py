@@ -1,5 +1,7 @@
 """Test entity discovery for device-specific schemas for the Z-Wave JS integration."""
 
+from unittest.mock import MagicMock
+
 import pytest
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
@@ -51,6 +53,24 @@ async def test_iblinds_v2(hass: HomeAssistant, client, iblinds_v2, integration) 
     assert not state
 
     state = hass.states.get("cover.window_blind_controller")
+    assert state
+
+
+async def test_touchwand_glass9(
+    hass: HomeAssistant,
+    client: MagicMock,
+    touchwand_glass9: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test a touchwand_glass9 is discovered as a cover."""
+    node = touchwand_glass9
+    node_device_class = node.device_class
+    assert node_device_class
+    assert node_device_class.specific.label == "Unused"
+
+    assert not hass.states.async_entity_ids_count("light")
+    assert hass.states.async_entity_ids_count("cover") == 3
+    state = hass.states.get("cover.gp9")
     assert state
 
 
