@@ -1229,7 +1229,6 @@ jobs:
           fail_ci_if_error: true
           flags: full-suite
           token: ${{ secrets.CODECOV_TOKEN }}
-          version: v0.6.0
 
   pytest-partial:
     runs-on: ubuntu-24.04
@@ -1366,4 +1365,3 @@ jobs:
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
-          version: v0.6.0
