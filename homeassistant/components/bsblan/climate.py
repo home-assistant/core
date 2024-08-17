@@ -16,16 +16,18 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from . import HomeAssistantBSBLANData
 from .const import ATTR_TARGET_TEMPERATURE, DOMAIN
-from .entity import BSBLANEntity
 
 PARALLEL_UPDATES = 1
 
@@ -51,18 +53,18 @@ async def async_setup_entry(
     async_add_entities(
         [
             BSBLANClimate(
-                data.coordinator,
-                data.client,
-                data.device,
-                data.info,
-                data.static,
-                entry,
+                coordinator=data.coordinator,
+                client=data.client,
+                device=data.device,
+                info=data.info,
+                static=data.static,
+                entry=entry,
             )
         ]
     )
 
 
-class BSBLANClimate(BSBLANEntity, ClimateEntity):
+class BSBLANClimate(CoordinatorEntity, ClimateEntity):
     """Defines a BSBLAN climate device."""
 
     _attr_has_entity_name = True
@@ -86,16 +88,30 @@ class BSBLANClimate(BSBLANEntity, ClimateEntity):
         entry: ConfigEntry,
     ) -> None:
         """Initialize BSBLAN climate device."""
-        super().__init__(client, device, info, static, entry)
-        self.coordinator = coordinator
+        super().__init__(coordinator)
 
-        self._attr_name = f"{device.name} Climate"
+        self.client = client
+        self.device = device
+        self.info = info
+        self.static = static
+        self.entry = entry
+
         self._attr_unique_id = f"{format_mac(device.MAC)}-climate"
-        self._attr_min_temp = float(static.min_temp.value)
-        self._attr_max_temp = float(static.max_temp.value)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, format_mac(device.MAC))},
+            name=device.name,
+            manufacturer="BSBLAN Inc.",
+            model=info.device_identification.value,
+            sw_version=f"{device.version}",
+            configuration_url=f"http://{entry.data[CONF_HOST]}",
+        )
+        self._attr_name = f"{self.device.name} Climate"
+        self._attr_unique_id = f"{format_mac(self.device.MAC)}-climate"
+        self._attr_min_temp = float(self.static.min_temp.value)
+        self._attr_max_temp = float(self.static.max_temp.value)
         self._attr_temperature_unit = (
             UnitOfTemperature.CELSIUS
-            if static.min_temp.unit in ("&deg;C", "°C")
+            if self.static.min_temp.unit in ("&deg;C", "°C")
             else UnitOfTemperature.FAHRENHEIT
         )
 
@@ -161,11 +177,10 @@ class BSBLANClimate(BSBLANEntity, ClimateEntity):
         if ATTR_HVAC_MODE in kwargs:
             data[ATTR_HVAC_MODE] = kwargs[ATTR_HVAC_MODE]
         if ATTR_PRESET_MODE in kwargs:
-            data[ATTR_HVAC_MODE] = (
-                kwargs[ATTR_PRESET_MODE]
-                if kwargs[ATTR_PRESET_MODE] != PRESET_NONE
-                else HVACMode.AUTO
-            )
+            if kwargs[ATTR_PRESET_MODE] == PRESET_ECO:
+                data[ATTR_HVAC_MODE] = PRESET_ECO
+            elif kwargs[ATTR_PRESET_MODE] == PRESET_NONE:
+                data[ATTR_HVAC_MODE] = HVACMode.AUTO
 
         try:
             await self.client.thermostat(**data)
