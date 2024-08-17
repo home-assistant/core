@@ -556,6 +556,33 @@ async def test_register_entity_service(
     assert len(calls) == 2
 
 
+async def test_register_entity_service_non_entity_service_schema(
+    hass: HomeAssistant,
+) -> None:
+    """Test attempting to register a service with an incomplete schema."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=(
+            "The schema does not include all required keys: entity_id, device_id, area_id, "
+            "floor_id, label_id"
+        ),
+    ):
+        component.async_register_entity_service(
+            "hello", vol.Schema({"some": str}), Mock()
+        )
+
+    # The check currently does not recurse into vol.All or vol.Any allowing these
+    # non-compliant schemas to pass
+    component.async_register_entity_service(
+        "hello", vol.All(vol.Schema({"some": str})), Mock()
+    )
+    component.async_register_entity_service(
+        "hello", vol.Any(vol.Schema({"some": str})), Mock()
+    )
+
+
 async def test_register_entity_service_response_data(hass: HomeAssistant) -> None:
     """Test an entity service that does support response data."""
     entity = MockEntity(entity_id=f"{DOMAIN}.entity")
