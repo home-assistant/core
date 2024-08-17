@@ -41,7 +41,7 @@ async def test_full_user_flow_implementation(
     )
 
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
-    assert result2.get("title") == format_mac("00:80:41:19:69:90")
+    assert result2.get("title") == "BSB-LAN - 00:80:41:19:69:90"
     assert result2.get("data") == {
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 80,
