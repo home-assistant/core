@@ -36,10 +36,9 @@ from thinqconnect import (
     WaterPurifierDevice,
     WineCellarDevice,
 )
-from thinqconnect.devices.connect_device import ConnectBaseDevice
 
 # Common
-DOMAIN = "lgthinq"
+DOMAIN: Final = "lgthinq"
 THINQ_DEFAULT_NAME: Final = "LG ThinQ"
 THINQ_PAT_URL: Final = "https://connect-pat.lgthinq.com"
 
@@ -49,13 +48,13 @@ CONF_CONNECT_CLIENT_ID: Final = "connect_client_id"
 DEFAULT_COUNTRY: Final = "US"
 
 # Device
-DEFAULT_TEMP_STEP: int = 1
-POWER_OFF: Final[str] = "POWER_OFF"
-POWER_ON: Final[str] = "POWER_ON"
+DEFAULT_TEMP_STEP: Final = 1
+POWER_OFF: Final = "POWER_OFF"
+POWER_ON: Final = "POWER_ON"
 
-THINQ_DEVICE_ADDED: Final[str] = "thinq_device_added"
+THINQ_DEVICE_ADDED: Final = "thinq_device_added"
 
-DEVICE_TYPE_API_MAP: Final[dict[DeviceType, ConnectBaseDevice]] = {
+DEVICE_TYPE_API_MAP: Final = {
     DeviceType.AIR_CONDITIONER: AirConditionerDevice,
     DeviceType.AIR_PURIFIER_FAN: AirPurifierFanDevice,
     DeviceType.AIR_PURIFIER: AirPurifierDevice,
@@ -103,7 +102,7 @@ class ErrorCode(StrEnum):
 
 
 # Support translation during ConfigEntry using translation_key by ErrorCode
-TRANSLATION_ERROR_CODE: Final[list[str]] = [
+TRANSLATION_ERROR_CODE: Final = [
     ErrorCode.INVALID_TOKEN,
     ErrorCode.NOT_ACCEPTABLE_TERMS,
     ErrorCode.EXCEEDED_API_CALLS,
@@ -113,9 +112,9 @@ TRANSLATION_ERROR_CODE: Final[list[str]] = [
 
 
 # Service Attributes
-SERVICE_ATTR_DEVICE_INFO: Final[str] = "device_info"
-SERVICE_ATTR_RESULT: Final[str] = "result"
-SERVICE_ATTR_VALUE: Final[str] = "value"
+SERVICE_ATTR_DEVICE_INFO: Final = "device_info"
+SERVICE_ATTR_RESULT: Final = "result"
+SERVICE_ATTR_VALUE: Final = "value"
 
 # Types for profile and property.
 type Profile = dict[str, Any]
@@ -123,4 +122,4 @@ type ProfileMap = dict[str, Profile]
 type PropertyMap = dict[str, ProfileMap]
 
 # Misc
-NONE_KEY: Final[str] = "_"
+NONE_KEY: Final = "_"
