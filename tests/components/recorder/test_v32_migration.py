@@ -640,7 +640,7 @@ async def test_out_of_disk_space_while_removing_foreign_key(
     ix_states_event_id is removed from the states table.
 
     Note that the test is somewhat forced; the states.event_id foreign key constraint is
-    removed when migrating to schema version 44, inspecting the schema in
+    removed when migrating to schema version 46, inspecting the schema in
     cleanup_legacy_states_event_ids is not likely to fail.
     """
     importlib.import_module(SCHEMA_MODULE)
@@ -779,7 +779,7 @@ async def test_out_of_disk_space_while_removing_foreign_key(
                     states_index_names = {index["name"] for index in states_indexes}
                     assert instance.use_legacy_events_index is True
                     # The states.event_id foreign key constraint was removed when
-                    # migration to schema version 44
+                    # migration to schema version 46
                     assert (
                         await instance.async_add_executor_job(
                             _get_event_id_foreign_keys
