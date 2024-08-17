@@ -74,8 +74,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_SAVED_HUMIDITY = "saved_humidity"
 
-DEFAULT_STALE_DURATION = timedelta(minutes=60)
-
 PLATFORM_SCHEMA = HUMIDIFIER_PLATFORM_SCHEMA.extend(HYGROSTAT_SCHEMA.schema)
 
 
@@ -130,8 +128,8 @@ async def _async_setup_config(
     min_cycle_duration: timedelta | None = _time_period_or_none(
         config.get(CONF_MIN_DUR)
     )
-    sensor_stale_duration: timedelta = (
-        _time_period_or_none(config.get(CONF_STALE_DURATION)) or DEFAULT_STALE_DURATION
+    sensor_stale_duration: timedelta | None = _time_period_or_none(
+        config.get(CONF_STALE_DURATION)
     )
     dry_tolerance: float = config[CONF_DRY_TOLERANCE]
     wet_tolerance: float = config[CONF_WET_TOLERANCE]
@@ -187,7 +185,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         initial_state: bool | None,
         away_humidity: int | None,
         away_fixed: bool | None,
-        sensor_stale_duration: timedelta,
+        sensor_stale_duration: timedelta | None,
         unique_id: str | None,
     ) -> None:
         """Initialize the hygrostat."""
@@ -398,7 +396,9 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         # Get default humidity from super class
         return super().max_humidity
 
-    async def _async_sensor_event(self, event: Event[EventStateChangedData] | Event[EventStateReportedData]) -> None:
+    async def _async_sensor_event(
+        self, event: Event[EventStateChangedData] | Event[EventStateReportedData]
+    ) -> None:
         """Handle ambient humidity changes."""
         new_state = event.data["new_state"]
         if new_state is None:
@@ -406,23 +406,22 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
 
         await self._async_sensor_update(new_state)
 
-    async def _async_sensor_update(
-            self, new_state: State
-        ) -> None:
+    async def _async_sensor_update(self, new_state: State) -> None:
         """Update state based on humidity sensor."""
 
-        if self._remove_stale_tracking:
-            self._remove_stale_tracking()
-        self._remove_stale_tracking = async_track_time_interval(
-            self.hass,
-            self._async_sensor_not_responding,
-            self._sensor_stale_duration,
-        )
+        if self._sensor_stale_duration:
+            if self._remove_stale_tracking:
+                self._remove_stale_tracking()
+
+            self._remove_stale_tracking = async_track_time_interval(
+                self.hass,
+                self._async_sensor_not_responding,
+                self._sensor_stale_duration,
+            )
 
         await self._async_update_humidity(new_state.state)
         await self._async_operate()
         self.async_write_ha_state()
-
 
     async def _async_sensor_not_responding(self, now: datetime | None = None) -> None:
         """Handle sensor stale event."""
