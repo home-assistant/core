@@ -505,12 +505,14 @@ async def test_hassio_cannot_connect(
     assert len(mock_finish_setup.mock_calls) == 0
 
 
-@pytest.mark.usefixtures("mqtt_client_mock", "supervisor", "addon_running")
+@pytest.mark.usefixtures(
+    "mqtt_client_mock", "supervisor", "addon_info", "addon_running"
+)
 @pytest.mark.parametrize("discovery_info", [{"config": ADD_ON_DISCOVERY_INFO.copy()}])
 async def test_addon_flow_with_supervisor_addon_running(
     hass: HomeAssistant,
-    mock_try_connection: MagicMock,
-    addon_info: AsyncMock,
+    mock_try_connection_success: MagicMock,
+    mock_finish_setup: MagicMock,
 ) -> None:
     """Test we perform an auto config flow with a supervised install.
 
@@ -536,23 +538,40 @@ async def test_addon_flow_with_supervisor_addon_running(
     # add-on is running so entry can be installed
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "hassio_confirm"
+    assert result["description_placeholders"] == {"addon": "Mosquitto Mqtt Broker"}
+
+    mock_try_connection_success.reset_mock()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"discovery": True}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].data == {
+        "broker": "mock-broker",
+        "port": 1883,
+        "username": "mock-user",
+        "password": "mock-pass",
+        "discovery": True,
+    }
+    # Check we tried the connection
+    assert len(mock_try_connection_success.mock_calls)
+    # Check config entry got setup
+    assert len(mock_finish_setup.mock_calls) == 1
 
 
 @pytest.mark.usefixtures(
-    "mqtt_client_mock", "supervisor", "addon_installed", "start_addon"
+    "mqtt_client_mock", "supervisor", "addon_info", "addon_installed", "start_addon"
 )
 @pytest.mark.parametrize("discovery_info", [{"config": ADD_ON_DISCOVERY_INFO.copy()}])
 async def test_addon_flow_with_supervisor_addon_installed(
     hass: HomeAssistant,
-    mock_try_connection: MagicMock,
-    addon_info: AsyncMock,
+    mock_try_connection_success: MagicMock,
+    mock_finish_setup: MagicMock,
 ) -> None:
     """Test we perform an auto config flow with a supervised install.
 
     Case: The Mosquitto add-on is installed, but not running.
     """
-    mock_try_connection.return_value = True
-
     # show menu
     result = await hass.config_entries.flow.async_init(
         "mqtt", context={"source": config_entries.SOURCE_USER}
@@ -582,11 +601,31 @@ async def test_addon_flow_with_supervisor_addon_installed(
     await hass.async_block_till_done(wait_background_tasks=True)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "hassio_confirm"
+    assert result["description_placeholders"] == {"addon": "Mosquitto Mqtt Broker"}
+
+    mock_try_connection_success.reset_mock()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"discovery": True}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].data == {
+        "broker": "mock-broker",
+        "port": 1883,
+        "username": "mock-user",
+        "password": "mock-pass",
+        "discovery": True,
+    }
+    # Check we tried the connection
+    assert len(mock_try_connection_success.mock_calls)
+    # Check config entry got setup
+    assert len(mock_finish_setup.mock_calls) == 1
 
 
 @pytest.mark.usefixtures(
     "mqtt_client_mock",
     "supervisor",
+    "addon_info",
     "addon_not_installed",
     "install_addon",
     "start_addon",
@@ -594,15 +633,13 @@ async def test_addon_flow_with_supervisor_addon_installed(
 @pytest.mark.parametrize("discovery_info", [{"config": ADD_ON_DISCOVERY_INFO.copy()}])
 async def test_addon_flow_with_supervisor_addon_not_installed(
     hass: HomeAssistant,
-    mock_try_connection: MagicMock,
-    addon_info: AsyncMock,
+    mock_try_connection_success: MagicMock,
+    mock_finish_setup: MagicMock,
 ) -> None:
     """Test we perform an auto config flow with a supervised install.
 
     Case: The Mosquitto add-on is not yet installed nor running.
     """
-    mock_try_connection.return_value = True
-
     result = await hass.config_entries.flow.async_init(
         "mqtt", context={"source": config_entries.SOURCE_USER}
     )
@@ -640,6 +677,25 @@ async def test_addon_flow_with_supervisor_addon_not_installed(
     await hass.async_block_till_done(wait_background_tasks=True)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "hassio_confirm"
+    assert result["description_placeholders"] == {"addon": "Mosquitto Mqtt Broker"}
+
+    mock_try_connection_success.reset_mock()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"discovery": True}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].data == {
+        "broker": "mock-broker",
+        "port": 1883,
+        "username": "mock-user",
+        "password": "mock-pass",
+        "discovery": True,
+    }
+    # Check we tried the connection
+    assert len(mock_try_connection_success.mock_calls)
+    # Check config entry got setup
+    assert len(mock_finish_setup.mock_calls) == 1
 
 
 async def test_option_flow(
