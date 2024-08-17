@@ -1535,7 +1535,9 @@ async def async_process_component_config(
     # No custom config validator, proceed with schema validation
     if hasattr(component, "CONFIG_SCHEMA"):
         try:
-            return IntegrationConfigInfo(component.CONFIG_SCHEMA(config), [])
+            return IntegrationConfigInfo(
+                await cv.async_validate(hass, component.CONFIG_SCHEMA, config), []
+            )
         except vol.Invalid as exc:
             exc_info = ConfigExceptionInfo(
                 exc,
@@ -1570,7 +1572,9 @@ async def async_process_component_config(
         # Validate component specific platform schema
         platform_path = f"{p_name}.{domain}"
         try:
-            p_validated = component_platform_schema(p_config)
+            p_validated = await cv.async_validate(
+                hass, component_platform_schema, p_config
+            )
         except vol.Invalid as exc:
             exc_info = ConfigExceptionInfo(
                 exc,
