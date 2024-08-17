@@ -40,11 +40,9 @@ REG_KEY = f"{BINARY_SENSOR_DOMAIN}_registry"
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITIES): cv.entities_domain([
-            BINARY_SENSOR_DOMAIN,
-            DEVICE_TRACKER_DOMAIN,
-            PERSON_DOMAIN
-        ]),
+        vol.Required(CONF_ENTITIES): cv.entities_domain(
+            [BINARY_SENSOR_DOMAIN, DEVICE_TRACKER_DOMAIN, PERSON_DOMAIN]
+        ),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
