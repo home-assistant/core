@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from socket import AF_INET, SO_REUSEPORT, SOCK_DGRAM, SOL_SOCKET, socket
 
-from pyais.stream import SocketStream
+from pyais.stream import UDPReceiver
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT
@@ -20,30 +19,6 @@ from .const import CONF_MMSIS, DOMAIN
 LOGGER = logging.getLogger(__name__)
 
 type AisTrackerConfigEntry = ConfigEntry[AisTrackerCoordinator]
-
-
-class UDPReceiver(SocketStream):
-    """Re-implementation of pyais.stream.UDPReceiver.
-
-    can be removed, as soon as https://github.com/M0r13n/pyais/pull/148 is merged.
-    """
-
-    _fobj: socket
-
-    def __init__(self, host: str, port: int) -> None:
-        """Initialize the UDP receiver."""
-        sock: socket = socket(AF_INET, SOCK_DGRAM)
-        sock.setsockopt(SOL_SOCKET, SO_REUSEPORT, 1)
-        sock.bind((host, port))
-        super().__init__(sock, preprocessor=None)
-
-    def recv(self) -> bytes:
-        """Receive data from socket."""
-        return self._fobj.recvfrom(self.BUF_SIZE)[0]
-
-    def close(self) -> None:
-        """Close the UDP receiver."""
-        self._fobj.close()
 
 
 class AisTrackerCoordinator(
@@ -68,7 +43,9 @@ class AisTrackerCoordinator(
     async def async_setup(self) -> None:
         """Set up the AIS tracker coordinator."""
 
-        self._receiver = UDPReceiver("", self.config_entry.data[CONF_PORT])
+        self._receiver = UDPReceiver(
+            "", self.config_entry.data[CONF_PORT], reusable=True
+        )
 
         async def async_ais_listerner():
             def ais_listerner():

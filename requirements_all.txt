@@ -1726,7 +1726,7 @@ pyairnow==1.2.1
 pyairvisual==2023.08.1
 
 # homeassistant.components.ais_tracker
-pyais==2.7.0
+pyais==2.7.1
 
 # homeassistant.components.aprilaire
 pyaprilaire==0.7.4
