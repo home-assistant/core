@@ -1,0 +1,18 @@
+{
+  "sensor": {
+    "current_temperature": {
+      "name": "Room temperature actual value 1",
+      "unit": "\u00b0C",
+      "desc": "",
+      "value": "25.0",
+      "data_type": 0
+    },
+    "outside_temperature": {
+      "name": "Outside temp",
+      "unit": "\u00b0C",
+      "desc": "",
+      "value": "30.1",
+      "data_type": 0
+    }
+  }
+}
