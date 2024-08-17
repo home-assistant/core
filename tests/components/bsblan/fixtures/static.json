@@ -1,0 +1,18 @@
+{
+  "static": {
+    "min_temp": {
+      "name": "Room temp protective setpoint cooling circuit 1",
+      "unit": "\u00b0C",
+      "desc": "",
+      "value": "8.0",
+      "data_type": 0
+    },
+    "max_temp": {
+      "name": "Comfort setpoint max",
+      "unit": "\u00b0C",
+      "desc": "",
+      "value": "23.0",
+      "data_type": 0
+    }
+  }
+}
