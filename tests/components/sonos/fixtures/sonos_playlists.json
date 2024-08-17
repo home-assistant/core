@@ -1,0 +1,13 @@
+[
+  {
+    "title": "sample playlist",
+    "parent_id": "SQ:",
+    "item_id": "SQ:0",
+    "resources": [
+      {
+        "uri": "file:///jffs/settings/savedqueues.rsq#0",
+        "protocol_info": "file:*:audio/mpegurl:*"
+      }
+    ]
+  }
+]
