@@ -9,8 +9,16 @@
       dict({
         'data': dict({
           'name': '**REDACTED**',
+          'parentRelations': list([
+          ]),
           'traits': dict({
             'sdm.devices.traits.CameraLiveStream': dict({
+              'audioCodecs': list([
+              ]),
+              'maxVideoResolution': dict({
+                'height': None,
+                'width': None,
+              }),
               'supportedProtocols': list([
                 'RTSP',
               ]),
@@ -28,7 +36,6 @@
 # name: test_device_diagnostics
   dict({
     'data': dict({
-      'assignee': '**REDACTED**',
       'name': '**REDACTED**',
       'parentRelations': list([
         dict({
@@ -38,13 +45,13 @@
       ]),
       'traits': dict({
         'sdm.devices.traits.Humidity': dict({
-          'ambientHumidityPercent': 35.0,
+          'ambient_humidity_percent': 35.0,
         }),
         'sdm.devices.traits.Info': dict({
-          'customName': '**REDACTED**',
+          'custom_name': '**REDACTED**',
         }),
         'sdm.devices.traits.Temperature': dict({
-          'ambientTemperatureCelsius': 25.1,
+          'ambient_temperature_celsius': 25.1,
         }),
       }),
       'type': 'sdm.devices.types.THERMOSTAT',
@@ -56,7 +63,6 @@
     'devices': list([
       dict({
         'data': dict({
-          'assignee': '**REDACTED**',
           'name': '**REDACTED**',
           'parentRelations': list([
             dict({
@@ -66,13 +72,13 @@
           ]),
           'traits': dict({
             'sdm.devices.traits.Humidity': dict({
-              'ambientHumidityPercent': 35.0,
+              'ambient_humidity_percent': 35.0,
             }),
             'sdm.devices.traits.Info': dict({
-              'customName': '**REDACTED**',
+              'custom_name': '**REDACTED**',
             }),
             'sdm.devices.traits.Temperature': dict({
-              'ambientTemperatureCelsius': 25.1,
+              'ambient_temperature_celsius': 25.1,
             }),
           }),
           'type': 'sdm.devices.types.THERMOSTAT',

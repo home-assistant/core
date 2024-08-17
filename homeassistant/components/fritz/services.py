@@ -11,14 +11,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
-from .const import (
-    DOMAIN,
-    FRITZ_SERVICES,
-    SERVICE_CLEANUP,
-    SERVICE_REBOOT,
-    SERVICE_RECONNECT,
-    SERVICE_SET_GUEST_WIFI_PW,
-)
+from .const import DOMAIN, FRITZ_SERVICES, SERVICE_SET_GUEST_WIFI_PW
 from .coordinator import AvmWrapper
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,9 +25,6 @@ SERVICE_SCHEMA_SET_GUEST_WIFI_PW = vol.Schema(
 )
 
 SERVICE_LIST: list[tuple[str, vol.Schema | None]] = [
-    (SERVICE_CLEANUP, None),
-    (SERVICE_REBOOT, None),
-    (SERVICE_RECONNECT, None),
     (SERVICE_SET_GUEST_WIFI_PW, SERVICE_SCHEMA_SET_GUEST_WIFI_PW),
 ]
 

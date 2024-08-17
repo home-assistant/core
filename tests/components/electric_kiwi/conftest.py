@@ -23,14 +23,13 @@ CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 REDIRECT_URI = "https://example.com/auth/external/callback"
 
-type YieldFixture = Generator[AsyncMock, None, None]
+type YieldFixture = Generator[AsyncMock]
 type ComponentSetup = Callable[[], Awaitable[bool]]
 
 
 @pytest.fixture(autouse=True)
-async def request_setup(current_request_with_host) -> None:
+async def request_setup(current_request_with_host: None) -> None:
     """Request setup."""
-    return
 
 
 @pytest.fixture
@@ -79,7 +78,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.electric_kiwi.async_setup_entry", return_value=True

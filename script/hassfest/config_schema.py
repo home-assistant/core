@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import ast
 
-from homeassistant.core import DOMAIN as HA_DOMAIN
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 
 from .model import Config, Integration
 
@@ -12,7 +12,7 @@ CONFIG_SCHEMA_IGNORE = {
     # Configuration under the homeassistant key is a special case, it's handled by
     # conf_util.async_process_ha_core_config already during bootstrapping, not by
     # a schema in the homeassistant integration.
-    HA_DOMAIN,
+    HOMEASSISTANT_DOMAIN,
 }
 
 
@@ -21,7 +21,7 @@ def _has_assignment(module: ast.Module, name: str) -> bool:
     for item in module.body:
         if type(item) not in (ast.Assign, ast.AnnAssign, ast.AugAssign):
             continue
-        if type(item) == ast.Assign:
+        if type(item) is ast.Assign:
             for target in item.targets:
                 if getattr(target, "id", None) == name:
                     return True
@@ -35,7 +35,7 @@ def _has_function(
     module: ast.Module, _type: ast.AsyncFunctionDef | ast.FunctionDef, name: str
 ) -> bool:
     """Test if the module defines a function."""
-    return any(type(item) == _type and item.name == name for item in module.body)
+    return any(type(item) is _type and item.name == name for item in module.body)
 
 
 def _has_import(module: ast.Module, name: str) -> bool:

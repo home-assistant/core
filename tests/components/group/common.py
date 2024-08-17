@@ -64,13 +64,13 @@ def async_set_group(
     """Create/Update a group."""
     data = {
         key: value
-        for key, value in [
+        for key, value in (
             (ATTR_OBJECT_ID, object_id),
             (ATTR_NAME, name),
             (ATTR_ENTITIES, entity_ids),
             (ATTR_ICON, icon),
             (ATTR_ADD_ENTITIES, add),
-        ]
+        )
         if value is not None
     }
 

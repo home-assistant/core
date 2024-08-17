@@ -827,12 +827,13 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             return self._source[:-7]
         return ""
 
-    async def _pipe_call(self, pipe_name, base_function_name):
-        if self._pipe_control_api.get(pipe_name):
-            return await getattr(
-                self._pipe_control_api[pipe_name],
+    async def _pipe_call(self, pipe_name, base_function_name) -> None:
+        if pipe := self._pipe_control_api.get(pipe_name):
+            await getattr(
+                pipe,
                 PIPE_FUNCTION_MAP[pipe_name][base_function_name],
             )()
+            return
         _LOGGER.warning("No pipe control available for %s", pipe_name)
 
     async def async_browse_media(

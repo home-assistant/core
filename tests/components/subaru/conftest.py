@@ -1,6 +1,7 @@
 """Common functions needed to setup tests for Subaru component."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -29,6 +30,8 @@ from homeassistant.const import (
     CONF_PIN,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -97,22 +100,25 @@ TEST_DEVICE_NAME = "test_vehicle_2"
 TEST_ENTITY_ID = f"sensor.{TEST_DEVICE_NAME}_odometer"
 
 
-def advance_time_to_next_fetch(hass):
+def advance_time_to_next_fetch(hass: HomeAssistant) -> None:
     """Fast forward time to next fetch."""
     future = dt_util.utcnow() + timedelta(seconds=FETCH_INTERVAL + 30)
     async_fire_time_changed(hass, future)
 
 
 async def setup_subaru_config_entry(
-    hass,
+    hass: HomeAssistant,
     config_entry,
-    vehicle_list=[TEST_VIN_2_EV],
-    vehicle_data=VEHICLE_DATA[TEST_VIN_2_EV],
-    vehicle_status=VEHICLE_STATUS_EV,
+    vehicle_list: list[str] | UndefinedType = UNDEFINED,
+    vehicle_data: dict[str, Any] | UndefinedType = UNDEFINED,
+    vehicle_status: dict[str, Any] | UndefinedType = UNDEFINED,
     connect_effect=None,
     fetch_effect=None,
 ):
     """Run async_setup with API mocks in place."""
+    if vehicle_data is UNDEFINED:
+        vehicle_data = VEHICLE_DATA[TEST_VIN_2_EV]
+
     with (
         patch(
             MOCK_API_CONNECT,
@@ -121,7 +127,7 @@ async def setup_subaru_config_entry(
         ),
         patch(
             MOCK_API_GET_VEHICLES,
-            return_value=vehicle_list,
+            return_value=[TEST_VIN_2_EV] if vehicle_list is UNDEFINED else vehicle_list,
         ),
         patch(
             MOCK_API_VIN_TO_NAME,
@@ -161,7 +167,9 @@ async def setup_subaru_config_entry(
         ),
         patch(
             MOCK_API_GET_DATA,
-            return_value=vehicle_status,
+            return_value=VEHICLE_STATUS_EV
+            if vehicle_status is UNDEFINED
+            else vehicle_status,
         ),
         patch(
             MOCK_API_UPDATE,
@@ -173,7 +181,7 @@ async def setup_subaru_config_entry(
 
 
 @pytest.fixture
-async def subaru_config_entry(hass):
+async def subaru_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create a Subaru config entry prior to setup."""
     await async_setup_component(hass, HA_DOMAIN, {})
     config_entry = MockConfigEntry(**TEST_CONFIG_ENTRY)
@@ -182,7 +190,9 @@ async def subaru_config_entry(hass):
 
 
 @pytest.fixture
-async def ev_entry(hass, subaru_config_entry):
+async def ev_entry(
+    hass: HomeAssistant, subaru_config_entry: MockConfigEntry
+) -> MockConfigEntry:
     """Create a Subaru entry representing an EV vehicle with full STARLINK subscription."""
     await setup_subaru_config_entry(hass, subaru_config_entry)
     assert DOMAIN in hass.config_entries.async_domains()

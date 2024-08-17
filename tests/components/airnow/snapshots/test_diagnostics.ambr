@@ -8,7 +8,7 @@
       'DateObserved': '2020-12-20',
       'HourObserved': 15,
       'Latitude': '**REDACTED**',
-      'LocalTimeZone': 'PST',
+      'LocalTimeZoneInfo': 'PST',
       'Longitude': '**REDACTED**',
       'O3': 0.048,
       'PM10': 12,

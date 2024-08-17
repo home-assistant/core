@@ -60,7 +60,7 @@ import homeassistant.util.dt as dt_util
 
 from . import config_validation as cv, entity_registry as er
 from .sun import get_astral_event_date
-from .template import Template, attach as template_attach, render_complex
+from .template import Template, render_complex
 from .trace import (
     TraceElement,
     trace_append_element,
@@ -150,7 +150,7 @@ def condition_trace_update_result(**kwargs: Any) -> None:
 
 
 @contextmanager
-def trace_condition(variables: TemplateVarsType) -> Generator[TraceElement, None, None]:
+def trace_condition(variables: TemplateVarsType) -> Generator[TraceElement]:
     """Trace condition evaluation."""
     should_pop = True
     trace_element = trace_stack_top(trace_stack_cv)
@@ -352,7 +352,7 @@ async def async_not_from_config(
 
 def numeric_state(
     hass: HomeAssistant,
-    entity: None | str | State,
+    entity: str | State | None,
     below: float | str | None = None,
     above: float | str | None = None,
     value_template: Template | None = None,
@@ -373,7 +373,7 @@ def numeric_state(
 
 def async_numeric_state(
     hass: HomeAssistant,
-    entity: None | str | State,
+    entity: str | State | None,
     below: float | str | None = None,
     above: float | str | None = None,
     value_template: Template | None = None,
@@ -510,9 +510,6 @@ def async_numeric_state_from_config(config: ConfigType) -> ConditionCheckerType:
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
         """Test numeric state condition."""
-        if value_template is not None:
-            value_template.hass = hass
-
         errors = []
         for index, entity_id in enumerate(entity_ids):
             try:
@@ -545,7 +542,7 @@ def async_numeric_state_from_config(config: ConfigType) -> ConditionCheckerType:
 
 def state(
     hass: HomeAssistant,
-    entity: None | str | State,
+    entity: str | State | None,
     req_state: Any,
     for_period: timedelta | None = None,
     attribute: str | None = None,
@@ -630,7 +627,6 @@ def state_from_config(config: ConfigType) -> ConditionCheckerType:
     @trace_condition_function
     def if_state(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Test if condition."""
-        template_attach(hass, for_period)
         errors = []
         result: bool = match != ENTITY_MATCH_ANY
         for index, entity_id in enumerate(entity_ids):
@@ -792,8 +788,6 @@ def async_template_from_config(config: ConfigType) -> ConditionCheckerType:
     @trace_condition_function
     def template_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Validate template based if-condition."""
-        value_template.hass = hass
-
         return async_template(hass, value_template, variables)
 
     return template_if
@@ -803,7 +797,7 @@ def time(
     hass: HomeAssistant,
     before: dt_time | str | None = None,
     after: dt_time | str | None = None,
-    weekday: None | str | Container[str] = None,
+    weekday: str | Container[str] | None = None,
 ) -> bool:
     """Test if local time condition matches.
 
@@ -902,8 +896,8 @@ def time_from_config(config: ConfigType) -> ConditionCheckerType:
 
 def zone(
     hass: HomeAssistant,
-    zone_ent: None | str | State,
-    entity: None | str | State,
+    zone_ent: str | State | None,
+    entity: str | State | None,
 ) -> bool:
     """Test if zone-condition matches.
 

@@ -102,10 +102,11 @@ async def validate_input(
             ws_context,
             options,
         )
-        await rpc_device.initialize()
-        await rpc_device.shutdown()
-
-        sleep_period = get_rpc_device_wakeup_period(rpc_device.status)
+        try:
+            await rpc_device.initialize()
+            sleep_period = get_rpc_device_wakeup_period(rpc_device.status)
+        finally:
+            await rpc_device.shutdown()
 
         return {
             "title": rpc_device.name,
@@ -121,11 +122,15 @@ async def validate_input(
         coap_context,
         options,
     )
-    await block_device.initialize()
-    await block_device.shutdown()
+    try:
+        await block_device.initialize()
+        sleep_period = get_block_device_sleep_period(block_device.settings)
+    finally:
+        await block_device.shutdown()
+
     return {
         "title": block_device.name,
-        CONF_SLEEP_PERIOD: get_block_device_sleep_period(block_device.settings),
+        CONF_SLEEP_PERIOD: sleep_period,
         "model": block_device.model,
         CONF_GEN: gen,
     }
@@ -274,6 +279,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
+        if discovery_info.ip_address.version == 6:
+            return self.async_abort(reason="ipv6_not_supported")
         host = discovery_info.host
         # First try to get the mac address from the name
         # so we can avoid making another connection to the

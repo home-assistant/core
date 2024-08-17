@@ -29,7 +29,7 @@ from .core import (
     callback,
 )
 from .exceptions import DependencyError, HomeAssistantError
-from .helpers import singleton, translation
+from .helpers import issue_registry as ir, singleton, translation
 from .helpers.issue_registry import IssueSeverity, async_create_issue
 from .helpers.typing import ConfigType
 from .util.async_ import create_eager_task
@@ -281,6 +281,20 @@ async def _async_setup_component(
         integration = await loader.async_get_integration(hass, domain)
     except loader.IntegrationNotFound:
         _log_error_setup_error(hass, domain, None, "Integration not found.")
+        if not hass.config.safe_mode:
+            ir.async_create_issue(
+                hass,
+                HOMEASSISTANT_DOMAIN,
+                f"integration_not_found.{domain}",
+                is_fixable=True,
+                issue_domain=HOMEASSISTANT_DOMAIN,
+                severity=IssueSeverity.ERROR,
+                translation_key="integration_not_found",
+                translation_placeholders={
+                    "domain": domain,
+                },
+                data={"domain": domain},
+            )
         return False
 
     log_error = partial(_log_error_setup_error, hass, domain, integration)
@@ -674,9 +688,7 @@ def _setup_started(
 
 
 @contextlib.contextmanager
-def async_pause_setup(
-    hass: core.HomeAssistant, phase: SetupPhases
-) -> Generator[None, None, None]:
+def async_pause_setup(hass: core.HomeAssistant, phase: SetupPhases) -> Generator[None]:
     """Keep track of time we are blocked waiting for other operations.
 
     We want to count the time we wait for importing and
@@ -724,7 +736,7 @@ def async_start_setup(
     integration: str,
     phase: SetupPhases,
     group: str | None = None,
-) -> Generator[None, None, None]:
+) -> Generator[None]:
     """Keep track of when setup starts and finishes.
 
     :param hass: Home Assistant instance

@@ -6,9 +6,7 @@ import aiohttp
 from aiohttp import WSMsgType
 import pytest
 
-from homeassistant.auth.providers.legacy_api_password import (
-    LegacyApiPasswordAuthProvider,
-)
+from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_INVALID,
@@ -28,7 +26,7 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
-def track_connected(hass):
+def track_connected(hass: HomeAssistant) -> dict[str, list[int]]:
     """Track connected and disconnected events."""
     connected_evt = []
 
@@ -51,7 +49,7 @@ def track_connected(hass):
 async def test_auth_events(
     hass: HomeAssistant,
     no_auth_websocket_client,
-    legacy_auth: LegacyApiPasswordAuthProvider,
+    local_auth: HassAuthProvider,
     hass_access_token: str,
     track_connected,
 ) -> None:
@@ -174,7 +172,7 @@ async def test_auth_active_with_password_not_allow(
 async def test_auth_legacy_support_with_password(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    legacy_auth: LegacyApiPasswordAuthProvider,
+    local_auth: HassAuthProvider,
 ) -> None:
     """Test authenticating with a token."""
     assert await async_setup_component(hass, "websocket_api", {})

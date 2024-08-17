@@ -41,7 +41,12 @@ DAY3 = datetime(2020, 4, 21, tzinfo=dt_util.UTC)
     ],
 )
 async def test_zodiac_day(
-    hass: HomeAssistant, now: datetime, sign: str, element: str, modality: str
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    now: datetime,
+    sign: str,
+    element: str,
+    modality: str,
 ) -> None:
     """Test the zodiac sensor."""
     await hass.config.async_set_time_zone("UTC")
@@ -75,7 +80,6 @@ async def test_zodiac_day(
         "virgo",
     ]
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("sensor.zodiac")
     assert entry
     assert entry.unique_id == "zodiac"

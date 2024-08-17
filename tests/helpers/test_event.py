@@ -15,7 +15,13 @@ import pytest
 
 from homeassistant.const import MATCH_ALL
 import homeassistant.core as ha
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    EventStateReportedData,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
@@ -34,6 +40,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_state_change_filtered,
     async_track_state_removed_domain,
+    async_track_state_report_event,
     async_track_sunrise,
     async_track_sunset,
     async_track_template,
@@ -61,7 +68,10 @@ async def test_track_point_in_time(hass: HomeAssistant) -> None:
     runs = []
 
     async_track_point_in_utc_time(
-        hass, callback(lambda x: runs.append(x)), birthday_paulus
+        hass,
+        # pylint: disable-next=unnecessary-lambda
+        callback(lambda x: runs.append(x)),
+        birthday_paulus,
     )
 
     async_fire_time_changed(hass, before_birthday)
@@ -78,7 +88,10 @@ async def test_track_point_in_time(hass: HomeAssistant) -> None:
     assert len(runs) == 1
 
     async_track_point_in_utc_time(
-        hass, callback(lambda x: runs.append(x)), birthday_paulus
+        hass,
+        # pylint: disable-next=unnecessary-lambda
+        callback(lambda x: runs.append(x)),
+        birthday_paulus,
     )
 
     async_fire_time_changed(hass, after_birthday)
@@ -86,7 +99,10 @@ async def test_track_point_in_time(hass: HomeAssistant) -> None:
     assert len(runs) == 2
 
     unsub = async_track_point_in_time(
-        hass, callback(lambda x: runs.append(x)), birthday_paulus
+        hass,
+        # pylint: disable-next=unnecessary-lambda
+        callback(lambda x: runs.append(x)),
+        birthday_paulus,
     )
     unsub()
 
@@ -107,6 +123,7 @@ async def test_track_point_in_time_drift_rearm(hass: HomeAssistant) -> None:
 
     async_track_point_in_utc_time(
         hass,
+        # pylint: disable-next=unnecessary-lambda
         callback(lambda x: specific_runs.append(x)),
         time_that_will_not_match_right_away,
     )
@@ -1459,7 +1476,7 @@ async def test_track_template_result_super_template_2(
     wildercard_runs = []
     wildercard_runs_availability = []
 
-    template_availability = Template(availability_template)
+    template_availability = Template(availability_template, hass)
     template_condition = Template("{{states.sensor.test.state}}", hass)
     template_condition_var = Template(
         "{{(states.sensor.test.state|int) + test }}", hass
@@ -1611,7 +1628,7 @@ async def test_track_template_result_super_template_2_initially_false(
     wildercard_runs = []
     wildercard_runs_availability = []
 
-    template_availability = Template(availability_template)
+    template_availability = Template(availability_template, hass)
     template_condition = Template("{{states.sensor.test.state}}", hass)
     template_condition_var = Template(
         "{{(states.sensor.test.state|int) + test }}", hass
@@ -3107,11 +3124,11 @@ async def test_async_track_template_result_multiple_templates(
 ) -> None:
     """Test tracking multiple templates."""
 
-    template_1 = Template("{{ states.switch.test.state == 'on' }}")
-    template_2 = Template("{{ states.switch.test.state == 'on' }}")
-    template_3 = Template("{{ states.switch.test.state == 'off' }}")
+    template_1 = Template("{{ states.switch.test.state == 'on' }}", hass)
+    template_2 = Template("{{ states.switch.test.state == 'on' }}", hass)
+    template_3 = Template("{{ states.switch.test.state == 'off' }}", hass)
     template_4 = Template(
-        "{{ states.binary_sensor | map(attribute='entity_id') | list }}"
+        "{{ states.binary_sensor | map(attribute='entity_id') | list }}", hass
     )
 
     refresh_runs = []
@@ -3171,11 +3188,12 @@ async def test_async_track_template_result_multiple_templates_mixing_domain(
 ) -> None:
     """Test tracking multiple templates when tracking entities and an entire domain."""
 
-    template_1 = Template("{{ states.switch.test.state == 'on' }}")
-    template_2 = Template("{{ states.switch.test.state == 'on' }}")
-    template_3 = Template("{{ states.switch.test.state == 'off' }}")
+    template_1 = Template("{{ states.switch.test.state == 'on' }}", hass)
+    template_2 = Template("{{ states.switch.test.state == 'on' }}", hass)
+    template_3 = Template("{{ states.switch.test.state == 'off' }}", hass)
     template_4 = Template(
-        "{{ states.switch | sort(attribute='entity_id') | map(attribute='entity_id') | list }}"
+        "{{ states.switch | sort(attribute='entity_id') | map(attribute='entity_id') | list }}",
+        hass,
     )
 
     refresh_runs = []
@@ -3400,8 +3418,8 @@ async def test_async_track_template_result_multiple_templates_mixing_listeners(
 ) -> None:
     """Test tracking multiple templates with mixing listener types."""
 
-    template_1 = Template("{{ states.switch.test.state == 'on' }}")
-    template_2 = Template("{{ now() and True }}")
+    template_1 = Template("{{ states.switch.test.state == 'on' }}", hass)
+    template_2 = Template("{{ now() and True }}", hass)
 
     refresh_runs = []
 
@@ -3546,7 +3564,10 @@ async def test_track_time_interval(hass: HomeAssistant) -> None:
 
     utc_now = dt_util.utcnow()
     unsub = async_track_time_interval(
-        hass, callback(lambda x: specific_runs.append(x)), timedelta(seconds=10)
+        hass,
+        # pylint: disable-next=unnecessary-lambda
+        callback(lambda x: specific_runs.append(x)),
+        timedelta(seconds=10),
     )
 
     async_fire_time_changed(hass, utc_now + timedelta(seconds=5))
@@ -3578,6 +3599,7 @@ async def test_track_time_interval_name(hass: HomeAssistant) -> None:
     unique_string = "xZ13"
     unsub = async_track_time_interval(
         hass,
+        # pylint: disable-next=unnecessary-lambda
         callback(lambda x: specific_runs.append(x)),
         timedelta(seconds=10),
         name=unique_string,
@@ -3808,12 +3830,20 @@ async def test_async_track_time_change(
     )
     freezer.move_to(time_that_will_not_match_right_away)
 
-    unsub = async_track_time_change(hass, callback(lambda x: none_runs.append(x)))
+    unsub = async_track_time_change(
+        hass,
+        # pylint: disable-next=unnecessary-lambda
+        callback(lambda x: none_runs.append(x)),
+    )
     unsub_utc = async_track_utc_time_change(
-        hass, callback(lambda x: specific_runs.append(x)), second=[0, 30]
+        hass,
+        # pylint: disable-next=unnecessary-lambda
+        callback(lambda x: specific_runs.append(x)),
+        second=[0, 30],
     )
     unsub_wildcard = async_track_time_change(
         hass,
+        # pylint: disable-next=unnecessary-lambda
         callback(lambda x: wildcard_runs.append(x)),
         second="*",
         minute="*",
@@ -3872,7 +3902,11 @@ async def test_periodic_task_minute(
     freezer.move_to(time_that_will_not_match_right_away)
 
     unsub = async_track_utc_time_change(
-        hass, callback(lambda x: specific_runs.append(x)), minute="/5", second=0
+        hass,
+        # pylint: disable-next=unnecessary-lambda
+        callback(lambda x: specific_runs.append(x)),
+        minute="/5",
+        second=0,
     )
 
     async_fire_time_changed(
@@ -3918,6 +3952,7 @@ async def test_periodic_task_hour(
 
     unsub = async_track_utc_time_change(
         hass,
+        # pylint: disable-next=unnecessary-lambda
         callback(lambda x: specific_runs.append(x)),
         hour="/2",
         minute=0,
@@ -3971,7 +4006,10 @@ async def test_periodic_task_wrong_input(hass: HomeAssistant) -> None:
 
     with pytest.raises(ValueError):
         async_track_utc_time_change(
-            hass, callback(lambda x: specific_runs.append(x)), hour="/two"
+            hass,
+            # pylint: disable-next=unnecessary-lambda
+            callback(lambda x: specific_runs.append(x)),
+            hour="/two",
         )
 
     async_fire_time_changed(
@@ -3995,6 +4033,7 @@ async def test_periodic_task_clock_rollback(
 
     unsub = async_track_utc_time_change(
         hass,
+        # pylint: disable-next=unnecessary-lambda
         callback(lambda x: specific_runs.append(x)),
         hour="/2",
         minute=0,
@@ -4064,6 +4103,7 @@ async def test_periodic_task_duplicate_time(
 
     unsub = async_track_utc_time_change(
         hass,
+        # pylint: disable-next=unnecessary-lambda
         callback(lambda x: specific_runs.append(x)),
         hour="/2",
         minute=0,
@@ -4109,6 +4149,7 @@ async def test_periodic_task_entering_dst(
 
     unsub = async_track_time_change(
         hass,
+        # pylint: disable-next=unnecessary-lambda
         callback(lambda x: specific_runs.append(x)),
         hour=2,
         minute=30,
@@ -4160,6 +4201,7 @@ async def test_periodic_task_entering_dst_2(
 
     unsub = async_track_time_change(
         hass,
+        # pylint: disable-next=unnecessary-lambda
         callback(lambda x: specific_runs.append(x)),
         second=list(range(59)),
     )
@@ -4210,6 +4252,7 @@ async def test_periodic_task_leaving_dst(
 
     unsub = async_track_time_change(
         hass,
+        # pylint: disable-next=unnecessary-lambda
         callback(lambda x: specific_runs.append(x)),
         hour=2,
         minute=30,
@@ -4285,6 +4328,7 @@ async def test_periodic_task_leaving_dst_2(
 
     unsub = async_track_time_change(
         hass,
+        # pylint: disable-next=unnecessary-lambda
         callback(lambda x: specific_runs.append(x)),
         minute=30,
         second=0,
@@ -4871,3 +4915,26 @@ async def test_track_point_in_time_repr(
     assert "Exception in callback _TrackPointUTCTime" in caplog.text
     assert "._raise_exception" in caplog.text
     await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def test_async_track_state_report_event(hass: HomeAssistant) -> None:
+    """Test async_track_state_report_event."""
+    tracker_called: list[ha.State] = []
+
+    @ha.callback
+    def single_run_callback(event: Event[EventStateReportedData]) -> None:
+        new_state = event.data["new_state"]
+        tracker_called.append(new_state)
+
+    unsub = async_track_state_report_event(
+        hass, ["light.bowl", "light.top"], single_run_callback
+    )
+    hass.states.async_set("light.bowl", "on")
+    hass.states.async_set("light.top", "on")
+    await hass.async_block_till_done()
+    assert len(tracker_called) == 0
+    hass.states.async_set("light.bowl", "on")
+    hass.states.async_set("light.top", "on")
+    await hass.async_block_till_done()
+    assert len(tracker_called) == 2
+    unsub()

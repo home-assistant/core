@@ -47,7 +47,7 @@ class RoonEventEntity(EventEntity):
     """Representation of a Roon Event entity."""
 
     _attr_device_class = EventDeviceClass.BUTTON
-    _attr_event_types = ["volume_up", "volume_down"]
+    _attr_event_types = ["volume_up", "volume_down", "mute_toggle"]
     _attr_translation_key = "volume"
 
     def __init__(self, server, player_data):
@@ -77,14 +77,16 @@ class RoonEventEntity(EventEntity):
     ) -> None:
         """Callbacks from the roon api with volume request."""
 
-        if event != "set_volume":
+        if event == "set_mute":
+            event = "mute_toggle"
+        elif event == "set_volume":
+            if value > 0:
+                event = "volume_up"
+            else:
+                event = "volume_down"
+        else:
             _LOGGER.debug("Received unsupported roon volume event %s", event)
             return
-
-        if value > 0:
-            event = "volume_up"
-        else:
-            event = "volume_down"
 
         self._trigger_event(event)
         self.schedule_update_ha_state()

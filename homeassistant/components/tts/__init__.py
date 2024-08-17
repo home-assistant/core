@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod
 import asyncio
 from collections.abc import Mapping
 from datetime import datetime
-from functools import partial
+from functools import cached_property, partial
 import hashlib
 from http import HTTPStatus
 import io
@@ -373,11 +372,24 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-class TextToSpeechEntity(RestoreEntity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "default_language",
+    "default_options",
+    "supported_languages",
+    "supported_options",
+}
+
+
+class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Represent a single TTS engine."""
 
     _attr_should_poll = False
     __last_tts_loaded: str | None = None
+
+    _attr_default_language: str
+    _attr_default_options: Mapping[str, Any] | None = None
+    _attr_supported_languages: list[str]
+    _attr_supported_options: list[str] | None = None
 
     @property
     @final
@@ -387,25 +399,25 @@ class TextToSpeechEntity(RestoreEntity):
             return None
         return self.__last_tts_loaded
 
-    @property
-    @abstractmethod
+    @cached_property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
+        return self._attr_supported_languages
 
-    @property
-    @abstractmethod
+    @cached_property
     def default_language(self) -> str:
         """Return the default language."""
+        return self._attr_default_language
 
-    @property
+    @cached_property
     def supported_options(self) -> list[str] | None:
         """Return a list of supported options like voice, emotions."""
-        return None
+        return self._attr_supported_options
 
-    @property
+    @cached_property
     def default_options(self) -> Mapping[str, Any] | None:
         """Return a mapping with the default options."""
-        return None
+        return self._attr_default_options
 
     @callback
     def async_get_supported_voices(self, language: str) -> list[Voice] | None:
@@ -415,6 +427,18 @@ class TextToSpeechEntity(RestoreEntity):
     async def async_internal_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
         await super().async_internal_added_to_hass()
+        try:
+            _ = self.default_language
+        except AttributeError as err:
+            raise AttributeError(
+                "TTS entities must either set the '_attr_default_language' attribute or override the 'default_language' property"
+            ) from err
+        try:
+            _ = self.supported_languages
+        except AttributeError as err:
+            raise AttributeError(
+                "TTS entities must either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
+            ) from err
         state = await self.async_get_last_state()
         if (
             state is not None
@@ -1114,7 +1138,7 @@ def websocket_get_engine(
     if not provider:
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_FOUND,
+            websocket_api.ERR_NOT_FOUND,
             f"tts engine {engine_id} not found",
         )
         return
@@ -1149,7 +1173,7 @@ def websocket_list_engine_voices(
     if not engine_instance:
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_FOUND,
+            websocket_api.ERR_NOT_FOUND,
             f"tts engine {engine_id} not found",
         )
         return

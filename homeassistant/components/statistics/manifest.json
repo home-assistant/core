@@ -3,7 +3,9 @@
   "name": "Statistics",
   "after_dependencies": ["recorder"],
   "codeowners": ["@ThomDietrich"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/statistics",
+  "integration_type": "helper",
   "iot_class": "local_polling",
   "quality_scale": "internal"
 }

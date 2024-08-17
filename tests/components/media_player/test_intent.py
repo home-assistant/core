@@ -7,6 +7,7 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_VOLUME_SET,
     intent as media_player_intent,
 )
@@ -65,7 +66,6 @@ async def test_pause_media_player_intent(hass: HomeAssistant) -> None:
             "test",
             media_player_intent.INTENT_MEDIA_PAUSE,
         )
-        await hass.async_block_till_done()
 
     # Test feature not supported
     hass.states.async_set(
@@ -80,7 +80,6 @@ async def test_pause_media_player_intent(hass: HomeAssistant) -> None:
             "test",
             media_player_intent.INTENT_MEDIA_PAUSE,
         )
-        await hass.async_block_till_done()
 
 
 async def test_unpause_media_player_intent(hass: HomeAssistant) -> None:
@@ -117,7 +116,6 @@ async def test_unpause_media_player_intent(hass: HomeAssistant) -> None:
             "test",
             media_player_intent.INTENT_MEDIA_UNPAUSE,
         )
-        await hass.async_block_till_done()
 
 
 async def test_next_media_player_intent(hass: HomeAssistant) -> None:
@@ -154,7 +152,6 @@ async def test_next_media_player_intent(hass: HomeAssistant) -> None:
             "test",
             media_player_intent.INTENT_MEDIA_NEXT,
         )
-        await hass.async_block_till_done()
 
     # Test feature not supported
     hass.states.async_set(
@@ -170,7 +167,57 @@ async def test_next_media_player_intent(hass: HomeAssistant) -> None:
             media_player_intent.INTENT_MEDIA_NEXT,
             {"name": {"value": "test media player"}},
         )
-        await hass.async_block_till_done()
+
+
+async def test_previous_media_player_intent(hass: HomeAssistant) -> None:
+    """Test HassMediaPrevious intent for media players."""
+    await media_player_intent.async_setup_intents(hass)
+
+    entity_id = f"{DOMAIN}.test_media_player"
+    attributes = {ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.PREVIOUS_TRACK}
+
+    hass.states.async_set(entity_id, STATE_PLAYING, attributes=attributes)
+
+    calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK)
+
+    response = await intent.async_handle(
+        hass,
+        "test",
+        media_player_intent.INTENT_MEDIA_PREVIOUS,
+    )
+    await hass.async_block_till_done()
+
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == DOMAIN
+    assert call.service == SERVICE_MEDIA_PREVIOUS_TRACK
+    assert call.data == {"entity_id": entity_id}
+
+    # Test if not playing
+    hass.states.async_set(entity_id, STATE_IDLE, attributes=attributes)
+
+    with pytest.raises(intent.MatchFailedError):
+        response = await intent.async_handle(
+            hass,
+            "test",
+            media_player_intent.INTENT_MEDIA_PREVIOUS,
+        )
+
+    # Test feature not supported
+    hass.states.async_set(
+        entity_id,
+        STATE_PLAYING,
+        attributes={ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature(0)},
+    )
+
+    with pytest.raises(intent.MatchFailedError):
+        response = await intent.async_handle(
+            hass,
+            "test",
+            media_player_intent.INTENT_MEDIA_PREVIOUS,
+            {"name": {"value": "test media player"}},
+        )
 
 
 async def test_volume_media_player_intent(hass: HomeAssistant) -> None:
@@ -208,7 +255,6 @@ async def test_volume_media_player_intent(hass: HomeAssistant) -> None:
             media_player_intent.INTENT_SET_VOLUME,
             {"volume_level": {"value": 50}},
         )
-        await hass.async_block_till_done()
 
     # Test feature not supported
     hass.states.async_set(
@@ -224,7 +270,6 @@ async def test_volume_media_player_intent(hass: HomeAssistant) -> None:
             media_player_intent.INTENT_SET_VOLUME,
             {"volume_level": {"value": 50}},
         )
-        await hass.async_block_till_done()
 
 
 async def test_multiple_media_players(
@@ -348,7 +393,6 @@ async def test_multiple_media_players(
             media_player_intent.INTENT_MEDIA_PAUSE,
             {"name": {"value": "TV"}},
         )
-        await hass.async_block_till_done()
 
     # Pause the upstairs TV
     calls = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_PAUSE)

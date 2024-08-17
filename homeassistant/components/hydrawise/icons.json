@@ -4,6 +4,9 @@
       "daily_active_water_use": {
         "default": "mdi:water"
       },
+      "daily_active_water_time": {
+        "default": "mdi:timelapse"
+      },
       "daily_inactive_water_use": {
         "default": "mdi:water"
       },
@@ -26,5 +29,10 @@
         }
       }
     }
+  },
+  "services": {
+    "start_watering": "mdi:sprinkler-variant",
+    "suspend": "mdi:pause-circle-outline",
+    "resume": "mdi:play"
   }
 }

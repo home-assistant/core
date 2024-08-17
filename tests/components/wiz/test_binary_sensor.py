@@ -21,14 +21,15 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-async def test_binary_sensor_created_from_push_updates(hass: HomeAssistant) -> None:
+async def test_binary_sensor_created_from_push_updates(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test a binary sensor created from push updates."""
     bulb, _ = await async_setup_integration(hass)
 
     await async_push_update(hass, bulb, {"mac": FAKE_MAC, "src": "pir", "state": True})
 
     entity_id = "binary_sensor.mock_title_occupancy"
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_get(entity_id).unique_id == f"{FAKE_MAC}_occupancy"
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -39,7 +40,9 @@ async def test_binary_sensor_created_from_push_updates(hass: HomeAssistant) -> N
     assert state.state == STATE_OFF
 
 
-async def test_binary_sensor_restored_from_registry(hass: HomeAssistant) -> None:
+async def test_binary_sensor_restored_from_registry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test a binary sensor restored from registry with state unknown."""
     entry = MockConfigEntry(
         domain=wiz.DOMAIN,
@@ -49,7 +52,6 @@ async def test_binary_sensor_restored_from_registry(hass: HomeAssistant) -> None
     entry.add_to_hass(hass)
     bulb = _mocked_wizlight(None, None, None)
 
-    entity_registry = er.async_get(hass)
     reg_ent = entity_registry.async_get_or_create(
         Platform.BINARY_SENSOR, wiz.DOMAIN, OCCUPANCY_UNIQUE_ID.format(bulb.mac)
     )

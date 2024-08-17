@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Callable, Coroutine
 from functools import partial
 import logging
@@ -9,13 +10,14 @@ from typing import Any, overload
 
 from homeassistant.core import (
     HassJob,
+    HassJobType,
     HomeAssistant,
     callback,
     get_hassjob_callable_job_type,
 )
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
-from homeassistant.util.logging import catch_log_exception
+from homeassistant.util.logging import catch_log_exception, log_exception
 
 # Explicit reexport of 'SignalType' for backwards compatibility
 from homeassistant.util.signal_type import SignalType as SignalType  # noqa: PLC0414
@@ -113,13 +115,8 @@ def async_dispatcher_connect[*_Ts](
     This method must be run in the event loop.
     """
     if DATA_DISPATCHER not in hass.data:
-        hass.data[DATA_DISPATCHER] = {}
-
+        hass.data[DATA_DISPATCHER] = defaultdict(dict)
     dispatchers: _DispatcherDataType[*_Ts] = hass.data[DATA_DISPATCHER]
-
-    if signal not in dispatchers:
-        dispatchers[signal] = {}
-
     dispatchers[signal][target] = None
     # Use a partial for the remove since it uses
     # less memory than a full closure since a partial copies
@@ -164,14 +161,20 @@ def _format_err[*_Ts](
 
 def _generate_job[*_Ts](
     signal: SignalType[*_Ts] | str, target: Callable[[*_Ts], Any] | Callable[..., Any]
-) -> HassJob[..., None | Coroutine[Any, Any, None]]:
+) -> HassJob[..., Coroutine[Any, Any, None] | None]:
     """Generate a HassJob for a signal and target."""
     job_type = get_hassjob_callable_job_type(target)
+    name = f"dispatcher {signal}"
+    if job_type is HassJobType.Callback:
+        # We will catch exceptions in the callback to avoid
+        # wrapping the callback since calling wraps() is more
+        # expensive than the whole dispatcher_send process
+        return HassJob(target, name, job_type=job_type)
     return HassJob(
         catch_log_exception(
             target, partial(_format_err, signal, target), job_type=job_type
         ),
-        f"dispatcher {signal}",
+        name,
         job_type=job_type,
     )
 
@@ -236,4 +239,13 @@ def async_dispatcher_send_internal[*_Ts](
         if job is None:
             job = _generate_job(signal, target)
             target_list[target] = job
-        hass.async_run_hass_job(job, *args)
+        # We do not wrap Callback jobs in catch_log_exception since
+        # single use dispatchers spend more time wrapping the callback
+        # than the actual callback takes to run in many cases.
+        if job.job_type is HassJobType.Callback:
+            try:
+                job.target(*args)
+            except Exception:  # noqa: BLE001
+                log_exception(partial(_format_err, signal, target), *args)  # type: ignore[arg-type]
+        else:
+            hass.async_run_hass_job(job, *args)

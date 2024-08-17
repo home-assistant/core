@@ -25,7 +25,7 @@ def fixture_mock_govee_api():
 
 
 @pytest.fixture(name="mock_setup_entry")
-def fixture_mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def fixture_mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.govee_light_local.async_setup_entry",

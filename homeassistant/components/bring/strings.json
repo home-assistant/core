@@ -6,6 +6,14 @@
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Bring! integration needs to re-authenticate your account",
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "error": {
@@ -14,7 +22,8 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "exceptions": {
@@ -40,7 +49,7 @@
       "message": "Authentication failed for {email}, check your email and password"
     },
     "notify_missing_argument_item": {
-      "message": "Failed to call service {service}. 'URGENT_MESSAGE' requires a value @ data['item']. Got None"
+      "message": "Failed to perform action {service}. 'URGENT_MESSAGE' requires a value @ data['item']. Got None"
     },
     "notify_request_failed": {
       "message": "Failed to send push notification for bring due to a connection error, try again later"

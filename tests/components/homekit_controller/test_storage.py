@@ -1,5 +1,6 @@
 """Basic checks for entity map storage."""
 
+from collections.abc import Callable
 from typing import Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
@@ -72,10 +73,10 @@ def create_lightbulb_service(accessory):
 
 
 async def test_storage_is_updated_on_add(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
+    hass: HomeAssistant, hass_storage: dict[str, Any], get_next_aid: Callable[[], int]
 ) -> None:
     """Test entity map storage is cleaned up on adding an accessory."""
-    await setup_test_component(hass, create_lightbulb_service)
+    await setup_test_component(hass, get_next_aid(), create_lightbulb_service)
 
     entity_map: EntityMapStorage = hass.data[ENTITY_MAP]
     hkid = "00:00:00:00:00:00"

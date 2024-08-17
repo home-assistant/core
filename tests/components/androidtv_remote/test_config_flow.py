@@ -7,7 +7,18 @@ from androidtvremote2 import CannotConnect, ConnectionClosed, InvalidAuth
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.components.androidtv_remote.const import DOMAIN
+from homeassistant.components.androidtv_remote.config_flow import (
+    APPS_NEW_ID,
+    CONF_APP_DELETE,
+    CONF_APP_ID,
+)
+from homeassistant.components.androidtv_remote.const import (
+    CONF_APP_ICON,
+    CONF_APP_NAME,
+    CONF_APPS,
+    CONF_ENABLE_IME,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -886,14 +897,14 @@ async def test_options_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     data_schema = result["data_schema"].schema
-    assert set(data_schema) == {"enable_ime"}
+    assert set(data_schema) == {CONF_APPS, CONF_ENABLE_IME}
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"enable_ime": False},
+        user_input={CONF_ENABLE_IME: False},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert mock_config_entry.options == {"enable_ime": False}
+    assert mock_config_entry.options == {CONF_ENABLE_IME: False}
     await hass.async_block_till_done()
 
     assert mock_api.disconnect.call_count == 1
@@ -903,10 +914,10 @@ async def test_options_flow(
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"enable_ime": False},
+        user_input={CONF_ENABLE_IME: False},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert mock_config_entry.options == {"enable_ime": False}
+    assert mock_config_entry.options == {CONF_ENABLE_IME: False}
     await hass.async_block_till_done()
 
     assert mock_api.disconnect.call_count == 1
@@ -916,11 +927,92 @@ async def test_options_flow(
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"enable_ime": True},
+        user_input={CONF_ENABLE_IME: True},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert mock_config_entry.options == {"enable_ime": True}
+    assert mock_config_entry.options == {CONF_ENABLE_IME: True}
     await hass.async_block_till_done()
 
     assert mock_api.disconnect.call_count == 2
     assert mock_api.async_connect.call_count == 3
+
+    # test app form with new app
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_APPS: APPS_NEW_ID,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "apps"
+
+    # test save value for new app
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_APP_ID: "app1",
+            CONF_APP_NAME: "App1",
+            CONF_APP_ICON: "Icon1",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    # test app form with existing app
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_APPS: "app1",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "apps"
+
+    # test change value in apps form
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_APP_NAME: "Application1",
+            CONF_APP_ICON: "Icon1",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options == {
+        CONF_APPS: {"app1": {CONF_APP_NAME: "Application1", CONF_APP_ICON: "Icon1"}},
+        CONF_ENABLE_IME: True,
+    }
+    await hass.async_block_till_done()
+
+    # test app form for delete
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_APPS: "app1",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "apps"
+
+    # test delete app1
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_APP_DELETE: True,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options == {CONF_ENABLE_IME: True}

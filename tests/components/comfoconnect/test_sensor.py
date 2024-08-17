@@ -1,7 +1,7 @@
 """Tests for the comfoconnect sensor platform."""
 
-# import json
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -28,7 +28,7 @@ VALID_CONFIG = {
 
 
 @pytest.fixture
-def mock_bridge_discover():
+def mock_bridge_discover() -> Generator[MagicMock]:
     """Mock the bridge discover method."""
     with patch("pycomfoconnect.bridge.Bridge.discover") as mock_bridge_discover:
         mock_bridge_discover.return_value[0].uuid.hex.return_value = "00"
@@ -36,7 +36,7 @@ def mock_bridge_discover():
 
 
 @pytest.fixture
-def mock_comfoconnect_command():
+def mock_comfoconnect_command() -> Generator[MagicMock]:
     """Mock the ComfoConnect connect method."""
     with patch(
         "pycomfoconnect.comfoconnect.ComfoConnect._command"
@@ -45,14 +45,19 @@ def mock_comfoconnect_command():
 
 
 @pytest.fixture
-async def setup_sensor(hass, mock_bridge_discover, mock_comfoconnect_command):
+async def setup_sensor(
+    hass: HomeAssistant,
+    mock_bridge_discover: MagicMock,
+    mock_comfoconnect_command: MagicMock,
+) -> None:
     """Set up demo sensor component."""
     with assert_setup_component(1, DOMAIN):
         await async_setup_component(hass, DOMAIN, VALID_CONFIG)
         await hass.async_block_till_done()
 
 
-async def test_sensors(hass: HomeAssistant, setup_sensor) -> None:
+@pytest.mark.usefixtures("setup_sensor")
+async def test_sensors(hass: HomeAssistant) -> None:
     """Test the sensors."""
     state = hass.states.get("sensor.comfoairq_inside_humidity")
     assert state is not None

@@ -15,7 +15,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import SQLITE_URL_PREFIX, get_instance
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import setup_component
@@ -34,13 +34,16 @@ SCHEMA_VERSION_POSTFIX = "23_with_newer_columns"
 SCHEMA_MODULE = get_schema_module_path(SCHEMA_VERSION_POSTFIX)
 
 
-def test_delete_duplicates(caplog: pytest.LogCaptureFixture, tmp_path: Path) -> None:
-    """Test removal of duplicated statistics."""
-    test_dir = tmp_path.joinpath("sqlite")
-    test_dir.mkdir()
-    test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.parametrize("persistent_database", [True])
+def test_delete_duplicates(
+    recorder_db_url: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test removal of duplicated statistics.
 
+    The test only works with SQLite.
+    """
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
 
@@ -176,7 +179,7 @@ def test_delete_duplicates(caplog: pytest.LogCaptureFixture, tmp_path: Path) -> 
         get_test_home_assistant() as hass,
     ):
         recorder_helper.async_initialize_recorder(hass)
-        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        setup_component(hass, "recorder", {"recorder": {"db_url": recorder_db_url}})
         get_instance(hass).recorder_and_worker_thread_ids.add(threading.get_ident())
         wait_recording_done(hass)
         wait_recording_done(hass)
@@ -204,7 +207,7 @@ def test_delete_duplicates(caplog: pytest.LogCaptureFixture, tmp_path: Path) -> 
     # Test that the duplicates are removed during migration from schema 23
     with get_test_home_assistant() as hass:
         recorder_helper.async_initialize_recorder(hass)
-        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        setup_component(hass, "recorder", {"recorder": {"db_url": recorder_db_url}})
         hass.start()
         wait_recording_done(hass)
         wait_recording_done(hass)
@@ -215,15 +218,16 @@ def test_delete_duplicates(caplog: pytest.LogCaptureFixture, tmp_path: Path) -> 
     assert "Found duplicated" not in caplog.text
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.parametrize("persistent_database", [True])
 def test_delete_duplicates_many(
-    caplog: pytest.LogCaptureFixture, tmp_path: Path
+    recorder_db_url: str, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test removal of duplicated statistics."""
-    test_dir = tmp_path.joinpath("sqlite")
-    test_dir.mkdir()
-    test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+    """Test removal of duplicated statistics.
 
+    The test only works with SQLite.
+    """
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
 
@@ -359,7 +363,7 @@ def test_delete_duplicates_many(
         get_test_home_assistant() as hass,
     ):
         recorder_helper.async_initialize_recorder(hass)
-        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        setup_component(hass, "recorder", {"recorder": {"db_url": recorder_db_url}})
         get_instance(hass).recorder_and_worker_thread_ids.add(threading.get_ident())
         wait_recording_done(hass)
         wait_recording_done(hass)
@@ -393,7 +397,7 @@ def test_delete_duplicates_many(
     # Test that the duplicates are removed during migration from schema 23
     with get_test_home_assistant() as hass:
         recorder_helper.async_initialize_recorder(hass)
-        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        setup_component(hass, "recorder", {"recorder": {"db_url": recorder_db_url}})
         hass.start()
         wait_recording_done(hass)
         wait_recording_done(hass)
@@ -405,15 +409,16 @@ def test_delete_duplicates_many(
 
 
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.parametrize("persistent_database", [True])
 def test_delete_duplicates_non_identical(
-    caplog: pytest.LogCaptureFixture, tmp_path: Path
+    recorder_db_url: str, caplog: pytest.LogCaptureFixture, tmp_path: Path
 ) -> None:
-    """Test removal of duplicated statistics."""
-    test_dir = tmp_path.joinpath("sqlite")
-    test_dir.mkdir()
-    test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+    """Test removal of duplicated statistics.
 
+    The test only works with SQLite.
+    """
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
 
@@ -519,7 +524,7 @@ def test_delete_duplicates_non_identical(
         get_test_home_assistant() as hass,
     ):
         recorder_helper.async_initialize_recorder(hass)
-        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        setup_component(hass, "recorder", {"recorder": {"db_url": recorder_db_url}})
         get_instance(hass).recorder_and_worker_thread_ids.add(threading.get_ident())
         wait_recording_done(hass)
         wait_recording_done(hass)
@@ -543,7 +548,7 @@ def test_delete_duplicates_non_identical(
     with get_test_home_assistant() as hass:
         hass.config.config_dir = tmp_path
         recorder_helper.async_initialize_recorder(hass)
-        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        setup_component(hass, "recorder", {"recorder": {"db_url": recorder_db_url}})
         hass.start()
         wait_recording_done(hass)
         wait_recording_done(hass)
@@ -556,7 +561,7 @@ def test_delete_duplicates_non_identical(
     isotime = dt_util.utcnow().isoformat()
     backup_file_name = f".storage/deleted_statistics.{isotime}.json"
 
-    with open(hass.config.path(backup_file_name)) as backup_file:
+    with open(hass.config.path(backup_file_name), encoding="utf8") as backup_file:
         backup = json.load(backup_file)
 
     assert backup == [
@@ -589,15 +594,16 @@ def test_delete_duplicates_non_identical(
     ]
 
 
+@pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 def test_delete_duplicates_short_term(
-    caplog: pytest.LogCaptureFixture, tmp_path: Path
+    recorder_db_url: str, caplog: pytest.LogCaptureFixture, tmp_path: Path
 ) -> None:
-    """Test removal of duplicated statistics."""
-    test_dir = tmp_path.joinpath("sqlite")
-    test_dir.mkdir()
-    test_db_file = test_dir.joinpath("test_run_info.db")
-    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+    """Test removal of duplicated statistics.
 
+    The test only works with SQLite.
+    """
     importlib.import_module(SCHEMA_MODULE)
     old_db_schema = sys.modules[SCHEMA_MODULE]
 
@@ -634,7 +640,7 @@ def test_delete_duplicates_short_term(
         get_test_home_assistant() as hass,
     ):
         recorder_helper.async_initialize_recorder(hass)
-        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        setup_component(hass, "recorder", {"recorder": {"db_url": recorder_db_url}})
         get_instance(hass).recorder_and_worker_thread_ids.add(threading.get_ident())
         wait_recording_done(hass)
         wait_recording_done(hass)
@@ -657,7 +663,7 @@ def test_delete_duplicates_short_term(
     with get_test_home_assistant() as hass:
         hass.config.config_dir = tmp_path
         recorder_helper.async_initialize_recorder(hass)
-        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        setup_component(hass, "recorder", {"recorder": {"db_url": recorder_db_url}})
         hass.start()
         wait_recording_done(hass)
         wait_recording_done(hass)

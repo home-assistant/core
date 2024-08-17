@@ -1,5 +1,7 @@
 """Test the Azure Data Explorer config flow."""
 
+from unittest.mock import AsyncMock, MagicMock
+
 from azure.kusto.data.exceptions import KustoAuthenticationError, KustoServiceError
 import pytest
 
@@ -10,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from .const import BASE_CONFIG
 
 
-async def test_config_flow(hass, mock_setup_entry) -> None:
+async def test_config_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
@@ -36,10 +38,10 @@ async def test_config_flow(hass, mock_setup_entry) -> None:
     ],
 )
 async def test_config_flow_errors(
-    test_input,
-    expected,
+    test_input: Exception,
+    expected: str,
     hass: HomeAssistant,
-    mock_execute_query,
+    mock_execute_query: MagicMock,
 ) -> None:
     """Test we handle connection KustoServiceError."""
     result = await hass.config_entries.flow.async_init(

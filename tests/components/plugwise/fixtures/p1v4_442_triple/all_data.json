@@ -57,6 +57,7 @@
         "warning": "The Smile P1 is not connected to a smart meter."
       }
     },
+    "reboot": true,
     "smile_name": "Smile P1"
   }
 }

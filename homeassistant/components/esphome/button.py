@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+from functools import partial
+
 from aioesphomeapi import ButtonInfo, EntityInfo, EntityState
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import callback
 from homeassistant.util.enum import try_parse_enum
 
 from .entity import (
@@ -15,20 +15,6 @@ from .entity import (
     convert_api_error_ha_error,
     platform_async_setup_entry,
 )
-
-
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Set up ESPHome buttons based on a config entry."""
-    await platform_async_setup_entry(
-        hass,
-        entry,
-        async_add_entities,
-        info_type=ButtonInfo,
-        entity_type=EsphomeButton,
-        state_type=EntityState,
-    )
 
 
 class EsphomeButton(EsphomeEntity[ButtonInfo, EntityState], ButtonEntity):
@@ -61,3 +47,11 @@ class EsphomeButton(EsphomeEntity[ButtonInfo, EntityState], ButtonEntity):
     async def async_press(self) -> None:
         """Press the button."""
         self._client.button_command(self._key)
+
+
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=ButtonInfo,
+    entity_type=EsphomeButton,
+    state_type=EntityState,
+)

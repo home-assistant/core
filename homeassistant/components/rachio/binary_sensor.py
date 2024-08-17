@@ -20,6 +20,7 @@ from .const import (
     KEY_DEVICE_ID,
     KEY_LOW,
     KEY_RAIN_SENSOR_TRIPPED,
+    KEY_REPLACE,
     KEY_REPORTED_STATE,
     KEY_STATE,
     KEY_STATUS,
@@ -59,9 +60,9 @@ def _create_entities(hass: HomeAssistant, config_entry: ConfigEntry) -> list[Ent
         entities.append(RachioControllerOnlineBinarySensor(controller))
         entities.append(RachioRainSensor(controller))
     entities.extend(
-        RachioHoseTimerBattery(valve, base_station.coordinator)
+        RachioHoseTimerBattery(valve, base_station.status_coordinator)
         for base_station in person.base_stations
-        for valve in base_station.coordinator.data.values()
+        for valve in base_station.status_coordinator.data.values()
     )
     return entities
 
@@ -171,4 +172,7 @@ class RachioHoseTimerBattery(RachioHoseTimerEntity, BinarySensorEntity):
         data = self.coordinator.data[self.id]
 
         self._static_attrs = data[KEY_STATE][KEY_REPORTED_STATE]
-        self._attr_is_on = self._static_attrs[KEY_BATTERY_STATUS] == KEY_LOW
+        self._attr_is_on = self._static_attrs[KEY_BATTERY_STATUS] in [
+            KEY_LOW,
+            KEY_REPLACE,
+        ]

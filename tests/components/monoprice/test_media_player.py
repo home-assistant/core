@@ -58,7 +58,7 @@ class AttrDict(dict):
 class MockMonoprice:
     """Mock for pymonoprice object."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Init mock object."""
         self.zones = defaultdict(
             lambda: AttrDict(power=True, volume=0, mute=True, source=1)

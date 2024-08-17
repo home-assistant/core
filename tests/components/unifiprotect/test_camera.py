@@ -4,10 +4,13 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock
 
-from pyunifiprotect.data import Camera as ProtectCamera, CameraChannel, StateType
-from pyunifiprotect.exceptions import NvrError
+from uiprotect.api import DEVICE_UPDATE_INTERVAL
+from uiprotect.data import Camera as ProtectCamera, CameraChannel, StateType
+from uiprotect.exceptions import NvrError
+from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.camera import (
+    STATE_IDLE,
     CameraEntityFeature,
     async_get_image,
     async_get_stream_source,
@@ -19,13 +22,13 @@ from homeassistant.components.unifiprotect.const import (
     ATTR_HEIGHT,
     ATTR_WIDTH,
     DEFAULT_ATTRIBUTION,
-    DEFAULT_SCAN_INTERVAL,
 )
 from homeassistant.components.unifiprotect.utils import get_camera_base_name
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -377,7 +380,7 @@ async def test_camera_interval_update(
 
     ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
     ufp.api.update = AsyncMock(return_value=ufp.api.bootstrap)
-    await time_changed(hass, DEFAULT_SCAN_INTERVAL)
+    await time_changed(hass, DEVICE_UPDATE_INTERVAL)
 
     state = hass.states.get(entity_id)
     assert state and state.state == "recording"
@@ -397,17 +400,44 @@ async def test_camera_bad_interval_update(
 
     # update fails
     ufp.api.update = AsyncMock(side_effect=NvrError)
-    await time_changed(hass, DEFAULT_SCAN_INTERVAL)
+    await time_changed(hass, DEVICE_UPDATE_INTERVAL)
 
     state = hass.states.get(entity_id)
     assert state and state.state == "unavailable"
 
     # next update succeeds
     ufp.api.update = AsyncMock(return_value=ufp.api.bootstrap)
-    await time_changed(hass, DEFAULT_SCAN_INTERVAL)
+    await time_changed(hass, DEVICE_UPDATE_INTERVAL)
 
     state = hass.states.get(entity_id)
     assert state and state.state == "idle"
+
+
+async def test_camera_websocket_disconnected(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+) -> None:
+    """Test the websocket gets disconnected and reconnected."""
+
+    await init_entry(hass, ufp, [camera])
+    assert_entity_counts(hass, Platform.CAMERA, 2, 1)
+    entity_id = "camera.test_camera_high_resolution_channel"
+
+    state = hass.states.get(entity_id)
+    assert state and state.state == STATE_IDLE
+
+    # websocket disconnects
+    ufp.ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state and state.state == STATE_UNAVAILABLE
+
+    # websocket reconnects
+    ufp.ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state and state.state == STATE_IDLE
 
 
 async def test_camera_ws_update(

@@ -11,7 +11,7 @@ from homeassistant.components.samsungtv import DOMAIN, device_trigger
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import async_get as get_dev_reg
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import setup_samsungtv_entry
@@ -21,12 +21,13 @@ from tests.common import MockConfigEntry, async_get_device_automations
 
 
 @pytest.mark.usefixtures("remoteencws", "rest_api")
-async def test_get_triggers(hass: HomeAssistant) -> None:
+async def test_get_triggers(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test we get the expected triggers."""
     await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
 
-    device_reg = get_dev_reg(hass)
-    device = device_reg.async_get_device(identifiers={(DOMAIN, "any")})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "any")})
 
     turn_on_trigger = {
         "platform": "device",
@@ -44,14 +45,15 @@ async def test_get_triggers(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("remoteencws", "rest_api")
 async def test_if_fires_on_turn_on_request(
-    hass: HomeAssistant, calls: list[ServiceCall]
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
     await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
     entity_id = "media_player.fake"
 
-    device_reg = get_dev_reg(hass)
-    device = device_reg.async_get_device(identifiers={(DOMAIN, "any")})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "any")})
 
     assert await async_setup_component(
         hass,
@@ -95,15 +97,17 @@ async def test_if_fires_on_turn_on_request(
     )
     await hass.async_block_till_done()
 
-    assert len(calls) == 2
-    assert calls[0].data["some"] == device.id
-    assert calls[0].data["id"] == 0
-    assert calls[1].data["some"] == entity_id
-    assert calls[1].data["id"] == 0
+    assert len(service_calls) == 3
+    assert service_calls[1].data["some"] == device.id
+    assert service_calls[1].data["id"] == 0
+    assert service_calls[2].data["some"] == entity_id
+    assert service_calls[2].data["id"] == 0
 
 
 @pytest.mark.usefixtures("remoteencws", "rest_api")
-async def test_failure_scenarios(hass: HomeAssistant) -> None:
+async def test_failure_scenarios(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test failure scenarios."""
     await setup_samsungtv_entry(hass, MOCK_ENTRYDATA_ENCRYPTED_WS)
 
@@ -127,9 +131,8 @@ async def test_failure_scenarios(hass: HomeAssistant) -> None:
 
     entry = MockConfigEntry(domain="fake", state=ConfigEntryState.LOADED, data={})
     entry.add_to_hass(hass)
-    device_reg = get_dev_reg(hass)
 
-    device = device_reg.async_get_or_create(
+    device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id, identifiers={("fake", "fake")}
     )
 

@@ -13,7 +13,7 @@ from homeassistant.components.bring import (
 from homeassistant.components.bring.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from tests.common import MockConfigEntry
 
@@ -70,7 +70,7 @@ async def test_init_failure(
     ("exception", "expected"),
     [
         (BringRequestException, ConfigEntryNotReady),
-        (BringAuthException, ConfigEntryError),
+        (BringAuthException, ConfigEntryAuthFailed),
         (BringParseException, ConfigEntryNotReady),
     ],
 )

@@ -59,8 +59,7 @@ async def test_flow_user(hass: HomeAssistant, mock_api: requests_mock.Mocker) ->
 
     # Test flow with wrong creds, fail with invalid_auth
     with requests_mock.Mocker() as mock:
-        mock.get(f"{USER_INPUT[CONF_URL]}/api/v2/transfer/speedLimitsMode")
-        mock.get(f"{USER_INPUT[CONF_URL]}/api/v2/app/preferences", status_code=403)
+        mock.head(USER_INPUT[CONF_URL])
         mock.post(
             f"{USER_INPUT[CONF_URL]}/api/v2/auth/login",
             text="Wrong username/password",
@@ -74,11 +73,18 @@ async def test_flow_user(hass: HomeAssistant, mock_api: requests_mock.Mocker) ->
     assert result["errors"] == {"base": "invalid_auth"}
 
     # Test flow with proper input, succeed
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], USER_INPUT
-    )
-    await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    with requests_mock.Mocker() as mock:
+        mock.head(USER_INPUT[CONF_URL])
+        mock.post(
+            f"{USER_INPUT[CONF_URL]}/api/v2/auth/login",
+            text="Ok.",
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+
     assert result["data"] == {
         CONF_URL: "http://localhost:8080",
         CONF_USERNAME: "user",

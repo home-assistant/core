@@ -23,11 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 
 from .bridge import (
@@ -53,7 +49,6 @@ from .coordinator import SamsungTVDataUpdateCoordinator
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 SamsungTVConfigEntry = ConfigEntry[SamsungTVDataUpdateCoordinator]
 
@@ -297,13 +292,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     if version == 2:
         if minor_version < 2:
             # Cleanup invalid MAC addresses - see #103512
-            dev_reg = dr.async_get(hass)
-            for device in dr.async_entries_for_config_entry(
-                dev_reg, config_entry.entry_id
-            ):
-                for connection in device.connections:
-                    if connection == (dr.CONNECTION_NETWORK_MAC, "none"):
-                        dev_reg.async_remove_device(device.id)
+            # Reverted due to device registry collisions - see #119082 / #119249
 
             minor_version = 2
             hass.config_entries.async_update_entry(config_entry, minor_version=2)

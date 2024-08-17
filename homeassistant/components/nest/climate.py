@@ -10,7 +10,6 @@ from google_nest_sdm.device_traits import FanTrait, TemperatureTrait
 from google_nest_sdm.exceptions import ApiException
 from google_nest_sdm.thermostat_traits import (
     ThermostatEcoTrait,
-    ThermostatHeatCoolTrait,
     ThermostatHvacTrait,
     ThermostatModeTrait,
     ThermostatTemperatureSetpointTrait,
@@ -173,7 +172,7 @@ class ThermostatEntity(ClimateEntity):
     @property
     def _target_temperature_trait(
         self,
-    ) -> ThermostatHeatCoolTrait | None:
+    ) -> ThermostatEcoTrait | ThermostatTemperatureSetpointTrait | None:
         """Return the correct trait with a target temp depending on mode."""
         if (
             self.preset_mode == PRESET_ECO

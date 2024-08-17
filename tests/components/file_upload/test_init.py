@@ -3,6 +3,7 @@
 from contextlib import contextmanager
 from pathlib import Path
 from random import getrandbits
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -16,7 +17,9 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
-async def uploaded_file_dir(hass: HomeAssistant, hass_client) -> Path:
+async def uploaded_file_dir(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> Path:
     """Test uploading and using a file."""
     assert await async_setup_component(hass, "file_upload", {})
     client = await hass_client()
@@ -139,7 +142,7 @@ async def test_upload_large_file_fails(
         yield MockPathOpen()
 
     class MockPathOpen:
-        def __init__(self, *args, **kwargs) -> None:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             pass
 
         def write(self, data: bytes) -> None:

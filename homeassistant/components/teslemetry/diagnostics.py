@@ -5,8 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+
+from . import TeslemetryConfigEntry
 
 VEHICLE_REDACT = [
     "id",
@@ -28,7 +29,7 @@ ENERGY_INFO_REDACT = ["installation_date"]
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: TeslemetryConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     vehicles = [

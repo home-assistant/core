@@ -107,7 +107,6 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
     def new_event_loop(self) -> asyncio.AbstractEventLoop:
         """Get the event loop."""
         loop: asyncio.AbstractEventLoop = super().new_event_loop()
-        setattr(loop, "_thread_ident", threading.get_ident())
         loop.set_exception_handler(_async_loop_exception_handler)
         if self.debug:
             loop.set_debug(True)
@@ -137,16 +136,18 @@ def _async_loop_exception_handler(_: Any, context: dict[str, Any]) -> None:
     if source_traceback := context.get("source_traceback"):
         stack_summary = "".join(traceback.format_list(source_traceback))
         logger.error(
-            "Error doing job: %s: %s",
+            "Error doing job: %s (%s): %s",
             context["message"],
+            context.get("task"),
             stack_summary,
             **kwargs,  # type: ignore[arg-type]
         )
         return
 
     logger.error(
-        "Error doing job: %s",
+        "Error doing job: %s (%s)",
         context["message"],
+        context.get("task"),
         **kwargs,  # type: ignore[arg-type]
     )
 

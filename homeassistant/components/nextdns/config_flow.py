@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
 from nextdns import ApiError, InvalidApiKeyError, NextDns
+from tenacity import RetryError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -37,13 +37,12 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.api_key = user_input[CONF_API_KEY]
             try:
-                async with asyncio.timeout(10):
-                    self.nextdns = await NextDns.create(
-                        websession, user_input[CONF_API_KEY]
-                    )
+                self.nextdns = await NextDns.create(
+                    websession, user_input[CONF_API_KEY]
+                )
             except InvalidApiKeyError:
                 errors["base"] = "invalid_api_key"
-            except (ApiError, ClientConnectorError, TimeoutError):
+            except (ApiError, ClientConnectorError, RetryError, TimeoutError):
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"

@@ -12,11 +12,11 @@ from .const import CONF_CLIENT_DEVICE_ID, DOMAIN, PLATFORMS
 from .coordinator import JellyfinDataUpdateCoordinator, SessionsDataUpdateCoordinator
 from .models import JellyfinData
 
+type JellyfinConfigEntry = ConfigEntry[JellyfinData]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> bool:
     """Set up Jellyfin from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     if CONF_CLIENT_DEVICE_ID not in entry.data:
         entry_data = entry.data.copy()
         entry_data[CONF_CLIENT_DEVICE_ID] = entry.entry_id
@@ -45,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for coordinator in coordinators.values():
         await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = JellyfinData(
+    entry.runtime_data = JellyfinData(
         client_device_id=entry.data[CONF_CLIENT_DEVICE_ID],
         jellyfin_client=client,
         coordinators=coordinators,
@@ -56,18 +56,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.data[DOMAIN].pop(entry.entry_id)
+    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unloaded:
+        entry.runtime_data.jellyfin_client.stop()
 
-    return True
+    return unloaded
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: JellyfinConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove device from a config entry."""
-    data = hass.data[DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     coordinator = data.coordinators["sessions"]
 
     return not device_entry.identifiers.intersection(

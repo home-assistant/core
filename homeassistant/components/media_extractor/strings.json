@@ -1,4 +1,11 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    }
+  },
   "services": {
     "play_media": {
       "name": "Play media",
@@ -16,7 +23,7 @@
     },
     "extract_media_url": {
       "name": "Get Media URL",
-      "description": "Extract media url from a service.",
+      "description": "Extract media URL from a service.",
       "fields": {
         "url": {
           "name": "Media URL",

@@ -22,7 +22,7 @@ async def integration_fixture(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture(name="client")
-def client_fixture() -> Generator[MagicMock, None, None]:
+def client_fixture() -> Generator[MagicMock]:
     """Mock balboa spa client."""
     with patch(
         "homeassistant.components.balboa.SpaClient", autospec=True

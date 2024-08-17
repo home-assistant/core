@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "minor_version": 1,
+  "key": "knx/config_store.json",
+  "data": {
+    "entities": {
+      "switch": {
+        "knx_es_9d97829f47f1a2a3176a7c5b4216070c": {
+          "entity": {
+            "entity_category": null,
+            "name": "test",
+            "device_info": "knx_vdev_4c80a564f5fe5da701ed293966d6384d"
+          },
+          "knx": {
+            "ga_switch": {
+              "write": "1/1/45",
+              "state": "1/0/45",
+              "passive": []
+            },
+            "invert": false,
+            "sync_state": true,
+            "respond_to_read": false
+          }
+        }
+      },
+      "light": {}
+    }
+  }
+}

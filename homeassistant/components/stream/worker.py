@@ -47,6 +47,14 @@ class StreamWorkerError(Exception):
     """An exception thrown while processing a stream."""
 
 
+def redact_av_error_string(err: av.AVError) -> str:
+    """Return an error string with credentials redacted from the url."""
+    parts = [str(err.type), err.strerror]
+    if err.filename is not None:
+        parts.append(redact_credentials(err.filename))
+    return ", ".join(parts)
+
+
 class StreamEndedError(StreamWorkerError):
     """Raised when the stream is complete, exposed for facilitating testing."""
 
@@ -415,7 +423,7 @@ class PeekIterator(Iterator):
         self._next = self._iterator.__next__
         return self._next()
 
-    def peek(self) -> Generator[av.Packet, None, None]:
+    def peek(self) -> Generator[av.Packet]:
         """Return items without consuming from the iterator."""
         # Items consumed are added to a buffer for future calls to __next__
         # or peek. First iterate over the buffer from previous calls to peek.
@@ -516,8 +524,7 @@ def stream_worker(
         container = av.open(source, options=pyav_options, timeout=SOURCE_TIMEOUT)
     except av.AVError as err:
         raise StreamWorkerError(
-            f"Error opening stream ({err.type}, {err.strerror})"
-            f" {redact_credentials(str(source))}"
+            f"Error opening stream ({redact_av_error_string(err)})"
         ) from err
     try:
         video_stream = container.streams.video[0]
@@ -592,7 +599,7 @@ def stream_worker(
     except av.AVError as ex:
         container.close()
         raise StreamWorkerError(
-            f"Error demuxing stream while finding first packet: {ex!s}"
+            f"Error demuxing stream while finding first packet ({redact_av_error_string(ex)})"
         ) from ex
 
     muxer = StreamMuxer(
@@ -617,7 +624,9 @@ def stream_worker(
             except StopIteration as ex:
                 raise StreamEndedError("Stream ended; no additional packets") from ex
             except av.AVError as ex:
-                raise StreamWorkerError(f"Error demuxing stream: {ex!s}") from ex
+                raise StreamWorkerError(
+                    f"Error demuxing stream ({redact_av_error_string(ex)})"
+                ) from ex
 
             muxer.mux_packet(packet)
 

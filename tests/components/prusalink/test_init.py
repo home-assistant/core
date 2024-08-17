@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from httpx import ConnectError
 from pyprusalink.types import InvalidAuth, PrusaLinkError
 import pytest
 
@@ -36,7 +37,10 @@ async def test_unloading(
         assert state.state == "unavailable"
 
 
-@pytest.mark.parametrize("exception", [InvalidAuth, PrusaLinkError])
+@pytest.mark.parametrize(
+    "exception",
+    [InvalidAuth, PrusaLinkError, ConnectError("All connection attempts failed")],
+)
 async def test_failed_update(
     hass: HomeAssistant, mock_config_entry: ConfigEntry, exception
 ) -> None:

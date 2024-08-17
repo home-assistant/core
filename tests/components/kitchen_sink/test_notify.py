@@ -8,10 +8,10 @@ import pytest
 
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.components.notify import (
+    ATTR_MESSAGE,
     DOMAIN as NOTIFY_DOMAIN,
     SERVICE_SEND_MESSAGE,
 )
-from homeassistant.components.notify.const import ATTR_MESSAGE
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -21,7 +21,7 @@ ENTITY_DIRECT_MESSAGE = "notify.mybox_personal_notifier"
 
 
 @pytest.fixture
-async def notify_only() -> AsyncGenerator[None, None]:
+async def notify_only() -> AsyncGenerator[None]:
     """Enable only the button platform."""
     with patch(
         "homeassistant.components.kitchen_sink.COMPONENTS_WITH_DEMO_PLATFORM",

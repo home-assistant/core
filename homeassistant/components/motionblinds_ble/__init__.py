@@ -24,11 +24,22 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_BLIND_TYPE, CONF_MAC_CODE, DOMAIN
+from .const import (
+    CONF_BLIND_TYPE,
+    CONF_MAC_CODE,
+    DOMAIN,
+    OPTION_DISCONNECT_TIME,
+    OPTION_PERMANENT_CONNECTION,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.COVER, Platform.SELECT]
+PLATFORMS: list[Platform] = [
+    Platform.BUTTON,
+    Platform.COVER,
+    Platform.SELECT,
+    Platform.SENSOR,
+]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -86,11 +97,38 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = device
 
+    # Register OptionsFlow update listener
+    entry.async_on_unload(entry.add_update_listener(options_update_listener))
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Apply options
+    entry.async_create_background_task(
+        hass, apply_options(hass, entry), device.ble_device.address
+    )
 
     _LOGGER.debug("(%s) Finished setting up device", entry.data[CONF_MAC_CODE])
 
     return True
+
+
+async def options_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    _LOGGER.debug(
+        "(%s) Updated device options: %s", entry.data[CONF_MAC_CODE], entry.options
+    )
+    await apply_options(hass, entry)
+
+
+async def apply_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Apply the options from the OptionsFlow."""
+
+    device: MotionDevice = hass.data[DOMAIN][entry.entry_id]
+    disconnect_time: float | None = entry.options.get(OPTION_DISCONNECT_TIME, None)
+    permanent_connection: bool = entry.options.get(OPTION_PERMANENT_CONNECTION, False)
+
+    device.set_custom_disconnect_time(disconnect_time)
+    await device.set_permanent_connection(permanent_connection)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -10,9 +10,7 @@ import respx
 
 
 @pytest.fixture
-def bmw_fixture(
-    request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
-) -> Generator[respx.MockRouter, None, None]:
+def bmw_fixture(monkeypatch: pytest.MonkeyPatch) -> Generator[respx.MockRouter]:
     """Patch MyBMW login API calls."""
 
     # we use the library's mock router to mock the API calls, but only with a subset of vehicles

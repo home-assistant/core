@@ -104,7 +104,9 @@ async def test_invalid_event_type(
     assert hass.states.get("event.arc_c1") == state
 
 
-async def test_ignoring_lighting4(hass: HomeAssistant, rfxtrx) -> None:
+async def test_ignoring_lighting4(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, rfxtrx
+) -> None:
     """Test with 1 sensor."""
     entry = await setup_rfx_test_cfg(
         hass,
@@ -117,10 +119,11 @@ async def test_ignoring_lighting4(hass: HomeAssistant, rfxtrx) -> None:
         },
     )
 
-    registry = er.async_get(hass)
     entries = [
         entry
-        for entry in registry.entities.get_entries_for_config_entry_id(entry.entry_id)
+        for entry in entity_registry.entities.get_entries_for_config_entry_id(
+            entry.entry_id
+        )
         if entry.domain == Platform.EVENT
     ]
     assert entries == []

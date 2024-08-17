@@ -414,7 +414,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def handle_webhook(
     hass: HomeAssistant, webhook_id: str, request: Request
-) -> None | Response:
+) -> Response | None:
     """Handle webhook callback."""
 
     try:

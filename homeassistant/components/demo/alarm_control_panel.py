@@ -33,6 +33,7 @@ async def async_setup_entry(
             ManualAlarm(  # type:ignore[no-untyped-call]
                 hass,
                 "Security",
+                "demo_alarm_control_panel",
                 "1234",
                 None,
                 True,

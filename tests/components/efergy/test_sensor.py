@@ -28,7 +28,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True)
-def enable_all_entities(entity_registry_enabled_by_default):
+def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
     """Make sure all entities are enabled."""
 
 

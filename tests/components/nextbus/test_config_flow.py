@@ -13,7 +13,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[MagicMock, None, None]:
+def mock_setup_entry() -> Generator[MagicMock]:
     """Create a mock for the nextbus component setup."""
     with patch(
         "homeassistant.components.nextbus.async_setup_entry",
@@ -23,7 +23,7 @@ def mock_setup_entry() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
-def mock_nextbus() -> Generator[MagicMock, None, None]:
+def mock_nextbus() -> Generator[MagicMock]:
     """Create a mock py_nextbus module."""
     with patch("homeassistant.components.nextbus.config_flow.NextBusClient") as client:
         yield client
@@ -44,7 +44,7 @@ async def test_user_config(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_AGENCY: "sf-muni",
+            CONF_AGENCY: "sfmta-cis",
         },
     )
     await hass.async_block_till_done()
@@ -68,16 +68,16 @@ async def test_user_config(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_STOP: "5650",
+            CONF_STOP: "5184",
         },
     )
     await hass.async_block_till_done()
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("data") == {
-        "agency": "sf-muni",
+        "agency": "sfmta-cis",
         "route": "F",
-        "stop": "5650",
+        "stop": "5184",
     }
 
     assert len(mock_setup_entry.mock_calls) == 1

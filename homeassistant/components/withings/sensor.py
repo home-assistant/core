@@ -10,6 +10,7 @@ from typing import Any
 from aiowithings import (
     Activity,
     Goals,
+    MeasurementPosition,
     MeasurementType,
     SleepSummary,
     Workout,
@@ -63,6 +64,7 @@ class WithingsMeasurementSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 
     measurement_type: MeasurementType
+    measurement_position: MeasurementPosition | None = None
 
 
 MEASUREMENT_SENSORS: dict[
@@ -258,6 +260,47 @@ MEASUREMENT_SENSORS: dict[
         entity_registry_enabled_default=False,
     ),
 }
+
+
+def get_positional_measurement_description(
+    measurement_type: MeasurementType, measurement_position: MeasurementPosition
+) -> WithingsMeasurementSensorEntityDescription | None:
+    """Get the sensor description for a measurement type."""
+    if measurement_position not in (
+        MeasurementPosition.TORSO,
+        MeasurementPosition.LEFT_ARM,
+        MeasurementPosition.RIGHT_ARM,
+        MeasurementPosition.LEFT_LEG,
+        MeasurementPosition.RIGHT_LEG,
+    ) or measurement_type not in (
+        MeasurementType.MUSCLE_MASS_FOR_SEGMENTS,
+        MeasurementType.FAT_FREE_MASS_FOR_SEGMENTS,
+        MeasurementType.FAT_MASS_FOR_SEGMENTS,
+    ):
+        return None
+    return WithingsMeasurementSensorEntityDescription(
+        key=f"{measurement_type.name.lower()}_{measurement_position.name.lower()}",
+        measurement_type=measurement_type,
+        measurement_position=measurement_position,
+        translation_key=f"{measurement_type.name.lower()}_{measurement_position.name.lower()}",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    )
+
+
+def get_measurement_description(
+    measurement: tuple[MeasurementType, MeasurementPosition | None],
+) -> WithingsMeasurementSensorEntityDescription | None:
+    """Get the sensor description for a measurement type."""
+    measurement_type, measurement_position = measurement
+    if measurement_position is not None:
+        return get_positional_measurement_description(
+            measurement_type, measurement_position
+        )
+    return MEASUREMENT_SENSORS.get(measurement_type)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -630,11 +673,9 @@ async def async_setup_entry(
 
     entities: list[SensorEntity] = []
     entities.extend(
-        WithingsMeasurementSensor(
-            measurement_coordinator, MEASUREMENT_SENSORS[measurement_type]
-        )
+        WithingsMeasurementSensor(measurement_coordinator, description)
         for measurement_type in measurement_coordinator.data
-        if measurement_type in MEASUREMENT_SENSORS
+        if (description := get_measurement_description(measurement_type)) is not None
     )
 
     current_measurement_types = set(measurement_coordinator.data)
@@ -646,10 +687,10 @@ async def async_setup_entry(
         if new_measurement_types:
             current_measurement_types.update(new_measurement_types)
             async_add_entities(
-                WithingsMeasurementSensor(
-                    measurement_coordinator, MEASUREMENT_SENSORS[measurement_type]
-                )
+                WithingsMeasurementSensor(measurement_coordinator, description)
                 for measurement_type in new_measurement_types
+                if (description := get_measurement_description(measurement_type))
+                is not None
             )
 
     measurement_coordinator.async_add_listener(_async_measurement_listener)
@@ -796,14 +837,23 @@ class WithingsMeasurementSensor(
     @property
     def native_value(self) -> float:
         """Return the state of the entity."""
-        return self.coordinator.data[self.entity_description.measurement_type]
+        return self.coordinator.data[
+            (
+                self.entity_description.measurement_type,
+                self.entity_description.measurement_position,
+            )
+        ]
 
     @property
     def available(self) -> bool:
         """Return if the sensor is available."""
         return (
             super().available
-            and self.entity_description.measurement_type in self.coordinator.data
+            and (
+                self.entity_description.measurement_type,
+                self.entity_description.measurement_position,
+            )
+            in self.coordinator.data
         )
 
 

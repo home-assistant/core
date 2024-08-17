@@ -123,7 +123,6 @@ async def test_switch_set_power_belief_api_error(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "switch.name_1", ATTR_POWER_STATE: False},
             blocking=True,
         )
-        await hass.async_block_till_done()
 
 
 async def test_update_reports_switch_is_on(hass: HomeAssistant) -> None:
