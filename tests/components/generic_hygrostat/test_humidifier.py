@@ -918,7 +918,7 @@ async def setup_comp_4(hass: HomeAssistant) -> None:
                 "humidifier": ENT_SWITCH,
                 "target_sensor": ENT_SENSOR,
                 "device_class": "dehumidifier",
-                "min_cycle_duration": datetime.timedelta(minutes=10),
+                "min_cycle_duration": {"minutes": 10},
                 "initial_state": True,
                 "target_humidity": 40,
             }
@@ -1060,7 +1060,7 @@ async def setup_comp_6(hass: HomeAssistant) -> None:
                 "wet_tolerance": 3,
                 "humidifier": ENT_SWITCH,
                 "target_sensor": ENT_SENSOR,
-                "min_cycle_duration": datetime.timedelta(minutes=10),
+                "min_cycle_duration": {"minutes": 10},
                 "initial_state": True,
                 "target_humidity": 40,
             }
@@ -1217,8 +1217,8 @@ async def setup_comp_7(hass: HomeAssistant) -> None:
                 "humidifier": ENT_SWITCH,
                 "target_sensor": ENT_SENSOR,
                 "device_class": "dehumidifier",
-                "min_cycle_duration": datetime.timedelta(minutes=15),
-                "keep_alive": datetime.timedelta(minutes=10),
+                "min_cycle_duration": {"minutes": 15},
+                "keep_alive": {"minutes": 10},
                 "initial_state": True,
                 "target_humidity": 40,
             }
@@ -1283,8 +1283,8 @@ async def setup_comp_8(hass: HomeAssistant) -> None:
                 "wet_tolerance": 3,
                 "humidifier": ENT_SWITCH,
                 "target_sensor": ENT_SENSOR,
-                "min_cycle_duration": datetime.timedelta(minutes=15),
-                "keep_alive": datetime.timedelta(minutes=10),
+                "min_cycle_duration": {"minutes": 15},
+                "keep_alive": {"minutes": 10},
                 "initial_state": True,
                 "target_humidity": 40,
             }
