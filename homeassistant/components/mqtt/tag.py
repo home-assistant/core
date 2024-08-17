@@ -118,8 +118,7 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdateMixin):
         self.hass = hass
         self._sub_state: dict[str, EntitySubscription] | None = None
         self._value_template = MqttValueTemplate(
-            config.get(CONF_VALUE_TEMPLATE),
-            hass=self.hass,
+            config.get(CONF_VALUE_TEMPLATE)
         ).async_render_with_possible_json_value
 
         MqttDiscoveryDeviceUpdateMixin.__init__(
@@ -136,8 +135,7 @@ class MQTTTagScanner(MqttDiscoveryDeviceUpdateMixin):
             return
         self._config = config
         self._value_template = MqttValueTemplate(
-            config.get(CONF_VALUE_TEMPLATE),
-            hass=self.hass,
+            config.get(CONF_VALUE_TEMPLATE)
         ).async_render_with_possible_json_value
         update_device(self.hass, self._config_entry, config)
         await self.subscribe_topics()

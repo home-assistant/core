@@ -312,6 +312,7 @@ async def test_unknown_hass_api(
             CONF_LLM_HASS_API: "non-existing",
         },
     )
+    await hass.async_block_till_done()
 
     result = await conversation.async_converse(
         hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
