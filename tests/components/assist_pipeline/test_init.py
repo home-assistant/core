@@ -13,6 +13,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import assist_pipeline, media_source, stt, tts
 from homeassistant.components.assist_pipeline.const import (
+    BYTES_PER_CHUNK,
     CONF_DEBUG_RECORDING_DIR,
     DOMAIN,
 )
@@ -20,15 +21,15 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
+    BYTES_ONE_SECOND,
     MockSttProvider,
     MockSttProviderEntity,
     MockTTSProvider,
     MockWakeWordEntity,
+    make_10ms_chunk,
 )
 
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
-
-BYTES_ONE_SECOND = 16000 * 2
 
 
 def process_events(events: list[assist_pipeline.PipelineEvent]) -> list[dict]:
@@ -58,8 +59,8 @@ async def test_pipeline_from_audio_stream_auto(
     events: list[assist_pipeline.PipelineEvent] = []
 
     async def audio_data():
-        yield b"part1"
-        yield b"part2"
+        yield make_10ms_chunk(b"part1")
+        yield make_10ms_chunk(b"part2")
         yield b""
 
     await assist_pipeline.async_pipeline_from_audio_stream(
@@ -79,7 +80,9 @@ async def test_pipeline_from_audio_stream_auto(
     )
 
     assert process_events(events) == snapshot
-    assert mock_stt_provider.received == [b"part1", b"part2"]
+    assert len(mock_stt_provider.received) == 2
+    assert mock_stt_provider.received[0].startswith(b"part1")
+    assert mock_stt_provider.received[1].startswith(b"part2")
 
 
 async def test_pipeline_from_audio_stream_legacy(
@@ -98,8 +101,8 @@ async def test_pipeline_from_audio_stream_legacy(
     events: list[assist_pipeline.PipelineEvent] = []
 
     async def audio_data():
-        yield b"part1"
-        yield b"part2"
+        yield make_10ms_chunk(b"part1")
+        yield make_10ms_chunk(b"part2")
         yield b""
 
     # Create a pipeline using an stt entity
@@ -142,7 +145,9 @@ async def test_pipeline_from_audio_stream_legacy(
     )
 
     assert process_events(events) == snapshot
-    assert mock_stt_provider.received == [b"part1", b"part2"]
+    assert len(mock_stt_provider.received) == 2
+    assert mock_stt_provider.received[0].startswith(b"part1")
+    assert mock_stt_provider.received[1].startswith(b"part2")
 
 
 async def test_pipeline_from_audio_stream_entity(
@@ -161,8 +166,8 @@ async def test_pipeline_from_audio_stream_entity(
     events: list[assist_pipeline.PipelineEvent] = []
 
     async def audio_data():
-        yield b"part1"
-        yield b"part2"
+        yield make_10ms_chunk(b"part1")
+        yield make_10ms_chunk(b"part2")
         yield b""
 
     # Create a pipeline using an stt entity
@@ -205,7 +210,9 @@ async def test_pipeline_from_audio_stream_entity(
     )
 
     assert process_events(events) == snapshot
-    assert mock_stt_provider_entity.received == [b"part1", b"part2"]
+    assert len(mock_stt_provider_entity.received) == 2
+    assert mock_stt_provider_entity.received[0].startswith(b"part1")
+    assert mock_stt_provider_entity.received[1].startswith(b"part2")
 
 
 async def test_pipeline_from_audio_stream_no_stt(
@@ -224,8 +231,8 @@ async def test_pipeline_from_audio_stream_no_stt(
     events: list[assist_pipeline.PipelineEvent] = []
 
     async def audio_data():
-        yield b"part1"
-        yield b"part2"
+        yield make_10ms_chunk(b"part1")
+        yield make_10ms_chunk(b"part2")
         yield b""
 
     # Create a pipeline without stt support
@@ -285,8 +292,8 @@ async def test_pipeline_from_audio_stream_unknown_pipeline(
     events: list[assist_pipeline.PipelineEvent] = []
 
     async def audio_data():
-        yield b"part1"
-        yield b"part2"
+        yield make_10ms_chunk(b"part1")
+        yield make_10ms_chunk(b"part2")
         yield b""
 
     # Try to use the created pipeline
@@ -327,7 +334,7 @@ async def test_pipeline_from_audio_stream_wake_word(
     # [0, 2, ...]
     wake_chunk_2 = bytes(it.islice(it.cycle(range(0, 256, 2)), BYTES_ONE_SECOND))
 
-    samples_per_chunk = 160
+    samples_per_chunk = 160  # 10ms @ 16Khz
     bytes_per_chunk = samples_per_chunk * 2  # 16-bit
 
     async def audio_data():
@@ -343,8 +350,8 @@ async def test_pipeline_from_audio_stream_wake_word(
             yield wake_chunk_2[i : i + bytes_per_chunk]
             i += bytes_per_chunk
 
-        for chunk in (b"wake word!", b"part1", b"part2"):
-            yield chunk + bytes(bytes_per_chunk - len(chunk))
+        for header in (b"wake word!", b"part1", b"part2"):
+            yield make_10ms_chunk(header)
 
         yield b""
 
@@ -365,9 +372,7 @@ async def test_pipeline_from_audio_stream_wake_word(
         wake_word_settings=assist_pipeline.WakeWordSettings(
             audio_seconds_to_buffer=1.5
         ),
-        audio_settings=assist_pipeline.AudioSettings(
-            is_vad_enabled=False, samples_per_chunk=samples_per_chunk
-        ),
+        audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
     )
 
     assert process_events(events) == snapshot
@@ -408,13 +413,11 @@ async def test_pipeline_save_audio(
         pipeline = assist_pipeline.async_get_pipeline(hass)
         events: list[assist_pipeline.PipelineEvent] = []
 
-        # Pad out to an even number of bytes since these "samples" will be saved
-        # as 16-bit values.
         async def audio_data():
-            yield b"wake word_"
+            yield make_10ms_chunk(b"wake word")
             # queued audio
-            yield b"part1_"
-            yield b"part2_"
+            yield make_10ms_chunk(b"part1")
+            yield make_10ms_chunk(b"part2")
             yield b""
 
         await assist_pipeline.async_pipeline_from_audio_stream(
@@ -457,12 +460,16 @@ async def test_pipeline_save_audio(
         # Verify wake file
         with wave.open(str(wake_file), "rb") as wake_wav:
             wake_data = wake_wav.readframes(wake_wav.getnframes())
-            assert wake_data == b"wake word_"
+            assert wake_data.startswith(b"wake word")
 
         # Verify stt file
         with wave.open(str(stt_file), "rb") as stt_wav:
             stt_data = stt_wav.readframes(stt_wav.getnframes())
-            assert stt_data == b"queued audiopart1_part2_"
+            assert stt_data.startswith(b"queued audio")
+            stt_data = stt_data[len(b"queued audio") :]
+            assert stt_data.startswith(b"part1")
+            stt_data = stt_data[BYTES_PER_CHUNK:]
+            assert stt_data.startswith(b"part2")
 
 
 async def test_pipeline_saved_audio_with_device_id(
@@ -645,10 +652,10 @@ async def test_wake_word_detection_aborted(
     events: list[assist_pipeline.PipelineEvent] = []
 
     async def audio_data():
-        yield b"silence!"
-        yield b"wake word!"
-        yield b"part1"
-        yield b"part2"
+        yield make_10ms_chunk(b"silence!")
+        yield make_10ms_chunk(b"wake word!")
+        yield make_10ms_chunk(b"part1")
+        yield make_10ms_chunk(b"part2")
         yield b""
 
     pipeline_store = pipeline_data.pipeline_store

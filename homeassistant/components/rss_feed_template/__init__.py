@@ -49,18 +49,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         requires_auth: bool = feedconfig["requires_api_password"]
 
-        title: Template | None
-        if (title := feedconfig.get("title")) is not None:
-            title.hass = hass
-
         items: list[dict[str, Template]] = feedconfig["items"]
-        for item in items:
-            if "title" in item:
-                item["title"].hass = hass
-            if "description" in item:
-                item["description"].hass = hass
-
-        rss_view = RssView(url, requires_auth, title, items)
+        rss_view = RssView(url, requires_auth, feedconfig.get("title"), items)
         hass.http.register_view(rss_view)
 
     return True

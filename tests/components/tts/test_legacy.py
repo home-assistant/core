@@ -123,7 +123,7 @@ async def test_platform_setup_with_error(
             discovery_info: DiscoveryInfoType | None = None,
         ) -> Provider:
             """Raise exception during platform setup."""
-            raise Exception("Setup error")  # pylint: disable=broad-exception-raised
+            raise Exception("Setup error")  # noqa: TRY002
 
     mock_integration(hass, MockModule(domain="bad_tts"))
     mock_platform(hass, "bad_tts.tts", BadPlatform(mock_provider))
