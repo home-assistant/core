@@ -1,6 +1,5 @@
 """Tests for the Sonos Media Player platform."""
 
-import logging
 from typing import Any
 from unittest.mock import patch
 
@@ -532,8 +531,7 @@ async def test_play_media_music_library_playlist_dne(
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     soco_mock.music_library.get_playlists.return_value = _mock_playlists
 
-    with caplog.at_level(logging.ERROR):
-        caplog.clear()
+    with pytest.raises(ServiceValidationError) as sve:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -545,8 +543,7 @@ async def test_play_media_music_library_playlist_dne(
             blocking=True,
         )
     assert soco_mock.play_uri.call_count == 0
-    assert media_content_id in caplog.text
-    assert "playlist" in caplog.text
+    assert media_content_id in str(sve.value)
 
 
 async def test_play_sonos_playlist(
@@ -556,13 +553,15 @@ async def test_play_sonos_playlist(
     sonos_playlists: SearchResult,
 ) -> None:
     """Test that sonos playlists can be played."""
+
+    # Test a successful call
     await hass.services.async_call(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            "entity_id": "media_player.zone_a",
-            "media_content_type": "playlist",
-            "media_content_id": "sample playlist",
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "playlist",
+            ATTR_MEDIA_CONTENT_ID: "sample playlist",
         },
         blocking=True,
     )
@@ -571,6 +570,24 @@ async def test_play_sonos_playlist(
     soco.add_to_queue.asset_called_with(
         sonos_playlists[0], timeout=LONG_SERVICE_TIMEOUT
     )
+
+    # Test playing a non-existent playlist
+    soco.clear_queue.reset_mock()
+    soco.add_to_queue.reset_mock()
+    with pytest.raises(ServiceValidationError) as sve:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: "playlist",
+                ATTR_MEDIA_CONTENT_ID: "bad playlist",
+            },
+            blocking=True,
+        )
+    assert soco.clear_queue.call_count == 0
+    assert soco.add_to_queue.call_count == 0
+    assert "bad playlist" in str(sve.value)
 
 
 @pytest.mark.parametrize(
