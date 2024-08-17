@@ -1734,7 +1734,7 @@ async def test_away_fixed_humidity_mode(hass: HomeAssistant) -> None:
 async def test_sensor_stale_duration(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    freezer: FrozenDateTimeFactory
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test turn off on sensor stale."""
 
