@@ -15,6 +15,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MP_DOMAIN,
+    SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     MediaPlayerEnqueue,
@@ -33,6 +34,11 @@ from homeassistant.components.sonos.media_player import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_MEDIA_STOP,
     SERVICE_REPEAT_SET,
     SERVICE_SHUFFLE_SET,
     SERVICE_VOLUME_DOWN,
@@ -963,3 +969,33 @@ async def test_volume(
     )
     # SoCo uses 0..100 for its range.
     assert soco.volume == 30
+
+
+@pytest.mark.parametrize(
+    ("service", "client_call"),
+    [
+        (SERVICE_MEDIA_PLAY, "play"),
+        (SERVICE_MEDIA_PAUSE, "pause"),
+        (SERVICE_MEDIA_STOP, "stop"),
+        (SERVICE_MEDIA_NEXT_TRACK, "next"),
+        (SERVICE_MEDIA_PREVIOUS_TRACK, "previous"),
+        (SERVICE_CLEAR_PLAYLIST, "clear_queue"),
+    ],
+)
+async def test_media_transport(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    service: str,
+    client_call: str,
+) -> None:
+    """Test the media player transport services."""
+    await hass.services.async_call(
+        MP_DOMAIN,
+        service,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+        },
+        blocking=True,
+    )
+    assert getattr(soco, client_call).call_count == 1
