@@ -54,10 +54,9 @@ async def test_compile_missing_statistics(
     start_time = three_days_ago + timedelta(days=3)
     freezer.move_to(three_days_ago)
     async with (
-        async_test_home_assistant() as hass,
+        async_test_home_assistant(initial_state=CoreState.not_running) as hass,
         async_test_recorder(hass, wait_recorder=False),
     ):
-        hass.set_state(CoreState.not_running)
         recorder_helper.async_initialize_recorder(hass)
         await async_setup_component(hass, "sensor", {})
         get_instance(hass).recorder_and_worker_thread_ids.add(threading.get_ident())
@@ -99,10 +98,9 @@ async def test_compile_missing_statistics(
 
     freezer.move_to(start_time)
     async with (
-        async_test_home_assistant() as hass,
+        async_test_home_assistant(initial_state=CoreState.not_running) as hass,
         async_test_recorder(hass, wait_recorder=False),
     ):
-        hass.set_state(CoreState.not_running)
         recorder_helper.async_initialize_recorder(hass)
         await async_setup_component(hass, "sensor", {})
         hass.states.async_set("sensor.test1", "0", POWER_SENSOR_ATTRIBUTES)
