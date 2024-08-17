@@ -13,7 +13,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
@@ -99,7 +98,6 @@ SET_AWAY_MODE_SCHEMA: VolDictType = {
 }
 SET_TEMPERATURE_SCHEMA: VolDictType = {
     vol.Required(ATTR_TEMPERATURE, "temperature"): vol.Coerce(float),
-    vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
     vol.Optional(ATTR_OPERATION_MODE): cv.string,
 }
 SET_OPERATION_MODE_SCHEMA: VolDictType = {
