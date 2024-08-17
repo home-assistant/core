@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, NoReturn
 
 from bsblan import BSBLAN, BSBLANConfig, BSBLANError
 import voluptuous as vol
@@ -91,6 +91,11 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    def _raise_cannot_connect(self, err: Exception) -> NoReturn:
+        """Raise cannot connect error."""
+        _LOGGER.error("Failed to get BSBLAN device info: %s", err)
+        raise BSBLANError("Failed to get device info") from err
+
     async def _get_bsblan_info(self, raise_on_progress: bool = True) -> None:
         """Get device information from an BSBLAN device."""
         config = BSBLANConfig(
@@ -106,9 +111,10 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             device = await bsblan.device()
             info = await bsblan.info()
-        except BSBLANError as err:
-            _LOGGER.error("Failed to get BSBLAN device info: %s", err)
-            raise
+            if device is None or info is None:
+                self._raise_cannot_connect(BSBLANError("Device info is not available"))
+        except (BSBLANError, TypeError) as err:
+            self._raise_cannot_connect(err)
 
         self.device_info = {
             "name": device.name,

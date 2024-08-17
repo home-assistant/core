@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from bsblan import BSBLANConnectionError
+import pytest
 
 from homeassistant.components.bsblan import config_flow
 from homeassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
@@ -65,6 +66,97 @@ async def test_show_user_form(hass: HomeAssistant) -> None:
 
     assert result["step_id"] == "user"
     assert result["type"] is FlowResultType.FORM
+
+
+async def test_device_info_not_available(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test handling of device info not being available."""
+    mock_bsblan.device.return_value = None
+    mock_bsblan.info.return_value = None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_create_entry(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test creating a config entry."""
+    mock_device = MagicMock()
+    mock_device.name = "Test Device"
+    mock_device.MAC = "00:11:22:33:44:55"
+    mock_device.version = "1.0.0"
+
+    mock_info = MagicMock()
+    mock_info.controller_variant.value = "Test Variant"
+
+    mock_bsblan.device.return_value = mock_device
+    mock_bsblan.info.return_value = mock_info
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "1234",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test Device - 00:11:22:33:44:55"
+    assert result["data"] == {
+        CONF_HOST: "127.0.0.1",
+        CONF_PORT: 80,
+        CONF_PASSKEY: "1234",
+        CONF_USERNAME: "admin",
+        CONF_PASSWORD: "admin1234",
+    }
+    assert result["result"].unique_id == "00:11:22:33:44:55"
+
+
+async def test_create_entry_no_device_info(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test creating a config entry when device_info is not available."""
+    mock_bsblan.device.return_value = MagicMock(
+        name="Test Device", MAC="00:11:22:33:44:55", version="1.0.0"
+    )
+    mock_bsblan.info.return_value = MagicMock(
+        controller_variant=MagicMock(value="Test Variant")
+    )
+
+    flow = config_flow.BSBLANFlowHandler()
+    flow.hass = hass
+    flow.host = "127.0.0.1"
+    flow.port = 80
+    flow.passkey = "1234"
+    flow.username = "admin"
+    flow.password = "admin1234"
+
+    # Simulate a scenario where _get_bsblan_info was not called or failed
+    flow.device_info = None
+
+    with pytest.raises(TypeError, match="Device info is not available"):
+        await flow._async_create_entry()
 
 
 async def test_connection_error(
