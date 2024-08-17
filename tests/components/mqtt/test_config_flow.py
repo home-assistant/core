@@ -29,8 +29,8 @@ from tests.common import MockConfigEntry
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 ADD_ON_DISCOVERY_INFO = {
-    "addon": "Mock Addon",
-    "host": "mock-broker",
+    "addon": "Mosquitto Mqtt Broker",
+    "host": "core-mosquitto",
     "port": 1883,
     "username": "mock-user",
     "password": "mock-pass",
@@ -433,7 +433,7 @@ async def test_hassio_confirm(
         "mqtt",
         data=HassioServiceInfo(
             config=ADD_ON_DISCOVERY_INFO.copy(),
-            name="Mock Addon",
+            name="Mosquitto Mqtt Broker",
             slug="mosquitto",
             uuid="1234",
         ),
@@ -441,7 +441,7 @@ async def test_hassio_confirm(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "hassio_confirm"
-    assert result["description_placeholders"] == {"addon": "Mock Addon"}
+    assert result["description_placeholders"] == {"addon": "Mosquitto Mqtt Broker"}
 
     mock_try_connection_success.reset_mock()
     result = await hass.config_entries.flow.async_configure(
@@ -450,7 +450,7 @@ async def test_hassio_confirm(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {
-        "broker": "mock-broker",
+        "broker": "core-mosquitto",
         "port": 1883,
         "username": "mock-user",
         "password": "mock-pass",
@@ -475,7 +475,7 @@ async def test_hassio_cannot_connect(
         data=HassioServiceInfo(
             config={
                 "addon": "Mock Addon",
-                "host": "mock-broker",
+                "host": "core-mosquitto",
                 "port": 1883,
                 "username": "mock-user",
                 "password": "mock-pass",
@@ -547,7 +547,7 @@ async def test_addon_flow_with_supervisor_addon_running(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {
-        "broker": "mock-broker",
+        "broker": "core-mosquitto",
         "port": 1883,
         "username": "mock-user",
         "password": "mock-pass",
@@ -610,7 +610,7 @@ async def test_addon_flow_with_supervisor_addon_installed(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {
-        "broker": "mock-broker",
+        "broker": "core-mosquitto",
         "port": 1883,
         "username": "mock-user",
         "password": "mock-pass",
@@ -686,7 +686,7 @@ async def test_addon_flow_with_supervisor_addon_not_installed(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {
-        "broker": "mock-broker",
+        "broker": "core-mosquitto",
         "port": 1883,
         "username": "mock-user",
         "password": "mock-pass",
