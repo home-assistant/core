@@ -62,7 +62,7 @@ def _construct_common_data(entry: ConfigEntry) -> IntelliFireCommonFireplaceData
 async def _async_pseudo_migrate_entry(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> ConfigEntry:
-    """Update configuration entry to latest VERSION 1 format.."""
+    """Update configuration entry to latest VERSION 1 format."""
     new = {**config_entry.data}
     # Rename Host to IP Address
     new[CONF_IP_ADDRESS] = new.pop("host")
