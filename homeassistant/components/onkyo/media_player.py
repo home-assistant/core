@@ -137,6 +137,16 @@ ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
 SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
 
 
+@dataclass
+class ReceiverInfo:
+    """Onkyo Receiver information."""
+
+    host: str
+    port: int
+    model_name: str
+    identifier: str
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -173,13 +183,6 @@ async def async_setup_platform(
     max_volume = config[CONF_MAX_VOLUME]
     receiver_max_volume = config[CONF_RECEIVER_MAX_VOLUME]
     sources = config[CONF_SOURCES]
-
-    @dataclass
-    class ReceiverInfo:
-        host: str
-        port: int
-        model_name: str
-        identifier: str
 
     async def async_setup_receiver(
         info: ReceiverInfo, discovered: bool, name: str | None
