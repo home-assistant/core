@@ -45,9 +45,8 @@ async def test_load_withoutbrand(
 ) -> None:
     """Test load entry without brand."""
     await setup_integration(hass, mock_config_entry_without_brand)
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry_without_brand.state is ConfigEntryState.LOADED
 
 
 async def test_coordinator_update_valid_refresh_token(
