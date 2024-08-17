@@ -1112,7 +1112,7 @@ class _SchemaVersion16Migrator(_SchemaVersionMigrator, target_version=16):
             # Version 16 changes settings for the foreign key constraint on
             # states.old_state_id. Dropping the constraint is not really correct
             # we should have recreated it instead. Recreating the constraint now
-            # happens in the migration to schema version 45.
+            # happens in the migration to schema version 47.
             _drop_foreign_key_constraints(
                 self.session_maker, self.engine, TABLE_STATES, "old_state_id"
             )
@@ -1637,6 +1637,24 @@ class _SchemaVersion43Migrator(_SchemaVersionMigrator, target_version=43):
         )
 
 
+class _SchemaVersion44Migrator(_SchemaVersionMigrator, target_version=44):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        # The changes in this version are identical to the changes in version
+        # 46. We apply the same changes again because the migration code previously
+        # swallowed errors which caused some users' databases to end up in an
+        # undefined state after the migration.
+
+
+class _SchemaVersion45Migrator(_SchemaVersionMigrator, target_version=45):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        # The changes in this version are identical to the changes in version
+        # 47. We apply the same changes again because the migration code previously
+        # swallowed errors which caused some users' databases to end up in an
+        # undefined state after the migration.
+
+
 FOREIGN_COLUMNS = (
     (
         "events",
@@ -1669,7 +1687,7 @@ FOREIGN_COLUMNS = (
 )
 
 
-class _SchemaVersion44Migrator(_SchemaVersionMigrator, target_version=44):
+class _SchemaVersion46Migrator(_SchemaVersionMigrator, target_version=46):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # We skip this step for SQLITE, it doesn't have differently sized integers
@@ -1720,14 +1738,14 @@ class _SchemaVersion44Migrator(_SchemaVersionMigrator, target_version=44):
             )
 
 
-class _SchemaVersion45Migrator(_SchemaVersionMigrator, target_version=45):
+class _SchemaVersion47Migrator(_SchemaVersionMigrator, target_version=47):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # We skip this step for SQLITE, it doesn't have differently sized integers
         if self.engine.dialect.name == SupportedDialect.SQLITE:
             return
 
-        # Restore constraints dropped in migration to schema version 44
+        # Restore constraints dropped in migration to schema version 46
         _restore_foreign_key_constraints(
             self.session_maker,
             self.engine,
