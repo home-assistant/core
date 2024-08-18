@@ -1,6 +1,7 @@
 """Test the Tessie sensor platform."""
 
-from datetime import timedelta
+from copy import deepcopy
+from datetime import datetime, timedelta
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -11,10 +12,16 @@ from homeassistant.components.tessie.coordinator import (
     TESSIE_SYNC_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 
-from .common import ERROR_AUTH, ERROR_CONNECTION, ERROR_UNKNOWN, setup_platform
+from .common import (
+    ERROR_AUTH,
+    ERROR_CONNECTION,
+    ERROR_UNKNOWN,
+    TEST_VEHICLE_STATE_ONLINE,
+    setup_platform,
+)
 
 from tests.common import async_fire_time_changed
 
@@ -30,7 +37,29 @@ async def test_coordinator(hass: HomeAssistant, freezer: FrozenDateTimeFactory) 
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
+    # Since the fixture data is old, the status will be offline
     assert hass.states.get("binary_sensor.test_status").state == STATE_OFF
+
+
+async def test_coordinator_online(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_get_state: AsyncMock
+) -> None:
+    """Tests that the coordinator updates vehicles with recent data."""
+
+    await setup_platform(hass, [Platform.BINARY_SENSOR])
+
+    # Update the fixture to be "current"
+    future = datetime.now()
+    data = deepcopy(TEST_VEHICLE_STATE_ONLINE)
+    data["vehicle_state"]["timestamp"] = int(future.timestamp() * 1000)
+    mock_get_state.return_value = data
+
+    freezer.move_to(future)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Since the timestamp is now current, the state will be online
+    assert hass.states.get("binary_sensor.test_status").state == STATE_ON
 
 
 async def test_coordinator_clienterror(
