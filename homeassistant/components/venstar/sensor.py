@@ -107,11 +107,9 @@ async def async_setup_entry(
                     )
                 )
             entities.extend(
-                [
-                    VenstarSensor(coordinator, config_entry, description, sensor_name)
-                    for description in CONSUMABLE_ENTITIES
-                    if description.key == sensor_name
-                ]
+                VenstarSensor(coordinator, config_entry, description, sensor_name)
+                for description in CONSUMABLE_ENTITIES
+                if description.key == sensor_name
             )
 
     for description in INFO_ENTITIES:
@@ -238,8 +236,9 @@ CONSUMABLE_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         key="filterHours",
         state_class=SensorStateClass.MEASUREMENT,
         uom_fn=lambda _: UnitOfTime.HOURS,
-        value_fn=lambda coordinator, sensor_name: coordinator.runtimes[-1][sensor_name]
-        / 100,
+        value_fn=lambda coordinator, sensor_name: (
+            coordinator.runtimes[-1][sensor_name] / 100
+        ),
         name_fn=None,
         translation_key="filter_install_time",
     ),

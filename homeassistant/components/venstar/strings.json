@@ -26,10 +26,10 @@
   "entity": {
     "sensor": {
       "filter_install_time": {
-        "name": "Filter Installation Time"
+        "name": "Filter installation time"
       },
       "filter_usage": {
-        "name": "Filter Usage"
+        "name": "Filter usage"
       },
       "schedule_part": {
         "name": "Schedule Part",
