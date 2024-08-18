@@ -1,0 +1,31 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Your Elevenlabs API key."
+        }
+      }
+    },
+    "error": {
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "voice": "Voice",
+          "model": "Model"
+        },
+        "data_description": {
+          "voice": "Voice to use for the TTS.",
+          "model": "ElevenLabs model to use. Please note that not all models support all languages equally well."
+        }
+      }
+    }
+  }
+}

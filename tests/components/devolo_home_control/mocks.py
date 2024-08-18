@@ -117,6 +117,7 @@ class DeviceMock(Zwave):
         self.uid = "Test"
         self.device_model_uid = "Test"
         self.device_type = "Test"
+        self.identifier = "MT01234"
         self.settings_property = {"general_device_settings": SettingsMock()}
         self.href = "https://www.mydevolo.com"
 

@@ -31,6 +31,8 @@ from .entity import TessieEnergyEntity, TessieEntity
 from .helpers import handle_command
 from .models import TessieEnergyData, TessieVehicleData
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class TessieNumberEntityDescription(NumberEntityDescription):

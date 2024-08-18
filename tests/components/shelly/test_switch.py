@@ -433,16 +433,25 @@ async def test_wall_display_relay_mode(
     assert entry.unique_id == "123456789ABC-switch:0"
 
 
-async def test_rpc_device_virtual_switch_with_name(
+@pytest.mark.parametrize(
+    ("name", "entity_id"),
+    [
+        ("Virtual switch", "switch.test_name_virtual_switch"),
+        (None, "switch.test_name_boolean_200"),
+    ],
+)
+async def test_rpc_device_virtual_switch(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    name: str | None,
+    entity_id: str,
 ) -> None:
     """Test a virtual switch for RPC device."""
     config = deepcopy(mock_rpc_device.config)
     config["boolean:200"] = {
-        "name": "Virtual switch",
+        "name": name,
         "meta": {"ui": {"view": "toggle"}},
     }
     monkeypatch.setattr(mock_rpc_device, "config", config)
@@ -450,8 +459,6 @@ async def test_rpc_device_virtual_switch_with_name(
     status = deepcopy(mock_rpc_device.status)
     status["boolean:200"] = {"value": True}
     monkeypatch.setattr(mock_rpc_device, "status", status)
-
-    entity_id = "switch.test_name_virtual_switch"
 
     await init_integration(hass, 3)
 
@@ -482,34 +489,6 @@ async def test_rpc_device_virtual_switch_with_name(
     )
     mock_rpc_device.mock_update()
     assert hass.states.get(entity_id).state == STATE_ON
-
-
-async def test_rpc_device_virtual_switch_without_name(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_rpc_device: Mock,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Test a virtual switch for RPC device."""
-    config = deepcopy(mock_rpc_device.config)
-    config["boolean:200"] = {"name": None, "meta": {"ui": {"view": "toggle"}}}
-    monkeypatch.setattr(mock_rpc_device, "config", config)
-
-    status = deepcopy(mock_rpc_device.status)
-    status["boolean:200"] = {"value": True}
-    monkeypatch.setattr(mock_rpc_device, "status", status)
-
-    entity_id = "switch.test_name_boolean_200"
-
-    await init_integration(hass, 3)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_ON
-
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "123456789ABC-boolean:200-boolean"
 
 
 async def test_rpc_device_virtual_binary_sensor(

@@ -157,9 +157,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "async_set_value",
     )
 
-    component.async_register_entity_service(SERVICE_INCREMENT, {}, "async_increment")
+    component.async_register_entity_service(SERVICE_INCREMENT, None, "async_increment")
 
-    component.async_register_entity_service(SERVICE_DECREMENT, {}, "async_decrement")
+    component.async_register_entity_service(SERVICE_DECREMENT, None, "async_decrement")
 
     return True
 

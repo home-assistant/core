@@ -25,11 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LutronCasetaDeviceUpdatableEntity
-from .const import (
-    DEVICE_TYPE_SPECTRUM_TUNE,
-    DEVICE_TYPE_WHITE_TUNE,
-    DOMAIN as CASETA_DOMAIN,
-)
+from .const import DEVICE_TYPE_SPECTRUM_TUNE, DEVICE_TYPE_WHITE_TUNE
 from .models import LutronCasetaData
 
 SUPPORTED_COLOR_MODE_DICT = {
@@ -64,7 +60,7 @@ async def async_setup_entry(
     Adds dimmers from the Caseta bridge associated with the config_entry as
     light entities.
     """
-    data: LutronCasetaData = hass.data[CASETA_DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     bridge = data.bridge
     light_devices = bridge.get_devices_by_domain(DOMAIN)
     async_add_entities(

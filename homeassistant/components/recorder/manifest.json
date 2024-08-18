@@ -1,7 +1,6 @@
 {
   "domain": "recorder",
   "name": "Recorder",
-  "after_dependencies": ["http"],
   "codeowners": ["@home-assistant/core"],
   "documentation": "https://www.home-assistant.io/integrations/recorder",
   "integration_type": "system",

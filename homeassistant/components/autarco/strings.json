@@ -34,6 +34,12 @@
       },
       "energy_production_total": {
         "name": "Energy production total"
+      },
+      "out_ac_power": {
+        "name": "Power AC output"
+      },
+      "out_ac_energy_total": {
+        "name": "Energy AC output total"
       }
     }
   }

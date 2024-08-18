@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 
 from israelrailapi import TrainSchedule
@@ -25,37 +25,17 @@ class DataConnection:
     """A connection data class."""
 
     departure: datetime | None
-    duration: int | None
     platform: str
-    remaining_time: str
     start: str
     destination: str
     train_number: str
-    transfers: int
-
-
-def calculate_duration_in_seconds(start_time: str, end_time: str) -> int | None:
-    """Transform and calculate the duration from start and end time into seconds."""
-    end_time_date = dt_util.parse_datetime(end_time)
-    start_time_date = dt_util.parse_datetime(start_time)
-    if not end_time_date or not start_time_date:
-        return None
-    return (end_time_date - start_time_date).seconds
+    trains: int
 
 
 def departure_time(train_route: TrainRoute) -> datetime | None:
     """Get departure time."""
     start_datetime = dt_util.parse_datetime(train_route.start_time)
     return start_datetime.astimezone() if start_datetime else None
-
-
-def remaining_time(departure) -> timedelta | None:
-    """Calculate the remaining time for the departure."""
-    departure_datetime = dt_util.parse_datetime(departure)
-
-    if departure_datetime:
-        return dt_util.as_local(departure_datetime) - dt_util.as_local(dt_util.utcnow())
-    return None
 
 
 class IsraelRailDataUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]]):
@@ -100,13 +80,9 @@ class IsraelRailDataUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]
                 departure=departure_time(train_routes[i]),
                 train_number=train_routes[i].trains[0].data["trainNumber"],
                 platform=train_routes[i].trains[0].platform,
-                transfers=len(train_routes[i].trains) - 1,
-                duration=calculate_duration_in_seconds(
-                    train_routes[i].start_time, train_routes[i].end_time
-                ),
+                trains=len(train_routes[i].trains),
                 start=station_name_to_id(train_routes[i].trains[0].src),
                 destination=station_name_to_id(train_routes[i].trains[-1].dst),
-                remaining_time=str(remaining_time(train_routes[i].trains[0].departure)),
             )
             for i in range(DEPARTURES_COUNT)
             if len(train_routes) > i and train_routes[i] is not None

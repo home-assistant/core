@@ -15,9 +15,10 @@ from habitipy.aio import HabitipyAsync
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import ADDITIONAL_USER_FIELDS, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,18 +42,25 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=30),
+            update_interval=timedelta(seconds=60),
+            request_refresh_debouncer=Debouncer(
+                hass,
+                _LOGGER,
+                cooldown=5,
+                immediate=False,
+            ),
         )
         self.api = habitipy
 
     async def _async_update_data(self) -> HabiticaData:
-        user_fields = set(self.async_contexts()) | ADDITIONAL_USER_FIELDS
-
         try:
-            user_response = await self.api.user.get(userFields=",".join(user_fields))
+            user_response = await self.api.user.get()
             tasks_response = await self.api.tasks.user.get()
             tasks_response.extend(await self.api.tasks.user.get(type="completedTodos"))
         except ClientResponseError as error:
+            if error.status == HTTPStatus.TOO_MANY_REQUESTS:
+                _LOGGER.debug("Currently rate limited, skipping update")
+                return self.data
             raise UpdateFailed(f"Error communicating with API: {error}") from error
 
         return HabiticaData(user=user_response, tasks=tasks_response)
@@ -75,4 +83,4 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
                 translation_key="service_call_exception",
             ) from e
         else:
-            await self.async_refresh()
+            await self.async_request_refresh()

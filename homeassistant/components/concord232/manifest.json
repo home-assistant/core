@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/concord232",
   "iot_class": "local_polling",
   "loggers": ["concord232", "stevedore"],
-  "requirements": ["concord232==0.15"]
+  "requirements": ["concord232==0.15.1"]
 }

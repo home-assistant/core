@@ -93,6 +93,18 @@
           "high": "High"
         }
       }
+    },
+    "fan": {
+      "generic_fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "nature": "Nature",
+              "normal": "Normal"
+            }
+          }
+        }
+      }
     }
   },
   "services": {
@@ -210,7 +222,7 @@
     },
     "remote_learn_command": {
       "name": "Remote learn command",
-      "description": "Learns an IR command, press \"Call Service\", point the remote at the IR device, and the learned command will be shown as a notification in Overview.",
+      "description": "Learns an IR command, press \"Perform action\", point the remote at the IR device, and the learned command will be shown as a notification in Overview.",
       "fields": {
         "slot": {
           "name": "Slot",
