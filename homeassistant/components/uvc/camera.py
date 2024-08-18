@@ -58,8 +58,8 @@ def setup_platform(
     port = config[CONF_PORT]
     ssl = config[CONF_SSL]
 
-    nvrconn = nvr.UVCRemote(addr, port, key, ssl=ssl)
     try:
+        nvrconn = nvr.UVCRemote(addr, port, key, ssl=ssl)
         # Exceptions may be raised in all method calls to the nvr library.
         cameras = nvrconn.index()
 
