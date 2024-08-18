@@ -22,16 +22,24 @@ async def test_button_setup_and_states(
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_madvr_client: AsyncMock,
 ) -> None:
-    """Test setup of the button entities and their actions."""
+    """Test setup of the button entities."""
     with patch("homeassistant.components.madvr.PLATFORMS", [Platform.BUTTON]):
         await setup_integration(hass, mock_config_entry)
 
     # Snapshot all entity states
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
+
+async def test_button_press(
+    hass: HomeAssistant,
+    mock_madvr_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test pressing a button."""
     # test a button press
+    with patch("homeassistant.components.madvr.PLATFORMS", [Platform.BUTTON]):
+        await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,

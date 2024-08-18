@@ -41,12 +41,6 @@ class ButtonCommands(Enum):
     """Enum for madvr button commands and names."""
 
     # these use an enum to make grabbing the value and name one operation
-    # menu commands
-    openmenu_info = ["OpenMenu", "Info"]
-    openmenu_settings = ["OpenMenu", "Settings"]
-    openmenu_configuration = ["OpenMenu", "Configuration"]
-    openmenu_profiles = ["OpenMenu", "Profiles"]
-    openmenu_testpatterns = ["OpenMenu", "TestPatterns"]
     # internal toggles
     toggle_debugosd = ["Toggle", "DebugOSD"]
     # debug commands
