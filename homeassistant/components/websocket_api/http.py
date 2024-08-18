@@ -301,6 +301,7 @@ class WebSocketHandler:
         request = self._request
         wsock = self._wsock
         logger = self._logger
+        hass = self._hass
 
         try:
             async with asyncio.timeout(10):
@@ -319,7 +320,7 @@ class WebSocketHandler:
         logger.debug("%s: Connected from %s", self.description, request.remote)
         self._handle_task = asyncio.current_task()
 
-        unsub_stop = self._hass.bus.async_listen(
+        unsub_stop = hass.bus.async_listen(
             EVENT_HOMEASSISTANT_STOP, self._async_handle_hass_stop
         )
 
@@ -329,12 +330,7 @@ class WebSocketHandler:
 
         send_bytes_text = partial(writer.send, binary=False)
         auth = AuthPhase(
-            logger,
-            self._hass,
-            self._send_message,
-            self._cancel,
-            request,
-            send_bytes_text,
+            logger, hass, self._send_message, self._cancel, request, send_bytes_text
         )
         disconnect_warn: str | None = None
         connection: ActiveConnection | None = None
