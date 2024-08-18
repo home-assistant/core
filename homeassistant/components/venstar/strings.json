@@ -25,6 +25,12 @@
   },
   "entity": {
     "sensor": {
+      "filter_install_time": {
+        "name": "Filter Installation Time"
+      },
+      "filter_usage": {
+        "name": "Filter Usage"
+      },
       "schedule_part": {
         "name": "Schedule Part",
         "state": {
