@@ -35,6 +35,7 @@ CONF_SOURCES = "sources"
 CONF_MAX_VOLUME = "max_volume"
 CONF_RECEIVER_MAX_VOLUME = "receiver_max_volume"
 
+DEFAULT_NAME = "Onkyo Receiver"
 SUPPORTED_MAX_VOLUME = 100
 DEFAULT_RECEIVER_MAX_VOLUME = 80
 ZONES = {"zone2": "Zone 2", "zone3": "Zone 3", "zone4": "Zone 4"}
@@ -73,7 +74,7 @@ DEFAULT_PLAYABLE_SOURCES = ("fm", "am", "tuner")
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_MAX_VOLUME, default=SUPPORTED_MAX_VOLUME): vol.All(
             vol.Coerce(int), vol.Range(min=1, max=100)
         ),
@@ -317,8 +318,8 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         """Initialize the Onkyo Receiver."""
         self._receiver = receiver
         name = receiver.name
-        self._attr_name = f"{name}{' ' + ZONES[zone] if zone != 'main' else ''}"
         identifier = receiver.identifier
+        self._attr_name = f"{name}{' ' + ZONES[zone] if zone != 'main' else ''}"
         if receiver.discovered:
             if zone == "main":
                 # keep legacy unique_id
