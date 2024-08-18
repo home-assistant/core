@@ -52,7 +52,7 @@ from homeassistant.components import device_automation, persistent_notification 
 from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
-from homeassistant.config import async_process_component_config
+from homeassistant.config import IntegrationConfigInfo, async_process_component_config
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
@@ -439,14 +439,16 @@ mock_service = threadsafe_callback_factory(async_mock_service)
 
 
 @callback
-def async_mock_intent(hass, intent_typ):
+def async_mock_intent(hass: HomeAssistant, intent_typ: str) -> list[intent.Intent]:
     """Set up a fake intent handler."""
-    intents = []
+    intents: list[intent.Intent] = []
 
     class MockIntentHandler(intent.IntentHandler):
         intent_type = intent_typ
 
-        async def async_handle(self, intent_obj):
+        async def async_handle(
+            self, intent_obj: intent.Intent
+        ) -> intent.IntentResponse:
             """Handle the intent."""
             intents.append(intent_obj)
             return intent_obj.create_response()
@@ -1159,7 +1161,12 @@ def assert_setup_component(count, domain=None):
     """
     config = {}
 
-    async def mock_psc(hass, config_input, integration, component=None):
+    async def mock_psc(
+        hass: HomeAssistant,
+        config_input: ConfigType,
+        integration: loader.Integration,
+        component: loader.ComponentProtocol | None = None,
+    ) -> IntegrationConfigInfo:
         """Mock the prepare_setup_component to capture config."""
         domain_input = integration.domain
         integration_config_info = await async_process_component_config(
