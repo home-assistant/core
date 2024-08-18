@@ -13,35 +13,42 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nextcloud.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_URL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration, mock_config_entry
 from .const import MOCKED_ENTRY_ID, NC_DATA, VALID_CONFIG
 
-from tests.common import mock_registry
+from tests.common import mock_registry, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("platform", "expected_entity_count"),
+    [
+        (Platform.BINARY_SENSOR, 6),
+        (Platform.SENSOR, 80),
+        (Platform.UPDATE, 1),
+    ],
+)
 async def test_async_setup_entry(
-    hass: HomeAssistant, snapshot: SnapshotAssertion
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    platform: Platform,
+    expected_entity_count: int,
 ) -> None:
     """Test a successful setup entry."""
-    entry = await init_integration(hass, VALID_CONFIG, NC_DATA)
+    with patch("homeassistant.components.nextcloud.PLATFORMS", [platform]):
+        entry = await init_integration(hass, VALID_CONFIG, NC_DATA)
 
     assert entry.state == ConfigEntryState.LOADED
 
     states = hass.states.async_all()
-    assert len(states) == 44
+    assert len(states) == expected_entity_count
 
-    e_reg = er.async_get(hass)
-
-    for state in states:
-        assert state.state == snapshot(name=f"{state.entity_id}_state")
-        assert state.attributes == snapshot(name=f"{state.entity_id}_attributes")
-        assert e_reg.async_get(state.entity_id).unique_id == snapshot(
-            name=f"{state.entity_id}_unique_id"
-        )
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
 async def test_unique_id_migration(hass: HomeAssistant) -> None:
