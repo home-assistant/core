@@ -244,7 +244,7 @@ async def async_setup_platform(
                 "Ignoring duplicate zone: %s %s", config_info.name, zctrl.zone
             )
 
-    _LOGGER.debug("Add entities %s",entities)
+    _LOGGER.debug("Add entities %s", entities)
     async_add_entities(entities)
 
     # Register Service 'select_scene'
