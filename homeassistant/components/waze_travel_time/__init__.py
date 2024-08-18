@@ -90,7 +90,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     """Load the saved entities."""
     if SEMAPHORE not in hass.data.setdefault(DOMAIN, {}):
         hass.data.setdefault(DOMAIN, {})[SEMAPHORE] = asyncio.Semaphore(1)
-    _migrate_incl_excl_filters(hass, config_entry)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -214,15 +213,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate an old config entry."""
 
-    for migration_func in (_migrate_incl_excl_filters,):
-        if not migration_func(hass, config_entry):
-            return False
-
-    return True
-
-
-def _migrate_incl_excl_filters(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Migrate the incl/excl filters from a single string to a list of strings."""
     if config_entry.version == 1:
         _LOGGER.debug(
             "Migrating from version %s.%s",
