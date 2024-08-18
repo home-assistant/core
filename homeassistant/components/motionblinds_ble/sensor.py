@@ -58,7 +58,6 @@ class MotionblindsBLESensorEntityDescription(SensorEntityDescription, Generic[_T
     ]
     value_func: Callable[[_T | None], StateType]
     is_supported: Callable[[MotionDevice], bool] = lambda device: True
-    entity_registry_enabled_default: bool = True
 
 
 SENSORS: tuple[MotionblindsBLESensorEntityDescription, ...] = (
@@ -127,7 +126,6 @@ class MotionblindsBLESensorEntity(MotionblindsBLEEntity, SensorEntity, Generic[_
             device,
             entry,
             entity_description,
-            entity_registry_enabled_default=entity_description.entity_registry_enabled_default,
             unique_id_suffix=entity_description.key,
         )
         self._attr_native_value = entity_description.initial_value

@@ -29,7 +29,6 @@ class MotionblindsBLEEntity(Entity):
         device: MotionDevice,
         entry: ConfigEntry,
         entity_description: EntityDescription,
-        entity_registry_enabled_default: bool = True,
         unique_id_suffix: str | None = None,
     ) -> None:
         """Initialize the entity."""
@@ -40,7 +39,6 @@ class MotionblindsBLEEntity(Entity):
         self.device = device
         self.entry = entry
         self.entity_description = entity_description
-        self.entity_registry_enabled_default = entity_registry_enabled_default
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, entry.data[CONF_ADDRESS])},
             manufacturer=MANUFACTURER,
