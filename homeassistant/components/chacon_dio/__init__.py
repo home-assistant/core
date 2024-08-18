@@ -13,16 +13,11 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall
-from homeassistant.helpers import entity_registry as er
-
-from .const import DOMAIN
+from homeassistant.core import Event, HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.COVER, Platform.SWITCH]
-
-SERVICE_RELOAD_STATE = "reload_state"
 
 
 @dataclass
@@ -63,24 +58,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ChaconDioConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    async def reload_devices_states(call: ServiceCall) -> None:
-        """Trigger a reload of the states of the devices."""
-        # No data input to call the service
-
-        _LOGGER.debug("Call to the reload service for all dio chacon devices")
-        registry = er.async_get(hass)
-
-        entries = registry.entities.get_entries_for_config_entry_id(entry.entry_id)
-
-        if entries:
-            ids: list = [d.unique_id for d in entries]
-            # Get the details of all the devices from the server
-            # The update information is sent via callback to the effective entity
-            await client.get_status_details(ids, True)
-
-    # This service allows user to reload all devices data from the server.
-    hass.services.async_register(DOMAIN, SERVICE_RELOAD_STATE, reload_devices_states)
-
     # Disconnect the permanent websocket connection of home assistant on shutdown
     async def _async_disconnect_websocket(_: Event) -> None:
         await client.disconnect()
@@ -96,8 +73,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ChaconDioConfigEntry) ->
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-
-    hass.services.async_remove(DOMAIN, SERVICE_RELOAD_STATE)
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         await entry.runtime_data.client.disconnect()
