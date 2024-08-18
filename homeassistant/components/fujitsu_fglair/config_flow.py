@@ -1,5 +1,6 @@
 """Config flow for Fujitsu HVAC (based on Ayla IOT) integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -22,10 +23,19 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_EUROPE): bool,
     }
 )
+STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PASSWORD): str,
+    }
+)
 
 
 class FGLairConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fujitsu HVAC (based on Ayla IOT)."""
+
+    def __init__(self) -> None:
+        """Initialize."""
+        self._reauth_data: dict[str, Any] = {}
 
     async def _async_validate_credentials(
         self, user_input: dict[str, Any]
@@ -70,4 +80,44 @@ class FGLairConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        self._reauth_data = {**entry_data}
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        errors: dict[str, str] = {}
+        if user_input:
+            self._reauth_data[CONF_PASSWORD] = user_input[CONF_PASSWORD]
+            errors = await self._async_validate_credentials(self._reauth_data)
+
+            if len(errors) == 0:
+                entry = self.hass.config_entries.async_get_entry(
+                    self.context["entry_id"]
+                )
+                if entry:
+                    self.hass.config_entries.async_update_entry(
+                        entry,
+                        data=self._reauth_data,
+                    )
+                    await self.hass.config_entries.async_reload(
+                        self.context["entry_id"]
+                    )
+                    return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=STEP_REAUTH_DATA_SCHEMA,
+            description_placeholders={
+                CONF_USERNAME: self._reauth_data[CONF_USERNAME],
+                **self.context["title_placeholders"],
+            },
+            errors=errors,
         )
