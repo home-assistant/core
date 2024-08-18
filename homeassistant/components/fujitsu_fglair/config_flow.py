@@ -2,12 +2,12 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ayla_iot_unofficial import AylaAuthError, new_ayla_api
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
 
@@ -35,7 +35,7 @@ class FGLairConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize."""
-        self._reauth_data: dict[str, Any] = {}
+        self._reauth_entry: ConfigEntry | None = None
 
     async def _async_validate_credentials(
         self, user_input: dict[str, Any]
@@ -86,7 +86,9 @@ class FGLairConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self._reauth_data = {**entry_data}
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -94,29 +96,24 @@ class FGLairConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
+        if TYPE_CHECKING:
+            assert self._reauth_entry is not None
+
         if user_input:
-            self._reauth_data[CONF_PASSWORD] = user_input[CONF_PASSWORD]
-            errors = await self._async_validate_credentials(self._reauth_data)
+            reauth_data = {**self._reauth_entry.data}
+            reauth_data[CONF_PASSWORD] = user_input[CONF_PASSWORD]
+            errors = await self._async_validate_credentials(reauth_data)
 
             if len(errors) == 0:
-                entry = self.hass.config_entries.async_get_entry(
-                    self.context["entry_id"]
+                return self.async_update_reload_and_abort(
+                    self._reauth_entry, data=reauth_data
                 )
-                if entry:
-                    self.hass.config_entries.async_update_entry(
-                        entry,
-                        data=self._reauth_data,
-                    )
-                    await self.hass.config_entries.async_reload(
-                        self.context["entry_id"]
-                    )
-                    return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=STEP_REAUTH_DATA_SCHEMA,
             description_placeholders={
-                CONF_USERNAME: self._reauth_data[CONF_USERNAME],
+                CONF_USERNAME: self._reauth_entry.data[CONF_USERNAME],
                 **self.context["title_placeholders"],
             },
             errors=errors,
