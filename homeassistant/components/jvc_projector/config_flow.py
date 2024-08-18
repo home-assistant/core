@@ -37,7 +37,7 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 if not is_host_valid(host):
-                    raise InvalidHost
+                    raise InvalidHost  # noqa: TRY301
 
                 mac = await get_mac_address(host, port, password)
             except InvalidHost:

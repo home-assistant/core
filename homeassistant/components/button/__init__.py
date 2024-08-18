@@ -54,7 +54,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_PRESS,
-        {},
+        None,
         "_async_press_action",
     )
 

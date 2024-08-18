@@ -116,6 +116,7 @@ OSI_APPROVED_LICENSES = {
     "Unlicense",
     "Apache-2",
     "GPLv2",
+    "Python-2.0.1",
 }
 
 EXCEPTIONS = {
@@ -159,7 +160,6 @@ EXCEPTIONS = {
     "pyTibber",  # https://github.com/Danielhiversen/pyTibber/pull/294
     "pybbox",  # https://github.com/HydrelioxGitHub/pybbox/pull/5
     "pyeconet",  # https://github.com/w1ll1am23/pyeconet/pull/41
-    "pylutron-caseta",  # https://github.com/gurumitts/pylutron-caseta/pull/168
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
     "pyvera",  # https://github.com/maximvelichko/pyvera/pull/164
     "pyxeoma",  # https://github.com/jeradM/pyxeoma/pull/11
@@ -179,16 +179,6 @@ TODO = {
     "aiocache": AwesomeVersion(
         "0.12.2"
     ),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
-    "asterisk_mbox": AwesomeVersion(
-        "0.5.0"
-    ),  # No license, integration is deprecated and scheduled for removal in 2024.9.0
-    "mficlient": AwesomeVersion(
-        "0.3.0"
-    ),  # No license https://github.com/kk7ds/mficlient/issues/4
-    "pyflic": AwesomeVersion("2.0.3"),  # No OSI approved license CC0-1.0 Universal)
-    "uvcclient": AwesomeVersion(
-        "0.11.0"
-    ),  # No License https://github.com/kk7ds/uvcclient/issues/7
 }
 
 
@@ -208,7 +198,7 @@ def main() -> int:
             if previous_unapproved_version < package.version:
                 if approved:
                     print(
-                        "Approved license detected for"
+                        "Approved license detected for "
                         f"{package.name}@{package.version}: {package.license}"
                     )
                     print("Please remove the package from the TODO list.")
@@ -222,14 +212,14 @@ def main() -> int:
                 exit_code = 1
         elif not approved and package.name not in EXCEPTIONS:
             print(
-                "We could not detect an OSI-approved license for"
+                "We could not detect an OSI-approved license for "
                 f"{package.name}@{package.version}: {package.license}"
             )
             print()
             exit_code = 1
         elif approved and package.name in EXCEPTIONS:
             print(
-                "Approved license detected for"
+                "Approved license detected for "
                 f"{package.name}@{package.version}: {package.license}"
             )
             print(f"Please remove the package from the EXCEPTIONS list: {package.name}")

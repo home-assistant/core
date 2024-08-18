@@ -87,9 +87,6 @@ async def async_setup_platform(
     sensor_names = config.get(CONF_SENSOR_NAMES)
     scan_interval = config.get(CONF_SCAN_INTERVAL, timedelta(seconds=30))
 
-    if value_template is not None:
-        value_template.hass = hass
-
     emoncms_client = EmoncmsClient(url, apikey, session=async_get_clientsession(hass))
     coordinator = EmoncmsCoordinator(hass, emoncms_client, scan_interval)
     await coordinator.async_refresh()

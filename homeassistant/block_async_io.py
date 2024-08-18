@@ -8,6 +8,8 @@ import glob
 from http.client import HTTPConnection
 import importlib
 import os
+from pathlib import Path
+from ssl import SSLContext
 import sys
 import threading
 import time
@@ -139,6 +141,78 @@ _BLOCKING_CALLS: tuple[BlockingCall, ...] = (
         object=importlib,
         function="import_module",
         check_allowed=_check_import_call_allowed,
+        strict=False,
+        strict_core=False,
+        skip_for_tests=True,
+    ),
+    BlockingCall(
+        original_func=SSLContext.load_default_certs,
+        object=SSLContext,
+        function="load_default_certs",
+        check_allowed=None,
+        strict=False,
+        strict_core=False,
+        skip_for_tests=True,
+    ),
+    BlockingCall(
+        original_func=SSLContext.load_verify_locations,
+        object=SSLContext,
+        function="load_verify_locations",
+        check_allowed=None,
+        strict=False,
+        strict_core=False,
+        skip_for_tests=True,
+    ),
+    BlockingCall(
+        original_func=SSLContext.load_cert_chain,
+        object=SSLContext,
+        function="load_cert_chain",
+        check_allowed=None,
+        strict=False,
+        strict_core=False,
+        skip_for_tests=True,
+    ),
+    BlockingCall(
+        original_func=Path.open,
+        object=Path,
+        function="open",
+        check_allowed=_check_file_allowed,
+        strict=False,
+        strict_core=False,
+        skip_for_tests=True,
+    ),
+    BlockingCall(
+        original_func=Path.read_text,
+        object=Path,
+        function="read_text",
+        check_allowed=_check_file_allowed,
+        strict=False,
+        strict_core=False,
+        skip_for_tests=True,
+    ),
+    BlockingCall(
+        original_func=Path.read_bytes,
+        object=Path,
+        function="read_bytes",
+        check_allowed=_check_file_allowed,
+        strict=False,
+        strict_core=False,
+        skip_for_tests=True,
+    ),
+    BlockingCall(
+        original_func=Path.write_text,
+        object=Path,
+        function="write_text",
+        check_allowed=_check_file_allowed,
+        strict=False,
+        strict_core=False,
+        skip_for_tests=True,
+    ),
+    BlockingCall(
+        original_func=Path.write_bytes,
+        object=Path,
+        function="write_bytes",
+        check_allowed=_check_file_allowed,
         strict=False,
         strict_core=False,
         skip_for_tests=True,

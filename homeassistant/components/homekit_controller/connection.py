@@ -845,21 +845,41 @@ class HKDevice:
 
     async def async_update(self, now: datetime | None = None) -> None:
         """Poll state of all entities attached to this bridge/accessory."""
+        to_poll = self.pollable_characteristics
+        accessories = self.entity_map.accessories
+
         if (
-            len(self.entity_map.accessories) == 1
+            len(accessories) == 1
             and self.available
-            and not (self.pollable_characteristics - self.watchable_characteristics)
+            and not (to_poll - self.watchable_characteristics)
             and self.pairing.is_available
             and await self.pairing.controller.async_reachable(
                 self.unique_id, timeout=5.0
             )
         ):
             # If its a single accessory and all chars are watchable,
-            # we don't need to poll.
-            _LOGGER.debug("Accessory is reachable, skip polling: %s", self.unique_id)
-            return
+            # only poll the firmware version to keep the connection alive
+            # https://github.com/home-assistant/core/issues/123412
+            #
+            # Firmware revision is used here since iOS does this to keep camera
+            # connections alive, and the goal is to not regress
+            # https://github.com/home-assistant/core/issues/116143
+            # by polling characteristics that are not normally polled frequently
+            # and may not be tested by the device vendor.
+            #
+            _LOGGER.debug(
+                "Accessory is reachable, limiting poll to firmware version: %s",
+                self.unique_id,
+            )
+            first_accessory = accessories[0]
+            accessory_info = first_accessory.services.first(
+                service_type=ServicesTypes.ACCESSORY_INFORMATION
+            )
+            assert accessory_info is not None
+            firmware_iid = accessory_info[CharacteristicsTypes.FIRMWARE_REVISION].iid
+            to_poll = {(first_accessory.aid, firmware_iid)}
 
-        if not self.pollable_characteristics:
+        if not to_poll:
             self.async_update_available_state()
             _LOGGER.debug(
                 "HomeKit connection not polling any characteristics: %s", self.unique_id
@@ -892,9 +912,7 @@ class HKDevice:
             _LOGGER.debug("Starting HomeKit device update: %s", self.unique_id)
 
             try:
-                new_values_dict = await self.get_characteristics(
-                    self.pollable_characteristics
-                )
+                new_values_dict = await self.get_characteristics(to_poll)
             except AccessoryNotFoundError:
                 # Not only did the connection fail, but also the accessory is not
                 # visible on the network.
