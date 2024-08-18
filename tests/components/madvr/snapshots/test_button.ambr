@@ -367,6 +367,374 @@
     'state': 'unknown',
   })
 # ---
+# name: test_button_setup_and_states[button.madvr_envy_none-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_none',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'restart',
+    'unique_id': '00:11:22:33:44:55_restart',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_none-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy None',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_none',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_none_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_none_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'openmenu_settings',
+    'unique_id': '00:11:22:33:44:55_openmenu_settings',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_none_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy None',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_none_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_none_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_none_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'openmenu_configuration',
+    'unique_id': '00:11:22:33:44:55_openmenu_configuration',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_none_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy None',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_none_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_none_4-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_none_4',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'openmenu_profiles',
+    'unique_id': '00:11:22:33:44:55_openmenu_profiles',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_none_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy None',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_none_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_none_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_none_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'openmenu_testpatterns',
+    'unique_id': '00:11:22:33:44:55_openmenu_testpatterns',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_none_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy None',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_none_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_none_6-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_none_6',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'toggle_debugosd',
+    'unique_id': '00:11:22:33:44:55_toggle_debugosd',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_none_6-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy None',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_none_6',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_none_7-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_none_7',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'force1080p60output',
+    'unique_id': '00:11:22:33:44:55_force1080p60output',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_none_7-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy None',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_none_7',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_none_8-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_none_8',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'restart',
+    'unique_id': '00:11:22:33:44:55_restart',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_none_8-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy None',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_none_8',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_button_setup_and_states[button.madvr_envy_ok-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
