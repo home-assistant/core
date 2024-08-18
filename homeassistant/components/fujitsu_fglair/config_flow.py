@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from ayla_iot_unofficial import AylaAuthError, new_ayla_api
 import voluptuous as vol
@@ -96,8 +96,7 @@ class FGLairConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
-        if TYPE_CHECKING:
-            assert self._reauth_entry is not None
+        assert self._reauth_entry
 
         if user_input:
             reauth_data = {**self._reauth_entry.data}
