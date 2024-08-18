@@ -90,7 +90,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
     WEEKDAYS,
-    UnitOfTemperature,
+    UnitOfTemperature, CONF_TRIGGER,
 )
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -1662,14 +1662,33 @@ CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
     )
 )
 
+def _backward_compat_trigger_schema(value: Any | None) -> Any:
+    """Backward compatibility for trigger schemas."""
+
+    if not isinstance(value, dict):
+        return value
+
+    # `platform` has been renamed to `trigger`
+    if CONF_PLATFORM in value:
+        if CONF_TRIGGER in value:
+            raise vol.Invalid(
+                "Cannot specify both 'platform' and 'trigger'. Please use 'trigger' only."
+            )
+        value[CONF_TRIGGER] = value.pop(CONF_PLATFORM)
+
+    return value
+
 TRIGGER_BASE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_ALIAS): str,
-        vol.Required(CONF_PLATFORM): str,
-        vol.Optional(CONF_ID): str,
-        vol.Optional(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
-        vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
-    }
+    vol.All(
+    _backward_compat_trigger_schema,
+        {
+            vol.Optional(CONF_ALIAS): str,
+            vol.Required(CONF_TRIGGER): str,
+            vol.Optional(CONF_ID): str,
+            vol.Optional(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
+            vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
+        }
+)
 )
 
 
