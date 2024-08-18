@@ -267,7 +267,7 @@ aiolivisi==0.0.19
 aiolookin==1.0.0
 
 # homeassistant.components.lyric
-aiolyric==1.1.0
+aiolyric==2.0.1
 
 # homeassistant.components.mealie
 aiomealie==0.8.1
@@ -470,6 +470,9 @@ autarco==2.0.0
 
 # homeassistant.components.axis
 axis==62
+
+# homeassistant.components.fujitsu_fglair
+ayla-iot-unofficial==1.3.1
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -836,7 +839,7 @@ google-cloud-pubsub==2.13.11
 google-generativeai==0.6.0
 
 # homeassistant.components.nest
-google-nest-sdm==4.0.6
+google-nest-sdm==4.0.7
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -919,7 +922,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.53
+holidays==0.54
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240809.0
@@ -1810,7 +1813,7 @@ python-fullykiosk==0.0.14
 python-homeassistant-analytics==0.7.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v6.2.0
+python-homewizard-energy==v6.3.0
 
 # homeassistant.components.izone
 python-izone==1.2.9
@@ -2193,7 +2196,7 @@ toonapi==0.3.0
 total-connect-client==2024.5
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.3.12
+tplink-omada-client==1.4.2
 
 # homeassistant.components.transmission
 transmission-rpc==7.0.3
