@@ -28,31 +28,6 @@ class MadvrButtonEntityDescription(ButtonEntityDescription):
 
 COMMANDS: tuple[MadvrButtonEntityDescription, ...] = (
     MadvrButtonEntityDescription(
-        key=ButtonCommands.openmenu_info.name,
-        translation_key=ButtonCommands.openmenu_info.name,
-        command=ButtonCommands.openmenu_info.value,
-    ),
-    MadvrButtonEntityDescription(
-        key=ButtonCommands.openmenu_settings.name,
-        translation_key=ButtonCommands.openmenu_settings.name,
-        command=ButtonCommands.openmenu_settings.value,
-    ),
-    MadvrButtonEntityDescription(
-        key=ButtonCommands.openmenu_configuration.name,
-        translation_key=ButtonCommands.openmenu_configuration.name,
-        command=ButtonCommands.openmenu_configuration.value,
-    ),
-    MadvrButtonEntityDescription(
-        key=ButtonCommands.openmenu_profiles.name,
-        translation_key=ButtonCommands.openmenu_profiles.name,
-        command=ButtonCommands.openmenu_profiles.value,
-    ),
-    MadvrButtonEntityDescription(
-        key=ButtonCommands.openmenu_testpatterns.name,
-        translation_key=ButtonCommands.openmenu_testpatterns.name,
-        command=ButtonCommands.openmenu_testpatterns.value,
-    ),
-    MadvrButtonEntityDescription(
         key=ButtonCommands.toggle_debugosd.name,
         translation_key=ButtonCommands.toggle_debugosd.name,
         command=ButtonCommands.toggle_debugosd.value,

@@ -118,21 +118,6 @@
       }
     },
     "button": {
-      "openmenu_info": {
-        "name": "Open info menu"
-      },
-      "openmenu_settings": {
-        "name": "Open settings menu"
-      },
-      "openmenu_configuration": {
-        "name": "Open configuration menu"
-      },
-      "openmenu_profiles": {
-        "name": "Open profiles menu"
-      },
-      "openmenu_testpatterns": {
-        "name": "Open test patterns menu"
-      },
       "toggle_debugosd": {
         "name": "Toggle debug osd"
       },

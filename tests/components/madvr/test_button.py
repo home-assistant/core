@@ -36,11 +36,11 @@ async def test_button_setup_and_states(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
         {
-            ATTR_ENTITY_ID: "button.madvr_envy_open_profiles_menu",
+            ATTR_ENTITY_ID: "button.madvr_envy_force_1080p60_output",
         },
         blocking=True,
     )
     # ensure that pressing a button adds it to the queue
     mock_madvr_client.add_command_to_queue.assert_called_once_with(
-        ButtonCommands.openmenu_profiles.value
+        ButtonCommands.force1080p60output.value
     )
