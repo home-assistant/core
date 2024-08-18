@@ -332,8 +332,9 @@ class WebSocketHandler:
         auth = AuthPhase(
             logger, hass, self._send_message, self._cancel, request, send_bytes_text
         )
-        disconnect_warn: str | None = None
         connection: ActiveConnection | None = None
+        disconnect_warn: str | None = None
+
         try:
             connection = await self._async_handle_auth_phase(auth, send_bytes_text)
             self._async_increase_writer_limit(writer)
