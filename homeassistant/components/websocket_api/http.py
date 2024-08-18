@@ -384,7 +384,7 @@ class WebSocketHandler:
         if msg.type in (WSMsgType.CLOSE, WSMsgType.CLOSED, WSMsgType.CLOSING):
             raise Disconnect("Received close message during auth phase")
 
-        if msg.type != WSMsgType.TEXT:
+        if msg.type is not WSMsgType.TEXT:
             raise Disconnect("Received non-Text message during auth phase")
 
         try:
