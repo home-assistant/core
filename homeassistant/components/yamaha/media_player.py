@@ -119,6 +119,7 @@ class YamahaConfigInfo:
 
 def _discovery(config_info, data):
     """Discover list of zone controllers from configuration in the network."""
+    _LOGGER.debug("Discovery Config %s", config_info)
     if config_info.from_discovery:
         _LOGGER.debug("Discovery Zones")
         zones = rxv.RXV(
@@ -243,6 +244,7 @@ async def async_setup_platform(
                 "Ignoring duplicate zone: %s %s", config_info.name, zctrl.zone
             )
 
+    _LOGGER.debug("Add entities %s",entities)
     async_add_entities(entities)
 
     # Register Service 'select_scene'
@@ -264,6 +266,7 @@ async def async_setup_platform(
         {vol.Required(ATTR_CURSOR): vol.In(CURSOR_TYPE_MAP)},
         YamahaDeviceZone.menu_cursor.__name__,
     )
+    _LOGGER.debug("Platform setup complete.")
 
 
 class YamahaDeviceZone(MediaPlayerEntity):
