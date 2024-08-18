@@ -225,7 +225,7 @@ async def test_publish(
 
 async def test_convert_outgoing_payload(hass: HomeAssistant) -> None:
     """Test the converting of outgoing MQTT payloads without template."""
-    command_template = mqtt.MqttCommandTemplate(None, hass=hass)
+    command_template = mqtt.MqttCommandTemplate(None)
     assert command_template.async_render(b"\xde\xad\xbe\xef") == b"\xde\xad\xbe\xef"
     assert (
         command_template.async_render("b'\\xde\\xad\\xbe\\xef'")

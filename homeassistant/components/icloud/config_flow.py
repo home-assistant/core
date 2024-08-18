@@ -141,7 +141,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 getattr, self.api, "devices"
             )
             if not devices:
-                raise PyiCloudNoDevicesException
+                raise PyiCloudNoDevicesException  # noqa: TRY301
         except (PyiCloudServiceNotActivatedException, PyiCloudNoDevicesException):
             _LOGGER.error("No device found in the iCloud account: %s", self._username)
             self.api = None
@@ -264,13 +264,13 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 if not await self.hass.async_add_executor_job(
                     self.api.validate_2fa_code, self._verification_code
                 ):
-                    raise PyiCloudException("The code you entered is not valid.")
+                    raise PyiCloudException("The code you entered is not valid.")  # noqa: TRY301
             elif not await self.hass.async_add_executor_job(
                 self.api.validate_verification_code,
                 self._trusted_device,
                 self._verification_code,
             ):
-                raise PyiCloudException("The code you entered is not valid.")
+                raise PyiCloudException("The code you entered is not valid.")  # noqa: TRY301
         except PyiCloudException as error:
             # Reset to the initial 2FA state to allow the user to retry
             _LOGGER.error("Failed to verify verification code: %s", error)

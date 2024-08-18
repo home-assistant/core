@@ -13,7 +13,12 @@ from collections.abc import (
     Mapping,
     Sequence,
 )
-from contextlib import asynccontextmanager, contextmanager, suppress
+from contextlib import (
+    AbstractAsyncContextManager,
+    asynccontextmanager,
+    contextmanager,
+    suppress,
+)
 from datetime import UTC, datetime, timedelta
 from enum import Enum
 import functools as ft
@@ -47,7 +52,7 @@ from homeassistant.components import device_automation, persistent_notification 
 from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
-from homeassistant.config import async_process_component_config
+from homeassistant.config import IntegrationConfigInfo, async_process_component_config
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
@@ -93,6 +98,7 @@ from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder, jso
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.async_ import (
     _SHUTDOWN_RUN_CALLBACK_THREADSAFE,
+    get_scheduled_timer_handles,
     run_callback_threadsafe,
 )
 import homeassistant.util.dt as dt_util
@@ -176,23 +182,32 @@ def get_test_config_dir(*add_path):
 @contextmanager
 def get_test_home_assistant() -> Generator[HomeAssistant]:
     """Return a Home Assistant object pointing at test config directory."""
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    context_manager = async_test_home_assistant(loop)
-    hass = loop.run_until_complete(context_manager.__aenter__())
-
+    hass_created_event = threading.Event()
     loop_stop_event = threading.Event()
 
-    def run_loop() -> None:
-        """Run event loop."""
+    context_manager: AbstractAsyncContextManager = None
+    hass: HomeAssistant = None
+    loop: asyncio.AbstractEventLoop = None
+    orig_stop: Callable = None
 
-        loop._thread_ident = threading.get_ident()
-        hass.loop_thread_id = loop._thread_ident
+    def run_loop() -> None:
+        """Create and run event loop."""
+        nonlocal context_manager, hass, loop, orig_stop
+
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        context_manager = async_test_home_assistant(loop)
+        hass = loop.run_until_complete(context_manager.__aenter__())
+
+        orig_stop = hass.stop
+        hass._stopped = Mock(set=loop.stop)
+        hass.start = start_hass
+        hass.stop = stop_hass
+
+        hass_created_event.set()
+
         loop.run_forever()
         loop_stop_event.set()
-
-    orig_stop = hass.stop
-    hass._stopped = Mock(set=loop.stop)
 
     def start_hass(*mocks: Any) -> None:
         """Start hass."""
@@ -203,10 +218,9 @@ def get_test_home_assistant() -> Generator[HomeAssistant]:
         orig_stop()
         loop_stop_event.wait()
 
-    hass.start = start_hass
-    hass.stop = stop_hass
-
     threading.Thread(name="LoopThread", target=run_loop, daemon=False).start()
+
+    hass_created_event.wait()
 
     try:
         yield hass
@@ -237,6 +251,7 @@ async def async_test_home_assistant(
     event_loop: asyncio.AbstractEventLoop | None = None,
     load_registries: bool = True,
     config_dir: str | None = None,
+    initial_state: CoreState = CoreState.running,
 ) -> AsyncGenerator[HomeAssistant]:
     """Return a Home Assistant object pointing at test config dir."""
     hass = HomeAssistant(config_dir or get_test_config_dir())
@@ -364,7 +379,7 @@ async def async_test_home_assistant(
             await rs.async_load(hass)
         hass.data[bootstrap.DATA_REGISTRIES_LOADED] = None
 
-    hass.set_state(CoreState.running)
+    hass.set_state(initial_state)
 
     @callback
     def clear_instance(event):
@@ -425,14 +440,16 @@ mock_service = threadsafe_callback_factory(async_mock_service)
 
 
 @callback
-def async_mock_intent(hass, intent_typ):
+def async_mock_intent(hass: HomeAssistant, intent_typ: str) -> list[intent.Intent]:
     """Set up a fake intent handler."""
-    intents = []
+    intents: list[intent.Intent] = []
 
     class MockIntentHandler(intent.IntentHandler):
         intent_type = intent_typ
 
-        async def async_handle(self, intent_obj):
+        async def async_handle(
+            self, intent_obj: intent.Intent
+        ) -> intent.IntentResponse:
             """Handle the intent."""
             intents.append(intent_obj)
             return intent_obj.create_response()
@@ -531,7 +548,7 @@ def _async_fire_time_changed(
     hass: HomeAssistant, utc_datetime: datetime | None, fire_all: bool
 ) -> None:
     timestamp = dt_util.utc_to_timestamp(utc_datetime)
-    for task in list(hass.loop._scheduled):
+    for task in list(get_scheduled_timer_handles(hass.loop)):
         if not isinstance(task, asyncio.TimerHandle):
             continue
         if task.cancelled():
@@ -1145,7 +1162,12 @@ def assert_setup_component(count, domain=None):
     """
     config = {}
 
-    async def mock_psc(hass, config_input, integration, component=None):
+    async def mock_psc(
+        hass: HomeAssistant,
+        config_input: ConfigType,
+        integration: loader.Integration,
+        component: loader.ComponentProtocol | None = None,
+    ) -> IntegrationConfigInfo:
         """Mock the prepare_setup_component to capture config."""
         domain_input = integration.domain
         integration_config_info = await async_process_component_config(

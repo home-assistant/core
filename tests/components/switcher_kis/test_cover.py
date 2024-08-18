@@ -105,7 +105,7 @@ async def test_cover(
 
     # Test stop
     with patch(
-        "homeassistant.components.switcher_kis.cover.SwitcherType2Api.stop"
+        "homeassistant.components.switcher_kis.cover.SwitcherType2Api.stop_shutter"
     ) as mock_control_device:
         await hass.services.async_call(
             COVER_DOMAIN,
