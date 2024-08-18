@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from aiohue.v2.models.feature import EffectStatus, TimedEffectStatus
+
 
 def normalize_hue_brightness(brightness: float | None) -> float | None:
     """Return calculated brightness values."""
@@ -28,3 +30,21 @@ def normalize_hue_colortemp(colortemp: int | None) -> int | None:
         colortemp = min(colortemp, 500)
         colortemp = max(colortemp, 153)
     return colortemp
+
+
+def normalize_hue_effect(effect_str: str | None) -> EffectStatus | TimedEffectStatus:
+    """Convert a string representation of an effect or timed effect into and EffectStatus or TimedEffectStatus.
+
+    If there is no effect, EffectStatus.NO_EFFECT is returned.
+    """
+    # Backwards compatibility: "None" or "none" were used instead of "no_effect" previously
+    if effect_str in (None, "None", "none"):
+        return EffectStatus.NO_EFFECT
+
+    if (effect := EffectStatus(effect_str)) != EffectStatus.UNKNOWN:
+        return effect
+
+    if (timed_effect := TimedEffectStatus(effect_str)) != TimedEffectStatus.UNKNOWN:
+        return timed_effect
+
+    return EffectStatus.UNKNOWN

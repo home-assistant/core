@@ -42,8 +42,8 @@ async def test_lights(
     assert light_1.attributes["min_mireds"] == 153
     assert light_1.attributes["max_mireds"] == 500
     assert light_1.attributes["dynamics"] == "dynamic_palette"
-    assert light_1.attributes["effect_list"] == ["None", "candle", "fire"]
-    assert light_1.attributes["effect"] == "None"
+    assert set(light_1.attributes["effect_list"]) == {"no_effect", "candle", "fire"}
+    assert light_1.attributes["effect"] == "no_effect"
 
     # test light which supports color temperature only
     light_2 = hass.states.get("light.hue_light_with_color_temperature_only")
@@ -57,7 +57,7 @@ async def test_lights(
     assert light_2.attributes["min_mireds"] == 153
     assert light_2.attributes["max_mireds"] == 454
     assert light_2.attributes["dynamics"] == "none"
-    assert light_2.attributes["effect_list"] == ["None", "candle", "sunrise"]
+    assert set(light_2.attributes["effect_list"]) == {"no_effect", "candle", "sunrise"}
 
     # test light which supports color only
     light_3 = hass.states.get("light.hue_light_with_color_only")
@@ -189,7 +189,7 @@ async def test_light_turn_on_service(
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": test_light_id, "effect": "None"},
+        {"entity_id": test_light_id, "effect": "no_effect"},
         blocking=True,
     )
     assert len(mock_bridge_v2.mock_requests) == 8
@@ -229,6 +229,16 @@ async def test_light_turn_on_service(
     assert len(mock_bridge_v2.mock_requests) == 11
     assert mock_bridge_v2.mock_requests[10]["json"]["effects"]["effect"] == "candle"
     assert "xy_color" not in mock_bridge_v2.mock_requests[9]["json"]
+
+    # test disable effect with "None" as effect
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": test_light_id, "effect": "None"},
+        blocking=True,
+    )
+    assert len(mock_bridge_v2.mock_requests) == 12
+    assert mock_bridge_v2.mock_requests[11]["json"]["effects"]["effect"] == "no_effect"
 
 
 async def test_light_turn_off_service(

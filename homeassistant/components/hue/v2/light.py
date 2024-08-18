@@ -35,10 +35,10 @@ from .entity import HueBaseEntity
 from .helpers import (
     normalize_hue_brightness,
     normalize_hue_colortemp,
+    normalize_hue_effect,
     normalize_hue_transition,
 )
 
-EFFECT_NONE = "None"
 FALLBACK_MIN_MIREDS = 153  # 6500 K
 FALLBACK_MAX_MIREDS = 500  # 2000 K
 FALLBACK_MIREDS = 173  # halfway
@@ -102,20 +102,17 @@ class HueLight(HueBaseEntity, LightEntity):
         self._last_brightness: float | None = None
         self._color_temp_active: bool = False
         # get list of supported effects (combine effects and timed_effects)
-        self._attr_effect_list = []
+        merged_effects: set[str] = set()
         if effects := resource.effects:
-            self._attr_effect_list = [
-                x.value for x in effects.status_values if x != EffectStatus.NO_EFFECT
-            ]
+            merged_effects |= {x.value for x in effects.status_values}
         if timed_effects := resource.timed_effects:
-            self._attr_effect_list += [
-                x.value
-                for x in timed_effects.status_values
-                if x != TimedEffectStatus.NO_EFFECT
-            ]
-        if len(self._attr_effect_list) > 0:
-            self._attr_effect_list.insert(0, EFFECT_NONE)
+            merged_effects |= {x.value for x in timed_effects.status_values}
+        if len(merged_effects - {EffectStatus.NO_EFFECT.value}) > 0:
+            self._attr_effect_list = list(merged_effects)
             self._attr_supported_features |= LightEntityFeature.EFFECT
+        else:
+            # Don't report any effects if "no_effect" is the only effect.
+            self._attr_effect_list = []
 
     @property
     def brightness(self) -> int | None:
@@ -203,7 +200,7 @@ class HueLight(HueBaseEntity, LightEntity):
         if timed_effects := self.resource.timed_effects:
             if timed_effects.status != TimedEffectStatus.NO_EFFECT:
                 return timed_effects.status.value
-        return EFFECT_NONE
+        return EffectStatus.NO_EFFECT.value
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -224,20 +221,15 @@ class HueLight(HueBaseEntity, LightEntity):
             self._last_brightness = None
         self._color_temp_active = color_temp is not None
         flash = kwargs.get(ATTR_FLASH)
-        effect = effect_str = kwargs.get(ATTR_EFFECT)
-        if effect_str in (EFFECT_NONE, EFFECT_NONE.lower()):
-            effect = EffectStatus.NO_EFFECT
-        elif effect_str is not None:
-            # work out if we got a regular effect or timed effect
-            effect = EffectStatus(effect_str)
-            if effect == EffectStatus.UNKNOWN:
-                effect = TimedEffectStatus(effect_str)
-                if transition is None:
-                    # a transition is required for timed effect, default to 10 minutes
-                    transition = 600000
+        effect = normalize_hue_effect(kwargs.get(ATTR_EFFECT))
+        if effect is not EffectStatus.NO_EFFECT:
             # we need to clear color values if an effect is applied
             color_temp = None
             xy_color = None
+
+            if isinstance(effect, TimedEffectStatus) and transition is None:
+                # a transition is required for timed effect, default to 10 minutes
+                transition = 600000
 
         if flash is not None:
             await self.async_set_flash(flash)
