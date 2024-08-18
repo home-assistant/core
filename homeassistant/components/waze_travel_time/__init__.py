@@ -130,10 +130,13 @@ async def async_get_travel_times(
     avoid_subscription_roads: bool,
     avoid_ferries: bool,
     realtime: bool,
-    incl_filters: Collection[str] = (),
-    excl_filters: Collection[str] = (),
+    incl_filters: Collection[str] | None = None,
+    excl_filters: Collection[str] | None = None,
 ) -> list[CalcRoutesResponse] | None:
     """Get all available routes."""
+
+    incl_filters = incl_filters or ()
+    excl_filters = excl_filters or ()
 
     _LOGGER.debug(
         "Getting update for origin: %s destination: %s",
