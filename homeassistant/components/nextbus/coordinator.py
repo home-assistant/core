@@ -48,7 +48,7 @@ class NextBusDataUpdateCoordinator(DataUpdateCoordinator):
         """Check if this coordinator is tracking any routes."""
         return len(self._route_stops) > 0
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from NextBus."""
 
         _route_stops = set(self._route_stops)
