@@ -192,3 +192,10 @@ class TeslemetryWallConnectorEntity(
             .get(self.din, {})
             .get(self.key)
         )
+
+    @property
+    def has(self) -> bool:
+        """Return True if a specific value is in wall connector coordinator data."""
+        return self.key in self.coordinator.data.get("wall_connectors", {}).get(
+            self.din, {}
+        )
