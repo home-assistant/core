@@ -306,13 +306,6 @@ class WebSocketHandler:
         try:
             async with asyncio.timeout(10):
                 await wsock.prepare(request)
-        except ConnectionResetError:
-            # Likely the client disconnected before we prepared the websocket
-            logger.debug(
-                "%s: Connection reset by peer while preparing WebSocket",
-                self.description,
-            )
-            return wsock
         except TimeoutError:
             self._logger.warning("Timeout preparing request from %s", request.remote)
             return wsock

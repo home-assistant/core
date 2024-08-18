@@ -363,12 +363,12 @@ async def test_non_json_message(
     assert "bad=<object" in caplog.text
 
 
-async def test_prepare_fail_timeout(
+async def test_prepare_fail(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test failing to prepare due to timeout."""
+    """Test failing to prepare."""
     with (
         patch(
             "homeassistant.components.websocket_api.http.web.WebSocketResponse.prepare",
@@ -379,24 +379,6 @@ async def test_prepare_fail_timeout(
         await hass_ws_client(hass)
 
     assert "Timeout preparing request" in caplog.text
-
-
-async def test_prepare_fail_connection_reset(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test failing to prepare due to connection reset."""
-    with (
-        patch(
-            "homeassistant.components.websocket_api.http.web.WebSocketResponse.prepare",
-            side_effect=(ConnectionResetError, web.WebSocketResponse.prepare),
-        ),
-        pytest.raises(WSServerHandshakeError),
-    ):
-        await hass_ws_client(hass)
-
-    assert "Connection reset by peer while preparing WebSocket" in caplog.text
 
 
 async def test_enable_coalesce(
