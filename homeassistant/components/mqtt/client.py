@@ -929,10 +929,9 @@ class MQTT:
                 _LOGGER.debug(
                     "Subscribing with mid: %s to topics with qos: %s", mid, chunk_list
                 )
+            self._last_subscribe = time.monotonic()
 
             await self._async_wait_for_mid_or_raise(mid, result)
-
-        self._last_subscribe = time.monotonic()
 
     async def _async_perform_unsubscribes(self) -> None:
         """Perform pending MQTT client unsubscribes."""
