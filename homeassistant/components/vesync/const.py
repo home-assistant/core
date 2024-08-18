@@ -40,6 +40,7 @@ SKU_TO_BASE_DEVICE = {
     "LAP-C202S-WUSR": "Core200S",  # Alt ID Model Core200S
     "Core300S": "Core300S",
     "LAP-C301S-WJP": "Core300S",  # Alt ID Model Core300S
+    "LAP-C301S-WAAA": "Core300S",  # Alt ID Model Core300S
     "Core400S": "Core400S",
     "LAP-C401S-WJP": "Core400S",  # Alt ID Model Core400S
     "LAP-C401S-WUSR": "Core400S",  # Alt ID Model Core400S
