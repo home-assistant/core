@@ -343,7 +343,9 @@ class WebSocketHandler:
             logger.debug("%s: Connection cancelled", self.description)
             raise
         except Disconnect as ex:
-            disconnect_warn = str(ex)
+            if disconnect_msg := str(ex):
+                disconnect_warn = disconnect_msg
+
             logger.debug("%s: Connection closed by client: %s", self.description, ex)
         except Exception:
             logger.exception(
