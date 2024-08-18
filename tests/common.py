@@ -251,6 +251,7 @@ async def async_test_home_assistant(
     event_loop: asyncio.AbstractEventLoop | None = None,
     load_registries: bool = True,
     config_dir: str | None = None,
+    initial_state: CoreState = CoreState.running,
 ) -> AsyncGenerator[HomeAssistant]:
     """Return a Home Assistant object pointing at test config dir."""
     hass = HomeAssistant(config_dir or get_test_config_dir())
@@ -378,7 +379,7 @@ async def async_test_home_assistant(
             await rs.async_load(hass)
         hass.data[bootstrap.DATA_REGISTRIES_LOADED] = None
 
-    hass.set_state(CoreState.running)
+    hass.set_state(initial_state)
 
     @callback
     def clear_instance(event):
