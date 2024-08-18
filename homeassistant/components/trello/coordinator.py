@@ -53,7 +53,7 @@ def _get_boards(
 ) -> dict[str, Board]:
     board_id_boards: dict[str, Board] = {}
     for i, batch_response_pair in enumerate(
-        zip(batch_response[::2], batch_response[1::2])
+        zip(batch_response[::2], batch_response[1::2], strict=False)
     ):
         board_response = batch_response_pair[0]
         list_response = batch_response_pair[1]
