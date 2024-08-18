@@ -314,7 +314,7 @@ class WebSocketHandler:
             )
             return wsock
         except TimeoutError:
-            self._logger.warning("Timeout preparing request from %s", request.remote)
+            logger.warning("Timeout preparing request from %s", request.remote)
             return wsock
 
         logger.debug("%s: Connected from %s", self.description, request.remote)
