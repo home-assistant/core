@@ -1324,7 +1324,7 @@ build.json @home-assistant/supervisor
 /tests/components/smart_meter_texas/ @grahamwetzler
 /homeassistant/components/smarttub/ @mdz
 /tests/components/smarttub/ @mdz
-/homeassistant/components/smarty/ @martinssipenko
+/homeassistant/components/smarty/ @z0mbieprocess
 /homeassistant/components/smhi/ @gjohansson-ST
 /tests/components/smhi/ @gjohansson-ST
 /homeassistant/components/sms/ @ocalvo
