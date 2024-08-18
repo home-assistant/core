@@ -123,10 +123,7 @@ class MotionblindsBLESensorEntity(MotionblindsBLEEntity, SensorEntity, Generic[_
     ) -> None:
         """Initialize the sensor entity."""
         super().__init__(
-            device,
-            entry,
-            entity_description,
-            unique_id_suffix=entity_description.key,
+            device, entry, entity_description, unique_id_suffix=entity_description.key,
         )
         self._attr_native_value = entity_description.initial_value
 
