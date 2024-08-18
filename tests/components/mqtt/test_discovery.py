@@ -176,6 +176,29 @@ async def test_invalid_config(
     assert "Error 'expected int for dictionary value @ data['qos']'" in caplog.text
 
 
+async def test_only_valid_components(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test for a valid component."""
+    await mqtt_mock_entry()
+    with patch(
+        "homeassistant.components.mqtt.discovery.async_dispatcher_send"
+    ) as mock_dispatcher_send:
+        invalid_component = "timer"
+
+        mock_dispatcher_send = AsyncMock(return_value=None)
+
+        async_fire_mqtt_message(
+            hass, f"homeassistant/{invalid_component}/bla/config", "{}"
+        )
+
+    await hass.async_block_till_done()
+
+    assert not mock_dispatcher_send.called
+
+
 async def test_correct_config_discovery(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
