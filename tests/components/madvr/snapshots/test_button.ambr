@@ -1149,6 +1149,53 @@
     'state': 'unknown',
   })
 # ---
+# name: test_button_setup_and_states[button.madvr_envy_restart-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.madvr_envy_restart',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
+    'original_icon': None,
+    'original_name': 'Restart',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:11:22:33:44:55_restart',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_setup_and_states[button.madvr_envy_restart-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'restart',
+      'friendly_name': 'madVR Envy Restart',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.madvr_envy_restart',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_button_setup_and_states[button.madvr_envy_right-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
