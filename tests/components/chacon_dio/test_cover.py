@@ -100,7 +100,7 @@ async def test_cover_callbacks(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the creation and values of the Chacon Dio covers."""
+    """Test the callbacks on the Chacon Dio covers."""
 
     await setup_integration(hass, mock_config_entry)
 
