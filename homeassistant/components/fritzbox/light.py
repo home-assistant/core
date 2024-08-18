@@ -155,10 +155,14 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
     async def async_added_to_hass(self) -> None:
         """Get light attributes from device after entity is added to hass."""
         await super().async_added_to_hass()
-        supported_colors = await self.hass.async_add_executor_job(self.data.get_colors)
-        supported_color_temps = await self.hass.async_add_executor_job(
-            self.data.get_color_temps
-        )
+
+        def _get_color_data() -> tuple[dict, list]:
+            return (self.data.get_colors(), self.data.get_color_temps())
+
+        (
+            supported_colors,
+            supported_color_temps,
+        ) = await self.hass.async_add_executor_job(_get_color_data)
 
         if supported_color_temps:
             # only available for color bulbs
