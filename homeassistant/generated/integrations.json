@@ -414,7 +414,7 @@
       "iot_class": "local_polling"
     },
     "aquacell": {
-      "name": "Aquacell",
+      "name": "AquaCell",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "cloud_polling"
