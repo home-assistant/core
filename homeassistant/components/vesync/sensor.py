@@ -72,6 +72,7 @@ FILTER_LIFE_SUPPORTED = [
     "Core300S",
     "Core400S",
     "Core600S",
+    "EverestAir",
     "Vital100S",
     "Vital200S",
 ]
@@ -83,7 +84,14 @@ AIR_QUALITY_SUPPORTED = [
     "Vital100S",
     "Vital200S",
 ]
-PM25_SUPPORTED = ["Core300S", "Core400S", "Core600S", "Vital100S", "Vital200S"]
+PM25_SUPPORTED = [
+    "Core300S",
+    "Core400S",
+    "Core600S",
+    "EverestAir",
+    "Vital100S",
+    "Vital200S",
+]
 
 SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     VeSyncSensorEntityDescription(
