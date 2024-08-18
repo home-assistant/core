@@ -266,7 +266,7 @@ async def async_setup_platform(
         {vol.Required(ATTR_CURSOR): vol.In(CURSOR_TYPE_MAP)},
         YamahaDeviceZone.menu_cursor.__name__,
     )
-    _LOGGER.debug("Platform setup complete.")
+    _LOGGER.debug("Platform setup complete")
 
 
 class YamahaDeviceZone(MediaPlayerEntity):
