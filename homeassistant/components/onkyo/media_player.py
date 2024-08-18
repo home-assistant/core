@@ -313,7 +313,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         sources: dict[str, str],
         zone: str,
         max_volume: int,
-        receiver_max_volume: int,
+        volume_resolution: int,
     ) -> None:
         """Initialize the Onkyo Receiver."""
         self._receiver = receiver
@@ -333,7 +333,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         self._source_mapping = sources
         self._reverse_mapping = {value: key for key, value in sources.items()}
         self._max_volume = max_volume
-        self._receiver_max_volume = receiver_max_volume
+        self._volume_resolution = volume_resolution
 
         self._attr_source_list = list(sources.values())
         self._attr_extra_state_attributes = {}
@@ -382,9 +382,9 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         will give 80% volume on the receiver. Then we convert that to the correct
         scale for the receiver.
         """
-        # HA_VOL * (MAX VOL / 100) * MAX_RECEIVER_VOL
+        # HA_VOL * (MAX VOL / 100) * VOL_RESOLUTION
         self._update_receiver(
-            "volume", int(volume * (self._max_volume / 100) * self._receiver_max_volume)
+            "volume", int(volume * (self._max_volume / 100) * self._volume_resolution)
         )
 
     async def async_volume_up(self) -> None:
@@ -462,9 +462,9 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                 self._attr_extra_state_attributes.pop(ATTR_VIDEO_OUT, None)
         elif command in ["volume", "master-volume"] and value != "N/A":
             self._supports_volume = True
-            # AMP_VOL / (MAX_RECEIVER_VOL * (MAX_VOL / 100))
+            # AMP_VOL / (VOL_RESOLUTION * (MAX_VOL / 100))
             self._attr_volume_level = value / (
-                self._receiver_max_volume * self._max_volume / 100
+                self._volume_resolution * self._max_volume / 100
             )
         elif command in ["muting", "audio-muting"]:
             self._attr_is_volume_muted = bool(value == "on")
