@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
+from yalesmartalarmclient import YaleSmartAlarmData
 from yalesmartalarmclient.const import YALE_STATE_ARM_FULL
 
 from homeassistant.components.yale_smart_alarm.const import DOMAIN, PLATFORMS
@@ -33,7 +34,7 @@ async def patch_platform_constant() -> list[Platform]:
 
 @pytest.fixture
 async def load_config_entry(
-    hass: HomeAssistant, load_json: dict[str, Any], load_platforms: list[Platform]
+    hass: HomeAssistant, get_data: YaleSmartAlarmData, load_platforms: list[Platform]
 ) -> tuple[MockConfigEntry, Mock]:
     """Set up the Yale Smart Living integration in Home Assistant."""
     with patch("homeassistant.components.yale_smart_alarm.PLATFORMS", load_platforms):
@@ -56,7 +57,7 @@ async def load_config_entry(
             client = mock_client_class.return_value
             client.auth = Mock()
             client.lock_api = Mock()
-            client.get_all.return_value = load_json
+            client.get_information.return_value = get_data
             client.get_armed_status.return_value = YALE_STATE_ARM_FULL
             await hass.config_entries.async_setup(config_entry.entry_id)
             await hass.async_block_till_done()
@@ -64,10 +65,19 @@ async def load_config_entry(
         return (config_entry, client)
 
 
-@pytest.fixture(name="load_json", scope="package")
-def load_json_from_fixture() -> dict[str, Any]:
+@pytest.fixture(name="get_data", scope="package")
+def get_data_from_fixture() -> YaleSmartAlarmData:
     """Load fixture with json data and return."""
 
     data_fixture = load_fixture("get_all.json", "yale_smart_alarm")
     json_data: dict[str, Any] = json.loads(data_fixture)
-    return json_data
+    status = json_data["STATUS"]
+    cycle = json_data["CYCLE"]
+    online = json_data["ONLINE"]
+    panel_info = json_data["PANEL INFO"]
+    return YaleSmartAlarmData(
+        status=status,
+        cycle=cycle,
+        online=online,
+        panel_info=panel_info,
+    )
