@@ -238,7 +238,8 @@ CONSUMABLE_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         key="filterHours",
         state_class=SensorStateClass.MEASUREMENT,
         uom_fn=lambda _: UnitOfTime.HOURS,
-        value_fn=lambda coordinator, sensor_name: coordinator.runtimes[-1][sensor_name],
+        value_fn=lambda coordinator, sensor_name: coordinator.runtimes[-1][sensor_name]
+        / 100,
         name_fn=None,
         translation_key="filter_install_time",
     ),
