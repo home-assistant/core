@@ -113,7 +113,7 @@ class IntelliFireConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """
         errors: dict[str, str] = {}
         LOGGER.debug("STEP: cloud_api")
-        LOGGER.warning(user_input)
+
         if user_input is not None:
             try:
                 async with self.cloud_api_interface as cloud_interface:
@@ -155,7 +155,6 @@ class IntelliFireConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         if self._dhcp_mode or user_input is not None:
-            LOGGER.error("Picking time")
             if self._dhcp_mode:
                 serial = self._dhcp_discovered_serial
                 LOGGER.debug(f"DHCP Mode detected for serial [{serial}]")
@@ -172,10 +171,10 @@ class IntelliFireConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self._async_create_config_entry_from_common_data(
                     fireplace=fireplace
                 )
-        LOGGER.error("Proceed")
+
         # Parse User Data to see if we auto-configure or prompt for selection:
         user_data = self.cloud_api_interface.user_data
-        LOGGER.error(user_data)
+
         available_fireplaces: list[IntelliFireCommonFireplaceData] = list(
             {
                 fp.serial: fp

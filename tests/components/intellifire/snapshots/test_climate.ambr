@@ -44,7 +44,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by unpublished Intellifire API',
-      'current_temperature': 1.0,
+      'current_temperature': 17.0,
       'friendly_name': 'IntelliFire Thermostat',
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
@@ -54,13 +54,13 @@
       'min_temp': 0,
       'supported_features': <ClimateEntityFeature: 385>,
       'target_temp_step': 1.0,
-      'temperature': 1.0,
+      'temperature': 0.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.intellifire_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'heat',
+    'state': 'off',
   })
 # ---

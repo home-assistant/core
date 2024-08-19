@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 from intellifire4py.exceptions import LoginError
 
 from homeassistant.components.intellifire.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -12,7 +13,7 @@ from homeassistant.data_entry_flow import FlowResultType
 async def test_pseudo_migration_good(
     hass: HomeAssistant, mock_config_entry_old, mock_apis_single_fp
 ) -> None:
-    """Test entity update from old Version1 to newer Versio1."""
+    """With the new library we are going to end up rewriting the config entries."""
     mock_config_entry_old.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry_old.entry_id)
 
@@ -53,6 +54,7 @@ async def test_pseudo_migration_bad_title(
     """Test entity update from older Version1 to a newer Version1 with serial that can't be detected."""
     mock_config_entry_v1_bad_title.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry_v1_bad_title.entry_id)
+    assert mock_config_entry_v1_bad_title.state == ConfigEntryState.LOADED
 
     assert mock_config_entry_v1_bad_title.data == {
         "ip_address": "192.168.2.108",

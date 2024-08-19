@@ -44,7 +44,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_disabled_error-entry]
@@ -92,7 +92,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_ecm_offline_error-entry]
@@ -140,7 +140,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_fan_delay_error-entry]
@@ -188,7 +188,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_fan_error-entry]
@@ -236,7 +236,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_flame-entry]
@@ -331,7 +331,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_lights_error-entry]
@@ -379,7 +379,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_maintenance_error-entry]
@@ -427,7 +427,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_offline_error-entry]
@@ -475,7 +475,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_pilot_flame_error-entry]
@@ -523,7 +523,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_pilot_light_on-entry]
@@ -618,7 +618,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_thermostat_on-entry]
@@ -665,7 +665,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_all_binary_sensor_entities[binary_sensor.intellifire_timer_on-entry]
@@ -712,6 +712,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---

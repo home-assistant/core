@@ -197,9 +197,9 @@ def mock_local_interface() -> Generator[AsyncMock, None, None]:
 def mock_fp(mock_common_data_local) -> Generator[AsyncMock, None, None]:
     """Mock fireplace."""
     fixture_data = load_fixture("local_poll.json", DOMAIN)
-    local_poll_json = IntelliFirePollData(**json.loads(fixture_data))
+    local_poll_data = IntelliFirePollData(**json.loads(fixture_data))
 
-    assert local_poll_json.connection_quality == 988451
+    assert local_poll_data.connection_quality == 988451
 
     with patch(
         "homeassistant.components.intellifire.UnifiedFireplace"
@@ -225,7 +225,11 @@ def mock_fp(mock_common_data_local) -> Generator[AsyncMock, None, None]:
         mock_instance.auth_cookie = "mock_auth_cookie"
         mock_instance.web_client_id = "mock_web_client_id"
 
+        # Configure the READ Api
         mock_instance.read_api = MagicMock()
+        mock_instance.read_api.poll = MagicMock(return_value=local_poll_data)
+        mock_instance.read_api.data = local_poll_data
+
         mock_instance.control_api = MagicMock()
 
         mock_instance.local_connectivity = True
@@ -237,7 +241,7 @@ def mock_fp(mock_common_data_local) -> Generator[AsyncMock, None, None]:
         mock_instance.control_mode = IntelliFireApiMode.LOCAL
         mock_instance._control_mode = IntelliFireApiMode.LOCAL
 
-        mock_instance.data = local_poll_json
+        mock_instance.data = local_poll_data
 
         mock_instance.set_read_mode = AsyncMock()
         mock_instance.set_control_mode = AsyncMock()
