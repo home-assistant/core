@@ -4,7 +4,7 @@ aiodhcpwatcher==1.0.2
 aiodiscover==2.1.0
 aiodns==3.2.0
 aiohttp-fast-zlib==0.1.1
-aiohttp==3.10.3
+aiohttp==3.10.4
 aiohttp_cors==0.7.0
 aiozoneinfo==0.2.1
 astral==2.2
@@ -156,9 +156,6 @@ websockets>=11.0.1
 # pysnmplib is no longer maintained and does not work with newer
 # python
 pysnmplib==1000000000.0.0
-# pysnmp is no longer maintained and does not work with newer
-# python
-pysnmp==1000000000.0.0
 
 # The get-mac package has been replaced with getmac. Installing get-mac alongside getmac
 # breaks getmac due to them both sharing the same python package name inside 'getmac'.
