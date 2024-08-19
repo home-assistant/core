@@ -7,6 +7,7 @@ from typing import Final
 
 from homeassistant.components import stt
 from homeassistant.components.assist_pipeline import (
+    AudioSettings,
     PipelineEvent,
     PipelineEventType,
     PipelineStage,
@@ -91,6 +92,9 @@ class AssistSatelliteEntity(entity.Entity):
             device_id=device_id,
             tts_audio_output="wav",
             wake_word_phrase=wake_word_phrase,
+            audio_settings=AudioSettings(
+                silence_seconds=self._satellite_config.finished_speaking_seconds
+            ),
         )
 
     def on_pipeline_event(self, event: PipelineEvent) -> None:

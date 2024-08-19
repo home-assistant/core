@@ -504,7 +504,7 @@ class AudioSettings:
     is_vad_enabled: bool = True
     """True if VAD is used to determine the end of the voice command."""
 
-    silence_seconds: float = 0.5
+    silence_seconds: float = 0.7
     """Seconds of silence after voice command has ended."""
 
     def __post_init__(self) -> None:

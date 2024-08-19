@@ -42,7 +42,6 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 _PIPELINE_TIMEOUT_SEC: Final = 30
-_CHUNK_TIMEOUT_SEC: Final = 2
 
 
 class Tones(IntFlag):
@@ -86,7 +85,7 @@ async def async_setup_entry(
 class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol):
     """Assist satellite for VoIP devices."""
 
-    _attr_state = AssistSatelliteState.IDLE
+    _attr_state = AssistSatelliteState.MUTED
 
     def __init__(
         self,
@@ -103,9 +102,11 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self.config_entry = config_entry
 
         self._audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
+        self._audio_chunk_timeout: float = 2.0
         self._pipeline_task: asyncio.Task | None = None
         self._pipeline_had_error: bool = False
         self._tts_done = asyncio.Event()
+        self._tts_extra_timeout: float = 1.0
         self._tone_bytes: dict[Tones, bytes] = {}
         self._tones = tones
         self._processing_tone_done = asyncio.Event()
@@ -122,11 +123,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             | AssistSatelliteEntityFeature.AUDIO_OUTPUT
         )
 
-    # @property
-    # def available(self) -> bool:
-    #     """Return true if entity is available."""
-    #     return self._attr_available
-
     async def _async_config_updated(self) -> None:
         """Inform when the device config is updated.
 
@@ -136,7 +132,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     @property
     def is_microphone_muted(self) -> bool:
         """Return if the satellite's microphone is muted."""
-        return False  # not supported
+        return not self._is_connected
 
     async def async_set_microphone_mute(self, mute: bool) -> None:
         """Mute or unmute the satellite's microphone."""
@@ -150,11 +146,13 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         """Server is ready."""
         super().connection_made(transport)
         self.voip_device.set_is_active(True)
+        self._set_state(AssistSatelliteState.IDLE)
 
-    def connection_lost(self, exc):
+    def disconnect(self):
         """Handle connection is lost or closed."""
-        super().connection_lost(exc)
+        super().disconnect()
         self.voip_device.set_is_active(False)
+        self._set_state(AssistSatelliteState.MUTED)
 
     def prepare_for_call(self, call_info: CallInfo, rtcp_state: RtcpState | None):
         """Copy relevant data to RTP protocol."""
@@ -210,7 +208,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                 await self._async_accept_pipeline_from_satellite(  # noqa: SLF001
                     context=Context(user_id=self.config_entry.data["user"]),
                     audio_stream=async_audio_stream_from_queue(
-                        self._audio_queue, timeout=_CHUNK_TIMEOUT_SEC
+                        self._audio_queue, timeout=self._audio_chunk_timeout
                     ),
                 )
 
@@ -232,9 +230,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             _LOGGER.debug("Pipeline cancelled or timed out")
             self.disconnect()
             self._clear_audio_queue()
-        except Exception:
-            _LOGGER.error("Unexpected error running pipeline")
-            raise
         finally:
             # Allow pipeline to run again
             self._pipeline_task = None
@@ -315,7 +310,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             tts_samples = len(audio_bytes) / (WIDTH * CHANNELS)
             tts_seconds = tts_samples / RATE
 
-            async with asyncio.timeout(tts_seconds + 1):
+            async with asyncio.timeout(tts_seconds + self._tts_extra_timeout):
                 # TTS audio is 16Khz 16-bit mono
                 await self._async_send_audio(audio_bytes)
         except TimeoutError:

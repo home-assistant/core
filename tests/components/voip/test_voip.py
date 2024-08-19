@@ -13,11 +13,11 @@ from voip_utils import CallInfo
 from homeassistant.components import assist_pipeline, assist_satellite, voip
 from homeassistant.components.assist_satellite import AssistSatelliteState
 from homeassistant.components.voip import HassVoipDatagramProtocol
-from homeassistant.components.voip.assist_satellite import VoipAssistSatellite
+from homeassistant.components.voip.assist_satellite import Tones, VoipAssistSatellite
 from homeassistant.components.voip.devices import VoIPDevice, VoIPDevices
 from homeassistant.components.voip.voip import PreRecordMessageProtocol, make_protocol
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -67,7 +67,7 @@ async def test_is_valid_call(
     assert protocol.is_valid_call(call_info)
 
 
-async def test_pre_recorded_message(
+async def test_calls_not_allowed(
     hass: HomeAssistant,
     voip_devices: VoIPDevices,
     voip_device: VoIPDevice,
@@ -80,6 +80,7 @@ async def test_pre_recorded_message(
     assert isinstance(protocol, PreRecordMessageProtocol)
     assert protocol.file_name == "problem.pcm"
 
+    # Test the playback
     done = asyncio.Event()
     played_audio_bytes = b""
 
@@ -102,10 +103,73 @@ async def test_pre_recorded_message(
     assert played_audio_bytes == snapshot()
 
 
+async def test_pipeline_not_found(
+    hass: HomeAssistant,
+    voip_devices: VoIPDevices,
+    voip_device: VoIPDevice,
+    call_info: CallInfo,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that a pre-recorded message is played when a pipeline isn't found."""
+    assert await async_setup_component(hass, "voip", {})
+
+    with patch(
+        "homeassistant.components.voip.voip.async_get_pipeline", return_value=None
+    ):
+        protocol: PreRecordMessageProtocol = make_protocol(
+            hass, voip_devices, call_info
+        )
+
+    assert isinstance(protocol, PreRecordMessageProtocol)
+    assert protocol.file_name == "problem.pcm"
+
+
+async def test_satellite_prepared(
+    hass: HomeAssistant,
+    voip_devices: VoIPDevices,
+    voip_device: VoIPDevice,
+    call_info: CallInfo,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that satellite is prepared for a call."""
+    assert await async_setup_component(hass, "voip", {})
+
+    pipeline = assist_pipeline.Pipeline(
+        conversation_engine="test",
+        conversation_language="en",
+        language="en",
+        name="test",
+        stt_engine="test",
+        stt_language="en",
+        tts_engine="test",
+        tts_language="en",
+        tts_voice=None,
+        wake_word_entity=None,
+        wake_word_id=None,
+    )
+
+    satellite = assist_satellite.async_get_satellite_entity(
+        hass, voip.DOMAIN, voip_device.voip_id
+    )
+    assert isinstance(satellite, VoipAssistSatellite)
+
+    with (
+        patch(
+            "homeassistant.components.voip.voip.async_get_pipeline",
+            return_value=pipeline,
+        ),
+        patch.object(satellite, "prepare_for_call") as mock_prepare_for_call,
+    ):
+        protocol = make_protocol(hass, voip_devices, call_info)
+        assert protocol == satellite
+        mock_prepare_for_call.assert_called_once_with(call_info, None)
+
+
 async def test_pipeline(
     hass: HomeAssistant,
     voip_devices: VoIPDevices,
     voip_device: VoIPDevice,
+    call_info: CallInfo,
 ) -> None:
     """Test that pipeline function is called from RTP protocol."""
     assert await async_setup_component(hass, "voip", {})
@@ -114,7 +178,10 @@ async def test_pipeline(
         hass, voip.DOMAIN, voip_device.voip_id
     )
     assert isinstance(satellite, VoipAssistSatellite)
-    assert satellite.state == AssistSatelliteState.IDLE
+
+    # Satellite is muted until a call begins
+    assert satellite.state == AssistSatelliteState.MUTED
+    assert satellite.is_microphone_muted
 
     done = asyncio.Event()
 
@@ -193,45 +260,44 @@ async def test_pipeline(
             new=async_pipeline_from_audio_stream,
         ),
         patch(
-            "homeassistant.components.voip.voip.tts.async_get_media_source_audio",
+            "homeassistant.components.voip.assist_satellite.tts.async_get_media_source_audio",
             new=async_get_media_source_audio,
         ),
         patch.object(satellite, "tts_response_finished", tts_response_finished),
     ):
-        rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
-            hass,
-            voip_devices,
-            voip_device,
-            satellite,
-            Context(),
-            opus_payload_type=123,
-            listening_tone_enabled=False,
-            processing_tone_enabled=False,
-            error_tone_enabled=False,
-        )
-        rtp_protocol.transport = Mock()
+        satellite.prepare_for_call(call_info, None)
+        satellite._tones = Tones(0)
+        satellite.transport = Mock()
+
+        satellite.connection_made(satellite.transport)
+        assert satellite.state == AssistSatelliteState.IDLE
+        assert not satellite.is_microphone_muted
 
         # Ensure audio queue is cleared before pipeline starts
-        rtp_protocol._audio_queue.put_nowait(bad_chunk)
+        satellite._audio_queue.put_nowait(bad_chunk)
 
         def send_audio(*args, **kwargs):
             # Don't send audio
             pass
 
-        rtp_protocol.send_audio = Mock(side_effect=send_audio)
+        satellite.send_audio = Mock(side_effect=send_audio)
 
         # silence
-        rtp_protocol.on_chunk(bytes(_ONE_SECOND))
+        satellite.on_chunk(bytes(_ONE_SECOND))
 
         # "speech"
-        rtp_protocol.on_chunk(bytes([255] * _ONE_SECOND * 2))
+        satellite.on_chunk(bytes([255] * _ONE_SECOND * 2))
 
         # silence
-        rtp_protocol.on_chunk(bytes(_ONE_SECOND))
+        satellite.on_chunk(bytes(_ONE_SECOND))
 
         # Wait for mock pipeline to exhaust the audio stream
         async with asyncio.timeout(1):
             await done.wait()
+
+        # Hang up
+        satellite.disconnect()
+        assert satellite.state == AssistSatelliteState.MUTED
 
 
 async def test_stt_stream_timeout(
@@ -257,26 +323,16 @@ async def test_stt_stream_timeout(
         "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
         new=async_pipeline_from_audio_stream,
     ):
-        rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
-            hass,
-            voip_devices,
-            voip_device,
-            satellite,
-            Context(),
-            opus_payload_type=123,
-            audio_chunk_timeout=0.001,
-            listening_tone_enabled=False,
-            processing_tone_enabled=False,
-            error_tone_enabled=False,
-        )
+        satellite._tones = Tones(0)
+        satellite._audio_chunk_timeout = 0.001
         transport = Mock(spec=["close"])
-        rtp_protocol.connection_made(transport)
+        satellite.connection_made(transport)
 
         # Closing the transport will cause the test to succeed
         transport.close.side_effect = done.set
 
         # silence
-        rtp_protocol.on_chunk(bytes(_ONE_SECOND))
+        satellite.on_chunk(bytes(_ONE_SECOND))
 
         # Wait for mock pipeline to time out
         async with asyncio.timeout(1):
@@ -359,29 +415,18 @@ async def test_tts_timeout(
             new=async_pipeline_from_audio_stream,
         ),
         patch(
-            "homeassistant.components.voip.voip.tts.async_get_media_source_audio",
+            "homeassistant.components.voip.assist_satellite.tts.async_get_media_source_audio",
             new=async_get_media_source_audio,
         ),
     ):
-        rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
-            hass,
-            voip_devices,
-            voip_device,
-            satellite,
-            Context(),
-            opus_payload_type=123,
-            tts_extra_timeout=0.001,
-            listening_tone_enabled=True,
-            processing_tone_enabled=True,
-            error_tone_enabled=True,
-        )
-        rtp_protocol._tone_bytes = tone_bytes
-        rtp_protocol._processing_bytes = tone_bytes
-        rtp_protocol._error_bytes = tone_bytes
-        rtp_protocol.transport = Mock()
-        rtp_protocol.send_audio = Mock()
+        satellite._tts_extra_timeout = 0.001
+        for tone in Tones:
+            satellite._tone_bytes[tone] = tone_bytes
 
-        original_send_tts = rtp_protocol._send_tts
+        satellite.transport = Mock()
+        satellite.send_audio = Mock()
+
+        original_send_tts = satellite._send_tts
 
         async def send_tts(*args, **kwargs):
             # Call original then end test successfully
@@ -390,17 +435,17 @@ async def test_tts_timeout(
 
             done.set()
 
-        rtp_protocol._async_send_audio = AsyncMock(side_effect=async_send_audio)  # type: ignore[method-assign]
-        rtp_protocol._send_tts = AsyncMock(side_effect=send_tts)  # type: ignore[method-assign]
+        satellite._async_send_audio = AsyncMock(side_effect=async_send_audio)  # type: ignore[method-assign]
+        satellite._send_tts = AsyncMock(side_effect=send_tts)  # type: ignore[method-assign]
 
         # silence
-        rtp_protocol.on_chunk(bytes(_ONE_SECOND))
+        satellite.on_chunk(bytes(_ONE_SECOND))
 
         # "speech"
-        rtp_protocol.on_chunk(bytes([255] * _ONE_SECOND * 2))
+        satellite.on_chunk(bytes([255] * _ONE_SECOND * 2))
 
         # silence
-        rtp_protocol.on_chunk(bytes(_ONE_SECOND))
+        satellite.on_chunk(bytes(_ONE_SECOND))
 
         # Wait for mock pipeline to exhaust the audio stream
         async with asyncio.timeout(1):
@@ -473,21 +518,13 @@ async def test_tts_wrong_extension(
             new=async_pipeline_from_audio_stream,
         ),
         patch(
-            "homeassistant.components.voip.voip.tts.async_get_media_source_audio",
+            "homeassistant.components.voip.assist_satellite.tts.async_get_media_source_audio",
             new=async_get_media_source_audio,
         ),
     ):
-        rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
-            hass,
-            voip_devices,
-            voip_device,
-            satellite,
-            Context(),
-            opus_payload_type=123,
-        )
-        rtp_protocol.transport = Mock()
+        satellite.transport = Mock()
 
-        original_send_tts = rtp_protocol._send_tts
+        original_send_tts = satellite._send_tts
 
         async def send_tts(*args, **kwargs):
             # Call original then end test successfully
@@ -496,16 +533,16 @@ async def test_tts_wrong_extension(
 
             done.set()
 
-        rtp_protocol._send_tts = AsyncMock(side_effect=send_tts)  # type: ignore[method-assign]
+        satellite._send_tts = AsyncMock(side_effect=send_tts)  # type: ignore[method-assign]
 
         # silence
-        rtp_protocol.on_chunk(bytes(_ONE_SECOND))
+        satellite.on_chunk(bytes(_ONE_SECOND))
 
         # "speech"
-        rtp_protocol.on_chunk(bytes([255] * _ONE_SECOND * 2))
+        satellite.on_chunk(bytes([255] * _ONE_SECOND * 2))
 
         # silence (assumes relaxed VAD sensitivity)
-        rtp_protocol.on_chunk(bytes(_ONE_SECOND * 4))
+        satellite.on_chunk(bytes(_ONE_SECOND * 4))
 
         # Wait for mock pipeline to exhaust the audio stream
         async with asyncio.timeout(1):
@@ -585,21 +622,13 @@ async def test_tts_wrong_wav_format(
             new=async_pipeline_from_audio_stream,
         ),
         patch(
-            "homeassistant.components.voip.voip.tts.async_get_media_source_audio",
+            "homeassistant.components.voip.assist_satellite.tts.async_get_media_source_audio",
             new=async_get_media_source_audio,
         ),
     ):
-        rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
-            hass,
-            voip_devices,
-            voip_device,
-            satellite,
-            Context(),
-            opus_payload_type=123,
-        )
-        rtp_protocol.transport = Mock()
+        satellite.transport = Mock()
 
-        original_send_tts = rtp_protocol._send_tts
+        original_send_tts = satellite._send_tts
 
         async def send_tts(*args, **kwargs):
             # Call original then end test successfully
@@ -608,16 +637,16 @@ async def test_tts_wrong_wav_format(
 
             done.set()
 
-        rtp_protocol._send_tts = AsyncMock(side_effect=send_tts)  # type: ignore[method-assign]
+        satellite._send_tts = AsyncMock(side_effect=send_tts)  # type: ignore[method-assign]
 
         # silence
-        rtp_protocol.on_chunk(bytes(_ONE_SECOND))
+        satellite.on_chunk(bytes(_ONE_SECOND))
 
         # "speech"
-        rtp_protocol.on_chunk(bytes([255] * _ONE_SECOND * 2))
+        satellite.on_chunk(bytes([255] * _ONE_SECOND * 2))
 
         # silence (assumes relaxed VAD sensitivity)
-        rtp_protocol.on_chunk(bytes(_ONE_SECOND * 4))
+        satellite.on_chunk(bytes(_ONE_SECOND * 4))
 
         # Wait for mock pipeline to exhaust the audio stream
         async with asyncio.timeout(1):
@@ -681,31 +710,23 @@ async def test_empty_tts_output(
             new=async_pipeline_from_audio_stream,
         ),
         patch(
-            "homeassistant.components.voip.voip.PipelineRtpDatagramProtocol._send_tts",
+            "homeassistant.components.voip.assist_satellite.VoipAssistSatellite._send_tts",
         ) as mock_send_tts,
     ):
-        rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
-            hass,
-            voip_devices,
-            voip_device,
-            satellite,
-            Context(),
-            opus_payload_type=123,
-        )
-        rtp_protocol.transport = Mock()
+        satellite.transport = Mock()
 
         # silence
-        rtp_protocol.on_chunk(bytes(_ONE_SECOND))
+        satellite.on_chunk(bytes(_ONE_SECOND))
 
         # "speech"
-        rtp_protocol.on_chunk(bytes([255] * _ONE_SECOND * 2))
+        satellite.on_chunk(bytes([255] * _ONE_SECOND * 2))
 
         # silence (assumes relaxed VAD sensitivity)
-        rtp_protocol.on_chunk(bytes(_ONE_SECOND * 4))
+        satellite.on_chunk(bytes(_ONE_SECOND * 4))
 
         # Wait for mock pipeline to finish
         async with asyncio.timeout(1):
-            await rtp_protocol._tts_done.wait()
+            await satellite._tts_done.wait()
 
         mock_send_tts.assert_not_called()
 
@@ -750,21 +771,11 @@ async def test_pipeline_error(
             new=async_pipeline_from_audio_stream,
         ),
     ):
-        rtp_protocol = voip.voip.PipelineRtpDatagramProtocol(
-            hass,
-            voip_devices,
-            voip_device,
-            satellite,
-            Context(),
-            opus_payload_type=123,
-            listening_tone_enabled=False,
-            processing_tone_enabled=False,
-            error_tone_enabled=True,
-        )
-        rtp_protocol.transport = Mock()
-        rtp_protocol._async_send_audio = AsyncMock(side_effect=async_send_audio)  # type: ignore[method-assign]
+        satellite._tones = Tones.ERROR
+        satellite.transport = Mock()
+        satellite._async_send_audio = AsyncMock(side_effect=async_send_audio)  # type: ignore[method-assign]
 
-        rtp_protocol.on_chunk(bytes(_ONE_SECOND))
+        satellite.on_chunk(bytes(_ONE_SECOND))
 
         # Wait for error tone to be played
         async with asyncio.timeout(1):
