@@ -16,13 +16,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import OpenThermGatewayDevice
 from .const import DATA_GATEWAYS, DATA_OPENTHERM_GW
-from .entity import OpenThermEntity, OpenThermEntityDescriptionMixin
+from .entity import OpenThermEntity, OpenThermEntityDescription
 
 
 @dataclass(frozen=True, kw_only=True)
 class OpenThermBinarySensorEntityDescription(
-    BinarySensorEntityDescription, OpenThermEntityDescriptionMixin
+    BinarySensorEntityDescription, OpenThermEntityDescription
 ):
     """Describes opentherm_gw binary sensor entity."""
 
@@ -301,17 +302,24 @@ async def async_setup_entry(
 class OpenThermBinarySensor(OpenThermEntity, BinarySensorEntity):
     """Represent an OpenTherm Gateway binary sensor."""
 
-    def __init__(self, gw_dev, source, description):
+    entity_description: OpenThermBinarySensorEntityDescription
+
+    def __init__(
+        self,
+        gw_dev: OpenThermGatewayDevice,
+        source: str,
+        description: OpenThermBinarySensorEntityDescription,
+    ) -> None:
         """Initialize the binary sensor."""
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT,
             f"{description.key}_{source}_{gw_dev.gw_id}",
             hass=gw_dev.hass,
         )
-        OpenThermEntity.__init__(self, gw_dev, source, description)
+        super().__init__(gw_dev, source, description)
 
     @callback
-    def receive_report(self, status):
+    def receive_report(self, status: dict[str, dict]) -> None:
         """Handle status updates from the component."""
         self._attr_available = self._gateway.connected
         state = status[self._source].get(self.entity_description.key)

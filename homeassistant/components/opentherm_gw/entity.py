@@ -1,21 +1,20 @@
 """Common opentherm_gw entity properties."""
 
-from dataclasses import dataclass
 import logging
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 
+from . import OpenThermGatewayDevice
 from .const import DOMAIN, TRANSLATE_SOURCE
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class OpenThermEntityDescriptionMixin:
-    """Mixin for common opentherm_gw entity properties."""
+class OpenThermEntityDescription(EntityDescription):
+    """Describe common opentherm_gw entity properties."""
 
     friendly_name_format: str
 
@@ -26,8 +25,14 @@ class OpenThermEntity(Entity):
     _attr_should_poll = False
     _attr_entity_registry_enabled_default = False
     _attr_available = False
+    entity_description: OpenThermEntityDescription
 
-    def __init__(self, gw_dev, source, description):
+    def __init__(
+        self,
+        gw_dev: OpenThermGatewayDevice,
+        source: str,
+        description: OpenThermEntityDescription,
+    ) -> None:
         """Initialize the entity."""
         self.entity_description = description
         self._gateway = gw_dev
@@ -38,7 +43,6 @@ class OpenThermEntity(Entity):
             else description.friendly_name_format
         )
         self._attr_name = friendly_name_format.format(gw_dev.name)
-        self._unsub_updates = None
         self._attr_unique_id = f"{gw_dev.gw_id}-{source}-{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, gw_dev.gw_id)},
@@ -51,17 +55,14 @@ class OpenThermEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates from the component."""
         _LOGGER.debug("Added OpenTherm Gateway entity %s", self._attr_name)
-        self._unsub_updates = async_dispatcher_connect(
-            self.hass, self._gateway.update_signal, self.receive_report
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, self._gateway.update_signal, self.receive_report
+            )
         )
 
-    async def async_will_remove_from_hass(self) -> None:
-        """Unsubscribe from updates from the component."""
-        _LOGGER.debug("Removing OpenTherm Gateway binary sensor %s", self._attr_name)
-        self._unsub_updates()
-
     @callback
-    def receive_report(self, status):
+    def receive_report(self, status: dict[str, dict]) -> None:
         """Handle status updates from the component."""
         # Must be implemented at the platform level.
         raise NotImplementedError
