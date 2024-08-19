@@ -116,6 +116,7 @@ OSI_APPROVED_LICENSES = {
     "Unlicense",
     "Apache-2",
     "GPLv2",
+    "Python-2.0.1",
 }
 
 EXCEPTIONS = {
@@ -138,7 +139,6 @@ EXCEPTIONS = {
     "crownstone-core",  # https://github.com/crownstone/crownstone-lib-python-core/pull/6
     "crownstone-sse",  # https://github.com/crownstone/crownstone-lib-python-sse/pull/2
     "crownstone-uart",  # https://github.com/crownstone/crownstone-lib-python-uart/pull/12
-    "dio-chacon-wifi-api",
     "eliqonline",  # https://github.com/molobrakos/eliqonline/pull/17
     "enocean",  # https://github.com/kipe/enocean/pull/142
     "gardena-bluetooth",  # https://github.com/elupus/gardena-bluetooth/pull/11

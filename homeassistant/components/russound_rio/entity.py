@@ -53,6 +53,7 @@ class RussoundBaseEntity(Entity):
             or f"{self._primary_mac_address}-{self._controller.controller_id}"
         )
         self._attr_device_info = DeviceInfo(
+            configuration_url=f"http://{self._instance.host}",
             # Use MAC address of Russound device as identifier
             identifiers={(DOMAIN, self._device_identifier)},
             manufacturer="Russound",
