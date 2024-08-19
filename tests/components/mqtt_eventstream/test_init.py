@@ -20,7 +20,12 @@ from tests.common import (
 from tests.typing import MqttMockHAClient
 
 
-async def add_eventstream(hass, sub_topic=None, pub_topic=None, ignore_event=None):
+async def add_eventstream(
+    hass: HomeAssistant,
+    sub_topic: str | None = None,
+    pub_topic: str | None = None,
+    ignore_event: list[str] | None = None,
+) -> bool:
     """Add a mqtt_eventstream component."""
     config = {}
     if sub_topic:

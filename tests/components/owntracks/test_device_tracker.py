@@ -4,6 +4,7 @@ import base64
 from collections.abc import Callable, Generator
 import json
 import pickle
+from typing import Any
 from unittest.mock import patch
 
 from nacl.encoding import Base64Encoder
@@ -305,7 +306,9 @@ def setup_comp(
     hass.states.async_set("zone.outer", "zoning", OUTER_ZONE)
 
 
-async def setup_owntracks(hass, config, ctx_cls=owntracks.OwnTracksContext):
+async def setup_owntracks(
+    hass: HomeAssistant, config: dict[str, Any], ctx_cls=owntracks.OwnTracksContext
+) -> None:
     """Set up OwnTracks."""
     MockConfigEntry(
         domain="owntracks", data={"webhook_id": "owntracks_test", "secret": "abcd"}
@@ -347,7 +350,9 @@ def context(hass: HomeAssistant, setup_comp: None) -> OwnTracksContextFactory:
     return get_context
 
 
-async def send_message(hass, topic, message, corrupt=False):
+async def send_message(
+    hass: HomeAssistant, topic: str, message: dict[str, Any], corrupt: bool = False
+) -> None:
     """Test the sending of a message."""
     str_message = json.dumps(message)
     if corrupt:
@@ -359,51 +364,57 @@ async def send_message(hass, topic, message, corrupt=False):
     await hass.async_block_till_done()
 
 
-def assert_location_state(hass, location):
+def assert_location_state(hass: HomeAssistant, location: str) -> None:
     """Test the assertion of a location state."""
     state = hass.states.get(DEVICE_TRACKER_STATE)
     assert state.state == location
 
 
-def assert_location_latitude(hass, latitude):
+def assert_location_latitude(hass: HomeAssistant, latitude: float) -> None:
     """Test the assertion of a location latitude."""
     state = hass.states.get(DEVICE_TRACKER_STATE)
     assert state.attributes.get("latitude") == latitude
 
 
-def assert_location_longitude(hass, longitude):
+def assert_location_longitude(hass: HomeAssistant, longitude: float) -> None:
     """Test the assertion of a location longitude."""
     state = hass.states.get(DEVICE_TRACKER_STATE)
     assert state.attributes.get("longitude") == longitude
 
 
-def assert_location_accuracy(hass, accuracy):
+def assert_location_accuracy(hass: HomeAssistant, accuracy: int) -> None:
     """Test the assertion of a location accuracy."""
     state = hass.states.get(DEVICE_TRACKER_STATE)
     assert state.attributes.get("gps_accuracy") == accuracy
 
 
-def assert_location_source_type(hass, source_type):
+def assert_location_source_type(hass: HomeAssistant, source_type: str) -> None:
     """Test the assertion of source_type."""
     state = hass.states.get(DEVICE_TRACKER_STATE)
     assert state.attributes.get("source_type") == source_type
 
 
-def assert_mobile_tracker_state(hass, location, beacon=IBEACON_DEVICE):
+def assert_mobile_tracker_state(
+    hass: HomeAssistant, location: str, beacon: str = IBEACON_DEVICE
+) -> None:
     """Test the assertion of a mobile beacon tracker state."""
     dev_id = MOBILE_BEACON_FMT.format(beacon)
     state = hass.states.get(dev_id)
     assert state.state == location
 
 
-def assert_mobile_tracker_latitude(hass, latitude, beacon=IBEACON_DEVICE):
+def assert_mobile_tracker_latitude(
+    hass: HomeAssistant, latitude: float, beacon: str = IBEACON_DEVICE
+) -> None:
     """Test the assertion of a mobile beacon tracker latitude."""
     dev_id = MOBILE_BEACON_FMT.format(beacon)
     state = hass.states.get(dev_id)
     assert state.attributes.get("latitude") == latitude
 
 
-def assert_mobile_tracker_accuracy(hass, accuracy, beacon=IBEACON_DEVICE):
+def assert_mobile_tracker_accuracy(
+    hass: HomeAssistant, accuracy: int, beacon: str = IBEACON_DEVICE
+) -> None:
     """Test the assertion of a mobile beacon tracker accuracy."""
     dev_id = MOBILE_BEACON_FMT.format(beacon)
     state = hass.states.get(dev_id)
