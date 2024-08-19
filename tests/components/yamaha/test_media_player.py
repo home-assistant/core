@@ -11,7 +11,24 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.setup import async_setup_component
 
-CONFIG = {"media_player": {"platform": "yamaha", "host": "127.0.0.1"}}
+CONFIG_HOST = {
+    "media_player": {
+        "platform": "yamaha",
+        "host": "127.0.0.1",
+    }
+}
+CONFIG_HOST_IGNORE_ZONE = {
+    "media_player": {
+        "platform": "yamaha",
+        "host": "127.0.0.1",
+        "zone_ignore": "Zone 2",
+    }
+}
+CONFIG_NO_HOST = {
+    "media_player": {
+        "platform": "yamaha",
+    }
+}
 
 
 def _create_zone_mock(name, url):
@@ -25,10 +42,13 @@ def _create_zone_mock(name, url):
 class FakeYamahaDevice:
     """A fake Yamaha device."""
 
-    def __init__(self, ctrl_url, name, zones=None) -> None:
+    def __init__(self, ctrl_url, name, zones=None, serial_number=None) -> None:
         """Initialize the fake Yamaha device."""
         self.ctrl_url = ctrl_url
         self.name = name
+        self.friendly_name = name
+        self.model_name = name
+        self.serial_number = serial_number
         self._zones = zones or []
 
     def zone_controllers(self):
@@ -40,6 +60,12 @@ class FakeYamahaDevice:
 def main_zone_fixture():
     """Mock the main zone."""
     return _create_zone_mock("Main zone", "http://main")
+
+
+@pytest.fixture(name="zone_2")
+def zone_2_fixture():
+    """Mock the main zone."""
+    return _create_zone_mock("Zone 2", "http://zone2")
 
 
 @pytest.fixture(name="device")
@@ -54,36 +80,34 @@ def device_fixture(main_zone):
 
 
 @pytest.fixture(name="device2")
-def device2_fixture(main_zone):
+def device2_fixture(main_zone, zone_2):
+    """Mock the yamaha device."""
+    device2 = FakeYamahaDevice(
+        "http://127.0.0.1:80/YamahaRemoteControl/ctrl",
+        "Receiver 2",
+        zones=[main_zone, zone_2],
+        serial_number="DEADBEEF",
+    )
+    with (
+        patch("rxv.RXV", return_value=device2),
+        patch("rxv.find", return_value=device2),
+    ):
+        yield device2
+
+
+@pytest.fixture(name="device3")
+def device3_fixture(main_zone):
     """Mock the yamaha device."""
     device = FakeYamahaDevice(
-        "http://127.0.0.1:80/YamahaRemoteControl/ctrl", "Receiver 2", zones=[main_zone]
+        "http://127.0.0.1:80/YamahaRemoteControl/ctrl",
+        "Receiver 3",
+        zones=[main_zone],
     )
     with (
         patch("rxv.RXV", return_value=device),
         patch("rxv.find", return_value=[device]),
     ):
         yield device
-
-
-async def test_setup_host(hass: HomeAssistant, device, device2, main_zone) -> None:
-    """Test set up integration with host."""
-    assert await async_setup_component(hass, MP_DOMAIN, CONFIG)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("media_player.yamaha_receiver_main_zone")
-
-    assert state is not None
-    assert state.state == "off"
-
-    with patch("rxv.find", return_value=[device2]):
-        assert await async_setup_component(hass, MP_DOMAIN, CONFIG)
-        await hass.async_block_till_done()
-
-    state = hass.states.get("media_player.yamaha_receiver_main_zone")
-
-    assert state is not None
-    assert state.state == "off"
 
 
 @pytest.mark.parametrize(
@@ -98,7 +122,7 @@ async def test_setup_find_errors(hass: HomeAssistant, device, main_zone, error) 
     """Test set up integration encountering an Error."""
 
     with patch("rxv.find", side_effect=error):
-        assert await async_setup_component(hass, MP_DOMAIN, CONFIG)
+        assert await async_setup_component(hass, MP_DOMAIN, CONFIG_HOST)
         await hass.async_block_till_done()
 
         state = hass.states.get("media_player.yamaha_receiver_main_zone")
@@ -107,18 +131,59 @@ async def test_setup_find_errors(hass: HomeAssistant, device, main_zone, error) 
         assert state.state == "off"
 
 
-async def test_setup_no_host(hass: HomeAssistant, device, main_zone) -> None:
-    """Test set up integration without host."""
-    with patch("rxv.find", return_value=[device]):
-        assert await async_setup_component(
-            hass, MP_DOMAIN, {"media_player": {"platform": "yamaha"}}
-        )
+@pytest.mark.parametrize(
+    ("config"),
+    [
+        CONFIG_NO_HOST,
+        CONFIG_HOST_IGNORE_ZONE,
+        CONFIG_HOST,
+    ],
+)
+async def test_setup_host(hass: HomeAssistant, device2, main_zone, config) -> None:
+    """Test set up integration with host."""
+    with patch("rxv.find", return_value=[device2]):
+        assert await async_setup_component(hass, MP_DOMAIN, config)
         await hass.async_block_till_done()
 
-    state = hass.states.get("media_player.yamaha_receiver_main_zone")
+        state = hass.states.get("media_player.yamaha_receiver_main_zone")
 
-    assert state is not None
-    assert state.state == "off"
+        assert state is not None
+        assert state.state == "off"
+
+
+async def test_setup_host_noserial(hass: HomeAssistant, device3, main_zone) -> None:
+    """Test set up integration find."""
+    with patch("rxv.find", return_value=[device3]):
+        assert await async_setup_component(hass, MP_DOMAIN, CONFIG_HOST)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("media_player.yamaha_receiver_main_zone")
+
+        assert state is not None
+        assert state.state == "off"
+
+
+async def test_setup_host_nofind(hass: HomeAssistant, device, main_zone) -> None:
+    """Test set up integration find."""
+    with (
+        patch("rxv.find", return_value=[]),
+        patch(
+            "homeassistant.helpers.storage.Store.async_load",
+            return_value={
+                "http://127.0.0.1:80/YamahaRemoteControl/ctrl": {
+                    "serial_number": "DEADBEEF",
+                    "model_name": "42",
+                }
+            },
+        ),
+    ):
+        assert await async_setup_component(hass, MP_DOMAIN, CONFIG_HOST)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("media_player.yamaha_receiver_main_zone")
+
+        assert state is not None
+        assert state.state == "off"
 
 
 async def test_setup_discovery(hass: HomeAssistant, device, main_zone) -> None:
@@ -162,7 +227,7 @@ async def test_setup_zone_ignore(hass: HomeAssistant, device, main_zone) -> None
 
 async def test_enable_output(hass: HomeAssistant, device, main_zone) -> None:
     """Test enable output service."""
-    assert await async_setup_component(hass, MP_DOMAIN, CONFIG)
+    assert await async_setup_component(hass, MP_DOMAIN, CONFIG_HOST)
     await hass.async_block_till_done()
 
     port = "hdmi1"
@@ -193,7 +258,7 @@ async def test_enable_output(hass: HomeAssistant, device, main_zone) -> None:
 @pytest.mark.usefixtures("device")
 async def test_menu_cursor(hass: HomeAssistant, main_zone, cursor, method) -> None:
     """Verify that the correct menu method is called for the menu_cursor service."""
-    assert await async_setup_component(hass, MP_DOMAIN, CONFIG)
+    assert await async_setup_component(hass, MP_DOMAIN, CONFIG_HOST)
     await hass.async_block_till_done()
 
     data = {
@@ -212,7 +277,7 @@ async def test_select_scene(
     scene_prop = PropertyMock(return_value=None)
     type(main_zone).scene = scene_prop
 
-    assert await async_setup_component(hass, MP_DOMAIN, CONFIG)
+    assert await async_setup_component(hass, MP_DOMAIN, CONFIG_HOST)
     await hass.async_block_till_done()
 
     scene = "TV Viewing"
