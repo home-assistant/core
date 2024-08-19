@@ -1,8 +1,6 @@
 """The BSB-Lan integration."""
 
-import dataclasses
-
-from bsblan import BSBLAN, BSBLANConfig, Device, Info, StaticState
+from bsblan import BSBLAN, BSBLANConfig, BSBLANConnectionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -13,23 +11,14 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_PASSKEY, DOMAIN
 from .coordinator import BSBLanUpdateCoordinator
+from .models import BSBLanData
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
-
-
-@dataclasses.dataclass
-class HomeAssistantBSBLANData:
-    """BSBLan data stored in the Home Assistant data object."""
-
-    coordinator: BSBLanUpdateCoordinator
-    client: BSBLAN
-    device: Device
-    info: Info
-    static: StaticState
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -50,14 +39,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Create and perform first refresh of the coordinator
     coordinator = BSBLanUpdateCoordinator(hass, entry, bsblan)
-    await coordinator.async_config_entry_first_refresh()
+
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except BSBLANConnectionError as err:
+        raise ConfigEntryNotReady from err
 
     # Fetch all required data concurrently
     device = await bsblan.device()
     info = await bsblan.info()
     static = await bsblan.static_values()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantBSBLANData(
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = BSBLanData(
         client=bsblan,
         coordinator=coordinator,
         device=device,
