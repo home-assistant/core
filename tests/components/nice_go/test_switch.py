@@ -7,7 +7,7 @@ from homeassistant.components.switch import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -23,7 +23,7 @@ async def test_turn_on(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {"entity_id": "switch.test_garage_1_vacation_mode"},
+        {ATTR_ENTITY_ID: "switch.test_garage_1_vacation_mode"},
         blocking=True,
     )
     mock_nice_go.vacation_mode_on.assert_called_once_with("1")
@@ -37,7 +37,7 @@ async def test_turn_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
-        {"entity_id": "switch.test_garage_2_vacation_mode"},
+        {ATTR_ENTITY_ID: "switch.test_garage_2_vacation_mode"},
         blocking=True,
     )
     mock_nice_go.vacation_mode_off.assert_called_once_with("2")
