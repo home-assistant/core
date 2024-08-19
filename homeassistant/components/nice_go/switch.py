@@ -20,7 +20,7 @@ async def async_setup_entry(
     config_entry: NiceGOConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Nice G.O. cover."""
+    """Set up Nice G.O. switch."""
     coordinator = config_entry.runtime_data
 
     async_add_entities(
