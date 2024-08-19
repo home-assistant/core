@@ -72,7 +72,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not await self._async_check_auth_required(user_input):
                     return await self._async_complete_entry(user_input)
             except SmlightConnectionError:
-                errors["base"] = "cannot_connect"
+                return self.async_abort(reason="cannot_connect")
             except SmlightAuthError:
                 errors["base"] = "invalid_auth"
 
@@ -112,8 +112,10 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 if not await self._async_check_auth_required(user_input):
                     return await self._async_complete_entry(user_input)
+
             except SmlightConnectionError:
-                errors["base"] = "cannot_connect"
+                return self.async_abort(reason="cannot_connect")
+
             except SmlightAuthError:
                 return await self.async_step_auth()
 

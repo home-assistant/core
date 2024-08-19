@@ -12,7 +12,6 @@ from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.device_registry import format_mac
 
 from .conftest import MOCK_HOST, MOCK_PASSWORD, MOCK_USERNAME
 
@@ -283,7 +282,7 @@ async def test_user_cannot_connect(
 async def test_auth_cannot_connect(
     hass: HomeAssistant, mock_smlight_client: MagicMock
 ) -> None:
-    """Test we handle auth step cannot connect error."""
+    """Test we abort auth step on cannot connect error."""
     mock_smlight_client.check_auth_needed.return_value = True
 
     result = await hass.config_entries.flow.async_init(
@@ -310,14 +309,14 @@ async def test_auth_cannot_connect(
         },
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "cannot_connect"
 
 
 async def test_zeroconf_cannot_connect(
     hass: HomeAssistant, mock_smlight_client: MagicMock
 ) -> None:
-    """Test we handle zeroconf cannot connect error."""
+    """Test we abort flow on zeroconf cannot connect error."""
     mock_smlight_client.check_auth_needed.side_effect = SmlightConnectionError
 
     result = await hass.config_entries.flow.async_init(
@@ -333,13 +332,14 @@ async def test_zeroconf_cannot_connect(
         {},
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-    assert result2["step_id"] == "confirm_discovery"
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "cannot_connect"
 
 
 @pytest.mark.usefixtures("mock_smlight_client")
-async def test_zeroconf_legacy_mac(hass: HomeAssistant) -> None:
+async def test_zeroconf_legacy_mac(
+    hass: HomeAssistant, mock_smlight_client: MagicMock, mock_setup_entry: AsyncMock
+) -> None:
     """Test we can get unique id MAC address for older firmwares."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -347,10 +347,19 @@ async def test_zeroconf_legacy_mac(hass: HomeAssistant) -> None:
         data=DISCOVERY_INFO_LEGACY,
     )
 
-    progress = hass.config_entries.flow.async_progress()
-    assert len(progress) == 1
-    assert "context" in progress[0]
-    assert progress[0]["context"]["unique_id"] == format_mac("AA:BB:CC:DD:EE:FF")
-    assert progress[0]["flow_id"] == result["flow_id"]
-
     assert result["description_placeholders"] == {"host": MOCK_HOST}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["context"]["source"] == "zeroconf"
+    assert result2["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
+    assert result2["title"] == "SLZB-06p7"
+    assert result2["data"] == {
+        CONF_HOST: MOCK_HOST,
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_smlight_client.get_info.mock_calls) == 2

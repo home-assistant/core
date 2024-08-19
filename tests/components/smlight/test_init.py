@@ -6,7 +6,6 @@ from pysmlight.exceptions import SmlightAuthError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.smlight import SmDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -30,7 +29,6 @@ async def test_async_setup_entry(
 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff"
-    assert isinstance(entry.runtime_data, SmDataUpdateCoordinator)
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
