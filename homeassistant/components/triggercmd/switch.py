@@ -40,7 +40,7 @@ class TRIGGERcmdSwitch(SwitchEntity):
         self._state = False
         self._assumed_state = False
         self._attr_unique_id = f"{self._switch.computer_id}.{self._switch.trigger_id}"
-        self._attr_name = self._switch.trigger_id
+        self._attr_name = trigger.trigger_id
 
     @property
     def device_info(self) -> DeviceInfo:
