@@ -13,16 +13,6 @@ UUID = "FF31F09E-5001-FBDE-0546-2DBFFF31F09E"
 NAME = "Smart Zone 1_54B9"
 
 
-def mock_bridge() -> AsyncMock:
-    """Mock for LinkPlayBridge."""
-    bridge = AsyncMock(spec=LinkPlayBridge)
-    bridge.endpoint = HOST
-    bridge.device = AsyncMock(spec=LinkPlayDevice)
-    bridge.device.uuid = UUID
-    bridge.device.name = NAME
-    return bridge
-
-
 @pytest.fixture
 def mock_linkplay_factory_bridge() -> Generator[AsyncMock]:
     """Mock for linkplay_factory_httpapi_bridge."""
@@ -34,9 +24,14 @@ def mock_linkplay_factory_bridge() -> Generator[AsyncMock]:
         ),
         patch(
             "homeassistant.components.linkplay.config_flow.linkplay_factory_httpapi_bridge",
-            return_value=mock_bridge(),
         ) as factory,
     ):
+        bridge = AsyncMock(spec=LinkPlayBridge)
+        bridge.endpoint = HOST
+        bridge.device = AsyncMock(spec=LinkPlayDevice)
+        bridge.device.uuid = UUID
+        bridge.device.name = NAME
+        factory.return_value = bridge
         yield factory
 
 

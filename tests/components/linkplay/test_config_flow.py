@@ -166,7 +166,7 @@ async def test_flow_errors(
 ) -> None:
     """Test flow when the device cannot be reached."""
 
-    # Temporarily store bridge in a separate variable and set factory to return None
+    # Temporarily make the mock_linkplay_factory_bridge throw an exception
     mock_linkplay_factory_bridge.side_effect = (LinkPlayRequestException("Error"),)
 
     result = await hass.config_entries.flow.async_init(
