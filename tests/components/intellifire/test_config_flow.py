@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from intellifire4py.model import IntelliFirePollData
+from intellifire4py.exceptions import LoginError
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
@@ -15,11 +15,10 @@ from homeassistant.data_entry_flow import FlowResultType
 async def test_standard_config_with_single_fireplace(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_login_with_credentials: AsyncMock,
-    mock_cloud_api_interface_user_data_1,
-    mock_connectivity_test_pass_pass,
+    mock_apis_single_fp,
 ) -> None:
     """Test standard flow with a user who has only a single fireplace."""
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -48,10 +47,8 @@ async def test_standard_config_with_single_fireplace(
 async def test_standard_config_with_pre_configured_fireplace(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_login_with_credentials: AsyncMock,
     mock_config_entry_current,
-    mock_cloud_api_interface_user_data_1,
-    mock_connectivity_test_pass_pass,
+    mock_apis_single_fp,
 ) -> None:
     """What if we try to configure an already configured fireplace."""
     # Configure an existing entry
@@ -77,11 +74,13 @@ async def test_standard_config_with_pre_configured_fireplace(
 async def test_standard_config_with_single_fireplace_and_bad_credentials(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_login_with_bad_credentials: AsyncMock,
-    mock_cloud_api_interface_user_data_1,
-    mock_connectivity_test_pass_pass,
+    mock_apis_single_fp,
 ) -> None:
-    """Run a test against bad crednetials."""
+    """Test bad credentials on a login."""
+    mock_local_interface, mock_cloud_interface, mock_fp = mock_apis_single_fp
+    # Set login error
+    mock_cloud_interface.login_with_credentials.side_effect = LoginError
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -93,6 +92,9 @@ async def test_standard_config_with_single_fireplace_and_bad_credentials(
         result["flow_id"],
         {CONF_USERNAME: "donJulio", CONF_PASSWORD: "Tequila0FD00m"},
     )
+
+    # Erase the error
+    mock_cloud_interface.login_with_credentials.side_effect = None
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "api_error"}
@@ -118,9 +120,7 @@ async def test_standard_config_with_single_fireplace_and_bad_credentials(
 async def test_standard_config_with_multiple_fireplace(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_login_with_credentials: AsyncMock,
-    mock_cloud_api_interface_user_data_3,
-    mock_connectivity_test_pass_pass,
+    mock_apis_multifp,
 ) -> None:
     """Test multi-fireplace user who must be very rich."""
     result = await hass.config_entries.flow.async_init(
@@ -141,7 +141,6 @@ async def test_standard_config_with_multiple_fireplace(
         result["flow_id"],
         {CONF_SERIAL: "4GC295860E5837G40D9974B7FD459234"},
     )
-
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "ip_address": "192.168.2.109",
@@ -158,12 +157,10 @@ async def test_standard_config_with_multiple_fireplace(
 async def test_dhcp_discovery_intellifire_device(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_poll_local_fireplace: AsyncMock,
-    mock_login_with_credentials: AsyncMock,
-    mock_local_poll_data: IntelliFirePollData,
-    mock_cloud_api_interface_user_data_3,
+    mock_apis_multifp,
 ) -> None:
     """Test successful DHCP Discovery."""
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
@@ -186,12 +183,14 @@ async def test_dhcp_discovery_intellifire_device(
 async def test_dhcp_discovery_non_intellifire_device(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_poll_local_fireplace_exception: AsyncMock,
-    mock_login_with_credentials: AsyncMock,
-    mock_local_poll_data: IntelliFirePollData,
-    mock_cloud_api_interface_user_data_3,
+    mock_apis_multifp,
 ) -> None:
     """Test successful DHCP Discovery."""
+
+    # Patch poll with an exception
+    mock_local_interface, mock_cloud_interface, mock_fp = mock_apis_multifp
+    mock_local_interface.poll.side_effect = ConnectionError
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},

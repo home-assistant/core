@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 from aiohttp.client_reqrep import ConnectionKey
 from intellifire4py.const import IntelliFireApiMode
-from intellifire4py.exceptions import LoginError
 from intellifire4py.model import (
     IntelliFireCommonFireplaceData,
     IntelliFirePollData,
@@ -33,7 +32,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
 
 
 @pytest.fixture
@@ -45,146 +44,146 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
         yield mock_setup
 
 
-@pytest.fixture
-def mock_cloud_api_interface_user_data_1() -> IntelliFireUserData:
-    """Fixture to mock the user_data property of IntelliFireCloudInterface."""
-    fixture_data = load_fixture("intellifire/user_data_1.json")
-    user_data_mock = IntelliFireUserData(**json.loads(fixture_data))
-    with patch(
-        "homeassistant.components.intellifire.config_flow.IntelliFireCloudInterface.user_data",
-        new_callable=PropertyMock,
-    ) as mock_user_data:
-        mock_user_data.return_value = user_data_mock
-        yield
+# @pytest.fixture
+# def mock_cloud_api_interface_user_data_1() -> IntelliFireUserData:
+#     """Fixture to mock the user_data property of IntelliFireCloudInterface."""
+#     fixture_data = load_fixture("intellifire/user_data_1.json")
+#     user_data_mock = IntelliFireUserData(**json.loads(fixture_data))
+#     with patch(
+#         "homeassistant.components.intellifire.config_flow.IntelliFireCloudInterface.user_data",
+#         new_callable=PropertyMock,
+#     ) as mock_user_data:
+#         mock_user_data.return_value = user_data_mock
+#         yield
+#
+#
+# @pytest.fixture
+# def mock_cloud_api_interface_user_data_3() -> IntelliFireUserData:
+#     """Fixture to mock the user_data property of IntelliFireCloudInterface."""
+#     fixture_data = load_fixture("intellifire/user_data_3.json")
+#     user_data_mock = IntelliFireUserData(**json.loads(fixture_data))
+#
+#     with patch(
+#         "homeassistant.components.intellifire.config_flow.IntelliFireCloudInterface.user_data",
+#         new_callable=PropertyMock,
+#     ) as mock_user_data:
+#         mock_user_data.return_value = user_data_mock
+#         yield
 
-
-@pytest.fixture
-def mock_cloud_api_interface_user_data_3() -> IntelliFireUserData:
-    """Fixture to mock the user_data property of IntelliFireCloudInterface."""
-    fixture_data = load_fixture("intellifire/user_data_3.json")
-    user_data_mock = IntelliFireUserData(**json.loads(fixture_data))
-
-    with patch(
-        "homeassistant.components.intellifire.config_flow.IntelliFireCloudInterface.user_data",
-        new_callable=PropertyMock,
-    ) as mock_user_data:
-        mock_user_data.return_value = user_data_mock
-        yield
-
-
-@pytest.fixture
-def mock_local_poll_data() -> IntelliFirePollData:
-    """Mock polling a local fireplace."""
-    fixture_data = load_fixture("intellifire/local_poll.json")
-    poll_data_mock = IntelliFirePollData(**json.loads(fixture_data))
-
-    with patch(
-        "homeassistant.components.intellifire.config_flow.IntelliFireAPILocal.data",
-        new_callable=PropertyMock,
-    ) as mock_user_data:
-        mock_user_data.return_value = poll_data_mock
-        yield
-
-
-@pytest.fixture
-def mock_login_with_credentials() -> Generator[AsyncMock, None, None]:
-    """Mock the login_with_credentials method and set _user_data."""
-
-    with patch(
-        "homeassistant.components.intellifire.config_flow.IntelliFireCloudInterface.login_with_credentials",
-        new_callable=AsyncMock,
-    ) as mock_login:
-        # mock_login.side_effect = login_side_effect
-        yield mock_login
-
-
-@pytest.fixture
-def mock_login_with_bad_credentials() -> Generator[AsyncMock, None, None]:
-    """Mock the login_with_credentials method and set _user_data."""
-
-    # Custom side effect function
-    async def side_effect_func(*args, **kwargs):
-        if not hasattr(side_effect_func, "called"):
-            side_effect_func.called = True
-            raise LoginError
-        # Simulate async function
-
-    with patch(
-        "homeassistant.components.intellifire.config_flow.IntelliFireCloudInterface.login_with_credentials",
-        new_callable=AsyncMock,
-    ) as mock_login:
-        mock_login.side_effect = side_effect_func
-        yield mock_login
-
-
-@pytest.fixture
-def mock_poll_local_fireplace() -> Generator[AsyncMock, None, None]:
-    """Mock polling of local fireplace."""
-    with patch(
-        "homeassistant.components.intellifire.config_flow.IntelliFireAPILocal.poll",
-        new_callable=AsyncMock,
-    ) as mock_poll:
-        # mock_login.side_effect = login_side_effect
-        yield mock_poll
-
-
-@pytest.fixture
-def mock_cloud_poll() -> Generator[AsyncMock, None, None]:
-    """Mock a successful cloud poll call."""
-    with patch(
-        "homeassistant.components.intellifire.UnifiedFireplace.perform_cloud_poll",
-        new_callable=AsyncMock,
-    ) as mock_poll:
-        # mock_login.side_effect = login_side_effect
-        yield mock_poll
-
-
-@pytest.fixture
-def mock_connectivity_test_pass_pass() -> Generator[AsyncMock, None, None]:
-    """Mock both Cloud and Local Connectivity."""
-    with patch(
-        "homeassistant.components.intellifire.__init__.UnifiedFireplace.async_validate_connectivity",
-        new_callable=AsyncMock,
-    ) as mock_connectivity:
-        mock_connectivity.return_value = (True, True)
-        yield mock_connectivity
-
-
-@pytest.fixture
-def mock_connectivity_test_fail_fail() -> Generator[AsyncMock, None, None]:
-    """Mock both Cloud and Local Connectivity."""
-    with patch(
-        "homeassistant.components.intellifire.__init__.UnifiedFireplace.async_validate_connectivity",
-        new_callable=AsyncMock,
-    ) as mock_connectivity:
-        mock_connectivity.return_value = (False, False)
-        yield mock_connectivity
-
-
-@pytest.fixture
-def mock_connectivity_test_fail_fail_then_pass_pass() -> (
-    Generator[AsyncMock, None, None]
-):
-    """Mock both Cloud and Local Connectivity."""
-    return_values = [(False, False), (True, True), (True, True), (True, True)]
-
-    with patch(
-        "homeassistant.components.intellifire.__init__.UnifiedFireplace.async_validate_connectivity",
-        new_callable=AsyncMock,
-    ) as mock_connectivity:
-        mock_connectivity.side_effect = return_values
-        yield mock_connectivity
-
-
-@pytest.fixture
-def mock_poll_local_fireplace_exception() -> Generator[AsyncMock, None, None]:
-    """Mock polling a fireplace that isn't a fireplace."""
-    with patch(
-        "homeassistant.components.intellifire.config_flow.IntelliFireAPILocal.poll",
-        new_callable=AsyncMock,
-    ) as mock_poll:
-        mock_poll.side_effect = ConnectionError
-        yield mock_poll
+#
+# @pytest.fixture
+# def mock_local_poll_data() -> IntelliFirePollData:
+#     """Mock polling a local fireplace."""
+#     fixture_data = load_fixture("intellifire/local_poll.json")
+#     poll_data_mock = IntelliFirePollData(**json.loads(fixture_data))
+#
+#     with patch(
+#         "homeassistant.components.intellifire.config_flow.IntelliFireAPILocal.data",
+#         new_callable=PropertyMock,
+#     ) as mock_user_data:
+#         mock_user_data.return_value = poll_data_mock
+#         yield
+#
+#
+# @pytest.fixture
+# def mock_login_with_credentials() -> Generator[AsyncMock, None, None]:
+#     """Mock the login_with_credentials method and set _user_data."""
+#
+#     with patch(
+#         "homeassistant.components.intellifire.config_flow.IntelliFireCloudInterface.login_with_credentials",
+#         new_callable=AsyncMock,
+#     ) as mock_login:
+#         # mock_login.side_effect = login_side_effect
+#         yield mock_login
+#
+#
+# @pytest.fixture
+# def mock_login_with_bad_credentials() -> Generator[AsyncMock, None, None]:
+#     """Mock the login_with_credentials method and set _user_data."""
+#
+#     # Custom side effect function
+#     async def side_effect_func(*args, **kwargs):
+#         if not hasattr(side_effect_func, "called"):
+#             side_effect_func.called = True
+#             raise LoginError
+#         # Simulate async function
+#
+#     with patch(
+#         "homeassistant.components.intellifire.config_flow.IntelliFireCloudInterface.login_with_credentials",
+#         new_callable=AsyncMock,
+#     ) as mock_login:
+#         mock_login.side_effect = side_effect_func
+#         yield mock_login
+#
+#
+# @pytest.fixture
+# def mock_poll_local_fireplace() -> Generator[AsyncMock, None, None]:
+#     """Mock polling of local fireplace."""
+#     with patch(
+#         "homeassistant.components.intellifire.config_flow.IntelliFireAPILocal.poll",
+#         new_callable=AsyncMock,
+#     ) as mock_poll:
+#         # mock_login.side_effect = login_side_effect
+#         yield mock_poll
+#
+#
+# @pytest.fixture
+# def mock_cloud_poll() -> Generator[AsyncMock, None, None]:
+#     """Mock a successful cloud poll call."""
+#     with patch(
+#         "homeassistant.components.intellifire.UnifiedFireplace.perform_cloud_poll",
+#         new_callable=AsyncMock,
+#     ) as mock_poll:
+#         # mock_login.side_effect = login_side_effect
+#         yield mock_poll
+#
+#
+# @pytest.fixture
+# def mock_connectivity_test_pass_pass() -> Generator[AsyncMock, None, None]:
+#     """Mock both Cloud and Local Connectivity."""
+#     with patch(
+#         "homeassistant.components.intellifire.__init__.UnifiedFireplace.async_validate_connectivity",
+#         new_callable=AsyncMock,
+#     ) as mock_connectivity:
+#         mock_connectivity.return_value = (True, True)
+#         yield mock_connectivity
+#
+#
+# @pytest.fixture
+# def mock_connectivity_test_fail_fail() -> Generator[AsyncMock, None, None]:
+#     """Mock both Cloud and Local Connectivity."""
+#     with patch(
+#         "homeassistant.components.intellifire.__init__.UnifiedFireplace.async_validate_connectivity",
+#         new_callable=AsyncMock,
+#     ) as mock_connectivity:
+#         mock_connectivity.return_value = (False, False)
+#         yield mock_connectivity
+#
+#
+# @pytest.fixture
+# def mock_connectivity_test_fail_fail_then_pass_pass() -> (
+#     Generator[AsyncMock, None, None]
+# ):
+#     """Mock both Cloud and Local Connectivity."""
+#     return_values = [(False, False), (True, True), (True, True), (True, True)]
+#
+#     with patch(
+#         "homeassistant.components.intellifire.UnifiedFireplace.async_validate_connectivity",
+#         new_callable=AsyncMock,
+#     ) as mock_connectivity:
+#         mock_connectivity.side_effect = return_values
+#         yield mock_connectivity
+#
+#
+# @pytest.fixture
+# def mock_poll_local_fireplace_exception() -> Generator[AsyncMock, None, None]:
+#     """Mock polling a fireplace that isn't a fireplace."""
+#     with patch(
+#         "homeassistant.components.intellifire.config_flow.IntelliFireAPILocal.poll",
+#         new_callable=AsyncMock,
+#     ) as mock_poll:
+#         mock_poll.side_effect = ConnectionError
+#         yield mock_poll
 
 
 @pytest.fixture
@@ -273,19 +272,19 @@ def mock_fireplace_finder_single() -> Generator[None, MagicMock, None]:
         yield mock_found_fireplaces
 
 
-@pytest.fixture
-def mock_intellifire_config_flow() -> Generator[None, MagicMock, None]:
-    """Return a mocked IntelliFire client."""
-    data_mock = Mock()
-    data_mock.serial = "12345"
-
-    with patch(
-        "homeassistant.components.intellifire.config_flow.IntelliFireAPILocal",
-        autospec=True,
-    ) as intellifire_mock:
-        intellifire = intellifire_mock.return_value
-        intellifire.data = data_mock
-        yield intellifire
+# @pytest.fixture
+# def mock_intellifire_config_flow() -> Generator[None, MagicMock, None]:
+#     """Return a mocked IntelliFire client."""
+#     data_mock = Mock()
+#     data_mock.serial = "12345"
+#
+#     with patch(
+#         "homeassistant.components.intellifire.config_flow.IntelliFireAPILocal",
+#         autospec=True,
+#     ) as intellifire_mock:
+#         intellifire = intellifire_mock.return_value
+#         intellifire.data = data_mock
+#         yield intellifire
 
 
 def mock_api_connection_error() -> ConnectionError:
@@ -311,6 +310,89 @@ def mock_common_data_local() -> IntelliFireCommonFireplaceData:
 
 
 @pytest.fixture
+def mock_apis_multifp(
+    mock_cloud_interface, mock_local_interface, mock_fp
+) -> Generator[tuple[AsyncMock, AsyncMock, MagicMock], None, None]:
+    """Multi fireplace version of mocks."""
+    return mock_local_interface, mock_cloud_interface, mock_fp
+
+
+@pytest.fixture
+def mock_apis_single_fp(
+    mock_cloud_interface, mock_local_interface, mock_fp
+) -> Generator[tuple[AsyncMock, AsyncMock, MagicMock], None, None]:
+    """Single fire place version of the mocks."""
+    data_v1 = IntelliFireUserData(
+        **load_json_object_fixture("user_data_1.json", DOMAIN)
+    )
+    with patch.object(
+        type(mock_cloud_interface), "user_data", new_callable=PropertyMock
+    ) as mock_user_data:
+        mock_user_data.return_value = data_v1
+        yield mock_local_interface, mock_cloud_interface, mock_fp
+
+
+@pytest.fixture
+def mock_cloud_interface():
+    """Mock cloud interface to use for testing."""
+    user_data = IntelliFireUserData(
+        **json.loads(load_fixture("user_data_3.json", DOMAIN))
+    )
+
+    with (
+        patch(
+            "homeassistant.components.intellifire.IntelliFireCloudInterface",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.intellifire.config_flow.IntelliFireCloudInterface",
+            new=mock_client,
+        ),
+        patch(
+            "intellifire4py.cloud_interface.IntelliFireCloudInterface",
+            new=mock_client,
+        ),
+    ):
+        # Mock async context manager
+        mock_client = mock_client.return_value
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=None)
+
+        # Mock other async methods if needed
+        mock_client.login_with_credentials = AsyncMock()
+        mock_client.poll = AsyncMock()
+        type(mock_client).user_data = PropertyMock(return_value=user_data)
+
+        yield mock_client  # Yielding to the test
+
+
+@pytest.fixture
+def mock_local_interface():
+    """Mock version of IntelliFireAPILocal."""
+    fixture_data = load_fixture("intellifire/local_poll.json")
+    poll_data = IntelliFirePollData(**json.loads(fixture_data))
+    with patch(
+        "homeassistant.components.intellifire.config_flow.IntelliFireAPILocal",
+        autospec=True,
+    ) as mock_client:
+        mock_client = mock_client.return_value
+        type(mock_client).data = PropertyMock(return_value=poll_data)
+        yield mock_client
+
+
+# @pytest.fixture
+# def mock_connectivity_test_pass_pass() -> Generator[AsyncMock, None, None]:
+#     """Mock both Cloud and Local Connectivity."""
+#     with patch(
+#             "homeassistant.components.intellifire.__init__.UnifiedFireplace.async_validate_connectivity",
+#             new_callable=AsyncMock,
+#     ) as mock_connectivity:
+#         mock_connectivity.return_value = (True, True)
+#         yield mock_connectivity
+#
+
+
+@pytest.fixture
 def mock_fp(mock_common_data_local):
     """Mock fireplace."""
     fixture_data = load_fixture("local_poll.json", DOMAIN)
@@ -319,7 +401,7 @@ def mock_fp(mock_common_data_local):
     assert local_poll_json.connection_quality == 988451
 
     with patch(
-        "homeassistant.components.intellifire.__init__.UnifiedFireplace"
+        "homeassistant.components.intellifire.UnifiedFireplace"
     ) as MockUnifiedFireplace:
         # Create an instance of the mock
         mock_instance = MockUnifiedFireplace.return_value
@@ -330,8 +412,8 @@ def mock_fp(mock_common_data_local):
 
         mock_instance.async_validate_connectivity = AsyncMock(return_value=(True, True))
 
-        mock_instance.is_cloud_polling.return_value = False
-        mock_instance.is_local_polling.return_value = True
+        type(mock_instance).is_cloud_polling = PropertyMock(return_value=False)
+        type(mock_instance).is_local_polling = PropertyMock(return_value=True)
 
         mock_instance.get_user_data_as_json.return_value = '{"mock": "data"}'
 
@@ -342,10 +424,9 @@ def mock_fp(mock_common_data_local):
         mock_instance.auth_cookie = "mock_auth_cookie"
         mock_instance.web_client_id = "mock_web_client_id"
 
-        mock_instance.read_api = MagicMock()  # If needed, you can mock this further
-        mock_instance.control_api = MagicMock()  # If needed, you can mock this further
+        mock_instance.read_api = MagicMock()
+        mock_instance.control_api = MagicMock()
 
-        # Connectivity
         mock_instance.local_connectivity = True
         mock_instance.cloud_connectivity = False
 
@@ -355,7 +436,6 @@ def mock_fp(mock_common_data_local):
         mock_instance.control_mode = IntelliFireApiMode.LOCAL
         mock_instance._control_mode = IntelliFireApiMode.LOCAL
 
-        # Use poll data locally
         mock_instance.data = local_poll_json
 
         mock_instance.set_read_mode = AsyncMock()
@@ -365,4 +445,10 @@ def mock_fp(mock_common_data_local):
             return_value=(True, False)
         )
 
-        yield mock_instance  # Provide the mock instance to the test
+        # Patch class methods
+        with patch(
+            "homeassistant.components.intellifire.UnifiedFireplace.build_fireplace_from_common",
+            new_callable=AsyncMock,
+            return_value=mock_instance,
+        ):
+            yield mock_instance

@@ -134,7 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 _construct_common_data(entry)
             )
         )
-        LOGGER.info("Waiting for Fireplace to Initialize")
+        LOGGER.debug("Waiting for Fireplace to Initialize")
         await asyncio.wait_for(
             _async_wait_for_initialization(fireplace), timeout=STARTUP_TIMEOUT
         )
@@ -148,7 +148,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass=hass, fireplace=fireplace
     )
 
-    LOGGER.info("Fireplace to Initialized - Awaiting first refresh")
+    LOGGER.debug("Fireplace to Initialized - Awaiting first refresh")
     await data_update_coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data_update_coordinator
@@ -163,7 +163,7 @@ async def _async_wait_for_initialization(fireplace, timeout=STARTUP_TIMEOUT):
     while (
         fireplace.data.ipv4_address == "127.0.0.1" and fireplace.data.serial == "unset"
     ):
-        LOGGER.info(f"Waiting for fireplace to initialize [{fireplace.read_mode}]")
+        LOGGER.debug(f"Waiting for fireplace to initialize [{fireplace.read_mode}]")
         await asyncio.sleep(10)
 
 

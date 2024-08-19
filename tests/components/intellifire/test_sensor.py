@@ -1,6 +1,6 @@
-"""Test fan entities."""
+"""Test IntelliFire Binary Sensors."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
 import pytest
@@ -22,15 +22,12 @@ async def test_all_sensor_entities(
     snapshot: SnapshotAssertion,
     mock_config_entry_current: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_fp,
+    mock_apis_single_fp: tuple[AsyncMock, AsyncMock, AsyncMock],
 ) -> None:
     """Test all entities."""
+
     with (
-        patch("homeassistant.components.intellifire.PLATFORMS", [Platform.FAN]),
-        patch(
-            "intellifire4py.unified_fireplace.UnifiedFireplace.build_fireplace_from_common",
-            return_value=mock_fp,
-        ),
+        patch("homeassistant.components.intellifire.PLATFORMS", [Platform.SENSOR]),
     ):
         await setup_integration(hass, mock_config_entry_current)
         await snapshot_platform(

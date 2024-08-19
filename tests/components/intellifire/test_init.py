@@ -1,18 +1,14 @@
 """Test the IntelliFire config flow."""
 
+from intellifire4py.exceptions import LoginError
+
 from homeassistant.components.intellifire.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
 async def test_pseudo_migration_good(
-    hass: HomeAssistant,
-    mock_config_entry_old,
-    mock_login_with_credentials,
-    mock_cloud_api_interface_user_data_1,
-    mock_local_poll_data,
-    mock_cloud_poll,
-    mock_connectivity_test_pass_pass,
+    hass: HomeAssistant, mock_config_entry_old, mock_apis_single_fp
 ) -> None:
     """Test entity update from old Version1 to newer Versio1."""
     mock_config_entry_old.add_to_hass(hass)
@@ -33,9 +29,10 @@ async def test_pseudo_migration_good(
 async def test_connectivity_bad(
     hass: HomeAssistant,
     mock_config_entry_current,
-    mock_login_with_credentials,
-    mock_cloud_api_interface_user_data_1,
-    mock_connectivity_test_fail_fail,
+    # mock_login_with_credentials,
+    # mock_cloud_api_interface_user_data_1,
+    # mock_connectivity_test_fail_fail,
+    mock_apis_single_fp,
 ) -> None:
     """Test entity update from older Version1 to a newer Version1 with serial that can't be detected."""
     mock_config_entry_current.add_to_hass(hass)
@@ -47,13 +44,7 @@ async def test_connectivity_bad(
 
 
 async def test_pseudo_migration_bad_title(
-    hass: HomeAssistant,
-    mock_config_entry_v1_bad_title,
-    mock_login_with_credentials,
-    mock_cloud_api_interface_user_data_1,
-    mock_local_poll_data,
-    mock_cloud_poll,
-    mock_connectivity_test_pass_pass,
+    hass: HomeAssistant, mock_config_entry_v1_bad_title, mock_apis_single_fp
 ) -> None:
     """Test entity update from older Version1 to a newer Version1 with serial that can't be detected."""
     mock_config_entry_v1_bad_title.add_to_hass(hass)
@@ -74,12 +65,16 @@ async def test_pseudo_migration_bad_title(
 async def test_reauth_flow(
     hass: HomeAssistant,
     mock_config_entry_current,
-    mock_login_with_credentials,
-    mock_cloud_api_interface_user_data_1,
-    mock_connectivity_test_fail_fail_then_pass_pass,
+    # mock_login_with_credentials,
+    # mock_cloud_api_interface_user_data_1,
+    mock_apis_single_fp,
+    # mock_connectivity_test_fail_fail_then_pass_pass,
 ) -> None:
     """Test reauth."""
-    mock_config_entry_current.add_to_hass(hass)
+
+    mock_local_interface, mock_cloud_interface, mock_fp = mock_apis_single_fp
+    # Set login error
+    mock_cloud_interface.login_with_credentials.side_effect = LoginError
 
     mock_config_entry_current.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
