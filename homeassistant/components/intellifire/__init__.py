@@ -129,6 +129,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Fireplace will throw an error if it can't connect
     try:
+        LOGGER.error("TRYING TO BUILD FIREPLACE")
+
         fireplace: UnifiedFireplace = (
             await UnifiedFireplace.build_fireplace_from_common(
                 _construct_common_data(entry)

@@ -1,5 +1,7 @@
 """Test the IntelliFire config flow."""
 
+from unittest.mock import AsyncMock, patch
+
 from intellifire4py.exceptions import LoginError
 
 from homeassistant.components.intellifire.const import DOMAIN
@@ -34,13 +36,18 @@ async def test_connectivity_bad(
     # mock_connectivity_test_fail_fail,
     mock_apis_single_fp,
 ) -> None:
-    """Test entity update from older Version1 to a newer Version1 with serial that can't be detected."""
-    mock_config_entry_current.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry_current.entry_id)
+    """Test a timeout error on the setup flow."""
 
-    # assert await hass.config_entries.async_setup(mock_config_entry_current.entry_id) is True
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
+    with patch(
+        "homeassistant.components.intellifire.UnifiedFireplace.build_fireplace_from_common",
+        new_callable=AsyncMock,
+        side_effect=TimeoutError,
+    ):
+        mock_config_entry_current.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry_current.entry_id)
+
+        await hass.async_block_till_done()
+        assert len(hass.states.async_all()) == 0
 
 
 async def test_pseudo_migration_bad_title(
