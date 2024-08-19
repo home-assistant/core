@@ -10,11 +10,10 @@ from xknx.devices import (
     ClimateMode as XknxClimateMode,
     Device as XknxDevice,
 )
-from xknx.dpt.dpt_20 import HVACControllerMode
+from xknx.dpt.dpt_20 import HVACControllerMode, HVACOperationMode
 
 from homeassistant import config_entries
 from homeassistant.components.climate import (
-    PRESET_AWAY,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -32,19 +31,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from . import KNXModule
-from .const import (
-    CONTROLLER_MODES,
-    CURRENT_HVAC_ACTIONS,
-    DATA_KNX_CONFIG,
-    DOMAIN,
-    PRESET_MODES,
-)
+from .const import CONTROLLER_MODES, CURRENT_HVAC_ACTIONS, DATA_KNX_CONFIG, DOMAIN
 from .knx_entity import KnxYamlEntity
 from .schema import ClimateSchema
 
 ATTR_COMMAND_VALUE = "command_value"
 CONTROLLER_MODES_INV = {value: key for key, value in CONTROLLER_MODES.items()}
-PRESET_MODES_INV = {value: key for key, value in PRESET_MODES.items()}
 
 
 async def async_setup_entry(
@@ -142,6 +134,7 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
 
     _device: XknxClimate
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = "knx_climate"
     _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
@@ -165,8 +158,14 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
                 ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
             )
 
-        if self.preset_modes:
+        if (
+            self._device.mode is not None
+            and self._device.mode.operation_modes  # empty list when not writable
+        ):
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
+            self._attr_preset_modes = [
+                mode.name.lower() for mode in self._device.mode.operation_modes
+            ]
         self._attr_target_temperature_step = self._device.temperature_step
         self._attr_unique_id = (
             f"{self._device.temperature.group_address_state}_"
@@ -309,32 +308,18 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
         Requires ClimateEntityFeature.PRESET_MODE.
         """
         if self._device.mode is not None and self._device.mode.supports_operation_mode:
-            return PRESET_MODES.get(self._device.mode.operation_mode, PRESET_AWAY)
+            return self._device.mode.operation_mode.name.lower()
         return None
-
-    @property
-    def preset_modes(self) -> list[str] | None:
-        """Return a list of available preset modes.
-
-        Requires ClimateEntityFeature.PRESET_MODE.
-        """
-        if self._device.mode is None:
-            return None
-
-        presets = [
-            PRESET_MODES.get(operation_mode)
-            for operation_mode in self._device.mode.operation_modes
-        ]
-        return list(filter(None, presets))
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if (
             self._device.mode is not None
-            and self._device.mode.supports_operation_mode
-            and (knx_operation_mode := PRESET_MODES_INV.get(preset_mode)) is not None
+            and self._device.mode.operation_modes  # empty list when not writable
         ):
-            await self._device.mode.set_operation_mode(knx_operation_mode)
+            await self._device.mode.set_operation_mode(
+                HVACOperationMode[preset_mode.upper()]
+            )
             self.async_write_ha_state()
 
     @property
