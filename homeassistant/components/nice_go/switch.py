@@ -33,7 +33,6 @@ class NiceGOSwitchEntity(NiceGOEntity, SwitchEntity):
     """Representation of a Nice G.O. switch."""
 
     _attr_device_class = SwitchDeviceClass.SWITCH
-    _attr_icon = "mdi:beach"
     _attr_translation_key = "vacation_mode"
 
     @property
