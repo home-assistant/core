@@ -1,5 +1,7 @@
 """Base class for yale_smart_alarm entity."""
 
+from yalesmartalarmclient import YaleLock
+
 from homeassistant.const import CONF_NAME, CONF_USERNAME
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -23,6 +25,24 @@ class YaleEntity(CoordinatorEntity[YaleDataUpdateCoordinator], Entity):
             manufacturer=MANUFACTURER,
             model=MODEL,
             identifiers={(DOMAIN, data["address"])},
+            via_device=(DOMAIN, self.coordinator.entry.data[CONF_USERNAME]),
+        )
+
+
+class YaleLockEntity(CoordinatorEntity[YaleDataUpdateCoordinator], Entity):
+    """Base implementation for Yale lock device."""
+
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: YaleDataUpdateCoordinator, lock: YaleLock) -> None:
+        """Initialize an Yale device."""
+        super().__init__(coordinator)
+        self._attr_unique_id: str = lock.sid()
+        self._attr_device_info = DeviceInfo(
+            name=lock.name,
+            manufacturer=MANUFACTURER,
+            model=MODEL,
+            identifiers={(DOMAIN, lock.sid())},
             via_device=(DOMAIN, self.coordinator.entry.data[CONF_USERNAME]),
         )
 
