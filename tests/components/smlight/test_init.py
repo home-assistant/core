@@ -1,17 +1,17 @@
 "Test SMLIGHT SLZB device integration initialization."
 
-from datetime import timedelta
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.smlight.const import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-import homeassistant.util.dt as dt_util
 
 from .conftest import setup_integration
 
@@ -59,6 +59,7 @@ async def test_update_failed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test update failed due to connection error."""
 
@@ -68,11 +69,12 @@ async def test_update_failed(
 
     mock_smlight_client.get_info.side_effect = SmlightConnectionError
 
-    next_update = dt_util.utcnow() + timedelta(minutes=10)
-    async_fire_time_changed(hass, next_update)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     entity = hass.states.get("sensor.mock_title_core_chip_temp")
+    assert entity is not None
     assert entity.state == STATE_UNAVAILABLE
 
 
