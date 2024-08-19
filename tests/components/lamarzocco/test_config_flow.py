@@ -330,10 +330,8 @@ async def test_reconfigure_flow(
     assert result4["type"] is FlowResultType.ABORT
     assert result4["reason"] == "reconfigure_successful"
 
-    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
-    assert entry
-    assert entry.title == "My LaMarzocco"
-    assert entry.data == {**mock_config_entry.data, CONF_MAC: service_info.address}
+    assert mock_config_entry.title == "My LaMarzocco"
+    assert mock_config_entry.data == {**mock_config_entry.data, CONF_MAC: service_info.address}
 
 
 async def test_bluetooth_discovery(
