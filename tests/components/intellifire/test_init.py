@@ -31,9 +31,6 @@ async def test_pseudo_migration_good(
 async def test_connectivity_bad(
     hass: HomeAssistant,
     mock_config_entry_current,
-    # mock_login_with_credentials,
-    # mock_cloud_api_interface_user_data_1,
-    # mock_connectivity_test_fail_fail,
     mock_apis_single_fp,
 ) -> None:
     """Test a timeout error on the setup flow."""
@@ -72,10 +69,7 @@ async def test_pseudo_migration_bad_title(
 async def test_reauth_flow(
     hass: HomeAssistant,
     mock_config_entry_current,
-    # mock_login_with_credentials,
-    # mock_cloud_api_interface_user_data_1,
     mock_apis_single_fp,
-    # mock_connectivity_test_fail_fail_then_pass_pass,
 ) -> None:
     """Test reauth."""
 
