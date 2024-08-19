@@ -2168,9 +2168,6 @@ pylitejet==0.6.3
 # homeassistant.components.litterrobot
 pylitterbot==2025.0.0
 
-# homeassistant.components.mammotion
-pyluba==0.0.13
-
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.26.0
 
@@ -2179,6 +2176,9 @@ pylutron==0.2.18
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
+
+# homeassistant.components.mammotion
+pymammotion==0.2.0
 
 # homeassistant.components.firmata
 pymata-express==1.19
