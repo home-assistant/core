@@ -90,8 +90,7 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
 
         Set values to _attr_ibutes if needed.
         """
-        color_mode_tmp = COLOR_MODE_MAP.get(self._feature.color_mode, ColorMode.ONOFF)
-        return color_mode_tmp
+        return COLOR_MODE_MAP.get(self._feature.color_mode, ColorMode.ONOFF)
 
     @property
     def supported_color_modes(self):
