@@ -1,7 +1,6 @@
 """Common fixtures for the SMLIGHT Zigbee tests."""
 
 from collections.abc import Generator
-from json import loads
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pysmlight.exceptions import SmlightAuthError
@@ -12,7 +11,7 @@ from homeassistant.components.smlight.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 MOCK_HOST = "slzb-06.local"
 MOCK_USERNAME = "test-user"
@@ -62,10 +61,10 @@ def mock_smlight_client(request: pytest.FixtureRequest) -> Generator[MagicMock]:
         api = smlight_mock.return_value
         api.host = MOCK_HOST
         api.get_info.return_value = Info.from_dict(
-            loads(load_fixture("info.json", DOMAIN))
+            load_json_object_fixture("info.json", DOMAIN)
         )
         api.get_sensors.return_value = Sensors.from_dict(
-            loads(load_fixture("sensors.json", DOMAIN))
+            load_json_object_fixture("sensors.json", DOMAIN)
         )
 
         if request.node.get_closest_marker("invalid_auth"):

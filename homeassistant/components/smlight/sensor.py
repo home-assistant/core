@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
 
 from pysmlight.web import Sensors
 
@@ -99,6 +98,6 @@ class SmSensorEntity(SmEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
 
     @property
-    def native_value(self) -> float | datetime | None:
+    def native_value(self) -> float | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.data.sensors)

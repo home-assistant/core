@@ -58,9 +58,8 @@ class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData]):
         """Authenticate if needed during initial setup."""
         if await self.client.check_auth_needed():
             if (
-                self.config_entry
-                and self.config_entry.data.get(CONF_USERNAME)
-                and self.config_entry.data.get(CONF_PASSWORD)
+                CONF_USERNAME in self.config_entry.data
+                and CONF_PASSWORD in self.config_entry.data
             ):
                 try:
                     await self.client.authenticate(
