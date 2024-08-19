@@ -1279,3 +1279,19 @@ async def test_rpc_rgbw_sensors(
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == f"123456789ABC-{light_type}:0-temperature_{light_type}"
+
+
+async def test_rpc_device_sensor_goes_unavailable_on_disconnect(
+    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test RPC device with sensor goes unavailable on disconnect."""
+    await init_integration(hass, 2)
+    temp_sensor_state = hass.states.get("sensor.test_name_temperature")
+    assert temp_sensor_state is not None
+    assert temp_sensor_state.state != STATE_UNAVAILABLE
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    mock_rpc_device.mock_disconnected()
+    assert temp_sensor_state.state == STATE_UNAVAILABLE
+    monkeypatch.setattr(mock_rpc_device, "connected", True)
+    mock_rpc_device.mock_connected()
+    assert temp_sensor_state.state != STATE_UNAVAILABLE
