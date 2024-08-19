@@ -2,6 +2,12 @@
 
 from unittest.mock import AsyncMock
 
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -13,10 +19,10 @@ async def test_turn_on(
     hass: HomeAssistant, mock_nice_go: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test turn on switch."""
-    await setup_integration(hass, mock_config_entry, ["switch"])
+    await setup_integration(hass, mock_config_entry, [Platform.SWITCH])
     await hass.services.async_call(
-        "switch",
-        "turn_on",
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
         {"entity_id": "switch.test_garage_1_vacation_mode"},
         blocking=True,
     )
@@ -27,10 +33,10 @@ async def test_turn_off(
     hass: HomeAssistant, mock_nice_go: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test turn off switch."""
-    await setup_integration(hass, mock_config_entry, ["switch"])
+    await setup_integration(hass, mock_config_entry, [Platform.SWITCH])
     await hass.services.async_call(
-        "switch",
-        "turn_off",
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
         {"entity_id": "switch.test_garage_2_vacation_mode"},
         blocking=True,
     )
