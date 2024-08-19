@@ -27,6 +27,18 @@
       "vacation_mode": {
         "name": "Vacation mode"
       }
+    },
+    "event": {
+      "barrier_obstructed": {
+        "name": "Barrier obstructed",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "barrier_obstructed": "Barrier obstructed"
+            }
+          }
+        }
+      }
     }
   },
   "issues": {
