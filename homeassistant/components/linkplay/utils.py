@@ -1,6 +1,13 @@
 """Utilities for the LinkPlay component."""
 
-from typing import Final
+from typing import Final, cast
+
+from aiohttp import ClientSession
+from linkplay.utils import async_create_unverified_client_session
+
+from homeassistant.core import HomeAssistant
+
+from .const import CONF_SESSION, DOMAIN
 
 MANUFACTURER_ARTSOUND: Final[str] = "ArtSound"
 MANUFACTURER_ARYLIC: Final[str] = "Arylic"
@@ -44,3 +51,12 @@ def get_info_from_project(project: str) -> tuple[str, str]:
             return MANUFACTURER_IEAST, MODELS_IEAST_AUDIOCAST_M5
         case _:
             return MANUFACTURER_GENERIC, MODELS_GENERIC
+
+
+async def async_get_client_session(hass: HomeAssistant) -> ClientSession:
+    """Get a ClientSession that can be used with LinkPlay devices."""
+    hass.data.setdefault(DOMAIN, {})
+    if CONF_SESSION not in hass.data[DOMAIN]:
+        hass.data[DOMAIN][CONF_SESSION] = async_create_unverified_client_session()
+
+    return cast(ClientSession, hass.data[DOMAIN][CONF_SESSION])
