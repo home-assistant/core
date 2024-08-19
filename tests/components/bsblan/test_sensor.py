@@ -23,7 +23,7 @@ from tests.common import MockConfigEntry
 def mock_coordinator(hass: HomeAssistant) -> MagicMock:
     """Create a mock coordinator."""
     coordinator = MagicMock(spec=BSBLanUpdateCoordinator)
-    coordinator.config_entry = MockConfigEntry(
+    coordinator.bsblan_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.168.1.100"}
     )
     coordinator.data = MagicMock()
