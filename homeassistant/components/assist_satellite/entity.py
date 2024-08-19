@@ -72,7 +72,6 @@ class AssistSatelliteEntity(entity.Entity):
 
         # Set entity state based on pipeline events
         self._run_has_tts = False
-        self._set_state(AssistSatelliteState.LISTENING)
 
         await async_pipeline_from_audio_stream(
             self.hass,
@@ -99,7 +98,11 @@ class AssistSatelliteEntity(entity.Entity):
 
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Set state based on pipeline stage."""
-        if event.type == PipelineEventType.STT_END:
+        if event.type == PipelineEventType.WAKE_WORD_START:
+            self._set_state(AssistSatelliteState.IDLE)
+        elif event.type == PipelineEventType.STT_START:
+            self._set_state(AssistSatelliteState.LISTENING)
+        elif event.type == PipelineEventType.INTENT_START:
             self._set_state(AssistSatelliteState.PROCESSING)
         elif event.type == PipelineEventType.TTS_END:
             # Wait until tts_response_finished is called to return to idle

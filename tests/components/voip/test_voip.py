@@ -202,8 +202,6 @@ async def test_pipeline(
             elif in_command:
                 break  # done with command
 
-        assert satellite.state == AssistSatelliteState.LISTENING
-
         # Test empty data
         event_callback(
             assist_pipeline.PipelineEvent(
@@ -212,11 +210,33 @@ async def test_pipeline(
             )
         )
 
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                type=assist_pipeline.PipelineEventType.STT_START,
+                data={"engine": "test", "metadata": {}},
+            )
+        )
+
+        assert satellite.state == AssistSatelliteState.LISTENING
+
         # Fake STT result
         event_callback(
             assist_pipeline.PipelineEvent(
                 type=assist_pipeline.PipelineEventType.STT_END,
                 data={"stt_output": {"text": "fake-text"}},
+            )
+        )
+
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                type=assist_pipeline.PipelineEventType.INTENT_START,
+                data={
+                    "engine": "test",
+                    "language": hass.config.language,
+                    "intent_input": "fake-text",
+                    "conversation_id": None,
+                    "device_id": None,
+                },
             )
         )
 
