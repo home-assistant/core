@@ -2,11 +2,12 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-from bsblan import BSBLANError
+from bsblan import BSBLANError, State
 import pytest
 
 from homeassistant.components.bsblan.climate import BSBLANClimate
 from homeassistant.components.bsblan.const import DOMAIN
+from homeassistant.components.bsblan.models import BSBLanCoordinatorData
 from homeassistant.components.climate import PRESET_ECO, PRESET_NONE, HVACMode
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -18,13 +19,24 @@ from tests.common import MockConfigEntry
 def mock_coordinator():
     """Create a mock coordinator."""
     coordinator = MagicMock()
-    coordinator.data = {
-        "state": MagicMock(
-            current_temperature=MagicMock(value="21.5"),
-            target_temperature=MagicMock(value="22.0"),
-            hvac_mode=MagicMock(value="heat"),
-        )
-    }
+    coordinator.data = BSBLanCoordinatorData(
+        state=State.from_dict(
+            {
+                "current_temperature": MagicMock(value="21.5"),
+                "target_temperature": MagicMock(value="22.0"),
+                "hvac_mode": MagicMock(value="heat"),
+                "hvac_mode2": MagicMock(value="2"),
+                "hvac_action": MagicMock(value="122"),
+                "outside_temperature": MagicMock(value="6.1"),
+                "target_temperature_high": MagicMock(value="23.0"),
+                "target_temperature_low": MagicMock(value="17.0"),
+                "min_temp": MagicMock(value="8.0"),
+                "max_temp": MagicMock(value="20.0"),
+                "room1_thermostat_mode": MagicMock(value="0"),
+            }
+        ),
+        sensor=MagicMock(),
+    )
     coordinator.async_request_refresh = AsyncMock()
     return coordinator
 
@@ -58,7 +70,7 @@ async def test_set_preset_mode(
 ) -> None:
     """Test setting preset mode."""
     # Test setting preset mode when HVAC mode is AUTO
-    mock_coordinator.data["state"].hvac_mode.value = HVACMode.AUTO
+    mock_coordinator.data.state.hvac_mode.value = HVACMode.AUTO
     await climate_entity.async_set_preset_mode(PRESET_ECO)
     climate_entity.client.thermostat.assert_called_once_with(hvac_mode=PRESET_ECO)
     climate_entity.coordinator.async_request_refresh.assert_called_once()
@@ -67,7 +79,7 @@ async def test_set_preset_mode(
     climate_entity.coordinator.async_request_refresh.reset_mock()
 
     # Test setting preset mode when HVAC mode is not AUTO
-    mock_coordinator.data["state"].hvac_mode.value = HVACMode.HEAT
+    mock_coordinator.data.state.hvac_mode.value = HVACMode.HEAT
     with pytest.raises(ServiceValidationError):
         await climate_entity.async_set_preset_mode(PRESET_ECO)
 
@@ -95,9 +107,9 @@ async def test_update_state(
     hass: HomeAssistant, climate_entity, mock_coordinator
 ) -> None:
     """Test updating climate entity state."""
-    mock_coordinator.data["state"].current_temperature.value = "22.5"
-    mock_coordinator.data["state"].target_temperature.value = "23.0"
-    mock_coordinator.data["state"].hvac_mode.value = "auto"
+    mock_coordinator.data.state.current_temperature.value = "22.5"
+    mock_coordinator.data.state.target_temperature.value = "23.0"
+    mock_coordinator.data.state.hvac_mode.value = "auto"
 
     await hass.async_block_till_done()
 
