@@ -160,7 +160,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _async_wait_for_initialization(fireplace, timeout=STARTUP_TIMEOUT):
+async def _async_wait_for_initialization(
+    fireplace: UnifiedFireplace, timeout=STARTUP_TIMEOUT
+):
     """Wait for a fireplace to be initialized."""
     while (
         fireplace.data.ipv4_address == "127.0.0.1" and fireplace.data.serial == "unset"

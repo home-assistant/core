@@ -137,7 +137,6 @@ INTELLIFIRE_SENSORS: tuple[IntelliFireSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda coordinator: coordinator.data.ipv4_address,
     ),
-    # HACS DIAGNOSTIC SENSORS
     IntelliFireSensorEntityDescription(
         key="local_connectivity",
         translation_key="local_connectivity",
