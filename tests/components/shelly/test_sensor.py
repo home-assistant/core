@@ -1293,5 +1293,5 @@ async def test_rpc_device_sensor_goes_unavailable_on_disconnect(
     mock_rpc_device.mock_disconnected()
     assert temp_sensor_state.state == STATE_UNAVAILABLE
     monkeypatch.setattr(mock_rpc_device, "connected", True)
-    mock_rpc_device.mock_connected()
+    mock_rpc_device.mock_initialized()
     assert temp_sensor_state.state != STATE_UNAVAILABLE
