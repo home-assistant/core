@@ -18,7 +18,6 @@ from homeassistant.components.assist_pipeline import (
     PipelineEvent,
     PipelineEventType,
     PipelineNotFound,
-    async_audio_stream_from_queue,
     select as pipeline_select,
     vad,
 )
@@ -31,6 +30,7 @@ from homeassistant.components.assist_satellite import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.async_ import queue_to_iterable
 
 from .const import CHANNELS, DOMAIN, RATE, RTP_AUDIO_SETTINGS, WIDTH
 from .devices import VoIPDevice
@@ -86,6 +86,10 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     """Assist satellite for VoIP devices."""
 
     _attr_state = AssistSatelliteState.MUTED
+    _attr_supported_features = (
+        AssistSatelliteEntityFeature.AUDIO_INPUT
+        | AssistSatelliteEntityFeature.AUDIO_OUTPUT
+    )
 
     def __init__(
         self,
@@ -114,14 +118,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     # -------------------------------------------------------------------------
     # Satellite
     # -------------------------------------------------------------------------
-
-    @property
-    def supported_features(self) -> AssistSatelliteEntityFeature:
-        """Return supported features of the satellite."""
-        return (
-            AssistSatelliteEntityFeature.AUDIO_INPUT
-            | AssistSatelliteEntityFeature.AUDIO_OUTPUT
-        )
 
     async def _async_config_updated(self) -> None:
         """Inform when the device config is updated.
@@ -207,7 +203,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             async with asyncio.timeout(_PIPELINE_TIMEOUT_SEC):
                 await self._async_accept_pipeline_from_satellite(  # noqa: SLF001
                     context=Context(user_id=self.config_entry.data["user"]),
-                    audio_stream=async_audio_stream_from_queue(
+                    audio_stream=queue_to_iterable(
                         self._audio_queue, timeout=self._audio_chunk_timeout
                     ),
                 )
