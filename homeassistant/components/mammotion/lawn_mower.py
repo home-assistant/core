@@ -2,129 +2,135 @@
 
 from __future__ import annotations
 
-from pyluba.utility.constant.device_constant import work_mode
+from pymammotion.mammotion.devices.mammotion import has_field
+from pymammotion.proto.luba_msg import RptDevStatus
+from pymammotion.utility.constant.device_constant import WorkMode
 
 from homeassistant.components.lawn_mower import (
     LawnMowerActivity,
     LawnMowerEntity,
     LawnMowerEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from . import MammotionConfigEntry
+from .const import COMMAND_EXCEPTIONS, DOMAIN, LOGGER
 from .coordinator import MammotionDataUpdateCoordinator
-
-SUPPORTED_FEATURES = (
-    LawnMowerEntityFeature.DOCK
-    | LawnMowerEntityFeature.PAUSE
-    | LawnMowerEntityFeature.START_MOWING
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    coordinator: MammotionDataUpdateCoordinator,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up luba lawn mower."""
-
-    async_add_entities(
-        [
-            MammotionLawnMowerEntity(config.get("title"), coordinator),
-        ],
-        update_before_add=True,
-    )
+from .entity import MammotionBaseEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MammotionConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Luba config entry."""
-    coordinator: MammotionDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    await async_setup_platform(
-        hass, {"title": entry.title}, coordinator, async_add_entities
+    coordinator = entry.runtime_data
+    async_add_entities([MammotionLawnMowerEntity(coordinator)])
+
+
+class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
+    """Representation of a Mammotion lawn mower."""
+
+    _attr_supported_features = (
+        LawnMowerEntityFeature.DOCK
+        | LawnMowerEntityFeature.PAUSE
+        | LawnMowerEntityFeature.START_MOWING
     )
 
-
-class MammotionLawnMowerEntity(
-    CoordinatorEntity[MammotionDataUpdateCoordinator], LawnMowerEntity
-):
-    """Representation of a Luba lawn mower."""
-
-    _attr_supported_features = SUPPORTED_FEATURES
-    _attr_has_entity_name = True
-
-    def __init__(
-        self, device_name: str, coordinator: MammotionDataUpdateCoordinator
-    ) -> None:
+    def __init__(self, coordinator: MammotionDataUpdateCoordinator) -> None:
         """Initialize the lawn mower."""
-        super().__init__(coordinator)
-        self._attr_name = device_name
-        self._attr_unique_id = f"{device_name}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_name)},
-            manufacturer="Mammotion",
-            name=device_name,
-            suggested_area="Garden",
-        )
-
-    def _get_mower_activity(self) -> LawnMowerActivity:
-        mode = "FAIL"
-        if "sys" in self.coordinator.device.raw_data:
-            if "toappReportData" in self.coordinator.device.raw_data["sys"]:
-                mode = self.coordinator.device.raw_data["sys"]["toappReportData"][
-                    "dev"
-                ]["sysStatus"]
-        print(mode)
-        if mode == work_mode.MODE_PAUSE.value:
-            return LawnMowerActivity.PAUSED
-        if mode == work_mode.MODE_WORKING.value:
-            return LawnMowerActivity.MOWING
-        if mode == work_mode.MODE_LOCK.value:
-            return LawnMowerActivity.ERROR
-        if (
-            mode == work_mode.MODE_CHARGING.value
-            or mode == work_mode.MODE_READY.value
-            or mode == work_mode.MODE_RETURNING.value
-        ):
-            return LawnMowerActivity.DOCKED
-
-        return self._attr_activity
+        super().__init__(coordinator, "mower")
+        self._attr_name = None  # main feature of device
 
     @property
-    def activity(self) -> LawnMowerActivity:
+    def rpt_dev_status(self) -> RptDevStatus | None:
+        """Return the device status."""
+        if has_field(self.coordinator.data.sys.toapp_report_data.dev):
+            return self.coordinator.data.sys.toapp_report_data.dev
+        return None
+
+    @property
+    def activity(self) -> LawnMowerActivity | None:
         """Return the state of the mower."""
-        # productkey = coordinator.device.raw_data['net']['toappWifiIotStatus']['productkey']
-        # devicename = coordinator.device.raw_data['net']['toappWifiIotStatus']['devicename']
-        return self._get_mower_activity()
+
+        if self.rpt_dev_status is None:
+            return None
+
+        mode = self.rpt_dev_status.sys_status
+        charge_state = self.rpt_dev_status.charge_state
+
+        LOGGER.debug("activity mode %s", mode)
+        if (
+            mode == WorkMode.MODE_PAUSE
+            or mode == WorkMode.MODE_READY
+            and charge_state == 0
+        ):
+            return LawnMowerActivity.PAUSED
+        if mode in (WorkMode.MODE_WORKING, WorkMode.MODE_RETURNING):
+            return LawnMowerActivity.MOWING
+        if mode == WorkMode.MODE_LOCK:
+            return LawnMowerActivity.ERROR
+        if mode == WorkMode.MODE_READY and charge_state != 0:
+            return LawnMowerActivity.DOCKED
+        return None
 
     async def async_start_mowing(self) -> None:
         """Start mowing."""
-        self._attr_activity = LawnMowerActivity.MOWING
-        self.async_write_ha_state()
+        # check if job in progress
+        #
+        if self.rpt_dev_status is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="device_not_ready"
+            )
+        if self.rpt_dev_status.sys_status == WorkMode.MODE_PAUSE:
+            try:
+                await self.coordinator.device.command("resume_execute_task")
+                return await self.coordinator.async_request_iot_sync()
+            except COMMAND_EXCEPTIONS as exc:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="resume_failed"
+                ) from exc
+        try:
+            await self.coordinator.device.command("start_job")
+            await self.coordinator.async_request_iot_sync()
+        except COMMAND_EXCEPTIONS as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="start_failed"
+            ) from exc
+        finally:
+            self.coordinator.async_set_updated_data(self.coordinator.device.luba_msg)
 
     async def async_dock(self) -> None:
         """Start docking."""
-        self._attr_activity = LawnMowerActivity.DOCKED
-        self.async_write_ha_state()
+
+        mode = self.rpt_dev_status.sys_status
+
+        try:
+            if mode == WorkMode.MODE_RETURNING:
+                await self.coordinator.device.command("cancel_return_to_dock")
+                return await self.coordinator.device.command("get_report_cfg")
+            if mode == WorkMode.MODE_WORKING:
+                await self.coordinator.device.command("pause_execute_task")
+            await self.coordinator.device.command("return_to_dock")
+            await self.coordinator.async_request_iot_sync()
+        except COMMAND_EXCEPTIONS as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="dock_failed"
+            ) from exc
+        finally:
+            self.coordinator.async_set_updated_data(self.coordinator.device.luba_msg)
 
     async def async_pause(self) -> None:
         """Pause mower."""
-        self._attr_activity = LawnMowerActivity.PAUSED
-        self.async_write_ha_state()
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        print("coordinator callback")
-        print(self.coordinator.device.raw_data)
-        self._attr_activity = self._get_mower_activity()
-        self.async_write_ha_state()
+        try:
+            await self.coordinator.device.command("pause_execute_task")
+            await self.coordinator.async_request_iot_sync()
+        except COMMAND_EXCEPTIONS as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="pause_failed"
+            ) from exc
+        finally:
+            self.coordinator.async_set_updated_data(self.coordinator.device.luba_msg)

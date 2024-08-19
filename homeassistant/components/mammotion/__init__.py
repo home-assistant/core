@@ -2,31 +2,24 @@
 
 from __future__ import annotations
 
-import logging
-
-from bleak_retry_connector import BleakNotFoundError
-from pyluba.mammotion.devices import MammotionBaseBLEDevice
-
-from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_MAC, CONF_NAME, Platform
+from homeassistant.const import CONF_ADDRESS, CONF_MAC, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT, DOMAIN
+from .const import CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT
 from .coordinator import MammotionDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.LAWN_MOWER]
 
-_LOGGER = logging.getLogger(__name__)
+type MammotionConfigEntry = ConfigEntry[MammotionDataUpdateCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) -> bool:
     """Set up Mammotion Luba from a config entry."""
 
     assert entry.unique_id is not None
-    hass.data.setdefault(DOMAIN, {})
+
     if CONF_ADDRESS not in entry.data and CONF_MAC in entry.data:
         # Bleak uses addresses not mac addresses which are actually
         # UUIDs on some platforms (MacOS).
@@ -44,31 +37,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             options={CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT},
         )
 
-    address: str = entry.data[CONF_ADDRESS]
-    ble_device = bluetooth.async_ble_device_from_address(
-        hass, address.upper(), connectable=True
-    )
-    if not ble_device:
-        raise ConfigEntryNotReady(
-            f"Could not find Mammotion lawn mower with address {address}"
-        )
+    coordinator = MammotionDataUpdateCoordinator(hass)
 
-    device = MammotionBaseBLEDevice(ble_device)
-
-    coordinator = hass.data[DOMAIN][entry.entry_id] = MammotionDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        ble_device,
-        device,
-        entry.unique_id,
-        entry.data.get(CONF_NAME, entry.title),
-    )
-
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except BleakNotFoundError as err:
-        raise ConfigEntryNotReady from err
-
+    await coordinator.async_setup()
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -81,7 +54,4 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
