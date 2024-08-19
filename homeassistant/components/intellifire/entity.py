@@ -22,8 +22,8 @@ class IntellifireEntity(CoordinatorEntity[IntellifireDataUpdateCoordinator]):
         """Class initializer."""
         super().__init__(coordinator=coordinator)
         self.entity_description = description
-        self.identifiers = ({("IntelliFire", f"{coordinator.fireplace.serial}]")},)
         self._attr_unique_id = f"{description.key}_{coordinator.fireplace.serial}"
+        self.identifiers = ({("IntelliFire", f"{coordinator.fireplace.serial}]")},)
 
         # Configure the Device Info
         self._attr_device_info = self.coordinator.device_info

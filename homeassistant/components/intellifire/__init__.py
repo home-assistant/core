@@ -28,6 +28,7 @@ from .const import (
     CONF_USER_ID,
     CONF_WEB_CLIENT_ID,
     DOMAIN,
+    INIT_WAIT_TIME_SECONDS,
     LOGGER,
     STARTUP_TIMEOUT,
 )
@@ -168,7 +169,7 @@ async def _async_wait_for_initialization(
         fireplace.data.ipv4_address == "127.0.0.1" and fireplace.data.serial == "unset"
     ):
         LOGGER.debug(f"Waiting for fireplace to initialize [{fireplace.read_mode}]")
-        await asyncio.sleep(10)
+        await asyncio.sleep(INIT_WAIT_TIME_SECONDS)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
