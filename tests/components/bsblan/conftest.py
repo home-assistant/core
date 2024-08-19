@@ -67,3 +67,9 @@ async def init_integration(
     await hass.async_block_till_done()
 
     return mock_config_entry
+
+
+@pytest.fixture
+async def hass_client(hass, hass_ws_client):
+    """Return an authenticated HTTP client."""
+    return await hass_ws_client(hass)
