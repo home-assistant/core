@@ -4,6 +4,11 @@
       "vacation_mode": {
         "default": "mdi:beach"
       }
+    },
+    "event": {
+      "barrier_obstructed": {
+        "default": "mdi:garage-alert"
+      }
     }
   }
 }
