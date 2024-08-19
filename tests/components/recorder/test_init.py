@@ -1366,7 +1366,7 @@ async def test_statistics_runs_initiated(
 
 @pytest.mark.freeze_time("2022-09-13 09:00:00+02:00")
 @pytest.mark.parametrize("persistent_database", [True])
-@pytest.mark.parametrize("enable_statistics", [True])
+@pytest.mark.parametrize("enable_missing_statistics", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_compile_missing_statistics(
     async_test_recorder: RecorderInstanceGenerator, freezer: FrozenDateTimeFactory
@@ -2322,7 +2322,7 @@ async def test_connect_args_priority(hass: HomeAssistant, config_url) -> None:
         __bases__ = []
         _has_events = False
 
-        def __init__(*args, **kwargs): ...
+        def __init__(self, *args: Any, **kwargs: Any) -> None: ...
 
         @property
         def is_async(self):
