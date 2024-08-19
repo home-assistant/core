@@ -478,7 +478,9 @@ async def test_auth_access_signed_path_via_websocket(
     @websocket_api.websocket_command({"type": "diagnostics/list"})
     @callback
     def get_signed_path(
-        hass: HomeAssistant, connection: web.ActiveConnection, msg: dict[str, Any]
+        hass: HomeAssistant,
+        connection: websocket_api.ActiveConnection,
+        msg: dict[str, Any],
     ) -> None:
         connection.send_result(
             msg["id"], {"path": async_sign_path(hass, "/", timedelta(seconds=5))}
