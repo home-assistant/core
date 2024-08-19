@@ -3,12 +3,16 @@
 from collections import OrderedDict
 from datetime import date, datetime, timedelta
 import enum
+from functools import partial
 import logging
 import os
 from socket import _GLOBAL_DEFAULT_TIMEOUT
-from unittest.mock import Mock, patch
+import threading
+from typing import Any
+from unittest.mock import ANY, Mock, patch
 import uuid
 
+import py
 import pytest
 import voluptuous as vol
 
@@ -32,7 +36,7 @@ def test_boolean() -> None:
         "T",
         "negative",
         "lock",
-        "tr  ue",
+        "tr  ue",  # codespell:ignore ue
         [],
         [1, 2],
         {"one": "two"},
@@ -416,27 +420,9 @@ def test_service() -> None:
     schema("homeassistant.turn_on")
 
 
-def test_service_schema(hass: HomeAssistant) -> None:
-    """Test service_schema validation."""
-    options = (
-        {},
-        None,
-        {
-            "service": "homeassistant.turn_on",
-            "service_template": "homeassistant.turn_on",
-        },
-        {"data": {"entity_id": "light.kitchen"}},
-        {"service": "homeassistant.turn_on", "data": None},
-        {
-            "service": "homeassistant.turn_on",
-            "data_template": {"brightness": "{{ no_end"},
-        },
-    )
-    for value in options:
-        with pytest.raises(vol.MultipleInvalid):
-            cv.SERVICE_SCHEMA(value)
-
-    options = (
+@pytest.mark.parametrize(
+    "config",
+    [
         {"service": "homeassistant.turn_on"},
         {"service": "homeassistant.turn_on", "entity_id": "light.kitchen"},
         {"service": "light.turn_on", "entity_id": "all"},
@@ -450,14 +436,70 @@ def test_service_schema(hass: HomeAssistant) -> None:
             "alias": "turn on kitchen lights",
         },
         {"service": "scene.turn_on", "metadata": {}},
-    )
-    for value in options:
-        cv.SERVICE_SCHEMA(value)
+        {"action": "homeassistant.turn_on"},
+        {"action": "homeassistant.turn_on", "entity_id": "light.kitchen"},
+        {"action": "light.turn_on", "entity_id": "all"},
+        {
+            "action": "homeassistant.turn_on",
+            "entity_id": ["light.kitchen", "light.ceiling"],
+        },
+        {
+            "action": "light.turn_on",
+            "entity_id": "all",
+            "alias": "turn on kitchen lights",
+        },
+        {"action": "scene.turn_on", "metadata": {}},
+    ],
+)
+def test_service_schema(hass: HomeAssistant, config: dict[str, Any]) -> None:
+    """Test service_schema validation."""
+    validated = cv.SERVICE_SCHEMA(config)
 
-    # Check metadata is removed from the validated output
-    assert cv.SERVICE_SCHEMA({"service": "scene.turn_on", "metadata": {}}) == {
-        "service": "scene.turn_on"
-    }
+    # Ensure metadata is removed from the validated output
+    assert "metadata" not in validated
+
+    # Ensure service is migrated to action
+    assert "service" not in validated
+    assert "action" in validated
+    assert validated["action"] == config.get("service", config["action"])
+
+
+@pytest.mark.parametrize(
+    "config",
+    [
+        {},
+        None,
+        {"data": {"entity_id": "light.kitchen"}},
+        {
+            "service": "homeassistant.turn_on",
+            "service_template": "homeassistant.turn_on",
+        },
+        {"service": "homeassistant.turn_on", "data": None},
+        {
+            "service": "homeassistant.turn_on",
+            "data_template": {"brightness": "{{ no_end"},
+        },
+        {
+            "service": "homeassistant.turn_on",
+            "action": "homeassistant.turn_on",
+        },
+        {
+            "action": "homeassistant.turn_on",
+            "service_template": "homeassistant.turn_on",
+        },
+        {"action": "homeassistant.turn_on", "data": None},
+        {
+            "action": "homeassistant.turn_on",
+            "data_template": {"brightness": "{{ no_end"},
+        },
+    ],
+)
+def test_invalid_service_schema(
+    hass: HomeAssistant, config: dict[str, Any] | None
+) -> None:
+    """Test service_schema validation fails."""
+    with pytest.raises(vol.MultipleInvalid):
+        cv.SERVICE_SCHEMA(config)
 
 
 def test_entity_service_schema() -> None:
@@ -1453,7 +1495,7 @@ def test_whitespace() -> None:
         "T",
         "negative",
         "lock",
-        "tr  ue",
+        "tr  ue",  # codespell:ignore ue
         [],
         [1, 2],
         {"one": "two"},
@@ -1699,3 +1741,67 @@ def test_determine_script_action_ambiguous() -> None:
 def test_determine_script_action_non_ambiguous() -> None:
     """Test determine script action with a non ambiguous action."""
     assert cv.determine_script_action({"delay": "00:00:05"}) == "delay"
+
+
+async def test_async_validate(hass: HomeAssistant, tmpdir: py.path.local) -> None:
+    """Test the async_validate helper."""
+    validator_calls: dict[str, list[int]] = {}
+
+    def _mock_validator_schema(real_func, *args):
+        calls = validator_calls.setdefault(real_func.__name__, [])
+        calls.append(threading.get_ident())
+        return real_func(*args)
+
+    CV_PREFIX = "homeassistant.helpers.config_validation"
+    with (
+        patch(f"{CV_PREFIX}.isdir", wraps=partial(_mock_validator_schema, cv.isdir)),
+        patch(f"{CV_PREFIX}.string", wraps=partial(_mock_validator_schema, cv.string)),
+    ):
+        # Assert validation in event loop when not decorated with not_async_friendly
+        await cv.async_validate(hass, cv.string, "abcd")
+        assert validator_calls == {"string": [hass.loop_thread_id]}
+        validator_calls = {}
+
+        # Assert validation in executor when decorated with not_async_friendly
+        await cv.async_validate(hass, cv.isdir, tmpdir)
+        assert validator_calls == {"isdir": [hass.loop_thread_id, ANY]}
+        assert validator_calls["isdir"][1] != hass.loop_thread_id
+        validator_calls = {}
+
+        # Assert validation in executor when decorated with not_async_friendly
+        await cv.async_validate(hass, vol.All(cv.isdir, cv.string), tmpdir)
+        assert validator_calls == {"isdir": [hass.loop_thread_id, ANY], "string": [ANY]}
+        assert validator_calls["isdir"][1] != hass.loop_thread_id
+        assert validator_calls["string"][0] != hass.loop_thread_id
+        validator_calls = {}
+
+        # Assert validation in executor when decorated with not_async_friendly
+        await cv.async_validate(hass, vol.All(cv.string, cv.isdir), tmpdir)
+        assert validator_calls == {
+            "isdir": [hass.loop_thread_id, ANY],
+            "string": [hass.loop_thread_id, ANY],
+        }
+        assert validator_calls["isdir"][1] != hass.loop_thread_id
+        assert validator_calls["string"][1] != hass.loop_thread_id
+        validator_calls = {}
+
+        # Assert validation in event loop when not using cv.async_validate
+        cv.isdir(tmpdir)
+        assert validator_calls == {"isdir": [hass.loop_thread_id]}
+        validator_calls = {}
+
+        # Assert validation in event loop when not using cv.async_validate
+        vol.All(cv.isdir, cv.string)(tmpdir)
+        assert validator_calls == {
+            "isdir": [hass.loop_thread_id],
+            "string": [hass.loop_thread_id],
+        }
+        validator_calls = {}
+
+        # Assert validation in event loop when not using cv.async_validate
+        vol.All(cv.string, cv.isdir)(tmpdir)
+        assert validator_calls == {
+            "isdir": [hass.loop_thread_id],
+            "string": [hass.loop_thread_id],
+        }
+        validator_calls = {}

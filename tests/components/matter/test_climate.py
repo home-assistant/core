@@ -350,3 +350,9 @@ async def test_room_airconditioner(
     state = hass.states.get("climate.room_airconditioner_thermostat")
     assert state
     assert state.state == HVACMode.DRY
+
+    # test featuremap update
+    set_node_attribute(room_airconditioner, 1, 513, 65532, 1)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("climate.room_airconditioner_thermostat")
+    assert state.attributes["supported_features"] & ClimateEntityFeature.TURN_ON

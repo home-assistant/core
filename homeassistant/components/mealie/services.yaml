@@ -11,6 +11,7 @@ get_mealplan:
     end_date:
       selector:
         date:
+
 get_recipe:
   fields:
     config_entry_id:
@@ -22,6 +23,7 @@ get_recipe:
       required: true
       selector:
         text:
+
 import_recipe:
   fields:
     config_entry_id:
@@ -36,3 +38,52 @@ import_recipe:
     include_tags:
       selector:
         boolean:
+
+set_random_mealplan:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: mealie
+    date:
+      selector:
+        date:
+    entry_type:
+      selector:
+        select:
+          options:
+            - breakfast
+            - lunch
+            - dinner
+            - side
+          translation_key: mealplan_entry_type
+
+set_mealplan:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: mealie
+    date:
+      selector:
+        date:
+    entry_type:
+      selector:
+        select:
+          options:
+            - breakfast
+            - lunch
+            - dinner
+            - side
+          translation_key: mealplan_entry_type
+    recipe_id:
+      selector:
+        text:
+    note_title:
+      selector:
+        text:
+    note_text:
+      selector:
+        text:

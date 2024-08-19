@@ -129,6 +129,7 @@ def _get_mock_client(mac: str) -> OmadaNetworkClient:
             if c["wireless"]:
                 return OmadaWirelessClient(c)
             return OmadaWiredClient(c)
+    raise ValueError(f"Client with MAC {mac} not found in mock data")
 
 
 @pytest.fixture

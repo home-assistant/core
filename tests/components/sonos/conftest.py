@@ -1,9 +1,10 @@
 """Configuration for Sonos tests."""
 
 import asyncio
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Coroutine, Generator
 from copy import copy
 from ipaddress import ip_address
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
@@ -17,6 +18,7 @@ from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.const import CONF_HOSTS
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture, load_json_value_fixture
 
@@ -78,7 +80,7 @@ class SonosMockService:
 class SonosMockEvent:
     """Mock a sonos Event used in callbacks."""
 
-    def __init__(self, soco, service, variables):
+    def __init__(self, soco, service, variables) -> None:
         """Initialize the instance."""
         self.sid = f"{soco.uid}_sub0000000001"
         self.seq = "0"
@@ -119,7 +121,9 @@ async def async_autosetup_sonos(async_setup_sonos):
 
 
 @pytest.fixture
-def async_setup_sonos(hass, config_entry, fire_zgs_event):
+def async_setup_sonos(
+    hass: HomeAssistant, config_entry: MockConfigEntry, fire_zgs_event
+) -> Callable[[], Coroutine[Any, Any, None]]:
     """Return a coroutine to set up a Sonos integration instance on demand."""
 
     async def _wrapper():
@@ -135,7 +139,7 @@ def async_setup_sonos(hass, config_entry, fire_zgs_event):
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture():
+def config_entry_fixture() -> MockConfigEntry:
     """Create a mock Sonos config entry."""
     return MockConfigEntry(domain=DOMAIN, title="Sonos")
 
@@ -453,6 +457,7 @@ def mock_get_music_library_information(
                 "object.container.album.musicAlbum",
             )
         ]
+    return []
 
 
 @pytest.fixture(name="music_library_browse_categories")
@@ -648,7 +653,9 @@ def zgs_discovery_fixture():
 
 
 @pytest.fixture(name="fire_zgs_event")
-def zgs_event_fixture(hass: HomeAssistant, soco: SoCo, zgs_discovery: str):
+def zgs_event_fixture(
+    hass: HomeAssistant, soco: SoCo, zgs_discovery: str
+) -> Callable[[], Coroutine[Any, Any, None]]:
     """Create alarm_event fixture."""
     variables = {"ZoneGroupState": zgs_discovery}
 
@@ -660,3 +667,26 @@ def zgs_event_fixture(hass: HomeAssistant, soco: SoCo, zgs_discovery: str):
         await hass.async_block_till_done(wait_background_tasks=True)
 
     return _wrapper
+
+
+@pytest.fixture(name="sonos_setup_two_speakers")
+async def sonos_setup_two_speakers(
+    hass: HomeAssistant, soco_factory: SoCoMockFactory
+) -> list[MockSoCo]:
+    """Set up home assistant with two Sonos Speakers."""
+    soco_lr = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
+    soco_br = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "media_player": {
+                    "interface_addr": "127.0.0.1",
+                    "hosts": ["10.10.10.1", "10.10.10.2"],
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    return [soco_lr, soco_br]

@@ -7,11 +7,11 @@ from unittest.mock import ANY, patch
 
 import pytest
 
-from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
 from homeassistant.components.config import scene
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from tests.typing import ClientSessionGenerator
 

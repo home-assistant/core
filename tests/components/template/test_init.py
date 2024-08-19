@@ -7,9 +7,9 @@ import pytest
 
 from homeassistant import config
 from homeassistant.components.template import DOMAIN
+from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.reload import SERVICE_RELOAD
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -313,6 +313,22 @@ async def async_yaml_patch_helper(hass, filename):
                 "name": "My template",
             },
             {},
+        ),
+        (
+            {
+                "template_type": "number",
+                "name": "My template",
+                "state": "{{ 10 }}",
+                "min": "{{ 0 }}",
+                "max": "{{ 100 }}",
+                "step": "{{ 0.1 }}",
+            },
+            {
+                "state": "{{ 11 }}",
+                "min": "{{ 0 }}",
+                "max": "{{ 100 }}",
+                "step": "{{ 0.1 }}",
+            },
         ),
         (
             {

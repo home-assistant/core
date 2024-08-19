@@ -23,7 +23,7 @@ async def async_setup_entry(
     module = hass.data[DOMAIN][config.entry_id]
 
     async_add_entities(
-        VeluxLight(node)
+        VeluxLight(node, config.entry_id)
         for node in module.pyvlx.nodes
         if isinstance(node, LighteningDevice)
     )

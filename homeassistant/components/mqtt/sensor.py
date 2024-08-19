@@ -260,7 +260,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
             return
         try:
             if (payload_datetime := dt_util.parse_datetime(payload)) is None:
-                raise ValueError
+                raise ValueError  # noqa: TRY301
         except ValueError:
             _LOGGER.warning("Invalid state message '%s' from '%s'", payload, msg.topic)
             self._attr_native_value = None
@@ -280,7 +280,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
         try:
             last_reset = dt_util.parse_datetime(str(payload))
             if last_reset is None:
-                raise ValueError
+                raise ValueError  # noqa: TRY301
             self._attr_last_reset = last_reset
         except ValueError:
             _LOGGER.warning(

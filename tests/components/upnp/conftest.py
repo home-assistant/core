@@ -248,7 +248,7 @@ async def mock_config_entry(
     ssdp_instant_discovery,
     mock_igd_device: IgdDevice,
     mock_mac_address_from_host,
-):
+) -> MockConfigEntry:
     """Create an initialized integration."""
     entry = MockConfigEntry(
         domain=DOMAIN,

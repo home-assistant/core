@@ -162,7 +162,9 @@ async def async_setup_entry(
         "set_sleep_timer",
     )
 
-    platform.async_register_entity_service(SERVICE_CLEAR_TIMER, {}, "clear_sleep_timer")
+    platform.async_register_entity_service(
+        SERVICE_CLEAR_TIMER, None, "clear_sleep_timer"
+    )
 
     platform.async_register_entity_service(
         SERVICE_UPDATE_ALARM,
@@ -388,7 +390,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @soco_error()
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        self.soco.volume = str(int(volume * 100))
+        self.soco.volume = int(volume * 100)
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
     def set_shuffle(self, shuffle: bool) -> None:

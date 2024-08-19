@@ -8,7 +8,7 @@ import pytest
 from homeassistant.components.russound_rio.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from .const import HARDWARE_MAC, MOCK_CONFIG, MODEL
+from .const import HARDWARE_MAC, MOCK_CONFIG, MOCK_CONTROLLERS, MODEL
 
 from tests.common import MockConfigEntry
 
@@ -44,5 +44,5 @@ def mock_russound() -> Generator[AsyncMock]:
             return_value=mock_client,
         ),
     ):
-        mock_client.enumerate_controllers.return_value = [(1, HARDWARE_MAC, MODEL)]
+        mock_client.enumerate_controllers.return_value = MOCK_CONTROLLERS
         yield mock_client

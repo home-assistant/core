@@ -224,6 +224,7 @@ class MqttFan(MqttEntity, FanEntity):
     _optimistic_preset_mode: bool
     _payload: dict[str, Any]
     _speed_range: tuple[int, int]
+    _enable_turn_on_off_backwards_compatibility = False
 
     @staticmethod
     def config_schema() -> VolSchemaType:
@@ -289,7 +290,9 @@ class MqttFan(MqttEntity, FanEntity):
             optimistic or self._topic[CONF_PRESET_MODE_STATE_TOPIC] is None
         )
 
-        self._attr_supported_features = FanEntityFeature(0)
+        self._attr_supported_features = (
+            FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
+        )
         self._attr_supported_features |= (
             self._topic[CONF_OSCILLATION_COMMAND_TOPIC] is not None
             and FanEntityFeature.OSCILLATE
