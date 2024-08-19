@@ -54,6 +54,6 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntelliFirePollData
             manufacturer="Hearth and Home",
             model="IFT-WFM",
             name="IntelliFire",
-            identifiers={("IntelliFire", f"{self.fireplace.serial}]")},
+            identifiers={("IntelliFire", str(self.fireplace.serial))},
             configuration_url=f"http://{self.fireplace.ip_address}/poll",
         )
