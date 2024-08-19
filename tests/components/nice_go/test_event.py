@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -12,11 +12,11 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.freeze_time("2024-08-19")
 async def test_barrier_obstructed(
     hass: HomeAssistant,
     mock_nice_go: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test barrier obstructed."""
     mock_nice_go.event = MagicMock()
@@ -25,13 +25,7 @@ async def test_barrier_obstructed(
     await mock_nice_go.event.call_args_list[2][0][0]({"deviceId": "1"})
     await hass.async_block_till_done()
 
-    assert (
-        hass.states.get("event.test_garage_1_barrier_obstructed").state
-        == freezer.time_to_freeze.isoformat(timespec="milliseconds") + "+00:00"
-    )
-    assert (
-        hass.states.get("event.test_garage_1_barrier_obstructed").attributes[
-            "event_type"
-        ]
-        == "barrier_obstructed"
-    )
+    event_state = hass.states.get("event.test_garage_1_barrier_obstructed")
+
+    assert event_state.state == "2024-08-19T00:00:00.000+00:00"
+    assert event_state.attributes["event_type"] == "barrier_obstructed"
