@@ -26,7 +26,6 @@ async def async_setup_entry(
 class ApSystemsMaxOutputNumber(ApSystemsEntity, NumberEntity):
     """Base sensor to be used with description."""
 
-    _attr_native_min_value = 30
     _attr_native_step = 1
     _attr_device_class = NumberDeviceClass.POWER
     _attr_mode = NumberMode.BOX
@@ -42,6 +41,7 @@ class ApSystemsMaxOutputNumber(ApSystemsEntity, NumberEntity):
         self._api = data.coordinator.api
         self._attr_unique_id = f"{data.device_id}_output_limit"
         self._attr_native_max_value = data.coordinator.api.max_power
+        self._attr_native_min_value = data.coordinator.api.min_power
 
     async def async_update(self) -> None:
         """Set the state with the value fetched from the inverter."""
