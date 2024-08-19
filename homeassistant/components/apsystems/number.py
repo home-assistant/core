@@ -41,7 +41,7 @@ class ApSystemsMaxOutputNumber(ApSystemsEntity, NumberEntity):
         super().__init__(data)
         self._api = data.coordinator.api
         self._attr_unique_id = f"{data.device_id}_output_limit"
-        self._attr_native_max_value = data.max_output
+        self._attr_native_max_value = data.coordinator.api.max_power
 
     async def async_update(self) -> None:
         """Set the state with the value fetched from the inverter."""

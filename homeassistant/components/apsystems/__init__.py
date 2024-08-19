@@ -27,7 +27,6 @@ class ApSystemsData:
 
     coordinator: ApSystemsDataCoordinator
     device_id: str
-    max_output: int
 
 
 type ApSystemsConfigEntry = ConfigEntry[ApSystemsData]
@@ -35,23 +34,16 @@ type ApSystemsConfigEntry = ConfigEntry[ApSystemsData]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ApSystemsConfigEntry) -> bool:
     """Set up this integration using UI."""
-    temp_api = APsystemsEZ1M(
-        ip_address=entry.data[CONF_IP_ADDRESS],
-        port=entry.data.get(CONF_PORT, DEFAULT_PORT),
-        timeout=8,
-    )
-    max_output = (await temp_api.get_device_info()).maxPower
     api = APsystemsEZ1M(
         ip_address=entry.data[CONF_IP_ADDRESS],
         port=entry.data.get(CONF_PORT, DEFAULT_PORT),
-        max_power=max_output,
         timeout=8,
     )
     coordinator = ApSystemsDataCoordinator(hass, api)
     await coordinator.async_config_entry_first_refresh()
     assert entry.unique_id
     entry.runtime_data = ApSystemsData(
-        coordinator=coordinator, device_id=entry.unique_id, max_output=max_output
+        coordinator=coordinator, device_id=entry.unique_id
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

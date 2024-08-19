@@ -34,6 +34,10 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
         )
         self.api = api
 
+    async def _async_setup(self) -> None:
+        max_power = (await self.api.get_device_info()).maxPower
+        self.api.max_power = max_power
+
     async def _async_update_data(self) -> ApSystemsSensorData:
         output_data = await self.api.get_output_data()
         alarm_info = await self.api.get_alarm_info()
