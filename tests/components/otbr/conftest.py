@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 
 from homeassistant.components import otbr
+from homeassistant.config_entries import SOURCE_HASSIO
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -25,7 +26,9 @@ async def otbr_config_entry_multipan_fixture(hass: HomeAssistant) -> None:
         data=CONFIG_ENTRY_DATA_MULTIPAN,
         domain=otbr.DOMAIN,
         options={},
+        source=SOURCE_HASSIO,
         title="Open Thread Border Router",
+        unique_id="1234",
     )
     config_entry.add_to_hass(hass)
     with (

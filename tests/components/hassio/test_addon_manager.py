@@ -11,6 +11,7 @@ from unittest.mock import AsyncMock, call, patch
 import pytest
 
 from homeassistant.components.hassio.addon_manager import (
+    AddonDiscoveryInfo,
     AddonError,
     AddonInfo,
     AddonManager,
@@ -210,9 +211,14 @@ async def test_get_addon_discovery_info(
     addon_manager: AddonManager, get_addon_discovery_info: AsyncMock
 ) -> None:
     """Test get addon discovery info."""
-    get_addon_discovery_info.return_value = {"config": {"test_key": "test"}}
+    get_addon_discovery_info.return_value = {
+        "config": {"test_key": "test"},
+        "uuid": "1234",
+    }
 
-    assert await addon_manager.async_get_addon_discovery_info() == {"test_key": "test"}
+    assert await addon_manager.async_get_addon_discovery_info() == AddonDiscoveryInfo(
+        config={"test_key": "test"}, uuid="1234"
+    )
 
     assert get_addon_discovery_info.call_count == 1
 

@@ -33,7 +33,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an Open Thread Border Router config entry."""
     api = python_otbr_api.OTBR(entry.data["url"], async_get_clientsession(hass), 10)
 
-    otbrdata = OTBRData(entry.data["url"], api, entry.entry_id)
+    otbrdata = OTBRData(
+        entry.data["url"], api, entry.entry_id, entry.source, entry.unique_id or DOMAIN
+    )
     try:
         border_agent_id = await otbrdata.get_border_agent_id()
         dataset_tlvs = await otbrdata.get_active_dataset_tlvs()

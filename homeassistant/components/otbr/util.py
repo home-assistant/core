@@ -80,6 +80,8 @@ class OTBRData:
     url: str
     api: python_otbr_api.OTBR
     entry_id: str
+    entry_source: str
+    entry_unique_id: str
 
     @_handle_otbr_error
     async def factory_reset(self) -> None:

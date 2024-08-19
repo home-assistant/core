@@ -25,9 +25,12 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 ADDON_DISCOVERY_INFO = {
-    "addon": "Z-Wave JS",
-    "host": "host1",
-    "port": 3001,
+    "config": {
+        "addon": "Z-Wave JS",
+        "host": "host1",
+        "port": 3001,
+    },
+    "uuid": "1234",
 }
 
 
@@ -335,7 +338,7 @@ async def test_manual_already_configured(hass: HomeAssistant) -> None:
     assert entry.data["integration_created_addon"] is False
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
 async def test_supervisor_discovery(
     hass: HomeAssistant,
     supervisor,
@@ -357,7 +360,7 @@ async def test_supervisor_discovery(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
         data=HassioServiceInfo(
-            config=ADDON_DISCOVERY_INFO,
+            config=ADDON_DISCOVERY_INFO["config"],
             name="Z-Wave JS",
             slug=ADDON_SLUG,
             uuid="1234",
@@ -396,7 +399,7 @@ async def test_supervisor_discovery(
 
 @pytest.mark.parametrize(
     ("discovery_info", "server_version_side_effect"),
-    [({"config": ADDON_DISCOVERY_INFO}, TimeoutError())],
+    [(ADDON_DISCOVERY_INFO, TimeoutError())],
 )
 async def test_supervisor_discovery_cannot_connect(
     hass: HomeAssistant, supervisor, get_addon_discovery_info
@@ -407,7 +410,7 @@ async def test_supervisor_discovery_cannot_connect(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
         data=HassioServiceInfo(
-            config=ADDON_DISCOVERY_INFO,
+            config=ADDON_DISCOVERY_INFO["config"],
             name="Z-Wave JS",
             slug=ADDON_SLUG,
             uuid="1234",
@@ -418,7 +421,7 @@ async def test_supervisor_discovery_cannot_connect(
     assert result["reason"] == "cannot_connect"
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
 async def test_clean_discovery_on_user_create(
     hass: HomeAssistant,
     supervisor,
@@ -440,7 +443,7 @@ async def test_clean_discovery_on_user_create(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
         data=HassioServiceInfo(
-            config=ADDON_DISCOVERY_INFO,
+            config=ADDON_DISCOVERY_INFO["config"],
             name="Z-Wave JS",
             slug=ADDON_SLUG,
             uuid="1234",
@@ -516,7 +519,7 @@ async def test_abort_discovery_with_existing_entry(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
         data=HassioServiceInfo(
-            config=ADDON_DISCOVERY_INFO,
+            config=ADDON_DISCOVERY_INFO["config"],
             name="Z-Wave JS",
             slug=ADDON_SLUG,
             uuid="1234",
@@ -545,7 +548,7 @@ async def test_abort_hassio_discovery_with_existing_flow(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
         data=HassioServiceInfo(
-            config=ADDON_DISCOVERY_INFO,
+            config=ADDON_DISCOVERY_INFO["config"],
             name="Z-Wave JS",
             slug=ADDON_SLUG,
             uuid="1234",
@@ -579,7 +582,7 @@ async def test_abort_hassio_discovery_for_other_addon(
     assert result2["reason"] == "not_zwave_js_addon"
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
 async def test_usb_discovery(
     hass: HomeAssistant,
     supervisor,
@@ -678,7 +681,7 @@ async def test_usb_discovery(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
 async def test_usb_discovery_addon_not_running(
     hass: HomeAssistant,
     supervisor,
@@ -794,7 +797,7 @@ async def test_discovery_addon_not_running(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
         data=HassioServiceInfo(
-            config=ADDON_DISCOVERY_INFO,
+            config=ADDON_DISCOVERY_INFO["config"],
             name="Z-Wave JS",
             slug=ADDON_SLUG,
             uuid="1234",
@@ -888,7 +891,7 @@ async def test_discovery_addon_not_installed(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
         data=HassioServiceInfo(
-            config=ADDON_DISCOVERY_INFO,
+            config=ADDON_DISCOVERY_INFO["config"],
             name="Z-Wave JS",
             slug=ADDON_SLUG,
             uuid="1234",
@@ -985,7 +988,7 @@ async def test_abort_usb_discovery_with_existing_flow(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
         data=HassioServiceInfo(
-            config=ADDON_DISCOVERY_INFO,
+            config=ADDON_DISCOVERY_INFO["config"],
             name="Z-Wave JS",
             slug=ADDON_SLUG,
             uuid="1234",
@@ -1118,7 +1121,7 @@ async def test_not_addon(hass: HomeAssistant, supervisor) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
 async def test_addon_running(
     hass: HomeAssistant,
     supervisor,
@@ -1184,14 +1187,14 @@ async def test_addon_running(
     ),
     [
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            ADDON_DISCOVERY_INFO,
             HassioAPIError(),
             None,
             None,
             "addon_get_discovery_info_failed",
         ),
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            ADDON_DISCOVERY_INFO,
             None,
             TimeoutError,
             None,
@@ -1205,7 +1208,7 @@ async def test_addon_running(
             "addon_get_discovery_info_failed",
         ),
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            ADDON_DISCOVERY_INFO,
             None,
             None,
             HassioAPIError(),
@@ -1240,7 +1243,7 @@ async def test_addon_running_failures(
     assert result["reason"] == abort_reason
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
 async def test_addon_running_already_configured(
     hass: HomeAssistant,
     supervisor,
@@ -1299,7 +1302,7 @@ async def test_addon_running_already_configured(
     assert entry.data["lr_s2_authenticated_key"] == "new321"
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
 async def test_addon_installed(
     hass: HomeAssistant,
     supervisor,
@@ -1392,7 +1395,7 @@ async def test_addon_installed(
 
 @pytest.mark.parametrize(
     ("discovery_info", "start_addon_side_effect"),
-    [({"config": ADDON_DISCOVERY_INFO}, HassioAPIError())],
+    [(ADDON_DISCOVERY_INFO, HassioAPIError())],
 )
 async def test_addon_installed_start_failure(
     hass: HomeAssistant,
@@ -1464,7 +1467,7 @@ async def test_addon_installed_start_failure(
     ("discovery_info", "server_version_side_effect"),
     [
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            ADDON_DISCOVERY_INFO,
             TimeoutError,
         ),
         (
@@ -1541,7 +1544,7 @@ async def test_addon_installed_failures(
 
 @pytest.mark.parametrize(
     ("set_addon_options_side_effect", "discovery_info"),
-    [(HassioAPIError(), {"config": ADDON_DISCOVERY_INFO})],
+    [(HassioAPIError(), ADDON_DISCOVERY_INFO)],
 )
 async def test_addon_installed_set_options_failure(
     hass: HomeAssistant,
@@ -1603,7 +1606,7 @@ async def test_addon_installed_set_options_failure(
     assert start_addon.call_count == 0
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
 async def test_addon_installed_already_configured(
     hass: HomeAssistant,
     supervisor,
@@ -1695,7 +1698,7 @@ async def test_addon_installed_already_configured(
     assert entry.data["lr_s2_authenticated_key"] == "new321"
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
 async def test_addon_not_installed(
     hass: HomeAssistant,
     supervisor,
@@ -1921,7 +1924,7 @@ async def test_options_not_addon(
     ),
     [
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            ADDON_DISCOVERY_INFO,
             {},
             {
                 "device": "/test",
@@ -1947,7 +1950,7 @@ async def test_options_not_addon(
             0,
         ),
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            ADDON_DISCOVERY_INFO,
             {"use_addon": True},
             {
                 "device": "/test",
@@ -2068,7 +2071,7 @@ async def test_options_addon_running(
     ("discovery_info", "entry_data", "old_addon_options", "new_addon_options"),
     [
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            ADDON_DISCOVERY_INFO,
             {},
             {
                 "device": "/test",
@@ -2195,7 +2198,7 @@ async def different_device_server_version(*args):
     ),
     [
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            ADDON_DISCOVERY_INFO,
             {},
             {
                 "device": "/test",
@@ -2224,7 +2227,7 @@ async def different_device_server_version(*args):
             different_device_server_version,
         ),
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            ADDON_DISCOVERY_INFO,
             {},
             {
                 "device": "/test",
@@ -2357,7 +2360,7 @@ async def test_options_different_device(
     ),
     [
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            ADDON_DISCOVERY_INFO,
             {},
             {
                 "device": "/test",
@@ -2386,7 +2389,7 @@ async def test_options_different_device(
             [HassioAPIError(), None],
         ),
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            ADDON_DISCOVERY_INFO,
             {},
             {
                 "device": "/test",
@@ -2520,7 +2523,7 @@ async def test_options_addon_restart_failed(
     ),
     [
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            ADDON_DISCOVERY_INFO,
             {},
             {
                 "device": "/test",
@@ -2613,7 +2616,7 @@ async def test_options_addon_running_server_info_failure(
     ),
     [
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            ADDON_DISCOVERY_INFO,
             {},
             {
                 "device": "/test",
@@ -2639,7 +2642,7 @@ async def test_options_addon_running_server_info_failure(
             0,
         ),
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            ADDON_DISCOVERY_INFO,
             {"use_addon": True},
             {
                 "device": "/test",
@@ -2751,7 +2754,7 @@ async def test_options_addon_not_installed(
     assert client.disconnect.call_count == 1
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
 async def test_import_addon_installed(
     hass: HomeAssistant,
     supervisor,

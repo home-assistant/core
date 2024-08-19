@@ -66,6 +66,14 @@ def api_error[_AddonManagerT: AddonManager, **_P, _R](
 
 
 @dataclass
+class AddonDiscoveryInfo:
+    """Represent the add-on discovery info."""
+
+    config: dict
+    uuid: str
+
+
+@dataclass
 class AddonInfo:
     """Represent the current add-on info state."""
 
@@ -125,7 +133,7 @@ class AddonManager:
         )
 
     @api_error("Failed to get the {addon_name} add-on discovery info")
-    async def async_get_addon_discovery_info(self) -> dict:
+    async def async_get_addon_discovery_info(self) -> AddonDiscoveryInfo:
         """Return add-on discovery info."""
         discovery_info = await async_get_addon_discovery_info(
             self._hass, self.addon_slug
@@ -134,8 +142,10 @@ class AddonManager:
         if not discovery_info:
             raise AddonError(f"Failed to get {self.addon_name} add-on discovery info")
 
-        discovery_info_config: dict = discovery_info["config"]
-        return discovery_info_config
+        return AddonDiscoveryInfo(
+            config=discovery_info["config"],
+            uuid=discovery_info["uuid"],
+        )
 
     @api_error("Failed to get the {addon_name} add-on info")
     async def async_get_addon_info(self) -> AddonInfo:
