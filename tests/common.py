@@ -13,12 +13,7 @@ from collections.abc import (
     Mapping,
     Sequence,
 )
-from contextlib import (
-    AbstractAsyncContextManager,
-    asynccontextmanager,
-    contextmanager,
-    suppress,
-)
+from contextlib import asynccontextmanager, contextmanager, suppress
 from datetime import UTC, datetime, timedelta
 from enum import Enum
 import functools as ft
@@ -28,7 +23,6 @@ import json
 import logging
 import os
 import pathlib
-import threading
 import time
 from types import FrameType, ModuleType
 from typing import Any, Literal, NoReturn
@@ -177,56 +171,6 @@ def threadsafe_coroutine_factory(func):
 def get_test_config_dir(*add_path):
     """Return a path to a test config dir."""
     return os.path.join(os.path.dirname(__file__), "testing_config", *add_path)
-
-
-@contextmanager
-def get_test_home_assistant() -> Generator[HomeAssistant]:
-    """Return a Home Assistant object pointing at test config directory."""
-    hass_created_event = threading.Event()
-    loop_stop_event = threading.Event()
-
-    context_manager: AbstractAsyncContextManager = None
-    hass: HomeAssistant = None
-    loop: asyncio.AbstractEventLoop = None
-    orig_stop: Callable = None
-
-    def run_loop() -> None:
-        """Create and run event loop."""
-        nonlocal context_manager, hass, loop, orig_stop
-
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        context_manager = async_test_home_assistant(loop)
-        hass = loop.run_until_complete(context_manager.__aenter__())
-
-        orig_stop = hass.stop
-        hass._stopped = Mock(set=loop.stop)
-        hass.start = start_hass
-        hass.stop = stop_hass
-
-        hass_created_event.set()
-
-        loop.run_forever()
-        loop_stop_event.set()
-
-    def start_hass(*mocks: Any) -> None:
-        """Start hass."""
-        asyncio.run_coroutine_threadsafe(hass.async_start(), loop).result()
-
-    def stop_hass() -> None:
-        """Stop hass."""
-        orig_stop()
-        loop_stop_event.wait()
-
-    threading.Thread(name="LoopThread", target=run_loop, daemon=False).start()
-
-    hass_created_event.wait()
-
-    try:
-        yield hass
-    finally:
-        loop.run_until_complete(context_manager.__aexit__(None, None, None))
-        loop.close()
 
 
 class StoreWithoutWriteLoad[_T: (Mapping[str, Any] | Sequence[Any])](storage.Store[_T]):
