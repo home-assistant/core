@@ -1082,6 +1082,7 @@ RPC_SENSORS: Final = {
             or config[key]["enable"] is False
             or status[key].get("xpercent") is None
         ),
+        unit=lambda config: config["xpercent"].get("unit"),
     ),
     "pulse_counter": RpcSensorDescription(
         key="input",
@@ -1104,6 +1105,7 @@ RPC_SENSORS: Final = {
             or config[key]["enable"] is False
             or status[key]["counts"].get("xtotal") is None
         ),
+        unit=lambda config: config["xcounts"].get("unit"),
     ),
     "counter_frequency": RpcSensorDescription(
         key="input",
@@ -1124,6 +1126,7 @@ RPC_SENSORS: Final = {
             or config[key]["enable"] is False
             or status[key].get("xfreq") is None
         ),
+        unit=lambda config: config["xfreq"].get("unit"),
     ),
     "text": RpcSensorDescription(
         key="text",
