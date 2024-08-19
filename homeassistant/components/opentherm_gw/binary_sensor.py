@@ -1,7 +1,6 @@
 """Support for OpenTherm Gateway binary sensors."""
 
 from dataclasses import dataclass
-import logging
 
 from pyotgw import vars as gw_vars
 
@@ -19,8 +18,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_GATEWAYS, DATA_OPENTHERM_GW
 from .entity import OpenThermEntity, OpenThermEntityDescriptionMixin
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
