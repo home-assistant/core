@@ -2,8 +2,9 @@
 
 from collections.abc import Callable
 
+from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
-from aiohomekit.model.services import ServicesTypes
+from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -12,7 +13,7 @@ from homeassistant.helpers import entity_registry as er
 from .common import setup_test_component
 
 
-def create_window_covering_service(accessory):
+def create_window_covering_service(accessory: Accessory) -> Service:
     """Define a window-covering characteristics as per page 219 of HAP spec."""
     service = accessory.add_service(ServicesTypes.WINDOW_COVERING)
 
@@ -37,7 +38,7 @@ def create_window_covering_service(accessory):
     return service
 
 
-def create_window_covering_service_with_h_tilt(accessory):
+def create_window_covering_service_with_h_tilt(accessory: Accessory) -> None:
     """Define a window-covering characteristics as per page 219 of HAP spec."""
     service = create_window_covering_service(accessory)
 
@@ -52,7 +53,7 @@ def create_window_covering_service_with_h_tilt(accessory):
     tilt_target.maxValue = 90
 
 
-def create_window_covering_service_with_h_tilt_2(accessory):
+def create_window_covering_service_with_h_tilt_2(accessory: Accessory) -> None:
     """Define a window-covering characteristics as per page 219 of HAP spec."""
     service = create_window_covering_service(accessory)
 
@@ -67,7 +68,7 @@ def create_window_covering_service_with_h_tilt_2(accessory):
     tilt_target.maxValue = 0
 
 
-def create_window_covering_service_with_v_tilt(accessory):
+def create_window_covering_service_with_v_tilt(accessory: Accessory) -> None:
     """Define a window-covering characteristics as per page 219 of HAP spec."""
     service = create_window_covering_service(accessory)
 
@@ -82,7 +83,7 @@ def create_window_covering_service_with_v_tilt(accessory):
     tilt_target.maxValue = 90
 
 
-def create_window_covering_service_with_v_tilt_2(accessory):
+def create_window_covering_service_with_v_tilt_2(accessory: Accessory) -> None:
     """Define a window-covering characteristics as per page 219 of HAP spec."""
     service = create_window_covering_service(accessory)
 
@@ -97,7 +98,7 @@ def create_window_covering_service_with_v_tilt_2(accessory):
     tilt_target.maxValue = 0
 
 
-def create_window_covering_service_with_none_tilt(accessory):
+def create_window_covering_service_with_none_tilt(accessory: Accessory) -> None:
     """Define a window-covering characteristics as per page 219 of HAP spec.
 
     This accessory uses None for the tilt value unexpectedly.
@@ -377,7 +378,7 @@ async def test_window_cover_stop(
     )
 
 
-def create_garage_door_opener_service(accessory):
+def create_garage_door_opener_service(accessory: Accessory) -> None:
     """Define a garage-door-opener chars as per page 217 of HAP spec."""
     service = accessory.add_service(ServicesTypes.GARAGE_DOOR_OPENER)
 
