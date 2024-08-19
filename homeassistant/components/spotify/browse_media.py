@@ -175,7 +175,8 @@ async def async_browse_media(
 
     if (
         parsed_url.host is None
-        or (entry := hass.config_entries.async_get_entry(parsed_url.host)) is None
+        or (entry := hass.config_entries.async_get_entry(parsed_url.host.upper()))
+        is None
         or not isinstance(entry.runtime_data, HomeAssistantSpotifyData)
     ):
         raise BrowseError("Invalid Spotify account specified")
