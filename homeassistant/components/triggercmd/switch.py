@@ -32,7 +32,7 @@ class TRIGGERcmdSwitch(SwitchEntity):
 
     _attr_has_entity_name = True
     _attr_assumed_state = True
-    should_poll = False
+    _attr_should_poll = False
 
     def __init__(self, trigger) -> None:
         """Initialize the switch."""
