@@ -3,7 +3,7 @@
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
-from pysmlight.exceptions import SmlightConnectionError
+from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
 import pytest
 
 from homeassistant.components import zeroconf
@@ -191,11 +191,13 @@ async def test_zeroconf_device_exists_abort(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.invalid_auth
 async def test_user_invalid_auth(
     hass: HomeAssistant, mock_smlight_client: MagicMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test we handle invalid auth."""
+    mock_smlight_client.check_auth_needed.return_value = True
+    mock_smlight_client.authenticate.side_effect = SmlightAuthError
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},

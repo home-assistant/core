@@ -3,7 +3,6 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pysmlight.exceptions import SmlightAuthError
 from pysmlight.web import Info, Sensors
 import pytest
 
@@ -16,14 +15,6 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 MOCK_HOST = "slzb-06.local"
 MOCK_USERNAME = "test-user"
 MOCK_PASSWORD = "test-pass"
-
-
-def pytest_configure(config):
-    """Add custom invalid_auth marker."""
-    config.addinivalue_line(
-        "markers",
-        "invalid_auth: mark test to run invalid authentication",
-    )
 
 
 @pytest.fixture
@@ -67,12 +58,9 @@ def mock_smlight_client(request: pytest.FixtureRequest) -> Generator[MagicMock]:
             load_json_object_fixture("sensors.json", DOMAIN)
         )
 
-        if request.node.get_closest_marker("invalid_auth"):
-            api.check_auth_needed.return_value = True
-            api.authenticate.side_effect = SmlightAuthError
-        else:
-            api.check_auth_needed.return_value = False
-            api.authenticate.return_value = True
+        api.check_auth_needed.return_value = False
+        api.authenticate.return_value = True
+
         yield api
 
 
