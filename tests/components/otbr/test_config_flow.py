@@ -347,7 +347,7 @@ async def test_hassio_discovery_flow_2x_addons(
     aioclient_mock.get(f"{url1}/node/dataset/active", text="aa")
     aioclient_mock.get(f"{url2}/node/dataset/active", text="bb")
 
-    async def _addon_info(hass, slug):
+    async def _addon_info(hass: HomeAssistant, slug: str) -> dict[str, Any]:
         await asyncio.sleep(0)
         if slug == "otbr":
             return {
