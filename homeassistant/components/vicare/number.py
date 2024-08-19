@@ -63,8 +63,19 @@ DEVICE_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         native_max_value=60,
         native_step=1,
     ),
+    ViCareNumberEntityDescription(
+        key="dhw_hysteresis",
+        translation_key="dhw_hysteresis",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.KELVIN,
+        value_getter=lambda api: api.getDomesticHotWaterHysteresis(),
+        value_setter=lambda api, value: api.setDomesticHotWaterHysteresis(value),
+        min_value_getter=lambda api: api.getDomesticHotWaterHysteresisMin(),
+        max_value_getter=lambda api: api.getDomesticHotWaterHysteresisMax(),
+        stepping_getter=lambda api: api.getDomesticHotWaterHysteresisStepping(),
+    ),
 )
-
 
 CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
     ViCareNumberEntityDescription(

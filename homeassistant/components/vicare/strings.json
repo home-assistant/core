@@ -107,6 +107,9 @@
       },
       "dhw_secondary_temperature": {
         "name": "DHW secondary temperature"
+      },
+      "dhw_hysteresis": {
+        "name": "DHW hysteresis"
       }
     },
     "sensor": {
