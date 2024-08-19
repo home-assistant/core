@@ -345,7 +345,13 @@ async def test_duplicated_names_resolved_with_device_area(
     )
 
     # Pipeline device in bedroom area
-    assist_device = device_registry.async_get_or_create("device_id")
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+    assist_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections=set(),
+        identifiers={("demo", "id-1234")},
+    )
     assist_device = device_registry.async_update_device(
         assist_device.id,
         area_id=area_bedroom.id,
@@ -360,6 +366,8 @@ async def test_duplicated_names_resolved_with_device_area(
         )
 
         assert len(calls) == 1
+        assert calls[0].data["entity_id"][0] == bedroom_light.entity_id
+
         assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
         assert result.response.intent is not None
         assert result.response.intent.slots.get("name", {}).get("value") == name
