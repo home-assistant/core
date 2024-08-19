@@ -4,13 +4,13 @@
     "step": {
       "pick_cloud_device": {
         "title": "Configure fireplace",
-        "description": "Select Fireplace by Serial Number:"
+        "description": "Select fireplace by serial number:"
       },
       "cloud_api": {
         "description": "Authenticate against IntelliFire Cloud",
         "data_description": {
-          "username": "IntelliFire Username",
-          "password": "IntelliFire Password"
+          "username": "Your IntelliFire app username",
+          "password": "Your IntelliFire app password"
         },
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
