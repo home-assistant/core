@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from syrupy import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -43,3 +43,8 @@ async def test_all_entities_with_lightning_error(
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+    assert (
+        hass.states.get("sensor.my_home_station_lightning_last_strike").state
+        == STATE_UNKNOWN
+    )
