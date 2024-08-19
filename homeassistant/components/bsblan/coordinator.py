@@ -25,7 +25,7 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[BSBLanCoordinatorData]):
     ) -> None:
         """Initialize the BSB-Lan coordinator."""
         self.client = client
-        self._bsblan_config_entry = config_entry
+        self.bsblan_config_entry = config_entry
 
         super().__init__(
             hass,
@@ -51,7 +51,7 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[BSBLanCoordinatorData]):
         except BSBLANConnectionError as err:
             raise UpdateFailed(
                 f"Error while establishing connection with "
-                f"BSB-Lan device at {self._bsblan_config_entry.data[CONF_HOST]}"
+                f"BSB-Lan device at {self.bsblan_config_entry.data[CONF_HOST]}"
             ) from err
 
         self.update_interval = self._get_update_interval()

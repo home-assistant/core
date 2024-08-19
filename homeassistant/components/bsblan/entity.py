@@ -25,7 +25,7 @@ class BSBLanEntity(CoordinatorEntity[BSBLanUpdateCoordinator]):
             manufacturer="BSBLAN Inc.",
             model=data.info.device_identification.value,
             sw_version=data.device.version,
-            configuration_url=f"http://{coordinator.config_entry.data['host']}",
+            configuration_url=f"http://{coordinator.bsblan_config_entry.data['host']}",
         )
 
     @property
