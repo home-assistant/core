@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN
-from .coordinator import IntelliFireDataUpdateCoordinator
+from .coordinator import IntellifireDataUpdateCoordinator
 from .entity import IntellifireEntity
 
 
@@ -28,7 +28,7 @@ class IntelliFireSensorRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[
-        [IntelliFireDataUpdateCoordinator], int | str | datetime | float | None
+        [IntellifireDataUpdateCoordinator], int | str | datetime | float | None
     ]
 
 
@@ -41,7 +41,7 @@ class IntelliFireSensorEntityDescription(
 
 
 def _time_remaining_to_timestamp(
-    coordinator: IntelliFireDataUpdateCoordinator,
+    coordinator: IntellifireDataUpdateCoordinator,
 ) -> datetime | None:
     """Define a sensor that takes into account timezone."""
     if not (seconds_offset := coordinator.data.timeremaining_s):
@@ -50,7 +50,7 @@ def _time_remaining_to_timestamp(
 
 
 def _downtime_to_timestamp(
-    coordinator: IntelliFireDataUpdateCoordinator,
+    coordinator: IntellifireDataUpdateCoordinator,
 ) -> datetime | None:
     """Define a sensor that takes into account a timezone."""
     if not (seconds_offset := coordinator.data.downtime):
@@ -59,7 +59,7 @@ def _downtime_to_timestamp(
 
 
 def _uptime_to_timestamp(
-    coordinator: IntelliFireDataUpdateCoordinator,
+    coordinator: IntellifireDataUpdateCoordinator,
 ) -> datetime | None:
     """Return a timestamp of how long the sensor has been up."""
     if not (seconds_offset := coordinator.data.uptime):
@@ -151,7 +151,7 @@ async def async_setup_entry(
 ) -> None:
     """Define setup entry call."""
 
-    coordinator: IntelliFireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         IntelliFireSensor(coordinator=coordinator, description=description)
         for description in INTELLIFIRE_SENSORS
