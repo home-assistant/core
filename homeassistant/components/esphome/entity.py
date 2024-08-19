@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import math
-from typing import TYPE_CHECKING, Any, Concatenate, Generic, ParamSpec, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Concatenate, Generic, TypeVar, cast
 
 from aioesphomeapi import (
     APIConnectionError,
@@ -30,8 +30,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
 
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
 _InfoT = TypeVar("_InfoT", bound=EntityInfo)
 _EntityT = TypeVar("_EntityT", bound="EsphomeEntity[Any,Any]")
 _StateT = TypeVar("_StateT", bound=EntityState)
@@ -116,7 +114,7 @@ async def platform_async_setup_entry(
     )
 
 
-def esphome_state_property(
+def esphome_state_property[_R, _EntityT: EsphomeEntity[Any, Any]](
     func: Callable[[_EntityT], _R],
 ) -> Callable[[_EntityT], _R | None]:
     """Wrap a state property of an esphome entity.
@@ -139,7 +137,7 @@ def esphome_state_property(
     return _wrapper
 
 
-def convert_api_error_ha_error(
+def convert_api_error_ha_error[**_P, _R, _EntityT: EsphomeEntity[Any, Any]](
     func: Callable[Concatenate[_EntityT, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
     """Decorate ESPHome command calls that send commands/make changes to the device.
