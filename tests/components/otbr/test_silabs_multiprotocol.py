@@ -1,8 +1,6 @@
 """Test OTBR Silicon Labs Multiprotocol support."""
 
-from collections.abc import Generator
-from typing import Any
-from unittest.mock import DEFAULT, AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 from python_otbr_api import ActiveDataSet, tlv_parser
@@ -34,43 +32,6 @@ DATASET_CH16_PENDING = (
 )
 
 
-ADDON_DISCOVERY_INFO = {
-    "config": {
-        "addon": "Silicon Labs Multiprotocol",
-        "host": "core-silabs-multiprotocol",
-        "port": 8081,
-    },
-    "uuid": "1234",
-}
-
-
-ADDON_DISCOVERY_INFO_OTHER_UUID = {
-    "config": {
-        "addon": "Silicon Labs Multiprotocol",
-        "host": "core-silabs-multiprotocol",
-        "port": 8081,
-    },
-    "uuid": "4321",
-}
-
-
-@pytest.fixture(name="discovery_info")
-def discovery_info_fixture() -> Any:
-    """Return the discovery info from the supervisor."""
-    return DEFAULT
-
-
-@pytest.fixture(name="get_addon_discovery_info", autouse=True)
-def get_addon_discovery_info_fixture(discovery_info: Any) -> Generator[AsyncMock]:
-    """Mock get add-on discovery info."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_get_addon_discovery_info",
-        return_value=discovery_info,
-    ) as get_addon_discovery_info:
-        yield get_addon_discovery_info
-
-
-@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
 async def test_async_change_channel(
     hass: HomeAssistant, otbr_config_entry_multipan
 ) -> None:
@@ -99,7 +60,6 @@ async def test_async_change_channel(
     )
 
 
-@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
 async def test_async_change_channel_no_pending(
     hass: HomeAssistant, otbr_config_entry_multipan
 ) -> None:
@@ -132,7 +92,6 @@ async def test_async_change_channel_no_pending(
     )
 
 
-@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
 async def test_async_change_channel_no_update(
     hass: HomeAssistant, otbr_config_entry_multipan
 ) -> None:
@@ -167,17 +126,17 @@ async def test_async_change_channel_no_otbr(hass: HomeAssistant) -> None:
     mock_set_channel.assert_not_awaited()
 
 
-@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO_OTHER_UUID])
-async def test_async_change_channel_non_matching_uuid(
+async def test_async_change_channel_non_matching_url(
     hass: HomeAssistant, otbr_config_entry_multipan
 ) -> None:
     """Test async_change_channel when otbr is not configured."""
+    data: otbr.OTBRData = hass.data[otbr.DOMAIN]
+    data.url = OTBR_NON_MULTIPAN_URL
     with patch("python_otbr_api.OTBR.set_channel") as mock_set_channel:
         await otbr_silabs_multiprotocol.async_change_channel(hass, 16, delay=0)
     mock_set_channel.assert_not_awaited()
 
 
-@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
 async def test_async_get_channel(
     hass: HomeAssistant, otbr_config_entry_multipan
 ) -> None:
@@ -191,7 +150,6 @@ async def test_async_get_channel(
     mock_get_active_dataset.assert_awaited_once_with()
 
 
-@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
 async def test_async_get_channel_no_dataset(
     hass: HomeAssistant, otbr_config_entry_multipan
 ) -> None:
@@ -205,7 +163,6 @@ async def test_async_get_channel_no_dataset(
     mock_get_active_dataset.assert_awaited_once_with()
 
 
-@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
 async def test_async_get_channel_error(
     hass: HomeAssistant, otbr_config_entry_multipan
 ) -> None:
@@ -227,11 +184,12 @@ async def test_async_get_channel_no_otbr(hass: HomeAssistant) -> None:
     mock_get_active_dataset.assert_not_awaited()
 
 
-@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO_OTHER_UUID])
-async def test_async_get_channel_non_matching_uuid(
+async def test_async_get_channel_non_matching_url(
     hass: HomeAssistant, otbr_config_entry_multipan
 ) -> None:
     """Test async_change_channel when otbr is not configured."""
+    data: otbr.OTBRData = hass.data[otbr.DOMAIN]
+    data.url = OTBR_NON_MULTIPAN_URL
     with patch("python_otbr_api.OTBR.get_active_dataset") as mock_get_active_dataset:
         assert await otbr_silabs_multiprotocol.async_get_channel(hass) is None
     mock_get_active_dataset.assert_not_awaited()
@@ -241,7 +199,6 @@ async def test_async_get_channel_non_matching_uuid(
     ("url", "expected"),
     [(OTBR_MULTIPAN_URL, True), (OTBR_NON_MULTIPAN_URL, False)],
 )
-@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
 async def test_async_using_multipan(
     hass: HomeAssistant, otbr_config_entry_multipan, url: str, expected: bool
 ) -> None:
@@ -258,9 +215,10 @@ async def test_async_using_multipan_no_otbr(hass: HomeAssistant) -> None:
     assert await otbr_silabs_multiprotocol.async_using_multipan(hass) is False
 
 
-@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO_OTHER_UUID])
-async def test_async_using_multipan_non_matching_uuid(
+async def test_async_using_multipan_non_matching_url(
     hass: HomeAssistant, otbr_config_entry_multipan
 ) -> None:
     """Test async_change_channel when otbr is not configured."""
+    data: otbr.OTBRData = hass.data[otbr.DOMAIN]
+    data.url = OTBR_NON_MULTIPAN_URL
     assert await otbr_silabs_multiprotocol.async_using_multipan(hass) is False

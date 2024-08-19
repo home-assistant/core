@@ -12,11 +12,9 @@ from python_otbr_api import tlv_parser
 from python_otbr_api.tlv_parser import MeshcopTLVType
 
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
-    get_multiprotocol_addon_manager,
     is_multiprotocol_url,
 )
 from homeassistant.components.thread import async_add_dataset
-from homeassistant.config_entries import SOURCE_HASSIO
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -50,15 +48,9 @@ def async_get_otbr_data[**_P, _R, _R_Def](
             if DOMAIN not in hass.data:
                 return retval
 
-            multipan_manager = await get_multiprotocol_addon_manager(hass)
-            discovery_info = await multipan_manager.async_get_addon_discovery_info()
-
             data: OTBRData = hass.data[DOMAIN]
 
-            if (
-                data.entry_source != SOURCE_HASSIO
-                or data.entry_unique_id != discovery_info.uuid
-            ):
+            if not is_multiprotocol_url(data.url):
                 return retval
 
             return await orig_func(hass, data, *args, **kwargs)
@@ -125,4 +117,4 @@ async def async_using_multipan(hass: HomeAssistant, data: OTBRData) -> bool:
 
     Returns False if not configured.
     """
-    return is_multiprotocol_url(data.url)
+    return True

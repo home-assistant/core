@@ -20,12 +20,9 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 ADDON_DISCOVERY_INFO = {
-    "config": {
-        "addon": "Matter Server",
-        "host": "host1",
-        "port": 5581,
-    },
-    "uuid": "1234",
+    "addon": "Matter Server",
+    "host": "host1",
+    "port": 5581,
 }
 ZEROCONF_INFO_TCP = ZeroconfServiceInfo(
     ip_address=ip_address("fd11:be53:8d46:0:729e:5a4f:539d:1ee6"),
@@ -304,7 +301,7 @@ async def test_zeroconf_discovery_not_onboarded_not_supervisor(
 
 
 @pytest.mark.parametrize("zeroconf_info", [ZEROCONF_INFO_TCP, ZEROCONF_INFO_UDP])
-@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
+@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_zeroconf_not_onboarded_already_discovered(
     hass: HomeAssistant,
     supervisor: MagicMock,
@@ -342,7 +339,7 @@ async def test_zeroconf_not_onboarded_already_discovered(
 
 
 @pytest.mark.parametrize("zeroconf_info", [ZEROCONF_INFO_TCP, ZEROCONF_INFO_UDP])
-@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
+@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_zeroconf_not_onboarded_running(
     hass: HomeAssistant,
     supervisor: MagicMock,
@@ -374,7 +371,7 @@ async def test_zeroconf_not_onboarded_running(
 
 
 @pytest.mark.parametrize("zeroconf_info", [ZEROCONF_INFO_TCP, ZEROCONF_INFO_UDP])
-@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
+@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_zeroconf_not_onboarded_installed(
     hass: HomeAssistant,
     supervisor: MagicMock,
@@ -408,7 +405,7 @@ async def test_zeroconf_not_onboarded_installed(
 
 
 @pytest.mark.parametrize("zeroconf_info", [ZEROCONF_INFO_TCP, ZEROCONF_INFO_UDP])
-@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
+@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_zeroconf_not_onboarded_not_installed(
     hass: HomeAssistant,
     supervisor: MagicMock,
@@ -445,7 +442,7 @@ async def test_zeroconf_not_onboarded_not_installed(
     assert setup_entry.call_count == 1
 
 
-@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
+@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_supervisor_discovery(
     hass: HomeAssistant,
     supervisor: MagicMock,
@@ -459,7 +456,7 @@ async def test_supervisor_discovery(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
         data=HassioServiceInfo(
-            config=ADDON_DISCOVERY_INFO["config"],
+            config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
             uuid="1234",
@@ -483,7 +480,7 @@ async def test_supervisor_discovery(
 
 @pytest.mark.parametrize(
     ("discovery_info", "error"),
-    [(ADDON_DISCOVERY_INFO, HassioAPIError())],
+    [({"config": ADDON_DISCOVERY_INFO}, HassioAPIError())],
 )
 async def test_supervisor_discovery_addon_info_failed(
     hass: HomeAssistant,
@@ -499,7 +496,7 @@ async def test_supervisor_discovery_addon_info_failed(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
         data=HassioServiceInfo(
-            config=ADDON_DISCOVERY_INFO["config"],
+            config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
             uuid="1234",
@@ -516,7 +513,7 @@ async def test_supervisor_discovery_addon_info_failed(
     assert result["reason"] == "addon_info_failed"
 
 
-@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
+@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_clean_supervisor_discovery_on_user_create(
     hass: HomeAssistant,
     supervisor: MagicMock,
@@ -530,7 +527,7 @@ async def test_clean_supervisor_discovery_on_user_create(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
         data=HassioServiceInfo(
-            config=ADDON_DISCOVERY_INFO["config"],
+            config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
             uuid="1234",
@@ -593,7 +590,7 @@ async def test_abort_supervisor_discovery_with_existing_entry(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
         data=HassioServiceInfo(
-            config=ADDON_DISCOVERY_INFO["config"],
+            config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
             uuid="1234",
@@ -623,7 +620,7 @@ async def test_abort_supervisor_discovery_with_existing_flow(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
         data=HassioServiceInfo(
-            config=ADDON_DISCOVERY_INFO["config"],
+            config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
             uuid="1234",
@@ -676,7 +673,7 @@ async def test_supervisor_discovery_addon_not_running(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
         data=HassioServiceInfo(
-            config=ADDON_DISCOVERY_INFO["config"],
+            config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
             uuid="1234",
@@ -725,7 +722,7 @@ async def test_supervisor_discovery_addon_not_installed(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
         data=HassioServiceInfo(
-            config=ADDON_DISCOVERY_INFO["config"],
+            config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
             uuid="1234",
@@ -807,7 +804,7 @@ async def test_not_addon(
     assert setup_entry.call_count == 1
 
 
-@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
+@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_addon_running(
     hass: HomeAssistant,
     supervisor: MagicMock,
@@ -853,7 +850,7 @@ async def test_addon_running(
     ),
     [
         (
-            ADDON_DISCOVERY_INFO,
+            {"config": ADDON_DISCOVERY_INFO},
             HassioAPIError(),
             None,
             None,
@@ -862,7 +859,7 @@ async def test_addon_running(
             False,
         ),
         (
-            ADDON_DISCOVERY_INFO,
+            {"config": ADDON_DISCOVERY_INFO},
             None,
             CannotConnect(Exception("Boom")),
             None,
@@ -880,7 +877,7 @@ async def test_addon_running(
             False,
         ),
         (
-            ADDON_DISCOVERY_INFO,
+            {"config": ADDON_DISCOVERY_INFO},
             None,
             None,
             HassioAPIError(),
@@ -939,7 +936,7 @@ async def test_addon_running_failures(
     ),
     [
         (
-            ADDON_DISCOVERY_INFO,
+            {"config": ADDON_DISCOVERY_INFO},
             HassioAPIError(),
             None,
             None,
@@ -948,7 +945,7 @@ async def test_addon_running_failures(
             False,
         ),
         (
-            ADDON_DISCOVERY_INFO,
+            {"config": ADDON_DISCOVERY_INFO},
             None,
             CannotConnect(Exception("Boom")),
             None,
@@ -966,7 +963,7 @@ async def test_addon_running_failures(
             False,
         ),
         (
-            ADDON_DISCOVERY_INFO,
+            {"config": ADDON_DISCOVERY_INFO},
             None,
             None,
             HassioAPIError(),
@@ -1010,7 +1007,7 @@ async def test_addon_running_failures_zeroconf(
     assert result["reason"] == abort_reason
 
 
-@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
+@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_addon_running_already_configured(
     hass: HomeAssistant,
     supervisor: MagicMock,
@@ -1048,7 +1045,7 @@ async def test_addon_running_already_configured(
     assert setup_entry.call_count == 1
 
 
-@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
+@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_addon_installed(
     hass: HomeAssistant,
     supervisor: MagicMock,
@@ -1098,14 +1095,14 @@ async def test_addon_installed(
     ),
     [
         (
-            ADDON_DISCOVERY_INFO,
+            {"config": ADDON_DISCOVERY_INFO},
             HassioAPIError(),
             None,
             False,
             False,
         ),
         (
-            ADDON_DISCOVERY_INFO,
+            {"config": ADDON_DISCOVERY_INFO},
             None,
             CannotConnect(Exception("Boom")),
             True,
@@ -1173,14 +1170,14 @@ async def test_addon_installed_failures(
     ),
     [
         (
-            ADDON_DISCOVERY_INFO,
+            {"config": ADDON_DISCOVERY_INFO},
             HassioAPIError(),
             None,
             False,
             False,
         ),
         (
-            ADDON_DISCOVERY_INFO,
+            {"config": ADDON_DISCOVERY_INFO},
             None,
             CannotConnect(Exception("Boom")),
             True,
@@ -1227,7 +1224,7 @@ async def test_addon_installed_failures_zeroconf(
     assert result["reason"] == "addon_start_failed"
 
 
-@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
+@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_addon_installed_already_configured(
     hass: HomeAssistant,
     supervisor: MagicMock,
@@ -1273,7 +1270,7 @@ async def test_addon_installed_already_configured(
     assert setup_entry.call_count == 1
 
 
-@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
+@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_addon_not_installed(
     hass: HomeAssistant,
     supervisor: MagicMock,
@@ -1382,7 +1379,7 @@ async def test_addon_not_installed_failures_zeroconf(
     assert result["reason"] == "addon_install_failed"
 
 
-@pytest.mark.parametrize("discovery_info", [ADDON_DISCOVERY_INFO])
+@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_addon_not_installed_already_configured(
     hass: HomeAssistant,
     supervisor: MagicMock,

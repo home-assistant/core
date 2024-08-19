@@ -333,12 +333,12 @@ class BaseZwaveJSFlow(ConfigEntryBaseFlow, ABC):
         """Return add-on discovery info."""
         addon_manager: AddonManager = get_addon_manager(self.hass)
         try:
-            discovery_info = await addon_manager.async_get_addon_discovery_info()
+            discovery_info_config = await addon_manager.async_get_addon_discovery_info()
         except AddonError as err:
             _LOGGER.error(err)
             raise AbortFlow("addon_get_discovery_info_failed") from err
 
-        return discovery_info.config
+        return discovery_info_config
 
 
 class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
