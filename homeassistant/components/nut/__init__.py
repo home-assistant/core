@@ -168,7 +168,7 @@ def _model_from_status(status: dict[str, str]) -> str | None:
 
 
 def _model_id_from_status(status: dict[str, str]) -> str | None:
-    """Return the best model ID value from the status."""
+    """Return the device part as model ID, if available."""
     return status.get("device.part")
 
 
