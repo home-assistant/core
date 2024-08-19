@@ -1,6 +1,6 @@
 """Utilities for the LinkPlay component."""
 
-from typing import Final, cast
+from typing import Final
 
 from aiohttp import ClientSession
 from linkplay.utils import async_create_unverified_client_session
@@ -57,6 +57,7 @@ async def async_get_client_session(hass: HomeAssistant) -> ClientSession:
     """Get a ClientSession that can be used with LinkPlay devices."""
     hass.data.setdefault(DOMAIN, {})
     if CONF_SESSION not in hass.data[DOMAIN]:
-        hass.data[DOMAIN][CONF_SESSION] = async_create_unverified_client_session()
+        hass.data[DOMAIN][CONF_SESSION] = await async_create_unverified_client_session()
 
-    return cast(ClientSession, hass.data[DOMAIN][CONF_SESSION])
+    session: ClientSession = hass.data[DOMAIN][CONF_SESSION]
+    return session

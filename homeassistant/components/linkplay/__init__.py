@@ -27,11 +27,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) -> 
     """Async setup hass config entry. Called when an entry has been setup."""
 
     session: ClientSession = await async_get_client_session(hass)
+    bridge: LinkPlayBridge | None = None
 
     try:
-        bridge: LinkPlayBridge = linkplay_factory_httpapi_bridge(
-            entry.data[CONF_HOST], session
-        )
+        bridge = await linkplay_factory_httpapi_bridge(entry.data[CONF_HOST], session)
     except LinkPlayRequestException as exception:
         raise ConfigEntryNotReady(
             f"Failed to connect to LinkPlay device at {entry.data[CONF_HOST]}"

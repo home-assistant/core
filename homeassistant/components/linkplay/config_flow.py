@@ -32,11 +32,10 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle Zeroconf discovery."""
 
         session: ClientSession = await async_get_client_session(self.hass)
+        bridge: LinkPlayBridge | None = None
 
         try:
-            bridge: LinkPlayBridge = linkplay_factory_httpapi_bridge(
-                discovery_info.host, session
-            )
+            bridge = await linkplay_factory_httpapi_bridge(discovery_info.host, session)
         except LinkPlayRequestException:
             _LOGGER.exception(
                 "Failed to connect to LinkPlay device at %s", discovery_info.host
@@ -79,9 +78,10 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input:
             session: ClientSession = await async_get_client_session(self.hass)
+            bridge: LinkPlayBridge | None = None
 
             try:
-                bridge: LinkPlayBridge = linkplay_factory_httpapi_bridge(
+                bridge = await linkplay_factory_httpapi_bridge(
                     user_input[CONF_HOST], session
                 )
             except LinkPlayRequestException:
