@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "switch": {
+      "vacation_mode": {
+        "default": "mdi:beach"
+      }
+    }
+  }
+}

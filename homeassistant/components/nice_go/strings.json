@@ -22,6 +22,11 @@
       "light": {
         "name": "[%key:component::light::title%]"
       }
+    },
+    "switch": {
+      "vacation_mode": {
+        "name": "Vacation mode"
+      }
     }
   },
   "issues": {
