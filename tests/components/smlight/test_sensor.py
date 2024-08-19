@@ -3,60 +3,52 @@
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from .conftest import setup_integration
+
+from tests.common import MockConfigEntry, snapshot_platform
+
 pytestmark = [
     pytest.mark.usefixtures(
-        "setup_platform",
         "mock_smlight_client",
     )
 ]
 
 
+@pytest.fixture
+def platforms() -> Platform | list[Platform]:
+    """Platforms, which should be loaded during the test."""
+    return Platform.SENSOR
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.parametrize(
-    "entity_id",
-    [
-        "sensor.slzb_06_core_chip_temp",
-        "sensor.slzb_06_zigbee_chip_temp",
-        "sensor.slzb_06_ram_usage",
-        "sensor.slzb_06_filesystem_usage",
-    ],
-)
 async def test_sensors(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
-    entity_id: str,
 ) -> None:
     """Test the SMLIGHT sensors."""
+    entry = await setup_integration(hass, mock_config_entry)
 
-    assert (state := hass.states.get(entity_id))
-    assert state == snapshot
-
-    assert (entry := entity_registry.async_get(entity_id))
-    assert entry == snapshot
-
-    assert entry.device_id
-    assert (device_entry := device_registry.async_get(entry.device_id))
-    assert device_entry == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
-@pytest.mark.parametrize(
-    "entity_id",
-    [
-        "sensor.slzb_06_ram_usage",
-        "sensor.slzb_06_filesystem_usage",
-    ],
-)
 async def test_disabled_by_default_sensors(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, entity_id: str
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the disabled by default SMLIGHT sensors."""
-    assert not hass.states.get(entity_id)
+    await setup_integration(hass, mock_config_entry)
 
-    assert (entry := entity_registry.async_get(entity_id))
-    assert entry.disabled
-    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    for sensor in ("ram_usage", "filesystem_usage"):
+        assert not hass.states.get(f"sensor.slzb_06_{sensor}")
+
+        assert (entry := entity_registry.async_get(f"sensor.slzb_06_{sensor}"))
+        assert entry.disabled
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

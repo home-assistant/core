@@ -64,18 +64,11 @@ def mock_smlight_client(request: pytest.FixtureRequest) -> Generator[MagicMock]:
         yield api
 
 
-@pytest.fixture
-async def setup_platform(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_smlight_client: MagicMock,
-    platform: str | None = None,
-) -> MockConfigEntry:
-    """Set up the platform."""
+async def setup_integration(hass: HomeAssistant, mock_config_entry: MockConfigEntry):
+    """Set up the integration."""
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
     await hass.async_block_till_done()
 
     return mock_config_entry

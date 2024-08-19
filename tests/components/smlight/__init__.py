@@ -1,1 +1,1 @@
-"""Tests for the SMLIGHT Zigbee integration."""
+"""Tests for the SMLIGHT Zigbee adapter integration."""
