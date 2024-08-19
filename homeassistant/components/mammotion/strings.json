@@ -1,17 +1,5 @@
 {
   "config": {
-    "flow_title": "[%key:component::bluetooth::config::flow_title%]",
-    "step": {
-      "user": {
-        "description": "[%key:component::bluetooth::config::step::user::description%]",
-        "data": {
-          "address": "[%key:common::config_flow::data::device%]"
-        }
-      },
-      "bluetooth_confirm": {
-        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
-      }
-    },
     "abort": {
       "not_supported": "Device not supported",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
@@ -19,6 +7,173 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "Configure your Mammotion lawn mower",
+    "step": {
+      "bluetooth_confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      },
+      "user": {
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]",
+          "use_wifi": "Use Wi-fi",
+          "account_name": "Mammotion email or account number",
+          "password": "Mammotion account password"
+        },
+        "description": "Setup your mower"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "title": "Update Configuration",
+          "stay_connected_bluetooth": "Keep bluetooth connected"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery_percent": {
+        "name": "Battery"
+      },
+      "ble_rssi": {
+        "name": "BLE RSSI"
+      },
+      "wifi_rssi": {
+        "name": "WiFi RSSI"
+      },
+      "gps_stars": {
+        "name": "Satellites (Robot)"
+      },
+      "blade_height": {
+        "name": "Blade height"
+      },
+      "area": {
+        "name": "Area"
+      },
+      "mowing_speed": {
+        "name": "Mowing speed"
+      },
+      "progress": {
+        "name": "Progress"
+      },
+      "total_time": {
+        "name": "Total time"
+      },
+      "elapsed_time": {
+        "name": "Elapsed time"
+      },
+      "left_time": {
+        "name": "Time left"
+      },
+      "l1_satellites": {
+        "name": "L1 Satellites (Co-Viewing)"
+      },
+      "l2_satellites": {
+        "name": "L2 Satellites (Co-Viewing)"
+      },
+      "position_mode": {
+        "name": "RTK position"
+      },
+      "position_type": {
+        "name": "Device position type"
+      },
+      "activity_mode": {
+        "name": "Activity mode"
+      }
+    },
+    "button": {
+      "start_map_sync": {
+        "name": "Sync maps"
+      },
+      "resync_rtk_dock": {
+        "name": "Sync RTK and dock",
+        "description": "Syncs RTK and dock location for when you move them."
+      }
+    },
+    "switch": {
+      "blades_on_off": {
+        "name": "Blades On/Off",
+        "description": "Turn the blades on or off."
+      },
+      "mowing_on_off": {
+        "name": "Mowing On/Off",
+        "description": "Start or stop mowing."
+      },
+      "dump_grass_on_off": {
+        "name": "Dump Grass On/Off",
+        "description": "Enable or disable grass dumping."
+      },
+      "rain_detection_on_off": {
+        "name": "Rain Detection On/Off",
+        "description": "Turn rain detection on or off."
+      },
+      "side_led_on_off": {
+        "name": "Side LED On/Off",
+        "description": "Enable or disable the side LED."
+      },
+      "perimeter_first_on_off": {
+        "name": "Perimeter First",
+        "description": "Perimeter first or lines/zigzag first mowing."
+      }
+    },
+    "select": {
+      "cutting_mode": {
+        "name": "Cutting Mode",
+        "description": "Select the cutting mode for the mower."
+      },
+      "border_patrol_mode": {
+        "name": "Border Patrol Mode",
+        "description": "Select the border patrol mode for the mower."
+      },
+      "obstacle_laps_mode": {
+        "name": "Obstacle Laps Mode",
+        "description": "Select the obstacle laps mode for the mower."
+      },
+      "mow_order": {
+        "name": "Mow Order",
+        "description": "Select the order in which the areas should be mowed."
+      }
+    },
+    "number": {
+      "start_progress": {
+        "name": "Start Progress",
+        "description": "Set the start progress percentage."
+      },
+      "blade_height": {
+        "name": "Blade Height",
+        "description": "Adjust the height of the cutter in increments."
+      },
+      "working_speed": {
+        "name": "Working Speed",
+        "description": "Set the working speed of the mower."
+      }
+    },
+    "device_tracker": {
+      "name": "Device Tracking"
+    }
+  },
+  "exceptions": {
+    "device_not_ready": {
+      "message": "Device is not ready."
+    },
+    "pause_failed": {
+      "message": "Failed to pause the mower."
+    },
+    "resume_failed": {
+      "message": "Failed to resume the mower."
+    },
+    "start_failed": {
+      "message": "Failed to start the mower."
+    },
+    "dock_failed": {
+      "message": "Failed to send the mower to the dock."
+    },
+    "command_failed": {
+      "message": "Failed to send command to the mower."
     }
   }
 }

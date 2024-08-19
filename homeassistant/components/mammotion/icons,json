@@ -1,0 +1,27 @@
+{
+  "entity": {
+    "sensor": {
+      "gps_stars": {
+        "default": "mdi:satellite-uplink"
+      },
+      "blade_height": {
+        "default": "mdi:altimeter"
+      },
+      "area": {
+        "default": "mdi:tape-measure"
+      },
+      "progress": {
+        "default": "mdi:percent-box"
+      },
+      "l1_satellites": {
+        "default": "mdi:satellite-variant"
+      },
+      "l2_satellites": {
+        "default": "mdi:satellite-variant"
+      },
+      "position_mode": {
+        "default": "mdi:map-marker"
+      }
+    }
+  }
+}
