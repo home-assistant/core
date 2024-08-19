@@ -48,8 +48,6 @@ async def test_update(
     hass: HomeAssistant,
     mock_dio_chacon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the creation and values of the Chacon Dio covers."""
 
@@ -71,7 +69,6 @@ async def test_update(
         {ATTR_ENTITY_ID: COVER_ENTITY_ID},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(COVER_ENTITY_ID)
     assert state
