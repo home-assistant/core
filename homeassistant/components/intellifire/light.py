@@ -62,7 +62,7 @@ class IntellifireLight(IntellifireEntity, LightEntity):
         return 85 * self.entity_description.value_fn(self.coordinator.read_api.data)
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self):
         """Return true if light is on."""
         return self.entity_description.value_fn(self.coordinator.read_api.data) >= 1
 
