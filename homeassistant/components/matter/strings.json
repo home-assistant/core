@@ -121,7 +121,7 @@
         "name": "On/Off transition time"
       },
       "altitude": {
-        "name": "Altitude above Sea Level"  
+        "name": "Altitude above Sea Level"
       }
     },
     "light": {
