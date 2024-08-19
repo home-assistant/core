@@ -33,9 +33,7 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema(
 class FGLairConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fujitsu HVAC (based on Ayla IOT)."""
 
-    def __init__(self) -> None:
-        """Initialize."""
-        self._reauth_entry: ConfigEntry | None = None
+    _reauth_entry: ConfigEntry | None = None
 
     async def _async_validate_credentials(
         self, user_input: dict[str, Any]
@@ -99,8 +97,10 @@ class FGLairConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._reauth_entry
 
         if user_input:
-            reauth_data = {**self._reauth_entry.data}
-            reauth_data[CONF_PASSWORD] = user_input[CONF_PASSWORD]
+            reauth_data = {
+                **self._reauth_entry.data,
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+            }
             errors = await self._async_validate_credentials(reauth_data)
 
             if len(errors) == 0:
