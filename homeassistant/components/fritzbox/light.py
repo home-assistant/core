@@ -20,8 +20,6 @@ from . import FritzboxDataUpdateCoordinator, FritzBoxDeviceEntity
 from .const import COLOR_MODE, LOGGER
 from .coordinator import FritzboxConfigEntry
 
-SUPPORTED_COLOR_MODES = {ColorMode.COLOR_TEMP, ColorMode.HS}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -61,6 +59,12 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
         super().__init__(coordinator, ain, None)
         self._supported_hs: dict[int, list[int]] = {}
 
+        self._attr_supported_color_modes = {ColorMode.ONOFF}
+        if self.data.has_color:
+            self._attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
+        elif self.data.has_level:
+            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
     @property
     def is_on(self) -> bool:
         """If the light is currently on or off."""
@@ -94,15 +98,6 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
         if self.data.has_level:
             return ColorMode.BRIGHTNESS
         return ColorMode.ONOFF
-
-    @property
-    def supported_color_modes(self) -> set[ColorMode]:
-        """Flag supported color modes."""
-        if self.data.has_color:
-            return SUPPORTED_COLOR_MODES
-        if self.data.has_level:
-            return {ColorMode.BRIGHTNESS}
-        return {ColorMode.ONOFF}
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
@@ -157,12 +152,14 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
     async def async_added_to_hass(self) -> None:
         """Get light attributes from device after entity is added to hass."""
         await super().async_added_to_hass()
-        supported_colors = await self.hass.async_add_executor_job(
-            self.coordinator.data.devices[self.ain].get_colors
-        )
-        supported_color_temps = await self.hass.async_add_executor_job(
-            self.coordinator.data.devices[self.ain].get_color_temps
-        )
+
+        def _get_color_data() -> tuple[dict, list]:
+            return (self.data.get_colors(), self.data.get_color_temps())
+
+        (
+            supported_colors,
+            supported_color_temps,
+        ) = await self.hass.async_add_executor_job(_get_color_data)
 
         if supported_color_temps:
             # only available for color bulbs

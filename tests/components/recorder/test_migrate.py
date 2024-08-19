@@ -29,7 +29,7 @@ from homeassistant.components.recorder.db_schema import (
     States,
 )
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import recorder as recorder_helper
 import homeassistant.util.dt as dt_util
 
@@ -47,7 +47,7 @@ async def mock_recorder_before_hass(
     """Set up recorder."""
 
 
-def _get_native_states(hass, entity_id):
+def _get_native_states(hass: HomeAssistant, entity_id: str) -> list[State]:
     with session_scope(hass=hass, read_only=True) as session:
         instance = recorder.get_instance(hass)
         metadata_id = instance.states_meta_manager.get(entity_id, session, True)
