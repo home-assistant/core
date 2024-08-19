@@ -47,7 +47,7 @@ from . import (
     register_entity,
 )
 
-from tests.common import mock_restore_cache_with_extra_data
+from tests.common import async_fire_time_changed, mock_restore_cache_with_extra_data
 
 RELAY_BLOCK_ID = 0
 SENSOR_BLOCK_ID = 3
@@ -1282,7 +1282,11 @@ async def test_rpc_rgbw_sensors(
 
 
 async def test_rpc_device_sensor_goes_unavailable_on_disconnect(
-    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test RPC device with sensor goes unavailable on disconnect."""
     await init_integration(hass, 2)
@@ -1290,8 +1294,17 @@ async def test_rpc_device_sensor_goes_unavailable_on_disconnect(
     assert temp_sensor_state is not None
     assert temp_sensor_state.state != STATE_UNAVAILABLE
     monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
     mock_rpc_device.mock_disconnected()
     assert temp_sensor_state.state == STATE_UNAVAILABLE
+
+    freezer.tick(60)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    # There should be no log messages
+    assert caplog.get_records("call") == []
+
     monkeypatch.setattr(mock_rpc_device, "connected", True)
+    monkeypatch.setattr(mock_rpc_device, "initialized", True)
     mock_rpc_device.mock_initialized()
     assert temp_sensor_state.state != STATE_UNAVAILABLE
