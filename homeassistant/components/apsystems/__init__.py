@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DEFAULT_PORT, MAX_OUTPUT
+from .const import DEFAULT_PORT
 from .coordinator import ApSystemsDataCoordinator
 
 PLATFORMS: list[Platform] = [
@@ -35,7 +35,12 @@ type ApSystemsConfigEntry = ConfigEntry[ApSystemsData]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ApSystemsConfigEntry) -> bool:
     """Set up this integration using UI."""
-    max_output = entry.data.get(MAX_OUTPUT, 800)
+    temp_api = APsystemsEZ1M(
+        ip_address=entry.data[CONF_IP_ADDRESS],
+        port=entry.data.get(CONF_PORT, DEFAULT_PORT),
+        timeout=8,
+    )
+    max_output = (await temp_api.get_device_info()).maxPower
     api = APsystemsEZ1M(
         ip_address=entry.data[CONF_IP_ADDRESS],
         port=entry.data.get(CONF_PORT, DEFAULT_PORT),
