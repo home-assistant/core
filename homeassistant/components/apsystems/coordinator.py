@@ -8,7 +8,7 @@ from datetime import timedelta
 from APsystemsEZ1 import APsystemsEZ1M, ReturnAlarmInfo, ReturnOutputData
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
 
@@ -35,7 +35,10 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
         self.api = api
 
     async def _async_setup(self) -> None:
-        max_power = (await self.api.get_device_info()).maxPower
+        try:
+            max_power = (await self.api.get_device_info()).maxPower
+        except (ConnectionError, TimeoutError):
+            raise UpdateFailed from None
         self.api.max_power = max_power
 
     async def _async_update_data(self) -> ApSystemsSensorData:
