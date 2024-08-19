@@ -142,9 +142,7 @@ def _discovery(config_info, data):
         with contextlib.suppress(AttributeError, ValueError):
             recvs.extend(rxv.find(DISCOVER_TIMEOUT))
         for recv in recvs:
-            _LOGGER.debug(
-                "Found %s", vars(recv)
-            )
+            _LOGGER.debug("Found %s", vars(recv))
             if recv.ctrl_url == config_info.ctrl_url and recv.serial_number:
                 _LOGGER.debug(
                     "Config Zones Matched with Serial %s: %s",
