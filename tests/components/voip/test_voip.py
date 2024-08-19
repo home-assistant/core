@@ -195,7 +195,7 @@ async def test_pipeline(
     assert isinstance(satellite, VoipAssistSatellite)
 
     # Satellite is muted until a call begins
-    assert satellite.state == AssistSatelliteState.WAITING_FOR_INPUT
+    assert satellite.state == AssistSatelliteState.WAITING_FOR_WAKE_WORD
 
     done = asyncio.Event()
 
@@ -304,7 +304,7 @@ async def test_pipeline(
         satellite.transport = Mock()
 
         satellite.connection_made(satellite.transport)
-        assert satellite.state == AssistSatelliteState.WAITING_FOR_INPUT
+        assert satellite.state == AssistSatelliteState.WAITING_FOR_WAKE_WORD
 
         # Ensure audio queue is cleared before pipeline starts
         satellite._audio_queue.put_nowait(bad_chunk)
@@ -330,7 +330,7 @@ async def test_pipeline(
 
         # Hang up
         satellite.disconnect()
-        assert satellite.state == AssistSatelliteState.WAITING_FOR_INPUT
+        assert satellite.state == AssistSatelliteState.WAITING_FOR_WAKE_WORD
 
 
 async def test_stt_stream_timeout(

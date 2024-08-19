@@ -33,7 +33,9 @@ class AssistSatelliteEntity(entity.Entity):
         entity_category=EntityCategory.CONFIG,
     )
     _attr_should_poll = False
-    _attr_state: AssistSatelliteState | None = AssistSatelliteState.WAITING_FOR_INPUT
+    _attr_state: AssistSatelliteState | None = (
+        AssistSatelliteState.WAITING_FOR_WAKE_WORD
+    )
 
     _satellite_config = SatelliteConfig()
 
@@ -107,7 +109,7 @@ class AssistSatelliteEntity(entity.Entity):
             self._set_state(AssistSatelliteState.RESPONDING)
         elif event.type == PipelineEventType.RUN_END:
             if not self._run_has_tts:
-                self._set_state(AssistSatelliteState.WAITING_FOR_INPUT)
+                self._set_state(AssistSatelliteState.WAITING_FOR_WAKE_WORD)
 
     async def async_get_config(self) -> SatelliteConfig:
         """Get satellite configuration."""
@@ -137,4 +139,4 @@ class AssistSatelliteEntity(entity.Entity):
 
     def tts_response_finished(self) -> None:
         """Tell entity that the text-to-speech response has finished playing."""
-        self._set_state(AssistSatelliteState.WAITING_FOR_INPUT)
+        self._set_state(AssistSatelliteState.WAITING_FOR_WAKE_WORD)

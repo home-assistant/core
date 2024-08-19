@@ -135,13 +135,13 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         """Server is ready."""
         super().connection_made(transport)
         self.voip_device.set_is_active(True)
-        self._set_state(AssistSatelliteState.WAITING_FOR_INPUT)
+        self._set_state(AssistSatelliteState.WAITING_FOR_WAKE_WORD)
 
     def disconnect(self):
         """Handle connection is lost or closed."""
         super().disconnect()
         self.voip_device.set_is_active(False)
-        self._set_state(AssistSatelliteState.WAITING_FOR_INPUT)
+        self._set_state(AssistSatelliteState.WAITING_FOR_WAKE_WORD)
 
     def prepare_for_call(self, call_info: CallInfo, rtcp_state: RtcpState | None):
         """Copy relevant data to RTP protocol."""

@@ -18,8 +18,8 @@ class SatelliteConfig:
 class AssistSatelliteState(StrEnum):
     """Valid states of an Assist satellite entity."""
 
-    WAITING_FOR_INPUT = "waiting_for_input"
-    """Device is waiting for user input, such as a wake word."""
+    WAITING_FOR_WAKE_WORD = "waiting_for_wake_word"
+    """Device is waiting for a wake word."""
 
     LISTENING_WAKE_WORD = "listening_wake_word"
     """Device is streaming audio for wake word detection to Home Assistant."""
