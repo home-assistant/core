@@ -151,13 +151,11 @@ def _discovery(config_info, data):
                 )
                 data[config_info.ctrl_url] = {
                     "serial_number": recv.serial_number,
-                    "model_name": recv.model_name,
                 }
                 zones = rxv.RXV(
                     config_info.ctrl_url,
-                    friendly_name=config_info.name,
+                    config_info.name,
                     serial_number=recv.serial_number,
-                    model_name=recv.model_name,
                 ).zone_controllers()
                 break
 
@@ -168,14 +166,13 @@ def _discovery(config_info, data):
                 _LOGGER.debug(
                     "Discovery store data matched with Serial %s %s %s",
                     config_info.ctrl_url,
+                    config_info.name,
                     data[config_info.ctrl_url]["serial_number"],
-                    data[config_info.ctrl_url]["model_name"],
                 )
                 zones = rxv.RXV(
                     config_info.ctrl_url,
-                    friendly_name=config_info.name,
+                    config_info.name,
                     serial_number=data[config_info.ctrl_url]["serial_number"],
-                    model_name=data[config_info.ctrl_url]["model_name"],
                 ).zone_controllers()
 
         if not zones:
