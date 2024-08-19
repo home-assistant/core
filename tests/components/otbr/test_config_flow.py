@@ -49,17 +49,25 @@ def addon_info_fixture():
         yield addon_info
 
 
+@pytest.mark.parametrize(
+    "url",
+    [
+        "http://custom_url:1234",
+        "http://custom_url:1234/",
+        "http://custom_url:1234//",
+    ],
+)
 async def test_user_flow(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, url: str
 ) -> None:
     """Test the user flow."""
-    url = "http://custom_url:1234"
-    aioclient_mock.get(f"{url}/node/dataset/active", text="aa")
+    stripped_url = "http://custom_url:1234"
+    aioclient_mock.get(f"{stripped_url}/node/dataset/active", text="aa")
     result = await hass.config_entries.flow.async_init(
         otbr.DOMAIN, context={"source": "user"}
     )
 
-    expected_data = {"url": url}
+    expected_data = {"url": stripped_url}
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
