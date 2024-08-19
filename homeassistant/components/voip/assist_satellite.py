@@ -23,7 +23,6 @@ from homeassistant.components.assist_pipeline import (
 )
 from homeassistant.components.assist_satellite import (
     AssistSatelliteEntity,
-    AssistSatelliteEntityFeature,
     AssistSatelliteState,
     SatelliteConfig,
 )
@@ -85,12 +84,6 @@ async def async_setup_entry(
 class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol):
     """Assist satellite for VoIP devices."""
 
-    _attr_state = AssistSatelliteState.MUTED
-    _attr_supported_features = (
-        AssistSatelliteEntityFeature.AUDIO_INPUT
-        | AssistSatelliteEntityFeature.AUDIO_OUTPUT
-    )
-
     def __init__(
         self,
         hass: HomeAssistant,
@@ -115,6 +108,10 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self._tones = tones
         self._processing_tone_done = asyncio.Event()
 
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        self.voip_device.protocol = self
+
     # -------------------------------------------------------------------------
     # Satellite
     # -------------------------------------------------------------------------
@@ -128,11 +125,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     @property
     def is_microphone_muted(self) -> bool:
         """Return if the satellite's microphone is muted."""
-        return not self._is_connected
-
-    async def async_set_microphone_mute(self, mute: bool) -> None:
-        """Mute or unmute the satellite's microphone."""
-        # not supported
+        return False  # not supported
 
     # -------------------------------------------------------------------------
     # VoIP
@@ -142,13 +135,13 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         """Server is ready."""
         super().connection_made(transport)
         self.voip_device.set_is_active(True)
-        self._set_state(AssistSatelliteState.IDLE)
+        self._set_state(AssistSatelliteState.WAITING_FOR_INPUT)
 
     def disconnect(self):
         """Handle connection is lost or closed."""
         super().disconnect()
         self.voip_device.set_is_active(False)
-        self._set_state(AssistSatelliteState.MUTED)
+        self._set_state(AssistSatelliteState.WAITING_FOR_INPUT)
 
     def prepare_for_call(self, call_info: CallInfo, rtcp_state: RtcpState | None):
         """Copy relevant data to RTP protocol."""

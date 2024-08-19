@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 
-from voip_utils import CallInfo
+from voip_utils import CallInfo, VoipDatagramProtocol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
@@ -22,6 +22,7 @@ class VoIPDevice:
     device_id: str
     is_active: bool = False
     update_listeners: list[Callable[[VoIPDevice], None]] = field(default_factory=list)
+    protocol: VoipDatagramProtocol | None = None
 
     @callback
     def set_is_active(self, active: bool) -> None:

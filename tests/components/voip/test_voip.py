@@ -11,14 +11,18 @@ from syrupy.assertion import SnapshotAssertion
 from voip_utils import CallInfo
 
 from homeassistant.components import assist_pipeline, assist_satellite, voip
-from homeassistant.components.assist_satellite import AssistSatelliteState
+from homeassistant.components.assist_satellite import (
+    AssistSatelliteEntity,
+    AssistSatelliteState,
+)
 from homeassistant.components.voip import HassVoipDatagramProtocol
 from homeassistant.components.voip.assist_satellite import Tones, VoipAssistSatellite
 from homeassistant.components.voip.devices import VoIPDevice, VoIPDevices
 from homeassistant.components.voip.voip import PreRecordMessageProtocol, make_protocol
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
 
 _ONE_SECOND = 16000 * 2  # 16Khz 16-bit
@@ -40,6 +44,23 @@ def _empty_wav() -> bytes:
             wav_file.setnchannels(1)
 
         return wav_io.getvalue()
+
+
+def async_get_satellite_entity(
+    hass: HomeAssistant, domain: str, unique_id_prefix: str
+) -> AssistSatelliteEntity | None:
+    """Get Assist satellite entity."""
+    ent_reg = er.async_get(hass)
+    satellite_entity_id = ent_reg.async_get_entity_id(
+        Platform.ASSIST_SATELLITE, domain, f"{unique_id_prefix}-assist_satellite"
+    )
+    if satellite_entity_id is None:
+        return None
+
+    component: EntityComponent[AssistSatelliteEntity] = hass.data[
+        assist_satellite.DOMAIN
+    ]
+    return component.get_entity(satellite_entity_id)
 
 
 async def test_is_valid_call(
@@ -148,9 +169,7 @@ async def test_satellite_prepared(
         wake_word_id=None,
     )
 
-    satellite = assist_satellite.async_get_satellite_entity(
-        hass, voip.DOMAIN, voip_device.voip_id
-    )
+    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     assert isinstance(satellite, VoipAssistSatellite)
 
     with (
@@ -158,11 +177,9 @@ async def test_satellite_prepared(
             "homeassistant.components.voip.voip.async_get_pipeline",
             return_value=pipeline,
         ),
-        patch.object(satellite, "prepare_for_call") as mock_prepare_for_call,
     ):
         protocol = make_protocol(hass, voip_devices, call_info)
         assert protocol == satellite
-        mock_prepare_for_call.assert_called_once_with(call_info, None)
 
 
 async def test_pipeline(
@@ -174,14 +191,11 @@ async def test_pipeline(
     """Test that pipeline function is called from RTP protocol."""
     assert await async_setup_component(hass, "voip", {})
 
-    satellite = assist_satellite.async_get_satellite_entity(
-        hass, voip.DOMAIN, voip_device.voip_id
-    )
+    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     assert isinstance(satellite, VoipAssistSatellite)
 
     # Satellite is muted until a call begins
-    assert satellite.state == AssistSatelliteState.MUTED
-    assert satellite.is_microphone_muted
+    assert satellite.state == AssistSatelliteState.WAITING_FOR_INPUT
 
     done = asyncio.Event()
 
@@ -217,7 +231,7 @@ async def test_pipeline(
             )
         )
 
-        assert satellite.state == AssistSatelliteState.LISTENING
+        assert satellite.state == AssistSatelliteState.LISTENING_COMMAND
 
         # Fake STT result
         event_callback(
@@ -290,8 +304,7 @@ async def test_pipeline(
         satellite.transport = Mock()
 
         satellite.connection_made(satellite.transport)
-        assert satellite.state == AssistSatelliteState.IDLE
-        assert not satellite.is_microphone_muted
+        assert satellite.state == AssistSatelliteState.WAITING_FOR_INPUT
 
         # Ensure audio queue is cleared before pipeline starts
         satellite._audio_queue.put_nowait(bad_chunk)
@@ -317,7 +330,7 @@ async def test_pipeline(
 
         # Hang up
         satellite.disconnect()
-        assert satellite.state == AssistSatelliteState.MUTED
+        assert satellite.state == AssistSatelliteState.WAITING_FOR_INPUT
 
 
 async def test_stt_stream_timeout(
@@ -326,9 +339,7 @@ async def test_stt_stream_timeout(
     """Test timeout in STT stream during pipeline run."""
     assert await async_setup_component(hass, "voip", {})
 
-    satellite = assist_satellite.async_get_satellite_entity(
-        hass, voip.DOMAIN, voip_device.voip_id
-    )
+    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     assert isinstance(satellite, VoipAssistSatellite)
 
     done = asyncio.Event()
@@ -367,9 +378,7 @@ async def test_tts_timeout(
     """Test that TTS will time out based on its length."""
     assert await async_setup_component(hass, "voip", {})
 
-    satellite = assist_satellite.async_get_satellite_entity(
-        hass, voip.DOMAIN, voip_device.voip_id
-    )
+    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     assert isinstance(satellite, VoipAssistSatellite)
 
     done = asyncio.Event()
@@ -480,9 +489,7 @@ async def test_tts_wrong_extension(
     """Test that TTS will only stream WAV audio."""
     assert await async_setup_component(hass, "voip", {})
 
-    satellite = assist_satellite.async_get_satellite_entity(
-        hass, voip.DOMAIN, voip_device.voip_id
-    )
+    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     assert isinstance(satellite, VoipAssistSatellite)
 
     done = asyncio.Event()
@@ -577,9 +584,7 @@ async def test_tts_wrong_wav_format(
     """Test that TTS will only stream WAV audio with a specific format."""
     assert await async_setup_component(hass, "voip", {})
 
-    satellite = assist_satellite.async_get_satellite_entity(
-        hass, voip.DOMAIN, voip_device.voip_id
-    )
+    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     assert isinstance(satellite, VoipAssistSatellite)
 
     done = asyncio.Event()
@@ -681,9 +686,7 @@ async def test_empty_tts_output(
     """Test that TTS will not stream when output is empty."""
     assert await async_setup_component(hass, "voip", {})
 
-    satellite = assist_satellite.async_get_satellite_entity(
-        hass, voip.DOMAIN, voip_device.voip_id
-    )
+    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     assert isinstance(satellite, VoipAssistSatellite)
 
     async def async_pipeline_from_audio_stream(*args, **kwargs):
@@ -760,9 +763,7 @@ async def test_pipeline_error(
     """Test that a pipeline error causes the error tone to be played."""
     assert await async_setup_component(hass, "voip", {})
 
-    satellite = assist_satellite.async_get_satellite_entity(
-        hass, voip.DOMAIN, voip_device.voip_id
-    )
+    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     assert isinstance(satellite, VoipAssistSatellite)
 
     done = asyncio.Event()

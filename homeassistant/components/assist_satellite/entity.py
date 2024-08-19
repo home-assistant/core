@@ -19,7 +19,7 @@ from homeassistant.helpers import entity
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.util import ulid
 
-from .models import AssistSatelliteEntityFeature, AssistSatelliteState, SatelliteConfig
+from .models import AssistSatelliteState, SatelliteConfig
 
 _CONVERSATION_TIMEOUT_SEC: Final = 5 * 60  # 5 minutes
 
@@ -33,10 +33,7 @@ class AssistSatelliteEntity(entity.Entity):
         entity_category=EntityCategory.CONFIG,
     )
     _attr_should_poll = False
-    _attr_state: AssistSatelliteState | None = None
-    _attr_supported_features: AssistSatelliteEntityFeature = (
-        AssistSatelliteEntityFeature(0)
-    )
+    _attr_state: AssistSatelliteState | None = AssistSatelliteState.WAITING_FOR_INPUT
 
     _satellite_config = SatelliteConfig()
 
@@ -99,9 +96,9 @@ class AssistSatelliteEntity(entity.Entity):
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Set state based on pipeline stage."""
         if event.type == PipelineEventType.WAKE_WORD_START:
-            self._set_state(AssistSatelliteState.IDLE)
+            self._set_state(AssistSatelliteState.LISTENING_WAKE_WORD)
         elif event.type == PipelineEventType.STT_START:
-            self._set_state(AssistSatelliteState.LISTENING)
+            self._set_state(AssistSatelliteState.LISTENING_COMMAND)
         elif event.type == PipelineEventType.INTENT_START:
             self._set_state(AssistSatelliteState.PROCESSING)
         elif event.type == PipelineEventType.TTS_END:
@@ -110,7 +107,7 @@ class AssistSatelliteEntity(entity.Entity):
             self._set_state(AssistSatelliteState.RESPONDING)
         elif event.type == PipelineEventType.RUN_END:
             if not self._run_has_tts:
-                self._set_state(AssistSatelliteState.IDLE)
+                self._set_state(AssistSatelliteState.WAITING_FOR_INPUT)
 
     async def async_get_config(self) -> SatelliteConfig:
         """Get satellite configuration."""
@@ -133,15 +130,6 @@ class AssistSatelliteEntity(entity.Entity):
     def is_microphone_muted(self) -> bool:
         """Return if the satellite's microphone is muted."""
 
-    @abstractmethod
-    async def async_set_microphone_mute(self, mute: bool) -> None:
-        """Mute or unmute the satellite's microphone."""
-
-    @property
-    def state(self) -> AssistSatelliteState | None:
-        """Return the current state of the satellite."""
-        return self._attr_state
-
     def _set_state(self, state: AssistSatelliteState):
         """Set the entity's state."""
         self._attr_state = state
@@ -149,4 +137,4 @@ class AssistSatelliteEntity(entity.Entity):
 
     def tts_response_finished(self) -> None:
         """Tell entity that the text-to-speech response has finished playing."""
-        self._set_state(AssistSatelliteState.IDLE)
+        self._set_state(AssistSatelliteState.WAITING_FOR_INPUT)

@@ -1,7 +1,7 @@
 """Models for assist satellite."""
 
 from dataclasses import dataclass
-from enum import IntFlag, StrEnum
+from enum import StrEnum
 
 
 @dataclass(frozen=True)
@@ -15,27 +15,17 @@ class SatelliteConfig:
     """Seconds of silence before voice command is finished."""
 
 
-class AssistSatelliteEntityFeature(IntFlag):
-    """Supported features of the satellite entity."""
-
-    AUDIO_INPUT = 1
-    """Satellite is capable of recording and streaming audio to Home Assistant."""
-
-    AUDIO_OUTPUT = 2
-    """Satellite is capable of playing audio."""
-
-    MUTE_INPUT = 4
-    """Satellite supported muting the input audio."""
-
-
 class AssistSatelliteState(StrEnum):
     """Valid states of an Assist satellite entity."""
 
-    IDLE = "idle"
-    """Device is waiting for the wake word."""
+    WAITING_FOR_INPUT = "waiting_for_input"
+    """Device is waiting for user input, such as a wake word."""
 
-    LISTENING = "listening"
-    """Device is streaming audio with the command to Home Assistant."""
+    LISTENING_WAKE_WORD = "listening_wake_word"
+    """Device is streaming audio for wake word detection to Home Assistant."""
+
+    LISTENING_COMMAND = "listening_command"
+    """Device is streaming audio with the voice command to Home Assistant."""
 
     PROCESSING = "processing"
     """Device has stopped streaming audio and is waiting for Home Assistant to
@@ -43,6 +33,3 @@ class AssistSatelliteState(StrEnum):
 
     RESPONDING = "responding"
     """Device is speaking the response."""
-
-    MUTED = "muted"
-    """Device is muted (in software or hardware)."""

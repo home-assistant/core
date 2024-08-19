@@ -23,11 +23,9 @@ from homeassistant.components.assist_pipeline import (
     async_get_pipeline,
     select as pipeline_select,
 )
-from homeassistant.components.assist_satellite import async_get_satellite_entity
 from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant
 
-from .assist_satellite import VoipAssistSatellite
 from .const import CHANNELS, DOMAIN, RATE, RTP_AUDIO_SETTINGS, WIDTH
 
 if TYPE_CHECKING:
@@ -64,12 +62,18 @@ def make_protocol(
             rtcp_state=rtcp_state,
         )
 
-    satellite = async_get_satellite_entity(hass, DOMAIN, voip_device.voip_id)
-    assert isinstance(satellite, VoipAssistSatellite), "VoIP satellite not found"
+    if (protocol := voip_device.protocol) is None:
+        raise ValueError("VoIP satellite not found")
 
-    # Pipeline is properly configured
-    satellite.prepare_for_call(call_info, rtcp_state)
-    return satellite
+    protocol._rtp_input.opus_payload_type = call_info.opus_payload_type  # noqa: SLF001
+    protocol._rtp_output.opus_payload_type = call_info.opus_payload_type  # noqa: SLF001
+
+    protocol.rtcp_state = rtcp_state
+    if protocol.rtcp_state is not None:
+        # Automatically disconnect when BYE is received over RTCP
+        protocol.rtcp_state.bye_callback = protocol.disconnect
+
+    return protocol
 
 
 class HassVoipDatagramProtocol(VoipDatagramProtocol):
