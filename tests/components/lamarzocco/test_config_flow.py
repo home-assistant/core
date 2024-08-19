@@ -331,7 +331,10 @@ async def test_reconfigure_flow(
     assert result4["reason"] == "reconfigure_successful"
 
     assert mock_config_entry.title == "My LaMarzocco"
-    assert mock_config_entry.data == {**mock_config_entry.data, CONF_MAC: service_info.address}
+    assert mock_config_entry.data == {
+        **mock_config_entry.data,
+        CONF_MAC: service_info.address,
+    }
 
 
 async def test_bluetooth_discovery(
