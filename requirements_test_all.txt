@@ -440,7 +440,7 @@ aprslib==0.7.2
 apsystems-ez1==1.3.3
 
 # homeassistant.components.aranet
-aranet4==2.3.4
+aranet4==2.4.0
 
 # homeassistant.components.arcam_fmj
 arcam-fmj==1.5.2
