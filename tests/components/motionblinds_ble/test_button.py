@@ -28,10 +28,10 @@ from tests.common import MockConfigEntry
     ],
 )
 async def test_button(
+    hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_motion_device: Mock,
     name: str,
-    hass: HomeAssistant,
     button: str,
 ) -> None:
     """Test states of the button."""

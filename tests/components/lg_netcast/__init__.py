@@ -1,7 +1,7 @@
 """Tests for LG Netcast TV."""
 
 from unittest.mock import patch
-from xml.etree import ElementTree as ET
+import xml.etree.ElementTree as ET
 
 from pylgnetcast import AccessTokenError, LgNetCastClient, SessionIdError
 import requests

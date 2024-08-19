@@ -15,7 +15,6 @@ from uuid import UUID
 import sqlalchemy
 from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text, update
 from sqlalchemy.engine import CursorResult, Engine
-from sqlalchemy.engine.interfaces import ReflectedForeignKeyConstraint
 from sqlalchemy.exc import (
     DatabaseError,
     IntegrityError,
@@ -645,7 +644,7 @@ def _update_states_table_with_foreign_key_options(
 
 def _drop_foreign_key_constraints(
     session_maker: Callable[[], Session], engine: Engine, table: str, column: str
-) -> list[tuple[str, str, ReflectedForeignKeyConstraint]]:
+) -> None:
     """Drop foreign key constraints for a table on specific columns.
 
     This is not supported for SQLite because it does not support
@@ -658,11 +657,6 @@ def _drop_foreign_key_constraints(
         )
 
     inspector = sqlalchemy.inspect(engine)
-    dropped_constraints = [
-        (table, column, foreign_key)
-        for foreign_key in inspector.get_foreign_keys(table)
-        if foreign_key["name"] and foreign_key["constrained_columns"] == [column]
-    ]
 
     ## Find matching named constraints and bind the ForeignKeyConstraints to the table
     tmp_table = Table(table, MetaData())
@@ -684,8 +678,6 @@ def _drop_foreign_key_constraints(
                     column,
                 )
                 raise
-
-    return dropped_constraints
 
 
 def _restore_foreign_key_constraints(
@@ -1120,7 +1112,7 @@ class _SchemaVersion16Migrator(_SchemaVersionMigrator, target_version=16):
             # Version 16 changes settings for the foreign key constraint on
             # states.old_state_id. Dropping the constraint is not really correct
             # we should have recreated it instead. Recreating the constraint now
-            # happens in the migration to schema version 45.
+            # happens in the migration to schema version 47.
             _drop_foreign_key_constraints(
                 self.session_maker, self.engine, TABLE_STATES, "old_state_id"
             )
@@ -1645,6 +1637,24 @@ class _SchemaVersion43Migrator(_SchemaVersionMigrator, target_version=43):
         )
 
 
+class _SchemaVersion44Migrator(_SchemaVersionMigrator, target_version=44):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        # The changes in this version are identical to the changes in version
+        # 46. We apply the same changes again because the migration code previously
+        # swallowed errors which caused some users' databases to end up in an
+        # undefined state after the migration.
+
+
+class _SchemaVersion45Migrator(_SchemaVersionMigrator, target_version=45):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        # The changes in this version are identical to the changes in version
+        # 47. We apply the same changes again because the migration code previously
+        # swallowed errors which caused some users' databases to end up in an
+        # undefined state after the migration.
+
+
 FOREIGN_COLUMNS = (
     (
         "events",
@@ -1677,7 +1687,7 @@ FOREIGN_COLUMNS = (
 )
 
 
-class _SchemaVersion44Migrator(_SchemaVersionMigrator, target_version=44):
+class _SchemaVersion46Migrator(_SchemaVersionMigrator, target_version=46):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # We skip this step for SQLITE, it doesn't have differently sized integers
@@ -1728,14 +1738,14 @@ class _SchemaVersion44Migrator(_SchemaVersionMigrator, target_version=44):
             )
 
 
-class _SchemaVersion45Migrator(_SchemaVersionMigrator, target_version=45):
+class _SchemaVersion47Migrator(_SchemaVersionMigrator, target_version=47):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # We skip this step for SQLITE, it doesn't have differently sized integers
         if self.engine.dialect.name == SupportedDialect.SQLITE:
             return
 
-        # Restore constraints dropped in migration to schema version 44
+        # Restore constraints dropped in migration to schema version 46
         _restore_foreign_key_constraints(
             self.session_maker,
             self.engine,

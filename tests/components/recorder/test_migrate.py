@@ -7,7 +7,9 @@ import sys
 from unittest.mock import ANY, Mock, PropertyMock, call, patch
 
 import pytest
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, inspect, text
+from sqlalchemy.engine import Engine
+from sqlalchemy.engine.interfaces import ReflectedForeignKeyConstraint
 from sqlalchemy.exc import (
     DatabaseError,
     InternalError,
@@ -27,7 +29,7 @@ from homeassistant.components.recorder.db_schema import (
     States,
 )
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import recorder as recorder_helper
 import homeassistant.util.dt as dt_util
 
@@ -45,7 +47,7 @@ async def mock_recorder_before_hass(
     """Set up recorder."""
 
 
-def _get_native_states(hass, entity_id):
+def _get_native_states(hass: HomeAssistant, entity_id: str) -> list[State]:
     with session_scope(hass=hass, read_only=True) as session:
         instance = recorder.get_instance(hass)
         metadata_id = instance.states_meta_manager.get(entity_id, session, True)
@@ -213,7 +215,7 @@ async def test_database_migration_failed(
         # Test error handling in _modify_columns
         (12, "sqlalchemy.engine.base.Connection.execute", False, 1, 0),
         # Test error handling in _drop_foreign_key_constraints
-        (44, "homeassistant.components.recorder.migration.DropConstraint", False, 2, 1),
+        (46, "homeassistant.components.recorder.migration.DropConstraint", False, 2, 1),
     ],
 )
 @pytest.mark.skip_on_db_engine(["sqlite"])
@@ -973,31 +975,40 @@ def test_drop_restore_foreign_key_constraints(recorder_db_url: str) -> None:
         ],
     }
 
+    def find_constraints(
+        engine: Engine, table: str, column: str
+    ) -> list[tuple[str, str, ReflectedForeignKeyConstraint]]:
+        inspector = inspect(engine)
+        return [
+            (table, column, foreign_key)
+            for foreign_key in inspector.get_foreign_keys(table)
+            if foreign_key["name"] and foreign_key["constrained_columns"] == [column]
+        ]
+
     engine = create_engine(recorder_db_url)
     db_schema.Base.metadata.create_all(engine)
 
+    matching_constraints_1 = [
+        dropped_constraint
+        for table, column, _, _ in constraints_to_recreate
+        for dropped_constraint in find_constraints(engine, table, column)
+    ]
+    assert matching_constraints_1 == expected_dropped_constraints[db_engine]
+
     with Session(engine) as session:
         session_maker = Mock(return_value=session)
-        dropped_constraints_1 = [
-            dropped_constraint
-            for table, column, _, _ in constraints_to_recreate
-            for dropped_constraint in migration._drop_foreign_key_constraints(
+        for table, column, _, _ in constraints_to_recreate:
+            migration._drop_foreign_key_constraints(
                 session_maker, engine, table, column
             )
-        ]
-    assert dropped_constraints_1 == expected_dropped_constraints[db_engine]
 
     # Check we don't find the constrained columns again (they are removed)
-    with Session(engine) as session:
-        session_maker = Mock(return_value=session)
-        dropped_constraints_2 = [
-            dropped_constraint
-            for table, column, _, _ in constraints_to_recreate
-            for dropped_constraint in migration._drop_foreign_key_constraints(
-                session_maker, engine, table, column
-            )
-        ]
-    assert dropped_constraints_2 == []
+    matching_constraints_2 = [
+        dropped_constraint
+        for table, column, _, _ in constraints_to_recreate
+        for dropped_constraint in find_constraints(engine, table, column)
+    ]
+    assert matching_constraints_2 == []
 
     # Restore the constraints
     with Session(engine) as session:
@@ -1007,16 +1018,12 @@ def test_drop_restore_foreign_key_constraints(recorder_db_url: str) -> None:
         )
 
     # Check we do find the constrained columns again (they are restored)
-    with Session(engine) as session:
-        session_maker = Mock(return_value=session)
-        dropped_constraints_3 = [
-            dropped_constraint
-            for table, column, _, _ in constraints_to_recreate
-            for dropped_constraint in migration._drop_foreign_key_constraints(
-                session_maker, engine, table, column
-            )
-        ]
-    assert dropped_constraints_3 == expected_dropped_constraints[db_engine]
+    matching_constraints_3 = [
+        dropped_constraint
+        for table, column, _, _ in constraints_to_recreate
+        for dropped_constraint in find_constraints(engine, table, column)
+    ]
+    assert matching_constraints_3 == expected_dropped_constraints[db_engine]
 
     engine.dispose()
 
