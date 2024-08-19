@@ -72,12 +72,13 @@ from homeassistant.const import (
     STATE_LOCKED,
     STATE_UNLOCKED,
 )
-from homeassistant.core import Context, CoreState, Event, HomeAssistant, callback
+from homeassistant.core import Context, CoreState, Event, HomeAssistant, State, callback
 from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
     recorder as recorder_helper,
 )
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads
@@ -123,7 +124,7 @@ def small_cache_size() -> Generator[None]:
         yield
 
 
-def _default_recorder(hass):
+def _default_recorder(hass: HomeAssistant) -> Recorder:
     """Return a recorder with reasonable defaults."""
     return Recorder(
         hass,
@@ -581,7 +582,7 @@ async def test_saving_state_with_commit_interval_zero(
         assert db_states[0].event_id is None
 
 
-async def _add_entities(hass, entity_ids):
+async def _add_entities(hass: HomeAssistant, entity_ids: list[str]) -> list[State]:
     """Add entities."""
     attributes = {"test_attr": 5, "test_attr_10": "nice"}
     for idx, entity_id in enumerate(entity_ids):
@@ -605,7 +606,7 @@ async def _add_entities(hass, entity_ids):
         return states
 
 
-def _state_with_context(hass, entity_id):
+def _state_with_context(hass: HomeAssistant, entity_id: str) -> State | None:
     # We don't restore context unless we need it by joining the
     # events table on the event_id for state_changed events
     return hass.states.get(entity_id)
@@ -1004,7 +1005,7 @@ async def test_defaults_set(hass: HomeAssistant) -> None:
     """Test the config defaults are set."""
     recorder_config = None
 
-    async def mock_setup(hass, config):
+    async def mock_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Mock setup."""
         nonlocal recorder_config
         recorder_config = config["recorder"]
@@ -1366,7 +1367,7 @@ async def test_statistics_runs_initiated(
 
 @pytest.mark.freeze_time("2022-09-13 09:00:00+02:00")
 @pytest.mark.parametrize("persistent_database", [True])
-@pytest.mark.parametrize("enable_statistics", [True])
+@pytest.mark.parametrize("enable_missing_statistics", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_compile_missing_statistics(
     async_test_recorder: RecorderInstanceGenerator, freezer: FrozenDateTimeFactory

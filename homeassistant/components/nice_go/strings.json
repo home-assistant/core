@@ -17,6 +17,13 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
+  "entity": {
+    "light": {
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    }
+  },
   "issues": {
     "firmware_update_required": {
       "title": "Firmware update required",

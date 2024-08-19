@@ -81,16 +81,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle an options update."""
     await hass.config_entries.async_reload(entry.entry_id)
-
-
-async def async_get_active_dataset_tlvs(hass: HomeAssistant) -> bytes | None:
-    """Get current active operational dataset in TLVS format, or None.
-
-    Returns None if there is no active operational dataset.
-    Raises if the http status is 400 or higher or if the response is invalid.
-    """
-    if DOMAIN not in hass.data:
-        raise HomeAssistantError("OTBR API not available")
-
-    data: OTBRData = hass.data[DOMAIN]
-    return await data.get_active_dataset_tlvs()

@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
@@ -44,10 +45,10 @@ from homeassistant.const import (
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
-    STATE_IDLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     CONNECTION_UPNP,
@@ -93,15 +94,18 @@ async def test_device_registry_not_portable(
 
 
 async def test_entity_basic(
-    hass: HomeAssistant, async_autosetup_sonos, discover
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    discover,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test basic state and attributes."""
-    state = hass.states.get("media_player.zone_a")
-    assert state.state == STATE_IDLE
-    attributes = state.attributes
-    assert attributes["friendly_name"] == "Zone A"
-    assert attributes["is_volume_muted"] is False
-    assert attributes["volume_level"] == 0.19
+    entity_id = "media_player.zone_a"
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+    state = hass.states.get(entity_entry.entity_id)
+    assert state == snapshot(name=f"{entity_entry.entity_id}-state")
 
 
 @pytest.mark.parametrize(
