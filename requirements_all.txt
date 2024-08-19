@@ -464,7 +464,7 @@ apprise==1.8.0
 aprslib==0.7.2
 
 # homeassistant.components.apsystems
-apsystems-ez1==1.3.3
+apsystems-ez1==2.1.0
 
 # homeassistant.components.aqualogic
 aqualogic==2.6
