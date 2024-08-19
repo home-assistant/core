@@ -119,7 +119,7 @@ class YamahaConfigInfo:
 
 def _discovery(config_info, data):
     """Discover list of zone controllers from configuration in the network."""
-    _LOGGER.debug("Discovery Config %s", config_info)
+    _LOGGER.debug("Discovery Config %s", vars(config_info))
     if config_info.from_discovery:
         _LOGGER.debug("Discovery Zones")
         zones = rxv.RXV(
@@ -136,35 +136,32 @@ def _discovery(config_info, data):
     else:
         _LOGGER.debug("Config Zones")
         zones = None
+        recvs = []
 
         # Fix for upstream issues in rxv.find() with some hardware.
         with contextlib.suppress(AttributeError, ValueError):
-            for recv in rxv.find(DISCOVER_TIMEOUT):
+            recvs.extend(rxv.find(DISCOVER_TIMEOUT))
+        for recv in recvs:
+            _LOGGER.debug(
+                "Found %s", vars(recv)
+            )
+            if recv.ctrl_url == config_info.ctrl_url and recv.serial_number:
                 _LOGGER.debug(
-                    "Found %s(%s) Model: %s Serial: %s Url: %s",
-                    config_info.name,
-                    recv.friendly_name,
-                    recv.model_name,
-                    recv.serial_number,
+                    "Config Zones Matched with Serial %s: %s",
                     recv.ctrl_url,
+                    recv.serial_number,
                 )
-                if recv.ctrl_url == config_info.ctrl_url:
-                    _LOGGER.debug(
-                        "Config Zones Matched with Serial %s: %s",
-                        recv.ctrl_url,
-                        recv.serial_number,
-                    )
-                    data[config_info.ctrl_url] = {
-                        "serial_number": recv.serial_number,
-                        "model_name": recv.model_name,
-                    }
-                    zones = rxv.RXV(
-                        config_info.ctrl_url,
-                        friendly_name=config_info.name,
-                        serial_number=recv.serial_number,
-                        model_name=recv.model_name,
-                    ).zone_controllers()
-                    break
+                data[config_info.ctrl_url] = {
+                    "serial_number": recv.serial_number,
+                    "model_name": recv.model_name,
+                }
+                zones = rxv.RXV(
+                    config_info.ctrl_url,
+                    friendly_name=config_info.name,
+                    serial_number=recv.serial_number,
+                    model_name=recv.model_name,
+                ).zone_controllers()
+                break
 
         if not zones:
             _LOGGER.debug("Discovery Store Fallback")
