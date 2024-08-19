@@ -265,7 +265,7 @@ async def test_platform_setup_with_error(
 
     async def async_get_service(hass, config, discovery_info=None):
         """Return None for an invalid notify service."""
-        raise Exception("Setup error")  # pylint: disable=broad-exception-raised
+        raise Exception("Setup error")  # noqa: TRY002
 
     mock_notify_platform(
         hass, tmp_path, "testnotify", async_get_service=async_get_service

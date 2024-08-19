@@ -95,8 +95,6 @@ homeassistant.components.aruba.*
 homeassistant.components.arwn.*
 homeassistant.components.aseko_pool_live.*
 homeassistant.components.assist_pipeline.*
-homeassistant.components.asterisk_cdr.*
-homeassistant.components.asterisk_mbox.*
 homeassistant.components.asuswrt.*
 homeassistant.components.autarco.*
 homeassistant.components.auth.*
@@ -168,6 +166,7 @@ homeassistant.components.ecowitt.*
 homeassistant.components.efergy.*
 homeassistant.components.electrasmart.*
 homeassistant.components.electric_kiwi.*
+homeassistant.components.elevenlabs.*
 homeassistant.components.elgato.*
 homeassistant.components.elkm1.*
 homeassistant.components.emulated_hue.*
@@ -197,7 +196,9 @@ homeassistant.components.fritzbox.*
 homeassistant.components.fritzbox_callmonitor.*
 homeassistant.components.fronius.*
 homeassistant.components.frontend.*
+homeassistant.components.fujitsu_fglair.*
 homeassistant.components.fully_kiosk.*
+homeassistant.components.fyta.*
 homeassistant.components.generic_hygrostat.*
 homeassistant.components.generic_thermostat.*
 homeassistant.components.geo_location.*
@@ -294,6 +295,7 @@ homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
 homeassistant.components.madvr.*
 homeassistant.components.mailbox.*
+homeassistant.components.manual.*
 homeassistant.components.map.*
 homeassistant.components.mastodon.*
 homeassistant.components.matrix.*

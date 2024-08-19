@@ -49,4 +49,4 @@ async def test_reset_favorites_button(
         DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: reset_entity_id}, blocking=True
     )
     assert hass.states.get(reset_entity_id).state != STATE_UNKNOWN
-    assert doorbird_entry.api.delete_favorite.call_count == 2
+    assert doorbird_entry.api.delete_favorite.call_count == 3

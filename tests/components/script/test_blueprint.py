@@ -74,7 +74,7 @@ async def test_confirmable_notification(
                                 "message": "Throw ring in mountain?",
                                 "confirm_action": [
                                     {
-                                        "service": "homeassistant.turn_on",
+                                        "action": "homeassistant.turn_on",
                                         "target": {"entity_id": "mount.doom"},
                                     }
                                 ],

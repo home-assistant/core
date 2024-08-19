@@ -13,7 +13,7 @@ from homeassistant.components.husqvarna_automower.const import DOMAIN
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
 from homeassistant.components.lawn_mower import LawnMowerActivity
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import setup_integration
 from .const import TEST_MOWER_ID
@@ -122,7 +122,7 @@ async def test_lawn_mower_commands(
 async def test_lawn_mower_service_commands(
     hass: HomeAssistant,
     aioautomower_command: str,
-    extra_data: int | None,
+    extra_data: timedelta,
     service: str,
     service_data: dict[str, int] | None,
     mock_automower_client: AsyncMock,
@@ -158,7 +158,61 @@ async def test_lawn_mower_service_commands(
 
 
 @pytest.mark.parametrize(
-    ("service", "service_data"),
+    ("aioautomower_command", "extra_data1", "extra_data2", "service", "service_data"),
+    [
+        (
+            "start_in_workarea",
+            123456,
+            timedelta(days=40),
+            "override_schedule_work_area",
+            {
+                "work_area_id": 123456,
+                "duration": {"days": 40},
+            },
+        ),
+    ],
+)
+async def test_lawn_mower_override_work_area_command(
+    hass: HomeAssistant,
+    aioautomower_command: str,
+    extra_data1: int,
+    extra_data2: timedelta,
+    service: str,
+    service_data: dict[str, int] | None,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test lawn_mower work area override commands."""
+    await setup_integration(hass, mock_config_entry)
+    mocked_method = AsyncMock()
+    setattr(mock_automower_client.commands, aioautomower_command, mocked_method)
+    await hass.services.async_call(
+        domain=DOMAIN,
+        service=service,
+        target={"entity_id": "lawn_mower.test_mower_1"},
+        service_data=service_data,
+        blocking=True,
+    )
+    mocked_method.assert_called_once_with(TEST_MOWER_ID, extra_data1, extra_data2)
+
+    getattr(
+        mock_automower_client.commands, aioautomower_command
+    ).side_effect = ApiException("Test error")
+    with pytest.raises(
+        HomeAssistantError,
+        match="Failed to send command: Test error",
+    ):
+        await hass.services.async_call(
+            domain=DOMAIN,
+            service=service,
+            target={"entity_id": "lawn_mower.test_mower_1"},
+            service_data=service_data,
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "mower_support_wa", "exception"),
     [
         (
             "override_schedule",
@@ -166,6 +220,26 @@ async def test_lawn_mower_service_commands(
                 "duration": {"days": 1, "hours": 12, "minutes": 30},
                 "override_mode": "fly_to_moon",
             },
+            False,
+            MultipleInvalid,
+        ),
+        (
+            "override_schedule_work_area",
+            {
+                "work_area_id": 123456,
+                "duration": {"days": 40},
+            },
+            False,
+            ServiceValidationError,
+        ),
+        (
+            "override_schedule_work_area",
+            {
+                "work_area_id": 12345,
+                "duration": {"days": 40},
+            },
+            True,
+            ServiceValidationError,
         ),
     ],
 )
@@ -173,12 +247,23 @@ async def test_lawn_mower_wrong_service_commands(
     hass: HomeAssistant,
     service: str,
     service_data: dict[str, int] | None,
+    mower_support_wa: bool,
+    exception,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test lawn_mower commands."""
     await setup_integration(hass, mock_config_entry)
-    with pytest.raises(MultipleInvalid):
+    values = mower_list_to_dictionary_dataclass(
+        load_json_value_fixture("mower.json", DOMAIN)
+    )
+    values[TEST_MOWER_ID].capabilities.work_areas = mower_support_wa
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    with pytest.raises(exception):
         await hass.services.async_call(
             domain=DOMAIN,
             service=service,
