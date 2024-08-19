@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from bsblan import BSBLAN, BSBLANError, Device, Info, Sensor, State, StaticState
+from bsblan import BSBLAN, BSBLANError, Device, Info, StaticState
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -21,13 +21,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import HomeAssistantBSBLANData
 from .const import ATTR_TARGET_TEMPERATURE, DOMAIN
+from .coordinator import BSBLanUpdateCoordinator
+from .models import BSBLanData
 
 PARALLEL_UPDATES = 1
 
@@ -49,7 +47,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up BSBLAN device based on a config entry."""
-    data: HomeAssistantBSBLANData = hass.data[DOMAIN][entry.entry_id]
+    data: BSBLanData = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [
             BSBLANClimate(
@@ -64,7 +62,7 @@ async def async_setup_entry(
     )
 
 
-class BSBLANClimate(CoordinatorEntity, ClimateEntity):
+class BSBLANClimate(CoordinatorEntity[BSBLanUpdateCoordinator], ClimateEntity):
     """Defines a BSBLAN climate device."""
 
     _attr_has_entity_name = True
@@ -80,7 +78,7 @@ class BSBLANClimate(CoordinatorEntity, ClimateEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[dict[str, State | Sensor]],
+        coordinator: BSBLanUpdateCoordinator,
         client: BSBLAN,
         device: Device,
         info: Info,
@@ -118,7 +116,7 @@ class BSBLANClimate(CoordinatorEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        state = self.coordinator.data["state"]
+        state = self.coordinator.data.state
         return (
             float(state.current_temperature.value)
             if state.current_temperature.value != "---"
@@ -128,13 +126,12 @@ class BSBLANClimate(CoordinatorEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        state = self.coordinator.data["state"]
-        return float(state.target_temperature.value)
+        return float(self.coordinator.data.state.target_temperature.value)
 
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode."""
-        state = self.coordinator.data["state"]
+        state = self.coordinator.data.state
         return (
             HVACMode.AUTO
             if state.hvac_mode.value == PRESET_ECO
@@ -144,7 +141,7 @@ class BSBLANClimate(CoordinatorEntity, ClimateEntity):
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
-        state = self.coordinator.data["state"]
+        state = self.coordinator.data.state
         return (
             PRESET_ECO
             if self.hvac_mode == HVACMode.AUTO and state.hvac_mode.value == PRESET_ECO
