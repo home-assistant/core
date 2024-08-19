@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import IntFlag, StrEnum
 
 
-@dataclass
+@dataclass(frozen=True)
 class SatelliteConfig:
     """Configuration of satellite."""
 
@@ -23,6 +23,9 @@ class AssistSatelliteEntityFeature(IntFlag):
 
     AUDIO_OUTPUT = 2
     """Satellite is capable of playing audio."""
+
+    MUTE_INPUT = 4
+    """Satellite supported muting the input audio."""
 
 
 class AssistSatelliteState(StrEnum):

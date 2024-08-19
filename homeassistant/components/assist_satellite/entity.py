@@ -8,14 +8,13 @@ from typing import Final
 from homeassistant.components import stt
 from homeassistant.components.assist_pipeline import (
     PipelineEvent,
-    PipelineEventCallback,
     PipelineEventType,
     PipelineStage,
     async_pipeline_from_audio_stream,
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import Context
-from homeassistant.helpers import entity, entity_registry as er
+from homeassistant.helpers import entity
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.util import ulid
 
@@ -38,38 +37,25 @@ class AssistSatelliteEntity(entity.Entity):
         AssistSatelliteEntityFeature(0)
     )
 
+    _satellite_config = SatelliteConfig()
+
     _conversation_id: str | None = None
     _conversation_id_time: float | None = None
 
-    _satellite_state: AssistSatelliteState = AssistSatelliteState.IDLE
     _run_has_tts: bool = False
-
-    def __init__(self) -> None:
-        """Initialize Assist satellite entity."""
-        self.satellite_config = SatelliteConfig()
-        super().__init__()
 
     async def _async_accept_pipeline_from_satellite(
         self,
         context: Context,
         audio_stream: AsyncIterable[bytes],
-        event_callback: PipelineEventCallback | None = None,
         start_stage: PipelineStage = PipelineStage.STT,
         end_stage: PipelineStage = PipelineStage.TTS,
         wake_word_phrase: str | None = None,
     ) -> None:
         """Triggers an Assist pipeline in Home Assistant from a satellite."""
         device_id: str | None = None
-        registry = er.async_get(self.hass)
-        if entry := registry.async_get(self.entity_id):
-            device_id = entry.device_id
-
-        wrapped_event_callback: PipelineEventCallback = self.on_pipeline_event
-        if event_callback is not None:
-
-            def wrapped_event_callback(event: PipelineEvent) -> None:
-                self.on_pipeline_event(event)
-                event_callback(event)
+        if self.registry_entry is not None:
+            device_id = self.registry_entry.device_id
 
         # Reset conversation id, if necessary
         if (self._conversation_id_time is None) or (
@@ -90,7 +76,7 @@ class AssistSatelliteEntity(entity.Entity):
         await async_pipeline_from_audio_stream(
             self.hass,
             context=context,
-            event_callback=wrapped_event_callback,
+            event_callback=self.on_pipeline_event,
             stt_metadata=stt.SpeechMetadata(
                 language="",  # set in async_pipeline_from_audio_stream
                 format=stt.AudioFormats.WAV,
@@ -100,7 +86,7 @@ class AssistSatelliteEntity(entity.Entity):
                 channel=stt.AudioChannels.CHANNEL_MONO,
             ),
             stt_stream=audio_stream,
-            pipeline_id=self.satellite_config.default_pipeline,
+            pipeline_id=self._satellite_config.default_pipeline,
             conversation_id=self._conversation_id,
             device_id=device_id,
             tts_audio_output="wav",
@@ -121,11 +107,11 @@ class AssistSatelliteEntity(entity.Entity):
 
     async def async_get_config(self) -> SatelliteConfig:
         """Get satellite configuration."""
-        return self.satellite_config
+        return self._satellite_config
 
     async def async_set_config(self, config: SatelliteConfig) -> None:
         """Set satellite configuration."""
-        self.satellite_config = config
+        self._satellite_config = config
         await self._async_config_updated()
 
     @abstractmethod
@@ -136,25 +122,22 @@ class AssistSatelliteEntity(entity.Entity):
         """
 
     @property
+    @abstractmethod
     def is_microphone_muted(self) -> bool:
         """Return if the satellite's microphone is muted."""
-        return self._attr_state == AssistSatelliteState.MUTED
 
+    @abstractmethod
     async def async_set_microphone_mute(self, mute: bool) -> None:
         """Mute or unmute the satellite's microphone."""
-        if mute:
-            self._set_state(AssistSatelliteState.MUTED)
-        else:
-            self._set_state(AssistSatelliteState.IDLE)
 
     @property
-    def state(self) -> AssistSatelliteState:
+    def state(self) -> AssistSatelliteState | None:
         """Return the current state of the satellite."""
-        return self._satellite_state
+        return self._attr_state
 
     def _set_state(self, state: AssistSatelliteState):
         """Set the entity's state."""
-        self._satellite_state = state
+        self._attr_state = state
         self.async_write_ha_state()
 
     def tts_response_finished(self) -> None:
