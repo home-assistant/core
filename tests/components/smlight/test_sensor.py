@@ -47,8 +47,8 @@ async def test_disabled_by_default_sensors(
     await setup_integration(hass, mock_config_entry)
 
     for sensor in ("ram_usage", "filesystem_usage"):
-        assert not hass.states.get(f"sensor.slzb_06_{sensor}")
+        assert not hass.states.get(f"sensor.mock_title_{sensor}")
 
-        assert (entry := entity_registry.async_get(f"sensor.slzb_06_{sensor}"))
+        assert (entry := entity_registry.async_get(f"sensor.mock_title_{sensor}"))
         assert entry.disabled
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

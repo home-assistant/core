@@ -1,7 +1,6 @@
 """DataUpdateCoordinator for Smlight."""
 
 from dataclasses import dataclass
-import socket
 
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
 from pysmlight.web import Api2, Info, Sensors
@@ -13,7 +12,6 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.network import is_ip_address
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
@@ -40,19 +38,8 @@ class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData]):
             update_interval=SCAN_INTERVAL,
         )
 
-        self.hostname = self.get_hostname(host)
         self.unique_id: str | None = None
-
         self.client = Api2(host=host, session=async_get_clientsession(hass))
-
-    def get_hostname(self, host: str) -> str:
-        """Get hostname. Fallback to IP if not available."""
-        if is_ip_address(host):
-            try:
-                host = socket.gethostbyaddr(host)[0]
-            except socket.herror:
-                return host
-        return host.split(".", maxsplit=1)[0]
 
     async def _async_setup(self) -> None:
         """Authenticate if needed during initial setup."""
