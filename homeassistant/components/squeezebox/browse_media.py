@@ -121,7 +121,8 @@ async def build_item_response(entity, player, payload):
                 elif item.get("hasitems") == 1:
                     _icon = _lms_prefix(player) + "html/images/musicfolder.png"
                 else:
-                    _icon = _lms_prefix(player) + item["image"]
+                    _start = 1 if item["image"].startswith("/") else 0
+                    _icon = _lms_prefix(player) + item["image"][_start:]
 
                 children.append(
                     BrowseMedia(
