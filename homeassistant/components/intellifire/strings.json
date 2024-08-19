@@ -23,7 +23,7 @@
     },
     "abort": {
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "not_intellifire_device": "Not an IntelliFire Device.",
+      "not_intellifire_device": "Not an IntelliFire device.",
       "all_devices_already_configured": "All available devices have already been configured."
     }
   },
@@ -93,12 +93,6 @@
     "sensor": {
       "flame_height": {
         "name": "Flame height"
-      },
-      "local_connectivity": {
-        "name": "Local connectivity"
-      },
-      "cloud_connectivity": {
-        "name": "Cloud connectivity"
       },
       "target_temp": {
         "name": "Target temperature"
