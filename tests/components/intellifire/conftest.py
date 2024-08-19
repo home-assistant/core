@@ -132,7 +132,7 @@ def mock_poll_local_fireplace() -> Generator[AsyncMock, None, None]:
 def mock_cloud_poll() -> Generator[AsyncMock, None, None]:
     """Mock a successful cloud poll call."""
     with patch(
-        "homeassistant.components.intellifire.__init__.UnifiedFireplace.perform_cloud_poll",
+        "homeassistant.components.intellifire.UnifiedFireplace.perform_cloud_poll",
         new_callable=AsyncMock,
     ) as mock_poll:
         # mock_login.side_effect = login_side_effect
