@@ -146,6 +146,16 @@ class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEn
         return self._feature.native_value
 
     @property
+    def probe_id(self) -> int:
+        """Return internal probe id of given sensor."""
+        return self._feature.probe_id
+
+    @property
+    def alias(self) -> str:
+        """Return sensor's alias string."""
+        return self._feature.alias
+
+    @property
     def last_reset(self):
         """Return the time when the sensor was last reset, if implemented."""
         native_implementation = getattr(self._feature, "last_reset", None)

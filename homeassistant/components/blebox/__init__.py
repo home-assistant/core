@@ -1,5 +1,6 @@
 """The BleBox devices integration."""
 
+from functools import partial
 import logging
 
 from blebox_uniapi.box import Box
@@ -16,8 +17,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
-from .const import DEFAULT_SETUP_TIMEOUT
+from .const import DEFAULT_SETUP_TIMEOUT, DOMAIN
+from .dashboards import async_create_smart_meter_dashboards
 from .helpers import get_maybe_authenticated_session
 
 type BleBoxConfigEntry = ConfigEntry[Box]
@@ -34,7 +38,19 @@ PLATFORMS = [
     Platform.SWITCH,
 ]
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 PARALLEL_UPDATES = 0
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up BleBox integration."""
+    hass.services.async_register(
+        DOMAIN,
+        "setup_dashboards",
+        partial(async_create_smart_meter_dashboards, hass=hass),
+    )
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BleBoxConfigEntry) -> bool:

@@ -1,0 +1,7 @@
+{
+  "services": {
+    "setup_dashboards": {
+      "service": "mdi:view-dashboard-variant-outline"
+    }
+  }
+}
