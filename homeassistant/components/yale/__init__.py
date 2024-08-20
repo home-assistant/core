@@ -7,7 +7,7 @@ from typing import cast
 
 from aiohttp import ClientResponseError
 from yalexs.const import Brand
-from yalexs.exceptions import AugustApiAIOHTTPError
+from yalexs.exceptions import YaleApiError
 from yalexs.manager.const import CONF_BRAND
 from yalexs.manager.exceptions import CannotConnect, InvalidAuth, RequireValidation
 from yalexs.manager.gateway import Config as YaleXSConfig
@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryAuthFailed from err
     except TimeoutError as err:
         raise ConfigEntryNotReady("Timed out connecting to yale api") from err
-    except (AugustApiAIOHTTPError, ClientResponseError, CannotConnect) as err:
+    except (YaleApiError, ClientResponseError, CannotConnect) as err:
         raise ConfigEntryNotReady from err
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

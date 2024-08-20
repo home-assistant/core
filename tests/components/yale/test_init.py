@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 from aiohttp import ClientResponseError
 import pytest
 from yalexs.authenticator_common import AuthenticationState
-from yalexs.exceptions import AugustApiAIOHTTPError
+from yalexs.exceptions import YaleApiError
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.yale.const import DOMAIN
@@ -90,7 +90,7 @@ async def test_yale_late_auth_failure(hass: HomeAssistant) -> None:
 
     with patch(
         "yalexs.authenticator_async.AuthenticatorAsync.async_authenticate",
-        side_effect=AugustApiAIOHTTPError(
+        side_effect=YaleApiError(
             "This should bubble up as its user consumable",
             aiohttp_client_response_exception,
         ),
@@ -110,7 +110,7 @@ async def test_unlock_throws_yale_api_http_error(hass: HomeAssistant) -> None:
     aiohttp_client_response_exception = ClientResponseError(None, None, status=400)
 
     def _unlock_return_activities_side_effect(access_token, device_id):
-        raise AugustApiAIOHTTPError(
+        raise YaleApiError(
             "This should bubble up as its user consumable",
             aiohttp_client_response_exception,
         )
@@ -140,7 +140,7 @@ async def test_lock_throws_yale_api_http_error(hass: HomeAssistant) -> None:
     aiohttp_client_response_exception = ClientResponseError(None, None, status=400)
 
     def _lock_return_activities_side_effect(access_token, device_id):
-        raise AugustApiAIOHTTPError(
+        raise YaleApiError(
             "This should bubble up as its user consumable",
             aiohttp_client_response_exception,
         )
