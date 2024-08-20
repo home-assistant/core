@@ -104,8 +104,7 @@ async def async_setup_entry(
         return
 
     name = entry.data[CONF_NAME]
-    entry_id = entry.entry_id
-    async_add_entities([MeteoAlertBinarySensor(api, name, entry_id)], True)
+    async_add_entities([MeteoAlertBinarySensor(api, name)], True)
 
 
 class MeteoAlertBinarySensor(BinarySensorEntity):
@@ -114,11 +113,11 @@ class MeteoAlertBinarySensor(BinarySensorEntity):
     _attr_attribution = ATTRIBUTION
     _attr_device_class = BinarySensorDeviceClass.SAFETY
 
-    def __init__(self, api: Meteoalert, name: str, entry_id: str) -> None:
+    def __init__(self, api: Meteoalert, name: str) -> None:
         """Initialize the MeteoAlert binary sensor."""
         self._attr_name = name
         self._api = api
-        self._attr_unique_id = entry_id
+        self._attr_unique_id = f"{api.country}_{api.province}_{api.language}"
 
     def update(self) -> None:
         """Update device state."""
