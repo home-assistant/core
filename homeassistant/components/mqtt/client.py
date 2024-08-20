@@ -899,7 +899,6 @@ class MQTT:
             for subscription in self._wildcard_subscriptions
             if subscription.topic in pending_subscriptions
         }
-        simple_subscription_list = list(pending_subscriptions.items())
 
         self._pending_subscriptions = {}
 
@@ -918,7 +917,9 @@ class MQTT:
 
             await self._async_wait_for_mid_or_raise(mid, result)
 
-        for chunk in chunked_or_all(simple_subscription_list, MAX_SUBSCRIBES_PER_CALL):
+        for chunk in chunked_or_all(
+            pending_subscriptions.items(), MAX_SUBSCRIBES_PER_CALL
+        ):
             chunk_list = list(chunk)
             if not chunk_list:
                 continue
