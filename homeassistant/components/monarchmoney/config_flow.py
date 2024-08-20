@@ -81,7 +81,7 @@ async def validate_login(
                 use_saved_session=False,
             )
         except RequireMFAException as err:
-            raise RequireMFAException from err
+            raise
         except LoginFailedException as err:
             raise InvalidAuth from err
 
