@@ -16,7 +16,7 @@
         "data": {
           "url": "[%key:component::emoncms::config::step::user::data::url%]",
           "api_key": "[%key:component::emoncms::config::step::user::data::api_key%]",
-          "include_only_feed_id": "choose feeds to include"
+          "include_only_feed_id": "Choose feeds to include"
         }
       }
     }
