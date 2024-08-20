@@ -111,6 +111,7 @@ UNSUBSCRIBE_COOLDOWN = 0.1
 TIMEOUT_ACK = 10
 RECONNECT_INTERVAL_SECONDS = 10
 
+MAX_WILDCARD_SUBSCRIBES_PER_CALL = 1
 MAX_SUBSCRIBES_PER_CALL = 500
 MAX_UNSUBSCRIBES_PER_CALL = 500
 
@@ -905,21 +906,11 @@ class MQTT:
 
         debug_enabled = _LOGGER.isEnabledFor(logging.DEBUG)
 
-        for topic, qos in pending_wildcard_subscriptions.items():
-            result, mid = self._mqttc.subscribe(topic, qos)
-
-            if debug_enabled:
-                _LOGGER.debug(
-                    "Subscribing wildcard topic %s with qos %s, mid: %s",
-                    topic,
-                    qos,
-                    mid,
-                )
-
-            await self._async_wait_for_mid_or_raise(mid, result)
-
-        for chunk in chunked_or_all(
-            pending_subscriptions.items(), MAX_SUBSCRIBES_PER_CALL
+        for chunk in chain(
+            chunked_or_all(
+                pending_wildcard_subscriptions.items(), MAX_WILDCARD_SUBSCRIBES_PER_CALL
+            ),
+            chunked_or_all(pending_subscriptions.items(), MAX_SUBSCRIBES_PER_CALL),
         ):
             chunk_list = list(chunk)
             if not chunk_list:
