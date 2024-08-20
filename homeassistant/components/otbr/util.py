@@ -9,6 +9,7 @@ import logging
 import random
 from typing import Any, Concatenate, cast
 
+import aiohttp
 import python_otbr_api
 from python_otbr_api import PENDING_DATASET_DELAY_TIMER, tlv_parser
 from python_otbr_api.pskc import compute_pskc
@@ -67,7 +68,7 @@ def _handle_otbr_error[**_P, _R](
     async def _func(self: OTBRData, *args: _P.args, **kwargs: _P.kwargs) -> _R:
         try:
             return await func(self, *args, **kwargs)
-        except python_otbr_api.OTBRError as exc:
+        except (python_otbr_api.OTBRError, aiohttp.ClientError, TimeoutError) as exc:
             raise HomeAssistantError("Failed to call OTBR API") from exc
 
     return _func
