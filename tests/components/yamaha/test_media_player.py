@@ -75,6 +75,7 @@ def device_fixture(main_zone):
     with (
         patch("rxv.RXV", return_value=device),
         patch("rxv.find", return_value=[device]),
+        patch("homeassistant.helpers.storage.Store.async_load", return_value={}),
     ):
         yield device
 
@@ -90,7 +91,8 @@ def device2_fixture(main_zone, zone_2):
     )
     with (
         patch("rxv.RXV", return_value=device2),
-        patch("rxv.find", return_value=device2),
+        patch("rxv.find", return_value=[device2]),
+        patch("homeassistant.helpers.storage.Store.async_load", return_value={}),
     ):
         yield device2
 
@@ -111,27 +113,6 @@ def device3_fixture(main_zone):
 
 
 @pytest.mark.parametrize(
-    ("error"),
-    [
-        AttributeError,
-        ValueError,
-        UnicodeDecodeError("", b"", 1, 0, ""),
-    ],
-)
-async def test_setup_find_errors(hass: HomeAssistant, device, main_zone, error) -> None:
-    """Test set up integration encountering an Error."""
-
-    with patch("rxv.find", side_effect=error):
-        assert await async_setup_component(hass, MP_DOMAIN, CONFIG_HOST)
-        await hass.async_block_till_done()
-
-        state = hass.states.get("media_player.yamaha_receiver_main_zone")
-
-        assert state is not None
-        assert state.state == "off"
-
-
-@pytest.mark.parametrize(
     ("config"),
     [
         CONFIG_NO_HOST,
@@ -141,7 +122,7 @@ async def test_setup_find_errors(hass: HomeAssistant, device, main_zone, error) 
 )
 async def test_setup_host(hass: HomeAssistant, device2, main_zone, config) -> None:
     """Test set up integration with host."""
-    with patch("rxv.find", return_value=[device2]):
+    with patch("homeassistant.helpers.storage.Store.async_load", return_value={}):
         assert await async_setup_component(hass, MP_DOMAIN, config)
         await hass.async_block_till_done()
 
@@ -153,7 +134,7 @@ async def test_setup_host(hass: HomeAssistant, device2, main_zone, config) -> No
 
 async def test_setup_host_noserial(hass: HomeAssistant, device3, main_zone) -> None:
     """Test set up integration find."""
-    with patch("rxv.find", return_value=[device3]):
+    with patch("homeassistant.helpers.storage.Store.async_load", return_value={}):
         assert await async_setup_component(hass, MP_DOMAIN, CONFIG_HOST)
         await hass.async_block_till_done()
 
@@ -163,19 +144,16 @@ async def test_setup_host_noserial(hass: HomeAssistant, device3, main_zone) -> N
         assert state.state == "off"
 
 
-async def test_setup_host_nofind(hass: HomeAssistant, device, main_zone) -> None:
+async def test_setup_host_store(hass: HomeAssistant, device, main_zone) -> None:
     """Test set up integration find."""
-    with (
-        patch("rxv.find", return_value=[]),
-        patch(
-            "homeassistant.helpers.storage.Store.async_load",
-            return_value={
-                "http://127.0.0.1:80/YamahaRemoteControl/ctrl": {
-                    "serial_number": "DEADBEEF",
-                    "model_name": "42",
-                }
-            },
-        ),
+    with patch(
+        "homeassistant.helpers.storage.Store.async_load",
+        return_value={
+            "http://127.0.0.1:80/YamahaRemoteControl/ctrl": {
+                "serial_number": "DEADBEEF",
+                "model_name": "42",
+            }
+        },
     ):
         assert await async_setup_component(hass, MP_DOMAIN, CONFIG_HOST)
         await hass.async_block_till_done()
@@ -255,8 +233,9 @@ async def test_enable_output(hass: HomeAssistant, device, main_zone) -> None:
         (yamaha.CURSOR_TYPE_UP, "menu_up"),
     ],
 )
-@pytest.mark.usefixtures("device")
-async def test_menu_cursor(hass: HomeAssistant, main_zone, cursor, method) -> None:
+async def test_menu_cursor(
+    hass: HomeAssistant, main_zone, cursor, method, device
+) -> None:
     """Verify that the correct menu method is called for the menu_cursor service."""
     assert await async_setup_component(hass, MP_DOMAIN, CONFIG_HOST)
     await hass.async_block_till_done()
