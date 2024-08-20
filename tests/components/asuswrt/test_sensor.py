@@ -10,10 +10,13 @@ from homeassistant.components.asuswrt.const import (
     CONF_INTERFACE,
     DOMAIN,
     SENSORS_BYTES,
+    SENSORS_CPU,
     SENSORS_LOAD_AVG,
+    SENSORS_MEMORY,
     SENSORS_RATES,
     SENSORS_TEMPERATURES,
     SENSORS_TEMPERATURES_LEGACY,
+    SENSORS_UPTIME,
 )
 from homeassistant.components.device_tracker import CONF_CONSIDER_HOME
 from homeassistant.config_entries import ConfigEntryState
@@ -42,7 +45,14 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 SENSORS_DEFAULT = [*SENSORS_BYTES, *SENSORS_RATES]
 
 SENSORS_ALL_LEGACY = [*SENSORS_DEFAULT, *SENSORS_LOAD_AVG, *SENSORS_TEMPERATURES_LEGACY]
-SENSORS_ALL_HTTP = [*SENSORS_DEFAULT, *SENSORS_LOAD_AVG, *SENSORS_TEMPERATURES]
+SENSORS_ALL_HTTP = [
+    *SENSORS_DEFAULT,
+    *SENSORS_CPU,
+    *SENSORS_LOAD_AVG,
+    *SENSORS_MEMORY,
+    *SENSORS_TEMPERATURES,
+    *SENSORS_UPTIME,
+]
 
 
 @pytest.fixture(name="create_device_registry_devices")
@@ -307,6 +317,88 @@ async def test_temperature_sensors_http(hass: HomeAssistant, connect_http) -> No
     assert hass.states.get(f"{sensor_prefix}_5_0ghz_2").state == "40.3"
     assert hass.states.get(f"{sensor_prefix}_6_0ghz").state == "40.4"
     assert not hass.states.get(f"{sensor_prefix}_5_0ghz")
+
+
+async def test_cpu_sensors_http_fail(
+    hass: HomeAssistant, connect_http_sens_fail
+) -> None:
+    """Test fail creating AsusWRT cpu sensors."""
+    config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA_HTTP, SENSORS_CPU)
+    config_entry.add_to_hass(hass)
+
+    # initial devices setup
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # assert cpu availability exception is handled correctly
+    assert not hass.states.get(f"{sensor_prefix}_cpu1_usage")
+    assert not hass.states.get(f"{sensor_prefix}_cpu2_usage")
+    assert not hass.states.get(f"{sensor_prefix}_cpu3_usage")
+    assert not hass.states.get(f"{sensor_prefix}_cpu4_usage")
+    assert not hass.states.get(f"{sensor_prefix}_cpu5_usage")
+    assert not hass.states.get(f"{sensor_prefix}_cpu6_usage")
+    assert not hass.states.get(f"{sensor_prefix}_cpu7_usage")
+    assert not hass.states.get(f"{sensor_prefix}_cpu8_usage")
+    assert not hass.states.get(f"{sensor_prefix}_cpu_total_usage")
+
+
+async def test_cpu_sensors_http(hass: HomeAssistant, connect_http) -> None:
+    """Test creating AsusWRT cpu sensors."""
+    config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA_HTTP, SENSORS_CPU)
+    config_entry.add_to_hass(hass)
+
+    # initial devices setup
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+
+    # assert cpu sensors available
+    assert hass.states.get(f"{sensor_prefix}_cpu1_usage").state == "0.1"
+    assert hass.states.get(f"{sensor_prefix}_cpu2_usage").state == "0.2"
+    assert hass.states.get(f"{sensor_prefix}_cpu3_usage").state == "0.3"
+    assert hass.states.get(f"{sensor_prefix}_cpu4_usage").state == "0.4"
+    assert hass.states.get(f"{sensor_prefix}_cpu5_usage").state == "0.5"
+    assert hass.states.get(f"{sensor_prefix}_cpu6_usage").state == "0.6"
+    assert hass.states.get(f"{sensor_prefix}_cpu7_usage").state == "0.7"
+    assert hass.states.get(f"{sensor_prefix}_cpu8_usage").state == "0.8"
+    assert hass.states.get(f"{sensor_prefix}_cpu_total_usage").state == "0.9"
+
+
+async def test_memory_sensors_http(hass: HomeAssistant, connect_http) -> None:
+    """Test creating AsusWRT memory sensors."""
+    config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA_HTTP, SENSORS_MEMORY)
+    config_entry.add_to_hass(hass)
+
+    # initial devices setup
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+
+    # assert memory sensors available
+    assert hass.states.get(f"{sensor_prefix}_mem_usage_perc").state == "52.4"
+    assert hass.states.get(f"{sensor_prefix}_mem_free").state == "384.0"
+    assert hass.states.get(f"{sensor_prefix}_mem_used").state == "640.0"
+
+
+async def test_memory_uptime_http(hass: HomeAssistant, connect_http) -> None:
+    """Test creating AsusWRT uptime sensors."""
+    config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA_HTTP, SENSORS_UPTIME)
+    config_entry.add_to_hass(hass)
+
+    # initial devices setup
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+
+    # assert uptime sensors available
+    assert (
+        hass.states.get(f"{sensor_prefix}_sensor_last_boot").state
+        == "2024-08-02T00:47:00+00:00"
+    )
+    assert hass.states.get(f"{sensor_prefix}_sensor_uptime").state == "1625927"
 
 
 @pytest.mark.parametrize(

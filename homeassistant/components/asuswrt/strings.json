@@ -88,6 +88,48 @@
       },
       "6ghz_temperature": {
         "name": "6GHz Temperature"
+      },
+      "cpu_usage": {
+        "name": "Cpu usage"
+      },
+      "cpu_core1_usage": {
+        "name": "Cpu core1 usage"
+      },
+      "cpu_core2_usage": {
+        "name": "Cpu core2 usage"
+      },
+      "cpu_core3_usage": {
+        "name": "Cpu core3 usage"
+      },
+      "cpu_core4_usage": {
+        "name": "Cpu core4 usage"
+      },
+      "cpu_core5_usage": {
+        "name": "Cpu core5 usage"
+      },
+      "cpu_core6_usage": {
+        "name": "Cpu core6 usage"
+      },
+      "cpu_core7_usage": {
+        "name": "Cpu core7 usage"
+      },
+      "cpu_core8_usage": {
+        "name": "Cpu core8 usage"
+      },
+      "memory_usage": {
+        "name": "Memory usage"
+      },
+      "memory_free": {
+        "name": "Memory free"
+      },
+      "memory_used": {
+        "name": "Memory used"
+      },
+      "last_boot": {
+        "name": "Last boot"
+      },
+      "uptime": {
+        "name": "Uptime"
       }
     }
   },
