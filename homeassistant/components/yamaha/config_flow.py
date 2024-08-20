@@ -41,7 +41,7 @@ class YamahaFlowHandler(ConfigFlow, domain=DOMAIN):
         self.serial_number = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
         self.upnp_description = discovery_info.ssdp_location
         try:
-            self.host = urlparse(discovery_info.ssdp_location).hostname
+            self.host = str(urlparse(discovery_info.ssdp_location).hostname)
         except ValueError:
             _LOGGER.error("SSDP urlparse location %s", discovery_info.ssdp_location)
             return self.async_abort(reason="urlparse fail")
@@ -72,4 +72,4 @@ class YamahaFlowHandler(ConfigFlow, domain=DOMAIN):
             await store.async_save(data)
 
         await self.async_set_unique_id(self.serial_number)
-        return self.async_abort(reason="serial recored")
+        return self.async_abort(reason="serial recorded")
