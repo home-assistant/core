@@ -893,8 +893,8 @@ class MQTT:
         if not self._pending_subscriptions:
             return
 
-        pending_subscriptions: dict[str, int] = self._pending_subscriptions
         # Split out the wildcard subscriptions, we subscribe to them one by one
+        pending_subscriptions: dict[str, int] = self._pending_subscriptions
         pending_wildcard_subscriptions = {
             subscription.topic: pending_subscriptions.pop(subscription.topic)
             for subscription in self._wildcard_subscriptions
