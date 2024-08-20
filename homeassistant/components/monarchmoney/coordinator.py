@@ -160,9 +160,9 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
         """Return accounts that aren't assets."""
         return [x for x in self.accounts if x.is_balance_account]
 
-    def get_account_for_id(self, account_id: str) -> MonarchAccount | None:
+    def get_account_for_id(self, account_id: str) -> MonarchAccount:
         """Get account for id."""
         for account in self.data.account_data:
             if account.id == account_id:
                 return account
-        return None
+        raise ValueError(f"Account with id {account_id} not found")

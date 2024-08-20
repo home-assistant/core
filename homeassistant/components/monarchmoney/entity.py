@@ -1,7 +1,5 @@
 """Monarch money entity definition."""
 
-from typing import Any
-
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -20,7 +18,6 @@ class MonarchMoneyEntityBase(CoordinatorEntity[MonarchMoneyDataUpdateCoordinator
     _attr_has_entity_name = True
 
 
-
 class MonarchMoneyCashFlowEntity(MonarchMoneyEntityBase):
     """Custom entity for Cashflow sensors."""
 
@@ -28,14 +25,12 @@ class MonarchMoneyCashFlowEntity(MonarchMoneyEntityBase):
         self,
         coordinator: MonarchMoneyDataUpdateCoordinator,
         description: EntityDescription,
-        data: Any,
     ) -> None:
         """Initialize the Monarch Money Entity."""
         super().__init__(coordinator)
         self._attr_unique_id = (
             f"{coordinator.subscription_id}_cashflow_{description.key}"
         )
-        self._data = data
         self.entity_description = description
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, "monarch_money_cashflow")},
@@ -90,6 +85,9 @@ class MonarchMoneyAccountEntity(MonarchMoneyEntityBase):
         )
 
     @property
-    def account_data(self) -> Any:
+    def account_data(self) -> MonarchAccount:
         """Return the account data."""
-        return self.coordinator.get_account_for_id(self._account_id)
+        if account := self.coordinator.get_account_for_id(self._account_id):
+            return account
+
+        raise ValueError("Account not found")

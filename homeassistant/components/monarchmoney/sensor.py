@@ -17,6 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import MonarchMoneyConfigEntry
+from .coordinator import MonarchAccount, MonarchCashflow
 from .entity import MonarchMoneyAccountEntity, MonarchMoneyCashFlowEntity
 
 
@@ -24,7 +25,8 @@ from .entity import MonarchMoneyAccountEntity, MonarchMoneyCashFlowEntity
 class MonarchMoneySensorEntityDescription(SensorEntityDescription):
     """Describe a sensor entity."""
 
-    value_fn: Callable[[Any], StateType]
+    value_fn: Callable[[MonarchAccount], StateType | datetime] | None = None
+    summary_fn: Callable[[MonarchCashflow], StateType] | None = None
     picture_fn: Callable[[Any], str] | None = None
 
 
@@ -75,7 +77,7 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
     MonarchMoneySensorEntityDescription(
         key="sum_income",
         translation_key="sum_income",
-        value_fn=lambda summary: summary.income,
+        summary_fn=lambda summary: summary.income,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=CURRENCY_DOLLAR,
@@ -84,7 +86,7 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
     MonarchMoneySensorEntityDescription(
         key="sum_expense",
         translation_key="sum_expense",
-        value_fn=lambda summary: summary.expenses,
+        summary_fn=lambda summary: summary.expenses,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=CURRENCY_DOLLAR,
@@ -93,7 +95,7 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
     MonarchMoneySensorEntityDescription(
         key="savings",
         translation_key="savings",
-        value_fn=lambda summary: summary.savings,
+        summary_fn=lambda summary: summary.savings,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=CURRENCY_DOLLAR,
@@ -102,7 +104,7 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
     MonarchMoneySensorEntityDescription(
         key="savings_rate",
         translation_key="savings_rate",
-        value_fn=lambda summary: summary.savings_rate * 100,
+        summary_fn=lambda summary: summary.savings_rate * 100,
         suggested_display_precision=1,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:cash-sync",
@@ -117,11 +119,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up Monarch Money sensors for config entries."""
     mm_coordinator = config_entry.runtime_data
+
     entity_list: list[MonarchMoneySensor | MonarchMoneyCashFlowSensor] = [
         MonarchMoneyCashFlowSensor(
             mm_coordinator,
             sensor_description,
-            mm_coordinator.cashflow_summary,
+            # mm_coordinator.cashflow_summary,
         )
         for sensor_description in MONARCH_CASHFLOW_SENSORS
     ]
@@ -170,7 +173,9 @@ class MonarchMoneyCashFlowSensor(MonarchMoneyCashFlowEntity, SensorEntity):
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state."""
-        return self.entity_description.value_fn(self.summary_data)
+        if self.entity_description.summary_fn is not None:
+            return self.entity_description.summary_fn(self.summary_data)
+        return None
 
 
 class MonarchMoneySensor(MonarchMoneyAccountEntity, SensorEntity):
@@ -181,7 +186,9 @@ class MonarchMoneySensor(MonarchMoneyAccountEntity, SensorEntity):
     @property
     def native_value(self) -> StateType | datetime | None:
         """Return the state."""
-        return self.entity_description.value_fn(self.account_data)
+        if self.entity_description.value_fn is not None:
+            return self.entity_description.value_fn(self.account_data)
+        return None
 
     @property
     def entity_picture(self) -> str | None:
