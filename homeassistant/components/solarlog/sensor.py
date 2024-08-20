@@ -220,7 +220,7 @@ async def async_setup_entry(
 
     # https://github.com/python/mypy/issues/14294
 
-    entities: list[CoordinatorEntity] = [
+    entities: list[SensorEntity] = [
         SolarLogCoordinatorSensor(coordinator, sensor)  # type: ignore[misc]  # noqa: PGH003
         for sensor in SENSOR_TYPES
         if sensor.key in coordinator.data
