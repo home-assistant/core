@@ -3,7 +3,7 @@
 from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pysmlight.web import Info, Sensors
+from pysmlight.web import CmdWrapper, Info, Sensors
 import pytest
 
 from homeassistant.components.smlight import PLATFORMS
@@ -74,6 +74,8 @@ def mock_smlight_client(request: pytest.FixtureRequest) -> Generator[MagicMock]:
 
         api.check_auth_needed.return_value = False
         api.authenticate.return_value = True
+
+        api.cmds = AsyncMock(spec_set=CmdWrapper)
 
         yield api
 
