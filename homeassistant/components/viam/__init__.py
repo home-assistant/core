@@ -8,6 +8,7 @@ from viam.rpc.dial import Credentials, DialOptions
 from homeassistant.const import CONF_ADDRESS, CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_API_ID,
@@ -22,10 +23,10 @@ from .services import async_setup_services
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-async def async_setup(hass: HomeAssistant, config: ViamConfigEntry) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Viam services."""
 
-    async_setup_services(hass, config)
+    async_setup_services(hass)
 
     return True
 
@@ -51,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViamConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistant, entry: ViamConfigEntry) -> bool:
     """Unload a config entry."""
-    manager: ViamManager = entry.runtime_data
+    manager = entry.runtime_data
     manager.unload()
 
     return True

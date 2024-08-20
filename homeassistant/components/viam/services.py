@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 from datetime import datetime
 from functools import partial
+from typing import Any, cast
 
 from PIL import Image
 from viam.app.app_client import RobotPart
@@ -13,6 +14,7 @@ from viam.services.vision import VisionClient
 import voluptuous as vol
 
 from homeassistant.components import camera
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -20,6 +22,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import selector
 
 from .const import DOMAIN
@@ -136,9 +139,34 @@ async def __get_image(
     return None
 
 
-async def __capture_data(config: ViamConfigEntry, call: ServiceCall) -> None:
+def __get_manager(hass: HomeAssistant, call: ServiceCall) -> ViamManager:
+    config_entry_id: str = call.data[ATTR_CONFIG_ENTRY]
+
+    if not (entry := hass.config_entries.async_get_entry(config_entry_id)):
+        raise ServiceValidationError(
+            f"Invalid config entry: {config_entry_id}",
+            translation_domain=DOMAIN,
+            translation_key="invalid_config_entry",
+            translation_placeholders={
+                "config_entry": config_entry_id,
+            },
+        )
+    if entry.state != ConfigEntryState.LOADED:
+        raise ServiceValidationError(
+            f"{entry.title} is not loaded",
+            translation_domain=DOMAIN,
+            translation_key="unloaded_config_entry",
+            translation_placeholders={
+                "config_entry": entry.title,
+            },
+        )
+
+    return cast(ViamConfigEntry, entry).runtime_data
+
+
+async def __capture_data(hass: HomeAssistant, call: ServiceCall) -> None:
     """Accept input from service call to send to Viam."""
-    manager: ViamManager = config.runtime_data
+    manager = __get_manager(hass, call)
     parts: list[RobotPart] = await manager.get_robot_parts()
     values = [call.data.get(SERVICE_VALUES, {})]
     component_type = call.data.get(SERVICE_COMPONENT_TYPE, "sensor")
@@ -154,11 +182,9 @@ async def __capture_data(config: ViamConfigEntry, call: ServiceCall) -> None:
     )
 
 
-async def __capture_image(
-    hass: HomeAssistant, config: ViamConfigEntry, call: ServiceCall
-) -> None:
+async def __capture_image(hass: HomeAssistant, call: ServiceCall) -> None:
     """Accept input from service call to send to Viam."""
-    manager: ViamManager = config.runtime_data
+    manager = __get_manager(hass, call)
     parts: list[RobotPart] = await manager.get_robot_parts()
     filepath = call.data.get(SERVICE_FILEPATH)
     camera_entity = call.data.get(SERVICE_CAMERA)
@@ -184,12 +210,11 @@ async def __capture_image(
 
 async def __get_service_values(
     hass: HomeAssistant,
-    config: ViamConfigEntry,
     call: ServiceCall,
     service_config_name: str,
-):
+) -> tuple[VisionClient, ViamImage | None, Any | None, float, int]:
     """Create common values for vision services."""
-    manager: ViamManager = config.runtime_data
+    manager = __get_manager(hass, call)
     filepath = call.data.get(SERVICE_FILEPATH)
     camera_entity = call.data.get(SERVICE_CAMERA)
     service_name = call.data.get(service_config_name, "")
@@ -202,21 +227,20 @@ async def __get_service_values(
         service: VisionClient = VisionClient.from_robot(robot, service_name)
         image = await __get_image(hass, filepath, camera_entity)
 
-    return manager, service, image, filepath, confidence_threshold, count
+    return service, image, filepath, confidence_threshold, count
 
 
 async def __get_classifications(
-    hass: HomeAssistant, config: ViamConfigEntry, call: ServiceCall
+    hass: HomeAssistant, call: ServiceCall
 ) -> ServiceResponse:
     """Accept input configuration to request classifications."""
     (
-        _manager,
         classifier,
         image,
         filepath,
         confidence_threshold,
         count,
-    ) = await __get_service_values(hass, config, call, SERVICE_CLASSIFIER_NAME)
+    ) = await __get_service_values(hass, call, SERVICE_CLASSIFIER_NAME)
 
     if image is None:
         return {
@@ -237,18 +261,15 @@ async def __get_classifications(
     }
 
 
-async def __get_detections(
-    hass: HomeAssistant, config: ViamConfigEntry, call: ServiceCall
-) -> ServiceResponse:
+async def __get_detections(hass: HomeAssistant, call: ServiceCall) -> ServiceResponse:
     """Accept input configuration to request detections."""
     (
-        _manager,
         detector,
         image,
         filepath,
         confidence_threshold,
         _count,
-    ) = await __get_service_values(hass, config, call, SERVICE_DETECTOR_NAME)
+    ) = await __get_service_values(hass, call, SERVICE_DETECTOR_NAME)
 
     if image is None:
         return {
@@ -277,32 +298,32 @@ async def __get_detections(
 
 
 @callback
-def async_setup_services(hass: HomeAssistant, config: ViamConfigEntry) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Viam integration."""
 
     hass.services.async_register(
         DOMAIN,
         DATA_CAPTURE_SERVICE_NAME,
-        partial(__capture_data, config),
+        partial(__capture_data, hass),
         DATA_CAPTURE_SERVICE_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
         CAPTURE_IMAGE_SERVICE_NAME,
-        partial(__capture_image, hass, config),
+        partial(__capture_image, hass),
         CAPTURE_IMAGE_SERVICE_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
         CLASSIFICATION_SERVICE_NAME,
-        partial(__get_classifications, hass, config),
+        partial(__get_classifications, hass),
         CLASSIFICATION_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,
         DETECTIONS_SERVICE_NAME,
-        partial(__get_detections, hass, config),
+        partial(__get_detections, hass),
         DETECTIONS_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
