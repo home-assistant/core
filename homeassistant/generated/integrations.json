@@ -5588,6 +5588,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "smlight": {
+      "name": "SMLIGHT SLZB",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "sms": {
       "name": "SMS notifications via GSM-modem",
       "integration_type": "hub",
