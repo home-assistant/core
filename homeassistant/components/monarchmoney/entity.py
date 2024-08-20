@@ -61,6 +61,8 @@ class MonarchMoneyAccountEntity(MonarchMoneyEntityBase):
 
         # Parse out some fields
         institution = "Manual entry"
+        if account.institution_name is not None:
+            institution = account.institution_name
         configuration_url = "http://monarchmoney.com"
         if account.institution_url is not None:
             configuration_url = account.institution_url
