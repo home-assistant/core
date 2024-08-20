@@ -25,7 +25,6 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[BSBLanCoordinatorData]):
     ) -> None:
         """Initialize the BSB-Lan coordinator."""
         self.client = client
-        self.bsblan_config_entry = config_entry
 
         super().__init__(
             hass,
@@ -47,11 +46,10 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[BSBLanCoordinatorData]):
         """Get state and sensor data from BSB-Lan device."""
         try:
             state = await self.client.state()
-            sensor = await self.client.sensor()
         except BSBLANConnectionError as err:
+            host = self.config_entry.data[CONF_HOST] if self.config_entry else "unknown"
             raise UpdateFailed(
-                f"Error while establishing connection with "
-                f"BSB-Lan device at {self.bsblan_config_entry.data[CONF_HOST]}"
+                f"Error while establishing connection with BSB-Lan device at {host}"
             ) from err
 
-        return BSBLanCoordinatorData(state=state, sensor=sensor)
+        return BSBLanCoordinatorData(state=state)
