@@ -1,41 +1,39 @@
-"""Base entity for the BSBLAN integration."""
+"""BSBLan base entity."""
 
 from __future__ import annotations
 
-from bsblan import BSBLAN, Device, Info, StaticState
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import BSBLanUpdateCoordinator
+from .models import BSBLanData
 
 
-class BSBLANEntity(Entity):
-    """Defines a BSBLAN entity."""
+class BSBLanEntity(CoordinatorEntity[BSBLanUpdateCoordinator]):
+    """Defines a base BSBLan entity."""
 
-    def __init__(
-        self,
-        client: BSBLAN,
-        device: Device,
-        info: Info,
-        static: StaticState,
-        entry: ConfigEntry,
-    ) -> None:
-        """Initialize an BSBLAN entity."""
-        self.client = client
+    _attr_has_entity_name = True
 
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, format_mac(device.MAC))},
-            identifiers={(DOMAIN, format_mac(device.MAC))},
-            manufacturer="BSBLAN Inc.",
-            model=info.device_identification.value,
-            name=device.name,
-            sw_version=f"{device.version})",
-            configuration_url=f"http://{entry.data[CONF_HOST]}",
+    def __init__(self, coordinator: BSBLanUpdateCoordinator, data: BSBLanData) -> None:
+        """Initialize BSBLan entity."""
+        super().__init__(coordinator)
+        self._data = data
+        host = (
+            coordinator.config_entry.data["host"]
+            if coordinator.config_entry
+            else "unknown"
         )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, data.device.MAC)},
+            name=data.device.name,
+            manufacturer="BSBLAN Inc.",
+            model=data.info.device_identification.value,
+            sw_version=data.device.version,
+            configuration_url=f"http://{host}",
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.coordinator.last_update_success
