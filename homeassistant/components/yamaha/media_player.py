@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import contextlib
 import logging
 from typing import Any
 
@@ -32,7 +31,9 @@ from .const import (
     CURSOR_TYPE_RIGHT,
     CURSOR_TYPE_SELECT,
     CURSOR_TYPE_UP,
-    DISCOVER_TIMEOUT,
+    DISCOVERY_STORE,
+    DISCOVERY_STORE_KEY,
+    DISCOVERY_STORE_VERSION,
     DOMAIN,
     KNOWN_ZONES,
     SERVICE_ENABLE_OUTPUT,
@@ -53,8 +54,6 @@ CONF_SOURCE_NAMES = "source_names"
 CONF_ZONE_IGNORE = "zone_ignore"
 CONF_ZONE_NAMES = "zone_names"
 
-STORAGE_KEY = f"{DOMAIN}.discovery"
-STORAGE_VERSION = 1
 
 CURSOR_TYPE_MAP = {
     CURSOR_TYPE_DOWN: rxv.RXV.menu_down.__name__,
@@ -131,37 +130,14 @@ def _discovery(config_info, data):
     elif config_info.host is None:
         _LOGGER.debug("Config No Host Supplied Zones")
         zones = []
-        for recv in rxv.find(DISCOVER_TIMEOUT):
+        for recv in rxv.find():
             zones.extend(recv.zone_controllers())
     else:
         _LOGGER.debug("Config Zones")
         zones = None
-        recvs = []
 
-        # Fix for upstream issues in rxv.find() with some hardware.
-        with contextlib.suppress(AttributeError, ValueError):
-            recvs.extend(rxv.find(DISCOVER_TIMEOUT))
-        for recv in recvs:
-            _LOGGER.debug("Found %s", vars(recv))
-            if recv.ctrl_url == config_info.ctrl_url and recv.serial_number:
-                _LOGGER.debug(
-                    "Config Zones Matched with Serial %s: %s",
-                    recv.ctrl_url,
-                    recv.serial_number,
-                )
-                data[config_info.ctrl_url] = {
-                    "serial_number": recv.serial_number,
-                }
-                zones = rxv.RXV(
-                    config_info.ctrl_url,
-                    config_info.name,
-                    serial_number=recv.serial_number,
-                ).zone_controllers()
-                break
-
-        if not zones:
-            _LOGGER.debug("Discovery Store Fallback")
-            # Fix for rxv.find being flakey we cache info and check that also. To be removed after ssdp and config flow sorted.
+        if data:
+            _LOGGER.debug("Discovery Store")
             if config_info.ctrl_url in data:
                 _LOGGER.debug(
                     "Discovery store data matched with Serial %s %s %s",
@@ -199,18 +175,20 @@ async def async_setup_platform(
     # Get the Infos for configuration from config (YAML) or Discovery
     config_info = YamahaConfigInfo(config=config, discovery_info=discovery_info)
     # Async check if the Receivers are there in the network
-    store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
+    store = Store[dict[str, Any]](hass, DISCOVERY_STORE_VERSION, DISCOVERY_STORE_KEY)
+    hass.data[DOMAIN][DISCOVERY_STORE] = store
     data = await store.async_load()
+
+    # empty store on first run allow an SSDP to run.
     if not data:
         data = {}
-    _LOGGER.debug("Discovery data store %s", data)
+        await store.async_save(data)
+        raise PlatformNotReady("SSDP Discovery needs a chance to to run")
 
     try:
         zone_ctrls = await hass.async_add_executor_job(_discovery, config_info, data)
     except requests.exceptions.ConnectionError as ex:
         raise PlatformNotReady(f"Issue while connecting to {config_info.name}") from ex
-
-    await store.async_save(data)
 
     entities = []
     for zctrl in zone_ctrls:

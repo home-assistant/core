@@ -5,5 +5,18 @@
   "documentation": "https://www.home-assistant.io/integrations/yamaha",
   "iot_class": "local_polling",
   "loggers": ["rxv"],
-  "requirements": ["rxv==0.7.0"]
+  "requirements": ["rxv==0.7.0"],
+  "dependencies": ["ssdp"],
+  "ssdp": [
+    {
+      "manufacturer": "YAMAHA CORPORATION",
+      "st": "upnp:rootdevice",
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1"
+    },
+    {
+      "manufacturer": "Yamaha Corporation",
+      "st": "upnp:rootdevice",
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1"
+    }
+  ]
 }
