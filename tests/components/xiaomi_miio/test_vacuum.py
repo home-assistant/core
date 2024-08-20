@@ -533,7 +533,7 @@ async def test_xiaomi_vacuum_fanspeeds(
     assert "Fan speed step not recognized" in caplog.text
 
 
-async def setup_component(hass, entity_name):
+async def setup_component(hass: HomeAssistant, entity_name: str) -> str:
     """Set up vacuum component."""
     entity_id = f"{DOMAIN}.{entity_name}"
 
