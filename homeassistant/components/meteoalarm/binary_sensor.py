@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import timedelta
-from typing import Any
 
 from meteoalertapi import Meteoalert
 import voluptuous as vol
@@ -114,7 +112,7 @@ class MeteoAlertBinarySensor(BinarySensorEntity):
     _attr_attribution = ATTRIBUTION
     _attr_device_class = BinarySensorDeviceClass.SAFETY
 
-    def __init__(self, config: Mapping[str, Any], entry_id: str | None = None) -> None:
+    def __init__(self, config: ConfigEntry, entry_id: str | None = None) -> None:
         """Initialize the MeteoAlert binary sensor."""
         self._api = Meteoalert(
             country=config.data.get(CONF_COUNTRY),
