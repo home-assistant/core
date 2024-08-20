@@ -117,17 +117,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up Monarch Money sensors for config entries."""
     mm_coordinator = config_entry.runtime_data
-
-    entity_list = (
+    entity_list: list[MonarchMoneySensor | MonarchMoneyCashFlowSensor] = [
+        MonarchMoneyCashFlowSensor(
+            mm_coordinator,
+            sensor_description,
+            mm_coordinator.cashflow_summary,
+        )
+        for sensor_description in MONARCH_CASHFLOW_SENSORS
+    ]
+    entity_list.extend(
         [
-            MonarchMoneyCashFlowSensor(
-                mm_coordinator,
-                sensor_description,
-                mm_coordinator.cashflow_summary,
-            )
-            for sensor_description in MONARCH_CASHFLOW_SENSORS
-        ]
-        + [
             MonarchMoneySensor(
                 mm_coordinator,
                 sensor_description,
@@ -136,7 +135,9 @@ async def async_setup_entry(
             for account in mm_coordinator.balance_accounts
             for sensor_description in MONARCH_MONEY_SENSORS
         ]
-        + [
+    )
+    entity_list.extend(
+        [
             MonarchMoneySensor(
                 mm_coordinator,
                 sensor_description,
@@ -145,7 +146,9 @@ async def async_setup_entry(
             for account in mm_coordinator.accounts
             for sensor_description in MONARCH_MONEY_AGE_SENSORS
         ]
-        + [
+    )
+    entity_list.extend(
+        [
             MonarchMoneySensor(
                 mm_coordinator,
                 sensor_description,
