@@ -17,72 +17,15 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import MonarchMoneyConfigEntry
-from .const import LOGGER
 from .entity import MonarchMoneyAccountEntity, MonarchMoneyCashFlowEntity
-
-
-def _type_to_icon(account: Any) -> str:
-    """Return icon mappings - in the case that an account does not have a "logoURL" set - this is a subset of the 86 possible combos."""
-    account_type = account["type"]["name"]
-    account_subtype = account["subtype"]["name"]
-
-    icon_mapping = {
-        "brokerage": {
-            "brokerage": "mdi:chart-line",
-            "cryptocurrency": "mdi:currency-btc",
-            "ira": "mdi:bank",
-            "st_401a": "mdi:chart-bell-curve-cumulative",
-            "st_403b": "mdi:chart-bell-curve-cumulative",
-            "st_529": "mdi:school-outline",
-        },
-        "vehicle": {
-            "car": "mdi:car",
-            "boat": "mdi:sail-boat",
-            "motorcycle": "mdi:motorbike",
-            "snowmobile": "mdi:snowmobile",
-            "bicycle": "mdi:bicycle",
-            "other": "mdi:car",
-        },
-        "credit": {"credit_card": "mdi:credit-card"},
-        "depository": {
-            "cash_management": "mdi:cash",
-            "checking": "mdi:checkbook",
-            "savings": "mdi:piggy-bank-outline",
-            "money_market": "mdi:piggy-bank-outline",
-        },
-        "loan": {
-            "line_of_credit": "mdi:credit-card-plus",
-            "loan": "mdi:bank-outline",
-            "mortgage": "mdi:home-city-outline",
-        },
-    }
-
-    default_icons = {
-        "brokerage": "mdi:chart-line",
-        "credit": "mdi:credit-card",
-        "depository": "mdi:cash",
-        "loan": "mdi:bank-outline",
-        "vehicle": "mdi:car",
-    }
-    if account_subtype not in icon_mapping.get(account_type, {}):
-        LOGGER.debug(
-            f"Unknown subtype '{account_subtype}' for account type '{account_type}'"
-        )
-        return default_icons.get(account_type, "mdi:cash")
-
-    account_type_icons = icon_mapping.get(account_type, {})
-    return account_type_icons.get(
-        account_subtype, default_icons.get(account_type, "mdi:help")
-    )
 
 
 @dataclass(frozen=True, kw_only=True)
 class MonarchMoneySensorEntityDescription(SensorEntityDescription):
     """Describe a sensor entity."""
 
-    value_fn: Callable[[Any], StateType | datetime]
+    value_fn: Callable[[Any], StateType]
     picture_fn: Callable[[Any], str] | None = None
-    icon_fn: Callable[[Any], str] | None = None
 
 
 MONARCH_MONEY_VALUE_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
@@ -91,9 +34,8 @@ MONARCH_MONEY_VALUE_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
         translation_key="value",
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
-        value_fn=lambda account: account["currentBalance"],
-        picture_fn=lambda account: account["logoUrl"],
-        icon_fn=_type_to_icon,
+        value_fn=lambda account: account.balance,
+        picture_fn=lambda account: account.logo_url,
         native_unit_of_measurement=CURRENCY_DOLLAR,
     ),
 )
@@ -104,9 +46,8 @@ MONARCH_MONEY_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
         translation_key="balance",
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
-        value_fn=lambda account: account["currentBalance"],
-        picture_fn=lambda account: account["logoUrl"],
-        icon_fn=_type_to_icon,
+        value_fn=lambda account: account.balance,
+        picture_fn=lambda account: account.logo_url,
         native_unit_of_measurement=CURRENCY_DOLLAR,
     ),
 )
@@ -117,14 +58,14 @@ MONARCH_MONEY_AGE_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
         translation_key="age",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda account: datetime.fromisoformat(account["updatedAt"]),
+        value_fn=lambda account: account.last_update,
     ),
     MonarchMoneySensorEntityDescription(
         key="created",
         translation_key="created",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda account: datetime.fromisoformat(account["createdAt"]),
+        value_fn=lambda account: account.date_created,
     ),
 )
 
@@ -242,11 +183,4 @@ class MonarchMoneySensor(MonarchMoneyAccountEntity, SensorEntity):
         """Return the picture of the account as provided by monarch money if it exists."""
         if self.entity_description.picture_fn is not None:
             return self.entity_description.picture_fn(self.account_data)
-        return None
-
-    @property
-    def icon(self) -> str | None:
-        """Icon function."""
-        if self.entity_description.icon_fn is not None:
-            return self.entity_description.icon_fn(self.account_data)
         return None
