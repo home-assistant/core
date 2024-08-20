@@ -228,10 +228,10 @@ class EnergyConverter(BaseUnitConverter):
         UnitOfEnergy.WATT_HOUR: 1e3,
         UnitOfEnergy.KILO_WATT_HOUR: 1,
         UnitOfEnergy.MEGA_WATT_HOUR: 1 / 1e3,
-        UnitOfEnergy.CALORIE: _WH_TO_J / _CAL_TO_J * 1e3,
-        UnitOfEnergy.KILO_CALORIE: _WH_TO_J / _CAL_TO_J,
-        UnitOfEnergy.MEGA_CALORIE: _WH_TO_J / _CAL_TO_J / 1e3,
-        UnitOfEnergy.GIGA_CALORIE: _WH_TO_J / _CAL_TO_J / 1e6,
+        UnitOfEnergy.CALORIE: _WH_TO_CAL * 1e3,
+        UnitOfEnergy.KILO_CALORIE: _WH_TO_CAL,
+        UnitOfEnergy.MEGA_CALORIE: _WH_TO_CAL / 1e3,
+        UnitOfEnergy.GIGA_CALORIE: _WH_TO_CAL / 1e6,
     }
     VALID_UNITS = set(UnitOfEnergy)
 
