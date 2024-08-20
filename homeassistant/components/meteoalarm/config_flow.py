@@ -60,6 +60,9 @@ class MeteoAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unknown exception")
                 errors["base"] = "unknown"
             else:
+                user_input[CONF_COUNTRY] = SUPPORTED_COUNTRIES.get(
+                    user_input[CONF_COUNTRY], DEFAULT_COUNTRY
+                )
                 return self.async_create_entry(
                     title=DOMAIN,
                     data=user_input,
@@ -94,7 +97,7 @@ class MeteoAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
 
         except KeyError:
             LOGGER.error("Wrong country digits or province name while importing")
-            return self.async_abort(reason="cannot_connect")
+            return self.async_abort(reason="wrong_country_or_province")
         except Exception:  # noqa: BLE001
             LOGGER.exception("Unknown exception while importing")
             return self.async_abort(reason="unknown")
