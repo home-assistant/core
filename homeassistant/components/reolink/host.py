@@ -11,7 +11,7 @@ from typing import Any, Literal
 
 import aiohttp
 from aiohttp.web import Request
-from reolink_aio.api import Host
+from reolink_aio.api import ALLOWED_SPECIAL_CHARS, Host
 from reolink_aio.enums import SubType
 from reolink_aio.exceptions import NotSupportedError, ReolinkError, SubscriptionError
 
@@ -31,7 +31,12 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from .const import CONF_USE_HTTPS, DOMAIN
-from .exceptions import ReolinkSetupException, ReolinkWebhookException, UserNotAdmin
+from .exceptions import (
+    PasswordIncompatible,
+    ReolinkSetupException,
+    ReolinkWebhookException,
+    UserNotAdmin,
+)
 
 DEFAULT_TIMEOUT = 30
 FIRST_ONVIF_TIMEOUT = 10
@@ -123,6 +128,13 @@ class ReolinkHost:
 
     async def async_init(self) -> None:
         """Connect to Reolink host."""
+        if not self._api.valid_password():
+            raise PasswordIncompatible(
+                "Reolink password contains incompatible special character, "
+                "please change the password to only contain characters: "
+                f"a-z, A-Z, 0-9 or {ALLOWED_SPECIAL_CHARS}"
+            )
+
         await self._api.get_host_data()
 
         if self._api.mac_address is None:

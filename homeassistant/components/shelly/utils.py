@@ -323,7 +323,7 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
             return f"{device_name} {key.replace(':', '_')}"
         if key.startswith("em1"):
             return f"{device_name} EM{key.split(':')[-1]}"
-        if key.startswith(("boolean:", "text:")):
+        if key.startswith(("boolean:", "enum:", "number:", "text:")):
             return key.replace(":", " ").title()
         return device_name
 
@@ -524,12 +524,16 @@ def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str
     if not component:
         return []
 
-    return [
-        k
-        for k, v in config.items()
-        if k.startswith(component["type"])
-        and v["meta"]["ui"]["view"] == component["mode"]
-    ]
+    ids: list[str] = []
+
+    for comp_type in component["types"]:
+        ids.extend(
+            k
+            for k, v in config.items()
+            if k.startswith(comp_type) and v["meta"]["ui"]["view"] in component["modes"]
+        )
+
+    return ids
 
 
 @callback

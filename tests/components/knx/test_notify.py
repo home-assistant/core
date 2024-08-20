@@ -21,17 +21,13 @@ async def test_legacy_notify_service_simple(
             }
         }
     )
-    await hass.async_block_till_done()
-
     await hass.services.async_call(
         "notify", "notify", {"target": "test", "message": "I love KNX"}, blocking=True
     )
-
     await knx.assert_write(
         "1/0/0",
         (73, 32, 108, 111, 118, 101, 32, 75, 78, 88, 0, 0, 0, 0),
     )
-
     await hass.services.async_call(
         "notify",
         "notify",
@@ -41,7 +37,6 @@ async def test_legacy_notify_service_simple(
         },
         blocking=True,
     )
-
     await knx.assert_write(
         "1/0/0",
         (73, 32, 108, 111, 118, 101, 32, 75, 78, 88, 44, 32, 98, 117),
@@ -68,12 +63,9 @@ async def test_legacy_notify_service_multiple_sends_to_all_with_different_encodi
             ]
         }
     )
-    await hass.async_block_till_done()
-
     await hass.services.async_call(
         "notify", "notify", {"message": "Gänsefüßchen"}, blocking=True
     )
-
     await knx.assert_write(
         "1/0/0",
         # "G?nsef??chen"
@@ -95,7 +87,6 @@ async def test_notify_simple(hass: HomeAssistant, knx: KNXTestKit) -> None:
             }
         }
     )
-
     await hass.services.async_call(
         notify.DOMAIN,
         notify.SERVICE_SEND_MESSAGE,

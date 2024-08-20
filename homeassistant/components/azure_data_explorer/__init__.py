@@ -18,7 +18,7 @@ from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import utcnow
 
@@ -203,9 +203,7 @@ class AzureDataExplorer:
             return None, dropped
         if (utcnow() - time_fired).seconds > DEFAULT_MAX_DELAY + self._send_interval:
             return None, dropped + 1
-        if "\n" in state.state:
-            return None, dropped + 1
 
-        json_event = json.dumps(obj=state, cls=JSONEncoder)
+        json_event = json.dumps(obj=state, cls=ExtendedJSONEncoder)
 
         return (json_event, dropped)

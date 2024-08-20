@@ -51,6 +51,7 @@ async def matter_client_fixture() -> AsyncGenerator[MagicMock]:
             wifi_credentials_set=True,
             thread_credentials_set=True,
             min_supported_schema_version=SCHEMA_VERSION,
+            bluetooth_enabled=False,
         )
 
         yield client

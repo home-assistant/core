@@ -6,21 +6,20 @@ import switchbot
 from switchbot.const import LockStatus
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import SwitchbotDataUpdateCoordinator
+from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SwitchbotConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Switchbot lock based on a config entry."""
-    coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([(SwitchBotLock(coordinator))])
+    async_add_entities([(SwitchBotLock(entry.runtime_data))])
 
 
 # noinspection PyAbstractClass

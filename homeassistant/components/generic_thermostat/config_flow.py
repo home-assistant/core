@@ -16,7 +16,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
 )
 
-from .climate import (
+from .const import (
     CONF_AC_MODE,
     CONF_COLD_TOLERANCE,
     CONF_HEATER,

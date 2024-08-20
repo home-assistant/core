@@ -8,6 +8,7 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any
 
+import aiohttp
 from aiohttp import web
 from amcrest import AmcrestError
 from haffmpeg.camera import CameraMjpeg
@@ -244,7 +245,9 @@ class AmcrestCam(Camera):
             websession = async_get_clientsession(self.hass)
             streaming_url = self._api.mjpeg_url(typeno=self._resolution)
             stream_coro = websession.get(
-                streaming_url, auth=self._token, timeout=CAMERA_WEB_SESSION_TIMEOUT
+                streaming_url,
+                auth=self._token,
+                timeout=aiohttp.ClientTimeout(total=CAMERA_WEB_SESSION_TIMEOUT),
             )
 
             return await async_aiohttp_proxy_web(self.hass, request, stream_coro)
@@ -496,7 +499,7 @@ class AmcrestCam(Camera):
                 await getattr(self, f"_async_set_{func}")(value)
                 new_value = await getattr(self, f"_async_get_{func}")()
                 if new_value != value:
-                    raise AmcrestCommandFailed
+                    raise AmcrestCommandFailed  # noqa: TRY301
             except (AmcrestError, AmcrestCommandFailed) as error:
                 if tries == 1:
                     log_update_error(_LOGGER, action, self.name, description, error)

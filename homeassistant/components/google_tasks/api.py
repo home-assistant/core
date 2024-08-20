@@ -68,7 +68,10 @@ class AsyncConfigEntryAuth:
         """Get all Task resources for the task list."""
         service = await self._get_service()
         cmd: HttpRequest = service.tasks().list(
-            tasklist=task_list_id, maxResults=MAX_TASK_RESULTS
+            tasklist=task_list_id,
+            maxResults=MAX_TASK_RESULTS,
+            showCompleted=True,
+            showHidden=True,
         )
         result = await self._execute(cmd)
         return result["items"]
