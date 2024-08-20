@@ -57,7 +57,6 @@ async def test_factory_reset(
     assert config_entry.unique_id == new_xa.hex()
 
 
-@pytest.mark.usefixtures("get_extended_address")
 async def test_factory_reset_not_supported(
     hass: HomeAssistant, otbr_config_entry_multipan: str
 ) -> None:
