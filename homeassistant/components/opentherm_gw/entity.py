@@ -2,15 +2,23 @@
 
 import logging
 
+import pyotgw.vars as gw_vars
+
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 
 from . import OpenThermGatewayDevice
-from .const import DOMAIN, TRANSLATE_SOURCE
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+TRANSLATE_SOURCE = {
+    gw_vars.BOILER: "Boiler",
+    gw_vars.OTGW: None,
+    gw_vars.THERMOSTAT: "Thermostat",
+}
 
 
 class OpenThermEntityDescription(EntityDescription):
