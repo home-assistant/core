@@ -23,7 +23,9 @@ class MonarchMoneyBaseEntity(CoordinatorEntity[MonarchMoneyDataUpdateCoordinator
     ) -> None:
         """Initialize the Monarch Money Entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"monarch_money_cashflow_{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.subscription_id}_cashflow_{description.key}"
+        )
 
         self._data = data
         self.entity_description = description
