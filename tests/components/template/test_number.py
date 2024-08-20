@@ -364,12 +364,12 @@ async def test_trigger_number(hass: HomeAssistant) -> None:
 
 
 def _verify(
-    hass,
-    expected_value,
-    expected_step,
-    expected_minimum,
-    expected_maximum,
-):
+    hass: HomeAssistant,
+    expected_value: int,
+    expected_step: int,
+    expected_minimum: int,
+    expected_maximum: int,
+) -> None:
     """Verify number's state."""
     state = hass.states.get(_TEST_NUMBER)
     attributes = state.attributes

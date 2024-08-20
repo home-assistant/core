@@ -21,7 +21,11 @@ from aiounifi.interfaces.ports import Ports
 from aiounifi.interfaces.wlans import Wlans
 from aiounifi.models.api import ApiItemT
 from aiounifi.models.client import Client
-from aiounifi.models.device import Device, TypedDeviceUptimeStatsWanMonitor
+from aiounifi.models.device import (
+    Device,
+    TypedDeviceTemperature,
+    TypedDeviceUptimeStatsWanMonitor,
+)
 from aiounifi.models.outlet import Outlet
 from aiounifi.models.port import Port
 from aiounifi.models.wlan import Wlan
@@ -170,6 +174,12 @@ def async_device_outlet_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     return hub.api.devices[obj_id].outlet_ac_power_budget is not None
 
 
+@callback
+def async_device_uplink_mac_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Determine if a device supports reading uplink MAC address."""
+    return "uplink_mac" in hub.api.devices[obj_id].raw.get("uplink", {})
+
+
 def device_system_stats_supported_fn(
     stat_index: int, hub: UnifiHub, obj_id: str
 ) -> bool:
@@ -276,6 +286,72 @@ def make_wan_latency_sensors() -> tuple[UnifiSensorEntityDescription, ...]:
             ("Microsoft", "microsoft"),
             ("Google", "google"),
             ("Cloudflare", "1.1.1.1"),
+        )
+    )
+
+
+@callback
+def async_device_temperatures_value_fn(
+    temperature_name: str, hub: UnifiHub, device: Device
+) -> float:
+    """Retrieve the temperature of the device."""
+    return_value: float = 0
+    if device.temperatures:
+        temperature = _device_temperature(temperature_name, device.temperatures)
+        return_value = temperature if temperature is not None else 0
+    return return_value
+
+
+@callback
+def async_device_temperatures_supported_fn(
+    temperature_name: str, hub: UnifiHub, obj_id: str
+) -> bool:
+    """Determine if an device have a temperatures."""
+    if (device := hub.api.devices[obj_id]) and device.temperatures:
+        return _device_temperature(temperature_name, device.temperatures) is not None
+    return False
+
+
+@callback
+def _device_temperature(
+    temperature_name: str, temperatures: list[TypedDeviceTemperature]
+) -> float | None:
+    """Return the temperature of the device."""
+    for temperature in temperatures:
+        if temperature_name in temperature["name"]:
+            return temperature["value"]
+    return None
+
+
+def make_device_temperatur_sensors() -> tuple[UnifiSensorEntityDescription, ...]:
+    """Create device temperature sensors."""
+
+    def make_device_temperature_entity_description(
+        name: str,
+    ) -> UnifiSensorEntityDescription:
+        return UnifiSensorEntityDescription[Devices, Device](
+            key=f"Device {name} temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            entity_registry_enabled_default=False,
+            api_handler_fn=lambda api: api.devices,
+            available_fn=async_device_available_fn,
+            device_info_fn=async_device_device_info_fn,
+            name_fn=lambda device: f"{device.name} {name} Temperature",
+            object_fn=lambda api, obj_id: api.devices[obj_id],
+            supported_fn=partial(async_device_temperatures_supported_fn, name),
+            unique_id_fn=lambda hub, obj_id: f"temperature-{slugify(name)}-{obj_id}",
+            value_fn=partial(async_device_temperatures_value_fn, name),
+        )
+
+    return tuple(
+        make_device_temperature_entity_description(name)
+        for name in (
+            "CPU",
+            "Local",
+            "PHY",
         )
     )
 
@@ -502,6 +578,19 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         value_fn=lambda hub, device: device.general_temperature,
     ),
     UnifiSensorEntityDescription[Devices, Device](
+        key="Device Uplink MAC",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        api_handler_fn=lambda api: api.devices,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        name_fn=lambda device: "Uplink MAC",
+        object_fn=lambda api, obj_id: api.devices[obj_id],
+        unique_id_fn=lambda hub, obj_id: f"device_uplink_mac-{obj_id}",
+        supported_fn=async_device_uplink_mac_supported_fn,
+        value_fn=lambda hub, device: device.raw.get("uplink", {}).get("uplink_mac"),
+        is_connected_fn=lambda hub, obj_id: hub.api.devices[obj_id].state == 1,
+    ),
+    UnifiSensorEntityDescription[Devices, Device](
         key="Device State",
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -544,7 +633,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
     ),
 )
 
-ENTITY_DESCRIPTIONS += make_wan_latency_sensors()
+ENTITY_DESCRIPTIONS += make_wan_latency_sensors() + make_device_temperatur_sensors()
 
 
 async def async_setup_entry(

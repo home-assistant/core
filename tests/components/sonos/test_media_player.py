@@ -5,10 +5,18 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.media_player import (
+    ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_ENQUEUE,
+    ATTR_MEDIA_REPEAT,
+    ATTR_MEDIA_SHUFFLE,
+    ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MP_DOMAIN,
+    SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     MediaPlayerEnqueue,
@@ -26,15 +34,21 @@ from homeassistant.components.sonos.media_player import (
     VOLUME_INCREMENT,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_MEDIA_STOP,
     SERVICE_REPEAT_SET,
     SERVICE_SHUFFLE_SET,
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
-    STATE_IDLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     CONNECTION_UPNP,
@@ -80,15 +94,18 @@ async def test_device_registry_not_portable(
 
 
 async def test_entity_basic(
-    hass: HomeAssistant, async_autosetup_sonos, discover
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    discover,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test basic state and attributes."""
-    state = hass.states.get("media_player.zone_a")
-    assert state.state == STATE_IDLE
-    attributes = state.attributes
-    assert attributes["friendly_name"] == "Zone A"
-    assert attributes["is_volume_muted"] is False
-    assert attributes["volume_level"] == 0.19
+    entity_id = "media_player.zone_a"
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+    state = hass.states.get(entity_entry.entity_id)
+    assert state == snapshot(name=f"{entity_entry.entity_id}-state")
 
 
 @pytest.mark.parametrize(
@@ -176,9 +193,9 @@ async def test_play_media_library(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            "entity_id": "media_player.zone_a",
-            "media_content_type": media_content_type,
-            "media_content_id": media_content_id,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: media_content_type,
+            ATTR_MEDIA_CONTENT_ID: media_content_id,
             ATTR_MEDIA_ENQUEUE: enqueue,
         },
         blocking=True,
@@ -225,9 +242,9 @@ async def test_play_media_lib_track_play(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            "entity_id": "media_player.zone_a",
-            "media_content_type": "track",
-            "media_content_id": _track_url,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "track",
+            ATTR_MEDIA_CONTENT_ID: _track_url,
             ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.PLAY,
         },
         blocking=True,
@@ -254,9 +271,9 @@ async def test_play_media_lib_track_next(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            "entity_id": "media_player.zone_a",
-            "media_content_type": "track",
-            "media_content_id": _track_url,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "track",
+            ATTR_MEDIA_CONTENT_ID: _track_url,
             ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.NEXT,
         },
         blocking=True,
@@ -282,9 +299,9 @@ async def test_play_media_lib_track_replace(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            "entity_id": "media_player.zone_a",
-            "media_content_type": "track",
-            "media_content_id": _track_url,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "track",
+            ATTR_MEDIA_CONTENT_ID: _track_url,
             ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.REPLACE,
         },
         blocking=True,
@@ -305,9 +322,9 @@ async def test_play_media_lib_track_add(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            "entity_id": "media_player.zone_a",
-            "media_content_type": "track",
-            "media_content_id": _track_url,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "track",
+            ATTR_MEDIA_CONTENT_ID: _track_url,
             ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.ADD,
         },
         blocking=True,
@@ -335,9 +352,9 @@ async def test_play_media_share_link_add(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            "entity_id": "media_player.zone_a",
-            "media_content_type": "playlist",
-            "media_content_id": _share_link,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "playlist",
+            ATTR_MEDIA_CONTENT_ID: _share_link,
             ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.ADD,
         },
         blocking=True,
@@ -363,9 +380,9 @@ async def test_play_media_share_link_next(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            "entity_id": "media_player.zone_a",
-            "media_content_type": "playlist",
-            "media_content_id": _share_link,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "playlist",
+            ATTR_MEDIA_CONTENT_ID: _share_link,
             ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.NEXT,
         },
         blocking=True,
@@ -395,9 +412,9 @@ async def test_play_media_share_link_play(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            "entity_id": "media_player.zone_a",
-            "media_content_type": "playlist",
-            "media_content_id": _share_link,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "playlist",
+            ATTR_MEDIA_CONTENT_ID: _share_link,
             ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.PLAY,
         },
         blocking=True,
@@ -429,9 +446,9 @@ async def test_play_media_share_link_replace(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            "entity_id": "media_player.zone_a",
-            "media_content_type": "playlist",
-            "media_content_id": _share_link,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "playlist",
+            ATTR_MEDIA_CONTENT_ID: _share_link,
             ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.REPLACE,
         },
         blocking=True,
@@ -494,9 +511,9 @@ async def test_play_media_music_library_playlist(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            "entity_id": "media_player.zone_a",
-            "media_content_type": "playlist",
-            "media_content_id": media_content_id,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "playlist",
+            ATTR_MEDIA_CONTENT_ID: media_content_id,
         },
         blocking=True,
     )
@@ -524,9 +541,9 @@ async def test_play_media_music_library_playlist_dne(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
             {
-                "entity_id": "media_player.zone_a",
-                "media_content_type": "playlist",
-                "media_content_id": media_content_id,
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: "playlist",
+                ATTR_MEDIA_CONTENT_ID: media_content_id,
             },
             blocking=True,
         )
@@ -565,8 +582,8 @@ async def test_select_source_line_in_tv(
         MP_DOMAIN,
         SERVICE_SELECT_SOURCE,
         {
-            "entity_id": "media_player.zone_a",
-            "source": source,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_INPUT_SOURCE: source,
         },
         blocking=True,
     )
@@ -608,8 +625,8 @@ async def test_select_source_play_uri(
         MP_DOMAIN,
         SERVICE_SELECT_SOURCE,
         {
-            "entity_id": "media_player.zone_a",
-            "source": source,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_INPUT_SOURCE: source,
         },
         blocking=True,
     )
@@ -648,8 +665,8 @@ async def test_select_source_play_queue(
         MP_DOMAIN,
         SERVICE_SELECT_SOURCE,
         {
-            "entity_id": "media_player.zone_a",
-            "source": source,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_INPUT_SOURCE: source,
         },
         blocking=True,
     )
@@ -677,8 +694,8 @@ async def test_select_source_error(
             MP_DOMAIN,
             SERVICE_SELECT_SOURCE,
             {
-                "entity_id": "media_player.zone_a",
-                "source": "invalid_source",
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_INPUT_SOURCE: "invalid_source",
             },
             blocking=True,
         )
@@ -698,8 +715,8 @@ async def test_shuffle_set(
         MP_DOMAIN,
         SERVICE_SHUFFLE_SET,
         {
-            "entity_id": "media_player.zone_a",
-            "shuffle": True,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_SHUFFLE: True,
         },
         blocking=True,
     )
@@ -709,8 +726,8 @@ async def test_shuffle_set(
         MP_DOMAIN,
         SERVICE_SHUFFLE_SET,
         {
-            "entity_id": "media_player.zone_a",
-            "shuffle": False,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_SHUFFLE: False,
         },
         blocking=True,
     )
@@ -728,13 +745,13 @@ async def test_shuffle_get(
     sub_callback = subscription.callback
 
     state = hass.states.get("media_player.zone_a")
-    assert state.attributes["shuffle"] is False
+    assert state.attributes[ATTR_MEDIA_SHUFFLE] is False
 
     no_media_event.variables["current_play_mode"] = "SHUFFLE_NOREPEAT"
     sub_callback(no_media_event)
     await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("media_player.zone_a")
-    assert state.attributes["shuffle"] is True
+    assert state.attributes[ATTR_MEDIA_SHUFFLE] is True
 
     # The integration keeps a copy of the last event to check for
     # changes, so we create a new event.
@@ -745,7 +762,7 @@ async def test_shuffle_get(
     sub_callback(no_media_event)
     await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("media_player.zone_a")
-    assert state.attributes["shuffle"] is False
+    assert state.attributes[ATTR_MEDIA_SHUFFLE] is False
 
 
 async def test_repeat_set(
@@ -759,8 +776,8 @@ async def test_repeat_set(
         MP_DOMAIN,
         SERVICE_REPEAT_SET,
         {
-            "entity_id": "media_player.zone_a",
-            "repeat": RepeatMode.ALL,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_REPEAT: RepeatMode.ALL,
         },
         blocking=True,
     )
@@ -770,8 +787,8 @@ async def test_repeat_set(
         MP_DOMAIN,
         SERVICE_REPEAT_SET,
         {
-            "entity_id": "media_player.zone_a",
-            "repeat": RepeatMode.ONE,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_REPEAT: RepeatMode.ONE,
         },
         blocking=True,
     )
@@ -781,8 +798,8 @@ async def test_repeat_set(
         MP_DOMAIN,
         SERVICE_REPEAT_SET,
         {
-            "entity_id": "media_player.zone_a",
-            "repeat": RepeatMode.OFF,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_REPEAT: RepeatMode.OFF,
         },
         blocking=True,
     )
@@ -800,13 +817,13 @@ async def test_repeat_get(
     sub_callback = subscription.callback
 
     state = hass.states.get("media_player.zone_a")
-    assert state.attributes["repeat"] == RepeatMode.OFF
+    assert state.attributes[ATTR_MEDIA_REPEAT] == RepeatMode.OFF
 
     no_media_event.variables["current_play_mode"] = "REPEAT_ALL"
     sub_callback(no_media_event)
     await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("media_player.zone_a")
-    assert state.attributes["repeat"] == RepeatMode.ALL
+    assert state.attributes[ATTR_MEDIA_REPEAT] == RepeatMode.ALL
 
     no_media_event = SonosMockEvent(
         soco, soco.avTransport, no_media_event.variables.copy()
@@ -815,7 +832,7 @@ async def test_repeat_get(
     sub_callback(no_media_event)
     await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("media_player.zone_a")
-    assert state.attributes["repeat"] == RepeatMode.ONE
+    assert state.attributes[ATTR_MEDIA_REPEAT] == RepeatMode.ONE
 
     no_media_event = SonosMockEvent(
         soco, soco.avTransport, no_media_event.variables.copy()
@@ -824,7 +841,7 @@ async def test_repeat_get(
     sub_callback(no_media_event)
     await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("media_player.zone_a")
-    assert state.attributes["repeat"] == RepeatMode.OFF
+    assert state.attributes[ATTR_MEDIA_REPEAT] == RepeatMode.OFF
 
 
 async def test_play_media_favorite_item_id(
@@ -838,9 +855,9 @@ async def test_play_media_favorite_item_id(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            "entity_id": "media_player.zone_a",
-            "media_content_type": "favorite_item_id",
-            "media_content_id": "FV:2/4",
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "favorite_item_id",
+            ATTR_MEDIA_CONTENT_ID: "FV:2/4",
         },
         blocking=True,
     )
@@ -860,9 +877,9 @@ async def test_play_media_favorite_item_id(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
             {
-                "entity_id": "media_player.zone_a",
-                "media_content_type": "favorite_item_id",
-                "media_content_id": "UNKNOWN_ID",
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: "favorite_item_id",
+                ATTR_MEDIA_CONTENT_ID: "UNKNOWN_ID",
             },
             blocking=True,
         )
@@ -900,7 +917,7 @@ async def test_service_snapshot_restore(
             SONOS_DOMAIN,
             SERVICE_SNAPSHOT,
             {
-                "entity_id": ["media_player.living_room", "media_player.bedroom"],
+                ATTR_ENTITY_ID: ["media_player.living_room", "media_player.bedroom"],
             },
             blocking=True,
         )
@@ -913,7 +930,7 @@ async def test_service_snapshot_restore(
             SONOS_DOMAIN,
             SERVICE_RESTORE,
             {
-                "entity_id": ["media_player.living_room", "media_player.bedroom"],
+                ATTR_ENTITY_ID: ["media_player.living_room", "media_player.bedroom"],
             },
             blocking=True,
         )
@@ -932,7 +949,7 @@ async def test_volume(
         MP_DOMAIN,
         SERVICE_VOLUME_UP,
         {
-            "entity_id": "media_player.zone_a",
+            ATTR_ENTITY_ID: "media_player.zone_a",
         },
         blocking=True,
     )
@@ -942,7 +959,7 @@ async def test_volume(
         MP_DOMAIN,
         SERVICE_VOLUME_DOWN,
         {
-            "entity_id": "media_player.zone_a",
+            ATTR_ENTITY_ID: "media_player.zone_a",
         },
         blocking=True,
     )
@@ -951,8 +968,38 @@ async def test_volume(
     await hass.services.async_call(
         MP_DOMAIN,
         SERVICE_VOLUME_SET,
-        {"entity_id": "media_player.zone_a", "volume_level": 0.30},
+        {ATTR_ENTITY_ID: "media_player.zone_a", ATTR_MEDIA_VOLUME_LEVEL: 0.30},
         blocking=True,
     )
     # SoCo uses 0..100 for its range.
     assert soco.volume == 30
+
+
+@pytest.mark.parametrize(
+    ("service", "client_call"),
+    [
+        (SERVICE_MEDIA_PLAY, "play"),
+        (SERVICE_MEDIA_PAUSE, "pause"),
+        (SERVICE_MEDIA_STOP, "stop"),
+        (SERVICE_MEDIA_NEXT_TRACK, "next"),
+        (SERVICE_MEDIA_PREVIOUS_TRACK, "previous"),
+        (SERVICE_CLEAR_PLAYLIST, "clear_queue"),
+    ],
+)
+async def test_media_transport(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    service: str,
+    client_call: str,
+) -> None:
+    """Test the media player transport services."""
+    await hass.services.async_call(
+        MP_DOMAIN,
+        service,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+        },
+        blocking=True,
+    )
+    assert getattr(soco, client_call).call_count == 1
