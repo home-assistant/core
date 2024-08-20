@@ -179,8 +179,8 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
 
     async def client_listen(self) -> None:
         """Listen to the websocket for updates."""
-        self.api.event(self.on_connected)
-        self.api.event(self.on_data)
+        self.api.listen("on_connected", self.on_connected)
+        self.api.listen("on_data", self.on_data)
         try:
             await self.api.connect(reconnect=True)
         except ApiError:
