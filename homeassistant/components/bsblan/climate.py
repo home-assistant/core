@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from bsblan import BSBLAN, BSBLANError, Device, Info, StaticState
+from bsblan import BSBLANError
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -16,15 +16,13 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_TARGET_TEMPERATURE, DOMAIN
-from .coordinator import BSBLanUpdateCoordinator
+from .entity import BSBLanEntity
 from .models import BSBLanData
 
 PARALLEL_UPDATES = 1
@@ -48,24 +46,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up BSBLAN device based on a config entry."""
     data: BSBLanData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        [
-            BSBLANClimate(
-                coordinator=data.coordinator,
-                client=data.client,
-                device=data.device,
-                info=data.info,
-                static=data.static,
-                entry=entry,
-            )
-        ]
-    )
+    async_add_entities([BSBLANClimate(data)])
 
 
-class BSBLANClimate(CoordinatorEntity[BSBLanUpdateCoordinator], ClimateEntity):
+class BSBLANClimate(BSBLanEntity, ClimateEntity):
     """Defines a BSBLAN climate device."""
 
     _attr_has_entity_name = True
+    _attr_name: str | None = None
+    _attr_translation_key = "Thermostat"
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.PRESET_MODE
@@ -76,40 +65,21 @@ class BSBLANClimate(CoordinatorEntity[BSBLanUpdateCoordinator], ClimateEntity):
     _attr_hvac_modes = HVAC_MODES
     _enable_turn_on_off_backwards_compatibility = False
 
-    def __init__(
-        self,
-        coordinator: BSBLanUpdateCoordinator,
-        client: BSBLAN,
-        device: Device,
-        info: Info,
-        static: StaticState,
-        entry: ConfigEntry,
-    ) -> None:
+    def __init__(self, data: BSBLanData) -> None:
         """Initialize BSBLAN climate device."""
-        super().__init__(coordinator)
+        super().__init__(data.coordinator, data)
+        self._attr_unique_id = f"{self._data.device.MAC}-climate"
+        self._attr_name = self._attr_translation_key
+        self._attr_min_temp = float(self._data.static.min_temp.value)
+        self._attr_max_temp = float(self._data.static.max_temp.value)
+        self._attr_temperature_unit = self.temperature_unit
 
-        self.client = client
-        self.device = device
-        self.info = info
-        self.static = static
-        self.entry = entry
-
-        self._attr_unique_id = f"{format_mac(device.MAC)}-climate"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, format_mac(device.MAC))},
-            name=device.name,
-            manufacturer="BSBLAN Inc.",
-            model=info.device_identification.value,
-            sw_version=f"{device.version}",
-            configuration_url=f"http://{entry.data[CONF_HOST]}",
-        )
-        self._attr_name = f"{self.device.name} Climate"
-        self._attr_unique_id = f"{format_mac(self.device.MAC)}-climate"
-        self._attr_min_temp = float(self.static.min_temp.value)
-        self._attr_max_temp = float(self.static.max_temp.value)
-        self._attr_temperature_unit = (
+    @property
+    def temperature_unit(self) -> str:
+        """Return the unit of measurement used by the platform."""
+        return (
             UnitOfTemperature.CELSIUS
-            if self.static.min_temp.unit in ("&deg;C", "°C")
+            if self._data.static.min_temp.unit in ("&deg;C", "°C")
             else UnitOfTemperature.FAHRENHEIT
         )
 
@@ -180,7 +150,7 @@ class BSBLANClimate(CoordinatorEntity[BSBLanUpdateCoordinator], ClimateEntity):
                 data[ATTR_HVAC_MODE] = HVACMode.AUTO
 
         try:
-            await self.client.thermostat(**data)
+            await self._data.client.thermostat(**data)
         except BSBLANError as err:
             raise HomeAssistantError(
                 "An error occurred while updating the BSBLAN device",
