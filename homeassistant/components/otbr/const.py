@@ -10,6 +10,6 @@ if TYPE_CHECKING:
     from .util import OTBRData
 
 DOMAIN = "otbr"
-DATA_OTBR: HassKey[OTBRData] = HassKey(DOMAIN)
+DATA_OTBR: HassKey[dict[str, OTBRData]] = HassKey(DOMAIN)
 
 DEFAULT_CHANNEL = 15

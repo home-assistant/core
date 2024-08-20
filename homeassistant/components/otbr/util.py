@@ -22,6 +22,7 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
     multi_pan_addon_using_device,
 )
 from homeassistant.components.homeassistant_yellow import RADIO_DEVICE as YELLOW_RADIO
+from homeassistant.config_entries import SOURCE_USER, ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
@@ -83,7 +84,7 @@ class OTBRData:
     entry_id: str
 
     @_handle_otbr_error
-    async def factory_reset(self) -> None:
+    async def factory_reset(self, hass: HomeAssistant) -> None:
         """Reset the router."""
         try:
             await self.api.factory_reset()
@@ -92,6 +93,11 @@ class OTBRData:
                 "OTBR does not support factory reset, attempting to delete dataset"
             )
             await self.delete_active_dataset()
+        await update_unique_id(
+            hass,
+            hass.config_entries.async_get_entry(self.entry_id),
+            await self.get_extended_address(),
+        )
 
     @_handle_otbr_error
     async def get_border_agent_id(self) -> bytes | None:
@@ -258,3 +264,22 @@ async def update_issues(
     """Raise or clear repair issues related to network settings."""
     await _warn_on_channel_collision(hass, otbrdata, dataset_tlvs)
     _warn_on_default_network_settings(hass, otbrdata, dataset_tlvs)
+
+
+async def update_unique_id(
+    hass: HomeAssistant, entry: ConfigEntry | None, extended_address: bytes
+) -> None:
+    """Update the config entry's unique_id if not matching."""
+    extended_address_hex = extended_address.hex()
+    if (
+        entry
+        and entry.source == SOURCE_USER
+        and entry.unique_id != extended_address_hex
+    ):
+        _LOGGER.debug(
+            "Updating unique_id of entry %s from %s to %s",
+            entry.entry_id,
+            entry.unique_id,
+            extended_address_hex,
+        )
+        hass.config_entries.async_update_entry(entry, unique_id=extended_address_hex)

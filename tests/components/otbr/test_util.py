@@ -31,22 +31,32 @@ async def test_get_allowed_channel(
     assert await otbr.util.get_allowed_channel(hass, OTBR_NON_MULTIPAN_URL) is None
 
 
-async def test_factory_reset(hass: HomeAssistant, otbr_config_entry_multipan) -> None:
+async def test_factory_reset(
+    hass: HomeAssistant, otbr_config_entry_multipan: str
+) -> None:
     """Test factory_reset."""
+    new_xa = b"new_xa"
+    config_entry = hass.config_entries.async_get_entry(otbr_config_entry_multipan)
+    assert config_entry.unique_id != new_xa.hex()
     with (
         patch("python_otbr_api.OTBR.factory_reset") as factory_reset_mock,
         patch(
             "python_otbr_api.OTBR.delete_active_dataset"
         ) as delete_active_dataset_mock,
+        patch("python_otbr_api.OTBR.get_extended_address", return_value=new_xa),
     ):
-        await hass.data[otbr.DATA_OTBR].factory_reset()
+        await hass.data[otbr.DATA_OTBR][otbr_config_entry_multipan].factory_reset(hass)
 
     delete_active_dataset_mock.assert_not_called()
     factory_reset_mock.assert_called_once_with()
 
+    # Check the unique_id is updated
+    config_entry = hass.config_entries.async_get_entry(otbr_config_entry_multipan)
+    assert config_entry.unique_id == new_xa.hex()
+
 
 async def test_factory_reset_not_supported(
-    hass: HomeAssistant, otbr_config_entry_multipan
+    hass: HomeAssistant, otbr_config_entry_multipan: str
 ) -> None:
     """Test factory_reset."""
     with (
@@ -58,14 +68,14 @@ async def test_factory_reset_not_supported(
             "python_otbr_api.OTBR.delete_active_dataset"
         ) as delete_active_dataset_mock,
     ):
-        await hass.data[otbr.DATA_OTBR].factory_reset()
+        await hass.data[otbr.DATA_OTBR][otbr_config_entry_multipan].factory_reset(hass)
 
     delete_active_dataset_mock.assert_called_once_with()
     factory_reset_mock.assert_called_once_with()
 
 
 async def test_factory_reset_error_1(
-    hass: HomeAssistant, otbr_config_entry_multipan
+    hass: HomeAssistant, otbr_config_entry_multipan: str
 ) -> None:
     """Test factory_reset."""
     with (
@@ -80,14 +90,14 @@ async def test_factory_reset_error_1(
             HomeAssistantError,
         ),
     ):
-        await hass.data[otbr.DATA_OTBR].factory_reset()
+        await hass.data[otbr.DATA_OTBR][otbr_config_entry_multipan].factory_reset(hass)
 
     delete_active_dataset_mock.assert_not_called()
     factory_reset_mock.assert_called_once_with()
 
 
 async def test_factory_reset_error_2(
-    hass: HomeAssistant, otbr_config_entry_multipan
+    hass: HomeAssistant, otbr_config_entry_multipan: str
 ) -> None:
     """Test factory_reset."""
     with (
@@ -103,7 +113,7 @@ async def test_factory_reset_error_2(
             HomeAssistantError,
         ),
     ):
-        await hass.data[otbr.DATA_OTBR].factory_reset()
+        await hass.data[otbr.DATA_OTBR][otbr_config_entry_multipan].factory_reset(hass)
 
     delete_active_dataset_mock.assert_called_once_with()
     factory_reset_mock.assert_called_once_with()

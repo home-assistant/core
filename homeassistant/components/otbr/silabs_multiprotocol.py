@@ -48,12 +48,11 @@ def async_get_otbr_data[**_P, _R, _R_Def](
             if DATA_OTBR not in hass.data:
                 return retval
 
-            data = hass.data[DATA_OTBR]
+            for data in hass.data[DATA_OTBR].values():
+                if is_multiprotocol_url(data.url):
+                    return await orig_func(hass, data, *args, **kwargs)
 
-            if not is_multiprotocol_url(data.url):
-                return retval
-
-            return await orig_func(hass, data, *args, **kwargs)
+            return retval
 
         return async_get_otbr_data_wrapper
 
