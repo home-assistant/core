@@ -39,8 +39,12 @@ def _find_traces(traces, trace_type, item_id):
 
 
 async def _setup_automation_or_script(
-    hass, domain, configs, script_config=None, stored_traces=None
-):
+    hass: HomeAssistant,
+    domain: str,
+    configs: list[dict[str, Any]],
+    script_config: dict[str, Any] | None = None,
+    stored_traces: int | None = None,
+) -> None:
     """Set up automations or scripts from automation config."""
     if domain == "script":
         configs = {config["id"]: {"sequence": config["action"]} for config in configs}
@@ -66,7 +70,13 @@ async def _setup_automation_or_script(
     assert await async_setup_component(hass, domain, {domain: configs})
 
 
-async def _run_automation_or_script(hass, domain, config, event, context=None):
+async def _run_automation_or_script(
+    hass: HomeAssistant,
+    domain: str,
+    config: dict[str, Any],
+    event: str,
+    context: dict[str, Any] | None = None,
+) -> None:
     if domain == "automation":
         hass.bus.async_fire(event, context=context)
     else:
