@@ -53,6 +53,53 @@
     'state': '35.0',
   })
 # ---
+# name: test_sensors[sensor.mock_title_core_uptime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_core_uptime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Core uptime',
+    'platform': 'smlight',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'core_uptime',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_core_uptime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.mock_title_core_uptime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Mock Title Core uptime',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_core_uptime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-06-25T02:51:15+00:00',
+  })
+# ---
 # name: test_sensors[sensor.mock_title_filesystem_usage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -149,6 +196,100 @@
     'state': '99',
   })
 # ---
+# name: test_sensors[sensor.mock_title_timestamp-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_timestamp',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Timestamp',
+    'platform': 'smlight',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'core_uptime',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_core_uptime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.mock_title_timestamp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Mock Title Timestamp',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_timestamp',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-06-25T02:51:15+00:00',
+  })
+# ---
+# name: test_sensors[sensor.mock_title_timestamp_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_timestamp_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Timestamp',
+    'platform': 'smlight',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'socket_uptime',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_socket_uptime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.mock_title_timestamp_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Mock Title Timestamp',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_timestamp_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-06-30T23:57:53+00:00',
+  })
+# ---
 # name: test_sensors[sensor.mock_title_zigbee_chip_temp-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -201,6 +342,53 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '32.7',
+  })
+# ---
+# name: test_sensors[sensor.mock_title_zigbee_uptime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_zigbee_uptime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Zigbee uptime',
+    'platform': 'smlight',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'socket_uptime',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_socket_uptime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.mock_title_zigbee_uptime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Mock Title Zigbee uptime',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_zigbee_uptime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-06-30T23:57:53+00:00',
   })
 # ---
 # name: test_sensors[sensor.slzb_06_core_chip_temp-entry]

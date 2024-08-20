@@ -25,6 +25,7 @@ def platforms() -> Platform | list[Platform]:
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.freeze_time("2024-07-01 00:00:00+00:00")
 async def test_sensors(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -46,7 +47,7 @@ async def test_disabled_by_default_sensors(
     """Test the disabled by default SMLIGHT sensors."""
     await setup_integration(hass, mock_config_entry)
 
-    for sensor in ("ram_usage", "filesystem_usage"):
+    for sensor in ("core_uptime", "filesystem_usage", "ram_usage", "zigbee_uptime"):
         assert not hass.states.get(f"sensor.mock_title_{sensor}")
 
         assert (entry := entity_registry.async_get(f"sensor.mock_title_{sensor}"))
