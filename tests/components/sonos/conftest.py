@@ -308,7 +308,13 @@ def silent_ssdp_scanner() -> Generator[None]:
 def discover_fixture(soco):
     """Create a mock soco discover fixture."""
 
-    def do_callback(hass, callback, *args, **kwargs):
+    def do_callback(
+        hass: HomeAssistant,
+        callback: Callable[
+            [ssdp.SsdpServiceInfo, ssdp.SsdpChange], Coroutine[Any, Any, None] | None
+        ],
+        match_dict: dict[str, str] | None = None,
+    ) -> MagicMock:
         callback(
             ssdp.SsdpServiceInfo(
                 ssdp_location=f"http://{soco.ip_address}/",

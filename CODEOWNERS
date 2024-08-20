@@ -499,6 +499,8 @@ build.json @home-assistant/supervisor
 /tests/components/frontend/ @home-assistant/frontend
 /homeassistant/components/frontier_silicon/ @wlcrs
 /tests/components/frontier_silicon/ @wlcrs
+/homeassistant/components/fujitsu_fglair/ @crevetor
+/tests/components/fujitsu_fglair/ @crevetor
 /homeassistant/components/fully_kiosk/ @cgarwood
 /tests/components/fully_kiosk/ @cgarwood
 /homeassistant/components/fyta/ @dontinelli
@@ -1327,6 +1329,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/smarty/ @z0mbieprocess
 /homeassistant/components/smhi/ @gjohansson-ST
 /tests/components/smhi/ @gjohansson-ST
+/homeassistant/components/smlight/ @tl-sl
+/tests/components/smlight/ @tl-sl
 /homeassistant/components/sms/ @ocalvo
 /tests/components/sms/ @ocalvo
 /homeassistant/components/snapcast/ @luar123
