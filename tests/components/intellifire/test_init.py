@@ -4,10 +4,29 @@ from unittest.mock import AsyncMock, patch
 
 from intellifire4py.exceptions import LoginError
 
-from homeassistant.components.intellifire.const import DOMAIN
+from homeassistant.components.intellifire import CONF_USER_ID
+from homeassistant.components.intellifire.const import (
+    API_MODE_CLOUD,
+    API_MODE_LOCAL,
+    CONF_AUTH_COOKIE,
+    CONF_CONTROL_MODE,
+    CONF_READ_MODE,
+    CONF_SERIAL,
+    CONF_WEB_CLIENT_ID,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_IP_ADDRESS,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry
 
 
 async def test_pseudo_migration_good(
@@ -27,6 +46,53 @@ async def test_pseudo_migration_good(
         "username": "grumpypanda@china.cn",
         "password": "you-stole-my-pandas",
     }
+
+
+async def test_what_ever_we_are_calling_this_if_its_a_migration_or_something_else_i_dont_know(
+    hass: HomeAssistant, mock_apis_single_fp
+) -> None:
+    """Test the case where we completely fail to initialize."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        title="Fireplace of testing",
+        data={
+            CONF_HOST: "11.168.2.218",
+            CONF_USERNAME: "grumpypanda@china.cn",
+            CONF_PASSWORD: "you-stole-my-pandas",
+            CONF_USER_ID: "52C3F9E8B9D3AC99F8E4D12345678901FE9A2BC7D85F7654E28BF98BCD123456",
+        },
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state == ConfigEntryState.SETUP_ERROR
+
+
+async def test_init_with_no_username(hass: HomeAssistant, mock_apis_single_fp) -> None:
+    """Test the case where we completely fail to initialize."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        data={
+            CONF_IP_ADDRESS: "192.168.2.108",
+            # CONF_USERNAME: "grumpypanda@china.cn",
+            CONF_PASSWORD: "you-stole-my-pandas",
+            CONF_SERIAL: "3FB284769E4736F30C8973A7ED358123",
+            CONF_WEB_CLIENT_ID: "FA2B1C3045601234D0AE17D72F8E975",
+            CONF_API_KEY: "B5C4DA27AAEF31D1FB21AFF9BFA6BCD2",
+            CONF_AUTH_COOKIE: "B984F21A6378560019F8A1CDE41B6782",
+            CONF_USER_ID: "52C3F9E8B9D3AC99F8E4D12345678901FE9A2BC7D85F7654E28BF98BCD123456",
+        },
+        options={CONF_READ_MODE: API_MODE_LOCAL, CONF_CONTROL_MODE: API_MODE_CLOUD},
+        unique_id="serial",
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state == ConfigEntryState.SETUP_ERROR
 
 
 async def test_connectivity_bad(

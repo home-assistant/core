@@ -89,8 +89,9 @@ async def _async_pseudo_migrate_entry(
             if valid_serial
             else None
         )
-        if not new_data:
-            new_data = cloud_interface.user_data.get_data_for_ip(new[CONF_IP_ADDRESS])
+
+    if not new_data:
+        new_data = cloud_interface.user_data.get_data_for_ip(new[CONF_IP_ADDRESS])
 
     if not new_data:
         raise ConfigEntryAuthFailed
