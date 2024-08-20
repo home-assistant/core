@@ -124,7 +124,6 @@ async def async_setup_entry(
         MonarchMoneyCashFlowSensor(
             mm_coordinator,
             sensor_description,
-            # mm_coordinator.cashflow_summary,
         )
         for sensor_description in MONARCH_CASHFLOW_SENSORS
     ]
