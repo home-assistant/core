@@ -1146,7 +1146,10 @@ async def test_add_item_intent(
     )
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
     assert response.results.success_results[0].name == "list 1"
-    assert response.results.success_results[0].type == intent.IntentResponseTargetType.ENTITY
+    assert (
+        response.results.success_results[0].type
+        == intent.IntentResponseTargetType.ENTITY
+    )
     assert response.results.success_results[0].id == entity1.entity_id
 
     assert len(entity1.items) == 1
