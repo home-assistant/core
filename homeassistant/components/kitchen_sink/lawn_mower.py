@@ -100,7 +100,7 @@ class DemoLawnMower(LawnMowerEntity):
 
     async def async_dock(self) -> None:
         """Start docking."""
-        self._attr_activity = LawnMowerActivity.RETURNING
+        self._attr_activity = LawnMowerActivity.DOCKED
         self.async_write_ha_state()
 
     async def async_pause(self) -> None:
