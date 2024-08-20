@@ -31,8 +31,10 @@ async def async_setup_platform(
             DemoLawnMower(
                 "kitchen_sink_mower_002",
                 "Mower can return",
-                LawnMowerActivity.RETURNING,
-                LawnMowerEntityFeature.DOCK | LawnMowerEntityFeature.START_MOWING,
+                LawnMowerActivity.PAUSED,
+                LawnMowerEntityFeature.DOCK
+                | LawnMowerEntityFeature.PAUSE
+                | LawnMowerEntityFeature.START_MOWING,
             ),
             DemoLawnMower(
                 "kitchen_sink_mower_003",
@@ -55,7 +57,7 @@ async def async_setup_platform(
                 | LawnMowerEntityFeature.START_MOWING,
             ),
             DemoLawnMower(
-                "kitchen_sink_mower_005",
+                "kitchen_sink_mower_006",
                 "Mower is paused",
                 LawnMowerActivity.PAUSED,
                 LawnMowerEntityFeature.DOCK
@@ -98,7 +100,7 @@ class DemoLawnMower(LawnMowerEntity):
 
     async def async_dock(self) -> None:
         """Start docking."""
-        self._attr_activity = LawnMowerActivity.DOCKED
+        self._attr_activity = LawnMowerActivity.RETURNING
         self.async_write_ha_state()
 
     async def async_pause(self) -> None:
