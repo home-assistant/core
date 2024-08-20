@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from bsblan import BSBLAN, BSBLANError, Device, Info, State, StaticState
+from bsblan import BSBLAN, BSBLANError, Device, Info, StaticState
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -21,14 +21,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.enum import try_parse_enum
 
 from . import HomeAssistantBSBLANData
 from .const import ATTR_TARGET_TEMPERATURE, DOMAIN
+from .coordinator import BSBLanUpdateCoordinator
 from .entity import BSBLANEntity
 
 PARALLEL_UPDATES = 1
@@ -67,9 +65,11 @@ async def async_setup_entry(
 
 
 class BSBLANClimate(
-    BSBLANEntity, CoordinatorEntity[DataUpdateCoordinator[State]], ClimateEntity
+    BSBLANEntity, CoordinatorEntity["BSBLanUpdateCoordinator"], ClimateEntity
 ):
     """Defines a BSBLAN climate device."""
+
+    coordinator: BSBLanUpdateCoordinator
 
     _attr_has_entity_name = True
     _attr_name = None
@@ -80,15 +80,14 @@ class BSBLANClimate(
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _attr_preset_modes = PRESET_MODES
 
-    # Determine hvac modes
+    _attr_preset_modes = PRESET_MODES
     _attr_hvac_modes = HVAC_MODES
     _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[State],
+        coordinator: BSBLanUpdateCoordinator,
         client: BSBLAN,
         device: Device,
         info: Info,
@@ -102,7 +101,6 @@ class BSBLANClimate(
 
         self._attr_min_temp = float(static.min_temp.value)
         self._attr_max_temp = float(static.max_temp.value)
-        # check if self.coordinator.data.current_temperature.unit is "&deg;C" or "°C"
         if static.min_temp.unit in ("&deg;C", "°C"):
             self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         else:
@@ -111,30 +109,30 @@ class BSBLANClimate(
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if self.coordinator.data.current_temperature.value == "---":
+        if self.coordinator.data.state.current_temperature.value == "---":
             # device returns no current temperature
             return None
 
-        return float(self.coordinator.data.current_temperature.value)
+        return float(self.coordinator.data.state.current_temperature.value)
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return float(self.coordinator.data.target_temperature.value)
+        return float(self.coordinator.data.state.target_temperature.value)
 
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode."""
-        if self.coordinator.data.hvac_mode.value == PRESET_ECO:
+        if self.coordinator.data.state.hvac_mode.value == PRESET_ECO:
             return HVACMode.AUTO
-        return try_parse_enum(HVACMode, self.coordinator.data.hvac_mode.value)
+        return try_parse_enum(HVACMode, self.coordinator.data.state.hvac_mode.value)
 
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         if (
             self.hvac_mode == HVACMode.AUTO
-            and self.coordinator.data.hvac_mode.value == PRESET_ECO
+            and self.coordinator.data.state.hvac_mode.value == PRESET_ECO
         ):
             return PRESET_ECO
         return PRESET_NONE
