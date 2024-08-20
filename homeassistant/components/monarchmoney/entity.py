@@ -19,10 +19,6 @@ class MonarchMoneyEntityBase(CoordinatorEntity[MonarchMoneyDataUpdateCoordinator
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: MonarchMoneyDataUpdateCoordinator) -> None:
-        """Initialize the Monarch Money Entity."""
-        super().__init__(coordinator)
-        self.coordinator = coordinator
 
 
 class MonarchMoneyCashFlowEntity(MonarchMoneyEntityBase):
