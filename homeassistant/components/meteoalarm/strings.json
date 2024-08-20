@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "country": "International country code of the country you want to receive alerts for",
+          "language": "International country code for the translation of the alerts you want to receive",
+          "province": "Local province name"
+        }
+      }
+    },
+    "error": {
+      "wrong_country_or_province": "The country or province you have provided is incorrect. Please check the integration documentation for more instructions",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_wrong_country_or_province": {
+      "title": "The {integration_title} YAML configuration import is invalid",
+      "description": "Configuring {integration_title} using YAML is being removed but there was an error importing your YAML configuration indicating the country or province name in your configuration is incorrect.\n\nPlease make sure {integration_title} is turned on, and restart Home Assistant to try importing again. Otherwise, please remove the YAML from your configuration and add the integration manually."
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "title": "The {integration_title} YAML configuration could not be imported",
+      "description": "Configuring {integration_title} using YAML is being removed but there was an unknown error importing your YAML configuration.\n\nPlease make sure {integration_title} is turned on, and restart Home Assistant to try importing again. Otherwise, please remove the YAML from your configuration and add the integration manually."
+    }
+  }
+}
