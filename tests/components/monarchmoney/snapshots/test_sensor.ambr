@@ -1285,8 +1285,8 @@
     'platform': 'monarchmoney',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'balance',
-    'unique_id': '222260252323873333_2050 Toyota RAV8_balance',
+    'translation_key': 'value',
+    'unique_id': '222260252323873333_2050 Toyota RAV8_value',
     'unit_of_measurement': '$',
   })
 # ---
@@ -1403,6 +1403,60 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-08-16T17:37:21+00:00',
+  })
+# ---
+# name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_value-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.vinaudit_2050_toyota_rav8_value',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': 'mdi:car',
+    'original_name': 'Value',
+    'platform': 'monarchmoney',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'value',
+    'unique_id': '222260252323873333_2050 Toyota RAV8_value',
+    'unit_of_measurement': '$',
+  })
+# ---
+# name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_value-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Monarch Money API via vin_audit',
+      'device_class': 'monetary',
+      'entity_picture': 'https://api.monarchmoney.com/cdn-cgi/image/width=128/images/institution/159427559853802644',
+      'friendly_name': 'VinAudit 2050 Toyota RAV8 Value',
+      'icon': 'mdi:car',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': '$',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vinaudit_2050_toyota_rav8_value',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '11075.58',
   })
 # ---
 # name: test_all_entities[sensor.zillow_house_balance-entry]

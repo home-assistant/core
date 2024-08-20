@@ -23,6 +23,8 @@
   "entity": {
     "sensor": {
       "balance": { "name": "Balance" },
+      "value": { "name": "Value" },
+
       "age": {
         "name": "Data age"
       },

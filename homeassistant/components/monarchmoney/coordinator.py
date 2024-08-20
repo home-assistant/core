@@ -1,5 +1,6 @@
 """Data coordinator for monarch money."""
 
+import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
@@ -56,8 +57,9 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
     async def _async_update_data(self) -> MonarchData:
         """Fetch data for all accounts."""
 
-        account_data = await self.client.get_accounts()
-        cashflow_summary = await self.client.get_cashflow_summary()
+        account_data, cashflow_summary = await asyncio.gather(
+            self.client.get_accounts(), self.client.get_cashflow_summary()
+        )
 
         return MonarchData(
             account_data=account_data["accounts"],
@@ -95,10 +97,9 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
             not in ["real-estate", "vehicle", "valuables", "other_assets"]
         ]
 
-
-def get_account_for_id(self, account_id: str) -> dict[str, Any] | None:
-    """Get account for id."""
-    for account in self.data.account_data:
-        if account["id"] == account_id:
-            return account
-    return None
+    def get_account_for_id(self, account_id: str) -> dict[str, Any] | None:
+        """Get account for id."""
+        for account in self.data.account_data:
+            if account["id"] == account_id:
+                return account
+        return None
