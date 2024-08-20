@@ -35,7 +35,12 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     SERVER_PORT,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN, Event, HomeAssistant, callback
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    Event,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import frame, issue_registry as ir, storage
 import homeassistant.helpers.config_validation as cv
@@ -268,6 +273,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         local_ip, host, server_port, ssl_certificate is not None
     )
 
+    @callback
     def _async_check_ssl_issue(_: Event) -> None:
         from homeassistant.components import (  # pylint: disable=import-outside-toplevel
             cloud,
@@ -280,7 +286,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ):
             ir.async_create_issue(
                 hass,
-                HA_DOMAIN,
+                HOMEASSISTANT_DOMAIN,
                 "ssl_configured_without_configured_urls",
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,

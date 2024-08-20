@@ -14,6 +14,7 @@ import pytest
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components import http
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.http import KEY_HASS
 from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.setup import async_setup_component
@@ -545,3 +546,64 @@ async def test_register_static_paths(
         "event loop, instead call "
         "`await hass.http.async_register_static_paths"
     ) in caplog.text
+
+
+async def test_ssl_issue_if_no_urls_configured(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test raising SSL issue if no external or internal URL is configured."""
+
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+
+    with (
+        patch("ssl.SSLContext.load_cert_chain"),
+        patch(
+            "homeassistant.util.ssl.server_context_modern",
+            side_effect=server_context_modern,
+        ),
+    ):
+        assert await async_setup_component(
+            hass,
+            "http",
+            {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}},
+        )
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 1
+
+
+async def test_ssl_issue_urls_configured(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test raising SSL issue if no external or internal URL is configured."""
+
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+
+    hass.config.external_url = "http://example.com"
+    hass.config.internal_url = "http://example.local"
+
+    with (
+        patch("ssl.SSLContext.load_cert_chain"),
+        patch(
+            "homeassistant.util.ssl.server_context_modern",
+            side_effect=server_context_modern,
+        ),
+    ):
+        assert await async_setup_component(
+            hass,
+            "http",
+            {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}},
+        )
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 0
