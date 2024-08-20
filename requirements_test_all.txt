@@ -1764,6 +1764,9 @@ pysmartthings==0.7.8
 # homeassistant.components.edl21
 pysml==0.0.12
 
+# homeassistant.components.smlight
+pysmlight==0.0.12
+
 # homeassistant.components.snmp
 pysnmp==6.2.5
 
@@ -1856,7 +1859,7 @@ python-picnic-api==1.1.0
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==2.5.0
+python-roborock==2.6.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36

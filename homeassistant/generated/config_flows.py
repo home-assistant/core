@@ -526,6 +526,7 @@ FLOWS = {
         "smartthings",
         "smarttub",
         "smhi",
+        "smlight",
         "sms",
         "snapcast",
         "snooz",
