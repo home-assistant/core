@@ -334,8 +334,5 @@ async def test_remove_extra_entries(
     config_entry1.add_to_hass(hass)
     config_entry2.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(otbr.DOMAIN)) == 2
-    with (
-        patch("homeassistant.components.otbr.util.compute_pskc"),
-    ):  # Patch to speed up tests
-        assert await async_setup_component(hass, otbr.DOMAIN, {})
+    assert await async_setup_component(hass, otbr.DOMAIN, {})
     assert len(hass.config_entries.async_entries(otbr.DOMAIN)) == 1
