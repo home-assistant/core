@@ -113,7 +113,7 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
             name="monarchmoney",
             update_interval=timedelta(hours=4),
         )
-        self.client: MonarchMoney = client
+        self.client = client
         self.subscription_id: str = "UNSET"
 
     async def _async_setup(self) -> None:
