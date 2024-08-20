@@ -1,13 +1,14 @@
 """Common fixtures for the SMLIGHT Zigbee tests."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pysmlight.web import Info, Sensors
 import pytest
 
+from homeassistant.components.smlight import PLATFORMS
 from homeassistant.components.smlight.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_json_object_fixture
@@ -29,6 +30,19 @@ def mock_config_entry() -> MockConfigEntry:
         },
         unique_id="aa:bb:cc:dd:ee:ff",
     )
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Platforms, which should be loaded during the test."""
+    return PLATFORMS
+
+
+@pytest.fixture(autouse=True)
+async def mock_patch_platforms(platforms: list[str]) -> AsyncGenerator[None, None]:
+    """Fixture to set up platforms for tests."""
+    with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
+        yield
 
 
 @pytest.fixture
