@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor
+from freezegun.api import FrozenDateTimeFactory
 from matter_server.client.models.node import MatterNode
 from matter_server.common.errors import UpdateCheckError, UpdateError
 from matter_server.common.models import MatterSoftwareVersion, UpdateSource
@@ -14,6 +15,7 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
+from homeassistant.components.matter.update import SCAN_INTERVAL
 from homeassistant.components.update import (
     ATTR_VERSION,
     DOMAIN as UPDATE_DOMAIN,
@@ -32,6 +34,7 @@ from .common import (
 )
 
 from tests.common import (
+    async_fire_time_changed,
     async_mock_restore_state_shutdown_restart,
     mock_restore_cache_with_extra_data,
 )
@@ -99,13 +102,13 @@ async def test_update_entity(
     assert matter_client.check_node_update.call_count == 1
 
 
-async def test_update_install(
+async def test_update_check_service(
     hass: HomeAssistant,
     matter_client: MagicMock,
     check_node_update: AsyncMock,
     updateable_node: MatterNode,
 ) -> None:
-    """Test device update with Matter attribute changes influence progress."""
+    """Test check device update through service call."""
     state = hass.states.get("update.mock_dimmable_light")
     assert state
     assert state.state == STATE_OFF
@@ -133,6 +136,47 @@ async def test_update_install(
         },
         blocking=True,
     )
+
+    assert matter_client.check_node_update.call_count == 2
+
+    state = hass.states.get("update.mock_dimmable_light")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes.get("latest_version") == "v2.0"
+    assert (
+        state.attributes.get("release_url")
+        == "http://home-assistant.io/non-existing-product"
+    )
+
+
+async def test_update_install(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    check_node_update: AsyncMock,
+    updateable_node: MatterNode,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test device update with Matter attribute changes influence progress."""
+    state = hass.states.get("update.mock_dimmable_light")
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes.get("installed_version") == "v1.0"
+
+    check_node_update.return_value = MatterSoftwareVersion(
+        vid=65521,
+        pid=32768,
+        software_version=2,
+        software_version_string="v2.0",
+        firmware_information="",
+        min_applicable_software_version=0,
+        max_applicable_software_version=1,
+        release_notes_url="http://home-assistant.io/non-existing-product",
+        update_source=UpdateSource.LOCAL,
+    )
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert matter_client.check_node_update.call_count == 2
 
@@ -211,14 +255,13 @@ async def test_update_install_failure(
     check_node_update: AsyncMock,
     update_node: AsyncMock,
     updateable_node: MatterNode,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test update entity service call errors."""
     state = hass.states.get("update.mock_dimmable_light")
     assert state
     assert state.state == STATE_OFF
     assert state.attributes.get("installed_version") == "v1.0"
-
-    await async_setup_component(hass, HA_DOMAIN, {})
 
     check_node_update.return_value = MatterSoftwareVersion(
         vid=65521,
@@ -232,14 +275,9 @@ async def test_update_install_failure(
         update_source=UpdateSource.LOCAL,
     )
 
-    await hass.services.async_call(
-        HA_DOMAIN,
-        SERVICE_UPDATE_ENTITY,
-        {
-            ATTR_ENTITY_ID: "update.mock_dimmable_light",
-        },
-        blocking=True,
-    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert matter_client.check_node_update.call_count == 2
 
@@ -285,6 +323,7 @@ async def test_update_state_save_and_restore(
     matter_client: MagicMock,
     check_node_update: AsyncMock,
     updateable_node: MatterNode,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test latest update information is retained across reload/restart."""
     state = hass.states.get("update.mock_dimmable_light")
@@ -292,18 +331,11 @@ async def test_update_state_save_and_restore(
     assert state.state == STATE_OFF
     assert state.attributes.get("installed_version") == "v1.0"
 
-    await async_setup_component(hass, HA_DOMAIN, {})
-
     check_node_update.return_value = TEST_SOFTWARE_VERSION
 
-    await hass.services.async_call(
-        HA_DOMAIN,
-        SERVICE_UPDATE_ENTITY,
-        {
-            ATTR_ENTITY_ID: "update.mock_dimmable_light",
-        },
-        blocking=True,
-    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert matter_client.check_node_update.call_count == 2
 
