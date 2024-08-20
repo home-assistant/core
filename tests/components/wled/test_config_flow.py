@@ -33,9 +33,7 @@ async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:
 
     assert result.get("title") == "WLED RGB Light"
     assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert "data" in result
     assert result["data"][CONF_HOST] == "192.168.1.123"
-    assert "result" in result
     assert result["result"].unique_id == "aabbccddeeff"
 
 
@@ -167,23 +165,6 @@ async def test_user_device_exists_abort(
     assert result.get("reason") == "already_configured"
 
 
-async def test_user_with_cct_channel_abort(
-    hass: HomeAssistant,
-    mock_wled: MagicMock,
-) -> None:
-    """Test we abort user flow if WLED device uses a CCT channel."""
-    mock_wled.update.return_value.info.leds.cct = True
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: "192.168.1.123"},
-    )
-
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "cct_unsupported"
-
-
 @pytest.mark.usefixtures("mock_wled")
 async def test_zeroconf_without_mac_device_exists_abort(
     hass: HomeAssistant,
@@ -232,31 +213,6 @@ async def test_zeroconf_with_mac_device_exists_abort(
 
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
-
-
-async def test_zeroconf_with_cct_channel_abort(
-    hass: HomeAssistant,
-    mock_wled: MagicMock,
-) -> None:
-    """Test we abort zeroconf flow if WLED device uses a CCT channel."""
-    mock_wled.update.return_value.info.leds.cct = True
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
-            ip_address=ip_address("192.168.1.123"),
-            ip_addresses=[ip_address("192.168.1.123")],
-            hostname="example.local.",
-            name="mock_name",
-            port=None,
-            properties={CONF_MAC: "aabbccddeeff"},
-            type="mock_type",
-        ),
-    )
-
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "cct_unsupported"
 
 
 async def test_options_flow(

@@ -2,9 +2,9 @@
 
 from typing import Final
 
-from py17track import Client as SeventeenTrackClient
-from py17track.errors import SeventeenTrackError
-from py17track.package import PACKAGE_STATUS_MAP
+from pyseventeentrack import Client as SeventeenTrackClient
+from pyseventeentrack.errors import SeventeenTrackError
+from pyseventeentrack.package import PACKAGE_STATUS_MAP
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -29,10 +29,14 @@ from homeassistant.util import slugify
 
 from .const import (
     ATTR_CONFIG_ENTRY_ID,
+    ATTR_DESTINATION_COUNTRY,
     ATTR_INFO_TEXT,
+    ATTR_ORIGIN_COUNTRY,
     ATTR_PACKAGE_STATE,
+    ATTR_PACKAGE_TYPE,
     ATTR_STATUS,
     ATTR_TIMESTAMP,
+    ATTR_TRACKING_INFO_LANGUAGE,
     ATTR_TRACKING_NUMBER,
     DOMAIN,
     SERVICE_GET_PACKAGES,
@@ -104,6 +108,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return {
             "packages": [
                 {
+                    ATTR_DESTINATION_COUNTRY: package.destination_country,
+                    ATTR_ORIGIN_COUNTRY: package.origin_country,
+                    ATTR_PACKAGE_TYPE: package.package_type,
+                    ATTR_TRACKING_INFO_LANGUAGE: package.tracking_info_language,
                     ATTR_TRACKING_NUMBER: package.tracking_number,
                     ATTR_LOCATION: package.location,
                     ATTR_STATUS: package.status,

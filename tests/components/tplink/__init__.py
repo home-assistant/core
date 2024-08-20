@@ -22,6 +22,7 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.components.tplink import (
     CONF_ALIAS,
+    CONF_CREDENTIALS_HASH,
     CONF_DEVICE_CONFIG,
     CONF_HOST,
     CONF_MODEL,
@@ -38,7 +39,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_json_value_fixture
 
-ColorTempRange = namedtuple("ColorTempRange", ["min", "max"])
+ColorTempRange = namedtuple("ColorTempRange", ["min", "max"])  # noqa: PYI024
 
 MODULE = "homeassistant.components.tplink"
 MODULE_CONFIG_FLOW = "homeassistant.components.tplink.config_flow"
@@ -48,38 +49,34 @@ ALIAS = "My Bulb"
 MODEL = "HS100"
 MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
 DEVICE_ID = "123456789ABCDEFGH"
+DEVICE_ID_MAC = "AA:BB:CC:DD:EE:FF"
 DHCP_FORMATTED_MAC_ADDRESS = MAC_ADDRESS.replace(":", "")
 MAC_ADDRESS2 = "11:22:33:44:55:66"
 DEFAULT_ENTRY_TITLE = f"{ALIAS} {MODEL}"
 CREDENTIALS_HASH_LEGACY = ""
 DEVICE_CONFIG_LEGACY = DeviceConfig(IP_ADDRESS)
-DEVICE_CONFIG_DICT_LEGACY = DEVICE_CONFIG_LEGACY.to_dict(
-    credentials_hash=CREDENTIALS_HASH_LEGACY, exclude_credentials=True
-)
+DEVICE_CONFIG_DICT_LEGACY = DEVICE_CONFIG_LEGACY.to_dict(exclude_credentials=True)
 CREDENTIALS = Credentials("foo", "bar")
-CREDENTIALS_HASH_AUTH = "abcdefghijklmnopqrstuv=="
-DEVICE_CONFIG_AUTH = DeviceConfig(
+CREDENTIALS_HASH_AES = "AES/abcdefghijklmnopqrstuvabcdefghijklmnopqrstuv=="
+CREDENTIALS_HASH_KLAP = "KLAP/abcdefghijklmnopqrstuv=="
+DEVICE_CONFIG_KLAP = DeviceConfig(
     IP_ADDRESS,
     credentials=CREDENTIALS,
     connection_type=DeviceConnectionParameters(
-        DeviceFamily.IotSmartPlugSwitch, DeviceEncryptionType.Klap
+        DeviceFamily.SmartTapoPlug, DeviceEncryptionType.Klap
     ),
     uses_http=True,
 )
-DEVICE_CONFIG_AUTH2 = DeviceConfig(
+DEVICE_CONFIG_AES = DeviceConfig(
     IP_ADDRESS2,
     credentials=CREDENTIALS,
     connection_type=DeviceConnectionParameters(
-        DeviceFamily.IotSmartPlugSwitch, DeviceEncryptionType.Klap
+        DeviceFamily.SmartTapoPlug, DeviceEncryptionType.Aes
     ),
     uses_http=True,
 )
-DEVICE_CONFIG_DICT_AUTH = DEVICE_CONFIG_AUTH.to_dict(
-    credentials_hash=CREDENTIALS_HASH_AUTH, exclude_credentials=True
-)
-DEVICE_CONFIG_DICT_AUTH2 = DEVICE_CONFIG_AUTH2.to_dict(
-    credentials_hash=CREDENTIALS_HASH_AUTH, exclude_credentials=True
-)
+DEVICE_CONFIG_DICT_KLAP = DEVICE_CONFIG_KLAP.to_dict(exclude_credentials=True)
+DEVICE_CONFIG_DICT_AES = DEVICE_CONFIG_AES.to_dict(exclude_credentials=True)
 
 CREATE_ENTRY_DATA_LEGACY = {
     CONF_HOST: IP_ADDRESS,
@@ -88,18 +85,28 @@ CREATE_ENTRY_DATA_LEGACY = {
     CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_LEGACY,
 }
 
-CREATE_ENTRY_DATA_AUTH = {
+CREATE_ENTRY_DATA_KLAP = {
     CONF_HOST: IP_ADDRESS,
     CONF_ALIAS: ALIAS,
     CONF_MODEL: MODEL,
-    CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_AUTH,
+    CONF_CREDENTIALS_HASH: CREDENTIALS_HASH_KLAP,
+    CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_KLAP,
 }
-CREATE_ENTRY_DATA_AUTH2 = {
+CREATE_ENTRY_DATA_AES = {
     CONF_HOST: IP_ADDRESS2,
     CONF_ALIAS: ALIAS,
     CONF_MODEL: MODEL,
-    CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_AUTH2,
+    CONF_CREDENTIALS_HASH: CREDENTIALS_HASH_AES,
+    CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_AES,
 }
+CONNECTION_TYPE_KLAP = DeviceConnectionParameters(
+    DeviceFamily.SmartTapoPlug, DeviceEncryptionType.Klap
+)
+CONNECTION_TYPE_KLAP_DICT = CONNECTION_TYPE_KLAP.to_dict()
+CONNECTION_TYPE_AES = DeviceConnectionParameters(
+    DeviceFamily.SmartTapoPlug, DeviceEncryptionType.Aes
+)
+CONNECTION_TYPE_AES_DICT = CONNECTION_TYPE_AES.to_dict()
 
 
 def _load_feature_fixtures():
@@ -185,7 +192,7 @@ def _mocked_device(
     device_id=DEVICE_ID,
     alias=ALIAS,
     model=MODEL,
-    ip_address=IP_ADDRESS,
+    ip_address: str | None = None,
     modules: list[str] | None = None,
     children: list[Device] | None = None,
     features: list[str | Feature] | None = None,
@@ -200,15 +207,21 @@ def _mocked_device(
     device.mac = mac
     device.alias = alias
     device.model = model
-    device.host = ip_address
     device.device_id = device_id
     device.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
     device.modules = {}
     device.features = {}
 
+    if not ip_address:
+        ip_address = IP_ADDRESS
+    else:
+        device_config.host = ip_address
+    device.host = ip_address
+
     if modules:
         device.modules = {
-            module_name: MODULE_TO_MOCK_GEN[module_name]() for module_name in modules
+            module_name: MODULE_TO_MOCK_GEN[module_name](device)
+            for module_name in modules
         }
 
     if features:
@@ -296,7 +309,7 @@ def _mocked_feature(
     return feature
 
 
-def _mocked_light_module() -> Light:
+def _mocked_light_module(device) -> Light:
     light = MagicMock(spec=Light, name="Mocked light module")
     light.update = AsyncMock()
     light.brightness = 50
@@ -312,26 +325,58 @@ def _mocked_light_module() -> Light:
     light.hsv = (10, 30, 5)
     light.valid_temperature_range = ColorTempRange(min=4000, max=9000)
     light.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
-    light.set_state = AsyncMock()
-    light.set_brightness = AsyncMock()
-    light.set_hsv = AsyncMock()
-    light.set_color_temp = AsyncMock()
+
+    async def _set_state(state, *_, **__):
+        light.state = state
+
+    light.set_state = AsyncMock(wraps=_set_state)
+
+    async def _set_brightness(brightness, *_, **__):
+        light.state.brightness = brightness
+        light.state.light_on = brightness > 0
+
+    light.set_brightness = AsyncMock(wraps=_set_brightness)
+
+    async def _set_hsv(h, s, v, *_, **__):
+        light.state.hue = h
+        light.state.saturation = s
+        light.state.brightness = v
+        light.state.light_on = True
+
+    light.set_hsv = AsyncMock(wraps=_set_hsv)
+
+    async def _set_color_temp(temp, *_, **__):
+        light.state.color_temp = temp
+        light.state.light_on = True
+
+    light.set_color_temp = AsyncMock(wraps=_set_color_temp)
     light.protocol = _mock_protocol()
     return light
 
 
-def _mocked_light_effect_module() -> LightEffect:
+def _mocked_light_effect_module(device) -> LightEffect:
     effect = MagicMock(spec=LightEffect, name="Mocked light effect")
     effect.has_effects = True
     effect.has_custom_effects = True
     effect.effect = "Effect1"
     effect.effect_list = ["Off", "Effect1", "Effect2"]
-    effect.set_effect = AsyncMock()
+
+    async def _set_effect(effect_name, *_, **__):
+        assert (
+            effect_name in effect.effect_list
+        ), f"set_effect '{effect_name}' not in {effect.effect_list}"
+        assert device.modules[
+            Module.Light
+        ], "Need a light module to test set_effect method"
+        device.modules[Module.Light].state.light_on = True
+        effect.effect = effect_name
+
+    effect.set_effect = AsyncMock(wraps=_set_effect)
     effect.set_custom_effect = AsyncMock()
     return effect
 
 
-def _mocked_fan_module() -> Fan:
+def _mocked_fan_module(effect) -> Fan:
     fan = MagicMock(auto_spec=Fan, name="Mocked fan")
     fan.fan_speed_level = 0
     fan.set_fan_speed_level = AsyncMock()

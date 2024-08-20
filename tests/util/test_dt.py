@@ -294,12 +294,12 @@ def test_parse_time_expression() -> None:
 
     assert list(range(0, 60, 5)) == dt_util.parse_time_expression("/5", 0, 59)
 
-    assert [1, 2, 3] == dt_util.parse_time_expression([2, 1, 3], 0, 59)
+    assert dt_util.parse_time_expression([2, 1, 3], 0, 59) == [1, 2, 3]
 
     assert list(range(24)) == dt_util.parse_time_expression("*", 0, 23)
 
-    assert [42] == dt_util.parse_time_expression(42, 0, 59)
-    assert [42] == dt_util.parse_time_expression("42", 0, 59)
+    assert dt_util.parse_time_expression(42, 0, 59) == [42]
+    assert dt_util.parse_time_expression("42", 0, 59) == [42]
 
     with pytest.raises(ValueError):
         dt_util.parse_time_expression(61, 0, 60)

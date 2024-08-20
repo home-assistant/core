@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Generator, Iterable
 from datetime import datetime, timedelta
 from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
-from typing_extensions import Generator
 from uiprotect import ProtectApiClient
 from uiprotect.data import (
     NVR,

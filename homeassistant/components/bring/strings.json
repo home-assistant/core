@@ -49,7 +49,7 @@
       "message": "Authentication failed for {email}, check your email and password"
     },
     "notify_missing_argument_item": {
-      "message": "Failed to call service {service}. 'URGENT_MESSAGE' requires a value @ data['item']. Got None"
+      "message": "Failed to perform action {service}. 'URGENT_MESSAGE' requires a value @ data['item']. Got None"
     },
     "notify_request_failed": {
       "message": "Failed to send push notification for bring due to a connection error, try again later"

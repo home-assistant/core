@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from matter_server.client.models.node import MatterNode
 from matter_server.common.const import SCHEMA_VERSION
 from matter_server.common.models import ServerInfoMessage
 import pytest
-from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant.core import HomeAssistant
 
@@ -51,6 +51,7 @@ async def matter_client_fixture() -> AsyncGenerator[MagicMock]:
             wifi_credentials_set=True,
             thread_credentials_set=True,
             min_supported_schema_version=SCHEMA_VERSION,
+            bluetooth_enabled=False,
         )
 
         yield client

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from knocki import KnockiClient, KnockiConnectionError
+from knocki import KnockiClient, KnockiConnectionError, KnockiInvalidAuthError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -45,6 +45,8 @@ class KnockiConfigFlow(ConfigFlow, domain=DOMAIN):
                 raise
             except KnockiConnectionError:
                 errors["base"] = "cannot_connect"
+            except KnockiInvalidAuthError:
+                errors["base"] = "invalid_auth"
             except Exception:  # noqa: BLE001
                 LOGGER.exception("Error logging into the Knocki API")
                 errors["base"] = "unknown"

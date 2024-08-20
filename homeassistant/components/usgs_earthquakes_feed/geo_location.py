@@ -276,17 +276,17 @@ class UsgsEarthquakesEvent(GeolocationEvent):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        attributes = {}
-        for key, value in (
-            (ATTR_EXTERNAL_ID, self._external_id),
-            (ATTR_PLACE, self._place),
-            (ATTR_MAGNITUDE, self._magnitude),
-            (ATTR_TIME, self._time),
-            (ATTR_UPDATED, self._updated),
-            (ATTR_STATUS, self._status),
-            (ATTR_TYPE, self._type),
-            (ATTR_ALERT, self._alert),
-        ):
-            if value or isinstance(value, bool):
-                attributes[key] = value
-        return attributes
+        return {
+            key: value
+            for key, value in (
+                (ATTR_EXTERNAL_ID, self._external_id),
+                (ATTR_PLACE, self._place),
+                (ATTR_MAGNITUDE, self._magnitude),
+                (ATTR_TIME, self._time),
+                (ATTR_UPDATED, self._updated),
+                (ATTR_STATUS, self._status),
+                (ATTR_TYPE, self._type),
+                (ATTR_ALERT, self._alert),
+            )
+            if value or isinstance(value, bool)
+        }

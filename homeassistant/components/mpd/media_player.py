@@ -86,7 +86,7 @@ async def async_setup_platform(
     )
     if (
         result["type"] is FlowResultType.CREATE_ENTRY
-        or result["reason"] == "single_instance_allowed"
+        or result["reason"] == "already_configured"
     ):
         async_create_issue(
             hass,
@@ -420,11 +420,6 @@ class MpdDevice(MediaPlayerEntity):
     def source(self):
         """Name of the current input source."""
         return self._current_playlist
-
-    @property
-    def source_list(self):
-        """Return the list of available input sources."""
-        return self._playlists
 
     async def async_select_source(self, source: str) -> None:
         """Choose a different available playlist and play it."""

@@ -1,10 +1,10 @@
 """Websocket tests for Voice Assistant integration."""
 
+from collections.abc import AsyncGenerator
 from typing import Any
 from unittest.mock import ANY, patch
 
 import pytest
-from typing_extensions import AsyncGenerator
 
 from homeassistant.components import conversation
 from homeassistant.components.assist_pipeline.const import DOMAIN

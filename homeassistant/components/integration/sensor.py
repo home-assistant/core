@@ -27,8 +27,6 @@ from homeassistant.const import (
     CONF_METHOD,
     CONF_NAME,
     CONF_UNIQUE_ID,
-    EVENT_STATE_CHANGED,
-    EVENT_STATE_REPORTED,
     STATE_UNAVAILABLE,
     UnitOfTime,
 )
@@ -45,7 +43,11 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.event import (
+    async_call_later,
+    async_track_state_change_event,
+    async_track_state_report_event,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -440,21 +442,17 @@ class IntegrationSensor(RestoreSensor):
             self._derive_and_set_attributes_from_state(state)
 
         self.async_on_remove(
-            self.hass.bus.async_listen(
-                EVENT_STATE_CHANGED,
+            async_track_state_change_event(
+                self.hass,
+                self._sensor_source_id,
                 handle_state_change,
-                event_filter=callback(
-                    lambda event_data: event_data["entity_id"] == self._sensor_source_id
-                ),
             )
         )
         self.async_on_remove(
-            self.hass.bus.async_listen(
-                EVENT_STATE_REPORTED,
+            async_track_state_report_event(
+                self.hass,
+                self._sensor_source_id,
                 handle_state_report,
-                event_filter=callback(
-                    lambda event_data: event_data["entity_id"] == self._sensor_source_id
-                ),
             )
         )
 

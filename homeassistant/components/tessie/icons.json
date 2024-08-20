@@ -22,6 +22,9 @@
       "climate_state_auto_steering_wheel_heat": {
         "default": "mdi:steering"
       },
+      "grid_services_power": {
+        "default": "mdi:transmission-tower"
+      },
       "vehicle_state_dashcam_state": {
         "default": "mdi:camera-off",
         "state": {
@@ -242,6 +245,12 @@
       },
       "charge_state_charge_enable_request": {
         "default": "mdi:ev-plug-ccs2"
+      },
+      "components_disallow_charge_from_grid_with_solar_installed": {
+        "state": {
+          "false": "mdi:transmission-tower",
+          "true": "mdi:solar-power"
+        }
       }
     }
   }

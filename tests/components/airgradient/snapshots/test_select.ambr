@@ -1,11 +1,12 @@
 # serializer version: 1
-# name: test_all_entities[indoor][select.airgradient_co2_automatic_baseline_calibration-entry]
+# name: test_all_entities[indoor][select.airgradient_co2_automatic_baseline_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        '1',
         '8',
         '30',
         '90',
@@ -19,7 +20,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.airgradient_co2_automatic_baseline_calibration',
+    'entity_id': 'select.airgradient_co2_automatic_baseline_duration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -31,7 +32,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'CO2 automatic baseline calibration',
+    'original_name': 'CO2 automatic baseline duration',
     'platform': 'airgradient',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -40,11 +41,12 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[indoor][select.airgradient_co2_automatic_baseline_calibration-state]
+# name: test_all_entities[indoor][select.airgradient_co2_automatic_baseline_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Airgradient CO2 automatic baseline calibration',
+      'friendly_name': 'Airgradient CO2 automatic baseline duration',
       'options': list([
+        '1',
         '8',
         '30',
         '90',
@@ -53,7 +55,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.airgradient_co2_automatic_baseline_calibration',
+    'entity_id': 'select.airgradient_co2_automatic_baseline_duration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -404,13 +406,14 @@
     'state': '12',
   })
 # ---
-# name: test_all_entities[outdoor][select.airgradient_co2_automatic_baseline_calibration-entry]
+# name: test_all_entities[outdoor][select.airgradient_co2_automatic_baseline_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        '1',
         '8',
         '30',
         '90',
@@ -424,7 +427,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.airgradient_co2_automatic_baseline_calibration',
+    'entity_id': 'select.airgradient_co2_automatic_baseline_duration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -436,7 +439,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'CO2 automatic baseline calibration',
+    'original_name': 'CO2 automatic baseline duration',
     'platform': 'airgradient',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -445,11 +448,12 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[outdoor][select.airgradient_co2_automatic_baseline_calibration-state]
+# name: test_all_entities[outdoor][select.airgradient_co2_automatic_baseline_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Airgradient CO2 automatic baseline calibration',
+      'friendly_name': 'Airgradient CO2 automatic baseline duration',
       'options': list([
+        '1',
         '8',
         '30',
         '90',
@@ -458,7 +462,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.airgradient_co2_automatic_baseline_calibration',
+    'entity_id': 'select.airgradient_co2_automatic_baseline_duration',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

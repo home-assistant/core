@@ -60,9 +60,7 @@ DEFAULT_CONFIG = {
 
 
 async def async_turn_on(
-    hass: HomeAssistant,
-    entity_id: str,
-    parameters: dict[str, Any],
+    hass: HomeAssistant, entity_id: str, parameters: dict[str, Any]
 ) -> None:
     """Turn all or specified siren on."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
@@ -180,9 +178,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     ],
 )
 async def test_controlling_state_via_topic_and_json_message(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the controlling state via topic and JSON message."""
     await mqtt_mock_entry()
@@ -618,11 +614,7 @@ async def test_update_with_json_attrs_not_dict(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        siren.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, siren.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -633,11 +625,7 @@ async def test_update_with_json_attrs_bad_json(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        siren.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, siren.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -787,8 +775,7 @@ async def test_discovery_update_siren_template(
     ],
 )
 async def test_command_templates(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test siren with command templates optimistic."""
     mqtt_mock = await mqtt_mock_entry()
@@ -1005,8 +992,7 @@ async def test_publishing_with_custom_encoding(
 
 
 async def test_reloadable(
-    hass: HomeAssistant,
-    mqtt_client_mock: MqttMockPahoClient,
+    hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = siren.DOMAIN
@@ -1016,9 +1002,7 @@ async def test_reloadable(
 
 @pytest.mark.parametrize(
     ("topic", "value", "attribute", "attribute_value"),
-    [
-        ("state_topic", "ON", None, "on"),
-    ],
+    [("state_topic", "ON", None, "on")],
 )
 async def test_encoding_subscribable_topics(
     hass: HomeAssistant,
@@ -1056,8 +1040,7 @@ async def test_setup_manual_entity_from_yaml(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test unloading the config entry."""
     domain = siren.DOMAIN

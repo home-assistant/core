@@ -116,7 +116,7 @@ async def primary_calendar_status() -> HTTPStatus | None:
 
 @pytest.fixture(autouse=True)
 async def primary_calendar(
-    mock_calendar_get: Callable[[...], None],
+    mock_calendar_get: Callable[..., None],
     primary_calendar_error: ClientError | None,
     primary_calendar_status: HTTPStatus | None,
     primary_calendar_email: str,
@@ -130,7 +130,7 @@ async def primary_calendar(
     )
 
 
-async def fire_alarm(hass, point_in_time):
+async def fire_alarm(hass: HomeAssistant, point_in_time: datetime.datetime) -> None:
     """Fire an alarm and wait for callbacks to run."""
     with freeze_time(point_in_time):
         async_fire_time_changed(hass, point_in_time)

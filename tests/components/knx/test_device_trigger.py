@@ -18,18 +18,12 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import KNXTestKit
 
-from tests.common import async_get_device_automations, async_mock_service
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
+from tests.common import async_get_device_automations
 
 
 async def test_if_fires_on_telegram(
     hass: HomeAssistant,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
     knx: KNXTestKit,
 ) -> None:
@@ -98,31 +92,31 @@ async def test_if_fires_on_telegram(
 
     # "specific" shall ignore destination address
     await knx.receive_write("0/0/1", (0x03, 0x2F))
-    assert len(calls) == 1
-    test_call = calls.pop()
+    assert len(service_calls) == 1
+    test_call = service_calls.pop()
     assert test_call.data["catch_all"] == "telegram - 0/0/1"
     assert test_call.data["id"] == 0
 
     await knx.receive_write("1/2/4", (0x03, 0x2F))
-    assert len(calls) == 2
-    test_call = calls.pop()
+    assert len(service_calls) == 2
+    test_call = service_calls.pop()
     assert test_call.data["specific"] == "telegram - 1/2/4"
     assert test_call.data["id"] == "test-id"
-    test_call = calls.pop()
+    test_call = service_calls.pop()
     assert test_call.data["catch_all"] == "telegram - 1/2/4"
     assert test_call.data["id"] == 0
 
     # "specific" shall ignore GroupValueRead
     await knx.receive_read("1/2/4")
-    assert len(calls) == 1
-    test_call = calls.pop()
+    assert len(service_calls) == 1
+    test_call = service_calls.pop()
     assert test_call.data["catch_all"] == "telegram - 1/2/4"
     assert test_call.data["id"] == 0
 
 
 async def test_default_if_fires_on_telegram(
     hass: HomeAssistant,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
     knx: KNXTestKit,
 ) -> None:
@@ -179,34 +173,34 @@ async def test_default_if_fires_on_telegram(
     )
 
     await knx.receive_write("0/0/1", (0x03, 0x2F))
-    assert len(calls) == 1
-    test_call = calls.pop()
+    assert len(service_calls) == 1
+    test_call = service_calls.pop()
     assert test_call.data["catch_all"] == "telegram - 0/0/1"
     assert test_call.data["id"] == 0
 
     await knx.receive_write("1/2/4", (0x03, 0x2F))
-    assert len(calls) == 2
-    test_call = calls.pop()
+    assert len(service_calls) == 2
+    test_call = service_calls.pop()
     assert test_call.data["specific"] == "telegram - 1/2/4"
     assert test_call.data["id"] == "test-id"
-    test_call = calls.pop()
+    test_call = service_calls.pop()
     assert test_call.data["catch_all"] == "telegram - 1/2/4"
     assert test_call.data["id"] == 0
 
     # "specific" shall catch GroupValueRead as it is not set explicitly
     await knx.receive_read("1/2/4")
-    assert len(calls) == 2
-    test_call = calls.pop()
+    assert len(service_calls) == 2
+    test_call = service_calls.pop()
     assert test_call.data["specific"] == "telegram - 1/2/4"
     assert test_call.data["id"] == "test-id"
-    test_call = calls.pop()
+    test_call = service_calls.pop()
     assert test_call.data["catch_all"] == "telegram - 1/2/4"
     assert test_call.data["id"] == 0
 
 
 async def test_remove_device_trigger(
     hass: HomeAssistant,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
     knx: KNXTestKit,
 ) -> None:
@@ -241,8 +235,8 @@ async def test_remove_device_trigger(
     )
 
     await knx.receive_write("0/0/1", (0x03, 0x2F))
-    assert len(calls) == 1
-    assert calls.pop().data["catch_all"] == "telegram - 0/0/1"
+    assert len(service_calls) == 1
+    assert service_calls.pop().data["catch_all"] == "telegram - 0/0/1"
 
     await hass.services.async_call(
         automation.DOMAIN,
@@ -250,8 +244,10 @@ async def test_remove_device_trigger(
         {ATTR_ENTITY_ID: f"automation.{automation_name}"},
         blocking=True,
     )
+    assert len(service_calls) == 1
+
     await knx.receive_write("0/0/1", (0x03, 0x2F))
-    assert len(calls) == 0
+    assert len(service_calls) == 1
 
 
 async def test_get_triggers(
@@ -395,7 +391,6 @@ async def test_invalid_device_trigger(
                 ]
             },
         )
-        await hass.async_block_till_done()
         assert (
             "Unnamed automation failed to setup triggers and has been disabled: "
             "extra keys not allowed @ data['invalid']. Got None"

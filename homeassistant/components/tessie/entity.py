@@ -42,6 +42,7 @@ class TessieBaseEntity(
         self.key = key
         self._attr_translation_key = key
         super().__init__(coordinator)
+        self._async_update_attrs()
 
     @property
     def _value(self) -> Any:
@@ -127,7 +128,7 @@ class TessieEnergyEntity(TessieBaseEntity):
         key: str,
     ) -> None:
         """Initialize common aspects of a Tessie energy site entity."""
-
+        self.api = data.api
         self._attr_unique_id = f"{data.id}-{key}"
         self._attr_device_info = data.device
 

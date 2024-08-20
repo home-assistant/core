@@ -1,5 +1,6 @@
 """Sanix tests configuration."""
 
+from collections.abc import Generator
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
 from zoneinfo import ZoneInfo
@@ -16,7 +17,6 @@ from sanix import (
     ATTR_API_TIME,
 )
 from sanix.models import Measurement
-from typing_extensions import Generator
 
 from homeassistant.components.sanix.const import CONF_SERIAL_NUMBER, DOMAIN
 from homeassistant.const import CONF_TOKEN

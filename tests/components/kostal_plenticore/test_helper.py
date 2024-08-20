@@ -1,10 +1,10 @@
 """Test Kostal Plenticore helper."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pykoplenti import ApiClient, ExtendedApiClient, SettingsData
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.kostal_plenticore.const import DOMAIN
 from homeassistant.core import HomeAssistant

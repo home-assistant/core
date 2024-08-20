@@ -107,13 +107,6 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.abort_on_import_error(user_input[CONF_URL], "url_error")
                 return self.show_user_form(user_input, {"base": "url_error"})
 
-        if not feed.entries:
-            if self.context["source"] == SOURCE_IMPORT:
-                return self.abort_on_import_error(
-                    user_input[CONF_URL], "no_feed_entries"
-                )
-            return self.show_user_form(user_input, {"base": "no_feed_entries"})
-
         feed_title = feed["feed"]["title"]
 
         return self.async_create_entry(
@@ -161,13 +154,6 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
                     step_id="reconfigure_confirm",
                     errors={"base": "url_error"},
                 )
-        if not feed.entries:
-            return self.show_user_form(
-                user_input=user_input,
-                description_placeholders={"name": self._config_entry.title},
-                step_id="reconfigure_confirm",
-                errors={"base": "no_feed_entries"},
-            )
 
         self.hass.config_entries.async_update_entry(self._config_entry, data=user_input)
         return self.async_abort(reason="reconfigure_successful")

@@ -826,9 +826,6 @@ class SonosSpeaker:
                     f"{SONOS_VANISHED}-{uid}",
                     reason,
                 )
-
-        if "zone_player_uui_ds_in_group" not in event.variables:
-            return
         self.event_stats.process(event)
         self.hass.async_create_background_task(
             self.create_update_groups_coro(event),
@@ -857,8 +854,7 @@ class SonosSpeaker:
 
         async def _async_extract_group(event: SonosEvent | None) -> list[str]:
             """Extract group layout from a topology event."""
-            group = event and event.zone_player_uui_ds_in_group
-            if group:
+            if group := (event and getattr(event, "zone_player_uui_ds_in_group", None)):
                 assert isinstance(group, str)
                 return group.split(",")
 
@@ -867,11 +863,21 @@ class SonosSpeaker:
         @callback
         def _async_regroup(group: list[str]) -> None:
             """Rebuild internal group layout."""
+            _LOGGER.debug("async_regroup %s %s", self.zone_name, group)
             if (
                 group == [self.soco.uid]
                 and self.sonos_group == [self]
                 and self.sonos_group_entities
             ):
+                # Single speakers do not have a coodinator, check and clear
+                if self.coordinator is not None:
+                    _LOGGER.debug(
+                        "Zone %s Cleared coordinator [%s]",
+                        self.zone_name,
+                        self.coordinator.zone_name,
+                    )
+                    self.coordinator = None
+                    self.async_write_entity_states()
                 # Skip updating existing single speakers in polling mode
                 return
 
@@ -912,6 +918,11 @@ class SonosSpeaker:
                     joined_speaker.coordinator = self
                     joined_speaker.sonos_group = sonos_group
                     joined_speaker.sonos_group_entities = sonos_group_entities
+                    _LOGGER.debug(
+                        "Zone %s Set coordinator [%s]",
+                        joined_speaker.zone_name,
+                        self.zone_name,
+                    )
                     joined_speaker.async_write_entity_states()
 
             _LOGGER.debug("Regrouped %s: %s", self.zone_name, self.sonos_group_entities)

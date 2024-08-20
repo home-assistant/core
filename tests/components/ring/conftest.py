@@ -1,11 +1,11 @@
 """Configuration for Ring tests."""
 
+from collections.abc import Generator
 from itertools import chain
 from unittest.mock import AsyncMock, Mock, create_autospec, patch
 
 import pytest
 import ring_doorbell
-from typing_extensions import Generator
 
 from homeassistant.components.ring import DOMAIN
 from homeassistant.const import CONF_USERNAME

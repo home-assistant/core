@@ -1487,6 +1487,10 @@
     "on": {
       "on": true
     },
+    "owner": {
+      "rid": "7cee478d-6455-483a-9e32-9f9fdcbcc4f6",
+      "rtype": "zone"
+    },
     "type": "grouped_light"
   },
   {
@@ -1498,6 +1502,10 @@
     "on": {
       "on": true
     },
+    "owner": {
+      "rid": "7cee478d-6455-483a-9e32-9f9fdcbcc4f6",
+      "rtype": "zone"
+    },
     "type": "grouped_light"
   },
   {
@@ -1508,6 +1516,10 @@
     "id_v1": "/groups/3",
     "on": {
       "on": false
+    },
+    "owner": {
+      "rid": "7cee478d-6455-483a-9e32-9f9fdcbcc4f6",
+      "rtype": "zone"
     },
     "type": "grouped_light"
   },

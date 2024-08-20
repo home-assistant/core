@@ -16,8 +16,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -121,7 +119,7 @@ class KafkaManager:
         state = event.data["new_state"]
         if (
             state is None
-            or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE)
+            or state.state == ""
             or not self._entities_filter(state.entity_id)
         ):
             return None
@@ -141,7 +139,8 @@ class KafkaManager:
 
     async def write(self, event: Event[EventStateChangedData]) -> None:
         """Write a binary payload to Kafka."""
+        key = event.data["entity_id"].encode("utf-8")
         payload = self._encode_event(event)
 
         if payload:
-            await self._producer.send_and_wait(self._topic, payload)
+            await self._producer.send_and_wait(self._topic, payload, key)

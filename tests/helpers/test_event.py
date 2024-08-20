@@ -40,7 +40,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_state_change_filtered,
     async_track_state_removed_domain,
-    async_track_state_reported_event,
+    async_track_state_report_event,
     async_track_sunrise,
     async_track_sunset,
     async_track_template,
@@ -1476,7 +1476,7 @@ async def test_track_template_result_super_template_2(
     wildercard_runs = []
     wildercard_runs_availability = []
 
-    template_availability = Template(availability_template)
+    template_availability = Template(availability_template, hass)
     template_condition = Template("{{states.sensor.test.state}}", hass)
     template_condition_var = Template(
         "{{(states.sensor.test.state|int) + test }}", hass
@@ -1628,7 +1628,7 @@ async def test_track_template_result_super_template_2_initially_false(
     wildercard_runs = []
     wildercard_runs_availability = []
 
-    template_availability = Template(availability_template)
+    template_availability = Template(availability_template, hass)
     template_condition = Template("{{states.sensor.test.state}}", hass)
     template_condition_var = Template(
         "{{(states.sensor.test.state|int) + test }}", hass
@@ -3124,11 +3124,11 @@ async def test_async_track_template_result_multiple_templates(
 ) -> None:
     """Test tracking multiple templates."""
 
-    template_1 = Template("{{ states.switch.test.state == 'on' }}")
-    template_2 = Template("{{ states.switch.test.state == 'on' }}")
-    template_3 = Template("{{ states.switch.test.state == 'off' }}")
+    template_1 = Template("{{ states.switch.test.state == 'on' }}", hass)
+    template_2 = Template("{{ states.switch.test.state == 'on' }}", hass)
+    template_3 = Template("{{ states.switch.test.state == 'off' }}", hass)
     template_4 = Template(
-        "{{ states.binary_sensor | map(attribute='entity_id') | list }}"
+        "{{ states.binary_sensor | map(attribute='entity_id') | list }}", hass
     )
 
     refresh_runs = []
@@ -3188,11 +3188,12 @@ async def test_async_track_template_result_multiple_templates_mixing_domain(
 ) -> None:
     """Test tracking multiple templates when tracking entities and an entire domain."""
 
-    template_1 = Template("{{ states.switch.test.state == 'on' }}")
-    template_2 = Template("{{ states.switch.test.state == 'on' }}")
-    template_3 = Template("{{ states.switch.test.state == 'off' }}")
+    template_1 = Template("{{ states.switch.test.state == 'on' }}", hass)
+    template_2 = Template("{{ states.switch.test.state == 'on' }}", hass)
+    template_3 = Template("{{ states.switch.test.state == 'off' }}", hass)
     template_4 = Template(
-        "{{ states.switch | sort(attribute='entity_id') | map(attribute='entity_id') | list }}"
+        "{{ states.switch | sort(attribute='entity_id') | map(attribute='entity_id') | list }}",
+        hass,
     )
 
     refresh_runs = []
@@ -3417,8 +3418,8 @@ async def test_async_track_template_result_multiple_templates_mixing_listeners(
 ) -> None:
     """Test tracking multiple templates with mixing listener types."""
 
-    template_1 = Template("{{ states.switch.test.state == 'on' }}")
-    template_2 = Template("{{ now() and True }}")
+    template_1 = Template("{{ states.switch.test.state == 'on' }}", hass)
+    template_2 = Template("{{ now() and True }}", hass)
 
     refresh_runs = []
 
@@ -4916,8 +4917,8 @@ async def test_track_point_in_time_repr(
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
-async def test_async_track_state_reported_event(hass: HomeAssistant) -> None:
-    """Test async_track_state_reported_event."""
+async def test_async_track_state_report_event(hass: HomeAssistant) -> None:
+    """Test async_track_state_report_event."""
     tracker_called: list[ha.State] = []
 
     @ha.callback
@@ -4925,7 +4926,7 @@ async def test_async_track_state_reported_event(hass: HomeAssistant) -> None:
         new_state = event.data["new_state"]
         tracker_called.append(new_state)
 
-    unsub = async_track_state_reported_event(
+    unsub = async_track_state_report_event(
         hass, ["light.bowl", "light.top"], single_run_callback
     )
     hass.states.async_set("light.bowl", "on")

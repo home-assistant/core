@@ -1,10 +1,10 @@
 """Provide basic Ondilo fixture."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.ondilo_ico.const import DOMAIN
 

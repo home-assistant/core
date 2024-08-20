@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
 from datetime import timedelta
 import logging
 from typing import Any
@@ -43,6 +44,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_CREDENTIALS_HASH,
     CONF_DEVICE_CONFIG,
     CONNECT_TIMEOUT,
     DISCOVERY_TIMEOUT,
@@ -73,6 +75,7 @@ def async_trigger_discovery(
     discovered_devices: dict[str, Device],
 ) -> None:
     """Trigger config flows for discovered devices."""
+
     for formatted_mac, device in discovered_devices.items():
         discovery_flow.async_create_flow(
             hass,
@@ -83,7 +86,6 @@ def async_trigger_discovery(
                 CONF_HOST: device.host,
                 CONF_MAC: formatted_mac,
                 CONF_DEVICE_CONFIG: device.config.to_dict(
-                    credentials_hash=device.credentials_hash,
                     exclude_credentials=True,
                 ),
             },
@@ -133,6 +135,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
     """Set up TPLink from a config entry."""
     host: str = entry.data[CONF_HOST]
     credentials = await get_credentials(hass)
+    entry_credentials_hash = entry.data.get(CONF_CREDENTIALS_HASH)
 
     config: DeviceConfig | None = None
     if config_dict := entry.data.get(CONF_DEVICE_CONFIG):
@@ -151,19 +154,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
     config.timeout = CONNECT_TIMEOUT
     if config.uses_http is True:
         config.http_client = create_async_tplink_clientsession(hass)
+
+    # If we have in memory credentials use them otherwise check for credentials_hash
     if credentials:
         config.credentials = credentials
+    elif entry_credentials_hash:
+        config.credentials_hash = entry_credentials_hash
+
     try:
         device: Device = await Device.connect(config=config)
     except AuthenticationError as ex:
+        # If the stored credentials_hash was used but doesn't work remove it
+        if not credentials and entry_credentials_hash:
+            data = {k: v for k, v in entry.data.items() if k != CONF_CREDENTIALS_HASH}
+            hass.config_entries.async_update_entry(entry, data=data)
         raise ConfigEntryAuthFailed from ex
     except KasaException as ex:
         raise ConfigEntryNotReady from ex
 
-    device_config_dict = device.config.to_dict(
-        credentials_hash=device.credentials_hash, exclude_credentials=True
-    )
+    device_credentials_hash = device.credentials_hash
+    device_config_dict = device.config.to_dict(exclude_credentials=True)
+    # Do not store the credentials hash inside the device_config
+    device_config_dict.pop(CONF_CREDENTIALS_HASH, None)
     updates: dict[str, Any] = {}
+    if device_credentials_hash and device_credentials_hash != entry_credentials_hash:
+        updates[CONF_CREDENTIALS_HASH] = device_credentials_hash
     if device_config_dict != config_dict:
         updates[CONF_DEVICE_CONFIG] = device_config_dict
     if entry.data.get(CONF_ALIAS) != device.alias:
@@ -268,6 +283,28 @@ def mac_alias(mac: str) -> str:
     return mac.replace(":", "")[-4:].upper()
 
 
+def _mac_connection_or_none(device: dr.DeviceEntry) -> str | None:
+    return next(
+        (
+            conn
+            for type_, conn in device.connections
+            if type_ == dr.CONNECTION_NETWORK_MAC
+        ),
+        None,
+    )
+
+
+def _device_id_is_mac_or_none(mac: str, device_ids: Iterable[str]) -> str | None:
+    # Previously only iot devices had child devices and iot devices use
+    # the upper and lcase MAC addresses as device_id so match on case
+    # insensitive mac address as the parent device.
+    upper_mac = mac.upper()
+    return next(
+        (device_id for device_id in device_ids if device_id.upper() == upper_mac),
+        None,
+    )
+
+
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     version = config_entry.version
@@ -284,49 +321,66 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         # always be linked into one device.
         dev_reg = dr.async_get(hass)
         for device in dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id):
-            new_identifiers: set[tuple[str, str]] | None = None
-            if len(device.identifiers) > 1 and (
-                mac := next(
-                    iter(
-                        [
-                            conn[1]
-                            for conn in device.connections
-                            if conn[0] == dr.CONNECTION_NETWORK_MAC
-                        ]
-                    ),
-                    None,
+            original_identifiers = device.identifiers
+            # Get only the tplink identifier, could be tapo or other integrations.
+            tplink_identifiers = [
+                ident[1] for ident in original_identifiers if ident[0] == DOMAIN
+            ]
+            # Nothing to fix if there's only one identifier. mac connection
+            # should never be none but if it is there's no problem.
+            if len(tplink_identifiers) <= 1 or not (
+                mac := _mac_connection_or_none(device)
+            ):
+                continue
+            if not (
+                tplink_parent_device_id := _device_id_is_mac_or_none(
+                    mac, tplink_identifiers
                 )
             ):
-                for identifier in device.identifiers:
-                    # Previously only iot devices that use the MAC address as
-                    # device_id had child devices so check for mac as the
-                    # parent device.
-                    if identifier[0] == DOMAIN and identifier[1].upper() == mac.upper():
-                        new_identifiers = {identifier}
-                        break
-                if new_identifiers:
-                    dev_reg.async_update_device(
-                        device.id, new_identifiers=new_identifiers
-                    )
-                    _LOGGER.debug(
-                        "Replaced identifiers for device %s (%s): %s with: %s",
-                        device.name,
-                        device.model,
-                        device.identifiers,
-                        new_identifiers,
-                    )
-                else:
-                    # No match on mac so raise an error.
-                    _LOGGER.error(
-                        "Unable to replace identifiers for device %s (%s): %s",
-                        device.name,
-                        device.model,
-                        device.identifiers,
-                    )
+                # No match on mac so raise an error.
+                _LOGGER.error(
+                    "Unable to replace identifiers for device %s (%s): %s",
+                    device.name,
+                    device.model,
+                    device.identifiers,
+                )
+                continue
+            # Retain any identifiers for other domains
+            new_identifiers = {
+                ident for ident in device.identifiers if ident[0] != DOMAIN
+            }
+            new_identifiers.add((DOMAIN, tplink_parent_device_id))
+            dev_reg.async_update_device(device.id, new_identifiers=new_identifiers)
+            _LOGGER.debug(
+                "Replaced identifiers for device %s (%s): %s with: %s",
+                device.name,
+                device.model,
+                original_identifiers,
+                new_identifiers,
+            )
 
         minor_version = 3
         hass.config_entries.async_update_entry(config_entry, minor_version=3)
 
-        _LOGGER.debug("Migration to version %s.%s successful", version, minor_version)
+        _LOGGER.debug("Migration to version %s.%s complete", version, minor_version)
+
+    if version == 1 and minor_version == 3:
+        # credentials_hash stored in the device_config should be moved to data.
+        updates: dict[str, Any] = {}
+        if config_dict := config_entry.data.get(CONF_DEVICE_CONFIG):
+            assert isinstance(config_dict, dict)
+            if credentials_hash := config_dict.pop(CONF_CREDENTIALS_HASH, None):
+                updates[CONF_CREDENTIALS_HASH] = credentials_hash
+                updates[CONF_DEVICE_CONFIG] = config_dict
+        minor_version = 4
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data={
+                **config_entry.data,
+                **updates,
+            },
+            minor_version=minor_version,
+        )
+        _LOGGER.debug("Migration to version %s.%s complete", version, minor_version)
 
     return True

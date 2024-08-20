@@ -1,5 +1,6 @@
 """Test the tplink config flow."""
 
+import logging
 from unittest.mock import AsyncMock, patch
 
 from kasa import TimeoutError
@@ -11,11 +12,16 @@ from homeassistant.components.tplink import (
     DOMAIN,
     AuthenticationError,
     Credentials,
+    Device,
     DeviceConfig,
     KasaException,
 )
-from homeassistant.components.tplink.const import CONF_DEVICE_CONFIG
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.tplink.const import (
+    CONF_CONNECTION_TYPE,
+    CONF_CREDENTIALS_HASH,
+    CONF_DEVICE_CONFIG,
+)
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     CONF_ALIAS,
     CONF_DEVICE,
@@ -29,11 +35,15 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     ALIAS,
-    CREATE_ENTRY_DATA_AUTH,
-    CREATE_ENTRY_DATA_AUTH2,
+    CONNECTION_TYPE_KLAP_DICT,
+    CREATE_ENTRY_DATA_AES,
+    CREATE_ENTRY_DATA_KLAP,
     CREATE_ENTRY_DATA_LEGACY,
+    CREDENTIALS_HASH_AES,
+    CREDENTIALS_HASH_KLAP,
     DEFAULT_ENTRY_TITLE,
-    DEVICE_CONFIG_DICT_AUTH,
+    DEVICE_CONFIG_DICT_AES,
+    DEVICE_CONFIG_DICT_KLAP,
     DEVICE_CONFIG_DICT_LEGACY,
     DHCP_FORMATTED_MAC_ADDRESS,
     IP_ADDRESS,
@@ -129,7 +139,7 @@ async def test_discovery_auth(
             CONF_HOST: IP_ADDRESS,
             CONF_MAC: MAC_ADDRESS,
             CONF_ALIAS: ALIAS,
-            CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_AUTH,
+            CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_KLAP,
         },
     )
     await hass.async_block_till_done()
@@ -148,7 +158,7 @@ async def test_discovery_auth(
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == DEFAULT_ENTRY_TITLE
-    assert result2["data"] == CREATE_ENTRY_DATA_AUTH
+    assert result2["data"] == CREATE_ENTRY_DATA_KLAP
     assert result2["context"]["unique_id"] == MAC_ADDRESS
 
 
@@ -181,7 +191,7 @@ async def test_discovery_auth_errors(
             CONF_HOST: IP_ADDRESS,
             CONF_MAC: MAC_ADDRESS,
             CONF_ALIAS: ALIAS,
-            CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_AUTH,
+            CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_KLAP,
         },
     )
     await hass.async_block_till_done()
@@ -212,7 +222,7 @@ async def test_discovery_auth_errors(
         },
     )
     assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["data"] == CREATE_ENTRY_DATA_AUTH
+    assert result3["data"] == CREATE_ENTRY_DATA_KLAP
     assert result3["context"]["unique_id"] == MAC_ADDRESS
 
 
@@ -232,7 +242,7 @@ async def test_discovery_new_credentials(
             CONF_HOST: IP_ADDRESS,
             CONF_MAC: MAC_ADDRESS,
             CONF_ALIAS: ALIAS,
-            CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_AUTH,
+            CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_KLAP,
         },
     )
     await hass.async_block_till_done()
@@ -261,7 +271,7 @@ async def test_discovery_new_credentials(
         {},
     )
     assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["data"] == CREATE_ENTRY_DATA_AUTH
+    assert result3["data"] == CREATE_ENTRY_DATA_KLAP
     assert result3["context"]["unique_id"] == MAC_ADDRESS
 
 
@@ -284,7 +294,7 @@ async def test_discovery_new_credentials_invalid(
             CONF_HOST: IP_ADDRESS,
             CONF_MAC: MAC_ADDRESS,
             CONF_ALIAS: ALIAS,
-            CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_AUTH,
+            CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_KLAP,
         },
     )
     await hass.async_block_till_done()
@@ -317,7 +327,7 @@ async def test_discovery_new_credentials_invalid(
         },
     )
     assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["data"] == CREATE_ENTRY_DATA_AUTH
+    assert result3["data"] == CREATE_ENTRY_DATA_KLAP
     assert result3["context"]["unique_id"] == MAC_ADDRESS
 
 
@@ -537,7 +547,7 @@ async def test_manual_auth(
     await hass.async_block_till_done()
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == DEFAULT_ENTRY_TITLE
-    assert result3["data"] == CREATE_ENTRY_DATA_AUTH
+    assert result3["data"] == CREATE_ENTRY_DATA_KLAP
     assert result3["context"]["unique_id"] == MAC_ADDRESS
 
 
@@ -601,7 +611,7 @@ async def test_manual_auth_errors(
         },
     )
     assert result4["type"] is FlowResultType.CREATE_ENTRY
-    assert result4["data"] == CREATE_ENTRY_DATA_AUTH
+    assert result4["data"] == CREATE_ENTRY_DATA_KLAP
     assert result4["context"]["unique_id"] == MAC_ADDRESS
 
     await hass.async_block_till_done()
@@ -785,16 +795,16 @@ async def test_integration_discovery_with_ip_change(
             CONF_HOST: "127.0.0.2",
             CONF_MAC: MAC_ADDRESS,
             CONF_ALIAS: ALIAS,
-            CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_AUTH,
+            CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_KLAP,
         },
     )
     await hass.async_block_till_done()
     assert discovery_result["type"] is FlowResultType.ABORT
     assert discovery_result["reason"] == "already_configured"
-    assert mock_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_AUTH
+    assert mock_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_KLAP
     assert mock_config_entry.data[CONF_HOST] == "127.0.0.2"
 
-    config = DeviceConfig.from_dict(DEVICE_CONFIG_DICT_AUTH)
+    config = DeviceConfig.from_dict(DEVICE_CONFIG_DICT_KLAP)
 
     mock_connect["connect"].reset_mock(side_effect=True)
     bulb = _mocked_device(
@@ -808,6 +818,79 @@ async def test_integration_discovery_with_ip_change(
     # Check that init set the new host correctly before calling connect
     assert config.host == "127.0.0.1"
     config.host = "127.0.0.2"
+    mock_connect["connect"].assert_awaited_once_with(config=config)
+
+
+async def test_integration_discovery_with_connection_change(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
+) -> None:
+    """Test that config entry is updated with new device config.
+
+    And that connection_hash is removed as it will be invalid.
+    """
+    mock_connect["connect"].side_effect = KasaException()
+
+    mock_config_entry = MockConfigEntry(
+        title="TPLink",
+        domain=DOMAIN,
+        data=CREATE_ENTRY_DATA_AES,
+        unique_id=MAC_ADDRESS2,
+    )
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.tplink.Discover.discover", return_value={}):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        len(
+            hass.config_entries.flow.async_progress_by_handler(
+                DOMAIN, match_context={"source": SOURCE_REAUTH}
+            )
+        )
+        == 0
+    )
+    assert mock_config_entry.data[CONF_HOST] == "127.0.0.2"
+    assert mock_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_AES
+    assert mock_config_entry.data[CONF_DEVICE_CONFIG].get(CONF_HOST) == "127.0.0.2"
+    assert mock_config_entry.data[CONF_CREDENTIALS_HASH] == CREDENTIALS_HASH_AES
+
+    NEW_DEVICE_CONFIG = {
+        **DEVICE_CONFIG_DICT_KLAP,
+        CONF_CONNECTION_TYPE: CONNECTION_TYPE_KLAP_DICT,
+        CONF_HOST: "127.0.0.2",
+    }
+    config = DeviceConfig.from_dict(NEW_DEVICE_CONFIG)
+    # Reset the connect mock so when the config flow reloads the entry it succeeds
+    mock_connect["connect"].reset_mock(side_effect=True)
+    bulb = _mocked_device(
+        device_config=config,
+        mac=mock_config_entry.unique_id,
+    )
+    mock_connect["connect"].return_value = bulb
+
+    discovery_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            CONF_HOST: "127.0.0.2",
+            CONF_MAC: MAC_ADDRESS2,
+            CONF_ALIAS: ALIAS,
+            CONF_DEVICE_CONFIG: NEW_DEVICE_CONFIG,
+        },
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert discovery_result["type"] is FlowResultType.ABORT
+    assert discovery_result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_DEVICE_CONFIG] == NEW_DEVICE_CONFIG
+    assert mock_config_entry.data[CONF_HOST] == "127.0.0.2"
+    assert CREDENTIALS_HASH_AES not in mock_config_entry.data
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
     mock_connect["connect"].assert_awaited_once_with(config=config)
 
 
@@ -876,6 +959,77 @@ async def test_reauth(
     await hass.async_block_till_done()
 
 
+async def test_reauth_update_with_encryption_change(
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test reauth flow."""
+    orig_side_effect = mock_connect["connect"].side_effect
+    mock_connect["connect"].side_effect = AuthenticationError()
+    mock_config_entry = MockConfigEntry(
+        title="TPLink",
+        domain=DOMAIN,
+        data={**CREATE_ENTRY_DATA_AES},
+        unique_id=MAC_ADDRESS2,
+    )
+    mock_config_entry.add_to_hass(hass)
+    assert mock_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_AES
+    assert mock_config_entry.data[CONF_CREDENTIALS_HASH] == CREDENTIALS_HASH_AES
+
+    with patch("homeassistant.components.tplink.Discover.discover", return_value={}):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    caplog.set_level(logging.DEBUG)
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    [result] = flows
+    assert result["step_id"] == "reauth_confirm"
+    assert mock_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_AES
+    assert CONF_CREDENTIALS_HASH not in mock_config_entry.data
+
+    new_config = DeviceConfig(
+        "127.0.0.2",
+        credentials=None,
+        connection_type=Device.ConnectionParameters(
+            Device.Family.SmartTapoPlug, Device.EncryptionType.Klap
+        ),
+        uses_http=True,
+    )
+    mock_discovery["mock_device"].host = "127.0.0.2"
+    mock_discovery["mock_device"].config = new_config
+    mock_discovery["mock_device"].credentials_hash = None
+    mock_connect["mock_devices"]["127.0.0.2"].config = new_config
+    mock_connect["mock_devices"]["127.0.0.2"].credentials_hash = CREDENTIALS_HASH_KLAP
+
+    mock_connect["connect"].side_effect = orig_side_effect
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "fake_username",
+            CONF_PASSWORD: "fake_password",
+        },
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert "Connection type changed for 127.0.0.2" in caplog.text
+    credentials = Credentials("fake_username", "fake_password")
+    mock_discovery["discover_single"].assert_called_once_with(
+        "127.0.0.2", credentials=credentials
+    )
+    mock_discovery["mock_device"].update.assert_called_once_with()
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.data[CONF_DEVICE_CONFIG] == {
+        **DEVICE_CONFIG_DICT_KLAP,
+        CONF_HOST: "127.0.0.2",
+    }
+    assert mock_config_entry.data[CONF_CREDENTIALS_HASH] == CREDENTIALS_HASH_KLAP
+
+
 async def test_reauth_update_from_discovery(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -904,13 +1058,13 @@ async def test_reauth_update_from_discovery(
             CONF_HOST: IP_ADDRESS,
             CONF_MAC: MAC_ADDRESS,
             CONF_ALIAS: ALIAS,
-            CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_AUTH,
+            CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_KLAP,
         },
     )
     await hass.async_block_till_done()
     assert discovery_result["type"] is FlowResultType.ABORT
     assert discovery_result["reason"] == "already_configured"
-    assert mock_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_AUTH
+    assert mock_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_KLAP
 
 
 async def test_reauth_update_from_discovery_with_ip_change(
@@ -940,13 +1094,13 @@ async def test_reauth_update_from_discovery_with_ip_change(
             CONF_HOST: "127.0.0.2",
             CONF_MAC: MAC_ADDRESS,
             CONF_ALIAS: ALIAS,
-            CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_AUTH,
+            CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_KLAP,
         },
     )
     await hass.async_block_till_done()
     assert discovery_result["type"] is FlowResultType.ABORT
     assert discovery_result["reason"] == "already_configured"
-    assert mock_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_AUTH
+    assert mock_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_KLAP
     assert mock_config_entry.data[CONF_HOST] == "127.0.0.2"
 
 
@@ -963,7 +1117,7 @@ async def test_reauth_no_update_if_config_and_ip_the_same(
         mock_config_entry,
         data={
             **mock_config_entry.data,
-            CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_AUTH,
+            CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_KLAP,
         },
     )
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -974,7 +1128,7 @@ async def test_reauth_no_update_if_config_and_ip_the_same(
     assert len(flows) == 1
     [result] = flows
     assert result["step_id"] == "reauth_confirm"
-    assert mock_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_AUTH
+    assert mock_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_KLAP
 
     discovery_result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -983,13 +1137,13 @@ async def test_reauth_no_update_if_config_and_ip_the_same(
             CONF_HOST: IP_ADDRESS,
             CONF_MAC: MAC_ADDRESS,
             CONF_ALIAS: ALIAS,
-            CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_AUTH,
+            CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_KLAP,
         },
     )
     await hass.async_block_till_done()
     assert discovery_result["type"] is FlowResultType.ABORT
     assert discovery_result["reason"] == "already_configured"
-    assert mock_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_AUTH
+    assert mock_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_KLAP
     assert mock_config_entry.data[CONF_HOST] == IP_ADDRESS
 
 
@@ -1137,15 +1291,20 @@ async def test_discovery_timeout_connect(
 
 async def test_reauth_update_other_flows(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
 ) -> None:
     """Test reauth updates other reauth flows."""
+    mock_config_entry = MockConfigEntry(
+        title="TPLink",
+        domain=DOMAIN,
+        data={**CREATE_ENTRY_DATA_KLAP},
+        unique_id=MAC_ADDRESS,
+    )
     mock_config_entry2 = MockConfigEntry(
         title="TPLink",
         domain=DOMAIN,
-        data={**CREATE_ENTRY_DATA_AUTH2},
+        data={**CREATE_ENTRY_DATA_AES},
         unique_id=MAC_ADDRESS2,
     )
     default_side_effect = mock_connect["connect"].side_effect
@@ -1167,7 +1326,7 @@ async def test_reauth_update_other_flows(
     flows_by_entry_id = {flow["context"]["entry_id"]: flow for flow in flows}
     result = flows_by_entry_id[mock_config_entry.entry_id]
     assert result["step_id"] == "reauth_confirm"
-    assert mock_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_LEGACY
+    assert mock_config_entry.data[CONF_DEVICE_CONFIG] == DEVICE_CONFIG_DICT_KLAP
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
