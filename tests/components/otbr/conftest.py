@@ -72,7 +72,12 @@ def get_extended_address_fixture() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(name="otbr_config_entry_multipan")
-async def otbr_config_entry_multipan_fixture(hass: HomeAssistant) -> None:
+async def otbr_config_entry_multipan_fixture(
+    hass: HomeAssistant,
+    get_active_dataset_tlvs: AsyncMock,
+    get_border_agent_id: AsyncMock,
+    get_extended_address: AsyncMock,
+) -> None:
     """Mock Open Thread Border Router config entry."""
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA_MULTIPAN,
@@ -81,24 +86,16 @@ async def otbr_config_entry_multipan_fixture(hass: HomeAssistant) -> None:
         title="Open Thread Border Router",
     )
     config_entry.add_to_hass(hass)
-    with (
-        patch(
-            "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
-        ),
-        patch(
-            "python_otbr_api.OTBR.get_border_agent_id",
-            return_value=TEST_BORDER_AGENT_ID,
-        ),
-        patch(
-            "python_otbr_api.OTBR.get_extended_address",
-            return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
-        ),
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
 
 
 @pytest.fixture(name="otbr_config_entry_thread")
-async def otbr_config_entry_thread_fixture(hass: HomeAssistant) -> None:
+async def otbr_config_entry_thread_fixture(
+    hass: HomeAssistant,
+    get_active_dataset_tlvs: AsyncMock,
+    get_border_agent_id: AsyncMock,
+    get_extended_address: AsyncMock,
+) -> None:
     """Mock Open Thread Border Router config entry."""
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA_THREAD,
@@ -107,20 +104,7 @@ async def otbr_config_entry_thread_fixture(hass: HomeAssistant) -> None:
         title="Open Thread Border Router",
     )
     config_entry.add_to_hass(hass)
-    with (
-        patch(
-            "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
-        ),
-        patch(
-            "python_otbr_api.OTBR.get_border_agent_id",
-            return_value=TEST_BORDER_AGENT_ID,
-        ),
-        patch(
-            "python_otbr_api.OTBR.get_extended_address",
-            return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
-        ),
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
 
 
 @pytest.fixture(autouse=True)
