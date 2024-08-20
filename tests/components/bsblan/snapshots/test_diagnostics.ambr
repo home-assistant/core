@@ -53,6 +53,16 @@
       'uptime': 969402857,
       'version': '1.0.38-20200730234859',
     }),
+    'entry': dict({
+      'data': dict({
+        'host': '127.0.0.1',
+        'passkey': '1234',
+        'password': 'admin1234',
+        'port': 80,
+        'username': 'admin',
+      }),
+      'title': 'BSBLAN Setup',
+    }),
     'info': dict({
       'controller_family': dict({
         'data_type': 0,
