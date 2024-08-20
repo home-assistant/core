@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import timedelta
+from typing import Any
 
 from meteoalertapi import Meteoalert
 import voluptuous as vol
@@ -94,7 +96,7 @@ async def async_setup_entry(
     """Set up MeteoAlarm from config_entry."""
 
     try:
-        api = Meteoalert(
+        Meteoalert(
             entry.data[CONF_COUNTRY],
             entry.data[CONF_PROVINCE],
             entry.data[CONF_LANGUAGE],
@@ -103,8 +105,7 @@ async def async_setup_entry(
         LOGGER.error("Wrong country digits or province name")
         return
 
-    name = entry.data[CONF_NAME]
-    async_add_entities([MeteoAlertBinarySensor(api, name)], True)
+    async_add_entities([MeteoAlertBinarySensor(entry)], True)
 
 
 class MeteoAlertBinarySensor(BinarySensorEntity):
@@ -113,11 +114,16 @@ class MeteoAlertBinarySensor(BinarySensorEntity):
     _attr_attribution = ATTRIBUTION
     _attr_device_class = BinarySensorDeviceClass.SAFETY
 
-    def __init__(self, api: Meteoalert, name: str) -> None:
+    def __init__(self, config: Mapping[str, Any], entry_id: str | None = None) -> None:
         """Initialize the MeteoAlert binary sensor."""
-        self._attr_name = name
-        self._api = api
-        self._attr_unique_id = f"{api.country}_{api.province}_{api.language}"
+        self._api = Meteoalert(
+            country=config.data.get(CONF_COUNTRY),
+            province=config.data.get(CONF_PROVINCE),
+            language=config.data.get(CONF_LANGUAGE),
+        )
+        self._attr_unique_id = (
+            f"{self._api.country}_{self._api.province}_{self._api.language}"
+        )
 
     def update(self) -> None:
         """Update device state."""
