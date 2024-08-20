@@ -2,7 +2,7 @@
 
 import pytest
 
-from homeassistant.components.climate import PRESET_ECO, PRESET_SLEEP, HVACMode
+from homeassistant.components.climate import HVACMode
 from homeassistant.components.knx.schema import ClimateSchema
 from homeassistant.const import CONF_NAME, STATE_IDLE
 from homeassistant.core import HomeAssistant
@@ -331,7 +331,6 @@ async def test_climate_preset_mode(
             }
         }
     )
-    events = async_capture_events(hass, "state_changed")
 
     # StateUpdater initialize state
     # StateUpdater semaphore allows 2 concurrent requests
@@ -340,30 +339,28 @@ async def test_climate_preset_mode(
     await knx.receive_response("1/2/3", RAW_FLOAT_21_0)
     await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
     await knx.assert_read("1/2/7")
-    await knx.receive_response("1/2/7", (0x01,))
-    events.clear()
+    await knx.receive_response("1/2/7", (0x01,))  # comfort
 
+    knx.assert_state("climate.test", HVACMode.HEAT, preset_mode="comfort")
     # set preset mode
     await hass.services.async_call(
         "climate",
         "set_preset_mode",
-        {"entity_id": "climate.test", "preset_mode": PRESET_ECO},
+        {"entity_id": "climate.test", "preset_mode": "building_protection"},
         blocking=True,
     )
     await knx.assert_write("1/2/6", (0x04,))
-    assert len(events) == 1
-    events.pop()
+    knx.assert_state("climate.test", HVACMode.HEAT, preset_mode="building_protection")
 
     # set preset mode
     await hass.services.async_call(
         "climate",
         "set_preset_mode",
-        {"entity_id": "climate.test", "preset_mode": PRESET_SLEEP},
+        {"entity_id": "climate.test", "preset_mode": "economy"},
         blocking=True,
     )
     await knx.assert_write("1/2/6", (0x03,))
-    assert len(events) == 1
-    events.pop()
+    knx.assert_state("climate.test", HVACMode.HEAT, preset_mode="economy")
 
     assert len(knx.xknx.devices) == 2
     assert len(knx.xknx.devices[0].device_updated_cbs) == 2

@@ -63,7 +63,7 @@ async def setup_zones(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture(name="webhook_id")
-async def webhook_id_fixture(hass, client):
+async def webhook_id_fixture(hass: HomeAssistant, client: TestClient) -> str:
     """Initialize the Traccar component and get the webhook_id."""
     await async_process_ha_core_config(
         hass,
