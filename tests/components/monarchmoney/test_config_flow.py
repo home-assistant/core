@@ -6,7 +6,7 @@ from monarchmoney import LoginFailedException, RequireMFAException
 
 from homeassistant import config_entries
 from homeassistant.components.monarchmoney.const import CONF_MFA_CODE, DOMAIN
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
+from homeassistant.const import CONF_EMAIL, CONF_ID, CONF_PASSWORD, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -34,6 +34,7 @@ async def test_form_simple(
     assert result["title"] == "Monarch Money"
     assert result["data"] == {
         CONF_TOKEN: "mocked_token",
+        CONF_ID: "222260252323873333",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -79,6 +80,7 @@ async def test_form_invalid_auth(
     assert result["title"] == "Monarch Money"
     assert result["data"] == {
         CONF_TOKEN: "mocked_token",
+        CONF_ID: "222260252323873333",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -137,5 +139,6 @@ async def test_form_mfa(
     assert result["title"] == "Monarch Money"
     assert result["data"] == {
         CONF_TOKEN: "mocked_token",
+        CONF_ID: "222260252323873333",
     }
     assert len(mock_setup_entry.mock_calls) == 1

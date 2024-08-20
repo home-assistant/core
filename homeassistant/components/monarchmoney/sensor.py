@@ -159,7 +159,14 @@ async def async_setup_entry(
     """Set up Monarch Money sensors for config entries."""
     mm_coordinator = config_entry.runtime_data
 
-    async_add_entities(
+    entity_list = [
+        MonarchMoneyCashFlowSensor(
+            mm_coordinator,
+            sensor_description,
+            mm_coordinator.cashflow_summary,
+        )
+        for sensor_description in MONARCH_CASHFLOW_SENSORS
+    ] + [
         MonarchMoneySensor(
             mm_coordinator,
             sensor_description,
@@ -167,16 +174,9 @@ async def async_setup_entry(
         )
         for account in mm_coordinator.accounts
         for sensor_description in MONARCH_MONEY_SENSORS
-    )
+    ]
 
-    async_add_entities(
-        MonarchMoneyCashFlowSensor(
-            mm_coordinator,
-            sensor_description,
-            mm_coordinator.cashflow_summary,
-        )
-        for sensor_description in MONARCH_CASHFLOW_SENSORS
-    )
+    async_add_entities(entity_list)
 
 
 class MonarchMoneyCashFlowSensor(MonarchMoneyBaseEntity, SensorEntity):

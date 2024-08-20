@@ -10,7 +10,7 @@ from monarchmoney.monarchmoney import SESSION_FILE
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
+from homeassistant.const import CONF_EMAIL, CONF_ID, CONF_PASSWORD, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
@@ -86,7 +86,14 @@ async def validate_login(
             raise InvalidAuth from err
 
     LOGGER.debug(f"Connection successful - saving session to file {SESSION_FILE}")
-    return {"title": "Monarch Money", CONF_TOKEN: monarch_client.token}
+    LOGGER.debug("Obtaining subscription id")
+    subs = await monarch_client.get_subscription_details()
+    subscription_id = subs["subscription"]["id"]
+    return {
+        "title": "Monarch Money",
+        CONF_TOKEN: monarch_client.token,
+        CONF_ID: subscription_id,
+    }
 
 
 class MonarchMoneyConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -129,7 +136,8 @@ class MonarchMoneyConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             else:
                 return self.async_create_entry(
-                    title=info["title"], data={CONF_TOKEN: info[CONF_TOKEN]}
+                    title=info["title"],
+                    data={CONF_TOKEN: info[CONF_TOKEN], CONF_ID: info[CONF_ID]},
                 )
 
         return self.async_show_form(
