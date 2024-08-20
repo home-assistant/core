@@ -575,7 +575,7 @@ bleak-retry-connector==3.5.0
 bleak==0.22.2
 
 # homeassistant.components.blebox
-blebox-uniapi==2.4.2
+blebox-uniapi==2.5.0
 
 # homeassistant.components.blink
 blinkpy==0.23.0
