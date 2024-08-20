@@ -43,6 +43,12 @@
       },
       "ram_usage": {
         "name": "RAM usage"
+      },
+      "core_uptime": {
+        "name": "Core uptime"
+      },
+      "socket_uptime": {
+        "name": "Zigbee uptime"
       }
     }
   }
