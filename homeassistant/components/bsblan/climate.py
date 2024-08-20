@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from bsblan import BSBLAN, BSBLANError, Device, Info, StaticState
+from bsblan import BSBLANError
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -21,13 +21,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.enum import try_parse_enum
 
-from . import HomeAssistantBSBLANData
 from .const import ATTR_TARGET_TEMPERATURE, DOMAIN
-from .coordinator import BSBLanUpdateCoordinator
-from .entity import BSBLANEntity
+from .entity import BSBLanEntity
+from .models import BSBLanData
 
 PARALLEL_UPDATES = 1
 
@@ -49,27 +47,18 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up BSBLAN device based on a config entry."""
-    data: HomeAssistantBSBLANData = hass.data[DOMAIN][entry.entry_id]
+    data: BSBLanData = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [
             BSBLANClimate(
-                data.coordinator,
-                data.client,
-                data.device,
-                data.info,
-                data.static,
-                entry,
+                data,
             )
         ]
     )
 
 
-class BSBLANClimate(
-    BSBLANEntity, CoordinatorEntity["BSBLanUpdateCoordinator"], ClimateEntity
-):
+class BSBLANClimate(BSBLanEntity, ClimateEntity):
     """Defines a BSBLAN climate device."""
-
-    coordinator: BSBLanUpdateCoordinator
 
     _attr_has_entity_name = True
     _attr_name = None
@@ -87,21 +76,15 @@ class BSBLANClimate(
 
     def __init__(
         self,
-        coordinator: BSBLanUpdateCoordinator,
-        client: BSBLAN,
-        device: Device,
-        info: Info,
-        static: StaticState,
-        entry: ConfigEntry,
+        data: BSBLanData,
     ) -> None:
         """Initialize BSBLAN climate device."""
-        super().__init__(client, device, info, static, entry)
-        CoordinatorEntity.__init__(self, coordinator)
-        self._attr_unique_id = f"{format_mac(device.MAC)}-climate"
+        super().__init__(data.coordinator, data)
+        self._attr_unique_id = f"{format_mac(data.device.MAC)}-climate"
 
-        self._attr_min_temp = float(static.min_temp.value)
-        self._attr_max_temp = float(static.max_temp.value)
-        if static.min_temp.unit in ("&deg;C", "°C"):
+        self._attr_min_temp = float(data.static.min_temp.value)
+        self._attr_max_temp = float(data.static.max_temp.value)
+        if data.static.min_temp.unit in ("&deg;C", "°C"):
             self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         else:
             self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
@@ -171,7 +154,7 @@ class BSBLANClimate(
             else:
                 data[ATTR_HVAC_MODE] = kwargs[ATTR_PRESET_MODE]
         try:
-            await self.client.thermostat(**data)
+            await self.coordinator.client.thermostat(**data)
         except BSBLANError as err:
             raise HomeAssistantError(
                 "An error occurred while updating the BSBLAN device",
