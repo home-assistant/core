@@ -1571,7 +1571,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
-    'original_icon': 'mdi:checkbook',
+    'original_icon': None,
     'original_name': 'Balance',
     'platform': 'monarchmoney',
     'previous_unique_id': None,
@@ -1588,7 +1588,6 @@
       'device_class': 'monetary',
       'entity_picture': 'data:image/png;base64,base64Nonce',
       'friendly_name': 'Rando Bank Checking Balance',
-      'icon': 'mdi:checkbook',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': '$',
     }),
@@ -1721,7 +1720,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
-    'original_icon': 'mdi:chart-line',
+    'original_icon': None,
     'original_name': 'Balance',
     'platform': 'monarchmoney',
     'previous_unique_id': None,
@@ -1738,7 +1737,6 @@
       'device_class': 'monetary',
       'entity_picture': 'base64Nonce',
       'friendly_name': 'Rando Brokerage Brokerage Balance',
-      'icon': 'mdi:chart-line',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': '$',
     }),
@@ -1871,7 +1869,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
-    'original_icon': 'mdi:credit-card',
+    'original_icon': None,
     'original_name': 'Balance',
     'platform': 'monarchmoney',
     'previous_unique_id': None,
@@ -1888,7 +1886,6 @@
       'device_class': 'monetary',
       'entity_picture': 'data:image/png;base64,base64Nonce',
       'friendly_name': 'Rando Credit Credit Card Balance',
-      'icon': 'mdi:credit-card',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': '$',
     }),
@@ -2021,7 +2018,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
-    'original_icon': 'mdi:chart-line',
+    'original_icon': None,
     'original_name': 'Balance',
     'platform': 'monarchmoney',
     'previous_unique_id': None,
@@ -2038,7 +2035,6 @@
       'device_class': 'monetary',
       'entity_picture': 'data:image/png;base64,base64Nonce',
       'friendly_name': 'Rando Employer Investments 401.k Balance',
-      'icon': 'mdi:chart-line',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': '$',
     }),
@@ -2171,7 +2167,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
-    'original_icon': 'mdi:chart-line',
+    'original_icon': None,
     'original_name': 'Balance',
     'platform': 'monarchmoney',
     'previous_unique_id': None,
@@ -2188,7 +2184,6 @@
       'device_class': 'monetary',
       'entity_picture': 'data:image/png;base64,base64Nonce',
       'friendly_name': 'Rando Investments Roth IRA Balance',
-      'icon': 'mdi:chart-line',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': '$',
     }),
@@ -2321,7 +2316,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
-    'original_icon': 'mdi:home-city-outline',
+    'original_icon': None,
     'original_name': 'Balance',
     'platform': 'monarchmoney',
     'previous_unique_id': None,
@@ -2338,7 +2333,6 @@
       'device_class': 'monetary',
       'entity_picture': 'data:image/png;base64,base64Nonce',
       'friendly_name': 'Rando Mortgage Mortgage Balance',
-      'icon': 'mdi:home-city-outline',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': '$',
     }),
@@ -2536,7 +2530,7 @@
 # name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_data_age-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Monarch Money API via vin_audit',
+      'attribution': 'Data provided by Monarch Money API via Manual entry',
       'device_class': 'timestamp',
       'friendly_name': 'VinAudit 2050 Toyota RAV8 Data age',
     }),
@@ -2584,7 +2578,7 @@
 # name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_first_sync-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Monarch Money API via vin_audit',
+      'attribution': 'Data provided by Monarch Money API via Manual entry',
       'device_class': 'timestamp',
       'friendly_name': 'VinAudit 2050 Toyota RAV8 First sync',
     }),
@@ -2621,7 +2615,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
-    'original_icon': 'mdi:car',
+    'original_icon': None,
     'original_name': 'Value',
     'platform': 'monarchmoney',
     'previous_unique_id': None,
@@ -2634,11 +2628,10 @@
 # name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_value-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Monarch Money API via vin_audit',
+      'attribution': 'Data provided by Monarch Money API via Manual entry',
       'device_class': 'monetary',
       'entity_picture': 'https://api.monarchmoney.com/cdn-cgi/image/width=128/images/institution/159427559853802644',
       'friendly_name': 'VinAudit 2050 Toyota RAV8 Value',
-      'icon': 'mdi:car',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': '$',
     }),
@@ -2675,7 +2668,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
-    'original_icon': 'mdi:cash',
+    'original_icon': None,
     'original_name': 'Balance',
     'platform': 'monarchmoney',
     'previous_unique_id': None,
@@ -2688,11 +2681,10 @@
 # name: test_all_entities[sensor.zillow_house_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Monarch Money API via zillow',
+      'attribution': 'Data provided by Monarch Money API via Manual entry',
       'device_class': 'monetary',
       'entity_picture': 'data:image/png;base64,base64Nonce',
       'friendly_name': 'Zillow House Balance',
-      'icon': 'mdi:cash',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': '$',
     }),
@@ -2740,7 +2732,7 @@
 # name: test_all_entities[sensor.zillow_house_data_age-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Monarch Money API via zillow',
+      'attribution': 'Data provided by Monarch Money API via Manual entry',
       'device_class': 'timestamp',
       'friendly_name': 'Zillow House Data age',
     }),
@@ -2788,7 +2780,7 @@
 # name: test_all_entities[sensor.zillow_house_first_sync-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Monarch Money API via zillow',
+      'attribution': 'Data provided by Monarch Money API via Manual entry',
       'device_class': 'timestamp',
       'friendly_name': 'Zillow House First sync',
     }),
