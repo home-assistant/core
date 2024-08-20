@@ -16,11 +16,11 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
 
     try:
         await discoverer.get_address()
-        # address exists, there's at least one device
-        return True
-
     except DevicesNotFoundException:
         return False
+    else:
+        # address exists, there's at least one device
+        return True
 
 
 config_entry_flow.register_discovery_flow(DOMAIN, NAME, _async_has_devices)
