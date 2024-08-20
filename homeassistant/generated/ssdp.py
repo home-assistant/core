@@ -349,6 +349,18 @@ SSDP = {
             "manufacturer": "All Automacao Ltda",
         },
     ],
+    "yamaha": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "YAMAHA CORPORATION",
+            "st": "upnp:rootdevice",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "Yamaha Corporation",
+            "st": "upnp:rootdevice",
+        },
+    ],
     "yamaha_musiccast": [
         {
             "manufacturer": "Yamaha Corporation",
