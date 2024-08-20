@@ -9,6 +9,7 @@
         'id': '1',
         'light_status': True,
         'name': 'Test Garage 1',
+        'vacation_mode': False,
       }),
       '2': dict({
         'barrier_status': 'open',
@@ -17,6 +18,7 @@
         'id': '2',
         'light_status': False,
         'name': 'Test Garage 2',
+        'vacation_mode': True,
       }),
     }),
     'entry': dict({
@@ -36,7 +38,7 @@
       'pref_disable_polling': False,
       'source': 'user',
       'title': '**REDACTED**',
-      'unique_id': None,
+      'unique_id': '**REDACTED**',
       'version': 1,
     }),
   })
