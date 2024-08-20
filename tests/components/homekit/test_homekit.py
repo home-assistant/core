@@ -73,6 +73,7 @@ from homeassistant.helpers.entityfilter import (
     CONF_INCLUDE_DOMAINS,
     CONF_INCLUDE_ENTITIES,
     CONF_INCLUDE_ENTITY_GLOBS,
+    EntityFilter,
     convert_filter,
 )
 from homeassistant.setup import async_setup_component
@@ -119,7 +120,13 @@ def patch_source_ip():
         yield
 
 
-def _mock_homekit(hass, entry, homekit_mode, entity_filter=None, devices=None):
+def _mock_homekit(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    homekit_mode: str,
+    entity_filter: EntityFilter | None = None,
+    devices: list[str] | None = None,
+) -> HomeKit:
     return HomeKit(
         hass=hass,
         name=BRIDGE_NAME,
@@ -136,7 +143,7 @@ def _mock_homekit(hass, entry, homekit_mode, entity_filter=None, devices=None):
     )
 
 
-def _mock_homekit_bridge(hass, entry):
+def _mock_homekit_bridge(hass: HomeAssistant, entry: MockConfigEntry) -> HomeKit:
     homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)
     homekit.driver = MagicMock()
     homekit.iid_storage = MagicMock()

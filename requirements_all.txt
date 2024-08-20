@@ -100,7 +100,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.7.1
 
 # homeassistant.components.vicare
-PyViCare==2.32.0
+PyViCare-neo==0.2.1
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -359,7 +359,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==11.2.0
+aioshelly==11.2.4
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -404,7 +404,7 @@ aiowatttime==0.1.1
 aiowebostv==0.4.2
 
 # homeassistant.components.withings
-aiowithings==3.0.2
+aiowithings==3.0.3
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.5
@@ -464,7 +464,7 @@ apprise==1.8.0
 aprslib==0.7.2
 
 # homeassistant.components.apsystems
-apsystems-ez1==2.1.0
+apsystems-ez1==2.2.1
 
 # homeassistant.components.aqualogic
 aqualogic==2.6
@@ -1426,7 +1426,7 @@ nextdns==3.1.0
 nibe==2.11.0
 
 # homeassistant.components.nice_go
-nice-go==0.1.6
+nice-go==0.3.0
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
@@ -2210,6 +2210,9 @@ pysmartthings==0.7.8
 # homeassistant.components.edl21
 pysml==0.0.12
 
+# homeassistant.components.smlight
+pysmlight==0.0.12
+
 # homeassistant.components.snmp
 pysnmp==6.2.5
 
@@ -2344,7 +2347,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==2.5.0
+python-roborock==2.6.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
