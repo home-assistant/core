@@ -5,24 +5,15 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from thinqconnect.const import PROPERTY_READABLE, DeviceType
+from thinqconnect import PROPERTY_READABLE, DeviceType, ThinQApi
 from thinqconnect.devices.connect_device import ConnectBaseDevice, ConnectDeviceProfile
-from thinqconnect.thinq_api import ThinQApiResponse
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import (
-    DEVICE_TYPE_API_MAP,
-    DOMAIN,
-    NONE_KEY,
-    ErrorCode,
-    Profile,
-    PropertyMap,
-)
-from .thinq import ThinQ
+from .const import DEVICE_TYPE_API_MAP, DOMAIN, NONE_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,14 +24,13 @@ class LGDevice:
     def __init__(
         self,
         hass: HomeAssistant,
-        thinq: ThinQ,
+        thinq_api: ThinQApi,
         api: ConnectBaseDevice,
-        *,
         sub_id: str | None = None,
     ) -> None:
         """Initialize device."""
         self._hass = hass
-        self._thinq = thinq
+        self._thinq_api = thinq_api
         self._type: str = api.device_type
         self._id: str = api.device_id
         self._model: str = api.model_name
@@ -74,7 +64,9 @@ class LGDevice:
         self._api: ConnectBaseDevice = api.get_sub_device(self._sub_id) or api
 
         # Create property map form the given api instance.
-        self._property_map: PropertyMap = self._retrieve_profiles(self.api.profiles)
+        self._property_map: dict[str, dict[str, dict[str, Any]]] = (
+            self._retrieve_profiles(self.api.profiles)
+        )
 
         # A notification message is stored in this device instance instead of
         # the api instance.
@@ -147,7 +139,7 @@ class LGDevice:
         )
 
     @property
-    def property_map(self) -> PropertyMap:
+    def property_map(self) -> dict[str, dict[str, dict[str, Any]]]:
         """Returns the profile map."""
         return self._property_map
 
@@ -166,7 +158,9 @@ class LGDevice:
         return f"[{self.name}]"
 
     def _fill_property_map_with_none_key(
-        self, profiles: ConnectDeviceProfile, property_map: PropertyMap
+        self,
+        profiles: ConnectDeviceProfile,
+        property_map: dict[str, dict[str, dict[str, Any]]],
     ) -> None:
         if profiles.properties:
             for property_list in profiles.properties.values():
@@ -182,7 +176,7 @@ class LGDevice:
         location: str,
         properties: dict[str, list],
         sub_profile: ConnectDeviceProfile,
-        property_map: PropertyMap,
+        property_map: dict[str, dict[str, dict[str, Any]]],
     ) -> None:
         for property_list in properties.values():
             for prop in property_list:
@@ -197,7 +191,9 @@ class LGDevice:
                     continue
 
     def _fill_property_map_with_location(
-        self, profiles: ConnectDeviceProfile, property_map: PropertyMap
+        self,
+        profiles: ConnectDeviceProfile,
+        property_map: dict[str, dict[str, dict[str, Any]]],
     ) -> None:
         if profiles.location_properties:
             for location, properties in profiles.location_properties.items():
@@ -213,7 +209,9 @@ class LGDevice:
                         PROPERTY_READABLE: sub_profile.errors,
                     }
 
-    def _retrieve_profiles(self, profiles: ConnectDeviceProfile) -> PropertyMap:
+    def _retrieve_profiles(
+        self, profiles: ConnectDeviceProfile
+    ) -> dict[str, dict[str, dict[str, Any]]]:
         """Create profile map form the given api instance."""
         # The structure of the profile map is as follows:
         #
@@ -228,7 +226,7 @@ class LGDevice:
         #   }
         #
         # Note that "None" key means that profile has not any location info.
-        property_map: PropertyMap = {NONE_KEY: {}}
+        property_map: dict[str, dict[str, dict[str, Any]]] = {NONE_KEY: {}}
 
         # Get properties that do not have location information.
         self._fill_property_map_with_none_key(profiles, property_map)
@@ -252,12 +250,12 @@ class LGDevice:
 
         return property_map
 
-    def get_profile(self, location: str, name: str) -> Profile | None:
+    def get_profile(self, location: str, name: str) -> dict[str, Any] | None:
         """Return the profile for the given location and name."""
         profile_map = self.property_map.get(location)
         return profile_map.get(name) if profile_map else None
 
-    def get_profiles(self, name: str) -> dict[str, Profile | None]:
+    def get_profiles(self, name: str) -> dict[str, dict[str, Any] | None]:
         """Return the profile map with location as key for the given name."""
         return {
             location: profile_map.get(name)
@@ -265,53 +263,26 @@ class LGDevice:
             if name in profile_map
         }
 
-    async def async_get_device_profile(self) -> dict[str, Any] | None:
-        """Get the device profile from the server."""
-        result = await self._thinq.async_get_device_profile(self.id)
-        profile = result.get(self.sub_id) if self.sub_id and result else result
-
-        _LOGGER.debug("%s Get device profile: %s", self.tag, result)
-        return profile
-
     async def async_get_device_status(self) -> dict[str, Any] | None:
         """Get the device status from the server."""
-        result: ThinQApiResponse = await self._thinq.async_get_device_status(self.id)
+        result = await self._thinq_api.async_get_device_status(self.id)
         return self.handle_api_response(result)
 
-    async def async_post_device_status(self, body: Any) -> dict[str, Any] | None:
-        """Post a device status to the server."""
-        result = await self._thinq.async_post_device_status(self.id, body)
-        return self.handle_api_response(result, handle_error=True)
-
     def handle_api_response(
-        self, result: ThinQApiResponse, *, handle_error: bool = False
+        self, result, *, handle_error: bool = False
     ) -> dict[str, Any] | None:
         """Handle an api response."""
         _LOGGER.debug("%s API result: %s", self.tag, result)
 
-        if ThinQ.is_success(result):
+        if not result.error_message:
             return result.body
 
-        message: str = result.error_message
-        code: str = result.error_code
-
         # Disable entity when "Not connected device" (error_code 1222)
-        self._is_connected = code != ErrorCode.NOT_CONNECTED_DEVICE
+        self._is_connected = result.error_code != "1222"
 
         # Raise service validation error to show error popup on frontend.
         if handle_error:
-            translation_placeholders = {
-                "state": (
-                    message.split()[-1]
-                    if code
-                    in (
-                        ErrorCode.COMMAND_NOT_SUPPORTED_IN_STATE,
-                        ErrorCode.COMMAND_NOT_SUPPORTED_IN_MODE,
-                    )
-                    else ""
-                )
-            }
-            self.handle_error(message, code, translation_placeholders)
+            self.handle_error(result.error_message, result.error_code)
 
         return None
 
@@ -319,7 +290,6 @@ class LGDevice:
         self,
         message: str,
         translation_key: str | None = None,
-        translation_placeholders: dict[str, str] | None = None,
     ) -> None:
         """Hanlde an error."""
         # Rollback status data.
@@ -330,7 +300,6 @@ class LGDevice:
             message,
             translation_domain=DOMAIN,
             translation_key=translation_key,
-            translation_placeholders=translation_placeholders,
         )
 
     async def async_init_coordinator(self) -> None:
@@ -391,7 +360,7 @@ class LGDevice:
 
 
 async def async_setup_lg_device(
-    hass: HomeAssistant, thinq: ThinQ, device: dict[str, Any]
+    hass: HomeAssistant, thinq_api: ThinQApi, device: dict[str, Any]
 ) -> list[LGDevice] | None:
     """Create LG ThinQ Device and initialize."""
     device_id = device.get("deviceId")
@@ -416,16 +385,17 @@ async def async_setup_lg_device(
         return None
 
     # Get a device profile from the server.
-    profile = await thinq.async_get_device_profile(device_id)
-    if profile is None:
+    response = await thinq_api.async_get_device_profile(device_id)
+    if response.error_message:
         _LOGGER.warning("Failed to setup device(%s): no profile", device_id)
         return None
     device_group_id: str = device_info.get("groupId")
+    profile = response.body
 
     # Create new device api instance.
     api: ConnectBaseDevice = (
         constructor(
-            thinq_api=thinq.api,
+            thinq_api=thinq_api,
             device_id=device_id,
             device_type=device_type,
             model_name=device_info.get("modelName"),
@@ -436,7 +406,7 @@ async def async_setup_lg_device(
         )
         if device_group_id
         else constructor(
-            thinq_api=thinq.api,
+            thinq_api=thinq_api,
             device_id=device_id,
             device_type=device_type,
             model_name=device_info.get("modelName"),
@@ -459,11 +429,11 @@ async def async_setup_lg_device(
     # Create new lg device instances.
     lg_device_list: list[LGDevice] = []
     for sub_id in device_sub_ids:
-        lg_device = LGDevice(hass, thinq, api, sub_id=sub_id)
+        lg_device = LGDevice(hass, thinq_api, api, sub_id=sub_id)
         await lg_device.async_init_coordinator()
 
         # Finally add a lg device into the result list.
         lg_device_list.append(lg_device)
-        _LOGGER.warning("Setup lg device: %s", lg_device)
+        _LOGGER.debug("Setup lg device: %s", lg_device)
 
     return lg_device_list

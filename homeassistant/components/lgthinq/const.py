@@ -1,8 +1,7 @@
 """Constants for LG ThinQ."""
 
 # Base component constants.
-from enum import StrEnum
-from typing import Any, Final
+from typing import Final
 
 from thinqconnect import (
     AirConditionerDevice,
@@ -85,41 +84,6 @@ DEVICE_TYPE_API_MAP: Final = {
     DeviceType.WATER_PURIFIER: WaterPurifierDevice,
     DeviceType.WINE_CELLAR: WineCellarDevice,
 }
-
-
-# Error Code
-class ErrorCode(StrEnum):
-    """Error codes of ThinQ Connect API."""
-
-    INVALID_TOKEN = "1218"
-    NOT_CONNECTED_DEVICE = "1222"
-    NOT_ACCEPTABLE_TERMS = "1304"
-    EXCEEDED_API_CALLS = "1306"
-    NOT_SUPPORTED_COUNTRY = "1307"
-    EXCEEDED_USER_API_CALLS = "1314"
-    COMMAND_NOT_SUPPORTED_IN_STATE = "2302"
-    COMMAND_NOT_SUPPORTED_IN_MODE = "2305"
-
-
-# Support translation during ConfigEntry using translation_key by ErrorCode
-TRANSLATION_ERROR_CODE: Final = [
-    ErrorCode.INVALID_TOKEN,
-    ErrorCode.NOT_ACCEPTABLE_TERMS,
-    ErrorCode.EXCEEDED_API_CALLS,
-    ErrorCode.NOT_SUPPORTED_COUNTRY,
-    ErrorCode.EXCEEDED_USER_API_CALLS,
-]
-
-
-# Service Attributes
-SERVICE_ATTR_DEVICE_INFO: Final = "device_info"
-SERVICE_ATTR_RESULT: Final = "result"
-SERVICE_ATTR_VALUE: Final = "value"
-
-# Types for profile and property.
-type Profile = dict[str, Any]
-type ProfileMap = dict[str, Profile]
-type PropertyMap = dict[str, ProfileMap]
 
 # Misc
 NONE_KEY: Final = "_"

@@ -11,13 +11,12 @@ import logging
 import math
 from typing import Any
 
-from thinqconnect.const import PROPERTY_READABLE, PROPERTY_WRITABLE
+from thinqconnect import PROPERTY_READABLE, PROPERTY_WRITABLE, ThinQApiResponse
 from thinqconnect.devices.connect_device import TYPE, UNIT, ConnectBaseDevice
-from thinqconnect.thinq_api import ThinQApiResponse
 
 from homeassistant.const import Platform
 
-from .const import NONE_KEY, POWER_ON, Profile
+from .const import NONE_KEY, POWER_ON
 from .device import LGDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,13 +76,13 @@ class Range:
         return options
 
     @classmethod
-    def create(cls, profile: Profile) -> Range | None:
+    def create(cls, profile: dict[str, Any]) -> Range | None:
         """Create a range instance."""
         value: Any = profile.get(PROPERTY_WRITABLE) or profile.get(PROPERTY_READABLE)
         return cls(value) if isinstance(value, dict) else None
 
     @staticmethod
-    def range_to_options(profile: Profile) -> list[str]:
+    def range_to_options(profile: dict[str, Any]) -> list[str]:
         """Create a range instance and then convert it to options."""
         value_range = Range.create(profile)
         return value_range.to_options() if value_range else []
@@ -166,7 +165,7 @@ class PropertyInfo:
 
     # Optional, if an alternative options is needed. The arguments of
     # of this method must be profile of the proerty.
-    alt_options_provider: Callable[[Profile], list[str]] | None = None
+    alt_options_provider: Callable[[dict[str, Any]], list[str]] | None = None
 
     # Optional, if an alternative get method is needed. The arguments
     # of this method must be property itself.
@@ -202,13 +201,13 @@ class Property:
         device: LGDevice,
         info: PropertyInfo,
         *,
-        profile: Profile | None = None,
+        profile: dict[str, Any] | None = None,
         location: str | None = None,
     ) -> None:
         """Initialize a property."""
         self._device: LGDevice = device
         self._info: PropertyInfo = info
-        self._profile: Profile = profile or {}
+        self._profile: dict[str, Any] = profile or {}
 
         # If location is NONE_KEY("_") then it should be None.
         self._location: str | None = None if location == NONE_KEY else location
@@ -242,7 +241,7 @@ class Property:
         return self._info
 
     @property
-    def profile(self) -> Profile:
+    def profile(self) -> dict[str, Any]:
         """Returns the profile data."""
         return self._profile
 
@@ -460,7 +459,7 @@ class Property:
     async def async_post_value(self, value: Any) -> ThinQApiResponse:
         """Request to post the property value."""
         if not self.writable:
-            _LOGGER.error(
+            _LOGGER.warning(
                 "%s Failed to async_post_value: %s", self.tag, "not writable."
             )
             self.device.handle_error("The control command is not supported.", "0001")
@@ -473,7 +472,7 @@ class Property:
         try:
             result = await self._async_post_value(value)
         except ValueError as e:
-            _LOGGER.error(
+            _LOGGER.warning(
                 "%s Failed to async_post_value: %s, %s",
                 self.tag,
                 value,
@@ -489,7 +488,7 @@ class Property:
                 )
                 result = await self.info.alt_post_method(self, value)
             else:
-                _LOGGER.error(
+                _LOGGER.warning(
                     "%s Failed to async_post_value: %s (%s), %s",
                     self.tag,
                     value,
@@ -713,7 +712,7 @@ def create_property(
     device: LGDevice,
     info: PropertyInfo,
     platform: Platform,
-    profile: Profile | None,
+    profile: dict[str, Any] | None,
     location: str,
 ) -> Property:
     """Create a property."""
@@ -741,7 +740,7 @@ def create_property(
 
 
 def validate_platform_creation(
-    info: PropertyInfo, platform: Platform, profile: Profile | None
+    info: PropertyInfo, platform: Platform, profile: dict[str, Any] | None
 ) -> bool:
     """Validate whether property can be created for the platform."""
     if not profile:
