@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections import deque
 import functools
+from itertools import chain
 import logging
 import re
 import time
@@ -339,12 +340,6 @@ async def async_start(  # noqa: C901
                 hass, MQTT_DISCOVERY_DONE.format(*discovery_hash), None
             )
 
-    discovery_topics = [
-        f"{discovery_topic}/{component}/+/config" for component in SUPPORTED_COMPONENTS
-    ] + [
-        f"{discovery_topic}/{component}/+/+/config"
-        for component in SUPPORTED_COMPONENTS
-    ]
     mqtt_data.discovery_unsubscribe = [
         mqtt.async_subscribe_internal(
             hass,
@@ -353,7 +348,16 @@ async def async_start(  # noqa: C901
             0,
             job_type=HassJobType.Callback,
         )
-        for topic in discovery_topics
+        for topic in chain(
+            (
+                f"{discovery_topic}/{component}/+/config"
+                for component in SUPPORTED_COMPONENTS
+            ),
+            (
+                f"{discovery_topic}/{component}/+/+/config"
+                for component in SUPPORTED_COMPONENTS
+            ),
+        )
     ]
 
     mqtt_data.last_discovery = time.monotonic()
