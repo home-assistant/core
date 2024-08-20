@@ -151,6 +151,34 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
 )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: MonarchMoneyConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Monarch Money sensors for config entries."""
+    mm_coordinator = config_entry.runtime_data
+
+    async_add_entities(
+        MonarchMoneySensor(
+            mm_coordinator,
+            sensor_description,
+            account,
+        )
+        for account in mm_coordinator.accounts
+        for sensor_description in MONARCH_MONEY_SENSORS
+    )
+
+    async_add_entities(
+        MonarchMoneyCashFlowSensor(
+            mm_coordinator,
+            sensor_description,
+            mm_coordinator.cashflow_summary,
+        )
+        for sensor_description in MONARCH_CASHFLOW_SENSORS
+    )
+
+
 class MonarchMoneyCashFlowSensor(MonarchMoneyBaseEntity, SensorEntity):
     """Cashflow summary sensor."""
 
@@ -185,31 +213,3 @@ class MonarchMoneySensor(MonarchMoneyAccountEntity, SensorEntity):
         if self.entity_description.icon_fn is not None:
             return self.entity_description.icon_fn(self.account_data)
         return None
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: MonarchMoneyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up Monarch Money sensors for config entries."""
-    mm_coordinator = config_entry.runtime_data
-
-    async_add_entities(
-        MonarchMoneySensor(
-            mm_coordinator,
-            sensor_description,
-            account,
-        )
-        for account in mm_coordinator.accounts
-        for sensor_description in MONARCH_MONEY_SENSORS
-    )
-
-    async_add_entities(
-        MonarchMoneyCashFlowSensor(
-            mm_coordinator,
-            sensor_description,
-            mm_coordinator.cashflow_summary,
-        )
-        for sensor_description in MONARCH_CASHFLOW_SENSORS
-    )
