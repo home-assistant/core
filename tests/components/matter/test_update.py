@@ -14,6 +14,11 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
+from homeassistant.components.update import (
+    ATTR_VERSION,
+    DOMAIN as UPDATE_DOMAIN,
+    SERVICE_INSTALL,
+)
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -141,8 +146,8 @@ async def test_update_install(
     )
 
     await hass.services.async_call(
-        "update",
-        "install",
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
         {
             ATTR_ENTITY_ID: "update.mock_dimmable_light",
         },
@@ -251,11 +256,11 @@ async def test_update_install_failure(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            "update",
-            "install",
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
             {
                 ATTR_ENTITY_ID: "update.mock_dimmable_light",
-                "version": "v3.0",
+                ATTR_VERSION: "v3.0",
             },
             blocking=True,
         )
@@ -264,11 +269,11 @@ async def test_update_install_failure(
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            "update",
-            "install",
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
             {
                 ATTR_ENTITY_ID: "update.mock_dimmable_light",
-                "version": "v3.0",
+                ATTR_VERSION: "v3.0",
             },
             blocking=True,
         )
@@ -365,8 +370,8 @@ async def test_update_state_restore(
     assert state.attributes.get("latest_version") == "v2.0"
 
     await hass.services.async_call(
-        "update",
-        "install",
+        UPDATE_DOMAIN,
+        SERVICE_INSTALL,
         {
             ATTR_ENTITY_ID: "update.mock_dimmable_light",
         },
