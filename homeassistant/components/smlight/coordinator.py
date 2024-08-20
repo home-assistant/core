@@ -2,8 +2,8 @@
 
 from dataclasses import dataclass
 
+from pysmlight import Api2, Info, Sensors
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
-from pysmlight.web import Api2, Info, Sensors
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME

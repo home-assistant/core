@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from pysmlight import Api2
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
-from pysmlight.web import Api2
 import voluptuous as vol
 
 from homeassistant.components import zeroconf

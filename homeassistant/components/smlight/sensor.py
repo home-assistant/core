@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from pysmlight.web import Sensors
+from pysmlight import Sensors
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
