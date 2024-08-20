@@ -2,15 +2,15 @@
 
 from typing import Any
 
-from linkplay.discovery import linkplay_factory_bridge
+from aiohttp import ClientSession
+from linkplay.discovery import linkplay_factory_httpapi_bridge
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MODEL
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DATA_SESSION, DOMAIN
 
 
 class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -25,8 +25,8 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle Zeroconf discovery."""
 
-        session = async_get_clientsession(self.hass)
-        bridge = await linkplay_factory_bridge(discovery_info.host, session)
+        session: ClientSession = self.hass.data[DOMAIN][DATA_SESSION]
+        bridge = await linkplay_factory_httpapi_bridge(discovery_info.host, session)
 
         if bridge is None:
             return self.async_abort(reason="cannot_connect")
@@ -66,8 +66,10 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
         if user_input:
-            session = async_get_clientsession(self.hass)
-            bridge = await linkplay_factory_bridge(user_input[CONF_HOST], session)
+            session: ClientSession = self.hass.data[DOMAIN][DATA_SESSION]
+            bridge = await linkplay_factory_httpapi_bridge(
+                user_input[CONF_HOST], session
+            )
 
             if bridge is not None:
                 self.data[CONF_HOST] = user_input[CONF_HOST]
