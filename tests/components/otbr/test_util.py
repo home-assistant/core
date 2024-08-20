@@ -1,6 +1,6 @@
 """Test OTBR Utility functions."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import python_otbr_api
@@ -32,10 +32,13 @@ async def test_get_allowed_channel(
 
 
 async def test_factory_reset(
-    hass: HomeAssistant, otbr_config_entry_multipan: str
+    hass: HomeAssistant,
+    otbr_config_entry_multipan: str,
+    get_extended_address: AsyncMock,
 ) -> None:
     """Test factory_reset."""
     new_xa = b"new_xa"
+    get_extended_address.return_value = new_xa
     config_entry = hass.config_entries.async_get_entry(otbr_config_entry_multipan)
     assert config_entry.unique_id != new_xa.hex()
     with (
@@ -43,7 +46,6 @@ async def test_factory_reset(
         patch(
             "python_otbr_api.OTBR.delete_active_dataset"
         ) as delete_active_dataset_mock,
-        patch("python_otbr_api.OTBR.get_extended_address", return_value=new_xa),
     ):
         await hass.data[otbr.DATA_OTBR][otbr_config_entry_multipan].factory_reset(hass)
 
@@ -55,6 +57,7 @@ async def test_factory_reset(
     assert config_entry.unique_id == new_xa.hex()
 
 
+@pytest.mark.usefixtures("get_extended_address")
 async def test_factory_reset_not_supported(
     hass: HomeAssistant, otbr_config_entry_multipan: str
 ) -> None:
