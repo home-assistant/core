@@ -42,6 +42,12 @@ async def _disable_charging(coordinator: TechnoVEDataUpdateCoordinator) -> None:
     await _set_charging_enabled(coordinator, False)
 
 
+async def _set_auto_charge(
+    coordinator: TechnoVEDataUpdateCoordinator, enabled: bool
+) -> None:
+    await coordinator.technove.set_auto_charge(enabled=enabled)
+
+
 @dataclass(frozen=True, kw_only=True)
 class TechnoVESwitchDescription(SwitchEntityDescription):
     """Describes TechnoVE binary sensor entity."""
@@ -57,12 +63,8 @@ SWITCHES = [
         translation_key="auto_charge",
         entity_category=EntityCategory.CONFIG,
         is_on_fn=lambda station: station.info.auto_charge,
-        turn_on_fn=lambda coordinator: coordinator.technove.set_auto_charge(
-            enabled=True
-        ),
-        turn_off_fn=lambda coordinator: coordinator.technove.set_auto_charge(
-            enabled=False
-        ),
+        turn_on_fn=lambda coordinator: _set_auto_charge(coordinator, True),
+        turn_off_fn=lambda coordinator: _set_auto_charge(coordinator, False),
     ),
     TechnoVESwitchDescription(
         key="session_active",
