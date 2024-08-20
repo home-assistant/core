@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
+from itertools import chain
 
 from pysmlight import Sensors
 
@@ -16,8 +18,10 @@ from homeassistant.components.sensor import (
 from homeassistant.const import EntityCategory, UnitOfInformation, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.dt import utcnow
 
 from . import SmConfigEntry
+from .const import UPTIME_DEVIATION
 from .coordinator import SmDataUpdateCoordinator
 from .entity import SmEntity
 
@@ -67,6 +71,23 @@ SENSORS = [
     ),
 ]
 
+UPTIME = [
+    SmSensorEntityDescription(
+        key="core_uptime",
+        translation_key="core_uptime",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
+        value_fn=lambda x: x.uptime,
+    ),
+    SmSensorEntityDescription(
+        key="socket_uptime",
+        translation_key="socket_uptime",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
+        value_fn=lambda x: x.socket_uptime,
+    ),
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -77,7 +98,10 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     async_add_entities(
-        SmSensorEntity(coordinator, description) for description in SENSORS
+        chain(
+            (SmSensorEntity(coordinator, description) for description in SENSORS),
+            (SmUptimeSensorEntity(coordinator, description) for description in UPTIME),
+        )
     )
 
 
@@ -98,6 +122,48 @@ class SmSensorEntity(SmEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> datetime | float | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.data.sensors)
+
+
+class SmUptimeSensorEntity(SmSensorEntity):
+    """Representation of a slzb uptime sensor."""
+
+    def __init__(
+        self,
+        coordinator: SmDataUpdateCoordinator,
+        description: SmSensorEntityDescription,
+    ) -> None:
+        "Initialize uptime sensor instance."
+        super().__init__(coordinator, description)
+        self._last_uptime: datetime | None = None
+
+    def get_uptime(self, uptime: float | None) -> datetime | None:
+        """Return device uptime or zigbee socket uptime.
+
+        Converts uptime from seconds to a datetime value, allow up to 5
+        seconds deviation. This avoids unnecessary updates to sensor state,
+        that may be caused by clock jitter.
+        """
+        if uptime is None:
+            # reset to unknown state
+            self._last_uptime = None
+            return None
+
+        new_uptime = utcnow() - timedelta(seconds=uptime)
+
+        if (
+            not self._last_uptime
+            or abs(new_uptime - self._last_uptime) > UPTIME_DEVIATION
+        ):
+            self._last_uptime = new_uptime
+
+        return self._last_uptime
+
+    @property
+    def native_value(self) -> datetime | None:
+        """Return the sensor value."""
+        value = self.entity_description.value_fn(self.coordinator.data.sensors)
+
+        return self.get_uptime(value)
