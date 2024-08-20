@@ -47,11 +47,31 @@ class MonarchAccount:
 
 
 @dataclass
+class MonarchCashflow:
+    """Cashflow data class."""
+
+    income: float
+    expenses: float
+    savings: float
+    savings_rate: float
+
+
+@dataclass
 class MonarchData:
     """Data class to hold monarch data."""
 
     account_data: list[MonarchAccount]
-    cashflow_summary: dict[str, Any]
+    cashflow_summary: MonarchCashflow
+
+
+def _build_cashflow(data: dict[str, Any]) -> MonarchCashflow:
+    """Build a monarch cashflow object."""
+    return MonarchCashflow(
+        income=data["sumIncome"],
+        expenses=data["sumExpense"],
+        savings=data["savings"],
+        savings_rate=data["savingsRate"],
+    )
 
 
 def _build_monarch_account(data: dict[str, Any]) -> MonarchAccount:
@@ -116,11 +136,11 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
             account_data=[
                 _build_monarch_account(acc) for acc in account_data["accounts"]
             ],
-            cashflow_summary=cashflow_summary["summary"][0]["summary"],
+            cashflow_summary=_build_cashflow(cashflow_summary["summary"][0]["summary"]),
         )
 
     @property
-    def cashflow_summary(self) -> dict[str, Any]:
+    def cashflow_summary(self) -> MonarchCashflow:
         """Return cashflow summary."""
         return self.data.cashflow_summary
 

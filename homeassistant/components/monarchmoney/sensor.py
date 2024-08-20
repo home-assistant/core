@@ -28,6 +28,7 @@ class MonarchMoneySensorEntityDescription(SensorEntityDescription):
     picture_fn: Callable[[Any], str] | None = None
 
 
+# These sensors include assets like a boat that might have value
 MONARCH_MONEY_VALUE_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
     MonarchMoneySensorEntityDescription(
         key="value",
@@ -40,6 +41,7 @@ MONARCH_MONEY_VALUE_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
     ),
 )
 
+# Most accounts are balance sensors
 MONARCH_MONEY_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
     MonarchMoneySensorEntityDescription(
         key="currentBalance",
@@ -73,7 +75,7 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
     MonarchMoneySensorEntityDescription(
         key="sum_income",
         translation_key="sum_income",
-        value_fn=lambda summary: summary["sumIncome"],
+        value_fn=lambda summary: summary.income,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=CURRENCY_DOLLAR,
@@ -82,7 +84,7 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
     MonarchMoneySensorEntityDescription(
         key="sum_expense",
         translation_key="sum_expense",
-        value_fn=lambda summary: summary["sumExpense"],
+        value_fn=lambda summary: summary.expenses,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=CURRENCY_DOLLAR,
@@ -91,7 +93,7 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
     MonarchMoneySensorEntityDescription(
         key="savings",
         translation_key="savings",
-        value_fn=lambda summary: summary["savings"],
+        value_fn=lambda summary: summary.savings,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement=CURRENCY_DOLLAR,
@@ -100,7 +102,7 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
     MonarchMoneySensorEntityDescription(
         key="savings_rate",
         translation_key="savings_rate",
-        value_fn=lambda summary: summary["savingsRate"] * 100,
+        value_fn=lambda summary: summary.savings_rate * 100,
         suggested_display_precision=1,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:cash-sync",

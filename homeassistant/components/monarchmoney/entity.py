@@ -7,7 +7,11 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import MonarchAccount, MonarchMoneyDataUpdateCoordinator
+from .coordinator import (
+    MonarchAccount,
+    MonarchCashflow,
+    MonarchMoneyDataUpdateCoordinator,
+)
 
 
 class MonarchMoneyEntityBase(CoordinatorEntity[MonarchMoneyDataUpdateCoordinator]):
@@ -44,7 +48,7 @@ class MonarchMoneyCashFlowEntity(MonarchMoneyEntityBase):
         )
 
     @property
-    def summary_data(self) -> Any:
+    def summary_data(self) -> MonarchCashflow:
         """Return cashflow summary data."""
         return self.coordinator.cashflow_summary
 
