@@ -49,8 +49,8 @@ _HRS_TO_SECS = _HRS_TO_MINUTES * _MIN_TO_SEC  # 1 hr = 60 minutes = 3600 seconds
 _DAYS_TO_SECS = 24 * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
 
 # Energy conversion constants
-_WH_TO_J: Final = 3600  # 1 Wh = 3600 J
-_CAL_TO_J: Final = 4.184  # 1 cal = 4.184 J
+_WH_TO_J = 3600  # 1 Wh = 3600 J
+_WH_TO_CAL = _WH_TO_J / 4.184  # 1 cal = 4.184 J
 
 # Mass conversion constants
 _POUND_TO_G = 453.59237
