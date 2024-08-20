@@ -18,7 +18,7 @@ from homeassistant.helpers.typing import StateType
 
 from . import MonarchMoneyConfigEntry
 from .const import LOGGER
-from .entity import MonarchMoneyAccountEntity, MonarchMoneyBaseEntity
+from .entity import MonarchMoneyAccountEntity, MonarchMoneyCashFlowEntity
 
 
 def _type_to_icon(account: Any) -> str:
@@ -179,7 +179,7 @@ async def async_setup_entry(
     async_add_entities(entity_list)
 
 
-class MonarchMoneyCashFlowSensor(MonarchMoneyBaseEntity, SensorEntity):
+class MonarchMoneyCashFlowSensor(MonarchMoneyCashFlowEntity, SensorEntity):
     """Cashflow summary sensor."""
 
     entity_description: MonarchMoneySensorEntityDescription

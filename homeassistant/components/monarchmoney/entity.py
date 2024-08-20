@@ -10,10 +10,19 @@ from .const import DOMAIN
 from .coordinator import MonarchMoneyDataUpdateCoordinator
 
 
-class MonarchMoneyBaseEntity(CoordinatorEntity[MonarchMoneyDataUpdateCoordinator]):
-    """Custom entity for Cashflow sensors."""
+class MonarchMoneyEntityBase(CoordinatorEntity[MonarchMoneyDataUpdateCoordinator]):
+    """Base entity for Monarch Money with entity name attribute."""
 
     _attr_has_entity_name = True
+
+    def __init__(self, coordinator: MonarchMoneyDataUpdateCoordinator) -> None:
+        """Initialize the Monarch Money Entity."""
+        super().__init__(coordinator)
+        self.coordinator = coordinator
+
+
+class MonarchMoneyCashFlowEntity(MonarchMoneyEntityBase):
+    """Custom entity for Cashflow sensors."""
 
     def __init__(
         self,
@@ -26,7 +35,6 @@ class MonarchMoneyBaseEntity(CoordinatorEntity[MonarchMoneyDataUpdateCoordinator
         self._attr_unique_id = (
             f"{coordinator.subscription_id}_cashflow_{description.key}"
         )
-
         self._data = data
         self.entity_description = description
         self._attr_device_info = DeviceInfo(
@@ -41,10 +49,8 @@ class MonarchMoneyBaseEntity(CoordinatorEntity[MonarchMoneyDataUpdateCoordinator
         return self.coordinator.cashflow_summary
 
 
-class MonarchMoneyAccountEntity(CoordinatorEntity[MonarchMoneyDataUpdateCoordinator]):
+class MonarchMoneyAccountEntity(MonarchMoneyEntityBase):
     """Define a generic class for Entities."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -74,14 +80,14 @@ class MonarchMoneyAccountEntity(CoordinatorEntity[MonarchMoneyDataUpdateCoordina
         if not configuration_url.startswith(("http://", "https://")):
             configuration_url = f"http://{configuration_url}"
 
-        self._attr_unique_id = f"{coordinator.subscription_id}_{account["displayName"]}_{description.translation_key}"
+        self._attr_unique_id = f"{coordinator.subscription_id}_{account['displayName']}_{description.translation_key}"
 
         atype = account["type"]["display"]
         asubtype = account["subtype"]["display"]
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, account["id"])},
-            name=f"{institution} {account["displayName"]}",
+            name=f"{institution} {account['displayName']}",
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=provider,
             model=f"{institution} - {atype} - {asubtype}",
