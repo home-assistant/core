@@ -199,6 +199,7 @@ SUPPORTED_COMPONENTS = {
     "camera",
     "climate",
     "cover",
+    "device",
     "device_automation",
     "device_tracker",
     "event",

@@ -1415,6 +1415,7 @@ async def test_cleanup_device_manual(
 
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_called_with(discovery_topic, None, 0, True)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
