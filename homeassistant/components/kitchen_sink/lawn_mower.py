@@ -31,7 +31,7 @@ async def async_setup_platform(
             DemoLawnMower(
                 "kitchen_sink_mower_002",
                 "Mower can return",
-                LawnMowerActivity.PAUSED,
+                LawnMowerActivity.RETURNING,
                 LawnMowerEntityFeature.DOCK
                 | LawnMowerEntityFeature.PAUSE
                 | LawnMowerEntityFeature.START_MOWING,
