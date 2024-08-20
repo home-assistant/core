@@ -110,6 +110,12 @@
       },
       "dhw_hysteresis": {
         "name": "DHW hysteresis"
+      },
+      "dhw_hysteresis_switch_on": {
+        "name": "DHW hysteresis switch on"
+      },
+      "dhw_hysteresis_switch_off": {
+        "name": "DHW hysteresis switch off"
       }
     },
     "sensor": {

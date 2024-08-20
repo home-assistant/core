@@ -75,6 +75,34 @@ DEVICE_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         max_value_getter=lambda api: api.getDomesticHotWaterHysteresisMax(),
         stepping_getter=lambda api: api.getDomesticHotWaterHysteresisStepping(),
     ),
+    ViCareNumberEntityDescription(
+        key="dhw_hysteresis_switch_on",
+        translation_key="dhw_hysteresis_switch_on",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.KELVIN,
+        value_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOn(),
+        value_setter=lambda api, value: api.setDomesticHotWaterHysteresisSwitchOn(
+            value
+        ),
+        min_value_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOnMin(),
+        max_value_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOnMax(),
+        stepping_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOnStepping(),
+    ),
+    ViCareNumberEntityDescription(
+        key="dhw_hysteresis_switch_off",
+        translation_key="dhw_hysteresis_switch_off",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.KELVIN,
+        value_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOff(),
+        value_setter=lambda api, value: api.setDomesticHotWaterHysteresisSwitchOff(
+            value
+        ),
+        min_value_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOffMin(),
+        max_value_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOffMax(),
+        stepping_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOffStepping(),
+    ),
 )
 
 CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
