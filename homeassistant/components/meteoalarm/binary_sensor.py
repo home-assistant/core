@@ -64,7 +64,7 @@ async def async_setup_platform(
             hass,
             HOMEASSISTANT_DOMAIN,
             f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2024.12.0",
+            breaks_in_ha_version="2025.3.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
@@ -113,7 +113,6 @@ class MeteoAlertBinarySensor(BinarySensorEntity):
 
     _attr_attribution = ATTRIBUTION
     _attr_device_class = BinarySensorDeviceClass.SAFETY
-    _attr_has_entity_name = True
 
     def __init__(self, api: Meteoalert, name: str, entry_id: str) -> None:
         """Initialize the MeteoAlert binary sensor."""

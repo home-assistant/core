@@ -5,21 +5,17 @@ from typing import Any
 from meteoalertapi import Meteoalert
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
-)
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_COUNTRY, CONF_LANGUAGE, CONF_PROVINCE, DOMAIN, LOGGER
 
-PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
+SCHEMA = vol.Schema(
     {
         vol.Required(CONF_COUNTRY): cv.string,
         vol.Required(CONF_PROVINCE): cv.string,
         vol.Optional(CONF_LANGUAGE, default="en"): cv.string,
-        vol.Optional(CONF_NAME, default=DOMAIN): cv.string,
     }
 )
 
@@ -58,7 +54,7 @@ class MeteoAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=PLATFORM_SCHEMA,
+            data_schema=SCHEMA,
             errors=errors,
         )
 
