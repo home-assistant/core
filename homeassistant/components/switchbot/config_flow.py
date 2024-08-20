@@ -39,8 +39,10 @@ from .const import (
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
     CONF_RETRY_COUNT,
+    CONF_LOCK_NIGHTLATCH,
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
     DEFAULT_RETRY_COUNT,
+    DEFAULT_LOCK_NIGHTLATCH,
     DOMAIN,
     NON_CONNECTABLE_SUPPORTED_MODEL_TYPES,
     SUPPORTED_LOCK_MODELS,
@@ -361,7 +363,13 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
                 default=self.config_entry.options.get(
                     CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT
                 ),
-            ): int
+            ): int,
+            vol.Optional(
+                CONF_LOCK_NIGHTLATCH,
+                default=self.config_entry.options.get(
+                    CONF_LOCK_NIGHTLATCH, DEFAULT_LOCK_NIGHTLATCH
+                ),
+            ): bool
         }
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
