@@ -2,15 +2,11 @@
 
 from __future__ import annotations
 
-from aiohttp import ClientResponseError
-from gql.transport.exceptions import TransportServerError
 from monarchmoney import MonarchMoney
-from monarchmoney.monarchmoney import LoginFailedException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
 
 from .coordinator import MonarchMoneyDataUpdateCoordinator
 
@@ -25,16 +21,7 @@ async def async_setup_entry(
     """Set up Monarch Money from a config entry."""
     monarch_client = MonarchMoney(token=entry.data.get(CONF_TOKEN))
 
-    try:
-        sub_details = await monarch_client.get_subscription_details()
-    except (TransportServerError, LoginFailedException, ClientResponseError) as err:
-        raise ConfigEntryError("Authentication failed") from err
-
-    subscription_id = sub_details["subscription"]["id"]
-
-    mm_coordinator = MonarchMoneyDataUpdateCoordinator(
-        hass, monarch_client, subscription_id
-    )
+    mm_coordinator = MonarchMoneyDataUpdateCoordinator(hass, monarch_client)
     await mm_coordinator.async_config_entry_first_refresh()
     entry.runtime_data = mm_coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

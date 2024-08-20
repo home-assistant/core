@@ -30,7 +30,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'sum_expense',
-    'unique_id': 'monarch_money_cashflow_sum_expense',
+    'unique_id': '222260252323873333_cashflow_sum_expense',
     'unit_of_measurement': '$',
   })
 # ---
@@ -82,7 +82,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'sum_income',
-    'unique_id': 'monarch_money_cashflow_sum_income',
+    'unique_id': '222260252323873333_cashflow_sum_income',
     'unit_of_measurement': '$',
   })
 # ---
@@ -135,7 +135,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'savings_rate',
-    'unique_id': 'monarch_money_cashflow_savings_rate',
+    'unique_id': '222260252323873333_cashflow_savings_rate',
     'unit_of_measurement': '%',
   })
 # ---
@@ -185,7 +185,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'savings',
-    'unique_id': 'monarch_money_cashflow_savings',
+    'unique_id': '222260252323873333_cashflow_savings',
     'unit_of_measurement': '$',
   })
 # ---

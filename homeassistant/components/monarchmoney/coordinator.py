@@ -4,10 +4,13 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
-from monarchmoney import MonarchMoney
+from aiohttp import ClientResponseError
+from gql.transport.exceptions import TransportServerError
+from monarchmoney import LoginFailedException, MonarchMoney
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import LOGGER
@@ -27,7 +30,9 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
     config_entry: ConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, client: MonarchMoney, subscription_id: str
+        self,
+        hass: HomeAssistant,
+        client: MonarchMoney,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -37,7 +42,16 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
             update_interval=timedelta(hours=4),
         )
         self.client: MonarchMoney = client
-        self.subscription_id = subscription_id
+        self.subscription_id: str = "UNSET"
+
+    async def _async_setup(self) -> None:
+        """Obtain subscription ID in setup phase."""
+        try:
+            sub_details = await self.client.get_subscription_details()
+        except (TransportServerError, LoginFailedException, ClientResponseError) as err:
+            raise ConfigEntryError("Authentication failed") from err
+
+        self.subscription_id = sub_details["subscription"]["id"]
 
     async def _async_update_data(self) -> MonarchData:
         """Fetch data for all accounts."""
