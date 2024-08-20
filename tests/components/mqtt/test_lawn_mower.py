@@ -103,6 +103,13 @@ async def test_run_lawn_mower_setup_and_state_updates(
     state = hass.states.get("lawn_mower.test_lawn_mower")
     assert state.state == "mowing"
 
+    async_fire_mqtt_message(hass, "test/lawn_mower_stat", "returning")
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lawn_mower.test_lawn_mower")
+    assert state.state == "returning"
+
     async_fire_mqtt_message(hass, "test/lawn_mower_stat", "docked")
 
     await hass.async_block_till_done()
@@ -198,6 +205,13 @@ async def test_value_template(
     state = hass.states.get("lawn_mower.test_lawn_mower")
     assert state.state == "paused"
 
+    async_fire_mqtt_message(hass, "test/lawn_mower_stat", '{"val":"returning"}')
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lawn_mower.test_lawn_mower")
+    assert state.state == "returning"
+
     async_fire_mqtt_message(hass, "test/lawn_mower_stat", '{"val": null}')
 
     await hass.async_block_till_done()
@@ -262,7 +276,7 @@ async def test_run_lawn_mower_service_optimistic(
     mqtt_mock.async_publish.assert_called_once_with("dock-test-topic", "dock", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lawn_mower.test")
-    assert state.state == "docked"
+    assert state.state == "returning"
 
 
 @pytest.mark.parametrize(
@@ -362,7 +376,7 @@ async def test_run_lawn_mower_service_optimistic_with_command_templates(
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lawn_mower.test_lawn_mower")
-    assert state.state == "docked"
+    assert state.state == "returning"
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -632,7 +646,7 @@ async def test_entity_id_update_discovery_update(
         (
             SERVICE_DOCK,
             "dock",
-            "docked",
+            "returning",
             "test/lawn_mower_stat",
             "dock-test-topic",
         ),
@@ -702,7 +716,8 @@ async def test_mqtt_payload_not_a_valid_activity_warning(
 
     assert (
         "Invalid activity for lawn_mower.test_lawn_mower: 'painting' "
-        "(valid activities: ['error', 'paused', 'mowing', 'docked'])" in caplog.text
+        "(valid activities: ['error', 'paused', 'mowing', 'docked', 'returning'])"
+        in caplog.text
     )
 
 
@@ -774,6 +789,7 @@ async def test_reloadable(
     [
         ("activity_state_topic", "paused", None, "paused"),
         ("activity_state_topic", "docked", None, "docked"),
+        ("activity_state_topic", "returning", None, "returning"),
         ("activity_state_topic", "mowing", None, "mowing"),
     ],
 )
