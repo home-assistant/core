@@ -9,11 +9,9 @@ from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection, entity_registry as er, restore_state
 
-from .const import DOMAIN
+from .const import DOMAIN, OPTION_PREFERRED
 from .pipeline import AssistDevice, PipelineData, PipelineStorageCollection
 from .vad import VadSensitivity
-
-OPTION_PREFERRED = "preferred"
 
 
 @callback

@@ -1,18 +1,6 @@
 """Models for assist satellite."""
 
-from dataclasses import dataclass
 from enum import StrEnum
-
-
-@dataclass(frozen=True)
-class SatelliteConfig:
-    """Configuration of satellite."""
-
-    default_pipeline: str | None = None
-    """Pipeline id to use by default (None = preferred)."""
-
-    finished_speaking_seconds: float = 1.0
-    """Seconds of silence before voice command is finished."""
 
 
 class AssistSatelliteState(StrEnum):

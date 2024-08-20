@@ -1,17 +1,19 @@
 """Assist satellite entity."""
 
-from abc import abstractmethod
 from collections.abc import AsyncIterable
 import time
 from typing import Final
 
 from homeassistant.components import stt
 from homeassistant.components.assist_pipeline import (
+    OPTION_PREFERRED,
     AudioSettings,
     PipelineEvent,
     PipelineEventType,
     PipelineStage,
+    async_get_pipelines,
     async_pipeline_from_audio_stream,
+    vad,
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import Context
@@ -19,7 +21,7 @@ from homeassistant.helpers import entity
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.util import ulid
 
-from .models import AssistSatelliteState, SatelliteConfig
+from .models import AssistSatelliteState
 
 _CONVERSATION_TIMEOUT_SEC: Final = 5 * 60  # 5 minutes
 
@@ -37,8 +39,6 @@ class AssistSatelliteEntity(entity.Entity):
         AssistSatelliteState.WAITING_FOR_WAKE_WORD
     )
 
-    _satellite_config = SatelliteConfig()
-
     _conversation_id: str | None = None
     _conversation_id_time: float | None = None
 
@@ -50,9 +50,30 @@ class AssistSatelliteEntity(entity.Entity):
         audio_stream: AsyncIterable[bytes],
         start_stage: PipelineStage = PipelineStage.STT,
         end_stage: PipelineStage = PipelineStage.TTS,
+        pipeline_entity_id: str | None = None,
+        vad_sensitivity_entity_id: str | None = None,
         wake_word_phrase: str | None = None,
     ) -> None:
         """Triggers an Assist pipeline in Home Assistant from a satellite."""
+        pipeline_id: str | None = None
+        vad_sensitivity = vad.VadSensitivity.DEFAULT
+
+        if pipeline_entity_id:
+            # Resolve pipeline by name
+            pipeline_entity_state = self.hass.states.get(pipeline_entity_id)
+            if (pipeline_entity_state is not None) and (
+                pipeline_entity_state.state != OPTION_PREFERRED
+            ):
+                for pipeline in async_get_pipelines(self.hass):
+                    if pipeline.name == pipeline_entity_state.state:
+                        pipeline_id = pipeline.id
+                        break
+
+        if vad_sensitivity_entity_id:
+            vad_sensitivity_state = self.hass.states.get(vad_sensitivity_entity_id)
+            if vad_sensitivity_state is not None:
+                vad_sensitivity = vad.VadSensitivity(vad_sensitivity_state.state)
+
         device_id: str | None = None
         if self.registry_entry is not None:
             device_id = self.registry_entry.device_id
@@ -85,13 +106,13 @@ class AssistSatelliteEntity(entity.Entity):
                 channel=stt.AudioChannels.CHANNEL_MONO,
             ),
             stt_stream=audio_stream,
-            pipeline_id=self._satellite_config.default_pipeline,
+            pipeline_id=pipeline_id,
             conversation_id=self._conversation_id,
             device_id=device_id,
             tts_audio_output="wav",
             wake_word_phrase=wake_word_phrase,
             audio_settings=AudioSettings(
-                silence_seconds=self._satellite_config.finished_speaking_seconds
+                silence_seconds=vad.VadSensitivity.to_seconds(vad_sensitivity)
             ),
         )
 
@@ -110,27 +131,6 @@ class AssistSatelliteEntity(entity.Entity):
         elif event.type == PipelineEventType.RUN_END:
             if not self._run_has_tts:
                 self._set_state(AssistSatelliteState.WAITING_FOR_WAKE_WORD)
-
-    async def async_get_config(self) -> SatelliteConfig:
-        """Get satellite configuration."""
-        return self._satellite_config
-
-    async def async_set_config(self, config: SatelliteConfig) -> None:
-        """Set satellite configuration."""
-        self._satellite_config = config
-        await self._async_config_updated()
-
-    @abstractmethod
-    async def _async_config_updated(self) -> None:
-        """Inform when the device config is updated.
-
-        Platforms need to make sure that the device has this configuration.
-        """
-
-    @property
-    @abstractmethod
-    def is_microphone_muted(self) -> bool:
-        """Return if the satellite's microphone is muted."""
 
     def _set_state(self, state: AssistSatelliteState):
         """Set the entity's state."""

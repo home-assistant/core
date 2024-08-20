@@ -11,20 +11,17 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Final
 import wave
 
-from voip_utils import CallInfo, RtcpState, RtpDatagramProtocol
+from voip_utils import RtpDatagramProtocol
 
 from homeassistant.components import tts
 from homeassistant.components.assist_pipeline import (
     PipelineEvent,
     PipelineEventType,
     PipelineNotFound,
-    select as pipeline_select,
-    vad,
 )
 from homeassistant.components.assist_satellite import (
     AssistSatelliteEntity,
     AssistSatelliteState,
-    SatelliteConfig,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant, callback
@@ -113,21 +110,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self.voip_device.protocol = self
 
     # -------------------------------------------------------------------------
-    # Satellite
-    # -------------------------------------------------------------------------
-
-    async def _async_config_updated(self) -> None:
-        """Inform when the device config is updated.
-
-        Platforms need to make sure that the device has this configuration.
-        """
-
-    @property
-    def is_microphone_muted(self) -> bool:
-        """Return if the satellite's microphone is muted."""
-        return False  # not supported
-
-    # -------------------------------------------------------------------------
     # VoIP
     # -------------------------------------------------------------------------
 
@@ -142,16 +124,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         super().disconnect()
         self.voip_device.set_is_active(False)
         self._set_state(AssistSatelliteState.WAITING_FOR_WAKE_WORD)
-
-    def prepare_for_call(self, call_info: CallInfo, rtcp_state: RtcpState | None):
-        """Copy relevant data to RTP protocol."""
-        self._rtp_input.opus_payload_type = call_info.opus_payload_type
-        self._rtp_output.opus_payload_type = call_info.opus_payload_type
-
-        self.rtcp_state = rtcp_state
-        if self.rtcp_state is not None:
-            # Automatically disconnect when BYE is received over RTCP
-            self.rtcp_state.bye_callback = self.disconnect
 
     def on_chunk(self, audio_bytes: bytes) -> None:
         """Handle raw audio chunk."""
@@ -172,19 +144,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     ) -> None:
         """Forward audio to pipeline STT and handle TTS."""
 
-        await self.async_set_config(
-            SatelliteConfig(
-                default_pipeline=pipeline_select.get_chosen_pipeline(
-                    self.hass, DOMAIN, self.voip_device.voip_id
-                ),
-                finished_speaking_seconds=vad.VadSensitivity.to_seconds(
-                    pipeline_select.get_vad_sensitivity(
-                        self.hass, DOMAIN, self.voip_device.voip_id
-                    )
-                ),
-            )
-        )
-
         # Play listening tone at the start of each cycle
         await self._play_tone(Tones.LISTENING, silence_before=0.2)
 
@@ -198,6 +157,12 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                     context=Context(user_id=self.config_entry.data["user"]),
                     audio_stream=queue_to_iterable(
                         self._audio_queue, timeout=self._audio_chunk_timeout
+                    ),
+                    pipeline_entity_id=self.voip_device.get_pipeline_entity_id(
+                        self.hass
+                    ),
+                    vad_sensitivity_entity_id=self.voip_device.get_vad_sensitivity_entity_id(
+                        self.hass
                     ),
                 )
 

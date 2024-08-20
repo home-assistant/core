@@ -299,7 +299,6 @@ async def test_pipeline(
         ),
         patch.object(satellite, "tts_response_finished", tts_response_finished),
     ):
-        satellite.prepare_for_call(call_info, None)
         satellite._tones = Tones(0)
         satellite.transport = Mock()
 

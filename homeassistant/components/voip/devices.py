@@ -57,6 +57,18 @@ class VoIPDevice:
 
         return False
 
+    def get_pipeline_entity_id(self, hass: HomeAssistant) -> str | None:
+        """Return entity id for pipeline select."""
+        ent_reg = er.async_get(hass)
+        return ent_reg.async_get_entity_id("select", DOMAIN, f"{self.voip_id}-pipeline")
+
+    def get_vad_sensitivity_entity_id(self, hass: HomeAssistant) -> str | None:
+        """Return entity id for VAD sensitivity."""
+        ent_reg = er.async_get(hass)
+        return ent_reg.async_get_entity_id(
+            "select", DOMAIN, f"{self.voip_id}-vad_sensitivity"
+        )
+
 
 class VoIPDevices:
     """Class to store devices."""
