@@ -100,6 +100,7 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
     """Data update coordinator for Monarch Money."""
 
     config_entry: ConfigEntry
+    subscription_id: str
 
     def __init__(
         self,
