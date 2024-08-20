@@ -10,6 +10,10 @@ from matter_server.common.errors import UpdateCheckError, UpdateError
 from matter_server.common.models import MatterSoftwareVersion, UpdateSource
 import pytest
 
+from homeassistant.components.homeassistant import (
+    DOMAIN as HA_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -102,7 +106,7 @@ async def test_update_install(
     assert state.state == STATE_OFF
     assert state.attributes.get("installed_version") == "v1.0"
 
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HA_DOMAIN, {})
 
     check_node_update.return_value = MatterSoftwareVersion(
         vid=65521,
@@ -117,8 +121,8 @@ async def test_update_install(
     )
 
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {
             ATTR_ENTITY_ID: "update.mock_dimmable_light",
         },
@@ -209,7 +213,7 @@ async def test_update_install_failure(
     assert state.state == STATE_OFF
     assert state.attributes.get("installed_version") == "v1.0"
 
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HA_DOMAIN, {})
 
     check_node_update.return_value = MatterSoftwareVersion(
         vid=65521,
@@ -224,8 +228,8 @@ async def test_update_install_failure(
     )
 
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {
             ATTR_ENTITY_ID: "update.mock_dimmable_light",
         },
@@ -283,13 +287,13 @@ async def test_update_state_save_and_restore(
     assert state.state == STATE_OFF
     assert state.attributes.get("installed_version") == "v1.0"
 
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HA_DOMAIN, {})
 
     check_node_update.return_value = TEST_SOFTWARE_VERSION
 
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {
             ATTR_ENTITY_ID: "update.mock_dimmable_light",
         },
