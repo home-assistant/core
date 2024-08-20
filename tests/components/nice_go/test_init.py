@@ -209,11 +209,11 @@ async def test_on_data_none_parsed(
 ) -> None:
     """Test on data with None parsed."""
 
-    mock_nice_go.event = MagicMock()
+    mock_nice_go.listen = MagicMock()
 
     await setup_integration(hass, mock_config_entry, [Platform.COVER])
 
-    await mock_nice_go.event.call_args[0][0](
+    await mock_nice_go.listen.call_args[0][1](
         {
             "data": {
                 "devicesStatesUpdateFeed": {
@@ -243,14 +243,14 @@ async def test_on_connected(
 ) -> None:
     """Test on connected."""
 
-    mock_nice_go.event = MagicMock()
+    mock_nice_go.listen = MagicMock()
 
     await setup_integration(hass, mock_config_entry, [Platform.COVER])
 
-    assert mock_nice_go.event.call_count == 2
+    assert mock_nice_go.listen.call_count == 2
 
     mock_nice_go.subscribe = AsyncMock()
-    await mock_nice_go.event.call_args_list[0][0][0]()
+    await mock_nice_go.listen.call_args_list[0][0][1]()
 
     assert mock_nice_go.subscribe.call_count == 1
 
@@ -262,13 +262,13 @@ async def test_no_connection_state(
 ) -> None:
     """Test parsing barrier with no connection state."""
 
-    mock_nice_go.event = MagicMock()
+    mock_nice_go.listen = MagicMock()
 
     await setup_integration(hass, mock_config_entry, [Platform.COVER])
 
-    assert mock_nice_go.event.call_count == 2
+    assert mock_nice_go.listen.call_count == 2
 
-    await mock_nice_go.event.call_args[0][0](
+    await mock_nice_go.listen.call_args[0][1](
         {
             "data": {
                 "devicesStatesUpdateFeed": {
