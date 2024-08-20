@@ -75,9 +75,30 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
 
         return self.data.account_data
 
-    def get_account_for_id(self, account_id: str) -> dict[str, Any] | None:
-        """Get account for id."""
-        for account in self.data.account_data:
-            if account["id"] == account_id:
-                return account
-        return None
+    @property
+    def value_accounts(self) -> list[dict[str, Any]]:
+        """Return value accounts."""
+        return [
+            x
+            for x in self.accounts
+            if x["type"]["name"]
+            in ["real-estate", "vehicle", "valuables", "other_assets"]
+        ]
+
+    @property
+    def balance_accounts(self) -> list[dict[str, Any]]:
+        """Return accounts that aren't assets."""
+        return [
+            x
+            for x in self.accounts
+            if x["type"]["name"]
+            not in ["real-estate", "vehicle", "valuables", "other_assets"]
+        ]
+
+
+def get_account_for_id(self, account_id: str) -> dict[str, Any] | None:
+    """Get account for id."""
+    for account in self.data.account_data:
+        if account["id"] == account_id:
+            return account
+    return None

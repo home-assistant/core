@@ -85,6 +85,19 @@ class MonarchMoneySensorEntityDescription(SensorEntityDescription):
     icon_fn: Callable[[Any], str] | None = None
 
 
+MONARCH_MONEY_VALUE_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
+    MonarchMoneySensorEntityDescription(
+        key="value",
+        translation_key="value",
+        state_class=SensorStateClass.TOTAL,
+        device_class=SensorDeviceClass.MONETARY,
+        value_fn=lambda account: account["currentBalance"],
+        picture_fn=lambda account: account["logoUrl"],
+        icon_fn=_type_to_icon,
+        native_unit_of_measurement=CURRENCY_DOLLAR,
+    ),
+)
+
 MONARCH_MONEY_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
     MonarchMoneySensorEntityDescription(
         key="currentBalance",
@@ -96,6 +109,9 @@ MONARCH_MONEY_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
         icon_fn=_type_to_icon,
         native_unit_of_measurement=CURRENCY_DOLLAR,
     ),
+)
+
+MONARCH_MONEY_AGE_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
     MonarchMoneySensorEntityDescription(
         key="age",
         translation_key="age",
@@ -159,22 +175,43 @@ async def async_setup_entry(
     """Set up Monarch Money sensors for config entries."""
     mm_coordinator = config_entry.runtime_data
 
-    entity_list = [
-        MonarchMoneyCashFlowSensor(
-            mm_coordinator,
-            sensor_description,
-            mm_coordinator.cashflow_summary,
-        )
-        for sensor_description in MONARCH_CASHFLOW_SENSORS
-    ] + [
-        MonarchMoneySensor(
-            mm_coordinator,
-            sensor_description,
-            account,
-        )
-        for account in mm_coordinator.accounts
-        for sensor_description in MONARCH_MONEY_SENSORS
-    ]
+    entity_list = (
+        [
+            MonarchMoneyCashFlowSensor(
+                mm_coordinator,
+                sensor_description,
+                mm_coordinator.cashflow_summary,
+            )
+            for sensor_description in MONARCH_CASHFLOW_SENSORS
+        ]
+        + [
+            MonarchMoneySensor(
+                mm_coordinator,
+                sensor_description,
+                account,
+            )
+            for account in mm_coordinator.balance_accounts
+            for sensor_description in MONARCH_MONEY_SENSORS
+        ]
+        + [
+            MonarchMoneySensor(
+                mm_coordinator,
+                sensor_description,
+                account,
+            )
+            for account in mm_coordinator.accounts
+            for sensor_description in MONARCH_MONEY_AGE_SENSORS
+        ]
+        + [
+            MonarchMoneySensor(
+                mm_coordinator,
+                sensor_description,
+                account,
+            )
+            for account in mm_coordinator.value_accounts
+            for sensor_description in MONARCH_MONEY_VALUE_SENSORS
+        ]
+    )
 
     async_add_entities(entity_list)
 
