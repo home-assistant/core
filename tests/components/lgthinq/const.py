@@ -33,8 +33,6 @@ WATER_HEATER: Final[str] = "DEVICE_WATER_HEATER"
 WATER_PURIFIER: Final[str] = "DEVICE_WATER_PURIFIER"
 WINE_CELLAR: Final[str] = "DEVICE_WINE_CELLAR"
 
-SOURCE_REGION = "region"
-
 MOCK_PAT: Final[str] = "123abc4567de8f90g123h4ij56klmn789012p345rst6uvw789xy"
 MOCK_ENTRY_NAME: Final[str] = "Test ThinQ"
 MOCK_COUNTRY: Final[str] = "KR"

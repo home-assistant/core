@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .common import mock_thinq_api_response
-from .const import MOCK_COUNTRY, MOCK_ENTRY_NAME, MOCK_PAT, SOURCE_REGION
+from .const import MOCK_COUNTRY, MOCK_ENTRY_NAME, MOCK_PAT
 
 from tests.common import MockConfigEntry
 
@@ -37,7 +37,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == SOURCE_REGION
+    assert result["step_id"] == SOURCE_USER
 
     with patch("homeassistant.components.lgthinq.config_flow.ThinQApi") as mock:
         thinq_api = mock.return_value
@@ -70,7 +70,7 @@ async def test_config_flow_invalid_pat(hass: HomeAssistant) -> None:
         )
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={CONF_SOURCE: SOURCE_REGION},
+            context={CONF_SOURCE: SOURCE_USER},
             data={CONF_COUNTRY: MOCK_COUNTRY},
         )
         await hass.async_block_till_done()
