@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/channels",
   "iot_class": "local_polling",
   "loggers": ["pychannels"],
-  "requirements": ["pychannels==1.2.3"]
+  "requirements": ["pychannels==1.2.3", "stringcase==1.2.0"]
 }
