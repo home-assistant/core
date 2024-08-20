@@ -20,6 +20,23 @@ from . import (
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(name="enable_compute_pskc")
+def enable_compute_pskc_fixture() -> Any:
+    """Allow controlling if compute_pskc should be enabled."""
+    return False
+
+
+@pytest.fixture(name="compute_pskc", autouse=True)
+def compute_pskc_fixture(enable_compute_pskc: bool) -> Any:
+    """Patch homeassistant.components.otbr.util.compute_pskc."""
+    compute_pskc = otbr.util.compute_pskc if enable_compute_pskc else None
+
+    with patch(
+        "homeassistant.components.otbr.util.compute_pskc", side_effect=compute_pskc
+    ) as compute_pskc_mock:
+        yield compute_pskc_mock
+
+
 @pytest.fixture(name="dataset")
 def dataset_fixture() -> Any:
     """Return the discovery info from the supervisor."""

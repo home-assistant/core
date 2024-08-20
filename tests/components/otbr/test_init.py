@@ -198,6 +198,7 @@ async def test_import_share_radio_no_channel_collision(
     )
 
 
+@pytest.mark.parametrize("enable_compute_pskc", [True])
 @pytest.mark.parametrize(
     "dataset", [DATASET_INSECURE_NW_KEY, DATASET_INSECURE_PASSPHRASE]
 )
