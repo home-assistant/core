@@ -11,7 +11,12 @@ from homeassistant.core import HomeAssistant
 from .coordinator import NiceGOUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS: list[Platform] = [Platform.COVER]
+PLATFORMS: list[Platform] = [
+    Platform.COVER,
+    Platform.EVENT,
+    Platform.LIGHT,
+    Platform.SWITCH,
+]
 
 type NiceGOConfigEntry = ConfigEntry[NiceGOUpdateCoordinator]
 
