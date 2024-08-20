@@ -12,7 +12,9 @@ from .coordinator import EmoncmsCoordinator
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry[EmoncmsCoordinator]
+) -> bool:
     """Load a config entry."""
     emoncms_client = EmoncmsClient(
         entry.data[CONF_URL],
