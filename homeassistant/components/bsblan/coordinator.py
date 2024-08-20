@@ -1,9 +1,10 @@
 """DataUpdateCoordinator for the BSB-Lan integration."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 from random import randint
 
-from bsblan import BSBLAN, BSBLANConnectionError
+from bsblan import BSBLAN, BSBLANConnectionError, State
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -11,7 +12,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
-from .models import BSBLanCoordinatorData
+
+
+@dataclass
+class BSBLanCoordinatorData:
+    """BSBLan data stored in the Home Assistant data object."""
+
+    state: State
 
 
 class BSBLanUpdateCoordinator(DataUpdateCoordinator[BSBLanCoordinatorData]):

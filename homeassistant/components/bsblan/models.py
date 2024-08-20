@@ -3,17 +3,10 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from bsblan import BSBLAN, Device, Info, State, StaticState
+from bsblan import BSBLAN, Device, Info, StaticState
 
 if TYPE_CHECKING:
     from .coordinator import BSBLanUpdateCoordinator
-
-
-@dataclass
-class BSBLanCoordinatorData:
-    """BSBLan data stored in the Home Assistant data object."""
-
-    state: State
 
 
 @dataclass
