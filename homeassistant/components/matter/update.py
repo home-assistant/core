@@ -8,7 +8,7 @@ from typing import Any
 
 from chip.clusters import Objects as clusters
 from matter_server.common.errors import UpdateCheckError, UpdateError
-from matter_server.common.models import MatterSoftwareVersion
+from matter_server.common.models import MatterSoftwareVersion, UpdateSource
 
 from homeassistant.components.update import (
     ATTR_LATEST_VERSION,
@@ -18,7 +18,7 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -76,6 +76,12 @@ class MatterUpdate(MatterEntity, UpdateEntity):
     _attr_should_poll = True
     _software_update: MatterSoftwareVersion | None = None
     _cancel_update: CALLBACK_TYPE | None = None
+    _attr_supported_features = (
+        UpdateEntityFeature.INSTALL
+        | UpdateEntityFeature.PROGRESS
+        | UpdateEntityFeature.SPECIFIC_VERSION
+        | UpdateEntityFeature.RELEASE_NOTES
+    )
 
     @callback
     def _update_from_device(self) -> None:
@@ -84,16 +90,6 @@ class MatterUpdate(MatterEntity, UpdateEntity):
         self._attr_installed_version = self.get_matter_attribute_value(
             clusters.BasicInformation.Attributes.SoftwareVersionString
         )
-
-        if self.get_matter_attribute_value(
-            clusters.OtaSoftwareUpdateRequestor.Attributes.UpdatePossible
-        ):
-            self._attr_supported_features = (
-                UpdateEntityFeature.INSTALL
-                | UpdateEntityFeature.PROGRESS
-                | UpdateEntityFeature.SPECIFIC_VERSION
-            )
-
         update_state: clusters.OtaSoftwareUpdateRequestor.Enums.UpdateStateEnum = (
             self.get_matter_attribute_value(
                 clusters.OtaSoftwareUpdateRequestor.Attributes.UpdateState
@@ -133,8 +129,38 @@ class MatterUpdate(MatterEntity, UpdateEntity):
             self._software_update = update_information
             self._attr_latest_version = update_information.software_version_string
             self._attr_release_url = update_information.release_notes_url
+
         except UpdateCheckError as err:
             raise HomeAssistantError(f"Error finding applicable update: {err}") from err
+
+    async def async_release_notes(self) -> str | None:
+        """Return full release notes.
+
+        This is suitable for a long changelog that does not fit in the release_summary
+        property. The returned string can contain markdown.
+        """
+        if self._software_update is None:
+            return None
+        if self.state != STATE_ON:
+            return None
+
+        release_notes = ""
+
+        # insert extra heavy warning case the update is not from the main net
+        if self._software_update.update_source != UpdateSource.MAIN_NET_DCL:
+            release_notes += (
+                "\n\n<ha-alert alert-type='warning'>"
+                f"Update provided by {self._software_update.update_source.value}. "
+                "Installing this update is at your own risk and you may run into unexpected "
+                "problems such as the need to re-add and factory reset your device.</ha-alert>\n\n"
+            )
+        return release_notes + (
+            "\n\n<ha-alert alert-type='info'>The update process can take a while, "
+            "especially for battery powered devices. Please be patient and wait until the update "
+            "process is fully completed. Do not remove power from the device while it's updating. "
+            "The device may restart during the update process and be unavailable for several minutes."
+            "</ha-alert>\n\n"
+        )
 
     async def async_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
@@ -171,6 +197,11 @@ class MatterUpdate(MatterEntity, UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install a new software version."""
+
+        if not self.get_matter_attribute_value(
+            clusters.OtaSoftwareUpdateRequestor.Attributes.UpdatePossible
+        ):
+            raise HomeAssistantError("Device is not ready to install updates")
 
         software_version: str | int | None = version
         if self._software_update is not None and (

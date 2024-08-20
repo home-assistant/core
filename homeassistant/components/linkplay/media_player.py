@@ -58,6 +58,8 @@ REPEAT_MAP: dict[LoopMode, RepeatMode] = {
     LoopMode.CONTINUOUS_PLAYBACK: RepeatMode.ALL,
     LoopMode.RANDOM_PLAYBACK: RepeatMode.ALL,
     LoopMode.LIST_CYCLE: RepeatMode.ALL,
+    LoopMode.SHUFF_DISABLED_REPEAT_DISABLED: RepeatMode.OFF,
+    LoopMode.SHUFF_ENABLED_REPEAT_ENABLED_LOOP_ONCE: RepeatMode.ALL,
 }
 
 REPEAT_MAP_INV: dict[RepeatMode, LoopMode] = {v: k for k, v in REPEAT_MAP.items()}

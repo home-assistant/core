@@ -46,4 +46,8 @@ class IronOSCoordinator(DataUpdateCoordinator[LiveDataResponse]):
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
 
-        self.device_info = await self.device.get_device_info()
+        try:
+            self.device_info = await self.device.get_device_info()
+
+        except CommunicationError as e:
+            raise UpdateFailed("Cannot connect to device") from e

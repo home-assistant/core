@@ -1024,7 +1024,7 @@ async def test_esphome_device_with_project(
     )
     assert dev.manufacturer == "mfr"
     assert dev.model == "model"
-    assert dev.hw_version == "2.2.2"
+    assert dev.sw_version == "2.2.2 (ESPHome 1.0.0)"
 
 
 async def test_esphome_device_with_manufacturer(
@@ -1229,7 +1229,7 @@ async def test_manager_voice_assistant_handlers_api(
             "", 0, None, None
         )
 
-        assert "Voice assistant UDP server was not stopped" in caplog.text
+        assert "Previous Voice assistant pipeline was not stopped" in caplog.text
 
     await device.mock_voice_assistant_handle_audio(bytes(_ONE_SECOND))
 
