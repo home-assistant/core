@@ -72,9 +72,7 @@ class MonarchMoneyAccountEntity(CoordinatorEntity[MonarchMoneyDataUpdateCoordina
         if not configuration_url.startswith(("http://", "https://")):
             configuration_url = f"http://{configuration_url}"
 
-        self._attr_unique_id = (
-            f"{institution}_{account["displayName"]}_{description.translation_key}"
-        )
+        self._attr_unique_id = f"{coordinator.subscription_id}_{account["displayName"]}_{description.translation_key}"
 
         atype = account["type"]["display"]
         asubtype = account["subtype"]["display"]

@@ -26,11 +26,15 @@ async def async_setup_entry(
     monarch_client = MonarchMoney(token=entry.data.get(CONF_TOKEN))
 
     try:
-        await monarch_client.get_subscription_details()
+        sub_details = await monarch_client.get_subscription_details()
     except (TransportServerError, LoginFailedException, ClientResponseError) as err:
         raise ConfigEntryError("Authentication failed") from err
 
-    mm_coordinator = MonarchMoneyDataUpdateCoordinator(hass, monarch_client)
+    subscription_id = sub_details["subscription"]["id"]
+
+    mm_coordinator = MonarchMoneyDataUpdateCoordinator(
+        hass, monarch_client, subscription_id
+    )
     await mm_coordinator.async_config_entry_first_refresh()
     entry.runtime_data = mm_coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

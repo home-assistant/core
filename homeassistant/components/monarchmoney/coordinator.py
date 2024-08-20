@@ -26,7 +26,9 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, client: MonarchMoney) -> None:
+    def __init__(
+        self, hass: HomeAssistant, client: MonarchMoney, subscription_id: str
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass=hass,
@@ -35,6 +37,7 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
             update_interval=timedelta(hours=4),
         )
         self.client: MonarchMoney = client
+        self.subscription_id = subscription_id
 
     async def _async_update_data(self) -> MonarchData:
         """Fetch data for all accounts."""

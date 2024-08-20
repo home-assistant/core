@@ -237,7 +237,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
-    'unique_id': 'Manual entry_Wallet_balance',
+    'unique_id': '222260252323873333_Wallet_balance',
     'unit_of_measurement': '$',
   })
 # ---
@@ -288,7 +288,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'age',
-    'unique_id': 'Manual entry_Wallet_age',
+    'unique_id': '222260252323873333_Wallet_age',
     'unit_of_measurement': None,
   })
 # ---
@@ -336,7 +336,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'created',
-    'unique_id': 'Manual entry_Wallet_created',
+    'unique_id': '222260252323873333_Wallet_created',
     'unit_of_measurement': None,
   })
 # ---
@@ -386,7 +386,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
-    'unique_id': 'Rando Bank_Checking_balance',
+    'unique_id': '222260252323873333_Checking_balance',
     'unit_of_measurement': '$',
   })
 # ---
@@ -438,7 +438,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'age',
-    'unique_id': 'Rando Bank_Checking_age',
+    'unique_id': '222260252323873333_Checking_age',
     'unit_of_measurement': None,
   })
 # ---
@@ -486,7 +486,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'created',
-    'unique_id': 'Rando Bank_Checking_created',
+    'unique_id': '222260252323873333_Checking_created',
     'unit_of_measurement': None,
   })
 # ---
@@ -536,7 +536,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
-    'unique_id': 'Rando Brokerage_Brokerage_balance',
+    'unique_id': '222260252323873333_Brokerage_balance',
     'unit_of_measurement': '$',
   })
 # ---
@@ -588,7 +588,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'age',
-    'unique_id': 'Rando Brokerage_Brokerage_age',
+    'unique_id': '222260252323873333_Brokerage_age',
     'unit_of_measurement': None,
   })
 # ---
@@ -636,7 +636,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'created',
-    'unique_id': 'Rando Brokerage_Brokerage_created',
+    'unique_id': '222260252323873333_Brokerage_created',
     'unit_of_measurement': None,
   })
 # ---
@@ -686,7 +686,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
-    'unique_id': 'Rando Credit_Credit Card_balance',
+    'unique_id': '222260252323873333_Credit Card_balance',
     'unit_of_measurement': '$',
   })
 # ---
@@ -738,7 +738,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'age',
-    'unique_id': 'Rando Credit_Credit Card_age',
+    'unique_id': '222260252323873333_Credit Card_age',
     'unit_of_measurement': None,
   })
 # ---
@@ -786,7 +786,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'created',
-    'unique_id': 'Rando Credit_Credit Card_created',
+    'unique_id': '222260252323873333_Credit Card_created',
     'unit_of_measurement': None,
   })
 # ---
@@ -836,7 +836,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
-    'unique_id': 'Rando Employer Investments_401.k_balance',
+    'unique_id': '222260252323873333_401.k_balance',
     'unit_of_measurement': '$',
   })
 # ---
@@ -888,7 +888,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'age',
-    'unique_id': 'Rando Employer Investments_401.k_age',
+    'unique_id': '222260252323873333_401.k_age',
     'unit_of_measurement': None,
   })
 # ---
@@ -936,7 +936,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'created',
-    'unique_id': 'Rando Employer Investments_401.k_created',
+    'unique_id': '222260252323873333_401.k_created',
     'unit_of_measurement': None,
   })
 # ---
@@ -986,7 +986,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
-    'unique_id': 'Rando Investments_Roth IRA_balance',
+    'unique_id': '222260252323873333_Roth IRA_balance',
     'unit_of_measurement': '$',
   })
 # ---
@@ -1038,7 +1038,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'age',
-    'unique_id': 'Rando Investments_Roth IRA_age',
+    'unique_id': '222260252323873333_Roth IRA_age',
     'unit_of_measurement': None,
   })
 # ---
@@ -1086,7 +1086,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'created',
-    'unique_id': 'Rando Investments_Roth IRA_created',
+    'unique_id': '222260252323873333_Roth IRA_created',
     'unit_of_measurement': None,
   })
 # ---
@@ -1136,7 +1136,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
-    'unique_id': 'Rando Mortgage_Mortgage_balance',
+    'unique_id': '222260252323873333_Mortgage_balance',
     'unit_of_measurement': '$',
   })
 # ---
@@ -1188,7 +1188,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'age',
-    'unique_id': 'Rando Mortgage_Mortgage_age',
+    'unique_id': '222260252323873333_Mortgage_age',
     'unit_of_measurement': None,
   })
 # ---
@@ -1236,7 +1236,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'created',
-    'unique_id': 'Rando Mortgage_Mortgage_created',
+    'unique_id': '222260252323873333_Mortgage_created',
     'unit_of_measurement': None,
   })
 # ---
@@ -1286,7 +1286,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
-    'unique_id': 'VinAudit_2050 Toyota RAV8_balance',
+    'unique_id': '222260252323873333_2050 Toyota RAV8_balance',
     'unit_of_measurement': '$',
   })
 # ---
@@ -1338,7 +1338,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'age',
-    'unique_id': 'VinAudit_2050 Toyota RAV8_age',
+    'unique_id': '222260252323873333_2050 Toyota RAV8_age',
     'unit_of_measurement': None,
   })
 # ---
@@ -1386,7 +1386,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'created',
-    'unique_id': 'VinAudit_2050 Toyota RAV8_created',
+    'unique_id': '222260252323873333_2050 Toyota RAV8_created',
     'unit_of_measurement': None,
   })
 # ---
@@ -1436,7 +1436,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
-    'unique_id': 'Zillow_House_balance',
+    'unique_id': '222260252323873333_House_balance',
     'unit_of_measurement': '$',
   })
 # ---
@@ -1488,7 +1488,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'age',
-    'unique_id': 'Zillow_House_age',
+    'unique_id': '222260252323873333_House_age',
     'unit_of_measurement': None,
   })
 # ---
@@ -1536,7 +1536,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'created',
-    'unique_id': 'Zillow_House_created',
+    'unique_id': '222260252323873333_House_created',
     'unit_of_measurement': None,
   })
 # ---

@@ -28,6 +28,7 @@ async def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={CONF_TOKEN: "fake_token_of_doom"},
+        unique_id="222260252323873333",
         version=1,
     )
 
