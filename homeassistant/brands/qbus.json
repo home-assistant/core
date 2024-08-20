@@ -1,0 +1,5 @@
+{
+  "domain": "qbus",
+  "name": "QBUS",
+  "integrations": ["qbus"]
+}
