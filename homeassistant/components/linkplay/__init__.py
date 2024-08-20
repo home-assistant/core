@@ -9,9 +9,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_SESSION, DOMAIN, PLATFORMS
+
+CONFIG_SCHEMA = cv.platform_only_config_schema(DOMAIN)
 
 
 class LinkPlayIntegrationData:
