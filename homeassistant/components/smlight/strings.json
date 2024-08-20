@@ -44,6 +44,17 @@
       "ram_usage": {
         "name": "RAM usage"
       }
+    },
+    "button": {
+      "core_restart": {
+        "name": "Core restart"
+      },
+      "zigbee_restart": {
+        "name": "Zigbee restart"
+      },
+      "zigbee_flash_mode": {
+        "name": "Zigbee flash mode"
+      }
     }
   }
 }
