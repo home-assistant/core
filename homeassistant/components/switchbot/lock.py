@@ -9,13 +9,9 @@ from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .const import CONF_LOCK_NIGHTLATCH, DEFAULT_LOCK_NIGHTLATCH
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
-
-from .const import (
-    CONF_LOCK_NIGHTLATCH,
-    DEFAULT_LOCK_NIGHTLATCH,
-)
 
 
 async def async_setup_entry(
@@ -36,7 +32,9 @@ class SwitchBotLock(SwitchbotEntity, LockEntity):
     _attr_name = None
     _device: switchbot.SwitchbotLock
 
-    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator, force_nightlatch) -> None:
+    def __init__(
+        self, coordinator: SwitchbotDataUpdateCoordinator, force_nightlatch
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self._async_update_attrs()
@@ -61,7 +59,7 @@ class SwitchBotLock(SwitchbotEntity, LockEntity):
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
-        if self._attr_supported_features  & (LockEntityFeature.OPEN):
+        if self._attr_supported_features & (LockEntityFeature.OPEN):
             self._last_run_success = await self._device.unlock_without_unlatch()
         else:
             self._last_run_success = await self._device.unlock()
