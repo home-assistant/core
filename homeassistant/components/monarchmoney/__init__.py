@@ -14,7 +14,7 @@ from homeassistant.exceptions import ConfigEntryError
 
 from .coordinator import MonarchMoneyDataUpdateCoordinator
 
-MonarchMoneyConfigEntry = ConfigEntry[MonarchMoneyDataUpdateCoordinator]  # noqa: F821
+type MonarchMoneyConfigEntry = ConfigEntry[MonarchMoneyDataUpdateCoordinator]
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 

@@ -41,6 +41,11 @@ def mock_config_api() -> Generator[AsyncMock]:
         load_fixture("get_cashflow_summary.json", DOMAIN)
     )
 
+    # monarch_data = MonarchData(
+    #     account_data=account_data["accounts"],
+    #     cashflow_summary=cashflow_summary["summary"][0]["summary"],
+    # )
+
     with (
         patch(
             "homeassistant.components.monarchmoney.config_flow.MonarchMoney",

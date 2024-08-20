@@ -65,7 +65,7 @@ def _type_to_icon(account: Any) -> str:
         "vehicle": "mdi:car",
     }
     if account_subtype not in icon_mapping.get(account_type, {}):
-        LOGGER.info(
+        LOGGER.debug(
             f"Unknown subtype '{account_subtype}' for account type '{account_type}'"
         )
         return default_icons.get(account_type, "mdi:cash")

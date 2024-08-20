@@ -54,7 +54,6 @@ class MonarchMoneyAccountEntity(CoordinatorEntity[MonarchMoneyDataUpdateCoordina
         super().__init__(coordinator)
 
         self.entity_description = description
-
         self._account_id = account["id"]
 
         # Parse out some fields
