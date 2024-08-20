@@ -72,8 +72,6 @@ async def test_flow_import_failure(
 
 
 USER_INPUT = {
-    CONF_URL: "http://1.1.1.1",
-    CONF_API_KEY: "my_api_key",
     CONF_ONLY_INCLUDE_FEEDID: ["1"],
 }
 

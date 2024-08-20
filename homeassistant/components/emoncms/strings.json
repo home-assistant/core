@@ -3,9 +3,8 @@
     "step": {
       "user": {
         "data": {
-          "id": "id",
-          "url": "Server Hostname",
-          "api_key": "API Key"
+          "url": "[%key:common::config_flow::data::url%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       }
     }
@@ -14,8 +13,6 @@
     "step": {
       "init": {
         "data": {
-          "url": "[%key:component::emoncms::config::step::user::data::url%]",
-          "api_key": "[%key:component::emoncms::config::step::user::data::api_key%]",
           "include_only_feed_id": "Choose feeds to include"
         }
       }

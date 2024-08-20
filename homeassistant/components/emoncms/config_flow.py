@@ -135,9 +135,10 @@ class EmoncmsOptionsFlow(OptionsFlowWithConfigEntry):
     ) -> ConfigFlowResult:
         """Manage the options."""
         errors: dict[str, str] = {}
-        url = self._config_entry.data[CONF_URL]
-        api_key = self._config_entry.data[CONF_API_KEY]
-        include_only_feeds = self._config_entry.data.get(CONF_ONLY_INCLUDE_FEEDID, [])
+        data = self.options if self.options else self._config_entry.data
+        url = data[CONF_URL]
+        api_key = data[CONF_API_KEY]
+        include_only_feeds = data.get(CONF_ONLY_INCLUDE_FEEDID, [])
         options: Any = include_only_feeds
         result = await get_feed_list(self.hass, url, api_key)
         if not result[CONF_SUCCESS]:
@@ -146,21 +147,20 @@ class EmoncmsOptionsFlow(OptionsFlowWithConfigEntry):
             options = get_options(result[CONF_MESSAGE])
         dropdown = {"options": options, "mode": "dropdown", "multiple": True}
         if user_input:
-            url = user_input[CONF_URL]
-            api_key = user_input[CONF_API_KEY]
             include_only_feeds = user_input[CONF_ONLY_INCLUDE_FEEDID]
-            if self.hass.config_entries.async_update_entry(
-                self._config_entry, title=sensor_name(url), data=user_input
-            ):
-                LOGGER.debug("entry updated")
-            return self.async_create_entry(data=user_input)
+            return self.async_create_entry(
+                title=sensor_name(url),
+                data={
+                    CONF_URL: url,
+                    CONF_API_KEY: api_key,
+                    CONF_ONLY_INCLUDE_FEEDID: include_only_feeds,
+                },
+            )
 
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_URL, default=url): str,
-                    vol.Required(CONF_API_KEY, default=api_key): str,
                     vol.Required(
                         CONF_ONLY_INCLUDE_FEEDID, default=include_only_feeds
                     ): selector({"select": dropdown}),
