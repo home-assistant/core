@@ -140,7 +140,7 @@ class BleBoxCoverEntity(BleBoxEntity[blebox_uniapi.cover.Cover], CoverEntity):
         return self._is_state(STATE_CLOSED)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
-        """Fully cpen the cover position."""
+        """Fully open the cover position."""
         await self._feature.async_open()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
