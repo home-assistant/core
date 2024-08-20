@@ -31,16 +31,16 @@ BLEBOX_TO_COVER_DEVICE_CLASSES = {
 
 BLEBOX_TO_HASS_COVER_STATES = {
     None: None,
-    0: STATE_CLOSING,  # moving down
-    1: STATE_OPENING,  # moving up
-    2: STATE_OPEN,  # manually stopped
-    3: STATE_CLOSED,  # lower limit
-    4: STATE_OPEN,  # upper limit / open
-    # gateController
-    5: STATE_OPEN,  # overload
-    6: STATE_OPEN,  # motor failure
-    # 7 is not used
-    8: STATE_OPEN,  # safety stop
+    # all blebox covers
+    blebox_uniapi.cover.BleboxCoverState.MOVING_DOWN: STATE_CLOSING,
+    blebox_uniapi.cover.BleboxCoverState.MOVING_UP: STATE_OPENING,
+    blebox_uniapi.cover.BleboxCoverState.MANUALLY_STOPPED: STATE_OPEN,
+    blebox_uniapi.cover.BleboxCoverState.LOWER_LIMIT_REACHED: STATE_CLOSED,
+    blebox_uniapi.cover.BleboxCoverState.UPPER_LIMIT_REACHED: STATE_OPEN,
+    # extra states of gateController product
+    blebox_uniapi.cover.BleboxCoverState.OVERLOAD: STATE_OPEN,
+    blebox_uniapi.cover.BleboxCoverState.MOTOR_FAILURE: STATE_OPEN,
+    blebox_uniapi.cover.BleboxCoverState.SAFETY_STOP: STATE_OPEN,
 }
 
 
