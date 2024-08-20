@@ -168,7 +168,11 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await self._connect_and_set_dataset(url)
-        except python_otbr_api.OTBRError as exc:
+        except (
+            python_otbr_api.OTBRError,
+            aiohttp.ClientError,
+            TimeoutError,
+        ) as exc:
             _LOGGER.warning("Failed to communicate with OTBR@%s: %s", url, exc)
             return self.async_abort(reason="unknown")
 

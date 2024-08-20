@@ -14,7 +14,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from . import websocket_api
-from .const import DOMAIN
+from .const import DATA_OTBR, DOMAIN
 from .util import OTBRData, update_issues
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -67,14 +67,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
-    hass.data[DOMAIN] = otbrdata
+    hass.data[DATA_OTBR] = otbrdata
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.data.pop(DOMAIN)
+    hass.data.pop(DATA_OTBR)
     return True
 
 
