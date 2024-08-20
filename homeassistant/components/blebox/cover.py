@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from enum import IntEnum
 from typing import Any
 
 from blebox_uniapi.box import Box
@@ -16,14 +15,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_JAMMED,
-    STATE_OPEN,
-    STATE_OPENING,
-    STATE_PROBLEM,
-)
+from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -36,40 +28,18 @@ BLEBOX_TO_COVER_DEVICE_CLASSES = {
     "shutter": CoverDeviceClass.SHUTTER,
 }
 
-
-class BleboxCoverState(IntEnum):
-    """Internal cover state as reported by switchbox devices and blebox_uniapi."""
-
-    MOVING_DOWN = 0
-    MOVING_UP = 1
-    MANUALLY_STOPPED = 2
-    LOWER_LIMIT_REACHED = 3
-    UPPER_LIMIT_REACHED = 4
-    OVERLOAD = 5
-    MOTOR_FAILURE = 6
-    UNUSED = 7
-    SAFETY_STOP = 8
-
-
 BLEBOX_TO_HASS_COVER_STATES = {
     None: None,
-    # === switchBox states ===
-    BleboxCoverState.MOVING_DOWN: STATE_CLOSING,
-    BleboxCoverState.MOVING_UP: STATE_OPENING,
-    # note: MANUALLY_STOPPED means either "stopped during opening" or "stopped during
-    #       closing" but never fully closed or fully opened. However, CoverEntity does
-    #       not distinguish between such states. This may result in seemingly strange
-    #       state transitions in the event log like "Is closing" -> "Was opened".
-    #       This is fine as something that is "partially" opened isn't really closed.
-    #       Such presentation of the state is thus safer for users relying on it.
-    BleboxCoverState.MANUALLY_STOPPED: STATE_OPEN,
-    BleboxCoverState.LOWER_LIMIT_REACHED: STATE_CLOSED,
-    BleboxCoverState.UPPER_LIMIT_REACHED: STATE_OPEN,
-    # === switchBox + gateController states ===
-    BleboxCoverState.OVERLOAD: STATE_PROBLEM,
-    BleboxCoverState.MOTOR_FAILURE: STATE_PROBLEM,
-    BleboxCoverState.UNUSED: None,  # never used
-    BleboxCoverState.SAFETY_STOP: STATE_JAMMED,
+    0: STATE_CLOSING,  # moving down
+    1: STATE_OPENING,  # moving up
+    2: STATE_OPEN,  # manually stopped
+    3: STATE_CLOSED,  # lower limit
+    4: STATE_OPEN,  # upper limit / open
+    # gateController
+    5: STATE_OPEN,  # overload
+    6: STATE_OPEN,  # motor failure
+    # 7 is not used
+    8: STATE_OPEN,  # safety stop
 }
 
 
