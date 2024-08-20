@@ -115,7 +115,6 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
             update_interval=timedelta(hours=4),
         )
         self.client = client
-        self.subscription_id: str = "UNSET"
 
     async def _async_setup(self) -> None:
         """Obtain subscription ID in setup phase."""
