@@ -1333,30 +1333,42 @@ async def test_duplicate_removal(
 
 
 @pytest.mark.parametrize(
-    ("discovery_topic", "discovery_payload", "entity_ids"),
+    ("discovery_payloads", "entity_ids"),
     [
         (
-            "homeassistant/sensor/bla/config",
-            '{ "device":{"identifiers":["0AFFD2"]},'
-            '  "state_topic": "foobar/sensor",'
-            '  "unique_id": "unique" }',
-            ["sensor.none_mqtt_sensor"],
+            {
+                "homeassistant/sensor/sens1/config": "{"
+                '"device":{"identifiers":["0AFFD2"]},'
+                '"state_topic": "foobar/sensor1",'
+                '"unique_id": "unique1",'
+                '"name": "sensor1"'
+                "}",
+                "homeassistant/sensor/sens2/config": "{"
+                '"device":{"identifiers":["0AFFD2"]},'
+                '"state_topic": "foobar/sensor2",'
+                '"unique_id": "unique2",'
+                '"name": "sensor2"'
+                "}",
+            },
+            ["sensor.none_sensor1", "sensor.none_sensor2"],
         ),
         (
-            "homeassistant/device/bla/config",
-            '{ "device":{"identifiers":["0AFFD2"]},'
-            '  "o": {"name": "foobar"},'
-            '  "cmp": {"sens1": {'
-            '  "platform": "sensor",'
-            '  "name": "sensor1",'
-            '  "state_topic": "foobar/sensor1",'
-            '  "unique_id": "unique1"'
-            ' },"sens2": {'
-            '  "platform": "sensor",'
-            '  "name": "sensor2",'
-            '  "state_topic": "foobar/sensor2",'
-            '  "unique_id": "unique2"'
-            "}}}",
+            {
+                "homeassistant/device/bla/config": "{"
+                '"device":{"identifiers":["0AFFD2"]},'
+                '"o": {"name": "foobar"},'
+                '"cmp": {"sens1": {'
+                '"platform": "sensor",'
+                '"name": "sensor1",'
+                '"state_topic": "foobar/sensor1",'
+                '"unique_id": "unique1"'
+                '},"sens2": {'
+                '"platform": "sensor",'
+                '"name": "sensor2",'
+                '"state_topic": "foobar/sensor2",'
+                '  "unique_id": "unique2"'
+                "}}}"
+            },
             ["sensor.none_sensor1", "sensor.none_sensor2"],
         ),
     ],
@@ -1368,8 +1380,7 @@ async def test_cleanup_device_manual(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    discovery_topic: str,
-    discovery_payload: str,
+    discovery_payloads: dict[str, str],
     entity_ids: list[str],
 ) -> None:
     """Test discovered device is cleaned up when entry removed from device."""
@@ -1378,7 +1389,8 @@ async def test_cleanup_device_manual(
     ws_client = await hass_ws_client(hass)
 
     mock_debouncer.clear()
-    async_fire_mqtt_message(hass, discovery_topic, discovery_payload)
+    for discovery_topic, discovery_payload in discovery_payloads.items():
+        async_fire_mqtt_message(hass, discovery_topic, discovery_payload)
     await mock_debouncer.wait()
 
     # Verify device and registry entries are created
@@ -1413,9 +1425,12 @@ async def test_cleanup_device_manual(
         state = hass.states.get(entity_id)
         assert state is None
 
-    # Verify retained discovery topic has been cleared
-    mqtt_mock.async_publish.assert_called_with(discovery_topic, None, 0, True)
-    await hass.async_block_till_done()
+    # Verify retained discovery topics have been cleared
+    mqtt_mock.async_publish.assert_has_calls(
+        [call(discovery_topic, None, 0, True) for discovery_topic in discovery_payloads]
+    )
+
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.mark.parametrize(
