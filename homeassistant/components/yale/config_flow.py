@@ -42,4 +42,4 @@ class YaleConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=
         """Create an entry for the flow."""
         if entry := self.reauth_entry:
             return self.async_update_reload_and_abort(entry, data=data)
-        return self.async_create_entry(title=self.flow_impl.name, data=data)
+        return await super().async_oauth_create_entry(data)
