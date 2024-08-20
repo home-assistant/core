@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
@@ -15,6 +16,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MP_DOMAIN,
+    SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     MediaPlayerEnqueue,
@@ -33,15 +35,20 @@ from homeassistant.components.sonos.media_player import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_MEDIA_STOP,
     SERVICE_REPEAT_SET,
     SERVICE_SHUFFLE_SET,
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
-    STATE_IDLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     CONNECTION_UPNP,
@@ -87,15 +94,18 @@ async def test_device_registry_not_portable(
 
 
 async def test_entity_basic(
-    hass: HomeAssistant, async_autosetup_sonos, discover
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    discover,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test basic state and attributes."""
-    state = hass.states.get("media_player.zone_a")
-    assert state.state == STATE_IDLE
-    attributes = state.attributes
-    assert attributes["friendly_name"] == "Zone A"
-    assert attributes["is_volume_muted"] is False
-    assert attributes["volume_level"] == 0.19
+    entity_id = "media_player.zone_a"
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+    state = hass.states.get(entity_entry.entity_id)
+    assert state == snapshot(name=f"{entity_entry.entity_id}-state")
 
 
 @pytest.mark.parametrize(
@@ -963,3 +973,33 @@ async def test_volume(
     )
     # SoCo uses 0..100 for its range.
     assert soco.volume == 30
+
+
+@pytest.mark.parametrize(
+    ("service", "client_call"),
+    [
+        (SERVICE_MEDIA_PLAY, "play"),
+        (SERVICE_MEDIA_PAUSE, "pause"),
+        (SERVICE_MEDIA_STOP, "stop"),
+        (SERVICE_MEDIA_NEXT_TRACK, "next"),
+        (SERVICE_MEDIA_PREVIOUS_TRACK, "previous"),
+        (SERVICE_CLEAR_PLAYLIST, "clear_queue"),
+    ],
+)
+async def test_media_transport(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    service: str,
+    client_call: str,
+) -> None:
+    """Test the media player transport services."""
+    await hass.services.async_call(
+        MP_DOMAIN,
+        service,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+        },
+        blocking=True,
+    )
+    assert getattr(soco, client_call).call_count == 1
