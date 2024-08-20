@@ -1535,15 +1535,11 @@ async def async_process_component_config(
             return IntegrationConfigInfo(None, config_exceptions)
 
     # No custom config validator, proceed with schema validation
-    if config_schema := getattr(component, "CONFIG_SCHEMA", None):
+    if hasattr(component, "CONFIG_SCHEMA"):
         try:
-            if domain in config:
-                # cv.isdir, cv.isfile, cv.isdevice are not async
-                # friendly so we need to run this in executor
-                schema = await hass.async_add_executor_job(config_schema, config)
-            else:
-                schema = config_schema(config)
-            return IntegrationConfigInfo(schema, [])
+            return IntegrationConfigInfo(
+                await cv.async_validate(hass, component.CONFIG_SCHEMA, config), []
+            )
         except vol.Invalid as exc:
             exc_info = ConfigExceptionInfo(
                 exc,
@@ -1578,7 +1574,9 @@ async def async_process_component_config(
         # Validate component specific platform schema
         platform_path = f"{p_name}.{domain}"
         try:
-            p_validated = component_platform_schema(p_config)
+            p_validated = await cv.async_validate(
+                hass, component_platform_schema, p_config
+            )
         except vol.Invalid as exc:
             exc_info = ConfigExceptionInfo(
                 exc,

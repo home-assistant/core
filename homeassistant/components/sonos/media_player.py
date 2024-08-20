@@ -162,7 +162,9 @@ async def async_setup_entry(
         "set_sleep_timer",
     )
 
-    platform.async_register_entity_service(SERVICE_CLEAR_TIMER, {}, "clear_sleep_timer")
+    platform.async_register_entity_service(
+        SERVICE_CLEAR_TIMER, None, "clear_sleep_timer"
+    )
 
     platform.async_register_entity_service(
         SERVICE_UPDATE_ALARM,
