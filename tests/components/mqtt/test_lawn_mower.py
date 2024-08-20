@@ -276,7 +276,7 @@ async def test_run_lawn_mower_service_optimistic(
     mqtt_mock.async_publish.assert_called_once_with("dock-test-topic", "dock", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lawn_mower.test")
-    assert state.state == "returning"
+    assert state.state == "docked"
 
 
 @pytest.mark.parametrize(
@@ -376,7 +376,7 @@ async def test_run_lawn_mower_service_optimistic_with_command_templates(
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lawn_mower.test_lawn_mower")
-    assert state.state == "returning"
+    assert state.state == "docked"
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -646,7 +646,7 @@ async def test_entity_id_update_discovery_update(
         (
             SERVICE_DOCK,
             "dock",
-            "returning",
+            "docked",
             "test/lawn_mower_stat",
             "dock-test-topic",
         ),

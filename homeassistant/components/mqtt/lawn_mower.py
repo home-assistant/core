@@ -199,7 +199,7 @@ class MqttLawnMower(MqttEntity, LawnMowerEntity, RestoreEntity):
 
     async def async_dock(self) -> None:
         """Dock the mower."""
-        await self._async_operate("dock", LawnMowerActivity.RETURNING)
+        await self._async_operate("dock", LawnMowerActivity.DOCKED)
 
     async def async_pause(self) -> None:
         """Pause the lawn mower."""
