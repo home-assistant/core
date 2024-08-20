@@ -605,6 +605,7 @@ async def cleanup_device_registry(
     entity_registry = er.async_get(hass)
     if (
         device_id
+        and device_id not in device_registry.deleted_devices
         and config_entry_id
         and not er.async_entries_for_device(
             entity_registry, device_id, include_disabled_entities=False

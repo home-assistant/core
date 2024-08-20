@@ -392,9 +392,6 @@ async def async_start(  # noqa: C901
             node_id = component_config.node_id
             object_id = component_config.object_id
             discovery_payload = component_config.discovery_payload
-            if component not in SUPPORTED_COMPONENTS:
-                _LOGGER.warning("Integration %s is not supported", component)
-                return
 
             if TOPIC_BASE in discovery_payload:
                 _replace_topic_base(discovery_payload)
