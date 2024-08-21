@@ -1676,10 +1676,10 @@ def _backward_compat_trigger_schema(value: Any | None) -> Any:
             raise vol.Invalid(
                 "Cannot specify both 'platform' and 'trigger'. Please use 'trigger' only."
             )
-        value[CONF_TRIGGER] = value.pop(CONF_PLATFORM)
+        value[CONF_TRIGGER] = value[CONF_PLATFORM]
     elif CONF_TRIGGER in value:
-        # `trigger` has been renamed to `platform`
-        value[CONF_PLATFORM] = value.pop(CONF_TRIGGER)
+        # We should still support the old `platform` key
+        value[CONF_PLATFORM] = value[CONF_TRIGGER]
 
     return value
 
