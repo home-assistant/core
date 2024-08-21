@@ -287,7 +287,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             )
         try:
             await self.start_task
-        except (AddonError, AbortFlow) as err:
+        except AddonError as err:
             _LOGGER.error(err)
             return self.async_show_progress_done(next_step_id="start_failed")
         finally:
@@ -319,9 +319,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             ):
                 break
         else:
-            raise AbortFlow(
-                "addon_start_failed",
-                description_placeholders={"addon": addon_manager.addon_name},
+            raise AddonError(
+                f"Failed to correctly start {addon_manager.addon_name} add-on"
             )
 
     async def async_step_user(
