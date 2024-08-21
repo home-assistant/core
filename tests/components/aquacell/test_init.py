@@ -38,6 +38,17 @@ async def test_load_unload_entry(
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
+async def test_load_withoutbrand(
+    hass: HomeAssistant,
+    mock_aquacell_api: AsyncMock,
+    mock_config_entry_without_brand: MockConfigEntry,
+) -> None:
+    """Test load entry without brand."""
+    await setup_integration(hass, mock_config_entry_without_brand)
+
+    assert mock_config_entry_without_brand.state is ConfigEntryState.LOADED
+
+
 async def test_coordinator_update_valid_refresh_token(
     hass: HomeAssistant,
     mock_aquacell_api: AsyncMock,
