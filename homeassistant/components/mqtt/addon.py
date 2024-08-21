@@ -1,4 +1,7 @@
-"""Provide add-on management."""
+"""Provide MQTT add-on management.
+
+Currently only supports the official mosquitto add-on.
+"""
 
 from __future__ import annotations
 
