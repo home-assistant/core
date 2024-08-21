@@ -34,10 +34,10 @@ class AssistSatelliteEntity(entity.Entity):
         translation_key="assist_satellite",
         entity_category=EntityCategory.CONFIG,
     )
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_should_poll = False
-    _attr_state: AssistSatelliteState | None = (
-        AssistSatelliteState.WAITING_FOR_WAKE_WORD
-    )
+    _attr_state: AssistSatelliteState | None = AssistSatelliteState.LISTENING_WAKE_WORD
 
     _conversation_id: str | None = None
     _conversation_id_time: float | None = None
@@ -46,7 +46,6 @@ class AssistSatelliteEntity(entity.Entity):
 
     async def _async_accept_pipeline_from_satellite(
         self,
-        context: Context,
         audio_stream: AsyncIterable[bytes],
         start_stage: PipelineStage = PipelineStage.STT,
         end_stage: PipelineStage = PipelineStage.TTS,
@@ -95,7 +94,7 @@ class AssistSatelliteEntity(entity.Entity):
 
         await async_pipeline_from_audio_stream(
             self.hass,
-            context=context,
+            context=self._context or Context(),
             event_callback=self.on_pipeline_event,
             stt_metadata=stt.SpeechMetadata(
                 language="",  # set in async_pipeline_from_audio_stream
@@ -130,7 +129,7 @@ class AssistSatelliteEntity(entity.Entity):
             self._set_state(AssistSatelliteState.RESPONDING)
         elif event.type == PipelineEventType.RUN_END:
             if not self._run_has_tts:
-                self._set_state(AssistSatelliteState.WAITING_FOR_WAKE_WORD)
+                self._set_state(AssistSatelliteState.LISTENING_WAKE_WORD)
 
     def _set_state(self, state: AssistSatelliteState):
         """Set the entity's state."""
@@ -139,4 +138,4 @@ class AssistSatelliteEntity(entity.Entity):
 
     def tts_response_finished(self) -> None:
         """Tell entity that the text-to-speech response has finished playing."""
-        self._set_state(AssistSatelliteState.WAITING_FOR_WAKE_WORD)
+        self._set_state(AssistSatelliteState.LISTENING_WAKE_WORD)

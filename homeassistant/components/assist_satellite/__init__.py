@@ -20,7 +20,6 @@ __all__ = [
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 
 

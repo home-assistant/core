@@ -105,6 +105,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         self.voip_device.protocol = self
+        self.async_set_context(Context(user_id=self.config_entry.data["user"]))
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
@@ -145,7 +146,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             _LOGGER.debug("Starting pipeline")
             async with asyncio.timeout(_PIPELINE_TIMEOUT_SEC):
                 await self._async_accept_pipeline_from_satellite(  # noqa: SLF001
-                    context=Context(user_id=self.config_entry.data["user"]),
                     audio_stream=queue_to_iterable(
                         self._audio_queue, timeout=self._audio_chunk_timeout
                     ),

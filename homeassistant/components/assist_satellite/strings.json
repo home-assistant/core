@@ -2,13 +2,11 @@
   "entity": {
     "assist_satellite": {
       "assist_satellite": {
-        "name": "Assist satellite",
         "state": {
-          "idle": "Idle",
-          "listening": "Listening",
+          "listening_wake_word": "Wake word",
+          "listening_command": "Voice command",
           "responding": "Responding",
-          "processing": "Processing",
-          "muted": "Muted"
+          "processing": "Processing"
         }
       }
     }
