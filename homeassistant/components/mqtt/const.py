@@ -149,8 +149,6 @@ DEFAULT_WILL = {
     ATTR_RETAIN: DEFAULT_RETAIN,
 }
 
-ADDON_SLUG = "core_mosquitto"
-
 DOMAIN = "mqtt"
 LOGGER = logging.getLogger(__package__)
 

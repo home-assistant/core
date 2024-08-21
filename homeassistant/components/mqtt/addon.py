@@ -9,8 +9,9 @@ from homeassistant.components.hassio import AddonManager
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.singleton import singleton
 
-from .const import ADDON_SLUG, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 
+ADDON_SLUG = "core_mosquitto"
 DATA_ADDON_MANAGER = f"{DOMAIN}_addon_manager"
 
 
