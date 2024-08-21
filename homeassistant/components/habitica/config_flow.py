@@ -97,7 +97,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                     session=session,
                     username=user_input[CONF_USERNAME],
                     password=user_input[CONF_PASSWORD],
-                )  # pyright: ignore[reportGeneralTypeIssues]
+                )
 
             except ClientResponseError as ex:
                 if ex.status == HTTPStatus.UNAUTHORIZED:
@@ -154,7 +154,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                 api_response = await api.user.get(
                     session=session,
                     userFields="auth",
-                )  # pyright: ignore[reportGeneralTypeIssues]
+                )
             except ClientResponseError as ex:
                 if ex.status == HTTPStatus.UNAUTHORIZED:
                     errors["base"] = "invalid_auth"
