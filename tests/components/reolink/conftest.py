@@ -38,6 +38,7 @@ TEST_USE_HTTPS = True
 TEST_HOST_MODEL = "RLN8-410"
 TEST_ITEM_NUMBER = "P000"
 TEST_CAM_MODEL = "RLC-123"
+TEST_DUO_MODEL = "Reolink Duo PoE"
 
 
 @pytest.fixture
