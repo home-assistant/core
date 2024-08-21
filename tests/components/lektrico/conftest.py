@@ -1,9 +1,9 @@
 """Fixtures for Lektrico Charging Station integration tests."""
 
 from ipaddress import ip_address
+from typing import Any
 from unittest.mock import patch
 
-from lektricowifi import Settings
 import pytest
 
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
@@ -29,12 +29,12 @@ MOCKED_DEVICE_ZEROCONF_DATA = ZeroconfServiceInfo(
 )
 
 
-def _mocked_device_config() -> Settings:
-    return Settings(
-        type=MOCKED_DEVICE_TYPE,
-        serial_number=MOCKED_DEVICE_SERIAL_NUMBER,
-        board_revision=MOCKED_DEVICE_BOARD_REV,
-    )
+def _mocked_device_config() -> dict[str, Any]:
+    return {
+        "type": MOCKED_DEVICE_TYPE,
+        "serial_number": MOCKED_DEVICE_SERIAL_NUMBER,
+        "board_revision": MOCKED_DEVICE_BOARD_REV,
+    }
 
 
 @pytest.fixture
