@@ -198,15 +198,6 @@ def get_addon_discovery_info_fixture(discovery_info: Any) -> Generator[AsyncMock
         yield get_addon_discovery_info
 
 
-@pytest.fixture(name="addon_setup_time", autouse=True)
-def addon_setup_time_fixture() -> Generator[int]:
-    """Mock add-on setup sleep time."""
-    with patch(
-        "homeassistant.components.mqtt.config_flow.ADDON_SETUP_TIMEOUT", new=0
-    ) as addon_setup_time:
-        yield addon_setup_time
-
-
 @pytest.fixture(name="addon_store_info")
 def addon_store_info_fixture() -> Generator[AsyncMock]:
     """Mock Supervisor add-on store info."""

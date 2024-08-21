@@ -197,6 +197,24 @@ def mock_process_uploaded_file(
         yield mock_upload
 
 
+@pytest.fixture(name="supervisor")
+def supervisor_fixture() -> Generator[MagicMock]:
+    """Mock Supervisor."""
+    with patch(
+        "homeassistant.components.mqtt.config_flow.is_hassio", return_value=True
+    ) as is_hassio:
+        yield is_hassio
+
+
+@pytest.fixture(name="addon_setup_time", autouse=True)
+def addon_setup_time_fixture() -> Generator[int]:
+    """Mock add-on setup sleep time."""
+    with patch(
+        "homeassistant.components.mqtt.config_flow.ADDON_SETUP_TIMEOUT", new=0
+    ) as addon_setup_time:
+        yield addon_setup_time
+
+
 @pytest.mark.usefixtures("mqtt_client_mock")
 async def test_user_connection_works(
     hass: HomeAssistant,
