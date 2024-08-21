@@ -112,5 +112,5 @@ async def test_options_flow_failure(
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     await hass.async_block_till_done()
     assert result["errors"]["base"] == "failure"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
