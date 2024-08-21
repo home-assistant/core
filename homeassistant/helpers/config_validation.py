@@ -78,6 +78,7 @@ from homeassistant.const import (
     CONF_TARGET,
     CONF_THEN,
     CONF_TIMEOUT,
+    CONF_TRIGGER,
     CONF_UNTIL,
     CONF_VALUE_TEMPLATE,
     CONF_VARIABLES,
@@ -90,7 +91,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
     WEEKDAYS,
-    UnitOfTemperature, CONF_TRIGGER,
+    UnitOfTemperature,
 )
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -1662,6 +1663,7 @@ CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
     )
 )
 
+
 def _backward_compat_trigger_schema(value: Any | None) -> Any:
     """Backward compatibility for trigger schemas."""
 
@@ -1675,20 +1677,22 @@ def _backward_compat_trigger_schema(value: Any | None) -> Any:
                 "Cannot specify both 'platform' and 'trigger'. Please use 'trigger' only."
             )
         value[CONF_TRIGGER] = value.pop(CONF_PLATFORM)
+    elif CONF_TRIGGER in value:
+        # `trigger` has been renamed to `platform`
+        value[CONF_PLATFORM] = value.pop(CONF_TRIGGER)
 
     return value
 
+
 TRIGGER_BASE_SCHEMA = vol.Schema(
-    vol.All(
-    _backward_compat_trigger_schema,
-        {
-            vol.Optional(CONF_ALIAS): str,
-            vol.Required(CONF_TRIGGER): str,
-            vol.Optional(CONF_ID): str,
-            vol.Optional(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
-            vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
-        }
-)
+    {
+        vol.Optional(CONF_ALIAS): str,
+        vol.Exclusive(CONF_PLATFORM, "trigger"): str,
+        vol.Exclusive(CONF_TRIGGER, "trigger"): str,
+        vol.Optional(CONF_ID): str,
+        vol.Optional(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
+        vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
+    }
 )
 
 
@@ -1702,7 +1706,9 @@ def _base_trigger_validator(value: Any) -> Any:
     return value
 
 
-TRIGGER_SCHEMA = vol.All(ensure_list, [_base_trigger_validator])
+TRIGGER_SCHEMA = vol.All(
+    ensure_list, [_base_trigger_validator, _backward_compat_trigger_schema]
+)
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema(
     {
