@@ -41,6 +41,7 @@ ALLOW_NAME_TRANSLATION = {
     "local_todo",
     "nmap_tracker",
     "rpi_power",
+    "swiss_public_transport",
     "waze_travel_time",
     "zodiac",
 }

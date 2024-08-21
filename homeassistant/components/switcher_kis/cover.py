@@ -29,7 +29,7 @@ from .coordinator import SwitcherDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 API_SET_POSITON = "set_position"
-API_STOP = "stop"
+API_STOP = "stop_shutter"
 
 
 async def async_setup_entry(
@@ -98,6 +98,7 @@ class SwitcherCoverEntity(
 
         try:
             async with SwitcherType2Api(
+                self.coordinator.data.device_type,
                 self.coordinator.data.ip_address,
                 self.coordinator.data.device_id,
                 self.coordinator.data.device_key,

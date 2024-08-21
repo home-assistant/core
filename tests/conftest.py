@@ -84,7 +84,7 @@ from homeassistant.helpers.translation import _TranslationsCacheData
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, location
-from homeassistant.util.async_ import create_eager_task
+from homeassistant.util.async_ import create_eager_task, get_scheduled_timer_handles
 from homeassistant.util.json import json_loads
 
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
@@ -372,7 +372,7 @@ def verify_cleanup(
     if tasks:
         event_loop.run_until_complete(asyncio.wait(tasks))
 
-    for handle in event_loop._scheduled:  # type: ignore[attr-defined]
+    for handle in get_scheduled_timer_handles(event_loop):
         if not handle.cancelled():
             with long_repr_strings():
                 if expected_lingering_timers:
@@ -1263,6 +1263,16 @@ def enable_statistics() -> bool:
 
 
 @pytest.fixture
+def enable_missing_statistics() -> bool:
+    """Fixture to control enabling of recorder's statistics compilation.
+
+    To enable statistics, tests can be marked with:
+    @pytest.mark.parametrize("enable_missing_statistics", [True])
+    """
+    return False
+
+
+@pytest.fixture
 def enable_schema_validation() -> bool:
     """Fixture to control enabling of recorder's statistics table validation.
 
@@ -1453,6 +1463,7 @@ async def async_test_recorder(
     recorder_db_url: str,
     enable_nightly_purge: bool,
     enable_statistics: bool,
+    enable_missing_statistics: bool,
     enable_schema_validation: bool,
     enable_migrate_context_ids: bool,
     enable_migrate_event_type_ids: bool,
@@ -1511,7 +1522,7 @@ async def async_test_recorder(
     )
     compile_missing = (
         recorder.Recorder._schedule_compile_missing_statistics
-        if enable_statistics
+        if enable_missing_statistics
         else None
     )
     migrate_states_context_ids = (

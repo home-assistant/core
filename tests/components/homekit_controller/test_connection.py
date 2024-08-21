@@ -5,8 +5,9 @@ import dataclasses
 from unittest import mock
 
 from aiohomekit.controller import TransportType
+from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
-from aiohomekit.model.services import ServicesTypes
+from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.testing import FakeController
 import pytest
 
@@ -344,12 +345,12 @@ async def test_thread_provision_migration_failed(hass: HomeAssistant) -> None:
     assert config_entry.data["Connection"] == "BLE"
 
 
-async def test_skip_polling_all_watchable_accessory_mode(
+async def test_poll_firmware_version_only_all_watchable_accessory_mode(
     hass: HomeAssistant, get_next_aid: Callable[[], int]
 ) -> None:
-    """Test that we skip polling if available and all chars are watchable accessory mode."""
+    """Test that we only poll firmware if available and all chars are watchable accessory mode."""
 
-    def _create_accessory(accessory):
+    def _create_accessory(accessory: Accessory) -> Service:
         service = accessory.add_service(ServicesTypes.LIGHTBULB, name="TestDevice")
 
         on_char = service.add_char(CharacteristicsTypes.ON)
@@ -370,7 +371,10 @@ async def test_skip_polling_all_watchable_accessory_mode(
         # Initial state is that the light is off
         state = await helper.poll_and_get_state()
         assert state.state == STATE_OFF
-        assert mock_get_characteristics.call_count == 0
+        assert mock_get_characteristics.call_count == 2
+        # Verify only firmware version is polled
+        assert mock_get_characteristics.call_args_list[0][0][0] == {(1, 7)}
+        assert mock_get_characteristics.call_args_list[1][0][0] == {(1, 7)}
 
         # Test device goes offline
         helper.pairing.available = False
@@ -382,16 +386,16 @@ async def test_skip_polling_all_watchable_accessory_mode(
             state = await helper.poll_and_get_state()
             assert state.state == STATE_UNAVAILABLE
             # Tries twice before declaring unavailable
-            assert mock_get_characteristics.call_count == 2
+            assert mock_get_characteristics.call_count == 4
 
         # Test device comes back online
         helper.pairing.available = True
         state = await helper.poll_and_get_state()
         assert state.state == STATE_OFF
-        assert mock_get_characteristics.call_count == 3
+        assert mock_get_characteristics.call_count == 6
 
         # Next poll should not happen because its a single
         # accessory, available, and all chars are watchable
         state = await helper.poll_and_get_state()
         assert state.state == STATE_OFF
-        assert mock_get_characteristics.call_count == 3
+        assert mock_get_characteristics.call_count == 8
