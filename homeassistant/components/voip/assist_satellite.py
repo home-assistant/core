@@ -19,10 +19,7 @@ from homeassistant.components.assist_pipeline import (
     PipelineEventType,
     PipelineNotFound,
 )
-from homeassistant.components.assist_satellite import (
-    AssistSatelliteEntity,
-    AssistSatelliteState,
-)
+from homeassistant.components.assist_satellite import AssistSatelliteEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -109,21 +106,14 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         """Run when entity about to be added to hass."""
         self.voip_device.protocol = self
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        if self.voip_device.protocol == self:
+            self.voip_device.protocol = None
+
     # -------------------------------------------------------------------------
     # VoIP
     # -------------------------------------------------------------------------
-
-    def connection_made(self, transport):
-        """Server is ready."""
-        super().connection_made(transport)
-        self.voip_device.set_is_active(True)
-        self._set_state(AssistSatelliteState.WAITING_FOR_WAKE_WORD)
-
-    def disconnect(self):
-        """Handle connection is lost or closed."""
-        super().disconnect()
-        self.voip_device.set_is_active(False)
-        self._set_state(AssistSatelliteState.WAITING_FOR_WAKE_WORD)
 
     def on_chunk(self, audio_bytes: bytes) -> None:
         """Handle raw audio chunk."""
@@ -143,6 +133,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self,
     ) -> None:
         """Forward audio to pipeline STT and handle TTS."""
+        self.voip_device.set_is_active(True)
 
         # Play listening tone at the start of each cycle
         await self._play_tone(Tones.LISTENING, silence_before=0.2)
@@ -185,6 +176,8 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             self.disconnect()
             self._clear_audio_queue()
         finally:
+            self.voip_device.set_is_active(False)
+
             # Allow pipeline to run again
             self._pipeline_task = None
 

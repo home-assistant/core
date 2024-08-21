@@ -124,8 +124,8 @@ class AssistSatelliteEntity(entity.Entity):
             self._set_state(AssistSatelliteState.LISTENING_COMMAND)
         elif event.type == PipelineEventType.INTENT_START:
             self._set_state(AssistSatelliteState.PROCESSING)
-        elif event.type == PipelineEventType.TTS_END:
-            # Wait until tts_response_finished is called to return to idle
+        elif event.type == PipelineEventType.TTS_START:
+            # Wait until tts_response_finished is called to return to waiting state
             self._run_has_tts = True
             self._set_state(AssistSatelliteState.RESPONDING)
         elif event.type == PipelineEventType.RUN_END:

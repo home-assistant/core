@@ -268,6 +268,21 @@ async def test_pipeline(
             )
         )
 
+        # Fake tts result
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                type=assist_pipeline.PipelineEventType.TTS_START,
+                data={
+                    "engine": "test",
+                    "language": hass.config.language,
+                    "voice": "test",
+                    "tts_input": "fake-text",
+                },
+            )
+        )
+
+        assert satellite.state == AssistSatelliteState.RESPONDING
+
         # Proceed with media output
         event_callback(
             assist_pipeline.PipelineEvent(
@@ -276,9 +291,16 @@ async def test_pipeline(
             )
         )
 
-        assert satellite.state == AssistSatelliteState.RESPONDING
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                type=assist_pipeline.PipelineEventType.RUN_END
+            )
+        )
+
+    original_tts_response_finished = satellite.tts_response_finished
 
     def tts_response_finished():
+        original_tts_response_finished()
         done.set()
 
     async def async_get_media_source_audio(
@@ -327,8 +349,7 @@ async def test_pipeline(
         async with asyncio.timeout(1):
             await done.wait()
 
-        # Hang up
-        satellite.disconnect()
+        # Finished speaking
         assert satellite.state == AssistSatelliteState.WAITING_FOR_WAKE_WORD
 
 
