@@ -172,10 +172,17 @@ async def async_browse_media(
 
     # Check for config entry specifier, and extract Spotify URI
     parsed_url = yarl.URL(media_content_id)
+    host = parsed_url.host
 
+    # config entry ids can be upper or lower case. Yarl always
+    # returns host names in lower case, so we need to look for the config entry
+    # in both l
     if (
-        parsed_url.host is None
-        or (entry := hass.config_entries.async_get_entry(parsed_url.host.upper()))
+        host is None
+        or (
+            entry := hass.config_entries.async_get_entry(host)
+            or hass.config_entries.async_get_entry(host.upper())
+        )
         is None
         or not isinstance(entry.runtime_data, HomeAssistantSpotifyData)
     ):
