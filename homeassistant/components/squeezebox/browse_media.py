@@ -51,6 +51,24 @@ CONTENT_TYPE_MEDIA_CLASS = {
     MediaType.PLAYLIST: {"item": MediaClass.PLAYLIST, "children": MediaClass.TRACK},
 }
 
+FAVORITE_CONTENT_TYPES = {
+    "favorite": {
+        "media_content_class": "favorite",
+        "can_play": True,
+        "can_expand": False,
+    },
+    "folder": {
+        "media_content_class": "Favorites",
+        "can_play": False,
+        "can_expand": True,
+    },
+    "album": {
+        "media_content_class": MediaType.ALBUM,
+        "can_play": True,
+        "can_expand": True,
+    },
+}
+
 CONTENT_TYPE_TO_CHILD_TYPE = {
     MediaType.ALBUM: MediaType.TRACK,
     MediaType.PLAYLIST: MediaType.PLAYLIST,
@@ -100,6 +118,7 @@ async def build_item_response(entity, player, payload):
                 "0",
                 str(BROWSE_LIMIT),
                 f"item_id:{search_id if search_id != "Favorites" else ""}",
+                "want_url:1",
             ]
         )
 
@@ -124,16 +143,47 @@ async def build_item_response(entity, player, payload):
                     _start = 1 if item["image"].startswith("/") else 0
                     _icon = _lms_prefix(player) + item["image"][_start:]
 
+                if item.get("url", "").startswith("db:album.title"):
+                    _type = "album"
+                    _album_seach_string = unquote(item.get("url"))[15:].split(
+                        "&contributor.name="
+                    )
+                    _album_title = _album_seach_string[0]
+                    _album_contributor = (
+                        _album_seach_string[1] if len(_album_seach_string) > 1 else None
+                    )
+
+                    _command = ["albums"]
+                    _command.extend(
+                        ["0", str(BROWSE_LIMIT), f"search:{_album_title}", "tags:a"]
+                    )
+
+                    _album_result = await player.async_query(*_command)
+
+                    if _album_contributor is None or _album_result["count"] == 1:
+                        _album_id = _album_result["albums_loop"][0]["id"]
+                    else:
+                        for _album in _album_result["albums_loop"]:
+                            if _album["artist"] == _album_contributor:
+                                _album_id = _album["id"]
+                                break
+                elif item.get("hasitems") == 1:
+                    _type = "folder"
+                else:
+                    _type = "favorite"
+
                 children.append(
                     BrowseMedia(
                         title=item["name"],
                         media_class=child_media_class["item"],
-                        media_content_id=item["id"],
-                        media_content_type=(
-                            "favorite" if item.get("hasitems") != 1 else "Favorites"
-                        ),
-                        can_play=item.get("hasitems") != 1,
-                        can_expand=item.get("hasitems") == 1,
+                        media_content_id=item["id"]
+                        if _type != "album"
+                        else str(_album_id),
+                        media_content_type=FAVORITE_CONTENT_TYPES[_type][
+                            "media_content_class"
+                        ],
+                        can_play=FAVORITE_CONTENT_TYPES[_type]["can_play"],
+                        can_expand=FAVORITE_CONTENT_TYPES[_type]["can_expand"],
                         thumbnail=_icon,
                     )
                 )
