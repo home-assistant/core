@@ -6,9 +6,9 @@ import asyncio
 import collections
 from collections.abc import Awaitable, Callable, Iterable
 from contextlib import suppress
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from enum import IntFlag
+from enum import IntFlag, StrEnum, auto
 from functools import cached_property, partial
 import logging
 import os
@@ -18,6 +18,7 @@ from typing import Any, Final, cast, final
 
 from aiohttp import hdrs, web
 import attr
+from stringcase import camelcase
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -152,6 +153,57 @@ class Image:
 
     content_type: str = attr.ib()
     content: bytes = attr.ib()
+
+
+@dataclass
+class RtcConfiguration:
+    """Web Rtc settings for peer connections.
+
+    Subset of the full RtcConfiguration interface definition
+    https://devdoc.net/web/developer.mozilla.org/en-US/docs/Web/API/RTCConfiguration.html
+    """
+
+    @dataclass
+    class IceServer:
+        urls: str
+        credential: str | None = None
+        username: str | None = None
+
+    class BundlePolicy(StrEnum):
+        BALANCED = auto()
+        MAX_BUNDLE = "max-bundle"
+        MAX_COMPAT = "max-compat"
+
+    class IceTransportPolicy(StrEnum):
+        ALL = auto()
+        RELAY = auto()
+
+    ice_servers: list[IceServer] | None = None
+    ice_transport_policy: IceTransportPolicy | None = None
+    bundle_policy: BundlePolicy | None = None
+
+    def as_ws_dict(self) -> dict:
+        """Return a dictionary conforming to the RtcConfiguration interface with null values omitted."""
+        return asdict(
+            self,
+            dict_factory=lambda x: {
+                camelcase(k): str(v) if isinstance(v, StrEnum) else v
+                for (k, v) in x
+                if v is not None
+            },
+        )
+
+
+@dataclass
+class WebRtcConfiguration:
+    class TransportDirection(StrEnum):
+        RECVONLY = auto()
+        SENDONLY = auto()
+        SENDRECV = auto()
+
+    rtc_configuration: RtcConfiguration | None = None
+    audio_direction: TransportDirection = TransportDirection.RECVONLY
+    video_direction: TransportDirection = TransportDirection.RECVONLY
 
 
 @bind_hass
@@ -393,6 +445,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     websocket_api.async_register_command(hass, ws_camera_stream)
     websocket_api.async_register_command(hass, ws_camera_web_rtc_offer)
+    websocket_api.async_register_command(hass, ws_camera_web_rtc_config)
+    websocket_api.async_register_command(hass, ws_camera_web_rtc_close)
     websocket_api.async_register_command(hass, websocket_get_prefs)
     websocket_api.async_register_command(hass, websocket_update_prefs)
 
@@ -639,6 +693,23 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             if answer_sdp:
                 return answer_sdp
         raise HomeAssistantError("WebRTC offer was not accepted by any providers")
+
+    async def async_get_web_rtc_config(self) -> WebRtcConfiguration:
+        """Return settings for the WebRtc peer session.
+
+        This is used by cameras with StreamType.WEB_RTC.
+
+        Integrations can override to specify settings such as ice_servers.
+        """
+        return WebRtcConfiguration()
+
+    async def async_handle_web_rtc_close(self) -> None:
+        """Do any cleanup following an RTC stream ending.
+
+        This is used by cameras with StreamType.WEB_RTC.
+
+        Integrations can override to do cleanup after a session has closed.
+        """
 
     def camera_image(
         self, width: int | None = None, height: int | None = None
@@ -943,6 +1014,95 @@ async def ws_camera_web_rtc_offer(
         )
     else:
         connection.send_result(msg["id"], {"answer": answer})
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "camera/web_rtc_config",
+        vol.Required("entity_id"): cv.entity_id,
+    }
+)
+@websocket_api.async_response
+async def ws_camera_web_rtc_config(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Get configuration for the web rtc session such as ice servers.
+
+    Async friendly.
+    """
+    entity_id = msg["entity_id"]
+    camera = _get_camera_from_entity_id(hass, entity_id)
+    if camera.frontend_stream_type != StreamType.WEB_RTC:
+        connection.send_error(
+            msg["id"],
+            "web_rtc_config_failed",
+            (
+                "Camera does not support WebRTC,"
+                f" frontend_stream_type={camera.frontend_stream_type}"
+            ),
+        )
+        return
+    try:
+        config = await camera.async_get_web_rtc_config()
+    except (HomeAssistantError, ValueError) as ex:
+        _LOGGER.error("Error getting WebRTC configuration: %s", ex)
+        connection.send_error(msg["id"], "web_rtc_config_failed", str(ex))
+    except TimeoutError:
+        _LOGGER.error("Timeout getting WebRTC configuration")
+        connection.send_error(
+            msg["id"], "web_rtc_config_failed", "Timeout getting WebRTC configuration"
+        )
+    else:
+        connection.send_result(
+            msg["id"],
+            {
+                "rtc_configuration": config.rtc_configuration.as_ws_dict()
+                if config.rtc_configuration
+                else None,
+                "video_direction": config.video_direction,
+                "audio_direction": config.audio_direction,
+            },
+        )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "camera/web_rtc_close",
+        vol.Required("entity_id"): cv.entity_id,
+    }
+)
+@websocket_api.async_response
+async def ws_camera_web_rtc_close(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Close the web rtc session.
+
+    Async friendly.
+    """
+    entity_id = msg["entity_id"]
+    camera = _get_camera_from_entity_id(hass, entity_id)
+    if camera.frontend_stream_type != StreamType.WEB_RTC:
+        connection.send_error(
+            msg["id"],
+            "web_rtc_close_failed",
+            (
+                "Camera does not support WebRTC,"
+                f" frontend_stream_type={camera.frontend_stream_type}"
+            ),
+        )
+        return
+    try:
+        await camera.async_handle_web_rtc_close()
+    except (HomeAssistantError, ValueError) as ex:
+        _LOGGER.error("Error calling WebRTC close: %s", ex)
+        connection.send_error(msg["id"], "web_rtc_close_failed", str(ex))
+    except TimeoutError:
+        _LOGGER.error("Timeout calling WebRTC close")
+        connection.send_error(
+            msg["id"], "web_rtc_close_failed", "Timeout calling WebRTC close"
+        )
+    else:
+        connection.send_result(msg["id"])
 
 
 @websocket_api.websocket_command(
