@@ -160,7 +160,27 @@ async def test_zeroconf_flow_re_entry(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_flow_errors(
+async def test_zeroconf_flow_errors(
+    hass: HomeAssistant,
+    mock_linkplay_factory_bridge: AsyncMock,
+) -> None:
+    """Test flow when the device discovered through Zeroconf cannot be reached."""
+
+    # Temporarily make the mock_linkplay_factory_bridge throw an exception
+    mock_linkplay_factory_bridge.side_effect = (LinkPlayRequestException("Error"),)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_errors(
     hass: HomeAssistant,
     mock_linkplay_factory_bridge: AsyncMock,
 ) -> None:
