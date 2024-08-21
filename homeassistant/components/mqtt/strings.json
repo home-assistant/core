@@ -26,7 +26,7 @@
       "user": {
         "description": "Please choose how you want to connect to the MQTT broker:",
         "menu_options": {
-          "addon": "Set up and use the official {addon} add-on.",
+          "addon": "Use the official {addon} add-on.",
           "broker": "Manually enter the MQTT connection details"
         }
       },
