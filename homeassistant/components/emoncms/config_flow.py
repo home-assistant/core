@@ -139,7 +139,7 @@ class EmoncmsOptionsFlow(OptionsFlowWithConfigEntry):
         url = data[CONF_URL]
         api_key = data[CONF_API_KEY]
         include_only_feeds = data.get(CONF_ONLY_INCLUDE_FEEDID, [])
-        options: Any = include_only_feeds
+        options: list = include_only_feeds
         result = await get_feed_list(self.hass, url, api_key)
         if not result[CONF_SUCCESS]:
             errors["base"] = result[CONF_MESSAGE]

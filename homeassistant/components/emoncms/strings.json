@@ -2,6 +2,7 @@
   "config": {
     "step": {
       "user": {
+        "description": "Fill in server url and your api key.",
         "data": {
           "url": "[%key:common::config_flow::data::url%]",
           "api_key": "[%key:common::config_flow::data::api_key%]"
