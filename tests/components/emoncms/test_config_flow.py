@@ -1,11 +1,10 @@
 """Test emoncms config flow."""
 
 import copy
-from typing import Any
 from unittest.mock import AsyncMock
 
 from homeassistant.components.emoncms.const import CONF_ONLY_INCLUDE_FEEDID, DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_PLATFORM, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -23,21 +22,17 @@ YAML = {
 }
 
 
-async def flow_import(hass: HomeAssistant, yaml: dict[str, Any]) -> ConfigFlowResult:
-    """Import of a yaml config."""
-    return await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=yaml,
-    )
-
-
 async def test_flow_import_all_feeds(
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
     emoncms_client: AsyncMock,
 ) -> None:
     """YAML import of all feeds - success test."""
-    result = await flow_import(hass, YAML)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=YAML,
+    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == SENSOR_NAME
     assert result["data"] == FLOW_RESULT
@@ -52,10 +47,15 @@ FLOW_RESULT_INCL_FEED[CONF_ONLY_INCLUDE_FEEDID] = ["2"]
 
 async def test_flow_import_include_feeds(
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
     emoncms_client: AsyncMock,
 ) -> None:
     """YAML import with included feed - success test."""
-    result = await flow_import(hass, YAML_INCL_FEED)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=YAML_INCL_FEED,
+    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == SENSOR_NAME
     assert result["data"] == FLOW_RESULT_INCL_FEED
@@ -67,8 +67,28 @@ async def test_flow_import_failure(
 ) -> None:
     """YAML import - failure test."""
     emoncms_client.async_request.return_value = EMONCMS_FAILURE
-    result = await flow_import(hass, YAML)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=YAML,
+    )
     assert result["type"] == FlowResultType.ABORT
+
+
+async def test_flow_import_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    emoncms_client: AsyncMock,
+) -> None:
+    """Test we abort import data set when entry is already configured."""
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=YAML,
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 USER_INPUT = {
@@ -98,6 +118,7 @@ async def test_options_flow(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == CONFIG_ENTRY
+    assert config_entry.options == CONFIG_ENTRY
 
 
 async def test_options_flow_failure(
