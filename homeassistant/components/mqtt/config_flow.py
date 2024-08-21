@@ -295,6 +295,33 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_progress_done(next_step_id="setup_entry_from_discovery")
 
+    async def _async_get_config_and_try(self) -> dict[str, Any] | None:
+        """Get the MQTT add-on discovery info and try the connection."""
+        if self._hassio_discovery is not None:
+            return self._hassio_discovery
+        addon_manager: AddonManager = get_addon_manager(self.hass)
+        try:
+            addon_discovery_config = (
+                await addon_manager.async_get_addon_discovery_info()
+            )
+            config: dict[str, Any] = {
+                CONF_BROKER: addon_discovery_config[CONF_HOST],
+                CONF_PORT: addon_discovery_config[CONF_PORT],
+                CONF_USERNAME: addon_discovery_config.get(CONF_USERNAME),
+                CONF_PASSWORD: addon_discovery_config.get(CONF_PASSWORD),
+                CONF_DISCOVERY: DEFAULT_DISCOVERY,
+            }
+        except AddonError:
+            # We do not have discovery information yet
+            return None
+        if await self.hass.async_add_executor_job(
+            try_connection,
+            config,
+        ):
+            self._hassio_discovery = config
+            return config
+        return None
+
     async def _async_start_addon(self) -> None:
         """Start the Mosquitto Broker add-on."""
         addon_manager: AddonManager = get_addon_manager(self.hass)
@@ -303,20 +330,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         # Sleep some seconds to let the add-on start properly before connecting.
         for _ in range(ADDON_SETUP_TIMEOUT_ROUNDS):
             await asyncio.sleep(ADDON_SETUP_TIMEOUT)
-            # Finish setup using discovery info
-            try:
-                addon_discovery_config = (
-                    await addon_manager.async_get_addon_discovery_info()
-                )
-                config: dict[str, Any] = addon_discovery_config.copy()
-                config[CONF_BROKER] = config.pop(CONF_HOST)
-            except AddonError:
-                # We do not have discovery information yet
-                continue
-            if await self.hass.async_add_executor_job(
-                try_connection,
-                config,
-            ):
+            # Finish setup using discovery info to test the connection
+            if await self._async_get_config_and_try():
                 break
         else:
             raise AddonError(
@@ -346,17 +361,15 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Set up mqtt entry from discovery info."""
-        addon_manager = self._addon_manager
-        addon_discovery_config = (
-            await addon_manager.async_get_addon_discovery_info()
-        ) | {"addon": addon_manager.addon_name}
-        return await self.async_step_hassio(
-            HassioServiceInfo(
-                config=addon_discovery_config,
-                name=addon_manager.addon_name,
-                slug=addon_manager.addon_slug,
-                uuid="",
+        if (config := await self._async_get_config_and_try()) is not None:
+            return self.async_create_entry(
+                title=self._addon_manager.addon_name,
+                data=config,
             )
+
+        raise AbortFlow(
+            "addon_connection_failed",
+            description_placeholders={"addon": self._addon_manager.addon_name},
         )
 
     async def async_step_addon(
