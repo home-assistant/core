@@ -178,8 +178,6 @@ async def test_async_update_playback_error(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    caplog.set_level(logging.ERROR)
-
     # The async_dispatcher_send function seems to swallow exceptions, making pytest.raises unusable
     async_dispatcher_send(
         hass,
@@ -743,8 +741,6 @@ async def test_async_play_media_overlay_invalid_offset_volume_tts(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    caplog.set_level(logging.WARNING)
 
     await hass.services.async_call(
         "media_player",
