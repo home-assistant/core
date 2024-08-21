@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Generator
 from datetime import timedelta
 from http import HTTPStatus
 from ipaddress import ip_address
@@ -12,7 +13,6 @@ from unittest.mock import AsyncMock, _patch, patch
 from aiohttp.hdrs import CONTENT_TYPE
 from aiohttp.test_utils import TestClient
 import pytest
-from typing_extensions import Generator
 
 from homeassistant import const, setup
 from homeassistant.components import (

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 from pyirishrail.pyirishrail import IrishRailRTPI
 import voluptuous as vol
@@ -104,7 +105,7 @@ class IrishRailTransportSensor(SensorEntity):
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self._times:
             next_up = "None"
@@ -127,6 +128,7 @@ class IrishRailTransportSensor(SensorEntity):
                 ATTR_NEXT_UP: next_up,
                 ATTR_TRAIN_TYPE: self._times[0][ATTR_TRAIN_TYPE],
             }
+        return None
 
     @property
     def native_unit_of_measurement(self):

@@ -1,5 +1,6 @@
 """Configuration for Elmax tests."""
 
+from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, patch
 
@@ -12,7 +13,6 @@ from elmax_api.constants import (
 from httpx import Response
 import pytest
 import respx
-from typing_extensions import Generator
 
 from . import (
     MOCK_DIRECT_HOST,

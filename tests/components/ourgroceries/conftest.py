@@ -1,9 +1,9 @@
 """Common fixtures for the OurGroceries tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.ourgroceries import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME

@@ -1,5 +1,6 @@
 """Tests for Renault sensors."""
 
+from collections.abc import Generator
 from datetime import datetime
 from unittest.mock import patch
 
@@ -7,7 +8,6 @@ import pytest
 from renault_api.exceptions import RenaultException
 from renault_api.kamereon import schemas
 from renault_api.kamereon.models import ChargeSchedule
-from typing_extensions import Generator
 
 from homeassistant.components.renault.const import DOMAIN
 from homeassistant.components.renault.services import (

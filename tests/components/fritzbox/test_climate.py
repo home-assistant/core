@@ -46,7 +46,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
 
-from . import FritzDeviceClimateMock, set_devices, setup_config_entry
+from . import (
+    FritzDeviceClimateMock,
+    FritzDeviceClimateWithoutTempSensorMock,
+    set_devices,
+    setup_config_entry,
+)
 from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
 from tests.common import async_fire_time_changed
@@ -162,6 +167,18 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     assert state.state == PRESET_COMFORT
 
 
+async def test_hkr_wo_temperature_sensor(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test hkr without exposing dedicated temperature sensor data block."""
+    device = FritzDeviceClimateWithoutTempSensorMock()
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 18.0
+
+
 async def test_target_temperature_on(hass: HomeAssistant, fritz: Mock) -> None:
     """Test turn device on."""
     device = FritzDeviceClimateMock()
@@ -263,10 +280,10 @@ async def test_set_temperature_temperature(hass: HomeAssistant, fritz: Mock) -> 
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 123},
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 23},
         True,
     )
-    assert device.set_target_temperature.call_args_list == [call(123)]
+    assert device.set_target_temperature.call_args_list == [call(23)]
 
 
 async def test_set_temperature_mode_off(hass: HomeAssistant, fritz: Mock) -> None:
@@ -282,7 +299,7 @@ async def test_set_temperature_mode_off(hass: HomeAssistant, fritz: Mock) -> Non
         {
             ATTR_ENTITY_ID: ENTITY_ID,
             ATTR_HVAC_MODE: HVACMode.OFF,
-            ATTR_TEMPERATURE: 123,
+            ATTR_TEMPERATURE: 23,
         },
         True,
     )
@@ -303,7 +320,7 @@ async def test_set_temperature_mode_heat(hass: HomeAssistant, fritz: Mock) -> No
         {
             ATTR_ENTITY_ID: ENTITY_ID,
             ATTR_HVAC_MODE: HVACMode.HEAT,
-            ATTR_TEMPERATURE: 123,
+            ATTR_TEMPERATURE: 23,
         },
         True,
     )

@@ -1,12 +1,12 @@
 """The tests for the camera component."""
 
+from collections.abc import Generator
 from http import HTTPStatus
 import io
 from types import ModuleType
 from unittest.mock import AsyncMock, Mock, PropertyMock, mock_open, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import camera
 from homeassistant.components.camera.const import (

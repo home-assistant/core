@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from asyncio import Event
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import AsyncGenerator, Awaitable, Callable, Coroutine
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -24,7 +24,6 @@ from aioesphomeapi import (
     VoiceAssistantFeature,
 )
 import pytest
-from typing_extensions import AsyncGenerator
 from zeroconf import Zeroconf
 
 from homeassistant.components.esphome import dashboard
@@ -422,7 +421,7 @@ async def _mock_generic_device_entry(
     class MockReconnectLogic(BaseMockReconnectLogic):
         """Mock ReconnectLogic."""
 
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             """Init the mock."""
             super().__init__(*args, **kwargs)
             mock_device.set_on_disconnect(kwargs["on_disconnect"])

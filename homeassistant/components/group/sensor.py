@@ -406,7 +406,7 @@ class SensorGroup(GroupEntity, SensorEntity):
                         and (uom := state.attributes["unit_of_measurement"])
                         not in self._valid_units
                     ):
-                        raise HomeAssistantError("Not a valid unit")
+                        raise HomeAssistantError("Not a valid unit")  # noqa: TRY301
 
                     sensor_values.append((entity_id, numeric_state, state))
                     if entity_id in self._state_incorrect:

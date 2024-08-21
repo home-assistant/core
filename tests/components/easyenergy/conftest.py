@@ -1,11 +1,11 @@
 """Fixtures for easyEnergy integration tests."""
 
+from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from easyenergy import Electricity, Gas
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.easyenergy.const import DOMAIN
 from homeassistant.core import HomeAssistant

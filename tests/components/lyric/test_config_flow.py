@@ -26,7 +26,7 @@ CLIENT_SECRET = "5678"
 
 
 @pytest.fixture
-async def mock_impl(hass):
+async def mock_impl(hass: HomeAssistant) -> None:
     """Mock implementation."""
     await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
@@ -45,12 +45,11 @@ async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
     assert result["reason"] == "missing_credentials"
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_impl")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    mock_impl,
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -112,12 +111,11 @@ async def test_full_flow(
     assert len(mock_setup.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_impl")
 async def test_reauthentication_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    mock_impl,
 ) -> None:
     """Test reauthentication flow."""
     old_entry = MockConfigEntry(

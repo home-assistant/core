@@ -36,7 +36,7 @@ from .const import (
 )
 from .models import DATA_MQTT, DATA_MQTT_AVAILABLE, ReceiveMessage
 
-AVAILABILITY_TIMEOUT = 30.0
+AVAILABILITY_TIMEOUT = 50.0
 
 TEMP_DIR_NAME = f"home-assistant-{DOMAIN}"
 

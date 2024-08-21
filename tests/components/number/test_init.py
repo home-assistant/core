@@ -1,10 +1,10 @@
 """The tests for the Number component."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.number import (
     ATTR_MAX,
@@ -121,7 +121,7 @@ class MockNumberEntityDescr(NumberEntity):
     Step is calculated based on the smaller max_value and min_value.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the clas instance."""
         self.entity_description = NumberEntityDescription(
             "test",
@@ -145,7 +145,7 @@ class MockNumberEntityAttrWithDescription(NumberEntity):
     members take precedence over the entity description.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the clas instance."""
         self.entity_description = NumberEntityDescription(
             "test",
@@ -223,7 +223,7 @@ class MockNumberEntityDescrDeprecated(NumberEntity):
     Step is calculated based on the smaller max_value and min_value.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the clas instance."""
         self.entity_description = NumberEntityDescription(
             "test",

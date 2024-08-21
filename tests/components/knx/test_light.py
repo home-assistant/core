@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from freezegun.api import FrozenDateTimeFactory
+import pytest
 from xknx.core import XknxConnectionState
 from xknx.devices.light import Light as XknxLight
 
-from homeassistant.components.knx.const import CONF_STATE_ADDRESS, KNX_ADDRESS
+from homeassistant.components.knx.const import CONF_STATE_ADDRESS, KNX_ADDRESS, Platform
 from homeassistant.components.knx.schema import LightSchema
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -19,8 +21,8 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
 
+from . import KnxEntityGenerator
 from .conftest import KNXTestKit
 
 from tests.common import async_fire_time_changed
@@ -91,9 +93,7 @@ async def test_light_brightness(hass: HomeAssistant, knx: KNXTestKit) -> None:
     )
     # StateUpdater initialize state
     await knx.assert_read(test_brightness_state)
-    await knx.xknx.connection_manager.connection_state_changed(
-        XknxConnectionState.CONNECTED
-    )
+    knx.xknx.connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
     # turn on light via brightness
     await hass.services.async_call(
         "light",
@@ -644,7 +644,9 @@ async def test_light_rgb_individual(hass: HomeAssistant, knx: KNXTestKit) -> Non
     await knx.assert_write(test_blue, (45,))
 
 
-async def test_light_rgbw_individual(hass: HomeAssistant, knx: KNXTestKit) -> None:
+async def test_light_rgbw_individual(
+    hass: HomeAssistant, knx: KNXTestKit, freezer: FrozenDateTimeFactory
+) -> None:
     """Test KNX light with rgbw color in individual GAs."""
     test_red = "1/1/3"
     test_red_state = "1/1/4"
@@ -764,9 +766,8 @@ async def test_light_rgbw_individual(hass: HomeAssistant, knx: KNXTestKit) -> No
     await knx.receive_write(test_green, (0,))
     # # individual color debounce takes 0.2 seconds if not all 4 addresses received
     knx.assert_state("light.test", STATE_ON)
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=XknxLight.DEBOUNCE_TIMEOUT)
-    )
+    freezer.tick(timedelta(seconds=XknxLight.DEBOUNCE_TIMEOUT))
+    async_fire_time_changed(hass)
     await knx.xknx.task_registry.block_till_done()
     knx.assert_state("light.test", STATE_OFF)
     # turn ON from KNX
@@ -1151,3 +1152,69 @@ async def test_light_rgbw_brightness(hass: HomeAssistant, knx: KNXTestKit) -> No
     knx.assert_state(
         "light.test", STATE_ON, brightness=50, rgbw_color=(100, 200, 55, 12)
     )
+
+
+async def test_light_ui_create(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+) -> None:
+    """Test creating a switch."""
+    await knx.setup_integration({})
+    await create_ui_entity(
+        platform=Platform.LIGHT,
+        entity_data={"name": "test"},
+        knx_data={
+            "ga_switch": {"write": "1/1/1", "state": "2/2/2"},
+            "_light_color_mode_schema": "default",
+            "sync_state": True,
+        },
+    )
+    # created entity sends read-request to KNX bus
+    await knx.assert_read("2/2/2")
+    await knx.receive_response("2/2/2", True)
+    state = hass.states.get("light.test")
+    assert state.state is STATE_ON
+
+
+@pytest.mark.parametrize(
+    ("color_temp_mode", "raw_ct"),
+    [
+        ("7.600", (0x10, 0x68)),
+        ("9", (0x46, 0x69)),
+        ("5.001", (0x74,)),
+    ],
+)
+async def test_light_ui_color_temp(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+    color_temp_mode: str,
+    raw_ct: tuple[int, ...],
+) -> None:
+    """Test creating a switch."""
+    await knx.setup_integration({})
+    await create_ui_entity(
+        platform=Platform.LIGHT,
+        entity_data={"name": "test"},
+        knx_data={
+            "ga_switch": {"write": "1/1/1", "state": "2/2/2"},
+            "ga_color_temp": {
+                "write": "3/3/3",
+                "dpt": color_temp_mode,
+            },
+            "_light_color_mode_schema": "default",
+            "sync_state": True,
+        },
+    )
+    await knx.assert_read("2/2/2", True)
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": "light.test", ATTR_COLOR_TEMP_KELVIN: 4200},
+        blocking=True,
+    )
+    await knx.assert_write("3/3/3", raw_ct)
+    state = hass.states.get("light.test")
+    assert state.state is STATE_ON
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == pytest.approx(4200, abs=1)

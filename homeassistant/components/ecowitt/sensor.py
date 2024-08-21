@@ -6,7 +6,7 @@ import dataclasses
 from datetime import datetime
 from typing import Final
 
-from aioecowitt import EcoWittListener, EcoWittSensor, EcoWittSensorTypes
+from aioecowitt import EcoWittSensor, EcoWittSensorTypes
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -37,7 +36,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
-from .const import DOMAIN
+from . import EcowittConfigEntry
 from .entity import EcowittEntity
 
 _METRIC: Final = (
@@ -217,10 +216,12 @@ ECOWITT_SENSORS_MAPPING: Final = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: EcowittConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add sensors if new."""
-    ecowitt: EcoWittListener = hass.data[DOMAIN][entry.entry_id]
+    ecowitt = entry.runtime_data
 
     def _new_sensor(sensor: EcoWittSensor) -> None:
         """Add new sensor."""

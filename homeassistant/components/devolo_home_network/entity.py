@@ -48,6 +48,7 @@ class DevoloEntity(Entity):
             identifiers={(DOMAIN, str(self.device.serial_number))},
             manufacturer="devolo",
             model=self.device.product,
+            model_id=self.device.mt_number,
             serial_number=self.device.serial_number,
             sw_version=self.device.firmware_version,
         )
