@@ -23,6 +23,7 @@ SATELLITE_PLATFORMS = [
     Platform.SELECT,
     Platform.SWITCH,
     Platform.NUMBER,
+    Platform.CONVERSATION,
 ]
 
 __all__ = [
