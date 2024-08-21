@@ -1,6 +1,6 @@
-"""Test ViCare binary sensors."""
+"""Test ViCare water heater entity."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -15,24 +15,6 @@ from .conftest import Fixture, MockPyViCare
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.parametrize(
-    "entity_id",
-    [
-        "burner",
-        "circulation_pump",
-        "frost_protection",
-    ],
-)
-async def test_binary_sensors(
-    hass: HomeAssistant,
-    mock_vicare_gas_boiler: MagicMock,
-    snapshot: SnapshotAssertion,
-    entity_id: str,
-) -> None:
-    """Test the ViCare binary sensor."""
-    assert hass.states.get(f"binary_sensor.model0_{entity_id}") == snapshot
-
-
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
@@ -44,7 +26,7 @@ async def test_all_entities(
     fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
     with (
         patch(f"{MODULE}.vicare_login", return_value=MockPyViCare(fixtures)),
-        patch(f"{MODULE}.PLATFORMS", [Platform.BINARY_SENSOR]),
+        patch(f"{MODULE}.PLATFORMS", [Platform.WATER_HEATER]),
     ):
         await setup_integration(hass, mock_config_entry)
 
