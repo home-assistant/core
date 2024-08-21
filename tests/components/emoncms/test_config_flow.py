@@ -96,7 +96,6 @@ async def test_options_flow(
         result["flow_id"],
         user_input=USER_INPUT,
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == CONFIG_ENTRY
 
