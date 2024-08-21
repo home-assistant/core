@@ -1,7 +1,7 @@
 """Test the Bang & Olufsen WebSocket listener."""
 
 import logging
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 from mozart_api.models import SoftwareUpdateState
 import pytest
@@ -11,7 +11,7 @@ from homeassistant.components.bang_olufsen.const import (
     CONNECTION_STATUS,
     DOMAIN,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -28,10 +28,6 @@ async def test_connection(
 ) -> None:
     """Test on_connection and on_connection_lost logs and calls correctly."""
 
-    @callback
-    def test_connection_callback(connection_status: bool) -> None:
-        assert connection_status is True
-
     mock_mozart_client.websocket_connected = True
 
     mock_config_entry.add_to_hass(hass)
@@ -40,15 +36,20 @@ async def test_connection(
     connection_callback = mock_mozart_client.get_on_connection.call_args[0][0]
 
     caplog.set_level(logging.DEBUG)
+
+    mock_connection_callback = Mock()
+
     async_dispatcher_connect(
         hass,
         f"{mock_config_entry.unique_id}_{CONNECTION_STATUS}",
-        test_connection_callback,
+        mock_connection_callback,
     )
 
     # Call the WebSocket connection status method
     connection_callback()
+    await hass.async_block_till_done()
 
+    mock_connection_callback.assert_called_once_with(True)
     assert f"Connected to the {TEST_NAME} notification channel" in caplog.text
 
 
@@ -60,25 +61,25 @@ async def test_connection_lost(
 ) -> None:
     """Test on_connection_lost logs and calls correctly."""
 
-    @callback
-    def test_connection_lost_callback(connection_status: bool) -> None:
-        assert connection_status is False
-
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     connection_lost_callback = mock_mozart_client.get_on_connection_lost.call_args[0][0]
 
     caplog.set_level(logging.ERROR)
+
+    mock_connection_lost_callback = Mock()
+
     async_dispatcher_connect(
         hass,
         f"{mock_config_entry.unique_id}_{CONNECTION_STATUS}",
-        test_connection_lost_callback,
+        mock_connection_lost_callback,
     )
 
     connection_lost_callback()
     await hass.async_block_till_done()
 
+    mock_connection_lost_callback.assert_called_once_with(False)
     assert f"Lost connection to the {TEST_NAME}" in caplog.text
 
 
@@ -146,17 +147,19 @@ async def test_on_all_notifications_raw(
         }
     )
 
-    @callback
-    def test_notification_callback(event) -> None:
-        assert event is raw_notification_full
+    caplog.set_level(logging.DEBUG)
+
+    mock_event_callback = Mock()
 
     # Listen to BANG_OLUFSEN_WEBSOCKET_EVENT events
-    hass.bus.async_listen_once(BANG_OLUFSEN_WEBSOCKET_EVENT, test_notification_callback)
-
-    caplog.set_level(logging.DEBUG)
+    hass.bus.async_listen(BANG_OLUFSEN_WEBSOCKET_EVENT, mock_event_callback)
 
     # Trigger the notification
     all_notifications_raw_callback(raw_notification)
     await hass.async_block_till_done()
 
     assert str(raw_notification_full) in caplog.text
+
+    mocked_call = mock_event_callback.call_args[0][0].as_dict()
+    assert mocked_call["event_type"] == BANG_OLUFSEN_WEBSOCKET_EVENT
+    assert mocked_call["data"] == raw_notification_full
