@@ -97,20 +97,16 @@ BROWSE_LIMIT = 1000
 def _lms_prefix(player):
     return (player.generate_image_url_from_track_id("")).split("music/")[0]
 
-async def _get_album_id(player, url):
 
-    _album_seach_string = unquote(url)[15:].split(
-                        "&contributor.name="
-                    )
+async def _get_album_id(player, url):
+    _album_seach_string = unquote(url)[15:].split("&contributor.name=")
     _album_title = _album_seach_string[0]
     _album_contributor = (
         _album_seach_string[1] if len(_album_seach_string) > 1 else None
     )
 
     _command = ["albums"]
-    _command.extend(
-        ["0", str(BROWSE_LIMIT), f"search:{_album_title}", "tags:a"]
-    )
+    _command.extend(["0", str(BROWSE_LIMIT), f"search:{_album_title}", "tags:a"])
 
     _album_result = await player.async_query(*_command)
 
@@ -122,6 +118,7 @@ async def _get_album_id(player, url):
                 _album_id = _album["id"]
                 break
     return str(_album_id)
+
 
 async def build_item_response(entity, player, payload):
     """Create response payload for search described by payload."""
@@ -171,7 +168,7 @@ async def build_item_response(entity, player, payload):
                 if item.get("url", "").startswith("db:album.title"):
                     _type = "album"
                     _album_id = await _get_album_id(player, item.get("url"))
- 
+
                 elif item.get("hasitems") == 1:
                     _type = "folder"
                 else:
