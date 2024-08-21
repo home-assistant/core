@@ -1,10 +1,10 @@
 """Tests for the Sonos Media Player platform."""
 
-import logging
 from typing import Any
 from unittest.mock import patch
 
 import pytest
+from soco.data_structures import SearchResult
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.media_player import (
@@ -535,8 +535,10 @@ async def test_play_media_music_library_playlist_dne(
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     soco_mock.music_library.get_playlists.return_value = _mock_playlists
 
-    with caplog.at_level(logging.ERROR):
-        caplog.clear()
+    with pytest.raises(
+        ServiceValidationError,
+        match=f"Could not find Sonos playlist: {media_content_id}",
+    ):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -548,8 +550,53 @@ async def test_play_media_music_library_playlist_dne(
             blocking=True,
         )
     assert soco_mock.play_uri.call_count == 0
-    assert media_content_id in caplog.text
-    assert "playlist" in caplog.text
+
+
+async def test_play_sonos_playlist(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    soco: MockSoCo,
+    sonos_playlists: SearchResult,
+) -> None:
+    """Test that sonos playlists can be played."""
+
+    # Test a successful call
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "playlist",
+            ATTR_MEDIA_CONTENT_ID: "sample playlist",
+        },
+        blocking=True,
+    )
+    assert soco.clear_queue.call_count == 1
+    assert soco.add_to_queue.call_count == 1
+    soco.add_to_queue.asset_called_with(
+        sonos_playlists[0], timeout=LONG_SERVICE_TIMEOUT
+    )
+
+    # Test playing a non-existent playlist
+    soco.clear_queue.reset_mock()
+    soco.add_to_queue.reset_mock()
+    media_content_id: str = "bad playlist"
+    with pytest.raises(
+        ServiceValidationError,
+        match=f"Could not find Sonos playlist: {media_content_id}",
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: "playlist",
+                ATTR_MEDIA_CONTENT_ID: media_content_id,
+            },
+            blocking=True,
+        )
+    assert soco.clear_queue.call_count == 0
+    assert soco.add_to_queue.call_count == 0
 
 
 @pytest.mark.parametrize(
