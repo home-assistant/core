@@ -41,7 +41,6 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
     async def _async_setup(self) -> None:
-        await super()._async_setup()
         await self.hass.async_add_executor_job(
             self.api.open,
         )

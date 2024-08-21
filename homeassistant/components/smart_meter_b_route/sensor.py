@@ -8,9 +8,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfElectricCurrent, UnitOfEnergy, UnitOfPower
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -88,10 +89,7 @@ class SmartMeterBRouteSensor(CoordinatorEntity[BRouteUpdateCoordinator], SensorE
             name=f"Smart Meter B Route {coordinator.bid}",
         )
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        if not self.coordinator.data:
-            return
-        self.native_value = self.coordinator.data.get(self.entity_description.key)
-        self.async_write_ha_state()
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self.coordinator.data.get(self.entity_description.key)
