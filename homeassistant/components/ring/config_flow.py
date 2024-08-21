@@ -34,8 +34,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
     auth = Auth(f"{APPLICATION_NAME}/{ha_version}")
 
     try:
-        token = await hass.async_add_executor_job(
-            auth.fetch_token,
+        token = await auth.async_fetch_token(
             data[CONF_USERNAME],
             data[CONF_PASSWORD],
             data.get(CONF_2FA),
