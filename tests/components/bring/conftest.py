@@ -1,7 +1,6 @@
 """Common fixtures for the Bring! tests."""
 
 from collections.abc import Generator
-import json
 from typing import cast
 from unittest.mock import AsyncMock, patch
 import uuid
@@ -12,7 +11,7 @@ import pytest
 from homeassistant.components.bring import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 EMAIL = "test-email"
 PASSWORD = "test-password"
@@ -45,8 +44,8 @@ def mock_bring_client() -> Generator[AsyncMock]:
         client = mock_client.return_value
         client.uuid = UUID
         client.login.return_value = cast(BringAuthResponse, {"name": "Bring"})
-        client.load_lists.return_value = json.loads(load_fixture("lists.json", DOMAIN))
-        client.get_list.return_value = json.loads(load_fixture("items.json", DOMAIN))
+        client.load_lists.return_value = load_json_object_fixture("lists.json", DOMAIN)
+        client.get_list.return_value = load_json_object_fixture("items.json", DOMAIN)
         yield client
 
 
