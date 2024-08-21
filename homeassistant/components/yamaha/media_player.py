@@ -183,7 +183,7 @@ async def async_setup_platform(
     if not data:
         data = {}
         await store.async_save(data)
-        raise PlatformNotReady("SSDP Discovery needs a chance to to run")
+        raise PlatformNotReady("SSDP Discovery needs a chance to to run, this is normal and should only happen when first added.")
 
     try:
         zone_ctrls = await hass.async_add_executor_job(_discovery, config_info, data)
