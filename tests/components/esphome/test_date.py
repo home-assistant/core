@@ -35,14 +35,14 @@ async def test_generic_date_entity(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("date.test_my_date")
+    state = hass.states.get("date.test_mydate")
     assert state is not None
     assert state.state == "2024-12-31"
 
     await hass.services.async_call(
         DATE_DOMAIN,
         SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "date.test_my_date", ATTR_DATE: "1999-01-01"},
+        {ATTR_ENTITY_ID: "date.test_mydate", ATTR_DATE: "1999-01-01"},
         blocking=True,
     )
     mock_client.date_command.assert_has_calls([call(1, 1999, 1, 1)])
@@ -71,6 +71,6 @@ async def test_generic_date_missing_state(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("date.test_my_date")
+    state = hass.states.get("date.test_mydate")
     assert state is not None
     assert state.state == STATE_UNKNOWN

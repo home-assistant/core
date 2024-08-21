@@ -30,7 +30,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'followers',
-    'unique_id': 'client_id_followers',
+    'unique_id': 'trwnh_mastodon_social_followers',
     'unit_of_measurement': 'accounts',
   })
 # ---
@@ -80,7 +80,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'following',
-    'unique_id': 'client_id_following',
+    'unique_id': 'trwnh_mastodon_social_following',
     'unit_of_measurement': 'accounts',
   })
 # ---
@@ -130,7 +130,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'posts',
-    'unique_id': 'client_id_posts',
+    'unique_id': 'trwnh_mastodon_social_posts',
     'unit_of_measurement': 'posts',
   })
 # ---
