@@ -21,16 +21,16 @@
   "entity": {
     "sensor": {
       "instantaneous_power": {
-        "name": "Instantaneous Power"
+        "name": "Instantaneous power"
       },
       "total_consumption": {
-        "name": "Total Consumption"
+        "name": "Total consumption"
       },
       "instantaneous_current_t_phase": {
-        "name": "Instantaneous Current T Phase"
+        "name": "Instantaneous current T phase"
       },
       "instantaneous_current_r_phase": {
-        "name": "Instantaneous Current R Phase"
+        "name": "Instantaneous current R phase"
       }
     }
   }

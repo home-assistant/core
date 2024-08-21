@@ -101,17 +101,18 @@ class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
         default_device: str = (
             user_input.get(CONF_DEVICE, first_device) if user_input else first_device
         )
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_DEVICE, default=default_device): vol.In(
-                    device_options
-                ),
-                vol.Required(CONF_ID): str,
-                vol.Required(CONF_PASSWORD): str,
-            }
-        )
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_DEVICE, default=default_device): vol.In(
+                        device_options
+                    ),
+                    vol.Required(CONF_ID): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
         )
 
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:

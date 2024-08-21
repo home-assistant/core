@@ -7,7 +7,6 @@ from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
 from .coordinator import BRouteUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -21,7 +20,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BRouteConfigEntry) -> bo
     device = entry.data[CONF_DEVICE]
     bid = entry.data[CONF_ID]
     password = entry.data[CONF_PASSWORD]
-    hass.data.setdefault(DOMAIN, {})
     try:
         coordinator = BRouteUpdateCoordinator(hass, device, bid, password)
         await coordinator.async_config_entry_first_refresh()

@@ -23,10 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 class BRouteUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """The B Route update coordinator."""
 
-    api: Momonga
-    device: str
-    bid: str
-
     def __init__(
         self,
         hass: HomeAssistant,
@@ -52,20 +48,17 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _get_data(self) -> dict[str, int | float]:
         """Get the data from API."""
-        data = {}
         current = self.api.get_instantaneous_current()
-        data[ATTR_API_INSTANTANEOUS_CURRENT_R_PHASE] = current["r phase current"]
-        data[ATTR_API_INSTANTANEOUS_CURRENT_T_PHASE] = current["t phase current"]
-        data[ATTR_API_INSTANTANEOUS_POWER] = self.api.get_instantaneous_power()
-        data[ATTR_API_TOTAL_CONSUMPTION] = self.api.get_measured_cumulative_energy()
-        return data
+        return {
+            ATTR_API_INSTANTANEOUS_CURRENT_R_PHASE: current["r phase current"],
+            ATTR_API_INSTANTANEOUS_CURRENT_T_PHASE: current["t phase current"],
+            ATTR_API_INSTANTANEOUS_POWER: self.api.get_instantaneous_power(),
+            ATTR_API_TOTAL_CONSUMPTION: self.api.get_measured_cumulative_energy(),
+        }
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data."""
-        data = {}
         try:
-            data = await self.hass.async_add_executor_job(self._get_data)
+            return await self.hass.async_add_executor_job(self._get_data)
         except MomongaError as error:
             raise UpdateFailed(error) from error
-
-        return data

@@ -68,7 +68,7 @@ async def async_setup_entry(
     )
 
 
-class SmartMeterBRouteSensor(SensorEntity, CoordinatorEntity[BRouteUpdateCoordinator]):
+class SmartMeterBRouteSensor(CoordinatorEntity[BRouteUpdateCoordinator], SensorEntity):
     """Representation of a Smart Meter B-route sensor entity."""
 
     _attr_has_entity_name = True
