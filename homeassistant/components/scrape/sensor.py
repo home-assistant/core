@@ -67,10 +67,6 @@ async def async_setup_platform(
 
     entities: list[ScrapeSensor] = []
     for sensor_config in sensors_config:
-        value_template: Template | None = sensor_config.get(CONF_VALUE_TEMPLATE)
-        if value_template is not None:
-            value_template.hass = hass
-
         trigger_entity_config = {CONF_NAME: sensor_config[CONF_NAME]}
         for key in TRIGGER_ENTITY_OPTIONS:
             if key not in sensor_config:
@@ -85,7 +81,7 @@ async def async_setup_platform(
                 sensor_config[CONF_SELECT],
                 sensor_config.get(CONF_ATTRIBUTE),
                 sensor_config[CONF_INDEX],
-                value_template,
+                sensor_config.get(CONF_VALUE_TEMPLATE),
                 True,
             )
         )

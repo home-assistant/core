@@ -197,9 +197,9 @@ class ESPHomeManager:
         if service.data_template:
             try:
                 data_template = {
-                    key: Template(value) for key, value in service.data_template.items()
+                    key: Template(value, hass)
+                    for key, value in service.data_template.items()
                 }
-                template.attach(hass, data_template)
                 service_data.update(
                     template.render_complex(data_template, service.variables)
                 )
@@ -346,7 +346,7 @@ class ESPHomeManager:
     ) -> int | None:
         """Start a voice assistant pipeline."""
         if self.voice_assistant_pipeline is not None:
-            _LOGGER.warning("Voice assistant UDP server was not stopped")
+            _LOGGER.warning("Previous Voice assistant pipeline was not stopped")
             self.voice_assistant_pipeline.stop()
             self.voice_assistant_pipeline = None
 
