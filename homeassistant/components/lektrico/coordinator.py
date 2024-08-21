@@ -23,7 +23,7 @@ from .const import LOGGER
 SCAN_INTERVAL = timedelta(seconds=10)
 
 
-class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator):
+class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Data update coordinator for Lektrico device."""
 
     config_entry: ConfigEntry
