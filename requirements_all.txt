@@ -1738,7 +1738,7 @@ pyasuswrt==0.1.21
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==8.0.3
+pyatmo==8.1.0
 
 # homeassistant.components.apple_tv
 pyatv==0.15.0
