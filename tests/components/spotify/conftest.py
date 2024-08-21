@@ -1,5 +1,6 @@
 """Common test fixtures."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -18,7 +19,7 @@ from tests.common import MockConfigEntry
 
 @pytest.fixture
 def mock_config_entry_1() -> MockConfigEntry:
-    """Mock a config entry."""
+    """Mock a config entry with an upper case entry id."""
     return MockConfigEntry(
         domain=DOMAIN,
         title="spotify_1",
@@ -42,7 +43,7 @@ def mock_config_entry_1() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_config_entry_2() -> MockConfigEntry:
-    """Mock a config entry."""
+    """Mock a config entry with a lower case entry id."""
     return MockConfigEntry(
         domain=DOMAIN,
         title="spotify_2",
@@ -62,16 +63,6 @@ def mock_config_entry_2() -> MockConfigEntry:
         unique_id="99fce612f5b8",
         entry_id="32oesphrnacjcf7vw5bf6odx3",
     )
-
-
-@pytest.fixture
-def spotify_mock(spotify_playlists: dict[str, Any]):
-    """Mock the Spotify API."""
-    with patch("homeassistant.components.spotify.Spotify") as spotify_mock:
-        mock = MagicMock()
-        mock.current_user_playlists.return_value = spotify_playlists
-        spotify_mock.return_value = mock
-        yield spotify_mock
 
 
 @pytest.fixture
@@ -98,9 +89,19 @@ def spotify_playlists() -> dict[str, Any]:
 
 
 @pytest.fixture
+def spotify_mock(spotify_playlists: dict[str, Any]) -> Generator[MagicMock]:
+    """Mock the Spotify API."""
+    with patch("homeassistant.components.spotify.Spotify") as spotify_mock:
+        mock = MagicMock()
+        mock.current_user_playlists.return_value = spotify_playlists
+        spotify_mock.return_value = mock
+        yield spotify_mock
+
+
+@pytest.fixture
 async def spotify_setup(
     hass: HomeAssistant,
-    spotify_mock,
+    spotify_mock: MagicMock,
     mock_config_entry_1: MockConfigEntry,
     mock_config_entry_2: MockConfigEntry,
 ):
