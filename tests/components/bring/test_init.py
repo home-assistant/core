@@ -28,9 +28,9 @@ async def setup_integration(
     await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("mock_bring_client")
 async def test_load_unload(
     hass: HomeAssistant,
-    mock_bring_client: AsyncMock,
     bring_config_entry: MockConfigEntry,
 ) -> None:
     """Test loading and unloading of the config entry."""
@@ -90,14 +90,16 @@ async def test_init_exceptions(
 
 
 @pytest.mark.parametrize("exception", [BringRequestException, BringParseException])
-async def test_load_lists_config_entry_not_ready(
+@pytest.mark.parametrize("bring_method", ["load_lists", "get_list"])
+async def test_config_entry_not_ready(
     hass: HomeAssistant,
     bring_config_entry: MockConfigEntry,
     mock_bring_client: AsyncMock,
     exception: Exception,
+    bring_method: str,
 ) -> None:
-    """Test config entry not ready for load_lists call."""
-    mock_bring_client.load_lists.side_effect = exception
+    """Test config entry not ready."""
+    getattr(mock_bring_client, bring_method).side_effect = exception
     bring_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(bring_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -105,64 +107,16 @@ async def test_load_lists_config_entry_not_ready(
     assert bring_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.parametrize("exception", [BringRequestException, BringParseException])
-async def test_get_list_config_entry_not_ready(
-    hass: HomeAssistant,
-    bring_config_entry: MockConfigEntry,
-    mock_bring_client: AsyncMock,
-    exception: Exception,
-) -> None:
-    """Test config entry not ready for get_list call."""
-
-    mock_bring_client.get_list.side_effect = exception
-    bring_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(bring_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert bring_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
+@pytest.mark.parametrize(
+    "exception", [None, BringAuthException, BringRequestException, BringParseException]
+)
 async def test_config_entry_not_ready_auth_error(
     hass: HomeAssistant,
     bring_config_entry: MockConfigEntry,
     mock_bring_client: AsyncMock,
+    exception: Exception | None,
 ) -> None:
-    """Test config entry not ready from auth error with successful token refresh."""
-
-    mock_bring_client.load_lists.side_effect = BringAuthException
-
-    bring_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(bring_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert bring_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_config_entry_auth_failed(
-    hass: HomeAssistant,
-    bring_config_entry: MockConfigEntry,
-    mock_bring_client: AsyncMock,
-) -> None:
-    """Test config entry auth and token refresh failed."""
-
-    mock_bring_client.load_lists.side_effect = BringAuthException
-    mock_bring_client.retrieve_new_access_token.side_effect = BringAuthException
-
-    bring_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(bring_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert bring_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-@pytest.mark.parametrize("exception", [BringRequestException, BringParseException])
-async def test_token_refresh_exception(
-    hass: HomeAssistant,
-    bring_config_entry: MockConfigEntry,
-    mock_bring_client: AsyncMock,
-    exception: Exception,
-) -> None:
-    """Test exceptions from token refresh call."""
+    """Test config entry not ready from authentication error."""
 
     mock_bring_client.load_lists.side_effect = BringAuthException
     mock_bring_client.retrieve_new_access_token.side_effect = exception
