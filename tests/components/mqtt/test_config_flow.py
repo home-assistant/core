@@ -215,6 +215,11 @@ def addon_setup_time_fixture() -> Generator[int]:
         yield addon_setup_time
 
 
+@pytest.fixture(autouse=True)
+def mock_get_addon_discovery_info(get_addon_discovery_info: AsyncMock) -> None:
+    """Mock get add-on discovery info."""
+
+
 @pytest.mark.usefixtures("mqtt_client_mock")
 async def test_user_connection_works(
     hass: HomeAssistant,

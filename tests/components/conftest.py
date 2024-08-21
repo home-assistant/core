@@ -6,7 +6,7 @@ from collections.abc import Callable, Generator
 from importlib.util import find_spec
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
-from unittest.mock import DEFAULT, AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -185,49 +185,37 @@ def mock_legacy_device_tracker_setup() -> Callable[[HomeAssistant, MockScanner],
 @pytest.fixture(name="discovery_info")
 def discovery_info_fixture() -> Any:
     """Return the discovery info from the supervisor."""
-    return DEFAULT
+    # pylint: disable-next=import-outside-toplevel
+    from .hassio.common import discovery_info_fixture
+
+    return discovery_info_fixture()
 
 
-@pytest.fixture(name="get_addon_discovery_info", autouse=True)
+@pytest.fixture(name="get_addon_discovery_info")
 def get_addon_discovery_info_fixture(discovery_info: Any) -> Generator[AsyncMock]:
     """Mock get add-on discovery info."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_get_addon_discovery_info",
-        return_value=discovery_info,
-    ) as get_addon_discovery_info:
-        yield get_addon_discovery_info
+    # pylint: disable-next=import-outside-toplevel
+    from .hassio.common import get_addon_discovery_info_fixture
+
+    yield from get_addon_discovery_info_fixture(discovery_info)
 
 
 @pytest.fixture(name="addon_store_info")
 def addon_store_info_fixture() -> Generator[AsyncMock]:
     """Mock Supervisor add-on store info."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_get_addon_store_info"
-    ) as addon_store_info:
-        addon_store_info.return_value = {
-            "available": False,
-            "installed": None,
-            "state": None,
-            "version": "1.0.0",
-        }
-        yield addon_store_info
+    # pylint: disable-next=import-outside-toplevel
+    from .hassio.common import addon_store_info_fixture
+
+    yield from addon_store_info_fixture()
 
 
 @pytest.fixture(name="addon_info")
 def addon_info_fixture() -> Generator[AsyncMock]:
     """Mock Supervisor add-on info."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_get_addon_info",
-    ) as addon_info:
-        addon_info.return_value = {
-            "available": False,
-            "hostname": None,
-            "options": {},
-            "state": None,
-            "update_available": False,
-            "version": None,
-        }
-        yield addon_info
+    # pylint: disable-next=import-outside-toplevel
+    from .hassio.common import addon_info_fixture
+
+    yield from addon_info_fixture()
 
 
 @pytest.fixture(name="addon_not_installed")
@@ -235,8 +223,10 @@ def addon_not_installed_fixture(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> AsyncMock:
     """Mock add-on not installed."""
-    addon_store_info.return_value["available"] = True
-    return addon_info
+    # pylint: disable-next=import-outside-toplevel
+    from .hassio.common import addon_not_installed_fixture
+
+    return addon_not_installed_fixture(addon_store_info, addon_info)
 
 
 @pytest.fixture(name="addon_installed")
@@ -244,17 +234,10 @@ def addon_installed_fixture(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> AsyncMock:
     """Mock add-on already installed but not running."""
-    addon_store_info.return_value = {
-        "available": True,
-        "installed": "1.0.0",
-        "state": "stopped",
-        "version": "1.0.0",
-    }
-    addon_info.return_value["available"] = True
-    addon_info.return_value["hostname"] = "core-matter-server"
-    addon_info.return_value["state"] = "stopped"
-    addon_info.return_value["version"] = "1.0.0"
-    return addon_info
+    # pylint: disable-next=import-outside-toplevel
+    from .hassio.common import addon_installed_fixture
+
+    return addon_installed_fixture(addon_store_info, addon_info)
 
 
 @pytest.fixture(name="addon_running")
@@ -262,17 +245,10 @@ def addon_running_fixture(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> AsyncMock:
     """Mock add-on already running."""
-    addon_store_info.return_value = {
-        "available": True,
-        "installed": "1.0.0",
-        "state": "started",
-        "version": "1.0.0",
-    }
-    addon_info.return_value["available"] = True
-    addon_info.return_value["hostname"] = "core-mosquitto"
-    addon_info.return_value["state"] = "started"
-    addon_info.return_value["version"] = "1.0.0"
-    return addon_info
+    # pylint: disable-next=import-outside-toplevel
+    from .hassio.common import addon_running_fixture
+
+    return addon_running_fixture(addon_store_info, addon_info)
 
 
 @pytest.fixture(name="install_addon")
@@ -280,30 +256,16 @@ def install_addon_fixture(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> Generator[AsyncMock]:
     """Mock install add-on."""
+    # pylint: disable-next=import-outside-toplevel
+    from .hassio.common import install_addon_fixture
 
-    async def install_addon_side_effect(hass: HomeAssistant, slug: str) -> None:
-        """Mock install add-on."""
-        addon_store_info.return_value = {
-            "available": True,
-            "installed": "1.0.0",
-            "state": "stopped",
-            "version": "1.0.0",
-        }
-        addon_info.return_value["available"] = True
-        addon_info.return_value["state"] = "stopped"
-        addon_info.return_value["version"] = "1.0.0"
-
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_install_addon"
-    ) as install_addon:
-        install_addon.side_effect = install_addon_side_effect
-        yield install_addon
+    yield from install_addon_fixture(addon_store_info, addon_info)
 
 
 @pytest.fixture(name="start_addon")
 def start_addon_fixture() -> Generator[AsyncMock]:
     """Mock start add-on."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_start_addon"
-    ) as start_addon:
-        yield start_addon
+    # pylint: disable-next=import-outside-toplevel
+    from .hassio.common import start_addon_fixture
+
+    yield from start_addon_fixture()
