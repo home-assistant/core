@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
+from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError, SmlightError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -55,19 +55,21 @@ async def test_async_setup_auth_failed(
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.parametrize("error", [SmlightConnectionError, SmlightAuthError])
 async def test_update_failed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
     freezer: FrozenDateTimeFactory,
+    error: SmlightError,
 ) -> None:
-    """Test update failed due to connection error."""
+    """Test update failed due to error."""
 
     await setup_integration(hass, mock_config_entry)
     entity = hass.states.get("sensor.mock_title_core_chip_temp")
     assert entity.state is not STATE_UNAVAILABLE
 
-    mock_smlight_client.get_info.side_effect = SmlightConnectionError
+    mock_smlight_client.get_info.side_effect = error
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
