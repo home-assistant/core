@@ -1,9 +1,11 @@
 """The tests for the manual Alarm Control Panel component."""
 
+import datetime
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import alarm_control_panel
@@ -13,9 +15,25 @@ from homeassistant.components.manual.alarm_control_panel import (
     ATTR_NEXT_STATE,
     ATTR_PREVIOUS_STATE,
 )
+from homeassistant.components.manual.const import (
+    CONF_ARMING_STATES,
+    CONF_CODE_ARM_REQUIRED,
+    DEFAULT_ALARM_NAME,
+    DEFAULT_DELAY_TIME,
+    DEFAULT_DISARM_AFTER_TRIGGER,
+    DEFAULT_TRIGGER_TIME,
+    DOMAIN,
+)
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
+    CONF_ARMING_TIME,
+    CONF_CODE,
+    CONF_DELAY_TIME,
+    CONF_DISARM_AFTER_TRIGGER,
+    CONF_NAME,
+    CONF_TRIGGER_TIME,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
     SERVICE_ALARM_ARM_HOME,
@@ -36,7 +54,12 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed, mock_component, mock_restore_cache
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_component,
+    mock_restore_cache,
+)
 from tests.components.alarm_control_panel import common
 
 CODE = "HELLO_CODE"
@@ -48,6 +71,17 @@ async def test_setup_demo_platform(hass: HomeAssistant) -> None:
     add_entities = mock.MagicMock()
     await demo.async_setup_entry(hass, {}, add_entities)
     assert add_entities.call_count == 1
+
+
+async def test_time_from_config_entry(
+    hass: HomeAssistant, loaded_entry: MockConfigEntry
+) -> None:
+    """Test the time at a different location."""
+
+    state = hass.states.get("alarm_control_panel.ha_alarm")
+    assert state is not None
+
+    assert state.state == STATE_ALARM_DISARMED
 
 
 @pytest.mark.parametrize(
@@ -333,6 +367,64 @@ async def test_with_specific_pending(
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("service", "expected_state"),
+    [
+        (SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
+        (SERVICE_ALARM_ARM_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
+        (SERVICE_ALARM_ARM_HOME, STATE_ALARM_ARMED_HOME),
+        (SERVICE_ALARM_ARM_NIGHT, STATE_ALARM_ARMED_NIGHT),
+        (SERVICE_ALARM_ARM_VACATION, STATE_ALARM_ARMED_VACATION),
+    ],
+)
+async def test_with_specific_pending_from_config_entry(
+    hass: HomeAssistant,
+    service: str,
+    expected_state: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test arming with specific pending loaded from config entry."""
+
+    config = {
+        CONF_NAME: DEFAULT_ALARM_NAME,
+        CONF_CODE: "1234",
+        CONF_CODE_ARM_REQUIRED: True,
+        CONF_DELAY_TIME: {"seconds": DEFAULT_DELAY_TIME.total_seconds()},
+        CONF_ARMING_TIME: {"seconds": 10},
+        CONF_TRIGGER_TIME: {"seconds": DEFAULT_TRIGGER_TIME.total_seconds()},
+        CONF_DISARM_AFTER_TRIGGER: DEFAULT_DISARM_AFTER_TRIGGER,
+        CONF_ARMING_STATES: [expected_state],
+    }
+    config[f"{expected_state}_arming_time"] = {"seconds": 2}
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=DEFAULT_ALARM_NAME,
+        source=SOURCE_USER,
+        options=config,
+        entry_id="1",
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = "alarm_control_panel.ha_alarm"
+
+    await hass.services.async_call(
+        alarm_control_panel.DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "alarm_control_panel.ha_alarm", ATTR_CODE: "1234"},
+        blocking=True,
+    )
+    assert hass.states.get(entity_id).state == STATE_ALARM_ARMING
+
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == expected_state
 

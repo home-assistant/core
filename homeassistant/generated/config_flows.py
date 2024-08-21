@@ -11,6 +11,7 @@ FLOWS = {
         "group",
         "history_stats",
         "integration",
+        "manual",
         "min_max",
         "random",
         "statistics",

@@ -1,4 +1,117 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "description": "Add a manual alarm control panel",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "code": "Code",
+          "code_arm_required": "Code for arm required",
+          "delay_time": "Delay time",
+          "arming_time": "Arming time",
+          "trigger_time": "Trigger time",
+          "disarm_after_trigger": "Disarm after trigger",
+          "arming_states": "Arming states"
+        },
+        "data_description": {
+          "code": "Code for enabling/disabling the alarm",
+          "code_arm_required": "If true, the code is required to arm the alarm.",
+          "delay_time": "The time in seconds of the 'pending' state before triggering the alarm.",
+          "arming_time": "The time in seconds of the 'arming' state before effecting a state change.",
+          "trigger_time": "The time in seconds of the 'triggered' state in which the alarm is firing.",
+          "disarm_after_trigger": "If true, the alarm will automatically disarm after it has been triggered instead of returning to the previous state.",
+          "arming_states": "Limit the supported arming states."
+        }
+      },
+      "state_specific": {
+        "description": "Add custom settings per alarm state",
+        "data": {
+          "armed_custom_bypass_delay_time": "Custom bypass delay time",
+          "armed_custom_bypass_arming_time": "Custom bypass arming time",
+          "armed_custom_bypass_trigger_time": "Custom bypass trigger time",
+          "armed_home_delay_time": "Home delay time",
+          "armed_home_arming_time": "Home arming time",
+          "armed_home_trigger_time": "Home trigger time",
+          "armed_away_delay_time": "Away delay time",
+          "armed_away_arming_time": "Away arming time",
+          "armed_away_trigger_time": "Away trigger time",
+          "armed_night_delay_time": "Night delay time",
+          "armed_night_arming_time": "Night arming time",
+          "armed_night_trigger_time": "Night trigger time",
+          "armed_vacation_delay_time": "Vacation delay time",
+          "armed_vacation_arming_time": "Vacation arming time",
+          "armed_vacation_trigger_time": "Vacation trigger time",
+          "disarmed_delay_time": "Disarmed delay time",
+          "disarmed_arming_time": "Disarmed arming time",
+          "disarmed_trigger_time": "Disarmed trigger time",
+          "triggered_delay_time": "Triggered delay time",
+          "triggered_arming_time": "Triggered arming time",
+          "triggered_trigger_time": "Triggered trigger time"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "code": "[%key:component::manual::config::step::user::data::code%]",
+          "code_arm_required": "[%key:component::manual::config::step::user::data::code_arm_required%]",
+          "delay_time": "[%key:component::manual::config::step::user::data::delay_time%]",
+          "arming_time": "[%key:component::manual::config::step::user::data::arming_time%]",
+          "trigger_time": "[%key:component::manual::config::step::user::data::trigger_time%]",
+          "disarm_after_trigger": "[%key:component::manual::config::step::user::data::disarm_after_trigger%]",
+          "arming_states": "[%key:component::manual::config::step::user::data::arming_states%]"
+        },
+        "data_description": {
+          "code": "[%key:component::manual::config::step::user::data_description::code%]",
+          "code_arm_required": "[%key:component::manual::config::step::user::data_description::code_arm_required%]",
+          "delay_time": "[%key:component::manual::config::step::user::data_description::delay_time%]",
+          "arming_time": "[%key:component::manual::config::step::user::data_description::arming_time%]",
+          "trigger_time": "[%key:component::manual::config::step::user::data_description::trigger_time%]",
+          "disarm_after_trigger": "[%key:component::manual::config::step::user::data_description::disarm_after_trigger%]",
+          "arming_states": "[%key:component::manual::config::step::user::data_description::arming_states%]"
+        }
+      },
+      "state_specific": {
+        "description": "[%key:component::manual::config::step::state_specific::description%]",
+        "data": {
+          "armed_custom_bypass_delay_time": "[%key:component::manual::config::step::state_specific::data::armed_custom_bypass_delay_time%]",
+          "armed_custom_bypass_arming_time": "[%key:component::manual::config::step::state_specific::data::armed_custom_bypass_arming_time%]",
+          "armed_custom_bypass_trigger_time": "[%key:component::manual::config::step::state_specific::data::armed_custom_bypass_trigger_time%]",
+          "armed_home_delay_time": "[%key:component::manual::config::step::state_specific::data::armed_home_delay_time%]",
+          "armed_home_arming_time": "[%key:component::manual::config::step::state_specific::data::armed_home_arming_time%]",
+          "armed_home_trigger_time": "[%key:component::manual::config::step::state_specific::data::armed_home_trigger_time%]",
+          "armed_away_delay_time": "[%key:component::manual::config::step::state_specific::data::armed_away_delay_time%]",
+          "armed_away_arming_time": "[%key:component::manual::config::step::state_specific::data::armed_away_arming_time%]",
+          "armed_away_trigger_time": "[%key:component::manual::config::step::state_specific::data::armed_away_trigger_time%]",
+          "armed_night_delay_time": "[%key:component::manual::config::step::state_specific::data::armed_night_delay_time%]",
+          "armed_night_arming_time": "[%key:component::manual::config::step::state_specific::data::armed_night_arming_time%]",
+          "armed_night_trigger_time": "[%key:component::manual::config::step::state_specific::data::armed_night_trigger_time%]",
+          "armed_vacation_delay_time": "[%key:component::manual::config::step::state_specific::data::armed_vacation_delay_time%]",
+          "armed_vacation_arming_time": "[%key:component::manual::config::step::state_specific::data::armed_vacation_arming_time%]",
+          "armed_vacation_trigger_time": "[%key:component::manual::config::step::state_specific::data::armed_vacation_trigger_time%]",
+          "disarmed_delay_time": "[%key:component::manual::config::step::state_specific::data::disarmed_delay_time%]",
+          "disarmed_arming_time": "[%key:component::manual::config::step::state_specific::data::disarmed_arming_time%]",
+          "disarmed_trigger_time": "[%key:component::manual::config::step::state_specific::data::disarmed_trigger_time%]",
+          "triggered_delay_time": "[%key:component::manual::config::step::state_specific::data::triggered_delay_time%]",
+          "triggered_arming_time": "[%key:component::manual::config::step::state_specific::data::triggered_arming_time%]",
+          "triggered_trigger_time": "[%key:component::manual::config::step::state_specific::data::triggered_trigger_time%]"
+        }
+      }
+    }
+  },
+  "selector": {
+    "arming_states": {
+      "options": {
+        "armed_custom_bypass": "[%key:component::alarm_control_panel::entity_component::_::state::armed_custom_bypass%]",
+        "armed_home": "[%key:component::alarm_control_panel::entity_component::_::state::armed_home%]",
+        "armed_away": "[%key:component::alarm_control_panel::entity_component::_::state::armed_away%]",
+        "armed_night": "[%key:component::alarm_control_panel::entity_component::_::state::armed_night%]",
+        "armed_vacation": "[%key:component::alarm_control_panel::entity_component::_::state::armed_vacation%]"
+      }
+    }
+  },
   "exceptions": {
     "invalid_code": {
       "message": "Invalid alarm code provided"

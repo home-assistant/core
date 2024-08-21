@@ -13,6 +13,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     CodeFormat,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ARMING_TIME,
     CONF_CODE,
@@ -41,45 +42,21 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-DOMAIN = "manual"
-
-CONF_ARMING_STATES = "arming_states"
-CONF_CODE_TEMPLATE = "code_template"
-CONF_CODE_ARM_REQUIRED = "code_arm_required"
-
-DEFAULT_ALARM_NAME = "HA Alarm"
-DEFAULT_DELAY_TIME = datetime.timedelta(seconds=60)
-DEFAULT_ARMING_TIME = datetime.timedelta(seconds=60)
-DEFAULT_TRIGGER_TIME = datetime.timedelta(seconds=120)
-DEFAULT_DISARM_AFTER_TRIGGER = False
-
-SUPPORTED_STATES = [
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_TRIGGERED,
-]
-
-SUPPORTED_PRETRIGGER_STATES = [
-    state for state in SUPPORTED_STATES if state != STATE_ALARM_TRIGGERED
-]
-
-SUPPORTED_ARMING_STATES = [
-    state
-    for state in SUPPORTED_STATES
-    if state not in (STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
-]
-
-SUPPORTED_ARMING_STATE_TO_FEATURE = {
-    STATE_ALARM_ARMED_AWAY: AlarmControlPanelEntityFeature.ARM_AWAY,
-    STATE_ALARM_ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
-    STATE_ALARM_ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
-    STATE_ALARM_ARMED_VACATION: AlarmControlPanelEntityFeature.ARM_VACATION,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
-}
+from .const import (
+    CONF_ARMING_STATES,
+    CONF_CODE_ARM_REQUIRED,
+    CONF_CODE_TEMPLATE,
+    DEFAULT_ALARM_NAME,
+    DEFAULT_ARMING_TIME,
+    DEFAULT_DELAY_TIME,
+    DEFAULT_DISARM_AFTER_TRIGGER,
+    DEFAULT_TRIGGER_TIME,
+    DOMAIN,
+    SUPPORTED_ARMING_STATE_TO_FEATURE,
+    SUPPORTED_ARMING_STATES,
+    SUPPORTED_PRETRIGGER_STATES,
+    SUPPORTED_STATES,
+)
 
 ATTR_PREVIOUS_STATE = "previous_state"
 ATTR_NEXT_STATE = "next_state"
@@ -183,6 +160,51 @@ async def async_setup_platform(
                 hass,
                 config[CONF_NAME],
                 config.get(CONF_UNIQUE_ID),
+                config.get(CONF_CODE),
+                config.get(CONF_CODE_TEMPLATE),
+                config[CONF_CODE_ARM_REQUIRED],
+                config[CONF_DISARM_AFTER_TRIGGER],
+                config,
+            )
+        ]
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the manual alarm from a config entry."""
+
+    state_config: dict[str, dict[str, Any]] = {
+        STATE_ALARM_DISARMED: {},
+        STATE_ALARM_ARMED_AWAY: {},
+        STATE_ALARM_ARMED_HOME: {},
+        STATE_ALARM_ARMED_NIGHT: {},
+        STATE_ALARM_ARMED_VACATION: {},
+        STATE_ALARM_ARMED_CUSTOM_BYPASS: {},
+        STATE_ALARM_TRIGGERED: {},
+    }
+
+    for state in SUPPORTED_STATES:
+        for key in entry.options:
+            if key.startswith(f"{state}_"):
+                new_key = key.replace(f"{state}_", "")
+                state_config[state][new_key] = datetime.timedelta(**entry.options[key])
+
+    config = {**entry.options, **state_config}
+    config[CONF_DELAY_TIME] = datetime.timedelta(**entry.options[CONF_DELAY_TIME])
+    config[CONF_ARMING_TIME] = datetime.timedelta(**entry.options[CONF_ARMING_TIME])
+    config[CONF_TRIGGER_TIME] = datetime.timedelta(**entry.options[CONF_TRIGGER_TIME])
+    config = _state_validator(config)
+
+    async_add_entities(
+        [
+            ManualAlarm(
+                hass,
+                config[CONF_NAME],
+                entry.entry_id,
                 config.get(CONF_CODE),
                 config.get(CONF_CODE_TEMPLATE),
                 config[CONF_CODE_ARM_REQUIRED],
