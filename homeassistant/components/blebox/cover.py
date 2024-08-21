@@ -6,6 +6,7 @@ from typing import Any
 
 from blebox_uniapi.box import Box
 import blebox_uniapi.cover
+from blebox_uniapi.cover import BleboxCoverState
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -31,16 +32,16 @@ BLEBOX_TO_COVER_DEVICE_CLASSES = {
 
 BLEBOX_TO_HASS_COVER_STATES = {
     None: None,
-    0: STATE_CLOSING,  # moving down
-    1: STATE_OPENING,  # moving up
-    2: STATE_OPEN,  # manually stopped
-    3: STATE_CLOSED,  # lower limit
-    4: STATE_OPEN,  # upper limit / open
-    # gateController
-    5: STATE_OPEN,  # overload
-    6: STATE_OPEN,  # motor failure
-    # 7 is not used
-    8: STATE_OPEN,  # safety stop
+    # all blebox covers
+    BleboxCoverState.MOVING_DOWN: STATE_CLOSING,
+    BleboxCoverState.MOVING_UP: STATE_OPENING,
+    BleboxCoverState.MANUALLY_STOPPED: STATE_OPEN,
+    BleboxCoverState.LOWER_LIMIT_REACHED: STATE_CLOSED,
+    BleboxCoverState.UPPER_LIMIT_REACHED: STATE_OPEN,
+    # extra states of gateController product
+    BleboxCoverState.OVERLOAD: STATE_OPEN,
+    BleboxCoverState.MOTOR_FAILURE: STATE_OPEN,
+    BleboxCoverState.SAFETY_STOP: STATE_OPEN,
 }
 
 
