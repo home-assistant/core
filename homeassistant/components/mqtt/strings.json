@@ -26,12 +26,12 @@
       "user": {
         "description": "Please choose how you want to connect to the MQTT broker:",
         "menu_options": {
-          "addon": "Install and configure the official {addon} add-on.",
+          "addon": "Set up and use the official {addon} add-on.",
           "broker": "Manually enter the MQTT connection details"
         }
       },
       "addon_setup_confirm": {
-        "description": "This will install the official {addon} add-on, and configure it as the MQTT broker. Additional logins can be configured using the [Configuration tab of the {addon} add-on]({url})."
+        "description": "This will set up the official {addon} add-on, and configure it as the MQTT broker. Additional logins can be configured using the [Configuration tab of the {addon} add-on]({url})."
       },
       "broker": {
         "description": "Please enter the connection information of your MQTT broker.",
