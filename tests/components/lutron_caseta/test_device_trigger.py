@@ -98,7 +98,7 @@ MOCK_BUTTON_DEVICES = [
 ]
 
 
-async def _async_setup_lutron_with_picos(hass):
+async def _async_setup_lutron_with_picos(hass: HomeAssistant) -> str:
     """Setups a lutron bridge with picos."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
