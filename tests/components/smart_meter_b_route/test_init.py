@@ -34,11 +34,12 @@ async def test_async_setup_entry_error(
     hass: HomeAssistant, error: Exception, mock_momonga
 ) -> None:
     """Test successful setup of entry."""
-    with patch.object(mock_momonga, "__init__", side_effect=error):
+    with patch.object(mock_momonga, "get_instantaneous_current", side_effect=error):
         entry = configure_integration(hass)
+        assert entry.state is ConfigEntryState.NOT_LOADED
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert entry.state is ConfigEntryState.SETUP_ERROR
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-    await hass.async_block_till_done()
+    flows = hass.config_entries.flow.async_progress()
+    assert [flow.get("step_id") for flow in flows] == []

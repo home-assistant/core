@@ -22,8 +22,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BRouteConfigEntry) -> bo
     bid = entry.data[CONF_ID]
     password = entry.data[CONF_PASSWORD]
     hass.data.setdefault(DOMAIN, {})
-    coordinator = BRouteUpdateCoordinator(hass, device, bid, password)
     try:
+        coordinator = BRouteUpdateCoordinator(hass, device, bid, password)
         await coordinator.async_config_entry_first_refresh()
         entry.runtime_data = coordinator
     except MomongaError | MomongaKeyError as ex:

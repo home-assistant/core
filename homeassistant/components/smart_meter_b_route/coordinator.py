@@ -24,6 +24,7 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """The B Route update coordinator."""
 
     api: Momonga
+    device: str
     bid: str
 
     def __init__(
@@ -36,6 +37,7 @@ class BRouteUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Initialize."""
 
         self.api = Momonga(dev=device, rbid=id, pwd=password)
+        self.device = device
         self.bid = id
 
         super().__init__(
