@@ -174,11 +174,10 @@ async def async_browse_media(
     parsed_url = yarl.URL(media_content_id)
     host = parsed_url.host
 
-    # config entry ids can be upper or lower case. Yarl always
-    # returns host names in lower case, so we need to look for the config entry
-    # in both l
     if (
         host is None
+        # config entry ids can be upper or lower case. Yarl always returns host
+        # names in lower case, so we need to look for the config entry in both
         or (
             entry := hass.config_entries.async_get_entry(host)
             or hass.config_entries.async_get_entry(host.upper())
