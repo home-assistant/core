@@ -300,14 +300,14 @@ async def test_async_update_playback_state(
     ],
 )
 async def test_async_update_source_change(
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     reported_source: Source,
     real_source: Source,
     content_type: MediaType,
     progress: int,
     metadata: PlaybackContentMetadata,
-    hass: HomeAssistant,
-    mock_mozart_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test _async_update_source_change."""
 
@@ -465,11 +465,11 @@ async def test_async_mute_volume(
     ],
 )
 async def test_async_media_play_pause(
-    initial_state: RenderingState,
-    command: str,
     hass: HomeAssistant,
     mock_mozart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    initial_state: RenderingState,
+    command: str,
 ) -> None:
     """Test async_media_play_pause."""
 
@@ -557,12 +557,12 @@ async def test_async_media_next_track(
     ],
 )
 async def test_async_media_seek(
-    source: Source,
-    expected_result: Callable,
-    seek_called_times: int,
     hass: HomeAssistant,
     mock_mozart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    source: Source,
+    expected_result: Callable,
+    seek_called_times: int,
 ) -> None:
     """Test async_media_seek."""
 
@@ -643,13 +643,13 @@ async def test_async_clear_playlist(
     ],
 )
 async def test_async_select_source(
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     source: str,
     expected_result: Callable,
     audio_source_call: int,
     video_source_call: int,
-    hass: HomeAssistant,
-    mock_mozart_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test async_select_source with an invalid source."""
 
@@ -1086,12 +1086,12 @@ async def test_async_play_media_url_m3u(
     ],
 )
 async def test_async_browse_media(
-    child: dict[str, str | bool | None],
-    present: bool,
     hass: HomeAssistant,
     mock_mozart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
+    child: dict[str, str | bool | None],
+    present: bool,
 ) -> None:
     """Test async_browse_media with audio and video source."""
 
