@@ -27,7 +27,7 @@
         "description": "Please choose how you want to connect to the MQTT broker:",
         "menu_options": {
           "addon": "Use the official {addon} add-on.",
-          "broker": "Manually enter the MQTT connection details"
+          "broker": "Manually enter the MQTT broker connection details"
         }
       },
       "broker": {
@@ -78,7 +78,13 @@
       },
       "hassio_confirm": {
         "title": "MQTT Broker via Home Assistant add-on",
-        "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the add-on {addon}?"
+        "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the add-on {addon}?",
+        "data": {
+          "discovery": "Enable discovery"
+        },
+        "data_description": {
+          "discovery": "Option to enable MQTT automatic discovery."
+        }
       },
       "reauth_confirm": {
         "title": "Re-authentication required with the MQTT broker",
@@ -185,7 +191,7 @@
         "title": "MQTT options",
         "description": "Discovery - If discovery is enabled (recommended), Home Assistant will automatically discover devices and entities which publish their configuration on the MQTT broker. If discovery is disabled, all configuration must be done manually.\nDiscovery prefix - The prefix a configuration topic for automatic discovery must start with.\nBirth message - The birth message will be sent each time Home Assistant (re)connects to the MQTT broker.\nWill message - The will message will be sent each time Home Assistant loses its connection to the broker, both in case of a clean (e.g. Home Assistant shutting down) and in case of an unclean (e.g. Home Assistant crashing or losing its network connection) disconnect.",
         "data": {
-          "discovery": "Enable discovery",
+          "discovery": "[%key:component::mqtt::config::step::hassio_confirm::data::discovery%]",
           "discovery_prefix": "Discovery prefix",
           "birth_enable": "Enable birth message",
           "birth_topic": "Birth message topic",
