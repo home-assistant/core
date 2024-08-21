@@ -182,15 +182,6 @@ def mock_legacy_device_tracker_setup() -> Callable[[HomeAssistant, MockScanner],
     return mock_legacy_device_tracker_setup
 
 
-@pytest.fixture(name="supervisor")
-def supervisor_fixture() -> Generator[MagicMock]:
-    """Mock Supervisor."""
-    with patch(
-        "homeassistant.components.mqtt.config_flow.is_hassio", return_value=True
-    ) as is_hassio:
-        yield is_hassio
-
-
 @pytest.fixture(name="discovery_info")
 def discovery_info_fixture() -> Any:
     """Return the discovery info from the supervisor."""
