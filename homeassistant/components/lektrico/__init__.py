@@ -8,7 +8,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
 from .coordinator import LektricoDeviceDataUpdateCoordinator
 
 # List the platforms that charger supports.
@@ -27,7 +26,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
+
     await hass.config_entries.async_forward_entry_setups(entry, _get_platforms(entry))
 
     return True
@@ -35,14 +35,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(
+
+    return await hass.config_entries.async_unload_platforms(
         entry, _get_platforms(entry)
-    ):
-        # Cleanup
-        del hass.data[DOMAIN][entry.entry_id]
-        if not hass.data[DOMAIN]:
-            del hass.data[DOMAIN]
-    return unload_ok
+    )
 
 
 def _get_platforms(entry: ConfigEntry) -> list[Platform]:

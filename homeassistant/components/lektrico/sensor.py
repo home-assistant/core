@@ -31,7 +31,6 @@ from homeassistant.exceptions import IntegrationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LektricoDeviceDataUpdateCoordinator
-from .const import DOMAIN
 from .entity import LektricoEntity
 
 
@@ -275,7 +274,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Lektrico charger based on a config entry."""
-    coordinator: LektricoDeviceDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: LektricoDeviceDataUpdateCoordinator = entry.runtime_data
 
     sensors_to_be_used: tuple[LektricoSensorEntityDescription, ...]
     if coordinator.device_type == Device.TYPE_1P7K:
