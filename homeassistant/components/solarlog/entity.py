@@ -11,8 +11,8 @@ from .const import DOMAIN
 from .coordinator import SolarLogCoordinator
 
 
-class SolarLogCoordinatorEntity(CoordinatorEntity[SolarLogCoordinator]):
-    """Base SolarLog Coordinator entity."""
+class SolarLogBaseEntity(CoordinatorEntity[SolarLogCoordinator]):
+    """SolarLog base entity."""
 
     _attr_has_entity_name = True
 
@@ -24,6 +24,20 @@ class SolarLogCoordinatorEntity(CoordinatorEntity[SolarLogCoordinator]):
         """Initialize the SolarLogCoordinator sensor."""
         super().__init__(coordinator)
 
+        self.entity_description = description
+
+
+class SolarLogCoordinatorEntity(SolarLogBaseEntity):
+    """Base SolarLog Coordinator entity."""
+
+    def __init__(
+        self,
+        coordinator: SolarLogCoordinator,
+        description: SensorEntityDescription,
+    ) -> None:
+        """Initialize the SolarLogCoordinator sensor."""
+        super().__init__(coordinator, description)
+
         self._attr_unique_id = f"{coordinator.unique_id}-{description.key}"
         self._attr_device_info = DeviceInfo(
             manufacturer="Solar-Log",
@@ -33,13 +47,9 @@ class SolarLogCoordinatorEntity(CoordinatorEntity[SolarLogCoordinator]):
             configuration_url=coordinator.host,
         )
 
-        self.entity_description = description
 
-
-class SolarLogInverterEntity(CoordinatorEntity[SolarLogCoordinator]):
+class SolarLogInverterEntity(SolarLogBaseEntity):
     """Base SolarLog inverter entity."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -48,7 +58,7 @@ class SolarLogInverterEntity(CoordinatorEntity[SolarLogCoordinator]):
         device_id: int,
     ) -> None:
         """Initialize the SolarLogInverter sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, description)
         self._attr_unique_id = f"{coordinator.unique_id}-{slugify(coordinator.solarlog.device_name(device_id))}-{description.key}"
         self._attr_device_info = DeviceInfo(
             manufacturer="Solar-Log",
@@ -62,7 +72,6 @@ class SolarLogInverterEntity(CoordinatorEntity[SolarLogCoordinator]):
             name=coordinator.solarlog.device_name(device_id),
             via_device=(DOMAIN, coordinator.unique_id),
         )
-        self.entity_description = description
         self.device_id = device_id
 
     @property
