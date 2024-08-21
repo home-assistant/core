@@ -20,7 +20,7 @@ from homeassistant.components.voip.assist_satellite import Tones, VoipAssistSate
 from homeassistant.components.voip.devices import VoIPDevice, VoIPDevices
 from homeassistant.components.voip.voip import PreRecordMessageProtocol, make_protocol
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
@@ -193,6 +193,8 @@ async def test_pipeline(
 
     satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     assert isinstance(satellite, VoipAssistSatellite)
+    voip_user_id = satellite.config_entry.data["user"]
+    assert voip_user_id
 
     # Satellite is muted until a call begins
     assert satellite.state == AssistSatelliteState.LISTENING_WAKE_WORD
@@ -202,7 +204,10 @@ async def test_pipeline(
     # Used to test that audio queue is cleared before pipeline starts
     bad_chunk = bytes([1, 2, 3, 4])
 
-    async def async_pipeline_from_audio_stream(*args, device_id, **kwargs):
+    async def async_pipeline_from_audio_stream(
+        hass: HomeAssistant, context: Context, *args, device_id: str | None, **kwargs
+    ):
+        assert context.user_id == voip_user_id
         assert device_id == voip_device.device_id
 
         stt_stream = kwargs["stt_stream"]

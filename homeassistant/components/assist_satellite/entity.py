@@ -77,7 +77,17 @@ class AssistSatelliteEntity(entity.Entity):
         if self.registry_entry is not None:
             device_id = self.registry_entry.device_id
 
-        # Reset conversation id, if necessary
+        # Refresh context if necessary
+        if (
+            (self._context is None)
+            or (self._context_set is None)
+            or ((time.time() - self._context_set) > entity.CONTEXT_RECENT_TIME_SECONDS)
+        ):
+            self.async_set_context(Context())
+
+        assert self._context is not None
+
+        # Reset conversation id if necessary
         if (self._conversation_id_time is None) or (
             (time.monotonic() - self._conversation_id_time) > _CONVERSATION_TIMEOUT_SEC
         ):
@@ -94,7 +104,7 @@ class AssistSatelliteEntity(entity.Entity):
 
         await async_pipeline_from_audio_stream(
             self.hass,
-            context=self._context or Context(),
+            context=self._context,
             event_callback=self.on_pipeline_event,
             stt_metadata=stt.SpeechMetadata(
                 language="",  # set in async_pipeline_from_audio_stream

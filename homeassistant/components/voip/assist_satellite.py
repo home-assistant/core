@@ -105,7 +105,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         self.voip_device.protocol = self
-        self.async_set_context(Context(user_id=self.config_entry.data["user"]))
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
@@ -134,6 +133,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self,
     ) -> None:
         """Forward audio to pipeline STT and handle TTS."""
+        self.async_set_context(Context(user_id=self.config_entry.data["user"]))
         self.voip_device.set_is_active(True)
 
         # Play listening tone at the start of each cycle
@@ -190,9 +190,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         """Set state based on pipeline stage."""
         super().on_pipeline_event(event)
 
-        if not event.data:
-            return
-
         if event.type == PipelineEventType.STT_END:
             if (self._tones & Tones.PROCESSING) == Tones.PROCESSING:
                 self._processing_tone_done.clear()
@@ -201,7 +198,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                 )
         elif event.type == PipelineEventType.TTS_END:
             # Send TTS audio to caller over RTP
-            if tts_output := event.data["tts_output"]:
+            if event.data and (tts_output := event.data["tts_output"]):
                 media_id = tts_output["media_id"]
                 self.config_entry.async_create_background_task(
                     self.hass,
