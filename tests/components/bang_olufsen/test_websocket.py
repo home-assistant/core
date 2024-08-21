@@ -66,8 +66,6 @@ async def test_connection_lost(
 
     connection_lost_callback = mock_mozart_client.get_on_connection_lost.call_args[0][0]
 
-    caplog.set_level(logging.ERROR)
-
     mock_connection_lost_callback = Mock()
 
     async_dispatcher_connect(
