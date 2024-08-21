@@ -131,7 +131,9 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input and CONF_HOST in user_input:
