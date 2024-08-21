@@ -10,8 +10,12 @@ from aioairzone_cloud.const import (
     AZD_AQ_PM_1,
     AZD_AQ_PM_2P5,
     AZD_AQ_PM_10,
+    AZD_CPU_USAGE,
     AZD_HUMIDITY,
+    AZD_MEMORY_FREE,
     AZD_TEMP,
+    AZD_THERMOSTAT_BATTERY,
+    AZD_THERMOSTAT_COVERAGE,
     AZD_WEBSERVERS,
     AZD_WIFI_RSSI,
     AZD_ZONES,
@@ -23,18 +27,18 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfInformation,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import AirzoneCloudConfigEntry
 from .coordinator import AirzoneUpdateCoordinator
 from .entity import (
     AirzoneAidooEntity,
@@ -53,6 +57,22 @@ AIDOO_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
 )
 
 WEBSERVER_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
+    SensorEntityDescription(
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        key=AZD_CPU_USAGE,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="cpu_usage",
+    ),
+    SensorEntityDescription(
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        key=AZD_MEMORY_FREE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="free_memory",
+    ),
     SensorEntityDescription(
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -99,14 +119,30 @@ ZONE_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    SensorEntityDescription(
+        device_class=SensorDeviceClass.BATTERY,
+        key=AZD_THERMOSTAT_BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        key=AZD_THERMOSTAT_COVERAGE,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="thermostat_coverage",
+    ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AirzoneCloudConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add Airzone Cloud sensors from a config_entry."""
-    coordinator: AirzoneUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     # Aidoos
     sensors: list[AirzoneSensor] = [
@@ -152,6 +188,11 @@ async def async_setup_entry(
 
 class AirzoneSensor(AirzoneEntity, SensorEntity):
     """Define an Airzone Cloud sensor."""
+
+    @property
+    def available(self) -> bool:
+        """Return Airzone Cloud sensor availability."""
+        return super().available and self.native_value is not None
 
     @callback
     def _handle_coordinator_update(self) -> None:

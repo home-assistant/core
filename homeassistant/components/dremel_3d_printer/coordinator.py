@@ -10,11 +10,13 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER
 
+type DremelConfigEntry = ConfigEntry[Dremel3DPrinterDataUpdateCoordinator]
+
 
 class Dremel3DPrinterDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching Dremel 3D Printer data."""
 
-    config_entry: ConfigEntry
+    config_entry: DremelConfigEntry
 
     def __init__(self, hass: HomeAssistant, api: Dremel3DPrinter) -> None:
         """Initialize Dremel 3D Printer data update coordinator."""

@@ -132,7 +132,7 @@ async def _generate_trackables(
     trackable = await trackable.details()
 
     # Check that the pet has tracker linked.
-    if not trackable["device_id"]:
+    if not trackable.get("device_id"):
         return None
 
     if "details" not in trackable:
@@ -147,6 +147,11 @@ async def _generate_trackables(
     tracker_details, hw_info, pos_report = await asyncio.gather(
         tracker.details(), tracker.hw_info(), tracker.pos_report()
     )
+
+    if not tracker_details.get("_id"):
+        raise ConfigEntryNotReady(
+            f"Tractive API returns incomplete data for tracker {trackable['device_id']}",
+        )
 
     return Trackables(tracker, trackable, tracker_details, hw_info, pos_report)
 

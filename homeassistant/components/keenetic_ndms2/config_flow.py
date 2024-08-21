@@ -24,6 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     CONF_CONSIDER_HOME,
@@ -84,7 +85,7 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
                     title=router_info.name, data={CONF_HOST: host, **user_input}
                 )
 
-        host_schema = (
+        host_schema: VolDictType = (
             {vol.Required(CONF_HOST): str} if CONF_HOST not in self.context else {}
         )
 

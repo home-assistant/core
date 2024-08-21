@@ -6,6 +6,7 @@ from telegram import Update
 
 from homeassistant.components.telegram_bot import (
     ATTR_MESSAGE,
+    ATTR_MESSAGE_THREAD_ID,
     DOMAIN,
     SERVICE_SEND_MESSAGE,
 )
@@ -35,7 +36,7 @@ async def test_send_message(hass: HomeAssistant, webhook_platform) -> None:
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SEND_MESSAGE,
-        {ATTR_MESSAGE: "test_message"},
+        {ATTR_MESSAGE: "test_message", ATTR_MESSAGE_THREAD_ID: "123"},
         blocking=True,
         context=context,
     )
@@ -43,6 +44,25 @@ async def test_send_message(hass: HomeAssistant, webhook_platform) -> None:
 
     assert len(events) == 1
     assert events[0].context == context
+
+
+async def test_send_message_thread(hass: HomeAssistant, webhook_platform) -> None:
+    """Test the send_message service for threads."""
+    context = Context()
+    events = async_capture_events(hass, "telegram_sent")
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {ATTR_MESSAGE: "test_message", ATTR_MESSAGE_THREAD_ID: "123"},
+        blocking=True,
+        context=context,
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].context == context
+    assert events[0].data[ATTR_MESSAGE_THREAD_ID] == "123"
 
 
 async def test_webhook_endpoint_generates_telegram_text_event(

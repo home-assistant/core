@@ -23,8 +23,8 @@ SERVER_URL = "http://127.0.0.1:8083"
 CONFIG_ENTRY_DATA = {"server_url": SERVER_URL}
 
 # Typing helpers
-ComponentSetup = Callable[[], Awaitable[None]]
-type AsyncYieldFixture[_T] = AsyncGenerator[_T, None]
+type ComponentSetup = Callable[[], Awaitable[None]]
+type AsyncYieldFixture[_T] = AsyncGenerator[_T]
 
 
 @pytest.fixture(autouse=True)
@@ -38,7 +38,7 @@ async def webrtc_server() -> None:
 
 
 @pytest.fixture
-async def mock_camera(hass) -> AsyncGenerator[None, None]:
+async def mock_camera(hass: HomeAssistant) -> AsyncGenerator[None]:
     """Initialize a demo camera platform."""
     assert await async_setup_component(
         hass, "camera", {camera.DOMAIN: {"platform": "demo"}}

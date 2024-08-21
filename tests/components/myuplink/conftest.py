@@ -135,7 +135,7 @@ def mock_myuplink_client(
     device_points_fixture,
     system_fixture,
     load_systems_jv_file,
-) -> Generator[MagicMock, None, None]:
+) -> Generator[MagicMock]:
     """Mock a myuplink client."""
 
     with patch(
@@ -182,7 +182,7 @@ async def setup_platform(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     platforms,
-) -> AsyncGenerator[None, None]:
+) -> AsyncGenerator[None]:
     """Set up one or all platforms."""
 
     with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):

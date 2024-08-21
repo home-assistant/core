@@ -148,7 +148,7 @@ def _format_err(name: str, *args: Any) -> str:
 async def async_register_callback(
     hass: HomeAssistant,
     callback: Callable[[SsdpServiceInfo, SsdpChange], Coroutine[Any, Any, None] | None],
-    match_dict: None | dict[str, str] = None,
+    match_dict: dict[str, str] | None = None,
 ) -> Callable[[], None]:
     """Register to receive a callback on ssdp broadcast.
 
@@ -317,7 +317,7 @@ class Scanner:
         return list(self._device_tracker.devices.values())
 
     async def async_register_callback(
-        self, callback: SsdpHassJobCallback, match_dict: None | dict[str, str] = None
+        self, callback: SsdpHassJobCallback, match_dict: dict[str, str] | None = None
     ) -> Callable[[], None]:
         """Register a callback."""
         if match_dict is None:

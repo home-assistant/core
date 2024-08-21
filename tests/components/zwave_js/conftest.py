@@ -1,9 +1,11 @@
 """Provide common Z-Wave JS fixtures."""
 
 import asyncio
+from collections.abc import Generator
 import copy
 import io
 import json
+from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, patch
 
 import pytest
@@ -20,13 +22,13 @@ from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(name="addon_info_side_effect")
-def addon_info_side_effect_fixture():
+def addon_info_side_effect_fixture() -> Any | None:
     """Return the add-on info side effect."""
     return None
 
 
 @pytest.fixture(name="addon_info")
-def mock_addon_info(addon_info_side_effect):
+def mock_addon_info(addon_info_side_effect: Any | None) -> Generator[AsyncMock]:
     """Mock Supervisor add-on info."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_get_addon_info",
@@ -44,13 +46,15 @@ def mock_addon_info(addon_info_side_effect):
 
 
 @pytest.fixture(name="addon_store_info_side_effect")
-def addon_store_info_side_effect_fixture():
+def addon_store_info_side_effect_fixture() -> Any | None:
     """Return the add-on store info side effect."""
     return None
 
 
 @pytest.fixture(name="addon_store_info")
-def mock_addon_store_info(addon_store_info_side_effect):
+def mock_addon_store_info(
+    addon_store_info_side_effect: Any | None,
+) -> Generator[AsyncMock]:
     """Mock Supervisor add-on info."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_get_addon_store_info",
@@ -66,7 +70,7 @@ def mock_addon_store_info(addon_store_info_side_effect):
 
 
 @pytest.fixture(name="addon_running")
-def mock_addon_running(addon_store_info, addon_info):
+def mock_addon_running(addon_store_info: AsyncMock, addon_info: AsyncMock) -> AsyncMock:
     """Mock add-on already running."""
     addon_store_info.return_value = {
         "available": True,
@@ -81,7 +85,9 @@ def mock_addon_running(addon_store_info, addon_info):
 
 
 @pytest.fixture(name="addon_installed")
-def mock_addon_installed(addon_store_info, addon_info):
+def mock_addon_installed(
+    addon_store_info: AsyncMock, addon_info: AsyncMock
+) -> AsyncMock:
     """Mock add-on already installed but not running."""
     addon_store_info.return_value = {
         "available": True,
@@ -96,23 +102,27 @@ def mock_addon_installed(addon_store_info, addon_info):
 
 
 @pytest.fixture(name="addon_not_installed")
-def mock_addon_not_installed(addon_store_info, addon_info):
+def mock_addon_not_installed(
+    addon_store_info: AsyncMock, addon_info: AsyncMock
+) -> AsyncMock:
     """Mock add-on not installed."""
     addon_store_info.return_value["available"] = True
     return addon_info
 
 
 @pytest.fixture(name="addon_options")
-def mock_addon_options(addon_info):
+def mock_addon_options(addon_info: AsyncMock):
     """Mock add-on options."""
     return addon_info.return_value["options"]
 
 
 @pytest.fixture(name="set_addon_options_side_effect")
-def set_addon_options_side_effect_fixture(addon_options):
+def set_addon_options_side_effect_fixture(
+    addon_options: dict[str, Any],
+) -> Any | None:
     """Return the set add-on options side effect."""
 
-    async def set_addon_options(hass: HomeAssistant, slug, options):
+    async def set_addon_options(hass: HomeAssistant, slug: str, options: dict) -> None:
         """Mock set add-on options."""
         addon_options.update(options["options"])
 
@@ -120,7 +130,9 @@ def set_addon_options_side_effect_fixture(addon_options):
 
 
 @pytest.fixture(name="set_addon_options")
-def mock_set_addon_options(set_addon_options_side_effect):
+def mock_set_addon_options(
+    set_addon_options_side_effect: Any | None,
+) -> Generator[AsyncMock]:
     """Mock set add-on options."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_set_addon_options",
@@ -130,7 +142,9 @@ def mock_set_addon_options(set_addon_options_side_effect):
 
 
 @pytest.fixture(name="install_addon_side_effect")
-def install_addon_side_effect_fixture(addon_store_info, addon_info):
+def install_addon_side_effect_fixture(
+    addon_store_info: AsyncMock, addon_info: AsyncMock
+) -> Any | None:
     """Return the install add-on side effect."""
 
     async def install_addon(hass: HomeAssistant, slug):
@@ -149,7 +163,7 @@ def install_addon_side_effect_fixture(addon_store_info, addon_info):
 
 
 @pytest.fixture(name="install_addon")
-def mock_install_addon(install_addon_side_effect):
+def mock_install_addon(install_addon_side_effect: Any | None) -> Generator[AsyncMock]:
     """Mock install add-on."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_install_addon",
@@ -159,7 +173,7 @@ def mock_install_addon(install_addon_side_effect):
 
 
 @pytest.fixture(name="update_addon")
-def mock_update_addon():
+def mock_update_addon() -> Generator[AsyncMock]:
     """Mock update add-on."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_update_addon"
@@ -168,7 +182,9 @@ def mock_update_addon():
 
 
 @pytest.fixture(name="start_addon_side_effect")
-def start_addon_side_effect_fixture(addon_store_info, addon_info):
+def start_addon_side_effect_fixture(
+    addon_store_info: AsyncMock, addon_info: AsyncMock
+) -> Any | None:
     """Return the start add-on options side effect."""
 
     async def start_addon(hass: HomeAssistant, slug):
@@ -186,7 +202,7 @@ def start_addon_side_effect_fixture(addon_store_info, addon_info):
 
 
 @pytest.fixture(name="start_addon")
-def mock_start_addon(start_addon_side_effect):
+def mock_start_addon(start_addon_side_effect: Any | None) -> Generator[AsyncMock]:
     """Mock start add-on."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_start_addon",
@@ -196,7 +212,7 @@ def mock_start_addon(start_addon_side_effect):
 
 
 @pytest.fixture(name="stop_addon")
-def stop_addon_fixture():
+def stop_addon_fixture() -> Generator[AsyncMock]:
     """Mock stop add-on."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_stop_addon"
@@ -205,13 +221,13 @@ def stop_addon_fixture():
 
 
 @pytest.fixture(name="restart_addon_side_effect")
-def restart_addon_side_effect_fixture():
+def restart_addon_side_effect_fixture() -> Any | None:
     """Return the restart add-on options side effect."""
     return None
 
 
 @pytest.fixture(name="restart_addon")
-def mock_restart_addon(restart_addon_side_effect):
+def mock_restart_addon(restart_addon_side_effect: Any | None) -> Generator[AsyncMock]:
     """Mock restart add-on."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_restart_addon",
@@ -221,7 +237,7 @@ def mock_restart_addon(restart_addon_side_effect):
 
 
 @pytest.fixture(name="uninstall_addon")
-def uninstall_addon_fixture():
+def uninstall_addon_fixture() -> Generator[AsyncMock]:
     """Mock uninstall add-on."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_uninstall_addon"
@@ -230,7 +246,7 @@ def uninstall_addon_fixture():
 
 
 @pytest.fixture(name="create_backup")
-def create_backup_fixture():
+def create_backup_fixture() -> Generator[AsyncMock]:
     """Mock create backup."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_create_backup"
@@ -472,6 +488,12 @@ def iblinds_v3_state_fixture():
     return json.loads(load_fixture("zwave_js/cover_iblinds_v3_state.json"))
 
 
+@pytest.fixture(name="zvidar_state", scope="package")
+def zvidar_state_fixture():
+    """Load the ZVIDAR node state fixture data."""
+    return json.loads(load_fixture("zwave_js/cover_zvidar_state.json"))
+
+
 @pytest.fixture(name="qubino_shutter_state", scope="package")
 def qubino_shutter_state_fixture():
     """Load the Qubino Shutter node state fixture data."""
@@ -685,6 +707,12 @@ def central_scene_node_state_fixture():
 def light_device_class_is_null_state_fixture():
     """Load node with device class is None state fixture data."""
     return json.loads(load_fixture("zwave_js/light_device_class_is_null_state.json"))
+
+
+@pytest.fixture(name="basic_cc_sensor_state", scope="package")
+def basic_cc_sensor_state_fixture():
+    """Load node with Basic CC sensor fixture data."""
+    return json.loads(load_fixture("zwave_js/basic_cc_sensor_state.json"))
 
 
 # model fixtures
@@ -1075,6 +1103,14 @@ def iblinds_v3_cover_fixture(client, iblinds_v3_state):
     return node
 
 
+@pytest.fixture(name="zvidar")
+def zvidar_cover_fixture(client, zvidar_state):
+    """Mock a ZVIDAR window cover node."""
+    node = Node(client, copy.deepcopy(zvidar_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="qubino_shutter")
 def qubino_shutter_cover_fixture(client, qubino_shutter_state):
     """Mock a Qubino flush shutter node."""
@@ -1353,5 +1389,13 @@ def central_scene_node_fixture(client, central_scene_node_state):
 def light_device_class_is_null_fixture(client, light_device_class_is_null_state):
     """Mock a node when device class is null."""
     node = Node(client, copy.deepcopy(light_device_class_is_null_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="basic_cc_sensor")
+def basic_cc_sensor_fixture(client, basic_cc_sensor_state):
+    """Mock a node with a Basic CC."""
+    node = Node(client, copy.deepcopy(basic_cc_sensor_state))
     client.driver.controller.nodes[node.node_id] = node
     return node

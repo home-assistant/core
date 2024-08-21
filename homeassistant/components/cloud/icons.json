@@ -1,6 +1,5 @@
 {
   "services": {
-    "create_temporary_strict_connection_url": "mdi:login-variant",
     "remote_connect": "mdi:cloud",
     "remote_disconnect": "mdi:cloud-off"
   }

@@ -197,13 +197,13 @@ async def test_update_errors(
 
 async def test_device_management(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that we are adding and removing devices for monitors returned from the API."""
     mock_entry = await setup_uptimerobot_integration(hass)
-    dev_reg = dr.async_get(hass)
 
-    devices = dr.async_entries_for_config_entry(dev_reg, mock_entry.entry_id)
+    devices = dr.async_entries_for_config_entry(device_registry, mock_entry.entry_id)
     assert len(devices) == 1
 
     assert devices[0].identifiers == {(DOMAIN, "1234")}
@@ -222,7 +222,7 @@ async def test_device_management(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    devices = dr.async_entries_for_config_entry(dev_reg, mock_entry.entry_id)
+    devices = dr.async_entries_for_config_entry(device_registry, mock_entry.entry_id)
     assert len(devices) == 2
     assert devices[0].identifiers == {(DOMAIN, "1234")}
     assert devices[1].identifiers == {(DOMAIN, "12345")}
@@ -241,7 +241,7 @@ async def test_device_management(
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 
-    devices = dr.async_entries_for_config_entry(dev_reg, mock_entry.entry_id)
+    devices = dr.async_entries_for_config_entry(device_registry, mock_entry.entry_id)
     assert len(devices) == 1
     assert devices[0].identifiers == {(DOMAIN, "1234")}
 

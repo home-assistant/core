@@ -10,9 +10,9 @@ from aiohue.v2.models.resource import ResourceTypes
 from aiohue.v2.models.zigbee_connectivity import ConnectivityServiceStatus
 
 from homeassistant.core import callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
 from ..bridge import HueBridge
 from ..const import CONF_IGNORE_AVAILABILITY, DOMAIN
@@ -128,7 +128,7 @@ class HueBaseEntity(Entity):
         if event_type == EventType.RESOURCE_DELETED:
             # cleanup entities that are not strictly device-bound and have the bridge as parent
             if self.device is None and resource.id == self.resource.id:
-                ent_reg = async_get_entity_registry(self.hass)
+                ent_reg = er.async_get(self.hass)
                 ent_reg.async_remove(self.entity_id)
             return
 

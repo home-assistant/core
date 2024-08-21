@@ -7,7 +7,10 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
@@ -17,7 +20,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -38,6 +45,7 @@ from .const import (
     ATTRIBUTION,
     CONF_SHOW_ARCHIVED,
     CONF_SHOW_DELIVERED,
+    DEPRECATED_KEY,
     DOMAIN,
     LOGGER,
     NOTIFICATION_DELIVERED_MESSAGE,
@@ -46,7 +54,7 @@ from .const import (
     VALUE_DELIVERED,
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
@@ -110,8 +118,12 @@ async def async_setup_entry(
     coordinator: SeventeenTrackCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     previous_tracking_numbers: set[str] = set()
 
+    # This has been deprecated in 2024.8, will be removed in 2025.2
     @callback
     def _async_create_remove_entities():
+        if config_entry.data.get(DEPRECATED_KEY):
+            remove_packages(hass, coordinator.account_id, previous_tracking_numbers)
+            return
         live_tracking_numbers = set(coordinator.data.live_packages.keys())
 
         new_tracking_numbers = live_tracking_numbers - previous_tracking_numbers
@@ -154,11 +166,12 @@ async def async_setup_entry(
         for status, summary_data in coordinator.data.summary.items()
     )
 
-    _async_create_remove_entities()
-
-    config_entry.async_on_unload(
-        coordinator.async_add_listener(_async_create_remove_entities)
-    )
+    if not config_entry.data.get(DEPRECATED_KEY):
+        deprecate_sensor_issue(hass, config_entry.entry_id)
+        _async_create_remove_entities()
+        config_entry.async_on_unload(
+            coordinator.async_add_listener(_async_create_remove_entities)
+        )
 
 
 class SeventeenTrackSensor(CoordinatorEntity[SeventeenTrackCoordinator], SensorEntity):
@@ -203,6 +216,7 @@ class SeventeenTrackSummarySensor(SeventeenTrackSensor):
         """Return the state of the sensor."""
         return self.coordinator.data.summary[self._status]["quantity"]
 
+    # This has been deprecated in 2024.8, will be removed in 2025.2
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
@@ -222,6 +236,7 @@ class SeventeenTrackSummarySensor(SeventeenTrackSensor):
         }
 
 
+# The dynamic package sensors have been replaced by the seventeentrack.get_packages service
 class SeventeenTrackPackageSensor(SeventeenTrackSensor):
     """Define an individual package sensor."""
 
@@ -294,4 +309,21 @@ def notify_delivered(hass: HomeAssistant, friendly_name: str, tracking_number: s
 
     persistent_notification.create(
         hass, message, title=title, notification_id=notification_id
+    )
+
+
+@callback
+def deprecate_sensor_issue(hass: HomeAssistant, entry_id: str) -> None:
+    """Ensure an issue is registered."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecate_sensor_{entry_id}",
+        breaks_in_ha_version="2025.2.0",
+        issue_domain=DOMAIN,
+        is_fixable=True,
+        is_persistent=True,
+        translation_key="deprecate_sensor",
+        severity=ir.IssueSeverity.WARNING,
+        data={"entry_id": entry_id},
     )

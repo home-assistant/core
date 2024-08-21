@@ -9,10 +9,11 @@ from typing import Any
 from google.oauth2.credentials import Credentials
 from gspread import Client, GSpreadException
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 
+from . import GoogleSheetsConfigEntry
 from .const import DEFAULT_ACCESS, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ class OAuth2FlowHandler(
 
     DOMAIN = DOMAIN
 
-    reauth_entry: ConfigEntry | None = None
+    reauth_entry: GoogleSheetsConfigEntry | None = None
 
     @property
     def logger(self) -> logging.Logger:
@@ -61,7 +62,9 @@ class OAuth2FlowHandler(
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow, or update existing entry."""
-        service = Client(Credentials(data[CONF_TOKEN][CONF_ACCESS_TOKEN]))
+        service = Client(
+            Credentials(data[CONF_TOKEN][CONF_ACCESS_TOKEN])  # type: ignore[no-untyped-call]
+        )
 
         if self.reauth_entry:
             _LOGGER.debug("service.open_by_key")

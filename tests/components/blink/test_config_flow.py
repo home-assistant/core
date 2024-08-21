@@ -49,6 +49,7 @@ async def test_form(hass: HomeAssistant) -> None:
         "account_id": None,
         "client_id": None,
         "region_id": None,
+        "user_id": None,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 

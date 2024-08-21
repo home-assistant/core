@@ -228,7 +228,7 @@ class NestEventMediaStore(EventMediaStore):
 
         def remove_media(filename: str) -> None:
             if not os.path.exists(filename):
-                return None
+                return
             _LOGGER.debug("Removing event media from disk store: %s", filename)
             os.remove(filename)
 

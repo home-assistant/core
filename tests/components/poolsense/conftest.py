@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.poolsense.async_setup_entry",
@@ -23,7 +23,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_poolsense_client() -> Generator[AsyncMock, None, None]:
+def mock_poolsense_client() -> Generator[AsyncMock]:
     """Mock a PoolSense client."""
     with (
         patch(

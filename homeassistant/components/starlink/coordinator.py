@@ -119,12 +119,16 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
 
     async def async_set_sleep_duration(self, end: int) -> None:
         """Set Starlink system sleep schedule end time."""
+        duration = end - self.data.sleep[0]
+        if duration < 0:
+            # If the duration pushed us into the next day, add one days worth to correct that.
+            duration += 1440
         async with asyncio.timeout(4):
             try:
                 await self.hass.async_add_executor_job(
                     set_sleep_config,
                     self.data.sleep[0],
-                    end,
+                    duration,
                     self.data.sleep[2],
                     self.channel_context,
                 )

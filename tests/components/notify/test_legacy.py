@@ -1,7 +1,7 @@
 """The tests for legacy notify services."""
 
 import asyncio
-from collections.abc import Mapping
+from collections.abc import Callable, Coroutine, Mapping
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
@@ -63,8 +63,16 @@ def mock_notify_platform(
     hass: HomeAssistant,
     tmp_path: Path,
     integration: str = "notify",
-    async_get_service: Any = None,
-    get_service: Any = None,
+    async_get_service: Callable[
+        [HomeAssistant, ConfigType, DiscoveryInfoType | None],
+        Coroutine[Any, Any, notify.BaseNotificationService],
+    ]
+    | None = None,
+    get_service: Callable[
+        [HomeAssistant, ConfigType, DiscoveryInfoType | None],
+        notify.BaseNotificationService,
+    ]
+    | None = None,
 ):
     """Specialize the mock platform for legacy notify service."""
     loaded_platform = MockNotifyPlatform(async_get_service, get_service)
@@ -226,7 +234,11 @@ async def test_invalid_service(
 ) -> None:
     """Test service setup with an invalid service object or platform."""
 
-    def get_service(hass, config, discovery_info=None):
+    def get_service(
+        hass: HomeAssistant,
+        config: ConfigType,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> notify.BaseNotificationService | None:
         """Return None for an invalid notify service."""
         return None
 
@@ -259,9 +271,13 @@ async def test_platform_setup_with_error(
 ) -> None:
     """Test service setup with an invalid setup."""
 
-    async def async_get_service(hass, config, discovery_info=None):
+    async def async_get_service(
+        hass: HomeAssistant,
+        config: ConfigType,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> notify.BaseNotificationService | None:
         """Return None for an invalid notify service."""
-        raise Exception("Setup error")
+        raise Exception("Setup error")  # noqa: TRY002
 
     mock_notify_platform(
         hass, tmp_path, "testnotify", async_get_service=async_get_service
@@ -279,11 +295,15 @@ async def test_platform_setup_with_error(
 
 
 async def test_reload_with_notify_builtin_platform_reload(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, tmp_path: Path
+    hass: HomeAssistant, tmp_path: Path
 ) -> None:
     """Test reload using the legacy notify platform reload method."""
 
-    async def async_get_service(hass, config, discovery_info=None):
+    async def async_get_service(
+        hass: HomeAssistant,
+        config: ConfigType,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> NotificationService:
         """Get notify service for mocked platform."""
         targetlist = {"a": 1, "b": 2}
         return NotificationService(hass, targetlist, "testnotify")
@@ -310,19 +330,25 @@ async def test_reload_with_notify_builtin_platform_reload(
     assert hass.services.has_service(notify.DOMAIN, "testnotify_b")
 
 
-async def test_setup_platform_and_reload(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, tmp_path: Path
-) -> None:
+async def test_setup_platform_and_reload(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test service setup and reload."""
     get_service_called = Mock()
 
-    async def async_get_service(hass, config, discovery_info=None):
+    async def async_get_service(
+        hass: HomeAssistant,
+        config: ConfigType,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> NotificationService:
         """Get notify service for mocked platform."""
         get_service_called(config, discovery_info)
         targetlist = {"a": 1, "b": 2}
         return NotificationService(hass, targetlist, "testnotify")
 
-    async def async_get_service2(hass, config, discovery_info=None):
+    async def async_get_service2(
+        hass: HomeAssistant,
+        config: ConfigType,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> NotificationService:
         """Get legacy notify service for mocked platform."""
         get_service_called(config, discovery_info)
         targetlist = {"c": 3, "d": 4}
@@ -401,18 +427,26 @@ async def test_setup_platform_and_reload(
 
 
 async def test_setup_platform_before_notify_setup(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, tmp_path: Path
+    hass: HomeAssistant, tmp_path: Path
 ) -> None:
     """Test trying to setup a platform before legacy notify service is setup."""
     get_service_called = Mock()
 
-    async def async_get_service(hass, config, discovery_info=None):
+    async def async_get_service(
+        hass: HomeAssistant,
+        config: ConfigType,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> NotificationService:
         """Get notify service for mocked platform."""
         get_service_called(config, discovery_info)
         targetlist = {"a": 1, "b": 2}
         return NotificationService(hass, targetlist, "testnotify")
 
-    async def async_get_service2(hass, config, discovery_info=None):
+    async def async_get_service2(
+        hass: HomeAssistant,
+        config: ConfigType,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> NotificationService:
         """Get notify service for mocked platform."""
         get_service_called(config, discovery_info)
         targetlist = {"c": 3, "d": 4}
@@ -451,18 +485,26 @@ async def test_setup_platform_before_notify_setup(
 
 
 async def test_setup_platform_after_notify_setup(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, tmp_path: Path
+    hass: HomeAssistant, tmp_path: Path
 ) -> None:
     """Test trying to setup a platform after legacy notify service is set up."""
     get_service_called = Mock()
 
-    async def async_get_service(hass, config, discovery_info=None):
+    async def async_get_service(
+        hass: HomeAssistant,
+        config: ConfigType,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> NotificationService:
         """Get notify service for mocked platform."""
         get_service_called(config, discovery_info)
         targetlist = {"a": 1, "b": 2}
         return NotificationService(hass, targetlist, "testnotify")
 
-    async def async_get_service2(hass, config, discovery_info=None):
+    async def async_get_service2(
+        hass: HomeAssistant,
+        config: ConfigType,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> NotificationService:
         """Get notify service for mocked platform."""
         get_service_called(config, discovery_info)
         targetlist = {"c": 3, "d": 4}
@@ -507,7 +549,6 @@ async def test_sending_none_message(hass: HomeAssistant, tmp_path: Path) -> None
         await hass.services.async_call(
             notify.DOMAIN, notify.SERVICE_NOTIFY, {notify.ATTR_MESSAGE: None}
         )
-        await hass.async_block_till_done()
     assert (
         str(exc.value)
         == "template value is None for dictionary value @ data['message']"

@@ -586,7 +586,7 @@ def _log_object_sources(
 
 
 @contextlib.contextmanager
-def _increase_repr_limit() -> Generator[None, None, None]:
+def _increase_repr_limit() -> Generator[None]:
     """Increase the repr limit."""
     arepr = reprlib.aRepr
     original_maxstring = arepr.maxstring

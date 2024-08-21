@@ -1,9 +1,11 @@
 """Tests for the Label Registry."""
 
+from datetime import datetime
 from functools import partial
 import re
 from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -12,16 +14,9 @@ from homeassistant.helpers import (
     entity_registry as er,
     label_registry as lr,
 )
-from homeassistant.helpers.label_registry import (
-    EVENT_LABEL_REGISTRY_UPDATED,
-    STORAGE_KEY,
-    STORAGE_VERSION_MAJOR,
-    LabelRegistry,
-    async_get,
-    async_load,
-)
+from homeassistant.util.dt import utcnow
 
-from tests.common import MockConfigEntry, async_capture_events, flush_store
+from tests.common import ANY, MockConfigEntry, async_capture_events, flush_store
 
 
 async def test_list_labels(label_registry: lr.LabelRegistry) -> None:
@@ -30,11 +25,12 @@ async def test_list_labels(label_registry: lr.LabelRegistry) -> None:
     assert len(list(labels)) == len(label_registry.labels)
 
 
+@pytest.mark.usefixtures("freezer")
 async def test_create_label(
     hass: HomeAssistant, label_registry: lr.LabelRegistry
 ) -> None:
     """Make sure that we can create labels."""
-    update_events = async_capture_events(hass, EVENT_LABEL_REGISTRY_UPDATED)
+    update_events = async_capture_events(hass, lr.EVENT_LABEL_REGISTRY_UPDATED)
     label = label_registry.async_create(
         name="My Label",
         color="#FF0000",
@@ -42,11 +38,16 @@ async def test_create_label(
         description="This label is for testing",
     )
 
-    assert label.label_id == "my_label"
-    assert label.name == "My Label"
-    assert label.color == "#FF0000"
-    assert label.icon == "mdi:test"
-    assert label.description == "This label is for testing"
+    assert label == lr.LabelEntry(
+        label_id="my_label",
+        name="My Label",
+        color="#FF0000",
+        icon="mdi:test",
+        description="This label is for testing",
+        created_at=utcnow(),
+        modified_at=utcnow(),
+        normalized_name=ANY,
+    )
 
     assert len(label_registry.labels) == 1
 
@@ -63,7 +64,7 @@ async def test_create_label_with_name_already_in_use(
     hass: HomeAssistant, label_registry: lr.LabelRegistry
 ) -> None:
     """Make sure that we can't create a label with a ID already in use."""
-    update_events = async_capture_events(hass, EVENT_LABEL_REGISTRY_UPDATED)
+    update_events = async_capture_events(hass, lr.EVENT_LABEL_REGISTRY_UPDATED)
     label_registry.async_create("mock")
 
     with pytest.raises(
@@ -95,7 +96,7 @@ async def test_delete_label(
     hass: HomeAssistant, label_registry: lr.LabelRegistry
 ) -> None:
     """Make sure that we can delete a label."""
-    update_events = async_capture_events(hass, EVENT_LABEL_REGISTRY_UPDATED)
+    update_events = async_capture_events(hass, lr.EVENT_LABEL_REGISTRY_UPDATED)
     label = label_registry.async_create("Label")
     assert len(label_registry.labels) == 1
 
@@ -127,19 +128,30 @@ async def test_delete_non_existing_label(label_registry: lr.LabelRegistry) -> No
 
 
 async def test_update_label(
-    hass: HomeAssistant, label_registry: lr.LabelRegistry
+    hass: HomeAssistant,
+    label_registry: lr.LabelRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Make sure that we can update labels."""
-    update_events = async_capture_events(hass, EVENT_LABEL_REGISTRY_UPDATED)
+    created_at = datetime.fromisoformat("2024-01-01T01:00:00+00:00")
+    freezer.move_to(created_at)
+    update_events = async_capture_events(hass, lr.EVENT_LABEL_REGISTRY_UPDATED)
     label = label_registry.async_create("Mock")
 
     assert len(label_registry.labels) == 1
-    assert label.label_id == "mock"
-    assert label.name == "Mock"
-    assert label.color is None
-    assert label.icon is None
-    assert label.description is None
+    assert label == lr.LabelEntry(
+        label_id="mock",
+        name="Mock",
+        color=None,
+        icon=None,
+        description=None,
+        created_at=created_at,
+        modified_at=created_at,
+        normalized_name=ANY,
+    )
 
+    modified_at = datetime.fromisoformat("2024-02-01T01:00:00+00:00")
+    freezer.move_to(modified_at)
     updated_label = label_registry.async_update(
         label.label_id,
         name="Updated",
@@ -149,12 +161,16 @@ async def test_update_label(
     )
 
     assert updated_label != label
-    assert updated_label.label_id == "mock"
-    assert updated_label.name == "Updated"
-    assert updated_label.color == "#FFFFFF"
-    assert updated_label.icon == "mdi:update"
-    assert updated_label.description == "Updated description"
-
+    assert updated_label == lr.LabelEntry(
+        label_id="mock",
+        name="Updated",
+        color="#FFFFFF",
+        icon="mdi:update",
+        description="Updated description",
+        created_at=created_at,
+        modified_at=modified_at,
+        normalized_name=ANY,
+    )
     assert len(label_registry.labels) == 1
 
     await hass.async_block_till_done()
@@ -174,7 +190,7 @@ async def test_update_label_with_same_data(
     hass: HomeAssistant, label_registry: lr.LabelRegistry
 ) -> None:
     """Make sure that we can reapply the same data to the label and it won't update."""
-    update_events = async_capture_events(hass, EVENT_LABEL_REGISTRY_UPDATED)
+    update_events = async_capture_events(hass, lr.EVENT_LABEL_REGISTRY_UPDATED)
     label = label_registry.async_create(
         "mock",
         color="#FFFFFF",
@@ -202,7 +218,7 @@ async def test_update_label_with_same_data(
 
 
 async def test_update_label_with_same_name_change_case(
-    hass: HomeAssistant, label_registry: lr.LabelRegistry
+    label_registry: lr.LabelRegistry,
 ) -> None:
     """Make sure that we can reapply the same name with a different case to the label."""
     label = label_registry.async_create("mock")
@@ -250,15 +266,21 @@ async def test_update_label_with_normalized_name_already_in_use(
 
 
 async def test_load_labels(
-    hass: HomeAssistant, label_registry: lr.LabelRegistry
+    hass: HomeAssistant,
+    label_registry: lr.LabelRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Make sure that we can load/save data correctly."""
+    label1_created = datetime.fromisoformat("2024-01-01T00:00:00+00:00")
+    freezer.move_to(label1_created)
     label1 = label_registry.async_create(
         "Label One",
         color="#FF000",
         icon="mdi:one",
         description="This label is label one",
     )
+    label2_created = datetime.fromisoformat("2024-02-01T00:00:00+00:00")
+    freezer.move_to(label2_created)
     label2 = label_registry.async_create(
         "Label Two",
         color="#000FF",
@@ -268,7 +290,7 @@ async def test_load_labels(
 
     assert len(label_registry.labels) == 2
 
-    registry2 = LabelRegistry(hass)
+    registry2 = lr.LabelRegistry(hass)
     await flush_store(label_registry._store)
     await registry2.async_load()
 
@@ -276,28 +298,19 @@ async def test_load_labels(
     assert list(label_registry.labels) == list(registry2.labels)
 
     label1_registry2 = registry2.async_get_label_by_name("Label One")
-    assert label1_registry2.label_id == label1.label_id
-    assert label1_registry2.name == label1.name
-    assert label1_registry2.color == label1.color
-    assert label1_registry2.description == label1.description
-    assert label1_registry2.icon == label1.icon
-    assert label1_registry2.normalized_name == label1.normalized_name
+    assert label1_registry2 == label1
 
     label2_registry2 = registry2.async_get_label_by_name("Label Two")
-    assert label2_registry2.name == label2.name
-    assert label2_registry2.color == label2.color
-    assert label2_registry2.description == label2.description
-    assert label2_registry2.icon == label2.icon
-    assert label2_registry2.normalized_name == label2.normalized_name
+    assert label2_registry2 == label2
 
 
 @pytest.mark.parametrize("load_registries", [False])
 async def test_loading_label_from_storage(
-    hass: HomeAssistant, hass_storage: Any
+    hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test loading stored labels on start."""
-    hass_storage[STORAGE_KEY] = {
-        "version": STORAGE_VERSION_MAJOR,
+    hass_storage[lr.STORAGE_KEY] = {
+        "version": lr.STORAGE_VERSION_MAJOR,
         "data": {
             "labels": [
                 {
@@ -306,13 +319,15 @@ async def test_loading_label_from_storage(
                     "icon": "mdi:test",
                     "label_id": "one",
                     "name": "One",
+                    "created_at": "2024-01-01T00:00:00+00:00",
+                    "modified_at": "2024-02-01T00:00:00+00:00",
                 }
             ]
         },
     }
 
-    await async_load(hass)
-    registry = async_get(hass)
+    await lr.async_load(hass)
+    registry = lr.async_get(hass)
 
     assert len(registry.labels) == 1
 
@@ -497,3 +512,52 @@ async def test_async_update_thread_safety(
         await hass.async_add_executor_job(
             partial(label_registry.async_update, any_label.label_id, name="new name")
         )
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_from_1_1(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test migration from version 1.1."""
+    hass_storage[lr.STORAGE_KEY] = {
+        "version": 1,
+        "data": {
+            "labels": [
+                {
+                    "color": None,
+                    "description": None,
+                    "icon": None,
+                    "label_id": "12345A",
+                    "name": "mock",
+                }
+            ]
+        },
+    }
+
+    await lr.async_load(hass)
+    registry = lr.async_get(hass)
+
+    # Test data was loaded
+    entry = registry.async_get_label_by_name("mock")
+    assert entry.label_id == "12345A"
+
+    # Check we store migrated data
+    await flush_store(registry._store)
+    assert hass_storage[lr.STORAGE_KEY] == {
+        "version": lr.STORAGE_VERSION_MAJOR,
+        "minor_version": lr.STORAGE_VERSION_MINOR,
+        "key": lr.STORAGE_KEY,
+        "data": {
+            "labels": [
+                {
+                    "color": None,
+                    "description": None,
+                    "icon": None,
+                    "label_id": "12345A",
+                    "name": "mock",
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                }
+            ]
+        },
+    }

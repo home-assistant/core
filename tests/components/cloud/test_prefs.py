@@ -6,13 +6,8 @@ from unittest.mock import ANY, MagicMock, patch
 import pytest
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
-from homeassistant.components.cloud.const import (
-    DOMAIN,
-    PREF_STRICT_CONNECTION,
-    PREF_TTS_DEFAULT_VOICE,
-)
+from homeassistant.components.cloud.const import DOMAIN, PREF_TTS_DEFAULT_VOICE
 from homeassistant.components.cloud.prefs import STORAGE_KEY, CloudPreferences
-from homeassistant.components.http.const import StrictConnectionMode
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -179,39 +174,3 @@ async def test_tts_default_voice_legacy_gender(
     await hass.async_block_till_done()
 
     assert cloud.client.prefs.tts_default_voice == (expected_language, voice)
-
-
-@pytest.mark.parametrize("mode", list(StrictConnectionMode))
-async def test_strict_connection_convertion(
-    hass: HomeAssistant,
-    cloud: MagicMock,
-    hass_storage: dict[str, Any],
-    mode: StrictConnectionMode,
-) -> None:
-    """Test strict connection string value will be converted to the enum."""
-    hass_storage[STORAGE_KEY] = {
-        "version": 1,
-        "data": {PREF_STRICT_CONNECTION: mode.value},
-    }
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
-    await hass.async_block_till_done()
-
-    assert cloud.client.prefs.strict_connection is mode
-
-
-@pytest.mark.parametrize("storage_data", [{}, {PREF_STRICT_CONNECTION: None}])
-async def test_strict_connection_default(
-    hass: HomeAssistant,
-    cloud: MagicMock,
-    hass_storage: dict[str, Any],
-    storage_data: dict[str, Any],
-) -> None:
-    """Test strict connection default values."""
-    hass_storage[STORAGE_KEY] = {
-        "version": 1,
-        "data": storage_data,
-    }
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
-    await hass.async_block_till_done()
-
-    assert cloud.client.prefs.strict_connection is StrictConnectionMode.DISABLED

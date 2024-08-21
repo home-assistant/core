@@ -311,9 +311,7 @@ def send_entry_not_found(
     connection: websocket_api.ActiveConnection, msg_id: int
 ) -> None:
     """Send Config entry not found error."""
-    connection.send_error(
-        msg_id, websocket_api.const.ERR_NOT_FOUND, "Config entry not found"
-    )
+    connection.send_error(msg_id, websocket_api.ERR_NOT_FOUND, "Config entry not found")
 
 
 def get_entry(

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Coroutine
 from datetime import timedelta
 import logging
-from typing import Any, Concatenate, TypeVar
+from typing import Any, Concatenate
 
 from synology_dsm.api.surveillance_station.camera import SynoCamera
 from synology_dsm.exceptions import (
@@ -28,7 +28,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-_DataT = TypeVar("_DataT")
 
 
 def async_re_login_on_expired[_T: SynologyDSMUpdateCoordinator[Any], **_P, _R](
@@ -57,7 +56,7 @@ def async_re_login_on_expired[_T: SynologyDSMUpdateCoordinator[Any], **_P, _R](
     return _async_wrap
 
 
-class SynologyDSMUpdateCoordinator(DataUpdateCoordinator[_DataT]):
+class SynologyDSMUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """DataUpdateCoordinator base class for synology_dsm."""
 
     def __init__(

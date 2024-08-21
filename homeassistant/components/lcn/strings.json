@@ -6,6 +6,64 @@
       "fingerprint": "Fingerprint code received",
       "codelock": "Code lock code received",
       "send_keys": "Send keys received"
+    },
+    "extra_fields": {
+      "action": "Action",
+      "code": "Code",
+      "key": "Key",
+      "level": "Level"
+    }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup LCN host",
+        "description": "Set up new connection to LCN host.",
+        "data": {
+          "host": "[%key:common::config_flow::data::name%]",
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "sk_num_tries": "Segment coupler scan attempts",
+          "dim_mode": "Dimming mode"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure LCN host",
+        "description": "Reconfigure connection to LCN host.",
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "sk_num_tries": "Segment coupler scan attempts",
+          "dim_mode": "Dimming mode"
+        }
+      }
+    },
+    "error": {
+      "authentication_error": "Authentication failed. Wrong username or password.",
+      "license_error": "Maximum number of connections was reached. An additional licence key is required.",
+      "connection_refused": "Unable to connect to PCHK. Check IP and port.",
+      "already_configured": "PCHK connection using the same ip address/port is already configured."
+    },
+    "abort": {
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  },
+  "issues": {
+    "authentication_error": {
+      "title": "Authentication failed.",
+      "description": "Configuring LCN using YAML is being removed but there was an error importing your YAML configuration.\n\nEnsure username and password are correct.\n\nConsider removing the LCN YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    },
+    "license_error": {
+      "title": "Maximum number of connections was reached.",
+      "description": "Configuring LCN using YAML is being removed but there was an error importing your YAML configuration.\n\nEnsure sufficient PCHK licenses are registered and restart Home Assistant.\n\nConsider removing the LCN YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    },
+    "connection_refused": {
+      "title": "Unable to connect to PCHK.",
+      "description": "Configuring LCN using YAML is being removed but there was an error importing your YAML configuration.\n\nEnsure the connection (IP and port) to the LCN bus coupler is correct.\n\nConsider removing the LCN YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
     }
   },
   "services": {

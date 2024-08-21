@@ -36,6 +36,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
                 "round": 1,
                 "source": input_sensor_entity_id,
                 "unit_time": "min",
+                "max_sub_interval": {"seconds": 0},
             },
         )
         await hass.async_block_till_done()
@@ -49,6 +50,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         "round": 1.0,
         "source": "sensor.input",
         "unit_time": "min",
+        "max_sub_interval": {"seconds": 0},
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -60,6 +62,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         "round": 1.0,
         "source": "sensor.input",
         "unit_time": "min",
+        "max_sub_interval": {"seconds": 0},
     }
     assert config_entry.title == "My integration"
 
@@ -72,7 +75,7 @@ def get_suggested(schema, key):
                 return None
             return k.description["suggested_value"]
     # Wanted key absent from schema
-    raise Exception
+    raise KeyError("Wanted key absent from schema")
 
 
 @pytest.mark.parametrize("platform", ["sensor"])
@@ -89,6 +92,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
             "source": "sensor.input",
             "unit_prefix": "k",
             "unit_time": "min",
+            "max_sub_interval": {"minutes": 1},
         },
         title="My integration",
     )
@@ -119,6 +123,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
             "method": "right",
             "round": 2.0,
             "source": "sensor.input",
+            "max_sub_interval": {"minutes": 1},
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -129,6 +134,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
         "source": "sensor.input",
         "unit_prefix": "k",
         "unit_time": "min",
+        "max_sub_interval": {"minutes": 1},
     }
     assert config_entry.data == {}
     assert config_entry.options == {
@@ -138,6 +144,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
         "source": "sensor.input",
         "unit_prefix": "k",
         "unit_time": "min",
+        "max_sub_interval": {"minutes": 1},
     }
     assert config_entry.title == "My integration"
 

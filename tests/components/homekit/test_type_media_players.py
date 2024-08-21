@@ -40,13 +40,15 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_STANDBY,
 )
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import CoreState, Event, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import async_mock_service
 
 
-async def test_media_player_set_state(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_media_player_set_state(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
     """Test if accessory and HA are updated accordingly."""
     config = {
         CONF_FEATURE_LIST: {
@@ -177,7 +179,10 @@ async def test_media_player_set_state(hass: HomeAssistant, hk_driver, events) ->
 
 
 async def test_media_player_television(
-    hass: HomeAssistant, hk_driver, events, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    hk_driver,
+    events: list[Event],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if television accessory and HA are updated accordingly."""
     entity_id = "media_player.television"
@@ -357,7 +362,6 @@ async def test_media_player_television(
 
     with pytest.raises(ValueError):
         acc.char_remote_key.client_update_value(20)
-        await hass.async_block_till_done()
 
     acc.char_remote_key.client_update_value(7)
     await hass.async_block_till_done()
@@ -367,7 +371,7 @@ async def test_media_player_television(
 
 
 async def test_media_player_television_basic(
-    hass: HomeAssistant, hk_driver, events, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, hk_driver, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test if basic television accessory and HA are updated accordingly."""
     entity_id = "media_player.television"
@@ -410,7 +414,7 @@ async def test_media_player_television_basic(
 
 
 async def test_media_player_television_supports_source_select_no_sources(
-    hass: HomeAssistant, hk_driver, events, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, hk_driver
 ) -> None:
     """Test if basic tv that supports source select but is missing a source list."""
     entity_id = "media_player.television"
@@ -430,7 +434,7 @@ async def test_media_player_television_supports_source_select_no_sources(
 
 
 async def test_tv_restore(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver, events
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver
 ) -> None:
     """Test setting up an entity from state in the event registry."""
     hass.set_state(CoreState.not_running)
@@ -483,7 +487,7 @@ async def test_tv_restore(
 
 
 async def test_media_player_television_max_sources(
-    hass: HomeAssistant, hk_driver, events, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, hk_driver
 ) -> None:
     """Test if television accessory that reaches the maximum number of sources."""
     entity_id = "media_player.television"
@@ -542,7 +546,7 @@ async def test_media_player_television_max_sources(
 
 
 async def test_media_player_television_duplicate_sources(
-    hass: HomeAssistant, hk_driver, events, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, hk_driver
 ) -> None:
     """Test if television accessory with duplicate sources."""
     entity_id = "media_player.television"
@@ -587,7 +591,7 @@ async def test_media_player_television_duplicate_sources(
 
 
 async def test_media_player_television_unsafe_chars(
-    hass: HomeAssistant, hk_driver, events, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, hk_driver, events: list[Event]
 ) -> None:
     """Test if television accessory with unsafe characters."""
     entity_id = "media_player.television"

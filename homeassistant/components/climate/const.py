@@ -97,6 +97,7 @@ class HVACAction(StrEnum):
     """HVAC action for climate devices."""
 
     COOLING = "cooling"
+    DEFROSTING = "defrosting"
     DRYING = "drying"
     FAN = "fan"
     HEATING = "heating"

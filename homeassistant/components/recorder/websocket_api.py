@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime as dt
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import Any, Literal, cast
 
 import voluptuous as vol
 
@@ -44,14 +44,11 @@ from .statistics import (
     statistics_during_period,
     validate_statistics,
 )
-from .util import PERIOD_SCHEMA, get_instance, resolve_period, session_scope
-
-if TYPE_CHECKING:
-    from .core import Recorder
-
+from .util import PERIOD_SCHEMA, get_instance, resolve_period
 
 UNIT_SCHEMA = vol.Schema(
     {
+        vol.Optional("conductivity"): vol.In(DataRateConverter.VALID_UNITS),
         vol.Optional("data_rate"): vol.In(DataRateConverter.VALID_UNITS),
         vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
         vol.Optional("duration"): vol.In(DurationConverter.VALID_UNITS),
@@ -82,10 +79,8 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_get_statistics_metadata)
     websocket_api.async_register_command(hass, ws_list_statistic_ids)
     websocket_api.async_register_command(hass, ws_import_statistics)
-    websocket_api.async_register_command(hass, ws_info)
     websocket_api.async_register_command(hass, ws_update_statistics_metadata)
     websocket_api.async_register_command(hass, ws_validate_statistics)
-    websocket_api.async_register_command(hass, ws_get_recorded_entities)
 
 
 def _ws_get_statistic_during_period(
@@ -165,14 +160,13 @@ def _ws_get_statistics_during_period(
         units,
         types,
     )
-    for statistic_id in result:
-        for item in result[statistic_id]:
-            if (start := item.get("start")) is not None:
-                item["start"] = int(start * 1000)
-            if (end := item.get("end")) is not None:
-                item["end"] = int(end * 1000)
-            if (last_reset := item.get("last_reset")) is not None:
-                item["last_reset"] = int(last_reset * 1000)
+    include_last_reset = "last_reset" in types
+    for statistic_rows in result.values():
+        for row in statistic_rows:
+            row["start"] = int(row["start"] * 1000)
+            row["end"] = int(row["end"] * 1000)
+            if include_last_reset and (last_reset := row["last_reset"]) is not None:
+                row["last_reset"] = int(last_reset * 1000)
     return json_bytes(messages.result_message(msg_id, result))
 
 
@@ -480,78 +474,3 @@ def ws_import_statistics(
     else:
         async_add_external_statistics(hass, metadata, stats)
     connection.send_result(msg["id"])
-
-
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "recorder/info",
-    }
-)
-@callback
-def ws_info(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Return status of the recorder."""
-    if instance := get_instance(hass):
-        backlog = instance.backlog
-        migration_in_progress = instance.migration_in_progress
-        migration_is_live = instance.migration_is_live
-        recording = instance.recording
-        # We avoid calling is_alive() as it can block waiting
-        # for the thread state lock which will block the event loop.
-        is_running = instance.is_running
-        max_backlog = instance.max_backlog
-    else:
-        backlog = None
-        migration_in_progress = False
-        migration_is_live = False
-        recording = False
-        is_running = False
-        max_backlog = None
-
-    recorder_info = {
-        "backlog": backlog,
-        "max_backlog": max_backlog,
-        "migration_in_progress": migration_in_progress,
-        "migration_is_live": migration_is_live,
-        "recording": recording,
-        "thread_running": is_running,
-    }
-    connection.send_result(msg["id"], recorder_info)
-
-
-def _get_recorded_entities(
-    hass: HomeAssistant, msg_id: int, instance: Recorder
-) -> bytes:
-    """Get the list of entities being recorded."""
-    with session_scope(hass=hass, read_only=True) as session:
-        return json_bytes(
-            messages.result_message(
-                msg_id,
-                {
-                    "entity_ids": list(
-                        instance.states_meta_manager.get_metadata_id_to_entity_id(
-                            session
-                        ).values()
-                    )
-                },
-            )
-        )
-
-
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "recorder/recorded_entities",
-    }
-)
-@websocket_api.async_response
-async def ws_get_recorded_entities(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Get the list of entities being recorded."""
-    instance = get_instance(hass)
-    return connection.send_message(
-        await instance.async_add_executor_job(
-            _get_recorded_entities, hass, msg["id"], instance
-        )
-    )

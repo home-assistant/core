@@ -22,6 +22,7 @@ class FakeDiscovery:
         self.mock_devices = {"abc": build_device_mock()}
         self.last_mock_infos = {}
         self._listeners = []
+        self.sock = None
 
     def add_listener(self, listener: Listener) -> None:
         """Add an event listener."""

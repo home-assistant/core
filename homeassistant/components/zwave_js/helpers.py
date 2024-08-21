@@ -40,7 +40,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.group import expand_entity_ids
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 
 from .const import (
     ATTR_COMMAND_CLASS,
@@ -479,7 +479,9 @@ def copy_available_params(
     )
 
 
-def get_value_state_schema(value: ZwaveValue) -> vol.Schema | None:
+def get_value_state_schema(
+    value: ZwaveValue,
+) -> VolSchemaType | vol.Coerce | vol.In | None:
     """Return device automation schema for a config entry."""
     if isinstance(value, ConfigurationValue):
         min_ = value.metadata.min

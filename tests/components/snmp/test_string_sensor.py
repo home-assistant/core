@@ -41,7 +41,9 @@ async def test_basic_config(hass: HomeAssistant) -> None:
     assert state.attributes == {"friendly_name": "SNMP"}
 
 
-async def test_entity_config(hass: HomeAssistant) -> None:
+async def test_entity_config(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test entity configuration."""
 
     config = {
@@ -61,7 +63,6 @@ async def test_entity_config(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_get("sensor.snmp_sensor").unique_id == "very_unique"
 
     state = hass.states.get("sensor.snmp_sensor")

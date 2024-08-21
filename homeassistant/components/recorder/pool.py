@@ -1,5 +1,7 @@
 """A pool for sqlite connections."""
 
+from __future__ import annotations
+
 import asyncio
 import logging
 import threading
@@ -51,7 +53,7 @@ class RecorderPool(SingletonThreadPool, NullPool):
         self.recorder_and_worker_thread_ids = recorder_and_worker_thread_ids
         SingletonThreadPool.__init__(self, creator, **kw)
 
-    def recreate(self) -> "RecorderPool":
+    def recreate(self) -> RecorderPool:
         """Recreate the pool."""
         self.logger.info("Pool recreating")
         return self.__class__(
@@ -69,7 +71,8 @@ class RecorderPool(SingletonThreadPool, NullPool):
 
     def _do_return_conn(self, record: ConnectionPoolEntry) -> None:
         if threading.get_ident() in self.recorder_and_worker_thread_ids:
-            return super()._do_return_conn(record)
+            super()._do_return_conn(record)
+            return
         record.close()
 
     def shutdown(self) -> None:
@@ -97,7 +100,7 @@ class RecorderPool(SingletonThreadPool, NullPool):
             # which is allowed but discouraged since its much slower
             return self._do_get_db_connection_protected()
         # In the event loop, raise an exception
-        raise_for_blocking_call(
+        raise_for_blocking_call(  # noqa: RET503
             self._do_get_db_connection_protected,
             strict=True,
             advise_msg=ADVISE_MSG,

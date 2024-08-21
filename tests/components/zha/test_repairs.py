@@ -12,11 +12,11 @@ from zigpy.application import ControllerApplication
 import zigpy.backups
 from zigpy.exceptions import NetworkSettingsInconsistent
 
-from homeassistant.components.homeassistant_sky_connect.const import (
+from homeassistant.components.homeassistant_sky_connect.const import (  # pylint: disable=hass-component-root-import
     DOMAIN as SKYCONNECT_DOMAIN,
 )
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
-from homeassistant.components.zha.core.const import DOMAIN
+from homeassistant.components.zha.const import DOMAIN
 from homeassistant.components.zha.repairs.network_settings_inconsistent import (
     ISSUE_INCONSISTENT_NETWORK_SETTINGS,
 )
@@ -134,6 +134,7 @@ async def test_multipan_firmware_repair(
     expected_learn_more_url: str,
     config_entry: MockConfigEntry,
     mock_zigpy_connect: ControllerApplication,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test creating a repair when multi-PAN firmware is installed and probed."""
 
@@ -147,7 +148,7 @@ async def test_multipan_firmware_repair(
             autospec=True,
         ),
         patch(
-            "homeassistant.components.zha.core.gateway.ZHAGateway.async_initialize",
+            "homeassistant.components.zha.Gateway.async_initialize",
             side_effect=RuntimeError(),
         ),
         patch(
@@ -161,8 +162,6 @@ async def test_multipan_firmware_repair(
         assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
     await hass.config_entries.async_unload(config_entry.entry_id)
-
-    issue_registry = ir.async_get(hass)
 
     issue = issue_registry.async_get_issue(
         domain=DOMAIN,
@@ -186,7 +185,7 @@ async def test_multipan_firmware_repair(
 
 
 async def test_multipan_firmware_no_repair_on_probe_failure(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test that a repair is not created when multi-PAN firmware cannot be probed."""
 
@@ -200,7 +199,7 @@ async def test_multipan_firmware_no_repair_on_probe_failure(
             autospec=True,
         ),
         patch(
-            "homeassistant.components.zha.core.gateway.ZHAGateway.async_initialize",
+            "homeassistant.components.zha.Gateway.async_initialize",
             side_effect=RuntimeError(),
         ),
     ):
@@ -212,7 +211,6 @@ async def test_multipan_firmware_no_repair_on_probe_failure(
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     # No repair is created
-    issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(
         domain=DOMAIN,
         issue_id=ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED,
@@ -224,6 +222,7 @@ async def test_multipan_firmware_retry_on_probe_ezsp(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_zigpy_connect: ControllerApplication,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test that ZHA is reloaded when EZSP firmware is probed."""
 
@@ -237,7 +236,7 @@ async def test_multipan_firmware_retry_on_probe_ezsp(
             autospec=True,
         ),
         patch(
-            "homeassistant.components.zha.core.gateway.ZHAGateway.async_initialize",
+            "homeassistant.components.zha.Gateway.async_initialize",
             side_effect=RuntimeError(),
         ),
     ):
@@ -250,7 +249,6 @@ async def test_multipan_firmware_retry_on_probe_ezsp(
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     # No repair is created
-    issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(
         domain=DOMAIN,
         issue_id=ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED,
@@ -299,6 +297,7 @@ async def test_inconsistent_settings_keep_new(
     config_entry: MockConfigEntry,
     mock_zigpy_connect: ControllerApplication,
     network_backup: zigpy.backups.NetworkBackup,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test inconsistent ZHA network settings: keep new settings."""
 
@@ -312,7 +311,7 @@ async def test_inconsistent_settings_keep_new(
     old_state = network_backup
 
     with patch(
-        "homeassistant.components.zha.core.gateway.ZHAGateway.async_initialize",
+        "homeassistant.components.zha.Gateway.async_initialize",
         side_effect=NetworkSettingsInconsistent(
             message="Network settings are inconsistent",
             new_state=new_state,
@@ -325,8 +324,6 @@ async def test_inconsistent_settings_keep_new(
         assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
     await hass.config_entries.async_unload(config_entry.entry_id)
-
-    issue_registry = ir.async_get(hass)
 
     issue = issue_registry.async_get_issue(
         domain=DOMAIN,
@@ -379,6 +376,7 @@ async def test_inconsistent_settings_restore_old(
     config_entry: MockConfigEntry,
     mock_zigpy_connect: ControllerApplication,
     network_backup: zigpy.backups.NetworkBackup,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test inconsistent ZHA network settings: restore last backup."""
 
@@ -392,7 +390,7 @@ async def test_inconsistent_settings_restore_old(
     old_state = network_backup
 
     with patch(
-        "homeassistant.components.zha.core.gateway.ZHAGateway.async_initialize",
+        "homeassistant.components.zha.Gateway.async_initialize",
         side_effect=NetworkSettingsInconsistent(
             message="Network settings are inconsistent",
             new_state=new_state,
@@ -405,8 +403,6 @@ async def test_inconsistent_settings_restore_old(
         assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
     await hass.config_entries.async_unload(config_entry.entry_id)
-
-    issue_registry = ir.async_get(hass)
 
     issue = issue_registry.async_get_issue(
         domain=DOMAIN,

@@ -79,10 +79,18 @@ async def async_block_recorder(hass: HomeAssistant, seconds: float) -> None:
     await event.wait()
 
 
+def get_start_time(start: datetime) -> datetime:
+    """Calculate a valid start time for statistics."""
+    start_minutes = start.minute - start.minute % 5
+    return start.replace(minute=start_minutes, second=0, microsecond=0)
+
+
 def do_adhoc_statistics(hass: HomeAssistant, **kwargs: Any) -> None:
     """Trigger an adhoc statistics run."""
     if not (start := kwargs.get("start")):
         start = statistics.get_start_time()
+    elif (start.minute % 5) != 0 or start.second != 0 or start.microsecond != 0:
+        raise ValueError(f"Statistics must start on 5 minute boundary got {start}")
     get_instance(hass).queue_task(StatisticsTask(start, False))
 
 
@@ -138,7 +146,7 @@ async def async_recorder_block_till_done(hass: HomeAssistant) -> None:
 
 def corrupt_db_file(test_db_file):
     """Corrupt an sqlite3 database file."""
-    with open(test_db_file, "w+") as fhandle:
+    with open(test_db_file, "w+", encoding="utf8") as fhandle:
         fhandle.seek(200)
         fhandle.write("I am a corrupt db" * 100)
 
@@ -257,12 +265,16 @@ def assert_dict_of_states_equal_without_context_and_last_changed(
         )
 
 
-async def async_record_states(hass: HomeAssistant):
+async def async_record_states(
+    hass: HomeAssistant,
+) -> tuple[datetime, datetime, dict[str, list[State | None]]]:
     """Record some test states."""
     return await hass.async_add_executor_job(record_states, hass)
 
 
-def record_states(hass):
+def record_states(
+    hass: HomeAssistant,
+) -> tuple[datetime, datetime, dict[str, list[State | None]]]:
     """Record some test states.
 
     We inject a bunch of state updates temperature sensors.
@@ -291,11 +303,11 @@ def record_states(hass):
         wait_recording_done(hass)
         return hass.states.get(entity_id)
 
-    zero = dt_util.utcnow()
+    zero = get_start_time(dt_util.utcnow())
     one = zero + timedelta(seconds=1 * 5)
     two = one + timedelta(seconds=15 * 5)
     three = two + timedelta(seconds=30 * 5)
-    four = three + timedelta(seconds=15 * 5)
+    four = three + timedelta(seconds=14 * 5)
 
     states = {mp: [], sns1: [], sns2: [], sns3: [], sns4: []}
     with freeze_time(one) as freezer:
@@ -416,6 +428,14 @@ def get_schema_module_path(schema_version_postfix: str) -> str:
     return f"tests.components.recorder.db_schema_{schema_version_postfix}"
 
 
+@dataclass(slots=True)
+class MockMigrationTask(migration.MigrationTask):
+    """Mock migration task which does nothing."""
+
+    def run(self, instance: Recorder) -> None:
+        """Run migration task."""
+
+
 @contextmanager
 def old_db_schema(schema_version_postfix: str) -> Iterator[None]:
     """Fixture to initialize the db with the old schema."""
@@ -434,7 +454,7 @@ def old_db_schema(schema_version_postfix: str) -> Iterator[None]:
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
         patch.object(core, "StateAttributes", old_db_schema.StateAttributes),
-        patch.object(migration.EntityIDMigration, "task", core.RecorderTask),
+        patch.object(migration.EntityIDMigration, "task", MockMigrationTask),
         patch(
             CREATE_ENGINE_TARGET,
             new=partial(

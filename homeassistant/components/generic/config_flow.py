@@ -48,7 +48,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import UnknownFlow
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import config_validation as cv, template as template_helper
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.util import slugify
@@ -292,6 +292,10 @@ async def async_test_stream(
         if err.errno == EIO:  # input/output error
             return {CONF_STREAM_SOURCE: "stream_io_error"}
         raise
+    except HomeAssistantError as err:
+        if "Stream integration is not set up" in str(err):
+            return {CONF_STREAM_SOURCE: "stream_not_set_up"}
+        raise
     return {}
 
 
@@ -361,6 +365,10 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.user_input = user_input
                     self.title = name
 
+                    if still_url is None:
+                        return self.async_create_entry(
+                            title=self.title, data={}, options=self.user_input
+                        )
                     # temporary preview for user to check the image
                     self.context["preview_cam"] = user_input
                     return await self.async_step_user_confirm_still()

@@ -196,7 +196,9 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         """Return a datetime."""
         if isinstance(obj, datetime):
             return CalDavUpdateCoordinator.to_local(obj)
-        return datetime.combine(obj, time.min).replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
+        return datetime.combine(obj, time.min).replace(
+            tzinfo=dt_util.get_default_time_zone()
+        )
 
     @staticmethod
     def to_local(obj: datetime | date) -> datetime | date:

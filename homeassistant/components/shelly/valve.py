@@ -23,7 +23,7 @@ from .entity import (
     ShellyBlockAttributeEntity,
     async_setup_block_attribute_entities,
 )
-from .utils import get_device_entry_gen
+from .utils import async_remove_shelly_entity, get_device_entry_gen
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -67,6 +67,9 @@ def async_setup_block_entry(
             {("valve", "valve"): GAS_VALVE},
             BlockShellyValve,
         )
+        # Remove deprecated switch entity for gas valve
+        unique_id = f"{coordinator.mac}-valve_0-valve"
+        async_remove_shelly_entity(hass, "switch", unique_id)
 
 
 class BlockShellyValve(ShellyBlockAttributeEntity, ValveEntity):

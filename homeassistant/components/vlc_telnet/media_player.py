@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate
+from typing import Any, Concatenate, Literal
 
 from aiovlc.client import Client
 from aiovlc.exceptions import AuthError, CommandError, ConnectError
@@ -29,6 +29,13 @@ from . import VlcConfigEntry
 from .const import DEFAULT_NAME, DOMAIN, LOGGER
 
 MAX_VOLUME = 500
+
+
+def _get_str(data: dict, key: str) -> str | None:
+    """Get a value from a dictionary and cast it to a string or None."""
+    if value := data.get(key):
+        return str(value)
+    return None
 
 
 async def async_setup_entry(
@@ -152,10 +159,10 @@ class VlcDevice(MediaPlayerEntity):
         data = info.data
         LOGGER.debug("Info data: %s", data)
 
-        self._attr_media_album_name = data.get("data", {}).get("album")
-        self._attr_media_artist = data.get("data", {}).get("artist")
-        self._attr_media_title = data.get("data", {}).get("title")
-        now_playing = data.get("data", {}).get("now_playing")
+        self._attr_media_album_name = _get_str(data.get("data", {}), "album")
+        self._attr_media_artist = _get_str(data.get("data", {}), "artist")
+        self._attr_media_title = _get_str(data.get("data", {}), "title")
+        now_playing = _get_str(data.get("data", {}), "now_playing")
 
         # Many radio streams put artist/title/album in now_playing and title is the station name.
         if now_playing:
@@ -168,7 +175,7 @@ class VlcDevice(MediaPlayerEntity):
 
         # Fall back to filename.
         if data_info := data.get("data"):
-            self._attr_media_title = data_info["filename"]
+            self._attr_media_title = _get_str(data_info, "filename")
 
             # Strip out auth signatures if streaming local media
             if (media_title := self.media_title) and (
@@ -268,7 +275,7 @@ class VlcDevice(MediaPlayerEntity):
     @catch_vlc_errors
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
-        shuffle_command = "on" if shuffle else "off"
+        shuffle_command: Literal["on", "off"] = "on" if shuffle else "off"
         await self._vlc.random(shuffle_command)
 
     async def async_browse_media(

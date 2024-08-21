@@ -199,8 +199,6 @@ async def test_disable_service_call(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-        await hass.async_block_till_done()
-
         mocked_hole.disable.assert_called_with(1)
 
 
@@ -218,8 +216,6 @@ async def test_unload(hass: HomeAssistant) -> None:
     assert entry.state is ConfigEntryState.LOADED
     assert isinstance(entry.runtime_data, PiHoleData)
     assert await hass.config_entries.async_unload(entry.entry_id)
-
-    await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
 

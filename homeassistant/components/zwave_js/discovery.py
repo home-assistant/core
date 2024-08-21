@@ -27,7 +27,10 @@ from zwave_js_server.const.command_class.lock import (
     DOOR_STATUS_PROPERTY,
     LOCKED_PROPERTY,
 )
-from zwave_js_server.const.command_class.meter import VALUE_PROPERTY
+from zwave_js_server.const.command_class.meter import (
+    RESET_PROPERTY as RESET_METER_PROPERTY,
+    VALUE_PROPERTY,
+)
 from zwave_js_server.const.command_class.protection import LOCAL_PROPERTY, RF_PROPERTY
 from zwave_js_server.const.command_class.sound_switch import (
     DEFAULT_TONE_ID_PROPERTY,
@@ -576,6 +579,15 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_registry_enabled_default=False,
     ),
+    # ZVIDAR Z-CM-V01 (SmartWings/Deyi WM25L/V Z-Wave Motor for Roller Shade)
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="shade",
+        manufacturer_id={0x045A},
+        product_id={0x0507},
+        product_type={0x0904},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+    ),
     # Vision Security ZL7432 In Wall Dual Relay Switch
     ZWaveDiscoverySchema(
         platform=Platform.SWITCH,
@@ -1103,7 +1115,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.LIGHT,
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
-    # light for Basic CC
+    # light for Basic CC with target
     ZWaveDiscoverySchema(
         platform=Platform.LIGHT,
         primary_value=ZWaveValueDiscoverySchema(
@@ -1113,9 +1125,24 @@ DISCOVERY_SCHEMAS = [
         ),
         required_values=[
             ZWaveValueDiscoverySchema(
-                command_class={
-                    CommandClass.BASIC,
-                },
+                command_class={CommandClass.BASIC},
+                type={ValueType.NUMBER},
+                property={TARGET_VALUE_PROPERTY},
+            )
+        ],
+    ),
+    # sensor for Basic CC without target
+    ZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        hint="numeric_sensor",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BASIC},
+            type={ValueType.NUMBER},
+            property={CURRENT_VALUE_PROPERTY},
+        ),
+        absent_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.BASIC},
                 type={ValueType.NUMBER},
                 property={TARGET_VALUE_PROPERTY},
             )
@@ -1180,13 +1207,25 @@ DISCOVERY_SCHEMAS = [
             stateful=False,
         ),
     ),
+    # button
+    # Meter CC idle
+    ZWaveDiscoverySchema(
+        platform=Platform.BUTTON,
+        hint="meter reset",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.METER},
+            property={RESET_METER_PROPERTY},
+            type={ValueType.BOOLEAN},
+        ),
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 ]
 
 
 @callback
 def async_discover_node_values(
     node: ZwaveNode, device: DeviceEntry, discovered_value_ids: dict[str, set[str]]
-) -> Generator[ZwaveDiscoveryInfo, None, None]:
+) -> Generator[ZwaveDiscoveryInfo]:
     """Run discovery on ZWave node and return matching (primary) values."""
     for value in node.values.values():
         # We don't need to rediscover an already processed value_id
@@ -1197,7 +1236,7 @@ def async_discover_node_values(
 @callback
 def async_discover_single_value(
     value: ZwaveValue, device: DeviceEntry, discovered_value_ids: dict[str, set[str]]
-) -> Generator[ZwaveDiscoveryInfo, None, None]:
+) -> Generator[ZwaveDiscoveryInfo]:
     """Run discovery on a single ZWave value and return matching schema info."""
     discovered_value_ids[device.id].add(value.value_id)
     for schema in DISCOVERY_SCHEMAS:
@@ -1318,7 +1357,7 @@ def async_discover_single_value(
 @callback
 def async_discover_single_configuration_value(
     value: ConfigurationValue,
-) -> Generator[ZwaveDiscoveryInfo, None, None]:
+) -> Generator[ZwaveDiscoveryInfo]:
     """Run discovery on single Z-Wave configuration value and return schema matches."""
     if value.metadata.writeable and value.metadata.readable:
         if value.configuration_value_type == ConfigurationValueType.ENUMERATED:
