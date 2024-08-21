@@ -413,3 +413,26 @@ async def test_token_updated(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert mock_config_entry.data[CONF_TOKEN] == {"access_token": "new-mock-token"}
+
+
+async def test_no_listen_start(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_listener,
+    mock_ring_client,
+) -> None:
+    """Test behaviour if listener doesn't start."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        data={"username": "foo", "token": {}},
+    )
+    mock_listener.do_not_start = True
+
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert "Ring event listener failed to start after 10 seconds" in [
+        record.message for record in caplog.records if record.levelname == "WARNING"
+    ]

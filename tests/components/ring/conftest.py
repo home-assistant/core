@@ -11,7 +11,7 @@ from homeassistant.components.ring import DOMAIN
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .device_mocks import get_active_alerts, get_devices_data, get_mock_devices
+from .device_mocks import get_devices_data, get_mock_devices
 
 from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
@@ -103,7 +103,7 @@ def mock_ring_client(mock_ring_auth, mock_ring_devices):
     mock_client = create_autospec(ring_doorbell.Ring)
     mock_client.return_value.devices_data = get_devices_data()
     mock_client.return_value.devices.return_value = mock_ring_devices
-    mock_client.return_value.active_alerts.side_effect = get_active_alerts
+    mock_client.return_value.active_alerts.return_value = []
 
     with patch("homeassistant.components.ring.Ring", new=mock_client):
         yield mock_client.return_value
@@ -135,3 +135,45 @@ async def mock_added_config_entry(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     return mock_config_entry
+
+
+@pytest.fixture(autouse=True)
+def mock_listener(request):
+    """Fixture to mock the push client connect and disconnect."""
+
+    f = _FakeRingListener()
+    with patch(
+        "homeassistant.components.ring.coordinator.RingEventListener", return_value=f
+    ):
+        yield f
+
+
+class _FakeRingListener:
+    """Test class to replace the ring_doorbell event listener for testing."""
+
+    def __init__(self, *_, **__):
+        self._callbacks = {}
+        self._subscription_counter = 1
+        self.started = False
+        self.do_not_start = False
+
+    async def start(self, *_, **__):
+        if self.do_not_start:
+            return False
+        self.started = True
+        return True
+
+    async def stop(self, *_, **__):
+        self.started = False
+
+    def add_notification_callback(self, callback):
+        self._callbacks[self._subscription_counter] = callback
+        self._subscription_counter += 1
+        return self._subscription_counter
+
+    def remove_notification_callback(self, subscription_id):
+        del self._callbacks[subscription_id]
+
+    def notify(self, ring_event: ring_doorbell.RingEvent):
+        for callback in self._callbacks.values():
+            callback(ring_event)

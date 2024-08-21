@@ -7,9 +7,7 @@ Each device entry in the devices.json will have a MagicMock instead of the RingO
 Mocks the api calls on the devices such as history() and health().
 """
 
-from copy import deepcopy
 from datetime import datetime
-from time import time
 from unittest.mock import AsyncMock, MagicMock
 
 from ring_doorbell import (
@@ -30,7 +28,6 @@ DOORBOT_HISTORY = load_json_value_fixture("doorbot_history.json", DOMAIN)
 INTERCOM_HISTORY = load_json_value_fixture("intercom_history.json", DOMAIN)
 DOORBOT_HEALTH = load_json_value_fixture("doorbot_health_attrs.json", DOMAIN)
 CHIME_HEALTH = load_json_value_fixture("chime_health_attrs.json", DOMAIN)
-DEVICE_ALERTS = load_json_value_fixture("ding_active.json", DOMAIN)
 
 
 def get_mock_devices():
@@ -52,14 +49,6 @@ def get_devices_data():
         device_type: {obj["id"]: obj for obj in devices}
         for device_type, devices in DEVICES_FIXTURE.items()
     }
-
-
-def get_active_alerts():
-    """Return active alerts set to now."""
-    dings_fixture = deepcopy(DEVICE_ALERTS)
-    for ding in dings_fixture:
-        ding["now"] = time()
-    return dings_fixture
 
 
 DEVICE_TYPES = {

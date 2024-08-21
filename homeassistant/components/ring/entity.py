@@ -15,16 +15,19 @@ from typing_extensions import TypeVar
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    BaseCoordinatorEntity,
+    CoordinatorEntity,
+)
 
 from .const import ATTRIBUTION, DOMAIN
-from .coordinator import RingDataCoordinator, RingNotificationsCoordinator
+from .coordinator import RingDataCoordinator, RingListenCoordinator
 
 RingDeviceT = TypeVar("RingDeviceT", bound=RingGeneric, default=RingGeneric)
 
 _RingCoordinatorT = TypeVar(
     "_RingCoordinatorT",
-    bound=(RingDataCoordinator | RingNotificationsCoordinator),
+    bound=(RingDataCoordinator | RingListenCoordinator),
 )
 
 
@@ -52,7 +55,7 @@ def exception_wrap[_RingBaseEntityT: RingBaseEntity[Any, Any], **_P, _R](
 
 
 class RingBaseEntity(
-    CoordinatorEntity[_RingCoordinatorT], Generic[_RingCoordinatorT, RingDeviceT]
+    BaseCoordinatorEntity[_RingCoordinatorT], Generic[_RingCoordinatorT, RingDeviceT]
 ):
     """Base implementation for Ring device."""
 
@@ -77,7 +80,7 @@ class RingBaseEntity(
         )
 
 
-class RingEntity(RingBaseEntity[RingDataCoordinator, RingDeviceT]):
+class RingEntity(RingBaseEntity[RingDataCoordinator, RingDeviceT], CoordinatorEntity):
     """Implementation for Ring devices."""
 
     def _get_coordinator_data(self) -> RingDevices:

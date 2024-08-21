@@ -32,9 +32,15 @@
     }
   },
   "entity": {
-    "binary_sensor": {
+    "event": {
       "ding": {
         "name": "Ding"
+      },
+      "motion": {
+        "name": "Motion"
+      },
+      "intercom_unlock": {
+        "name": "Unlock"
       }
     },
     "button": {
