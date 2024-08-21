@@ -18,6 +18,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CAMERA,
+    Platform.EVENT,
     Platform.LIGHT,
     Platform.SENSOR,
     Platform.SIREN,
