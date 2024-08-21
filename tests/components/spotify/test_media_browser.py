@@ -52,7 +52,7 @@ async def test_browse_media_playlists(
     config_entry_id: str,
     spotify_setup,
 ) -> None:
-    """Test browsing playlists."""
+    """Test browsing playlists for the two config entries."""
     response = await async_browse_media(
         hass,
         "spotify://current_user_playlists",
