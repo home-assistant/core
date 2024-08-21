@@ -15,10 +15,12 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import LcnEntity
 from .const import (
+    ADD_ENTITIES_CALLBACKS,
     CONF_DOMAIN_DATA,
     CONF_OUTPUTS,
     CONF_REGISTER,
     CONF_TRANSITION,
+    DOMAIN,
     OUTPUT_PORTS,
 )
 from .helpers import DeviceConnectionType, get_device_connection
@@ -43,6 +45,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LCN switch entities from a config entry."""
+    hass.data[DOMAIN][config_entry.entry_id][ADD_ENTITIES_CALLBACKS].update(
+        {DOMAIN_SCENE: (async_add_entities, create_lcn_scene_entity)}
+    )
 
     async_add_entities(
         create_lcn_scene_entity(hass, entity_config, config_entry)

@@ -129,11 +129,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         [SirenEntityFeature.TURN_ON],
     )
     component.async_register_entity_service(
-        SERVICE_TURN_OFF, {}, "async_turn_off", [SirenEntityFeature.TURN_OFF]
+        SERVICE_TURN_OFF, None, "async_turn_off", [SirenEntityFeature.TURN_OFF]
     )
     component.async_register_entity_service(
         SERVICE_TOGGLE,
-        {},
+        None,
         "async_toggle",
         [SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF],
     )
