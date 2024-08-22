@@ -1,10 +1,11 @@
 """Test the Bang & Olufsen media_player entity."""
 
+from collections.abc import Callable
 from contextlib import nullcontext as does_not_raise
 import logging
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
-from mozart_api.models import PlaybackContentMetadata
+from mozart_api.models import PlaybackContentMetadata, RenderingState, Source
 import pytest
 
 from homeassistant.components.bang_olufsen.const import (
@@ -75,7 +76,7 @@ async def test_initialization(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     mock_config_entry: MockConfigEntry,
-    mock_mozart_client,
+    mock_mozart_client: AsyncMock,
 ) -> None:
     """Test the integration is initialized properly in _initialize, async_added_to_hass and __init__."""
 
@@ -131,7 +132,9 @@ async def test_async_update_sources_outdated_api(
 
 
 async def test_async_update_playback_metadata(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test _async_update_playback_metadata."""
 
@@ -170,8 +173,8 @@ async def test_async_update_playback_metadata(
 async def test_async_update_playback_error(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    mock_mozart_client,
-    mock_config_entry,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test _async_update_playback_error."""
 
@@ -192,7 +195,9 @@ async def test_async_update_playback_error(
 
 
 async def test_async_update_playback_progress(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test _async_update_playback_progress."""
 
@@ -218,7 +223,9 @@ async def test_async_update_playback_progress(
 
 
 async def test_async_update_playback_state(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test _async_update_playback_state."""
 
@@ -293,14 +300,14 @@ async def test_async_update_playback_state(
     ],
 )
 async def test_async_update_source_change(
-    reported_source,
-    real_source,
-    content_type,
-    progress,
-    metadata,
     hass: HomeAssistant,
-    mock_mozart_client,
-    mock_config_entry,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    reported_source: Source,
+    real_source: Source,
+    content_type: MediaType,
+    progress: int,
+    metadata: PlaybackContentMetadata,
 ) -> None:
     """Test _async_update_source_change."""
 
@@ -338,7 +345,9 @@ async def test_async_update_source_change(
 
 
 async def test_async_turn_off(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test async_turn_off."""
 
@@ -366,7 +375,9 @@ async def test_async_turn_off(
 
 
 async def test_async_set_volume_level(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test async_set_volume_level and _async_update_volume by proxy."""
 
@@ -404,7 +415,9 @@ async def test_async_set_volume_level(
 
 
 async def test_async_mute_volume(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test async_mute_volume."""
 
@@ -452,11 +465,11 @@ async def test_async_mute_volume(
     ],
 )
 async def test_async_media_play_pause(
-    initial_state,
-    command,
     hass: HomeAssistant,
-    mock_mozart_client,
-    mock_config_entry,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    initial_state: RenderingState,
+    command: str,
 ) -> None:
     """Test async_media_play_pause."""
 
@@ -484,7 +497,9 @@ async def test_async_media_play_pause(
 
 
 async def test_async_media_stop(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test async_media_stop."""
 
@@ -513,7 +528,9 @@ async def test_async_media_stop(
 
 
 async def test_async_media_next_track(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test async_media_next_track."""
 
@@ -540,12 +557,12 @@ async def test_async_media_next_track(
     ],
 )
 async def test_async_media_seek(
-    source,
-    expected_result,
-    seek_called_times,
     hass: HomeAssistant,
-    mock_mozart_client,
-    mock_config_entry,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    source: Source,
+    expected_result: Callable,
+    seek_called_times: int,
 ) -> None:
     """Test async_media_seek."""
 
@@ -575,7 +592,9 @@ async def test_async_media_seek(
 
 
 async def test_async_media_previous_track(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test async_media_previous_track."""
 
@@ -593,7 +612,9 @@ async def test_async_media_previous_track(
 
 
 async def test_async_clear_playlist(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test async_clear_playlist."""
 
@@ -622,13 +643,13 @@ async def test_async_clear_playlist(
     ],
 )
 async def test_async_select_source(
-    source,
-    expected_result,
-    audio_source_call,
-    video_source_call,
     hass: HomeAssistant,
-    mock_mozart_client,
-    mock_config_entry,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    source: str,
+    expected_result: Callable,
+    audio_source_call: int,
+    video_source_call: int,
 ) -> None:
     """Test async_select_source with an invalid source."""
 
@@ -651,7 +672,9 @@ async def test_async_select_source(
 
 
 async def test_async_play_media_invalid_type(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test async_play_media only accepts valid media types."""
 
@@ -676,7 +699,9 @@ async def test_async_play_media_invalid_type(
 
 
 async def test_async_play_media_url(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test async_play_media URL."""
 
@@ -701,7 +726,9 @@ async def test_async_play_media_url(
 
 
 async def test_async_play_media_overlay_absolute_volume_uri(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test async_play_media overlay with Home Assistant local URI and absolute volume."""
 
@@ -734,8 +761,8 @@ async def test_async_play_media_overlay_absolute_volume_uri(
 async def test_async_play_media_overlay_invalid_offset_volume_tts(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    mock_mozart_client,
-    mock_config_entry,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test async_play_media with Home Assistant invalid offset volume and B&O tts."""
 
@@ -765,7 +792,9 @@ async def test_async_play_media_overlay_invalid_offset_volume_tts(
 
 
 async def test_async_play_media_overlay_offset_volume_tts(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test async_play_media with Home Assistant invalid offset volume and B&O tts."""
 
@@ -798,7 +827,9 @@ async def test_async_play_media_overlay_offset_volume_tts(
 
 
 async def test_async_play_media_tts(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test async_play_media with Home Assistant tts."""
 
@@ -822,7 +853,9 @@ async def test_async_play_media_tts(
 
 
 async def test_async_play_media_radio(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test async_play_media with B&O radio."""
 
@@ -846,7 +879,9 @@ async def test_async_play_media_radio(
 
 
 async def test_async_play_media_favourite(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test async_play_media with B&O favourite."""
 
@@ -868,7 +903,9 @@ async def test_async_play_media_favourite(
 
 
 async def test_async_play_media_deezer_flow(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test async_play_media with Deezer flow."""
 
@@ -894,7 +931,9 @@ async def test_async_play_media_deezer_flow(
 
 
 async def test_async_play_media_deezer_playlist(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test async_play_media with Deezer playlist."""
 
@@ -919,7 +958,9 @@ async def test_async_play_media_deezer_playlist(
 
 
 async def test_async_play_media_deezer_track(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test async_play_media with Deezer track."""
 
@@ -943,7 +984,9 @@ async def test_async_play_media_deezer_track(
 
 
 async def test_async_play_media_invalid_deezer(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test async_play_media with an invalid/no Deezer login."""
 
@@ -972,7 +1015,9 @@ async def test_async_play_media_invalid_deezer(
 
 
 async def test_async_play_media_url_m3u(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test async_play_media URL with the m3u extension."""
 
@@ -1041,12 +1086,12 @@ async def test_async_play_media_url_m3u(
     ],
 )
 async def test_async_browse_media(
-    child,
-    present,
     hass: HomeAssistant,
-    mock_mozart_client,
-    mock_config_entry,
     hass_ws_client: WebSocketGenerator,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    child: dict[str, str | bool | None],
+    present: bool,
 ) -> None:
     """Test async_browse_media with audio and video source."""
 
