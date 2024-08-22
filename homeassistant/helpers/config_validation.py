@@ -1733,10 +1733,8 @@ def _base_trigger_list_flatten(triggers: list[Any]) -> list[Any]:
     flatlist = []
     for t in triggers:
         if CONF_TRIGGERS in t and len(t.keys()) == 1:
-            if isinstance(t[CONF_TRIGGERS], list):
-                flatlist.extend(t[CONF_TRIGGERS])
-            elif t[CONF_TRIGGERS] is not None:
-                flatlist.append(t[CONF_TRIGGERS])
+            triggers = ensure_list(t[CONF_TRIGGERS])
+            flatlist.extend(t[CONF_TRIGGERS])
         else:
             flatlist.append(t)
 
