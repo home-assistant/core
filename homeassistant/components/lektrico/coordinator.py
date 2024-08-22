@@ -28,12 +28,12 @@ class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]])
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, friendly_name: str) -> None:
+    def __init__(self, hass: HomeAssistant, device_name: str) -> None:
         """Initialize a Lektrico Device."""
         super().__init__(
             hass,
             LOGGER,
-            name=friendly_name,
+            name=device_name,
             update_interval=SCAN_INTERVAL,
         )
         self.device = lektricowifi.Device(

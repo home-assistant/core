@@ -17,7 +17,7 @@ class LektricoEntity(CoordinatorEntity[LektricoDeviceDataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: LektricoDeviceDataUpdateCoordinator,
-        friendly_name: str,
+        device_name: str,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
@@ -25,7 +25,7 @@ class LektricoEntity(CoordinatorEntity[LektricoDeviceDataUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.serial_number)},
             model=coordinator.device_type.upper(),
-            name=friendly_name,
+            name=device_name,
             manufacturer="Lektrico",
             sw_version=coordinator.data["fw_version"],
             hw_version=coordinator.board_revision,

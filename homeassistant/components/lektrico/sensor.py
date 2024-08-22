@@ -310,10 +310,10 @@ class LektricoSensor(LektricoEntity, SensorEntity):
         self,
         description: LektricoSensorEntityDescription,
         coordinator: LektricoDeviceDataUpdateCoordinator,
-        friendly_name: str,
+        device_name: str,
     ) -> None:
         """Initialize Lektrico charger."""
-        super().__init__(coordinator, friendly_name)
+        super().__init__(coordinator, device_name)
         self.entity_description: LektricoSensorEntityDescription = description
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
 

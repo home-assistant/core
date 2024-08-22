@@ -5,7 +5,7 @@
         "description": "Set required parameters to connect to your device",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "friendly_name": "[%key:common::config_flow::data::name%]"
+          "device_name": "[%key:common::config_flow::data::name%]"
         }
       },
       "zeroconf_confirm": {
