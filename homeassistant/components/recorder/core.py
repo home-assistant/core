@@ -1495,7 +1495,12 @@ class Recorder(threading.Thread):
             self._end_session()
         finally:
             if self._db_executor:
+                # We shutdown the executor without forcefully
+                # joining the threads until after we have tried
+                # to cleanly close the connection.
                 self._db_executor.shutdown(join_threads_or_timeout=False)
             self._close_connection()
             if self._db_executor:
+                # After the connection is closed, we can join the threads
+                # or forcefully shutdown the threads if they take too long.
                 self._db_executor.join_threads_or_timeout()
