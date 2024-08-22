@@ -89,6 +89,7 @@ from .discovery_data_template import (
 )
 from .entity import ZWaveBaseEntity
 from .helpers import get_device_info, get_valueless_base_unique_id
+from .migrate import async_migrate_statistics_sensors
 
 PARALLEL_UPDATES = 0
 
@@ -447,6 +448,24 @@ ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
     ),
 ]
 
+CONTROLLER_STATISTICS_KEY_MAP: dict[str, str] = {
+    "messages_tx": "messagesTX",
+    "messages_rx": "messagesRX",
+    "messages_dropped_tx": "messagesDroppedTX",
+    "messages_dropped_rx": "messagesDroppedRX",
+    "nak": "NAK",
+    "can": "CAN",
+    "timeout_ack": "timeoutAck",
+    "timeout_response": "timeoutResponse",
+    "timeout_callback": "timeoutCallback",
+    "background_rssi.channel_0.average": "backgroundRSSI.channel0.average",
+    "background_rssi.channel_0.current": "backgroundRSSI.channel0.current",
+    "background_rssi.channel_1.average": "backgroundRSSI.channel1.average",
+    "background_rssi.channel_1.current": "backgroundRSSI.channel1.current",
+    "background_rssi.channel_2.average": "backgroundRSSI.channel2.average",
+    "background_rssi.channel_2.current": "backgroundRSSI.channel2.current",
+}
+
 # Node statistics descriptions
 ENTITY_DESCRIPTION_NODE_STATISTICS_LIST = [
     ZWaveJSStatisticsSensorEntityDescription(
@@ -499,6 +518,17 @@ ENTITY_DESCRIPTION_NODE_STATISTICS_LIST = [
         entity_registry_enabled_default=True,
     ),
 ]
+
+NODE_STATISTICS_KEY_MAP: dict[str, str] = {
+    "commands_rx": "commandsRX",
+    "commands_tx": "commandsTX",
+    "commands_dropped_rx": "commandsDroppedRX",
+    "commands_dropped_tx": "commandsDroppedTX",
+    "timeout_response": "timeoutResponse",
+    "rtt": "rtt",
+    "rssi": "rssi",
+    "last_seen": "lastSeen",
+}
 
 
 def get_entity_description(
@@ -582,6 +612,14 @@ async def async_setup_entry(
     @callback
     def async_add_statistics_sensors(node: ZwaveNode) -> None:
         """Add statistics sensors."""
+        async_migrate_statistics_sensors(
+            hass,
+            driver,
+            node,
+            CONTROLLER_STATISTICS_KEY_MAP
+            if driver.controller.own_node == node
+            else NODE_STATISTICS_KEY_MAP,
+        )
         async_add_entities(
             [
                 ZWaveStatisticsSensor(
