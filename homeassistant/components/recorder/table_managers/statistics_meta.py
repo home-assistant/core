@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Final, Literal
 
 from lru import LRU
 from sqlalchemy import lambda_stmt, select
@@ -32,6 +32,14 @@ QUERY_STATISTIC_META = (
     StatisticsMeta.has_sum,
     StatisticsMeta.name,
 )
+
+INDEX_ID: Final = 0
+INDEX_STATISTIC_ID: Final = 1
+INDEX_SOURCE: Final = 2
+INDEX_UNIT_OF_MEASUREMENT: Final = 3
+INDEX_HAS_MEAN: Final = 4
+INDEX_HAS_SUM: Final = 5
+INDEX_NAME: Final = 6
 
 
 def _generate_get_metadata_stmt(
@@ -96,15 +104,15 @@ class StatisticsMetaManager:
                 ),
                 orm_rows=False,
             ):
-                statistic_id = row.statistic_id
-                row_id = row.id
+                statistic_id = row[INDEX_STATISTIC_ID]
+                row_id = row[INDEX_ID]
                 meta = {
-                    "has_mean": row.has_mean,
-                    "has_sum": row.has_sum,
-                    "name": row.name,
-                    "source": row.source,
+                    "has_mean": row[INDEX_HAS_MEAN],
+                    "has_sum": row[INDEX_HAS_SUM],
+                    "name": row[INDEX_NAME],
+                    "source": row[INDEX_SOURCE],
                     "statistic_id": statistic_id,
-                    "unit_of_measurement": row.unit_of_measurement,
+                    "unit_of_measurement": row[INDEX_UNIT_OF_MEASUREMENT],
                 }
                 id_meta = (row_id, meta)
                 results[statistic_id] = id_meta
