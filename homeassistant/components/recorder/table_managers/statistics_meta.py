@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import threading
-from typing import TYPE_CHECKING, Literal, cast
+from typing import TYPE_CHECKING, Literal
 
 from lru import LRU
 from sqlalchemy import lambda_stmt, select
@@ -52,23 +52,6 @@ def _generate_get_metadata_stmt(
     return stmt
 
 
-def _statistics_meta_to_id_statistics_metadata(
-    meta: StatisticsMeta,
-) -> tuple[int, StatisticMetaData]:
-    """Convert StatisticsMeta tuple of metadata_id and StatisticMetaData."""
-    return (
-        meta.id,
-        {
-            "has_mean": meta.has_mean,  # type: ignore[typeddict-item]
-            "has_sum": meta.has_sum,  # type: ignore[typeddict-item]
-            "name": meta.name,
-            "source": meta.source,  # type: ignore[typeddict-item]
-            "statistic_id": meta.statistic_id,  # type: ignore[typeddict-item]
-            "unit_of_measurement": meta.unit_of_measurement,
-        },
-    )
-
-
 class StatisticsMetaManager:
     """Manage the StatisticsMeta table."""
 
@@ -100,6 +83,10 @@ class StatisticsMetaManager:
             and self.recorder.thread_id == threading.get_ident()
         )
         results: dict[str, tuple[int, StatisticMetaData]] = {}
+        id_meta: tuple[int, StatisticMetaData]
+        meta: StatisticMetaData
+        statistic_id: str
+        row_id: int
         with session.no_autoflush:
             stat_id_to_id_meta = self._stat_id_to_id_meta
             for row in execute_stmt_lambda_element(
@@ -109,10 +96,17 @@ class StatisticsMetaManager:
                 ),
                 orm_rows=False,
             ):
-                statistics_meta = cast(StatisticsMeta, row)
-                id_meta = _statistics_meta_to_id_statistics_metadata(statistics_meta)
-
-                statistic_id = cast(str, statistics_meta.statistic_id)
+                statistic_id = row.statistic_id
+                row_id = row.id
+                meta = {
+                    "has_mean": row.has_mean,
+                    "has_sum": row.has_sum,
+                    "name": row.name,
+                    "source": row.source,
+                    "statistic_id": statistic_id,
+                    "unit_of_measurement": row.unit_of_measurement,
+                }
+                id_meta = (row_id, meta)
                 results[statistic_id] = id_meta
                 if update_cache:
                     stat_id_to_id_meta[statistic_id] = id_meta
