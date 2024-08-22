@@ -238,7 +238,7 @@ def test_deprecated_current_constants(
 
 
 async def test_preset_mode_validation(
-    hass: HomeAssistant, setup_test_integration: MockConfigEntry
+    hass: HomeAssistant, register_test_integration: MockConfigEntry
 ) -> None:
     """Test mode validation for fan, swing and preset."""
     climate_entity = MockClimateEntity(name="test", entity_id="climate.test")
@@ -246,7 +246,7 @@ async def test_preset_mode_validation(
     setup_test_component_platform(
         hass, DOMAIN, entities=[climate_entity], from_config_entry=True
     )
-    await hass.config_entries.async_setup(setup_test_integration.entry_id)
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")
@@ -378,7 +378,7 @@ def test_deprecated_supported_features_ints(
 async def test_warning_not_implemented_turn_on_off_feature(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    setup_test_integration: MockConfigEntry,
+    register_test_integration: MockConfigEntry,
 ) -> None:
     """Test adding feature flag and warn if missing when methods are set."""
 
@@ -403,7 +403,7 @@ async def test_warning_not_implemented_turn_on_off_feature(
         setup_test_component_platform(
             hass, DOMAIN, entities=[climate_entity], from_config_entry=True
         )
-        await hass.config_entries.async_setup(setup_test_integration.entry_id)
+        await hass.config_entries.async_setup(register_test_integration.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")
@@ -449,7 +449,7 @@ async def test_warning_not_implemented_turn_on_off_feature(
 async def test_implicit_warning_not_implemented_turn_on_off_feature(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    setup_test_integration: MockConfigEntry,
+    register_test_integration: MockConfigEntry,
 ) -> None:
     """Test adding feature flag and warn if missing when methods are not set.
 
@@ -485,7 +485,7 @@ async def test_implicit_warning_not_implemented_turn_on_off_feature(
         setup_test_component_platform(
             hass, DOMAIN, entities=[climate_entity], from_config_entry=True
         )
-        await hass.config_entries.async_setup(setup_test_integration.entry_id)
+        await hass.config_entries.async_setup(register_test_integration.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")
@@ -503,7 +503,7 @@ async def test_implicit_warning_not_implemented_turn_on_off_feature(
 async def test_no_warning_implemented_turn_on_off_feature(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    setup_test_integration: MockConfigEntry,
+    register_test_integration: MockConfigEntry,
 ) -> None:
     """Test no warning when feature flags are set."""
 
@@ -526,7 +526,7 @@ async def test_no_warning_implemented_turn_on_off_feature(
         setup_test_component_platform(
             hass, DOMAIN, entities=[climate_entity], from_config_entry=True
         )
-        await hass.config_entries.async_setup(setup_test_integration.entry_id)
+        await hass.config_entries.async_setup(register_test_integration.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")
@@ -549,7 +549,7 @@ async def test_no_warning_implemented_turn_on_off_feature(
 async def test_no_warning_integration_has_migrated(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    setup_test_integration: MockConfigEntry,
+    register_test_integration: MockConfigEntry,
 ) -> None:
     """Test no warning when integration migrated using `_enable_turn_on_off_backwards_compatibility`."""
 
@@ -571,7 +571,7 @@ async def test_no_warning_integration_has_migrated(
         setup_test_component_platform(
             hass, DOMAIN, entities=[climate_entity], from_config_entry=True
         )
-        await hass.config_entries.async_setup(setup_test_integration.entry_id)
+        await hass.config_entries.async_setup(register_test_integration.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")
@@ -594,7 +594,7 @@ async def test_no_warning_integration_has_migrated(
 async def test_no_warning_integration_implement_feature_flags(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    setup_test_integration: MockConfigEntry,
+    register_test_integration: MockConfigEntry,
 ) -> None:
     """Test no warning when integration uses the correct feature flags."""
 
@@ -617,7 +617,7 @@ async def test_no_warning_integration_implement_feature_flags(
         setup_test_component_platform(
             hass, DOMAIN, entities=[climate_entity], from_config_entry=True
         )
-        await hass.config_entries.async_setup(setup_test_integration.entry_id)
+        await hass.config_entries.async_setup(register_test_integration.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")
@@ -866,7 +866,7 @@ async def test_issue_aux_property_deprecated(
 async def test_no_issue_aux_property_deprecated_for_core(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    setup_test_integration: MockConfigEntry,
+    register_test_integration: MockConfigEntry,
     manifest_extra: dict[str, str],
     translation_key: str,
     translation_placeholders_extra: dict[str, str],
@@ -908,7 +908,7 @@ async def test_no_issue_aux_property_deprecated_for_core(
     setup_test_component_platform(
         hass, DOMAIN, entities=[climate_entity], from_config_entry=True
     )
-    await hass.config_entries.async_setup(setup_test_integration.entry_id)
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
     await hass.async_block_till_done()
 
     assert climate_entity.state == HVACMode.HEAT
@@ -926,7 +926,7 @@ async def test_no_issue_aux_property_deprecated_for_core(
 async def test_no_issue_no_aux_property(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    setup_test_integration: MockConfigEntry,
+    register_test_integration: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the issue is raised on deprecated auxiliary heater attributes."""
@@ -939,7 +939,7 @@ async def test_no_issue_no_aux_property(
     setup_test_component_platform(
         hass, DOMAIN, entities=[climate_entity], from_config_entry=True
     )
-    assert await hass.config_entries.async_setup(setup_test_integration.entry_id)
+    assert await hass.config_entries.async_setup(register_test_integration.entry_id)
     await hass.async_block_till_done()
 
     assert climate_entity.state == HVACMode.HEAT
@@ -954,7 +954,7 @@ async def test_no_issue_no_aux_property(
 
 
 async def test_temperature_validation(
-    hass: HomeAssistant, setup_test_integration: MockConfigEntry
+    hass: HomeAssistant, register_test_integration: MockConfigEntry
 ) -> None:
     """Test validation for temperatures."""
 
@@ -989,7 +989,7 @@ async def test_temperature_validation(
     setup_test_component_platform(
         hass, DOMAIN, entities=[test_climate], from_config_entry=True
     )
-    await hass.config_entries.async_setup(setup_test_integration.entry_id)
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")
