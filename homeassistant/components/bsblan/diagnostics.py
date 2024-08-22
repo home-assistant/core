@@ -20,10 +20,6 @@ async def async_get_config_entry_diagnostics(
     return {
         "info": data.info.to_dict(),
         "device": data.device.to_dict(),
-        "coordinator_data": {
-            "state": data.coordinator.data.state.to_dict()
-            if data.coordinator.data
-            else {},
-        },
+        "coordinator_data": {"state": data.coordinator.data.state.to_dict()},
         "static": data.static.to_dict(),
     }
