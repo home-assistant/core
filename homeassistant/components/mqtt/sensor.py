@@ -33,6 +33,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from homeassistant.util import dt as dt_util
 
@@ -40,12 +41,7 @@ from . import subscription
 from .config import MQTT_RO_SCHEMA
 from .const import CONF_STATE_TOPIC, PAYLOAD_NONE
 from .mixins import MqttAvailabilityMixin, MqttEntity, async_setup_entity_entry_helper
-from .models import (
-    MqttValueTemplate,
-    PayloadSentinel,
-    ReceiveMessage,
-    ReceivePayloadType,
-)
+from .models import MqttValueTemplate, PayloadSentinel, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import check_state_too_long
 
