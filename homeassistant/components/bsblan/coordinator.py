@@ -24,6 +24,8 @@ class BSBLanCoordinatorData:
 class BSBLanUpdateCoordinator(DataUpdateCoordinator[BSBLanCoordinatorData]):
     """The BSB-Lan update coordinator."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -31,14 +33,13 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[BSBLanCoordinatorData]):
         client: BSBLAN,
     ) -> None:
         """Initialize the BSB-Lan coordinator."""
-        self.client = client
-
         super().__init__(
             hass,
             logger=LOGGER,
             name=f"{DOMAIN}_{config_entry.data[CONF_HOST]}",
             update_interval=self._get_update_interval(),
         )
+        self.client = client
 
     def _get_update_interval(self) -> timedelta:
         """Get the update interval with a random offset.
