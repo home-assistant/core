@@ -1,5 +1,7 @@
 """Constants used by multiple MQTT modules."""
 
+import logging
+
 import jinja2
 
 from homeassistant.const import CONF_PAYLOAD, Platform
@@ -148,6 +150,7 @@ DEFAULT_WILL = {
 }
 
 DOMAIN = "mqtt"
+LOGGER = logging.getLogger(__package__)
 
 MQTT_CONNECTION_STATE = "mqtt_connection_state"
 
