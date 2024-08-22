@@ -99,6 +99,10 @@
       "name": "Chime play",
       "description": "Play a ringtone on a chime.",
       "fields": {
+        "device_id": {
+          "name": "Target chime",
+          "description": "The chime to play the ringtone on."
+        },
         "ringtone": {
           "name": "Ringtone",
           "description": "Ringtone to play."

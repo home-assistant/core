@@ -14,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import TEST_NVR_NAME
-
 from tests.common import MockConfigEntry
 
 
@@ -67,6 +65,15 @@ async def test_play_chime_service_entity(
         )
 
     test_chime.play = AsyncMock(side_effect=InvalidParameterError("Test error"))
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            REOLINK_DOMAIN,
+            "play_chime",
+            {ATTR_DEVICE_ID: [device_id], ATTR_RINGTONE: "attraction"},
+            blocking=True,
+        )
+
+    reolink_connect.chime.return_value = None
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             REOLINK_DOMAIN,
