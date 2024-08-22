@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from operator import attrgetter
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 import voluptuous as vol
 
@@ -18,12 +18,14 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_ZONE,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+    from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+    from homeassistant.helpers.typing import ConfigType
 
 TRIGGER_TYPES: Final[set[str]] = {"enters", "leaves"}
 

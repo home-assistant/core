@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from http import HTTPStatus
-from typing import Any, NoReturn
+from typing import TYPE_CHECKING, Any, NoReturn
 
 from aiohttp import web
 import aiohttp.web_exceptions
@@ -23,7 +22,6 @@ from homeassistant.helpers.data_entry_flow import (
     FlowManagerResourceView,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.json import json_fragment
 from homeassistant.loader import (
     Integration,
     IntegrationNotFound,
@@ -31,6 +29,11 @@ from homeassistant.loader import (
     async_get_integrations,
     async_get_loaded_integration,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.helpers.json import json_fragment
 
 
 @callback

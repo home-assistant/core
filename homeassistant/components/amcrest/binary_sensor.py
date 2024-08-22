@@ -19,8 +19,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import CONF_BINARY_SENSORS, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 from .const import (
@@ -33,6 +31,9 @@ from .const import (
 from .helpers import log_update_error, service_signal
 
 if TYPE_CHECKING:
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
     from . import AmcrestDevice
 
 

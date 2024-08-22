@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import asyncio
 from functools import cached_property
-from typing import final
+from typing import TYPE_CHECKING, final
 
 from homeassistant.components import zone
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_GPS_ACCURACY,
@@ -19,15 +17,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.device_registry import (
-    DeviceInfo,
-    EventDeviceRegistryUpdatedData,
-)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity_platform import EntityPlatform
-from homeassistant.helpers.typing import StateType
 
 from .const import (
     ATTR_HOST_NAME,
@@ -39,6 +31,17 @@ from .const import (
     LOGGER,
     SourceType,
 )
+
+if TYPE_CHECKING:
+    import asyncio
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.device_registry import (
+        DeviceInfo,
+        EventDeviceRegistryUpdatedData,
+    )
+    from homeassistant.helpers.entity_platform import EntityPlatform
+    from homeassistant.helpers.typing import StateType
 
 # mypy: disallow-any-generics
 

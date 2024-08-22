@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.remote import (
     ATTR_ACTIVITY,
@@ -18,11 +17,16 @@ from homeassistant.components.remote import (
     RemoteEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AndroidTVRemoteConfigEntry
 from .const import CONF_APP_NAME
 from .entity import AndroidTVRemoteBaseEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AndroidTVRemoteConfigEntry
 
 PARALLEL_UPDATES = 0
 

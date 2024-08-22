@@ -5,8 +5,7 @@ from __future__ import annotations
 import asyncio
 from asyncio import timeout
 from dataclasses import asdict as dataclass_asdict, dataclass
-from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 import uuid
 
 import aiohttp
@@ -74,6 +73,9 @@ from .const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 
 @dataclass

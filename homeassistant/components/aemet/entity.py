@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aemet_opendata.helpers import dict_nested_value
 
-from homeassistant.components.weather import Forecast
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, DOMAIN
 from .coordinator import WeatherUpdateCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.components.weather import Forecast
 
 
 class AemetEntity(CoordinatorEntity[WeatherUpdateCoordinator]):

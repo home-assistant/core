@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from py_dormakaba_dkey import DKEYLock
 from py_dormakaba_dkey.commands import DoorPosition, Notifications, UnlockStatus
 
 from homeassistant.components.binary_sensor import (
@@ -13,14 +12,21 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 from .entity import DormakabaDkeyEntity
-from .models import DormakabaDkeyData
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from py_dormakaba_dkey import DKEYLock
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+    from .models import DormakabaDkeyData
 
 
 @dataclass(frozen=True, kw_only=True)

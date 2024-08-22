@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from asyncarve import ArveSensProData
 
@@ -22,8 +23,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import ArveCoordinator
 from .entity import ArveDeviceEntity
+
+if TYPE_CHECKING:
+    from .coordinator import ArveCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)

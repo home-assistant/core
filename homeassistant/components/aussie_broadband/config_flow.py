@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientError
 from aussiebb.asyncio import AussieBB, AuthenticationException
@@ -15,6 +14,9 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_SERVICES, DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 
 class AussieBroadbandConfigFlow(ConfigFlow, domain=DOMAIN):

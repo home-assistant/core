@@ -2,25 +2,29 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
-
-from jaraco.abode.devices.sensor import Sensor
+from typing import TYPE_CHECKING, cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import LIGHT_LUX, PERCENTAGE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AbodeSystem
 from .const import DOMAIN
 from .entity import AbodeDevice
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from jaraco.abode.devices.sensor import Sensor
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AbodeSystem
 
 ABODE_TEMPERATURE_UNIT_HA_UNIT = {
     "°F": UnitOfTemperature.FAHRENHEIT,

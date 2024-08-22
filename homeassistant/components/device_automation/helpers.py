@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_ENTITY_ID, Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
 from . import DeviceAutomationType, async_get_device_automation_platform
 from .exceptions import InvalidDeviceAutomationConfig
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 DYNAMIC_VALIDATOR = {
     DeviceAutomationType.ACTION: "async_validate_action_config",

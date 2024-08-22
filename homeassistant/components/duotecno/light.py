@@ -1,8 +1,7 @@
 """Support for Duotecno lights."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from duotecno.controller import PyDuotecno
 from duotecno.unit import DimUnit
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
@@ -12,6 +11,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import DuotecnoEntity, api_call
+
+if TYPE_CHECKING:
+    from duotecno.controller import PyDuotecno
 
 
 async def async_setup_entry(

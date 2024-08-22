@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
-from homeassistant.core import HomeAssistant
+from typing import TYPE_CHECKING
+
 from homeassistant.util import slugify
 
 from .const import CONF_SOURCE_ID, DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 
 def generate_source_id(hass: HomeAssistant, name: str) -> str:

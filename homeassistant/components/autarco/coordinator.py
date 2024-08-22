@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
-from typing import NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
-from autarco import AccountSite, Autarco, Inverter, Solar
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
+
+if TYPE_CHECKING:
+    from autarco import AccountSite, Autarco, Inverter, Solar
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 
 class AutarcoData(NamedTuple):

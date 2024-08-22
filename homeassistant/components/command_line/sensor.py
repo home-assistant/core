@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 import json
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from jsonpath import jsonpath
 
@@ -18,9 +18,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import ManualTriggerSensorEntity
@@ -35,6 +33,10 @@ from .const import (
     TRIGGER_ENTITY_OPTIONS,
 )
 from .utils import async_check_output_or_log
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 DEFAULT_NAME = "Command Sensor"
 

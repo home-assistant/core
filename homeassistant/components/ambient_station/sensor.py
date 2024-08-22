@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -26,12 +27,15 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AmbientStation, AmbientStationConfigEntry
 from .const import ATTR_LAST_DATA, TYPE_SOLARRADIATION, TYPE_SOLARRADIATION_LX
 from .entity import AmbientWeatherEntity
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity import EntityDescription
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AmbientStation, AmbientStationConfigEntry
 
 TYPE_24HOURRAININ = "24hourrainin"
 TYPE_AQI_PM25 = "aqi_pm25"

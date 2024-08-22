@@ -3,17 +3,20 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from evolutionhttp import BryantEvolutionLocalClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FILENAME, Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from . import names
 from .const import CONF_SYSTEM_ZONE, DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
 

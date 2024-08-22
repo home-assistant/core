@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import ValuesView
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
-from canary.model import Location, Reading
+if TYPE_CHECKING:
+    from collections.abc import ValuesView
+
+    from canary.model import Location, Reading
 
 
 class CanaryData(TypedDict):

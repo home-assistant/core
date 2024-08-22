@@ -10,7 +10,7 @@ import logging
 from pathlib import Path
 import re
 import time
-from typing import IO, Any, cast
+from typing import IO, TYPE_CHECKING, Any, cast
 
 from hassil.expression import Expression, ListReference, Sequence
 from hassil.intents import Intents, SlotList, TextSlotList, WildcardSlotList
@@ -40,7 +40,6 @@ from homeassistant.helpers import (
     template,
     translation,
 )
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_added_domain
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
@@ -48,6 +47,9 @@ from .const import DEFAULT_EXPOSED_ATTRIBUTES, DOMAIN, ConversationEntityFeature
 from .entity import ConversationEntity
 from .models import ConversationInput, ConversationResult
 from .trace import ConversationTraceEventType, async_conversation_trace_append
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
 
 _LOGGER = logging.getLogger(__name__)
 _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"

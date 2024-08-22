@@ -5,9 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import asyncio
 import logging
-from typing import Any
-
-from yarl import URL
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.storage import Store
@@ -15,6 +13,9 @@ from homeassistant.helpers.storage import Store
 from .const import DOMAIN
 from .entities import TRANSLATION_TABLE
 from .state_report import async_enable_proactive_mode
+
+if TYPE_CHECKING:
+    from yarl import URL
 
 STORE_AUTHORIZED = "authorized"
 

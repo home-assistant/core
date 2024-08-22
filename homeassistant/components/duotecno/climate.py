@@ -2,23 +2,25 @@
 
 from __future__ import annotations
 
-from typing import Any, Final
-
-from duotecno.controller import PyDuotecno
-from duotecno.unit import SensUnit
+from typing import TYPE_CHECKING, Any, Final
 
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import DuotecnoEntity, api_call
+
+if TYPE_CHECKING:
+    from duotecno.controller import PyDuotecno
+    from duotecno.unit import SensUnit
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 HVACMODE: Final = {
     0: HVACMode.OFF,

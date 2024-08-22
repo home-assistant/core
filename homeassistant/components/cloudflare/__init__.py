@@ -6,12 +6,11 @@ import asyncio
 from datetime import timedelta
 import logging
 import socket
+from typing import TYPE_CHECKING
 
 import pycfdns
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN, CONF_ZONE
-from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -23,6 +22,10 @@ from homeassistant.util.location import async_detect_location_info
 from homeassistant.util.network import is_ipv4_address
 
 from .const import CONF_RECORDS, DEFAULT_UPDATE_INTERVAL, DOMAIN, SERVICE_UPDATE_RECORDS
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant, ServiceCall
 
 _LOGGER = logging.getLogger(__name__)
 

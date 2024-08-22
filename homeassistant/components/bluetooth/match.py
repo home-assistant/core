@@ -14,10 +14,10 @@ from lru import LRU
 from homeassistant.core import callback
 from homeassistant.loader import BluetoothMatcher, BluetoothMatcherOptional
 
-from .models import BluetoothCallback, BluetoothServiceInfoBleak
-
 if TYPE_CHECKING:
     from bleak.backends.scanner import AdvertisementData
+
+    from .models import BluetoothCallback, BluetoothServiceInfoBleak
 
 
 MAX_REMEMBER_ADDRESSES: Final = 2048

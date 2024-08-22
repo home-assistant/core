@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory, Platform
@@ -12,6 +12,9 @@ from homeassistant.helpers import collection, entity_registry as er, restore_sta
 from .const import DOMAIN
 from .pipeline import AssistDevice, PipelineData, PipelineStorageCollection
 from .vad import VadSensitivity
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 OPTION_PREFERRED = "preferred"
 

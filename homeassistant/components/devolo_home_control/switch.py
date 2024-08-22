@@ -2,17 +2,20 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-from devolo_home_control_api.devices.zwave import Zwave
-from devolo_home_control_api.homecontrol import HomeControl
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DevoloHomeControlConfigEntry
 from .devolo_device import DevoloDeviceEntity
+
+if TYPE_CHECKING:
+    from devolo_home_control_api.devices.zwave import Zwave
+    from devolo_home_control_api.homecontrol import HomeControl
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import DevoloHomeControlConfigEntry
 
 
 async def async_setup_entry(

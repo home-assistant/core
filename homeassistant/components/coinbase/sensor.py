@@ -3,14 +3,11 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import CoinbaseData
 from .const import (
     ACCOUNT_IS_VAULT,
     API_ACCOUNT_AMOUNT,
@@ -24,6 +21,13 @@ from .const import (
     CONF_EXCHANGE_RATES,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import CoinbaseData
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -3,17 +3,21 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from bond_async import Action
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BondConfigEntry
 from .entity import BondEntity
-from .models import BondData
-from .utils import BondDevice
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import BondConfigEntry
+    from .models import BondData
+    from .utils import BondDevice
 
 # The api requires a step size even though it does not
 # seem to matter what is is as the underlying device is likely

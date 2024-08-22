@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
 from homeassistant.components.device_automation import (
@@ -24,9 +26,11 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.entity import get_capability, get_supported_features
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DOMAIN, const
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 CONDITION_TYPES = {"is_hvac_mode", "is_preset_mode"}
 

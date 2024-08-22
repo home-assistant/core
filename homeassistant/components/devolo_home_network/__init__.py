@@ -4,21 +4,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from devolo_plc_api import Device
-from devolo_plc_api.device_api import (
-    ConnectedStationInfo,
-    NeighborAPInfo,
-    UpdateFirmwareCheck,
-    WifiGuestAccessGet,
-)
 from devolo_plc_api.exceptions.device import (
     DeviceNotFound,
     DevicePasswordProtected,
     DeviceUnavailable,
 )
-from devolo_plc_api.plcnet_api import LogicalNetwork
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
@@ -46,6 +39,15 @@ from .const import (
     SWITCH_GUEST_WIFI,
     SWITCH_LEDS,
 )
+
+if TYPE_CHECKING:
+    from devolo_plc_api.device_api import (
+        ConnectedStationInfo,
+        NeighborAPInfo,
+        UpdateFirmwareCheck,
+        WifiGuestAccessGet,
+    )
+    from devolo_plc_api.plcnet_api import LogicalNetwork
 
 _LOGGER = logging.getLogger(__name__)
 

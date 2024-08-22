@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
 from functools import partial
 import itertools
 import logging
+from typing import TYPE_CHECKING
 
-from bleak_retry_connector import BleakSlotManager
-from bluetooth_adapters import BluetoothAdapters
 from habluetooth import BaseHaRemoteScanner, BaseHaScanner, BluetoothManager
 
 from homeassistant import config_entries
@@ -32,8 +30,15 @@ from .match import (
     ble_device_matches,
 )
 from .models import BluetoothCallback, BluetoothChange, BluetoothServiceInfoBleak
-from .storage import BluetoothStorage
 from .util import async_load_history_from_system
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
+
+    from bleak_retry_connector import BleakSlotManager
+    from bluetooth_adapters import BluetoothAdapters
+
+    from .storage import BluetoothStorage
 
 _LOGGER = logging.getLogger(__name__)
 

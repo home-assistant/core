@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
-
-from aiobafi6 import Device
+from typing import TYPE_CHECKING, cast
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -15,11 +12,18 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BAFConfigEntry
 from .const import HALF_DAY_SECS, ONE_DAY_SECS, ONE_MIN_SECS, SPEED_RANGE
 from .entity import BAFDescriptionEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from aiobafi6 import Device
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import BAFConfigEntry
 
 
 @dataclass(frozen=True, kw_only=True)

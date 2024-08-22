@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -20,6 +19,9 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.util import dt as dt_util
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 PRICE_EUR_KWH: Final = f"EUR/{UnitOfEnergy.KILO_WATT_HOUR}"
 PRICE_EUR_M3: Final = f"EUR/{UnitOfVolume.CUBIC_METERS}"

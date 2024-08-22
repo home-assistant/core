@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from devolo_plc_api.device import Device
 from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnavailable
 
 from homeassistant.components.button import (
@@ -14,13 +13,20 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DevoloHomeNetworkConfigEntry
 from .const import DOMAIN, IDENTIFY, PAIRING, RESTART, START_WPS
 from .entity import DevoloEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    from devolo_plc_api.device import Device
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import DevoloHomeNetworkConfigEntry
 
 PARALLEL_UPDATES = 1
 

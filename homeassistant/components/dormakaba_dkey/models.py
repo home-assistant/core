@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from py_dormakaba_dkey import DKEYLock
+if TYPE_CHECKING:
+    from py_dormakaba_dkey import DKEYLock
 
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+    from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 
 @dataclass

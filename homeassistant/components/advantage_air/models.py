@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from advantage_air import advantage_air
+if TYPE_CHECKING:
+    from advantage_air import advantage_air
 
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+    from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 
 @dataclass

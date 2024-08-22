@@ -1,7 +1,8 @@
 """BleBox binary sensor entities."""
 
+from typing import TYPE_CHECKING
+
 from blebox_uniapi.binary_sensor import BinarySensor as BinarySensorFeature
-from blebox_uniapi.box import Box
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -13,6 +14,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, PRODUCT, BleBoxEntity
+
+if TYPE_CHECKING:
+    from blebox_uniapi.box import Box
 
 BINARY_SENSOR_TYPES = (
     BinarySensorEntityDescription(

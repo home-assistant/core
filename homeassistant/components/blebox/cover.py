@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from blebox_uniapi.box import Box
 import blebox_uniapi.cover
 from blebox_uniapi.cover import BleboxCoverState
 
@@ -15,13 +14,17 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BleBoxEntity
 from .const import DOMAIN, PRODUCT
+
+if TYPE_CHECKING:
+    from blebox_uniapi.box import Box
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 BLEBOX_TO_COVER_DEVICE_CLASSES = {
     "gate": CoverDeviceClass.GATE,

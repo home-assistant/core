@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
 import functools
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
@@ -18,6 +17,9 @@ from homeassistant.util import yaml
 from . import importer, models
 from .const import DOMAIN
 from .errors import BlueprintException, FailedToLoad, FileAlreadyExists
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
 
 
 @callback

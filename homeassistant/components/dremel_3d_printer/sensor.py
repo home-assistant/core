@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-
-from dremel3dpy import Dremel3DPrinter
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -21,15 +19,22 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 from homeassistant.util.variance import ignore_variance
 
 from .const import ATTR_EXTRUDER, ATTR_PLATFORM
-from .coordinator import DremelConfigEntry
 from .entity import Dremel3DPrinterEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from dremel3dpy import Dremel3DPrinter
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import StateType
+
+    from .coordinator import DremelConfigEntry
 
 
 @dataclass(frozen=True, kw_only=True)

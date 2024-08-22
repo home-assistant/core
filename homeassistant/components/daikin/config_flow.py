@@ -4,22 +4,25 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 from aiohttp import ClientError, web_exceptions
-from pydaikin.daikin_base import Appliance
 from pydaikin.discovery import Discovery
 from pydaikin.exceptions import DaikinException
 from pydaikin.factory import DaikinFactory
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_UUID
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, KEY_MAC, TIMEOUT
+
+if TYPE_CHECKING:
+    from pydaikin.daikin_base import Appliance
+
+    from homeassistant.components import zeroconf
 
 _LOGGER = logging.getLogger(__name__)
 

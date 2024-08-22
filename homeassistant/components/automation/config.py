@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from contextlib import suppress
 from enum import StrEnum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -20,12 +20,10 @@ from homeassistant.const import (
     CONF_ID,
     CONF_VARIABLES,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, script
 from homeassistant.helpers.condition import async_validate_conditions_config
 from homeassistant.helpers.trigger import async_validate_trigger_config
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.yaml.input import UndefinedSubstitution
 
 from .const import (
@@ -39,6 +37,10 @@ from .const import (
     LOGGER,
 )
 from .helpers import async_get_blueprints
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
 
 PACKAGE_MERGE_HINT = "list"
 

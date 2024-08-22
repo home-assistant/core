@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
-from homeassistant.core import Context
-from homeassistant.helpers import intent
+if TYPE_CHECKING:
+    from homeassistant.core import Context
+    from homeassistant.helpers import intent
 
 
 @dataclass(frozen=True)

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyaprilaire.const import Attribute
 
@@ -16,10 +16,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PRECISION_HALVES, PRECISION_WHOLE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DOMAIN,
@@ -28,8 +25,14 @@ from .const import (
     PRESET_TEMPORARY_HOLD,
     PRESET_VACATION,
 )
-from .coordinator import AprilaireCoordinator
 from .entity import BaseAprilaireEntity
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import AprilaireCoordinator
 
 HVAC_MODE_MAP = {
     1: HVACMode.OFF,

@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
+from typing import TYPE_CHECKING
+
 from homeassistant.const import CONF_PORT
 from homeassistant.core import _LOGGER, HomeAssistant
 
 from .const import CONF_PORT_IPV6, DEFAULT_PORT, PLATFORMS
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

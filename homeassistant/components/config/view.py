@@ -3,23 +3,27 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
 from http import HTTPStatus
 import os
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
-from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.const import CONF_ID
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.file import write_utf8_file_atomic
 from homeassistant.util.yaml import dump, load_yaml
-from homeassistant.util.yaml.loader import JSON_TYPE
 
 from .const import ACTION_CREATE_UPDATE, ACTION_DELETE
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
+    from aiohttp import web
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.util.yaml.loader import JSON_TYPE
 
 
 class BaseEditConfigView[_DataT: (dict[str, dict[str, Any]], list[dict[str, Any]])](

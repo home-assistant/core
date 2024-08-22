@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import random
-
-from homeassistant.components.device_tracker import SeeCallback
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from typing import TYPE_CHECKING
 
 from .const import DOMAIN, SERVICE_RANDOMIZE_DEVICE_TRACKER_DATA
+
+if TYPE_CHECKING:
+    from homeassistant.components.device_tracker import SeeCallback
+    from homeassistant.core import HomeAssistant, ServiceCall
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 
 def setup_scanner(

@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Final
-
-from pdunehd import DuneHDPlayer
+from typing import TYPE_CHECKING, Any, Final
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -15,12 +13,16 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_MANUFACTURER, DEFAULT_NAME, DOMAIN
+
+if TYPE_CHECKING:
+    from pdunehd import DuneHDPlayer
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 CONF_SOURCES: Final = "sources"
 

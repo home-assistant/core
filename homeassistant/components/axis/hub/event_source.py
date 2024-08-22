@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-import axis
+from typing import TYPE_CHECKING
+
 from axis.errors import Unauthorized
 from axis.interfaces.mqtt import mqtt_json_to_event
 from axis.models.mqtt import ClientState
@@ -10,11 +11,15 @@ from axis.stream_manager import Signal, State
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
-from homeassistant.components.mqtt.models import ReceiveMessage
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_when_setup
+
+if TYPE_CHECKING:
+    import axis
+
+    from homeassistant.components.mqtt.models import ReceiveMessage
+    from homeassistant.config_entries import ConfigEntry
 
 
 class AxisEventSource:

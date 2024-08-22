@@ -4,18 +4,20 @@ from __future__ import annotations
 
 from asyncio import timeout
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiobafi6 import Device, Service
 from aiobafi6.discovery import PORT
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS
 
 from .const import DOMAIN, RUN_TIMEOUT
 from .models import BAFDiscovery
+
+if TYPE_CHECKING:
+    from homeassistant.components import zeroconf
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -3,24 +3,28 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
-from jaraco.abode.devices.base import Device
-from jaraco.abode.devices.camera import Camera as AbodeCam
 from jaraco.abode.helpers import timeline
 import requests
-from requests.models import Response
 
 from homeassistant.components.camera import Camera
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
 
-from . import AbodeSystem
 from .const import DOMAIN, LOGGER
 from .entity import AbodeDevice
+
+if TYPE_CHECKING:
+    from jaraco.abode.devices.base import Device
+    from jaraco.abode.devices.camera import Camera as AbodeCam
+    from requests.models import Response
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import Event, HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AbodeSystem
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=90)
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from mozart_api.models import (
     PlaybackContentMetadata,
@@ -13,15 +13,18 @@ from mozart_api.models import (
     VolumeMute,
     VolumeState,
 )
-from mozart_api.mozart_client import MozartClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from mozart_api.mozart_client import MozartClient
+
+    from homeassistant.config_entries import ConfigEntry
 
 
 class BangOlufsenBase:

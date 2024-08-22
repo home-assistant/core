@@ -19,13 +19,10 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import BringConfigEntry
 from .const import (
     ATTR_ITEM_NAME,
     ATTR_NOTIFICATION_TYPE,
@@ -33,6 +30,12 @@ from .const import (
     SERVICE_PUSH_NOTIFICATION,
 )
 from .coordinator import BringData, BringDataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import BringConfigEntry
 
 
 async def async_setup_entry(

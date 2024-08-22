@@ -3,22 +3,25 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
-
-from hass_nabucasa import Cloud
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .client import CloudClient
 from .const import DATA_CLOUD, DISPATCHER_REMOTE_UPDATE
+
+if TYPE_CHECKING:
+    from hass_nabucasa import Cloud
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .client import CloudClient
 
 WAIT_UNTIL_CHANGE = 3
 

@@ -2,16 +2,20 @@
 
 from __future__ import annotations
 
-from duotecno.controller import PyDuotecno
-from duotecno.unit import ControlUnit, VirtualUnit
+from typing import TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import DuotecnoEntity
+
+if TYPE_CHECKING:
+    from duotecno.controller import PyDuotecno
+    from duotecno.unit import ControlUnit, VirtualUnit
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 
 async def async_setup_entry(

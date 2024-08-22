@@ -1,6 +1,6 @@
 """Support for Abode Security System covers."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from jaraco.abode.devices.cover import Cover
 
@@ -9,9 +9,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AbodeSystem
 from .const import DOMAIN
 from .entity import AbodeDevice
+
+if TYPE_CHECKING:
+    from . import AbodeSystem
 
 
 async def async_setup_entry(

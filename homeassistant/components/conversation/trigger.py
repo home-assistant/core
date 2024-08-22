@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from hassil.recognize import PUNCTUATION, RecognizeResult
 import voluptuous as vol
@@ -11,11 +11,13 @@ from homeassistant.const import CONF_COMMAND, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import ScriptRunResult
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import UNDEFINED, ConfigType
 
 from .const import DOMAIN
 from .default_agent import DefaultAgent, async_get_default_agent
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 
 
 def has_no_punctuation(value: list[str]) -> list[str]:

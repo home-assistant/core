@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aioairzone_cloud.const import (
     API_CITY,
@@ -23,9 +23,11 @@ from aioairzone_cloud.const import (
 
 from homeassistant.components.diagnostics.util import async_redact_data
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 
-from . import AirzoneCloudConfigEntry
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
+    from . import AirzoneCloudConfigEntry
 
 TO_REDACT_API = [
     API_CITY,

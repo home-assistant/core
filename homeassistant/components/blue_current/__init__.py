@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import suppress
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from bluecurrent_api import Client
 from bluecurrent_api.exceptions import (
@@ -14,13 +14,15 @@ from bluecurrent_api.exceptions import (
     WebsocketError,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME, CONF_API_TOKEN, Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DOMAIN, EVSE_ID, LOGGER, MODEL_TYPE
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 PLATFORMS = [Platform.SENSOR]
 CHARGE_POINTS = "CHARGE_POINTS"

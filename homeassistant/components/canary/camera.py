@@ -4,11 +4,8 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
-from aiohttp.web import Request, StreamResponse
-from canary.live_stream_api import LiveStreamSession
-from canary.model import Device, Location
 from haffmpeg.camera import CameraMjpeg
 import voluptuous as vol
 
@@ -18,12 +15,9 @@ from homeassistant.components.camera import (
     Camera,
 )
 from homeassistant.components.ffmpeg import FFmpegManager, get_ffmpeg_manager
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
@@ -35,6 +29,15 @@ from .const import (
     MANUFACTURER,
 )
 from .coordinator import CanaryDataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from aiohttp.web import Request, StreamResponse
+    from canary.live_stream_api import LiveStreamSession
+    from canary.model import Device, Location
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 FORCE_CAMERA_REFRESH_INTERVAL: Final = timedelta(minutes=15)
 

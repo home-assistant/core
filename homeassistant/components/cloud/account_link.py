@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiohttp
 from awesomeversion import AwesomeVersion
@@ -15,6 +14,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_entry_oauth2_flow, event
 
 from .const import DATA_CLOUD, DOMAIN
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 DATA_SERVICES = "cloud_account_link_services"
 CACHE_TIMEOUT = 3600

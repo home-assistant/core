@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from python_homeassistant_analytics import (
     HomeassistantAnalyticsClient,
@@ -11,12 +12,14 @@ from python_homeassistant_analytics import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_TRACKED_INTEGRATIONS
 from .coordinator import HomeassistantAnalyticsDataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 type AnalyticsInsightsConfigEntry = ConfigEntry[AnalyticsInsightsData]

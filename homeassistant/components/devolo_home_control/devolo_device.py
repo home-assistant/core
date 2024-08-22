@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
-
-from devolo_home_control_api.devices.zwave import Zwave
-from devolo_home_control_api.homecontrol import HomeControl
 
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -14,6 +12,10 @@ from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 from .subscriber import Subscriber
+
+if TYPE_CHECKING:
+    from devolo_home_control_api.devices.zwave import Zwave
+    from devolo_home_control_api.homecontrol import HomeControl
 
 _LOGGER = logging.getLogger(__name__)
 

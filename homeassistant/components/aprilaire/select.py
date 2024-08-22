@@ -2,20 +2,24 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from pyaprilaire.const import Attribute
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import AprilaireCoordinator
 from .entity import BaseAprilaireEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import AprilaireCoordinator
 
 AIR_CLEANING_EVENT_MAP = {0: "off", 3: "event_clean", 4: "allergies"}
 AIR_CLEANING_MODE_MAP = {0: "off", 1: "constant_clean", 2: "automatic"}

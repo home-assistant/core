@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from homeassistant.components.device_tracker import ScannerEntity, SourceType
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AsusWrtConfigEntry
-from .router import AsusWrtDevInfo, AsusWrtRouter
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AsusWrtConfigEntry
+    from .router import AsusWrtDevInfo, AsusWrtRouter
 
 ATTR_LAST_TIME_REACHABLE = "last_time_reachable"
 

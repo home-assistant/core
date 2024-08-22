@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aioairzone.const import DEFAULT_PORT, DEFAULT_SYSTEM_ID
 from aioairzone.exceptions import AirzoneError, InvalidSystem
 from aioairzone.localapi import AirzoneLocalApi, ConnectionOptions
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
 from homeassistant.data_entry_flow import AbortFlow
@@ -18,6 +17,9 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.components import dhcp
 
 _LOGGER = logging.getLogger(__name__)
 

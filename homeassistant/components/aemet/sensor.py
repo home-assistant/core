@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from aemet_opendata.const import (
     AOD_CONDITION,
@@ -51,11 +49,8 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfVolumetricFlux,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import AemetConfigEntry
 from .const import (
     ATTR_API_CONDITION,
     ATTR_API_FORECAST_CONDITION,
@@ -87,8 +82,17 @@ from .const import (
     ATTR_API_WIND_SPEED,
     CONDITIONS_MAP,
 )
-from .coordinator import WeatherUpdateCoordinator
 from .entity import AemetEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from datetime import datetime
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AemetConfigEntry
+    from .coordinator import WeatherUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)

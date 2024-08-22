@@ -2,21 +2,25 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
-
-from adguardhome import AdGuardHome
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import PERCENTAGE, UnitOfTime
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AdGuardConfigEntry, AdGuardData
 from .const import DOMAIN
 from .entity import AdGuardHomeEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
+    from adguardhome import AdGuardHome
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AdGuardConfigEntry, AdGuardData
 
 SCAN_INTERVAL = timedelta(seconds=300)
 PARALLEL_UPDATES = 4

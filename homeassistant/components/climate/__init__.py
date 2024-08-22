@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import functools as ft
 from functools import cached_property
 import logging
-from typing import Any, Literal, final
+from typing import TYPE_CHECKING, Any, Literal, final
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
@@ -33,9 +31,7 @@ from homeassistant.helpers.deprecation import (
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.temperature import display_temp as show_temp
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_issue_tracker, async_suggest_report_issue
 from homeassistant.util.unit_conversion import TemperatureConverter
 
@@ -110,6 +106,13 @@ from .const import (  # noqa: F401
     HVACAction,
     HVACMode,
 )
+
+if TYPE_CHECKING:
+    import asyncio
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import EntityPlatform
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

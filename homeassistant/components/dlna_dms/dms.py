@@ -3,15 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from enum import StrEnum
 import functools
 from functools import cached_property
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
-from async_upnp_client.client import UpnpRequester
 from async_upnp_client.client_factory import UpnpFactory
 from async_upnp_client.const import NotificationSubType
 from async_upnp_client.exceptions import UpnpActionError, UpnpConnectionError, UpnpError
@@ -22,7 +20,6 @@ from homeassistant.components import ssdp
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import BrowseMediaSource, PlayMedia
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
@@ -42,6 +39,13 @@ from .const import (
     ROOT_OBJECT_ID,
     STREAMABLE_PROTOCOLS,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
+    from async_upnp_client.client import UpnpRequester
+
+    from homeassistant.config_entries import ConfigEntry
 
 
 class DlnaDmsData:

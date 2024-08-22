@@ -34,7 +34,6 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er, start
 from homeassistant.helpers.entity import get_device_class
-from homeassistant.helpers.entityfilter import EntityFilter
 from homeassistant.setup import async_setup_component
 
 from .const import (
@@ -48,6 +47,8 @@ from .const import (
 from .prefs import GOOGLE_SETTINGS_VERSION, CloudPreferences
 
 if TYPE_CHECKING:
+    from homeassistant.helpers.entityfilter import EntityFilter
+
     from .client import CloudClient
 
 _LOGGER = logging.getLogger(__name__)

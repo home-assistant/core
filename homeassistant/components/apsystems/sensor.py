@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-
-from APsystemsEZ1 import ReturnOutputData
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -15,14 +13,21 @@ from homeassistant.components.sensor import (
     StateType,
 )
 from homeassistant.const import UnitOfEnergy, UnitOfPower
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ApSystemsConfigEntry, ApSystemsData
 from .coordinator import ApSystemsDataCoordinator
 from .entity import ApSystemsEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from APsystemsEZ1 import ReturnOutputData
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import DiscoveryInfoType
+
+    from . import ApSystemsConfigEntry, ApSystemsData
 
 
 @dataclass(frozen=True, kw_only=True)

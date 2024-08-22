@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 import logging
 import math
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant import core as ha
 from homeassistant.components import (
@@ -59,7 +58,6 @@ from homeassistant.util import color as color_util, dt as dt_util
 from homeassistant.util.decorator import Registry
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .config import AbstractConfig
 from .const import (
     API_TEMP_UNITS,
     API_THERMOSTAT_MODES,
@@ -81,6 +79,11 @@ from .errors import (
     AlexaVideoActionNotPermittedForContentError,
 )
 from .state_report import AlexaDirective, AlexaResponse, async_enable_proactive_mode
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
+    from .config import AbstractConfig
 
 _LOGGER = logging.getLogger(__name__)
 DIRECTIVE_NOT_SUPPORTED = "Entity does not support directive"

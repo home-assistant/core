@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from canary.api import Api
 from requests.exceptions import ConnectTimeout, HTTPError
@@ -13,10 +13,8 @@ import voluptuous as vol
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME, Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_FFMPEG_ARGUMENTS,
@@ -27,6 +25,10 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import CanaryDataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER: Final = logging.getLogger(__name__)
 

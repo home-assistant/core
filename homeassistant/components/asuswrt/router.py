@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyasuswrt import AsusWrtError
 
@@ -15,7 +13,6 @@ from homeassistant.components.device_tracker import (
     DEFAULT_CONSIDER_HOME,
     DOMAIN as TRACKER_DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
@@ -40,6 +37,12 @@ from .const import (
     KEY_SENSORS,
     SENSORS_CONNECTED_DEVICE,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from types import MappingProxyType
+
+    from homeassistant.config_entries import ConfigEntry
 
 CONF_REQ_RELOAD = [CONF_DNSMASQ, CONF_INTERFACE, CONF_REQUIRE_IP]
 

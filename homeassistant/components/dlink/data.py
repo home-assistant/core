@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 import logging
+from typing import TYPE_CHECKING
 import urllib
 
-from pyW215.pyW215 import SmartPlug
-
 from homeassistant.util import dt as dt_util
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from pyW215.pyW215 import SmartPlug
 
 _LOGGER = logging.getLogger(__name__)
 

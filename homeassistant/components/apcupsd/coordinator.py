@@ -5,12 +5,10 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 import aioapcaccess
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -20,6 +18,10 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import CONNECTION_TIMEOUT, DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL: Final = timedelta(seconds=60)

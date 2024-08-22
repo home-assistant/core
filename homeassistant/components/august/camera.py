@@ -3,20 +3,25 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
-from aiohttp import ClientSession
 from yalexs.activity import ActivityType
-from yalexs.doorbell import Doorbell
 from yalexs.util import update_doorbell_image_from_activity
 
 from homeassistant.components.camera import Camera
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AugustConfigEntry, AugustData
 from .const import DEFAULT_NAME, DEFAULT_TIMEOUT
 from .entity import AugustEntityMixin
+
+if TYPE_CHECKING:
+    from aiohttp import ClientSession
+    from yalexs.doorbell import Doorbell
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AugustConfigEntry, AugustData
 
 _LOGGER = logging.getLogger(__name__)
 

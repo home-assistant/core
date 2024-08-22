@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components import (
     button,
@@ -55,7 +54,6 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant, State
 import homeassistant.util.color as color_util
 import homeassistant.util.dt as dt_util
 
@@ -75,6 +73,11 @@ from .resources import (
     AlexaPresetResource,
     AlexaSemantics,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+    from homeassistant.core import HomeAssistant, State
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 import uuid
 
 from homeassistant.const import (
@@ -12,9 +13,11 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.helpers.template import Template
 
 from .const import CONF_P_GIVEN_F, CONF_P_GIVEN_T, CONF_TO_STATE
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.template import Template
 
 
 @dataclass

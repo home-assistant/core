@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
-
-from aiobafi6 import Device
+from typing import TYPE_CHECKING, cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -21,10 +18,17 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BAFConfigEntry
 from .entity import BAFDescriptionEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from aiobafi6 import Device
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import BAFConfigEntry
 
 
 @dataclass(frozen=True, kw_only=True)

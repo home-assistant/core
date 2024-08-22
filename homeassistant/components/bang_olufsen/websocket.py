@@ -3,21 +3,8 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
-from mozart_api.models import (
-    PlaybackContentMetadata,
-    PlaybackError,
-    PlaybackProgress,
-    RenderingState,
-    SoftwareUpdateState,
-    Source,
-    VolumeState,
-    WebsocketNotificationTag,
-)
-from mozart_api.mozart_client import MozartClient
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.enum import try_parse_enum
@@ -29,6 +16,22 @@ from .const import (
 )
 from .entity import BangOlufsenBase
 from .util import get_device
+
+if TYPE_CHECKING:
+    from mozart_api.models import (
+        PlaybackContentMetadata,
+        PlaybackError,
+        PlaybackProgress,
+        RenderingState,
+        SoftwareUpdateState,
+        Source,
+        VolumeState,
+        WebsocketNotificationTag,
+    )
+    from mozart_api.mozart_client import MozartClient
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

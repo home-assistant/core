@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import timedelta
 from math import ceil
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyairvisual.cloud_api import (
     CloudAPI,
@@ -34,7 +33,6 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -52,6 +50,11 @@ from .const import (
     INTEGRATION_TYPE_NODE_PRO,
     LOGGER,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from homeassistant.helpers.entity import EntityDescription
 
 # We use a raw string for the airvisual_pro domain (instead of importing the actual
 # constant) so that we can avoid listing it as a dependency:

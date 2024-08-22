@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from functools import partial
-from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from devolo_home_control_api.exceptions.gateway import GatewayOfflineError
 from devolo_home_control_api.homecontrol import HomeControl
@@ -14,11 +13,15 @@ from devolo_home_control_api.mydevolo import Mydevolo
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import CONF_MYDEVOLO, DEFAULT_MYDEVOLO, GATEWAY_SERIAL_PATTERN, PLATFORMS
+
+if TYPE_CHECKING:
+    from types import MappingProxyType
+
+    from homeassistant.core import Event, HomeAssistant
+    from homeassistant.helpers.device_registry import DeviceEntry
 
 type DevoloHomeControlConfigEntry = ConfigEntry[list[HomeControl]]
 

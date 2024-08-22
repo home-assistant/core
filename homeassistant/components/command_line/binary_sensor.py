@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import (
@@ -15,8 +15,6 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import ManualTriggerEntity
@@ -25,6 +23,10 @@ from homeassistant.util import dt as dt_util
 
 from .const import CONF_COMMAND_TIMEOUT, LOGGER, TRIGGER_ENTITY_OPTIONS
 from .sensor import CommandSensorData
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 DEFAULT_NAME = "Binary Command Sensor"
 DEFAULT_PAYLOAD_ON = "ON"

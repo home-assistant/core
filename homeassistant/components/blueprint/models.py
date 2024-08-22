@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
-import logging
 import pathlib
 import shutil
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
@@ -45,6 +43,10 @@ from .errors import (
     MissingInput,
 )
 from .schemas import BLUEPRINT_INSTANCE_FIELDS, BLUEPRINT_SCHEMA
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+    import logging
 
 
 class Blueprint:

@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from asyncio import timeout
 from http import HTTPStatus
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from aiohttp import ClientSession
 from airly import Airly
 from airly.exceptions import AirlyError
 import voluptuous as vol
@@ -17,6 +16,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_USE_NEAREST, DOMAIN, NO_AIRLY_SENSORS
+
+if TYPE_CHECKING:
+    from aiohttp import ClientSession
 
 
 class AirlyFlowHandler(ConfigFlow, domain=DOMAIN):

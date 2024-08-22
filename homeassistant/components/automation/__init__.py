@@ -4,11 +4,10 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
-from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from functools import cached_property, partial
 import logging
-from typing import Any, Protocol, cast
+from typing import TYPE_CHECKING, Any, Protocol, cast
 
 import voluptuous as vol
 
@@ -98,7 +97,6 @@ from homeassistant.helpers.trigger import (
     TriggerInfo,
     async_initialize_triggers,
 )
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime
 
@@ -115,6 +113,11 @@ from .const import (
 )
 from .helpers import async_get_blueprints
 from .trace import trace_automation
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Mapping
+
+    from homeassistant.helpers.typing import ConfigType
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 

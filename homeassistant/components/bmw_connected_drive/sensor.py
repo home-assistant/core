@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
 import logging
+from typing import TYPE_CHECKING
 
 from bimmer_connected.models import StrEnum, ValueWithUnit
-from bimmer_connected.vehicle import MyBMWVehicle
 from bimmer_connected.vehicle.climate import ClimateActivityState
 from bimmer_connected.vehicle.fuel_and_battery import ChargingState
 
@@ -27,12 +26,19 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import BMWConfigEntry
-from .coordinator import BMWDataUpdateCoordinator
 from .entity import BMWBaseEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from bimmer_connected.vehicle import MyBMWVehicle
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import BMWConfigEntry
+    from .coordinator import BMWDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

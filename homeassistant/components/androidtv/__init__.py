@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 import os
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from adb_shell.auth.keygen import keygen
 from adb_shell.exceptions import (
@@ -30,7 +29,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -48,6 +46,11 @@ from .const import (
     PROP_WIFIMAC,
     SIGNAL_CONFIG_ENTITY,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from homeassistant.core import Event, HomeAssistant
 
 ADB_PYTHON_EXCEPTIONS: tuple = (
     AdbTimeoutError,

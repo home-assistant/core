@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from homeassistant.components import frontend
 from homeassistant.const import EVENT_COMPONENT_LOADED
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import EventComponentLoaded
 
 from . import (
@@ -25,6 +25,10 @@ from . import (
     script,
 )
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
 
 SECTIONS = (
     area_registry,

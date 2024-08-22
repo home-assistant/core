@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from py_aosmith.models import Device as AOSmithDevice, HotWaterStatus
 
@@ -16,10 +17,12 @@ from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AOSmithData
 from .const import DOMAIN
 from .coordinator import AOSmithEnergyCoordinator, AOSmithStatusCoordinator
 from .entity import AOSmithEnergyEntity, AOSmithStatusEntity
+
+if TYPE_CHECKING:
+    from . import AOSmithData
 
 
 @dataclass(frozen=True, kw_only=True)

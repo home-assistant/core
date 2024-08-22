@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from aioairzone_cloud.const import (
     AZD_ACTIVE,
@@ -26,16 +26,19 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AirzoneCloudConfigEntry
-from .coordinator import AirzoneUpdateCoordinator
 from .entity import (
     AirzoneAidooEntity,
     AirzoneEntity,
     AirzoneSystemEntity,
     AirzoneZoneEntity,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AirzoneCloudConfigEntry
+    from .coordinator import AirzoneUpdateCoordinator
 
 
 @dataclass(frozen=True)

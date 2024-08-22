@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from crownstone_cloud import CrownstoneCloud
 from crownstone_cloud.exceptions import (
@@ -15,7 +15,6 @@ from crownstone_uart import CrownstoneUart, UartEventBus
 from crownstone_uart.Exceptions import UartException
 
 from homeassistant.components import persistent_notification
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -33,6 +32,9 @@ from .const import (
 )
 from .helpers import get_port
 from .listeners import setup_sse_listeners, setup_uart_listeners
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

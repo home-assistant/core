@@ -1,13 +1,12 @@
 """Support for alexa Smart Home Skill API."""
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import web
 from yarl import URL
 
 from homeassistant import core
-from homeassistant.auth.models import User
 from homeassistant.components.http import (
     KEY_HASS,
     HomeAssistantRequest,
@@ -33,6 +32,9 @@ from .diagnostics import async_redact_auth_data
 from .errors import AlexaBridgeUnreachableError, AlexaError
 from .handlers import HANDLERS
 from .state_report import AlexaDirective
+
+if TYPE_CHECKING:
+    from homeassistant.auth.models import User
 
 _LOGGER = logging.getLogger(__name__)
 SMART_HOME_HTTP_ENDPOINT = "/api/alexa/smart_home"

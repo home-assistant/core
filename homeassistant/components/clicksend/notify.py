@@ -5,7 +5,7 @@ from __future__ import annotations
 from http import HTTPStatus
 import json
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import requests
 import voluptuous as vol
@@ -21,9 +21,11 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONTENT_TYPE_JSON,
 )
-from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 

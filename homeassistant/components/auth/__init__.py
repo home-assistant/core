@@ -130,7 +130,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPStatus
 from logging import getLogger
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 import uuid
 
 from aiohttp import web
@@ -156,11 +156,13 @@ from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2AuthorizeCallbackView
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 
 from . import indieauth, login_flow, mfa_setup_flow
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "auth"
 

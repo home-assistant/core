@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
-from typing import Any
+from typing import TYPE_CHECKING, Any
 import uuid
 
 from hass_nabucasa.voice import MAP_VOICE, Gender
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
-from homeassistant.auth.models import User
 from homeassistant.components import webhook
 from homeassistant.components.google_assistant.http import (
     async_get_users as async_get_google_assistant_users,
@@ -47,6 +45,11 @@ from .const import (
     PREF_TTS_DEFAULT_VOICE,
     PREF_USERNAME,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
+    from homeassistant.auth.models import User
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1

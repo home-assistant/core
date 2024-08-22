@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-from duotecno.controller import PyDuotecno
-from duotecno.unit import DuoswitchUnit
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.cover import CoverEntity, CoverEntityFeature
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import DuotecnoEntity, api_call
+
+if TYPE_CHECKING:
+    from duotecno.controller import PyDuotecno
+    from duotecno.unit import DuoswitchUnit
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 
 async def async_setup_entry(

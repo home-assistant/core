@@ -6,7 +6,6 @@ from asyncio import timeout
 from http import HTTPStatus
 import json
 import logging
-from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, cast
 from uuid import uuid4
 
@@ -45,6 +44,8 @@ from .entities import ENTITY_ADAPTERS, AlexaEntity
 from .errors import AlexaInvalidEndpointError, NoTokenAvailable, RequireRelink
 
 if TYPE_CHECKING:
+    from types import MappingProxyType
+
     from .config import AbstractConfig
 
 _LOGGER = logging.getLogger(__name__)

@@ -3,12 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Sequence
-from datetime import datetime, timedelta
 from functools import cached_property
 import hashlib
-from types import ModuleType
-from typing import Any, Final, Protocol, final
+from typing import TYPE_CHECKING, Any, Final, Protocol, final
 
 import attr
 import voluptuous as vol
@@ -48,7 +45,6 @@ from homeassistant.helpers.event import (
     async_track_utc_time_change,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, GPSType, StateType
 from homeassistant.setup import (
     SetupPhases,
     async_notify_setup_error,
@@ -81,6 +77,13 @@ from .const import (
     SCAN_INTERVAL,
     SourceType,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine, Sequence
+    from datetime import datetime, timedelta
+    from types import ModuleType
+
+    from homeassistant.helpers.typing import ConfigType, GPSType, StateType
 
 SERVICE_SEE: Final = "see"
 

@@ -2,19 +2,22 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.trace import (
     CONF_STORED_TRACES,
     ActionTrace,
     async_store_trace,
 )
-from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+    from homeassistant.core import Context, HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
 
 
 class AutomationTrace(ActionTrace):

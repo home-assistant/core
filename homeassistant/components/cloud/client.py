@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
 from http import HTTPStatus
 import logging
 from pathlib import Path
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import aiohttp
 from hass_nabucasa.client import CloudClient as Interface, RemoteActivationNotAllowed
@@ -28,7 +27,11 @@ from homeassistant.util.aiohttp import MockRequest, serialize_response
 
 from . import alexa_config, google_config
 from .const import DISPATCHER_REMOTE_UPDATE, DOMAIN
-from .prefs import CloudPreferences
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from .prefs import CloudPreferences
 
 _LOGGER = logging.getLogger(__name__)
 

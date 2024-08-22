@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from aioairzone_cloud.const import (
     AZD_AIDOOS,
@@ -36,16 +36,19 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AirzoneCloudConfigEntry
-from .coordinator import AirzoneUpdateCoordinator
 from .entity import (
     AirzoneAidooEntity,
     AirzoneEntity,
     AirzoneWebServerEntity,
     AirzoneZoneEntity,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AirzoneCloudConfigEntry
+    from .coordinator import AirzoneUpdateCoordinator
 
 AIDOO_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
     SensorEntityDescription(

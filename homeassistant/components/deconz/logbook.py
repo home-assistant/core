@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from homeassistant.components.logbook import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME
 from homeassistant.const import ATTR_DEVICE_ID, CONF_EVENT, CONF_ID
@@ -60,6 +60,9 @@ from .device_trigger import (
     REMOTES,
     _get_deconz_event_from_device,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 ACTIONS = {
     CONF_SHORT_PRESS: "Short press",

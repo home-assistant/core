@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import StrEnum
 import logging
+from typing import TYPE_CHECKING
 
 from .const import SAMPLE_CHANNELS, SAMPLE_RATE, SAMPLE_WIDTH
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
 
 _LOGGER = logging.getLogger(__name__)
 

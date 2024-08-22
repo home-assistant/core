@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientResponseError
 from doorbirdpy import DoorBird
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -22,7 +20,6 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNA
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     CONF_EVENTS,
@@ -32,6 +29,12 @@ from .const import (
     DOORBIRD_OUI,
 )
 from .util import get_mac_address_from_door_station_info
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from homeassistant.components import zeroconf
+    from homeassistant.helpers.typing import VolDictType
 
 _LOGGER = logging.getLogger(__name__)
 

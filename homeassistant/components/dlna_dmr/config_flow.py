@@ -7,7 +7,7 @@ from functools import partial
 from ipaddress import IPv6Address, ip_address
 import logging
 from pprint import pformat
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlparse
 
 from async_upnp_client.client import UpnpError
@@ -27,7 +27,6 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_MAC, CONF_TYPE, 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import IntegrationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     CONF_BROWSE_UNFILTERED,
@@ -38,6 +37,9 @@ from .const import (
     DOMAIN,
 )
 from .data import get_domain_data
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import VolDictType
 
 LOGGER = logging.getLogger(__name__)
 

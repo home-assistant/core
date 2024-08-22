@@ -5,13 +5,12 @@ from asyncio import shield, timeout
 from functools import lru_cache
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPBadRequest
 import voluptuous as vol
 
-from homeassistant.auth.models import User
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components.http import (
     KEY_HASS,
@@ -49,8 +48,11 @@ from homeassistant.helpers import config_validation as cv, recorder, template
 from homeassistant.helpers.json import json_dumps, json_fragment
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.event_type import EventType
 from homeassistant.util.json import json_loads
+
+if TYPE_CHECKING:
+    from homeassistant.auth.models import User
+    from homeassistant.util.event_type import EventType
 
 _LOGGER = logging.getLogger(__name__)
 

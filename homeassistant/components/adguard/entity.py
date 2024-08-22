@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from adguardhome import AdGuardHomeError
 
 from homeassistant.config_entries import SOURCE_HASSIO
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from . import AdGuardConfigEntry, AdGuardData
 from .const import DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from . import AdGuardConfigEntry, AdGuardData
 
 
 class AdGuardHomeEntity(Entity):

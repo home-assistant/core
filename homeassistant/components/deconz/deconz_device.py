@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pydeconz.models.deconz_device import DeconzDevice as PydeconzDevice
 from pydeconz.models.group import Group as PydeconzGroup
 from pydeconz.models.light import LightBase as PydeconzLightBase
@@ -14,8 +16,10 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN as DECONZ_DOMAIN
-from .hub import DeconzHub
 from .util import serial_from_unique_id
+
+if TYPE_CHECKING:
+    from .hub import DeconzHub
 
 type _DeviceType = (
     PydeconzGroup | PydeconzLightBase | PydeconzSensorBase | PydeconzScene

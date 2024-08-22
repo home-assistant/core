@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from typing import TYPE_CHECKING
 
 from homeassistant.components.event import (
     EventDeviceClass,
@@ -12,7 +13,6 @@ from homeassistant.components.event import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import format_discovered_event_class, format_event_dispatcher_name
 from .const import (
@@ -23,7 +23,11 @@ from .const import (
     EVENT_TYPE,
     BTHomeBleEvent,
 )
-from .types import BTHomeConfigEntry
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .types import BTHomeConfigEntry
 
 DESCRIPTIONS_BY_EVENT_CLASS = {
     EVENT_CLASS_BUTTON: EventEntityDescription(

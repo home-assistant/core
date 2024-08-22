@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import Context, HomeAssistant, State
 
 from . import ATTR_MAXIMUM, ATTR_MINIMUM, ATTR_STEP, DOMAIN, SERVICE_SET_VALUE, VALUE
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from homeassistant.core import Context, HomeAssistant, State
 
 _LOGGER = logging.getLogger(__name__)
 

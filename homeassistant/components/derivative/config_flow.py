@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
@@ -32,6 +31,9 @@ from .const import (
     CONF_UNIT_TIME,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 UNIT_PREFIXES = [
     selector.SelectOptionDict(value="n", label="n (nano)"),

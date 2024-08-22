@@ -2,19 +2,22 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
-
-from jaraco.abode.devices.switch import Switch
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AbodeSystem
 from .const import DOMAIN
 from .entity import AbodeAutomation, AbodeDevice
+
+if TYPE_CHECKING:
+    from jaraco.abode.devices.switch import Switch
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AbodeSystem
 
 DEVICE_TYPES = ["switch", "valve"]
 

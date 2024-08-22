@@ -6,9 +6,8 @@ import asyncio
 from datetime import date, datetime, timedelta
 from functools import partial
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
-import caldav
 from caldav.lib.error import DAVError, NotFoundError
 import requests
 
@@ -18,14 +17,18 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .api import async_get_calendars, get_attr_value
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    import caldav
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -2,31 +2,27 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine, Mapping
 from dataclasses import dataclass, field
 from http import HTTPStatus
 import json
 import logging
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components import http, websocket_api
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     integration_platform,
 )
-from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.json import (
     ExtendedJSONEncoder,
     find_paths_unserializable_data,
 )
 from homeassistant.helpers.system_info import async_get_system_info
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import (
     Manifest,
     async_get_custom_components,
@@ -37,6 +33,13 @@ from homeassistant.util.json import format_unserializable_data
 
 from .const import DOMAIN, REDACTED, DiagnosticsSubType, DiagnosticsType
 from .util import async_redact_data
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine, Mapping
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.device_registry import DeviceEntry
+    from homeassistant.helpers.typing import ConfigType
 
 __all__ = ["REDACTED", "async_redact_data"]
 

@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import partial
 import logging
+from typing import TYPE_CHECKING
 
 from yalexs.activity import Activity, ActivityType
-from yalexs.doorbell import DoorbellDetail
 from yalexs.lock import LockDetail, LockDoorStatus
 from yalexs.manager.const import ACTIVITY_UPDATE_INTERVAL
 from yalexs.util import update_lock_detail_from_activity
@@ -21,10 +20,8 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
-from . import AugustConfigEntry, AugustData
 from .entity import AugustDescriptionEntity
 from .util import (
     retrieve_ding_activity,
@@ -32,6 +29,15 @@ from .util import (
     retrieve_online_state,
     retrieve_time_based_activity,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from yalexs.doorbell import DoorbellDetail
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AugustConfigEntry, AugustData
 
 _LOGGER = logging.getLogger(__name__)
 

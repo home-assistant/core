@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import logging
-
-from homeassistant.helpers.typing import UndefinedType
+from typing import TYPE_CHECKING
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import UndefinedType
 
 
 def service_signal(service: str, *args: str) -> str:

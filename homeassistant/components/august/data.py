@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from yalexs.lock import LockDetail
+from typing import TYPE_CHECKING
+
 from yalexs.manager.data import YaleXSData
 from yalexs_ble import YaleXSBLEDiscovery
 
@@ -11,7 +12,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery_flow
 
-from .gateway import AugustGateway
+if TYPE_CHECKING:
+    from yalexs.lock import LockDetail
+
+    from .gateway import AugustGateway
 
 YALEXS_BLE_DOMAIN = "yalexs_ble"
 

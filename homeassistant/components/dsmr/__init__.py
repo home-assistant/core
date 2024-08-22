@@ -5,15 +5,16 @@ from __future__ import annotations
 from asyncio import CancelledError, Task
 from contextlib import suppress
 from dataclasses import dataclass
-from typing import Any
-
-from dsmr_parser.objects import Telegram
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 
 from .const import CONF_DSMR_VERSION, PLATFORMS
+
+if TYPE_CHECKING:
+    from dsmr_parser.objects import Telegram
 
 
 @dataclass

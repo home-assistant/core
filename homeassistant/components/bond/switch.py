@@ -2,21 +2,24 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp.client_exceptions import ClientResponseError
 from bond_async import Action, DeviceType
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BondConfigEntry
 from .const import ATTR_POWER_STATE, SERVICE_SET_POWER_TRACKED_STATE
 from .entity import BondEntity
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import BondConfigEntry
 
 
 async def async_setup_entry(

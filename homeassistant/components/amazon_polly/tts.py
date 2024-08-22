@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 import boto3
 import botocore
@@ -15,9 +15,7 @@ from homeassistant.components.tts import (
     TtsAudioType,
 )
 from homeassistant.const import ATTR_CREDENTIALS, CONF_PROFILE_NAME
-from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     AWS_CONF_CONNECT_TIMEOUT,
@@ -46,6 +44,10 @@ from .const import (
     SUPPORTED_TEXT_TYPES,
     SUPPORTED_VOICES,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER: Final = logging.getLogger(__name__)
 

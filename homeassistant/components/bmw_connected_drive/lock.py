@@ -3,20 +3,24 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from bimmer_connected.models import MyBMWAPIError
-from bimmer_connected.vehicle import MyBMWVehicle
 from bimmer_connected.vehicle.doors_windows import LockState
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BMWConfigEntry
-from .coordinator import BMWDataUpdateCoordinator
 from .entity import BMWBaseEntity
+
+if TYPE_CHECKING:
+    from bimmer_connected.vehicle import MyBMWVehicle
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import BMWConfigEntry
+    from .coordinator import BMWDataUpdateCoordinator
 
 DOOR_LOCK_STATE = "door_lock_state"
 _LOGGER = logging.getLogger(__name__)

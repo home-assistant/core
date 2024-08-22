@@ -2,15 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_DEVICE_TYPE,
@@ -20,8 +16,16 @@ from .const import (
     DEV_SOFTENER,
     DOMAIN,
 )
-from .coordinator import DROPDeviceDataUpdateCoordinator
 from .entity import DROPEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import DROPDeviceDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

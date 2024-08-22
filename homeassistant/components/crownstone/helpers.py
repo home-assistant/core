@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import os
-
-from serial.tools.list_ports_common import ListPortInfo
+from typing import TYPE_CHECKING
 
 from homeassistant.components import usb
 
 from .const import DONT_USE_USB, MANUAL_PATH, REFRESH_LIST
+
+if TYPE_CHECKING:
+    from serial.tools.list_ports_common import ListPortInfo
 
 
 def list_ports_as_str(

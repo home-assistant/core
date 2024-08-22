@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyairvisual.cloud_api import (
     CloudAPI,
@@ -41,6 +40,9 @@ from .const import (
     INTEGRATION_TYPE_GEOGRAPHY_NAME,
     LOGGER,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 API_KEY_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): cv.string})
 GEOGRAPHY_NAME_SCHEMA = API_KEY_DATA_SCHEMA.extend(

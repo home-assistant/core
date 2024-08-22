@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
+from typing import TYPE_CHECKING
 
 from denonavr import DenonAVR
-import httpx
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    import httpx
 
 _LOGGER = logging.getLogger(__name__)
 

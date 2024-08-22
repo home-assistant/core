@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 # Loading the config flow file will register the flow
 from .bridge import DynaliteBridge
@@ -28,6 +27,11 @@ from .const import (
 from .convert_config import convert_config
 from .panel import async_register_dynalite_frontend
 from .schema import BRIDGE_SCHEMA
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant, ServiceCall
+    from homeassistant.helpers.typing import ConfigType
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(

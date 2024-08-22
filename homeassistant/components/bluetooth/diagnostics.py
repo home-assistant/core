@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 import platform
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from bluetooth_adapters import get_dbus_managed_objects
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-
 from .api import _get_manager
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 
 async def async_get_config_entry_diagnostics(

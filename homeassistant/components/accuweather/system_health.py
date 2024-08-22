@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from accuweather.const import ENDPOINT
 
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
 
-from . import AccuWeatherConfigEntry
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from . import AccuWeatherConfigEntry
 
 
 @callback

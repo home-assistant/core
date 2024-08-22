@@ -2,24 +2,29 @@
 
 from __future__ import annotations
 
-from jaraco.abode.devices.alarm import Alarm
+from typing import TYPE_CHECKING
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AbodeSystem
 from .const import DOMAIN
 from .entity import AbodeDevice
+
+if TYPE_CHECKING:
+    from jaraco.abode.devices.alarm import Alarm
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AbodeSystem
 
 
 async def async_setup_entry(

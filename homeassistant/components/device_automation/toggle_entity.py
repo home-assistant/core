@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
 from homeassistant.components.homeassistant.triggers import state as state_trigger
@@ -20,8 +22,6 @@ from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
 )
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DEVICE_TRIGGER_BASE_SCHEMA, entity
 from .const import (
@@ -33,6 +33,10 @@ from .const import (
     CONF_TURNED_OFF,
     CONF_TURNED_ON,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+    from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 ENTITY_ACTIONS = [
     {

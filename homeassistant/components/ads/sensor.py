@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -9,10 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
-from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from .. import ads
 from . import (
@@ -23,6 +22,11 @@ from . import (
     STATE_KEY_STATE,
     AdsEntity,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 DEFAULT_NAME = "ADS sensor"
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(

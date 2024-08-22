@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
-from bimmer_connected.vehicle import MyBMWVehicle
+from typing import TYPE_CHECKING
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import BMWDataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from bimmer_connected.vehicle import MyBMWVehicle
 
 
 class BMWBaseEntity(CoordinatorEntity[BMWDataUpdateCoordinator]):

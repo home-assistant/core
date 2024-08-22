@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import json
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from mozart_api import __version__ as MOZART_API_VERSION
 from mozart_api.exceptions import ApiException
@@ -43,16 +42,13 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from . import BangOlufsenData
 from .const import (
     BANG_OLUFSEN_STATES,
     CONF_BEOLINK_JID,
@@ -66,6 +62,14 @@ from .const import (
     WebsocketNotification,
 )
 from .entity import BangOlufsenEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import BangOlufsenData
 
 _LOGGER = logging.getLogger(__name__)
 

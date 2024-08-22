@@ -5,15 +5,18 @@ from __future__ import annotations
 from asyncio import timeout
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from aioairzone_cloud.cloudapi import AirzoneCloudApi
 from aioairzone_cloud.exceptions import AirzoneCloudError
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import AIOAIRZONE_CLOUD_TIMEOUT_SEC, DOMAIN
+
+if TYPE_CHECKING:
+    from aioairzone_cloud.cloudapi import AirzoneCloudApi
+
+    from homeassistant.core import HomeAssistant
 
 SCAN_INTERVAL = timedelta(seconds=60)
 

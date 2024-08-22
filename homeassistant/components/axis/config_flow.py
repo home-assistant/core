@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from ipaddress import ip_address
 from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlsplit
 
 import voluptuous as vol
@@ -30,10 +29,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.network import is_link_local
 
-from . import AxisConfigEntry
 from .const import (
     CONF_STREAM_PROFILE,
     CONF_VIDEO_SOURCE,
@@ -43,6 +40,13 @@ from .const import (
 )
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import AxisHub, get_axis_api
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from homeassistant.helpers.typing import VolDictType
+
+    from . import AxisConfigEntry
 
 AXIS_OUI = {"00:40:8c", "ac:cc:8e", "b8:a4:4f"}
 DEFAULT_PORT = 443

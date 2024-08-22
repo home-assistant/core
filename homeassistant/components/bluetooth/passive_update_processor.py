@@ -5,10 +5,7 @@ from __future__ import annotations
 import dataclasses
 from datetime import timedelta
 from functools import cache
-import logging
 from typing import TYPE_CHECKING, Any, Self, TypedDict, cast
-
-from habluetooth import BluetoothScanningMode
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -33,6 +30,9 @@ from .update_coordinator import BasePassiveBluetoothCoordinator
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    import logging
+
+    from habluetooth import BluetoothScanningMode
 
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 

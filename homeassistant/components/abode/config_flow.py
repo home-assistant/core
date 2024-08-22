@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from http import HTTPStatus
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from jaraco.abode.client import Client as Abode
 from jaraco.abode.exceptions import (
@@ -19,6 +18,9 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import CONF_POLLING, DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 CONF_MFA = "mfa_code"
 

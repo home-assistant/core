@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from bond_async import BPUPSubscriptions
+if TYPE_CHECKING:
+    from bond_async import BPUPSubscriptions
 
-from .utils import BondHub
+    from .utils import BondHub
 
 
 @dataclass

@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from aiohttp import CookieJar
 from pybravia import BraviaClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .coordinator import BraviaTVCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 BraviaTVConfigEntry = ConfigEntry[BraviaTVCoordinator]
 

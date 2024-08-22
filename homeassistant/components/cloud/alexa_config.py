@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from contextlib import suppress
 from datetime import datetime, timedelta
 from http import HTTPStatus
@@ -12,7 +11,6 @@ from typing import TYPE_CHECKING, Any
 
 import aiohttp
 from hass_nabucasa import Cloud, cloud_api
-from yarl import URL
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.alexa import (
@@ -35,7 +33,6 @@ from homeassistant.core import Event, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, start
 from homeassistant.helpers.entity import get_device_class
-from homeassistant.helpers.entityfilter import EntityFilter
 from homeassistant.helpers.event import async_call_later
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -51,6 +48,12 @@ from .const import (
 from .prefs import ALEXA_SETTINGS_VERSION, CloudPreferences
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from yarl import URL
+
+    from homeassistant.helpers.entityfilter import EntityFilter
+
     from .client import CloudClient
 
 _LOGGER = logging.getLogger(__name__)

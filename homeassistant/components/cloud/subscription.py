@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp.client_exceptions import ClientError
 from hass_nabucasa import Cloud, cloud_api
 
-from .client import CloudClient
 from .const import REQUEST_TIMEOUT
+
+if TYPE_CHECKING:
+    from .client import CloudClient
 
 _LOGGER = logging.getLogger(__name__)
 

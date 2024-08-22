@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
-from asyncarve import ArveDeviceInfo
+from typing import TYPE_CHECKING
 
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import ArveCoordinator
+
+if TYPE_CHECKING:
+    from asyncarve import ArveDeviceInfo
+
+    from homeassistant.helpers.entity import EntityDescription
 
 
 class ArveDeviceEntity(CoordinatorEntity[ArveCoordinator]):

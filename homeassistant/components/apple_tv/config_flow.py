@@ -4,17 +4,15 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
-from collections.abc import Awaitable, Callable, Mapping
 from ipaddress import ip_address
 import logging
 from random import randrange
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyatv import exceptions, pair, scan
 from pyatv.const import DeviceModel, PairingRequirement, Protocol
 from pyatv.convert import model_str, protocol_str
 from pyatv.helpers import get_unique_id
-from pyatv.interface import BaseConfig, PairingHandler
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
@@ -36,6 +34,11 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 
 from .const import CONF_CREDENTIALS, CONF_IDENTIFIERS, CONF_START_OFF, DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable, Mapping
+
+    from pyatv.interface import BaseConfig, PairingHandler
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -6,13 +6,16 @@ from datetime import timedelta
 import logging
 from math import cos, pi, radians, sin
 import random
+from typing import TYPE_CHECKING
 
 from homeassistant.components.geo_location import GeolocationEvent
 from homeassistant.const import UnitOfLength
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import track_time_interval
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 

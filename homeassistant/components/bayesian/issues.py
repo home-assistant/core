@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
-from homeassistant.core import HomeAssistant
+from typing import TYPE_CHECKING
+
 from homeassistant.helpers import issue_registry as ir
 
 from . import DOMAIN
-from .helpers import Observation
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
+    from .helpers import Observation
 
 
 def raise_mirrored_entries(

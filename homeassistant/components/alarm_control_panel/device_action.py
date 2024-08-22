@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 import voluptuous as vol
 
@@ -22,14 +22,16 @@ from homeassistant.const import (
     SERVICE_ALARM_DISARM,
     SERVICE_ALARM_TRIGGER,
 )
-from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import get_supported_features
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import ATTR_CODE_ARM_REQUIRED, DOMAIN
 from .const import AlarmControlPanelEntityFeature
+
+if TYPE_CHECKING:
+    from homeassistant.core import Context, HomeAssistant
+    from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 ACTION_TYPES: Final[set[str]] = {
     "arm_away",

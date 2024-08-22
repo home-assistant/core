@@ -10,7 +10,6 @@ import logging
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 from aiohttp.client_exceptions import ClientError
-from pyblu import Input, Player, Preset, Status, SyncStatus
 import voluptuous as vol
 
 from homeassistant.components import media_source
@@ -44,8 +43,6 @@ from homeassistant.helpers.device_registry import (
     DeviceInfo,
     format_mac,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
@@ -62,6 +59,11 @@ from .const import (
 from .utils import format_unique_id
 
 if TYPE_CHECKING:
+    from pyblu import Input, Player, Preset, Status, SyncStatus
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
     from . import BluesoundConfigEntry
 
 _LOGGER = logging.getLogger(__name__)

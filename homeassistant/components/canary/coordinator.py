@@ -3,19 +3,24 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import ValuesView
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
-from canary.api import Api
-from canary.model import Location, Reading
 from requests.exceptions import ConnectTimeout, HTTPError
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 from .model import CanaryData
+
+if TYPE_CHECKING:
+    from collections.abc import ValuesView
+
+    from canary.api import Api
+    from canary.model import Location, Reading
+
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

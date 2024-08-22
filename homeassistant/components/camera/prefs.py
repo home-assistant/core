@@ -2,18 +2,21 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import asdict, dataclass
-from typing import Final, cast
+from typing import TYPE_CHECKING, Final, cast
 
 from homeassistant.components.stream import Orientation
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .const import DOMAIN, PREF_ORIENTATION, PREF_PRELOAD_STREAM
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from homeassistant.core import HomeAssistant
 
 STORAGE_KEY: Final = DOMAIN
 STORAGE_VERSION: Final = 1

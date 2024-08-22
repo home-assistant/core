@@ -6,13 +6,15 @@ import logging
 from typing import TYPE_CHECKING
 
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt import ReceiveMessage
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 
 from .const import CONF_DATA_TOPIC, CONF_DEVICE_TYPE, DOMAIN
 from .coordinator import DROPDeviceDataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.components.mqtt import ReceiveMessage
+    from homeassistant.config_entries import ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
 import logging
 from pprint import pformat
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlparse
 
 from pydeconz.errors import LinkButtonNotPressed, RequestError, ResponseError
@@ -20,7 +19,6 @@ from pydeconz.utils import (
 import voluptuous as vol
 
 from homeassistant.components import ssdp
-from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import (
     SOURCE_HASSIO,
     ConfigEntry,
@@ -45,6 +43,11 @@ from .const import (
     LOGGER,
 )
 from .hub import DeconzHub
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from homeassistant.components.hassio import HassioServiceInfo
 
 DECONZ_MANUFACTURERURL = "http://www.dresden-elektronik.de"
 CONF_SERIAL = "serial"

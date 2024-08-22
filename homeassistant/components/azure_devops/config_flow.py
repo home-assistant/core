@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aioazuredevops.client import DevOpsClient
 import aiohttp
@@ -13,6 +12,9 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_ORG, CONF_PAT, CONF_PROJECT, DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 
 class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):

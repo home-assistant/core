@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from functools import partial
 import logging
+from typing import TYPE_CHECKING
 
 from bthome_ble import BTHomeBluetoothDeviceData, SensorUpdate
 from bthome_ble.parser import EncryptionScheme
@@ -14,7 +15,6 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
 )
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceRegistry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -29,7 +29,11 @@ from .const import (
     BTHomeBleEvent,
 )
 from .coordinator import BTHomePassiveBluetoothProcessorCoordinator
-from .types import BTHomeConfigEntry
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
+    from .types import BTHomeConfigEntry
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.EVENT, Platform.SENSOR]
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from homeassistant.components.logbook import (
     LOGBOOK_ENTRY_ENTITY_ID,
@@ -14,6 +14,9 @@ from homeassistant.core import Event, HomeAssistant, callback
 
 from .const import DOMAIN
 from .util import async_get_entries
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 @callback

@@ -3,20 +3,23 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from amberelectric import ApiException
-from amberelectric.api import amber_api
-from amberelectric.model.actual_interval import ActualInterval
 from amberelectric.model.channel import ChannelType
 from amberelectric.model.current_interval import CurrentInterval
 from amberelectric.model.forecast_interval import ForecastInterval
-from amberelectric.model.interval import Descriptor
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
+
+if TYPE_CHECKING:
+    from amberelectric.api import amber_api
+    from amberelectric.model.actual_interval import ActualInterval
+    from amberelectric.model.interval import Descriptor
+
+    from homeassistant.core import HomeAssistant
 
 
 def is_current(interval: ActualInterval | CurrentInterval | ForecastInterval) -> bool:

@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -51,14 +50,12 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.trigger_template_entity import CONF_AVAILABILITY
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_COMMAND_TIMEOUT,
@@ -67,6 +64,12 @@ from .const import (
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Coroutine
+
+    from homeassistant.core import Event, HomeAssistant, ServiceCall
+    from homeassistant.helpers.typing import ConfigType
 
 BINARY_SENSOR_DEFAULT_NAME = "Binary Command Sensor"
 DEFAULT_PAYLOAD_ON = "ON"

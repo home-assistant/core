@@ -3,19 +3,16 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 from dataclasses import dataclass
 from enum import Enum
 from functools import wraps
 import logging
-from types import ModuleType
 from typing import TYPE_CHECKING, Any, Literal, overload
 
 import voluptuous as vol
 import voluptuous_serialize
 
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
@@ -29,7 +26,6 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.requirements import (
     RequirementsNotFound,
@@ -45,6 +41,12 @@ from .const import (  # noqa: F401
 from .exceptions import DeviceNotFound, EntityNotFound, InvalidDeviceAutomationConfig
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
+    from types import ModuleType
+
+    from homeassistant.components.websocket_api.connection import ActiveConnection
+    from homeassistant.helpers.typing import ConfigType, VolSchemaType
+
     from .action import DeviceAutomationActionProtocol
     from .condition import DeviceAutomationConditionProtocol
     from .trigger import DeviceAutomationTriggerProtocol

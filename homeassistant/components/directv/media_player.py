@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
-
-from directv import DIRECTV
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -14,9 +12,6 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -27,6 +22,13 @@ from .const import (
     DOMAIN,
 )
 from .entity import DIRECTVEntity
+
+if TYPE_CHECKING:
+    from directv import DIRECTV
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
 

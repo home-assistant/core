@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import time
+from typing import TYPE_CHECKING
 
 from clementineremote import ClementineRemote
 import voluptuous as vol
@@ -16,10 +17,12 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME, CONF_PORT
-from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 DEFAULT_NAME = "Clementine Remote"
 DEFAULT_PORT = 5500

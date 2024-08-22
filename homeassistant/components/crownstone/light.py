@@ -5,17 +5,12 @@ from __future__ import annotations
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
-from crownstone_cloud.cloud_models.crownstones import Crownstone
 from crownstone_cloud.const import DIMMING_ABILITY
 from crownstone_cloud.exceptions import CrownstoneAbilityError
-from crownstone_uart import CrownstoneUart
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CROWNSTONE_INCLUDE_TYPES,
@@ -28,6 +23,13 @@ from .devices import CrownstoneBaseEntity
 from .helpers import map_from_to
 
 if TYPE_CHECKING:
+    from crownstone_cloud.cloud_models.crownstones import Crownstone
+    from crownstone_uart import CrownstoneUart
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
     from .entry_manager import CrownstoneEntryManager
 
 

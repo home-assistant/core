@@ -4,16 +4,19 @@ from __future__ import annotations
 
 from datetime import timedelta
 from random import randint
+from typing import TYPE_CHECKING
 
 from bsblan import BSBLAN, BSBLANConnectionError
 from bsblan.models import State
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 
 class BSBLanUpdateCoordinator(DataUpdateCoordinator[State]):

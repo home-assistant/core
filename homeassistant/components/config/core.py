@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -14,6 +13,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import check_config, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import location, unit_system
+
+if TYPE_CHECKING:
+    from aiohttp import web
 
 
 @callback

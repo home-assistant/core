@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import asyncio
 from asyncio import Future
-from collections.abc import Callable, Iterable
 from typing import TYPE_CHECKING, cast
 
 from habluetooth import (
@@ -17,18 +16,21 @@ from habluetooth import (
     HaBleakScannerWrapper,
     get_manager,
 )
-from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.helpers.singleton import singleton
 
 from .const import DATA_MANAGER
 from .manager import HomeAssistantBluetoothManager
-from .match import BluetoothCallbackMatcher
-from .models import BluetoothCallback, BluetoothChange, ProcessAdvertisementCallback
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
+
     from bleak.backends.device import BLEDevice
+    from home_assistant_bluetooth import BluetoothServiceInfoBleak
+
+    from .match import BluetoothCallbackMatcher
+    from .models import BluetoothCallback, BluetoothChange, ProcessAdvertisementCallback
 
 
 @singleton(DATA_MANAGER)

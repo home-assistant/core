@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aioairzone.const import (
     API_SYSTEM_ID,
@@ -25,15 +25,18 @@ from aioairzone.const import (
 )
 from aioairzone.exceptions import AirzoneError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AirzoneConfigEntry
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import AirzoneUpdateCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+
+    from . import AirzoneConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

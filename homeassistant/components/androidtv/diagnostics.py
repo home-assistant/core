@@ -2,17 +2,20 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import attr
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import ATTR_CONNECTIONS, ATTR_IDENTIFIERS, CONF_UNIQUE_ID
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import AndroidTVConfigEntry
 from .const import DOMAIN, PROP_ETHMAC, PROP_SERIALNO, PROP_WIFIMAC
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
+    from . import AndroidTVConfigEntry
 
 TO_REDACT = {CONF_UNIQUE_ID}  # UniqueID contain MAC Address
 TO_REDACT_DEV = {ATTR_CONNECTIONS, ATTR_IDENTIFIERS}

@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_flow import DiscoveryFlowHandler
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigFlowResult
+    from homeassistant.core import HomeAssistant
 
 
 async def _async_has_devices(_: HomeAssistant) -> bool:

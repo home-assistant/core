@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-
-from aioelectricitymaps.models import CarbonIntensityResponse
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -13,14 +11,21 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CO2SignalConfigEntry
 from .const import ATTRIBUTION, DOMAIN
 from .coordinator import CO2SignalCoordinator
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from aioelectricitymaps.models import CarbonIntensityResponse
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import CO2SignalConfigEntry
 
 
 @dataclass(frozen=True, kw_only=True)

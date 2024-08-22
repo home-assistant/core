@@ -1,9 +1,8 @@
 """BleBox climate entity."""
 
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from blebox_uniapi.box import Box
 import blebox_uniapi.climate
 
 from homeassistant.components.climate import (
@@ -19,6 +18,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BleBoxEntity
 from .const import DOMAIN, PRODUCT
+
+if TYPE_CHECKING:
+    from blebox_uniapi.box import Box
 
 SCAN_INTERVAL = timedelta(seconds=5)
 

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
 from homeassistant.components.device_automation import CONF_IS_OFF, CONF_IS_ON
@@ -19,9 +21,11 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.entity import get_device_class
-from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN, BinarySensorDeviceClass
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
 
 # mypy: disallow-any-generics
 

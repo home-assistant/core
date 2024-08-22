@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
-from homeassistant import config_entries
+from typing import TYPE_CHECKING
+
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
 
 from .const import LOGGER
+
+if TYPE_CHECKING:
+    from homeassistant import config_entries
+    from homeassistant.core import HomeAssistant
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 

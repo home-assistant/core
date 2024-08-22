@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyairvisual.node import (
     InvalidAuthenticationError,
@@ -18,6 +17,9 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResu
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 
 from .const import DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 STEP_REAUTH_SCHEMA = vol.Schema(
     {

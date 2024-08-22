@@ -6,7 +6,7 @@ import asyncio
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyairvisual.node import (
     InvalidAuthenticationError,
@@ -22,10 +22,8 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -33,6 +31,10 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from homeassistant.core import Event, HomeAssistant
+    from homeassistant.helpers.entity import EntityDescription
 
 PLATFORMS = [Platform.SENSOR]
 

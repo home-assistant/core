@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 import json
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from aiokafka import AIOKafkaProducer
 import voluptuous as vol
@@ -17,11 +17,13 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
 )
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA, EntityFilter
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import ssl as ssl_util
+
+if TYPE_CHECKING:
+    from homeassistant.core import Event, EventStateChangedData, HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "apache_kafka"
 

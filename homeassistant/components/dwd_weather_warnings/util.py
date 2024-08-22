@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .exceptions import EntityNotFoundError
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 
 def get_position_data(

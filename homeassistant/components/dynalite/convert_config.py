@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from dynalite_devices_lib import const as dyn_const
 
@@ -41,6 +40,9 @@ from .const import (
     CONF_TILT_TIME,
     CONF_TIME_COVER,
 )
+
+if TYPE_CHECKING:
+    from types import MappingProxyType
 
 ACTIVE_MAP = {
     ACTIVE_INIT: dyn_const.ACTIVE_INIT,

@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import os
 import socket
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from pyasuswrt import AsusWrtError
 import voluptuous as vol
@@ -32,7 +32,6 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaOptionsFlowHandler,
 )
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
-from homeassistant.helpers.typing import VolDictType
 
 from .bridge import AsusWrtBridge
 from .const import (
@@ -52,6 +51,9 @@ from .const import (
     PROTOCOL_SSH,
     PROTOCOL_TELNET,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import VolDictType
 
 ALLOWED_PROTOCOL = [
     PROTOCOL_HTTPS,

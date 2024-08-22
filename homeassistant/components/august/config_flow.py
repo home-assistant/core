@@ -4,9 +4,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import aiohttp
 import voluptuous as vol
 from yalexs.authenticator_common import ValidationResult
 from yalexs.const import BRANDS, DEFAULT_BRAND
@@ -27,6 +26,9 @@ from .const import (
 )
 from .gateway import AugustGateway
 from .util import async_create_august_clientsession
+
+if TYPE_CHECKING:
+    import aiohttp
 
 _LOGGER = logging.getLogger(__name__)
 

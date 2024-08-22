@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-import axis
-
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
@@ -17,6 +15,8 @@ from .entity_loader import AxisEntityLoader
 from .event_source import AxisEventSource
 
 if TYPE_CHECKING:
+    import axis
+
     from .. import AxisConfigEntry
 
 

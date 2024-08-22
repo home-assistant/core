@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pyaprilaire.client
 from pyaprilaire.const import MODELS, Attribute, FunctionalDomain
@@ -15,6 +14,9 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import BaseDataUpdateCoordinatorProtocol
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
 
 RECONNECT_INTERVAL = 60 * 60
 RETRY_CONNECTION_INTERVAL = 10

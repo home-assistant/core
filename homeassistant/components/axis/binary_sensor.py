@@ -2,14 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 
-from axis.interfaces.applications.fence_guard import FenceGuardHandler
-from axis.interfaces.applications.loitering_guard import LoiteringGuardHandler
-from axis.interfaces.applications.motion_guard import MotionGuardHandler
-from axis.interfaces.applications.vmd4 import Vmd4Handler
 from axis.models.event import Event, EventTopic
 
 from homeassistant.components.binary_sensor import (
@@ -18,12 +14,22 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
-from . import AxisConfigEntry
 from .entity import AxisEventDescription, AxisEventEntity
-from .hub import AxisHub
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from axis.interfaces.applications.fence_guard import FenceGuardHandler
+    from axis.interfaces.applications.loitering_guard import LoiteringGuardHandler
+    from axis.interfaces.applications.motion_guard import MotionGuardHandler
+    from axis.interfaces.applications.vmd4 import Vmd4Handler
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AxisConfigEntry
+    from .hub import AxisHub
 
 
 @dataclass(frozen=True, kw_only=True)

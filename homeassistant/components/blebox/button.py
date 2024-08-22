@@ -2,16 +2,21 @@
 
 from __future__ import annotations
 
-from blebox_uniapi.box import Box
+from typing import TYPE_CHECKING
+
 import blebox_uniapi.button
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BleBoxEntity
 from .const import DOMAIN, PRODUCT
+
+if TYPE_CHECKING:
+    from blebox_uniapi.box import Box
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 
 async def async_setup_entry(

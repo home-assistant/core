@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
-import aiopulse
+from typing import TYPE_CHECKING
 
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import ACMEDA_ENTITY_REMOVE, DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    import aiopulse
 
 
 class AcmedaBase(entity.Entity):

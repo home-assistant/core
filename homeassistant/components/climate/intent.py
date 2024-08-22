@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 
 from . import DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 INTENT_GET_TEMPERATURE = "HassClimateGetTemperature"
 

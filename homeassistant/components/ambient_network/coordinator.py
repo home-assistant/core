@@ -3,19 +3,22 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
-from aioambient import OpenAPI
 from aioambient.errors import RequestError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import API_LAST_DATA, DOMAIN, LOGGER
 from .helper import get_station_name
+
+if TYPE_CHECKING:
+    from aioambient import OpenAPI
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 SCAN_INTERVAL = timedelta(minutes=5)
 

@@ -6,7 +6,7 @@ import asyncio
 import base64
 import json
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiobotocore.session import AioSession
 
@@ -23,11 +23,13 @@ from homeassistant.const import (
     CONF_PROFILE_NAME,
     CONF_SERVICE,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_CONTEXT, CONF_CREDENTIAL_NAME, CONF_REGION, DATA_SESSIONS
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 

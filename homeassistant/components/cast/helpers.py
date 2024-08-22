@@ -15,13 +15,13 @@ from pychromecast import dial
 from pychromecast.const import CAST_TYPE_GROUP
 from pychromecast.models import CastInfo
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
 
 if TYPE_CHECKING:
     from homeassistant.components import zeroconf
+    from homeassistant.core import HomeAssistant
 
 
 _LOGGER = logging.getLogger(__name__)

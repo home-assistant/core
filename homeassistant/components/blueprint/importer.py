@@ -6,17 +6,20 @@ from contextlib import suppress
 from dataclasses import dataclass
 import html
 import re
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 import yarl
 
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.util import yaml
 
 from .models import Blueprint
 from .schemas import is_blueprint_config
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 COMMUNITY_TOPIC_PATTERN = re.compile(
     r"^https://community.home-assistant.io/t/[a-z0-9-]+/(?P<topic>\d+)(?:/(?P<post>\d+)|)$"

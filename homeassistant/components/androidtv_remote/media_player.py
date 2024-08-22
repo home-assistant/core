@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from androidtvremote2 import AndroidTVRemote, ConnectionClosed
 
@@ -18,11 +18,14 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AndroidTVRemoteConfigEntry
 from .const import CONF_APP_ICON, CONF_APP_NAME
 from .entity import AndroidTVRemoteBaseEntity
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AndroidTVRemoteConfigEntry
 
 PARALLEL_UPDATES = 0
 

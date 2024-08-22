@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pyads
 import voluptuous as vol
@@ -14,10 +14,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     CONF_ADS_VAR,
@@ -27,6 +24,11 @@ from . import (
     STATE_KEY_STATE,
     AdsEntity,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 DEFAULT_NAME = "ADS Light"
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(

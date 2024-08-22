@@ -69,7 +69,6 @@ associate with an credential if "type" set to "link_user" in
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from http import HTTPStatus
 from ipaddress import ip_address
 from typing import TYPE_CHECKING, Any, cast
@@ -80,7 +79,6 @@ import voluptuous_serialize
 
 from homeassistant import data_entry_flow
 from homeassistant.auth import AuthManagerFlowManager, InvalidAuthError
-from homeassistant.auth.models import AuthFlowResult, Credentials
 from homeassistant.components import onboarding
 from homeassistant.components.http import KEY_HASS
 from homeassistant.components.http.auth import async_user_not_allowed_do_auth
@@ -98,6 +96,9 @@ from homeassistant.util.network import is_local
 from . import indieauth
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.auth.models import AuthFlowResult, Credentials
     from homeassistant.auth.providers.trusted_networks import (
         TrustedNetworksAuthProvider,
     )

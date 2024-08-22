@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from typing import TYPE_CHECKING, cast
 
-from pydeconz import DeconzSession
 from pydeconz.interfaces import sensors
-from pydeconz.interfaces.api_handlers import APIHandler, GroupedAPIHandler
 from pydeconz.interfaces.groups import GroupHandler
 from pydeconz.models.event import EventType
 
@@ -26,6 +23,11 @@ from ..const import (
 from .config import DeconzConfig
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from pydeconz import DeconzSession
+    from pydeconz.interfaces.api_handlers import APIHandler, GroupedAPIHandler
+
     from ..deconz_event import (
         DeconzAlarmEvent,
         DeconzEvent,

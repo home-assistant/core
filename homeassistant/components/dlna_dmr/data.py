@@ -4,18 +4,21 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from typing import NamedTuple, cast
+from typing import TYPE_CHECKING, NamedTuple, cast
 
 from async_upnp_client.aiohttp import AiohttpNotifyServer, AiohttpSessionRequester
-from async_upnp_client.client import UpnpRequester
 from async_upnp_client.client_factory import UpnpFactory
-from async_upnp_client.event_handler import UpnpEventHandler
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from async_upnp_client.client import UpnpRequester
+    from async_upnp_client.event_handler import UpnpEventHandler
+
+    from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant
 
 
 class EventListenAddr(NamedTuple):

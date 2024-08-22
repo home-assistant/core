@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from pydeconz.models.event import EventType
 from pydeconz.models.sensor.thermostat import (
     Thermostat,
     ThermostatFanMode,
@@ -28,14 +27,18 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_LOCKED, ATTR_OFFSET, ATTR_VALVE
 from .deconz_device import DeconzDevice
 from .hub import DeconzHub
+
+if TYPE_CHECKING:
+    from pydeconz.models.event import EventType
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 DECONZ_FAN_SMART = "smart"
 

@@ -3,21 +3,18 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from pyaftership import AfterShip, AfterShipException
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
 
-from . import AfterShipConfigEntry
 from .const import (
     ADD_TRACKING_SERVICE_SCHEMA,
     ATTR_TRACKINGS,
@@ -33,6 +30,12 @@ from .const import (
     SERVICE_REMOVE_TRACKING,
     UPDATE_TOPIC,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant, ServiceCall
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AfterShipConfigEntry
 
 _LOGGER: Final = logging.getLogger(__name__)
 

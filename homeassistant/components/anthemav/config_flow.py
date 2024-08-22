@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import anthemav
-from anthemav.connection import Connection
 from anthemav.device_error import DeviceError
 import voluptuous as vol
 
@@ -16,6 +15,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import DEFAULT_NAME, DEFAULT_PORT, DEVICE_TIMEOUT_SECONDS, DOMAIN
+
+if TYPE_CHECKING:
+    from anthemav.connection import Connection
 
 _LOGGER = logging.getLogger(__name__)
 

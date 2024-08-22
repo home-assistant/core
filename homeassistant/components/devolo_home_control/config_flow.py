@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
@@ -15,6 +13,11 @@ from homeassistant.core import callback
 from . import configure_mydevolo
 from .const import CONF_MYDEVOLO, DEFAULT_MYDEVOLO, DOMAIN, SUPPORTED_MODEL_TYPES
 from .exceptions import CredentialsInvalid, UuidChanged
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from homeassistant.components import zeroconf
 
 
 class DevoloHomeControlFlowHandler(ConfigFlow, domain=DOMAIN):

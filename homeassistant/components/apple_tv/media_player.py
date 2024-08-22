@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyatv import exceptions
 from pyatv.const import (
@@ -39,11 +38,15 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from . import AppleTvConfigEntry, AppleTVEntity, AppleTVManager
 from .browse_media import build_app_list
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
 

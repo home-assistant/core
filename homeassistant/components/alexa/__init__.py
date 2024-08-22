@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -13,9 +13,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entityfilter
-from homeassistant.helpers.typing import ConfigType
 
 from . import flash_briefings, intent, smart_home
 from .const import (
@@ -32,6 +30,10 @@ from .const import (
     CONF_UID,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
 
 CONF_FLASH_BRIEFINGS = "flash_briefings"
 CONF_SMART_HOME = "smart_home"

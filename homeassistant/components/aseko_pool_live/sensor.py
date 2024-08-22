@@ -2,20 +2,25 @@
 
 from __future__ import annotations
 
-from aioaseko import Unit, Variable
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import AsekoDataUpdateCoordinator
 from .entity import AsekoEntity
+
+if TYPE_CHECKING:
+    from aioaseko import Unit, Variable
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import AsekoDataUpdateCoordinator
 
 
 async def async_setup_entry(

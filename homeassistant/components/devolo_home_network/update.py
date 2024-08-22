@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from devolo_plc_api.device import Device
-from devolo_plc_api.device_api import UpdateFirmwareCheck
 from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnavailable
 
 from homeassistant.components.update import (
@@ -17,14 +14,22 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import DevoloHomeNetworkConfigEntry
 from .const import DOMAIN, REGULAR_FIRMWARE
 from .entity import DevoloCoordinatorEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    from devolo_plc_api.device import Device
+    from devolo_plc_api.device_api import UpdateFirmwareCheck
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+    from . import DevoloHomeNetworkConfigEntry
 
 PARALLEL_UPDATES = 1
 

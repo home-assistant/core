@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate
-
-from duotecno.unit import BaseUnit
+from typing import TYPE_CHECKING, Any, Concatenate
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable, Coroutine
+
+    from duotecno.unit import BaseUnit
 
 
 class DuotecnoEntity(Entity):

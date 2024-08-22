@@ -2,20 +2,23 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from androidtv.constants import KEYS
 
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_TURN_OFF_COMMAND, CONF_TURN_ON_COMMAND, DOMAIN
 from .entity import AndroidTVEntity, adb_decorator
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
 

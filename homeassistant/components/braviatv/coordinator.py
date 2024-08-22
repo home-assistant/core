@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from datetime import datetime, timedelta
 from functools import wraps
 import logging
-from types import MappingProxyType
-from typing import Any, Concatenate, Final
+from typing import TYPE_CHECKING, Any, Concatenate, Final
 
 from pybravia import (
     BraviaAuthError,
@@ -21,7 +19,6 @@ from pybravia import (
 
 from homeassistant.components.media_player import MediaType
 from homeassistant.const import CONF_CLIENT_ID, CONF_PIN
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -34,6 +31,12 @@ from .const import (
     NICKNAME_PREFIX,
     SourceType,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable, Coroutine, Iterable
+    from types import MappingProxyType
+
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

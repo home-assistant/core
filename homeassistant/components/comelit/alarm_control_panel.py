@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
-from aiocomelit.api import ComelitVedoAreaObject
 from aiocomelit.const import ALARM_AREAS, AlarmAreaState
 
 from homeassistant.components.alarm_control_panel import (
@@ -12,7 +12,6 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     CodeFormat,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -22,13 +21,18 @@ from homeassistant.const import (
     STATE_ALARM_DISARMING,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import ComelitVedoSystem
+
+if TYPE_CHECKING:
+    from aiocomelit.api import ComelitVedoAreaObject
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import StateType
 
 _LOGGER = logging.getLogger(__name__)
 

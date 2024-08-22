@@ -10,9 +10,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from contextlib import suppress
-from datetime import datetime
 import functools as ft
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME
 from homeassistant.core import (
@@ -24,9 +23,13 @@ from homeassistant.core import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from homeassistant.helpers.typing import ConfigType
 
 _KEY_INSTANCE = "configurator"
 

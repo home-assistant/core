@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-import logging
-
-from habluetooth import BluetoothScanningMode
+from typing import TYPE_CHECKING
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 
@@ -16,7 +14,13 @@ from .api import (
     async_track_unavailable,
 )
 from .match import BluetoothCallbackMatcher
-from .models import BluetoothChange, BluetoothServiceInfoBleak
+
+if TYPE_CHECKING:
+    import logging
+
+    from habluetooth import BluetoothScanningMode
+
+    from .models import BluetoothChange, BluetoothServiceInfoBleak
 
 
 class BasePassiveBluetoothCoordinator(ABC):

@@ -10,13 +10,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api.connection import ActiveConnection
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
@@ -29,13 +27,17 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, config_entry_oauth2_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import (
     IntegrationNotFound,
     async_get_application_credentials,
     async_get_integration,
 )
 from homeassistant.util import slugify
+
+if TYPE_CHECKING:
+    from homeassistant.components.websocket_api.connection import ActiveConnection
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.typing import ConfigType, VolDictType
 
 __all__ = ["ClientCredential", "AuthorizationServer", "async_import_client_credential"]
 

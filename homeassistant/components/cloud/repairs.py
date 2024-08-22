@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -13,11 +13,13 @@ from homeassistant.components.repairs import (
     repairs_flow_manager,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import issue_registry as ir
 
 from .const import DATA_CLOUD, DOMAIN
 from .subscription import async_migrate_paypal_agreement, async_subscription_info
+
+if TYPE_CHECKING:
+    from homeassistant.data_entry_flow import FlowResult
 
 BACKOFF_TIME = 5
 MAX_RETRIES = 60  # This allows for 10 minutes of retries

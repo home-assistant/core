@@ -4,17 +4,12 @@ from __future__ import annotations
 
 from asyncio import gather, timeout
 from dataclasses import dataclass
-from datetime import timedelta
+from typing import TYPE_CHECKING
 
-from aiohttp import ClientSession
 from python_awair import Awair, AwairLocal
-from python_awair.air_data import AirData
-from python_awair.devices import AwairBaseDevice, AwairLocalDevice
 from python_awair.exceptions import AuthError, AwairError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -25,6 +20,16 @@ from .const import (
     UPDATE_INTERVAL_CLOUD,
     UPDATE_INTERVAL_LOCAL,
 )
+
+if TYPE_CHECKING:
+    from datetime import timedelta
+
+    from aiohttp import ClientSession
+    from python_awair.air_data import AirData
+    from python_awair.devices import AwairBaseDevice, AwairLocalDevice
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 
 @dataclass

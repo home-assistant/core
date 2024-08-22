@@ -6,13 +6,16 @@ from datetime import date, datetime, time, timedelta
 from functools import partial
 import logging
 import re
+from typing import TYPE_CHECKING
 
 from homeassistant.components.calendar import CalendarEvent, extract_offset
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .api import get_attr_value
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

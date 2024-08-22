@@ -4,13 +4,12 @@ from __future__ import annotations
 
 import dataclasses
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
 from homeassistant.core import Context, HomeAssistant, async_get_hass, callback
 from homeassistant.helpers import config_validation as cv, singleton
-from homeassistant.helpers.entity_component import EntityComponent
 
 from .const import DOMAIN, HOME_ASSISTANT_AGENT, OLD_HOME_ASSISTANT_AGENT
 from .default_agent import async_get_default_agent
@@ -26,6 +25,9 @@ from .trace import (
     ConversationTraceEventType,
     async_conversation_trace,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
 
 _LOGGER = logging.getLogger(__name__)
 

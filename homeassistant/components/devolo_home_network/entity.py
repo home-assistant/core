@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from devolo_plc_api.device_api import (
     ConnectedStationInfo,
     NeighborAPInfo,
@@ -16,8 +18,10 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import DevoloHomeNetworkConfigEntry
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from . import DevoloHomeNetworkConfigEntry
 
 type _DataType = (
     LogicalNetwork

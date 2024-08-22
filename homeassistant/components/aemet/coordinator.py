@@ -5,7 +5,7 @@ from __future__ import annotations
 from asyncio import timeout
 from datetime import timedelta
 import logging
-from typing import Any, Final, cast
+from typing import TYPE_CHECKING, Any, Final, cast
 
 from aemet_opendata.const import (
     AOD_CONDITION,
@@ -16,13 +16,16 @@ from aemet_opendata.const import (
 )
 from aemet_opendata.exceptions import AemetError
 from aemet_opendata.helpers import dict_nested_value
-from aemet_opendata.interface import AEMET
 
 from homeassistant.components.weather import Forecast
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONDITIONS_MAP, DOMAIN, FORECAST_MAP
+
+if TYPE_CHECKING:
+    from aemet_opendata.interface import AEMET
+
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

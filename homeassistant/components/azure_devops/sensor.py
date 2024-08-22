@@ -2,27 +2,31 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from datetime import datetime
 import logging
-from typing import Any
-
-from aioazuredevops.models.builds import Build
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from . import AzureDevOpsConfigEntry
-from .coordinator import AzureDevOpsDataUpdateCoordinator
 from .entity import AzureDevOpsEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Mapping
+    from datetime import datetime
+
+    from aioazuredevops.models.builds import Build
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import StateType
+
+    from . import AzureDevOpsConfigEntry
+    from .coordinator import AzureDevOpsDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

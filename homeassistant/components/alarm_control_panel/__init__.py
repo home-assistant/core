@@ -5,11 +5,10 @@ from __future__ import annotations
 from datetime import timedelta
 from functools import cached_property, partial
 import logging
-from typing import Any, Final, final
+from typing import TYPE_CHECKING, Any, Final, final
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_CODE_FORMAT,
@@ -32,7 +31,6 @@ from homeassistant.helpers.deprecation import (
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (  # noqa: F401
     _DEPRECATED_FORMAT_NUMBER,
@@ -49,6 +47,10 @@ from .const import (  # noqa: F401
     AlarmControlPanelEntityFeature,
     CodeFormat,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER: Final = logging.getLogger(__name__)
 

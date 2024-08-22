@@ -5,16 +5,14 @@ from __future__ import annotations
 from datetime import timedelta
 from ipaddress import IPv4Address, IPv6Address
 import logging
+from typing import TYPE_CHECKING
 
 import aiodns
 from aiodns.error import DNSError
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PORT
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_HOSTNAME,
@@ -25,6 +23,11 @@ from .const import (
     CONF_RESOLVER_IPV6,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 DEFAULT_RETRIES = 2
 MAX_RESULTS = 10

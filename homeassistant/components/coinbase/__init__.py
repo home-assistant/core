@@ -4,15 +4,14 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from coinbase.rest import RESTClient
 from coinbase.rest.rest_base import HTTPError
 from coinbase.wallet.client import Client as LegacyClient
 from coinbase.wallet.error import AuthenticationError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import Throttle
 
@@ -39,6 +38,10 @@ from .const import (
     CONF_EXCHANGE_RATES,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,6 +1,7 @@
 """BleBox sensor entities."""
 
-from blebox_uniapi.box import Box
+from typing import TYPE_CHECKING
+
 import blebox_uniapi.sensor
 
 from homeassistant.components.sensor import (
@@ -29,6 +30,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BleBoxEntity
 from .const import DOMAIN, PRODUCT
+
+if TYPE_CHECKING:
+    from blebox_uniapi.box import Box
 
 SENSOR_TYPES = (
     SensorEntityDescription(

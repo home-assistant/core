@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from anova_wifi import AnovaMode, AnovaState, APCUpdateSensor
 
-from homeassistant import config_entries
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -15,14 +14,20 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import UnitOfTemperature, UnitOfTime
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
-from .coordinator import AnovaCoordinator
 from .entity import AnovaDescriptionEntity
-from .models import AnovaData
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant import config_entries
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import StateType
+
+    from .coordinator import AnovaCoordinator
+    from .models import AnovaData
 
 
 @dataclass(frozen=True, kw_only=True)

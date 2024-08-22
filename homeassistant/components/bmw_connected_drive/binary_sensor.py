@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from bimmer_connected.vehicle import MyBMWVehicle
 from bimmer_connected.vehicle.doors_windows import LockState
 from bimmer_connected.vehicle.fuel_and_battery import ChargingState
-from bimmer_connected.vehicle.reports import ConditionBasedService
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -18,13 +15,21 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.unit_system import UnitSystem
 
-from . import BMWConfigEntry
 from .const import UNIT_MAP
-from .coordinator import BMWDataUpdateCoordinator
 from .entity import BMWBaseEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from bimmer_connected.vehicle import MyBMWVehicle
+    from bimmer_connected.vehicle.reports import ConditionBasedService
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.util.unit_system import UnitSystem
+
+    from . import BMWConfigEntry
+    from .coordinator import BMWDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

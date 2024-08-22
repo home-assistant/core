@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import (
     HomeAssistant,
@@ -20,7 +19,6 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from .agent_manager import (
@@ -46,6 +44,10 @@ from .default_agent import async_get_default_agent, async_setup_default_agent
 from .entity import ConversationEntity
 from .http import async_setup as async_setup_conversation_http
 from .models import AbstractConversationAgent, ConversationInput, ConversationResult
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.typing import ConfigType
 
 __all__ = [
     "DOMAIN",

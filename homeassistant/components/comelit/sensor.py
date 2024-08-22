@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
-from aiocomelit import ComelitSerialBridgeObject, ComelitVedoZoneObject
 from aiocomelit.const import ALARM_ZONES, BRIDGE, OTHER, AlarmZoneState
 
 from homeassistant.components.sensor import (
@@ -12,15 +11,19 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TYPE, UnitOfPower
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import ComelitSerialBridge, ComelitVedoSystem
+
+if TYPE_CHECKING:
+    from aiocomelit import ComelitSerialBridgeObject, ComelitVedoZoneObject
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import StateType
 
 SENSOR_BRIDGE_TYPES: Final = (
     SensorEntityDescription(

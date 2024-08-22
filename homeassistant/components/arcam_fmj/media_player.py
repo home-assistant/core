@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 import functools
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from arcam.fmj import ConnectionFailed, SourceCodes
 from arcam.fmj.state import State
@@ -24,9 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ArcamFmjConfigEntry
 from .const import (
     DOMAIN,
     EVENT_TURN_ON,
@@ -34,6 +31,13 @@ from .const import (
     SIGNAL_CLIENT_STARTED,
     SIGNAL_CLIENT_STOPPED,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import ArcamFmjConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
 from homeassistant.components.device_automation import async_validate_entity_schema
@@ -19,13 +21,15 @@ from homeassistant.const import (
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
 )
-from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import get_supported_features
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import ATTR_POSITION, ATTR_TILT_POSITION, DOMAIN, CoverEntityFeature
+
+if TYPE_CHECKING:
+    from homeassistant.core import Context, HomeAssistant
+    from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 CMD_ACTION_TYPES = {"open", "close", "stop", "open_tilt", "close_tilt"}
 POSITION_ACTION_TYPES = {"set_position", "set_tilt_position"}

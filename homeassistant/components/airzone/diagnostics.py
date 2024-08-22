@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aioairzone.const import API_MAC, AZD_MAC
 
 from homeassistant.components.diagnostics.util import async_redact_data
 from homeassistant.const import CONF_UNIQUE_ID
-from homeassistant.core import HomeAssistant
 
-from . import AirzoneConfigEntry
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
+    from . import AirzoneConfigEntry
 
 TO_REDACT_API = [
     API_MAC,

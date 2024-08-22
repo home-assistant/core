@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-from devolo_home_control_api.devices.zwave import Zwave
-from devolo_home_control_api.homecontrol import HomeControl
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.climate import (
     ATTR_TEMPERATURE,
@@ -14,11 +11,17 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS, UnitOfTemperature
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DevoloHomeControlConfigEntry
 from .devolo_multi_level_switch import DevoloMultiLevelSwitchDeviceEntity
+
+if TYPE_CHECKING:
+    from devolo_home_control_api.devices.zwave import Zwave
+    from devolo_home_control_api.homecontrol import HomeControl
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import DevoloHomeControlConfigEntry
 
 
 async def async_setup_entry(

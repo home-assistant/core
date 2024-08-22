@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
-
-import numpy as np
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
@@ -25,9 +23,7 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_COMPENSATION,
@@ -36,6 +32,12 @@ from .const import (
     DATA_COMPENSATION,
     DEFAULT_NAME,
 )
+
+if TYPE_CHECKING:
+    import numpy as np
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 

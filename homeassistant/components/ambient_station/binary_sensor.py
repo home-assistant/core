@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -12,11 +12,14 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import ATTR_NAME, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AmbientStationConfigEntry
 from .const import ATTR_LAST_DATA
 from .entity import AmbientWeatherEntity
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AmbientStationConfigEntry
 
 TYPE_BATT1 = "batt1"
 TYPE_BATT10 = "batt10"

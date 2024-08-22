@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aioelectricitymaps import (
     ElectricityMaps,
@@ -31,6 +30,9 @@ from homeassistant.helpers.selector import (
 from .const import DOMAIN
 from .helpers import fetch_latest_carbon_intensity
 from .util import get_extra_name
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 TYPE_USE_HOME = "use_home_location"
 TYPE_SPECIFY_COORDINATES = "specify_coordinates"

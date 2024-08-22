@@ -2,20 +2,24 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from py_dormakaba_dkey import DKEYLock
 from py_dormakaba_dkey.commands import UnlockStatus
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 from .entity import DormakabaDkeyEntity
-from .models import DormakabaDkeyData
+
+if TYPE_CHECKING:
+    from py_dormakaba_dkey import DKEYLock
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+    from .models import DormakabaDkeyData
 
 
 async def async_setup_entry(

@@ -5,13 +5,16 @@ from __future__ import annotations
 from html.parser import HTMLParser
 from ipaddress import ip_address
 import logging
+from typing import TYPE_CHECKING
 from urllib.parse import ParseResult, urljoin, urlparse
 
 import aiohttp
 import aiohttp.client_exceptions
 
-from homeassistant.core import HomeAssistant
 from homeassistant.util.network import is_local
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

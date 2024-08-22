@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
 import logging
-
-from brother import BrotherSensors
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     DOMAIN as PLATFORM,
@@ -20,12 +17,19 @@ from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import BrotherConfigEntry, BrotherDataUpdateCoordinator
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from datetime import datetime
+
+    from brother import BrotherSensors
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import StateType
 
 ATTR_COUNTER = "counter"
 ATTR_REMAINING_PAGES = "remaining_pages"

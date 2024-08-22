@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from aioairzone_cloud.common import OperationAction, OperationMode, TemperatureUnit
 from aioairzone_cloud.const import (
@@ -56,10 +56,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AirzoneCloudConfigEntry
-from .coordinator import AirzoneUpdateCoordinator
 from .entity import (
     AirzoneAidooEntity,
     AirzoneEntity,
@@ -67,6 +64,12 @@ from .entity import (
     AirzoneInstallationEntity,
     AirzoneZoneEntity,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AirzoneCloudConfigEntry
+    from .coordinator import AirzoneUpdateCoordinator
 
 FAN_SPEED_AUTO: dict[int, str] = {
     0: FAN_AUTO,

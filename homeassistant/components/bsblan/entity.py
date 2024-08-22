@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from bsblan import BSBLAN, Device, Info, StaticState
+from typing import TYPE_CHECKING
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
@@ -14,6 +13,11 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from bsblan import BSBLAN, Device, Info, StaticState
+
+    from homeassistant.config_entries import ConfigEntry
 
 
 class BSBLANEntity(Entity):

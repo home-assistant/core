@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
 import dataclasses
 import datetime
 from http import HTTPStatus
 from itertools import groupby
 import logging
 import re
-from typing import Any, Final, cast, final
+from typing import TYPE_CHECKING, Any, Final, cast, final
 
 from aiohttp import web
 from dateutil.rrule import rrulestr
@@ -17,8 +16,6 @@ import voluptuous as vol
 
 from homeassistant.components import frontend, http, websocket_api
 from homeassistant.components.websocket_api import ERR_NOT_FOUND, ERR_NOT_SUPPORTED
-from homeassistant.components.websocket_api.connection import ActiveConnection
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -34,9 +31,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.template import DATE_STR_FORMAT
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
-from homeassistant.util.json import JsonValueType
 
 from .const import (
     CONF_EVENT,
@@ -62,6 +57,14 @@ from .const import (
     LIST_EVENT_FIELDS,
     CalendarEntityFeature,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
+
+    from homeassistant.components.websocket_api.connection import ActiveConnection
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.typing import ConfigType
+    from homeassistant.util.json import JsonValueType
 
 # mypy: disallow-any-generics
 

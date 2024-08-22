@@ -4,17 +4,20 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from functools import partial
+from typing import TYPE_CHECKING
 
-import aiohttp
 from yalexs.activity import ACTION_DOORBELL_CALL_MISSED, Activity, ActivityType
 from yalexs.doorbell import DoorbellDetail
-from yalexs.lock import LockDetail
 from yalexs.manager.const import ACTIVITY_UPDATE_INTERVAL
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 
-from . import AugustData
+if TYPE_CHECKING:
+    import aiohttp
+    from yalexs.lock import LockDetail
+
+    from . import AugustData
 
 TIME_TO_DECLARE_DETECTION = timedelta(seconds=ACTIVITY_UPDATE_INTERVAL.total_seconds())
 

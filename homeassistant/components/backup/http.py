@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from http import HTTPStatus
+from typing import TYPE_CHECKING
 
 from aiohttp.hdrs import CONTENT_DISPOSITION
 from aiohttp.web import FileResponse, Request, Response
@@ -12,7 +13,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
 from .const import DOMAIN
-from .manager import BackupManager
+
+if TYPE_CHECKING:
+    from .manager import BackupManager
 
 
 @callback

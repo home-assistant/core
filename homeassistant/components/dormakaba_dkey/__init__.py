@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from py_dormakaba_dkey import DKEYLock
 from py_dormakaba_dkey.errors import DKEY_EXCEPTIONS, NotAssociated
@@ -11,7 +12,6 @@ from py_dormakaba_dkey.models import AssociationData
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import ADDRESS, BluetoothCallbackMatcher
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -19,6 +19,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_ASSOCIATION_DATA, DOMAIN, UPDATE_SECONDS
 from .models import DormakabaDkeyData
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
 

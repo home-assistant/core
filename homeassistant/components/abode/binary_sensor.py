@@ -2,22 +2,25 @@
 
 from __future__ import annotations
 
-from typing import cast
-
-from jaraco.abode.devices.sensor import BinarySensor
+from typing import TYPE_CHECKING, cast
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
-from . import AbodeSystem
 from .const import DOMAIN
 from .entity import AbodeDevice
+
+if TYPE_CHECKING:
+    from jaraco.abode.devices.sensor import BinarySensor
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AbodeSystem
 
 
 async def async_setup_entry(

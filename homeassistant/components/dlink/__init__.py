@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pyW215.pyW215 import SmartPlug
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONF_USE_LEGACY_PROTOCOL
 from .data import SmartPlugData
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 type DLinkConfigEntry = ConfigEntry[SmartPlugData]
 

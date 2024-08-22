@@ -6,6 +6,7 @@ from http import HTTPStatus
 import os
 import re
 import threading
+from typing import TYPE_CHECKING
 
 import requests
 import voluptuous as vol
@@ -20,7 +21,6 @@ from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.service import async_register_admin_service
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
 from .const import (
@@ -35,6 +35,9 @@ from .const import (
     DOWNLOAD_FAILED_EVENT,
     SERVICE_DOWNLOAD_FILE,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_DOWNLOAD_DIR): cv.string})},

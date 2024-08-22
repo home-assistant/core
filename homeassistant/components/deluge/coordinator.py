@@ -9,13 +9,14 @@ from typing import TYPE_CHECKING, Any
 from deluge_client.client import DelugeRPCClient, FailedToReconnectException
 
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DATA_KEYS, LOGGER
 
 if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
     from . import DelugeConfigEntry
 
 

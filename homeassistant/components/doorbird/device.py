@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from functools import cached_property
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientResponseError
 from doorbirdpy import (
@@ -18,7 +18,6 @@ from doorbirdpy import (
 )
 
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import get_url
 from homeassistant.util import dt as dt_util, slugify
 
@@ -29,6 +28,9 @@ from .const import (
     MAX_WEEKDAY,
     MIN_WEEKDAY,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

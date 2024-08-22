@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from yalexs.const import DEFAULT_BRAND
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.core import HomeAssistant
 
-from . import AugustConfigEntry
 from .const import CONF_BRAND
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
+    from . import AugustConfigEntry
 
 TO_REDACT = {
     "HouseID",

@@ -3,15 +3,11 @@
 from __future__ import annotations
 
 import math
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
-from pybalboa import SpaClient, SpaControl
 from pybalboa.enums import OffOnState, UnknownState
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -19,6 +15,13 @@ from homeassistant.util.percentage import (
 
 from .const import DOMAIN
 from .entity import BalboaEntity
+
+if TYPE_CHECKING:
+    from pybalboa import SpaClient, SpaControl
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 
 async def async_setup_entry(

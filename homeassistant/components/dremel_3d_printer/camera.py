@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from homeassistant.components.camera import CameraEntityDescription
 from homeassistant.components.mjpeg import MjpegCamera
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import Dremel3DPrinterDataUpdateCoordinator, DremelConfigEntry
 from .entity import Dremel3DPrinterEntity
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import Dremel3DPrinterDataUpdateCoordinator, DremelConfigEntry
 
 CAMERA_TYPE = CameraEntityDescription(
     key="camera",

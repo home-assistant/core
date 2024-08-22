@@ -3,26 +3,21 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
-from datetime import datetime
 import json
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from azure.eventhub import EventData, EventDataBatch
-from azure.eventhub.aio import EventHubProducerClient
 from azure.eventhub.exceptions import EventHubError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import MATCH_ALL
-from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.json import JSONEncoder
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import utcnow
 
 from .client import AzureEventHubClient
@@ -41,6 +36,15 @@ from .const import (
     DOMAIN,
     FILTER_STATES,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from datetime import datetime
+
+    from azure.eventhub.aio import EventHubProducerClient
+
+    from homeassistant.core import Event, HomeAssistant, State
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

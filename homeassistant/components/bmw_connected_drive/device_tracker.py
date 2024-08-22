@@ -3,18 +3,21 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
-
-from bimmer_connected.vehicle import MyBMWVehicle
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.device_tracker import SourceType, TrackerEntity
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BMWConfigEntry
 from .const import ATTR_DIRECTION
-from .coordinator import BMWDataUpdateCoordinator
 from .entity import BMWBaseEntity
+
+if TYPE_CHECKING:
+    from bimmer_connected.vehicle import MyBMWVehicle
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import BMWConfigEntry
+    from .coordinator import BMWDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

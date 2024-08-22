@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 import bluetooth
 from bt_proximity import BluetoothRSSI
@@ -26,10 +26,8 @@ from homeassistant.components.device_tracker.legacy import (
     async_load_config,
 )
 from homeassistant.const import CONF_DEVICE_ID
-from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     BT_PREFIX,
@@ -38,6 +36,10 @@ from .const import (
     DOMAIN,
     SERVICE_UPDATE,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant, ServiceCall
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER: Final = logging.getLogger(__name__)
 

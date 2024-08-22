@@ -14,7 +14,7 @@ import logging
 import os
 from random import SystemRandom
 import time
-from typing import Any, Final, cast, final
+from typing import TYPE_CHECKING, Any, Final, cast, final
 
 from aiohttp import hdrs, web
 import attr
@@ -35,8 +35,6 @@ from homeassistant.components.stream import (
     Stream,
     create_stream,
 )
-from homeassistant.components.websocket_api import ActiveConnection
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_FILENAME,
@@ -59,8 +57,6 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import get_url
-from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
 
 from .const import (  # noqa: F401
@@ -80,6 +76,12 @@ from .const import (  # noqa: F401
 )
 from .img_util import scale_jpeg_camera_image
 from .prefs import CameraPreferences, DynamicStreamSettings  # noqa: F401
+
+if TYPE_CHECKING:
+    from homeassistant.components.websocket_api import ActiveConnection
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.template import Template
+    from homeassistant.helpers.typing import ConfigType, VolDictType
 
 _LOGGER = logging.getLogger(__name__)
 

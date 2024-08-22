@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from aiohttp import ClientResponseError
 from yalexs.exceptions import AugustApiAIOHTTPError
@@ -12,14 +12,16 @@ from yalexs.manager.gateway import Config as YaleXSConfig
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, PLATFORMS
 from .data import AugustData
 from .gateway import AugustGateway
 from .util import async_create_august_clientsession
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers import device_registry as dr
 
 type AugustConfigEntry = ConfigEntry[AugustData]
 

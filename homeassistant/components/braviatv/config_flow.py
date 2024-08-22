@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 from aiohttp import CookieJar
@@ -26,6 +25,9 @@ from .const import (
     DOMAIN,
     NICKNAME_PREFIX,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 
 class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):

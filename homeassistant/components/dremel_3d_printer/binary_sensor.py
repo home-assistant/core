@@ -2,21 +2,26 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-
-from dremel3dpy import Dremel3DPrinter
+from typing import TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import DremelConfigEntry
 from .entity import Dremel3DPrinterEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from dremel3dpy import Dremel3DPrinter
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import DremelConfigEntry
 
 
 @dataclass(frozen=True, kw_only=True)

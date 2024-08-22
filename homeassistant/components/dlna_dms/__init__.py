@@ -6,12 +6,15 @@ server is wrapped in a DmsEntity, and the server's USN is used as the unique_id.
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from typing import TYPE_CHECKING
 
 from .const import CONF_SOURCE_ID, LOGGER
 from .dms import get_domain_data
 from .util import generate_source_id
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

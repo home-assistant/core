@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from bond_async import Action, DeviceType
 
@@ -12,13 +12,16 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BondConfigEntry
 from .entity import BondEntity
-from .models import BondData
-from .utils import BondDevice
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import BondConfigEntry
+    from .models import BondData
+    from .utils import BondDevice
 
 
 def _bond_to_hass_position(bond_position: int) -> int:

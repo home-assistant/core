@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from bring_api import (
     Bring,
@@ -23,8 +22,12 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from . import BringConfigEntry
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from . import BringConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiobafi6 import OffOnAuto
 
@@ -14,15 +14,18 @@ from homeassistant.components.fan import (
     FanEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
 
-from . import BAFConfigEntry
 from .const import PRESET_MODE_AUTO, SPEED_COUNT, SPEED_RANGE
 from .entity import BAFEntity
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import BAFConfigEntry
 
 
 async def async_setup_entry(

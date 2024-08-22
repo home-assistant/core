@@ -5,6 +5,7 @@ from __future__ import annotations
 from http import HTTPStatus
 import logging
 import re
+from typing import TYPE_CHECKING
 
 import requests
 import voluptuous as vol
@@ -21,9 +22,11 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

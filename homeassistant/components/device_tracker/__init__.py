@@ -3,15 +3,14 @@
 from __future__ import annotations
 
 from functools import partial
+from typing import TYPE_CHECKING
 
 from homeassistant.const import ATTR_GPS_ACCURACY, STATE_HOME  # noqa: F401
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.deprecation import (
     all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from .config_entry import (  # noqa: F401
@@ -58,6 +57,10 @@ from .legacy import (  # noqa: F401
     async_setup_integration as async_setup_legacy_integration,
     see,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
 
 
 @bind_hass

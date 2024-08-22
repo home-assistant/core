@@ -4,18 +4,21 @@ from __future__ import annotations
 
 from asyncio import timeout
 import logging
+from typing import TYPE_CHECKING
 
 from aiohttp.client_exceptions import ClientResponseError, ServerDisconnectedError
 from brunt import BruntClientAsync, Thing
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DATA_BAPI, DATA_COOR, DOMAIN, PLATFORMS, REGULAR_INTERVAL
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

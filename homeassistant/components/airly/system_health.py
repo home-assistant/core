@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from airly import Airly
 
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
 
-from . import AirlyConfigEntry
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from . import AirlyConfigEntry
 
 
 @callback

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from aioairzone_cloud.common import HotWaterOperation, TemperatureUnit
 from aioairzone_cloud.const import (
@@ -29,11 +29,14 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AirzoneCloudConfigEntry
-from .coordinator import AirzoneUpdateCoordinator
 from .entity import AirzoneHotWaterEntity
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AirzoneCloudConfigEntry
+    from .coordinator import AirzoneUpdateCoordinator
 
 OPERATION_LIB_TO_HASS: Final[dict[HotWaterOperation, str]] = {
     HotWaterOperation.Off: STATE_OFF,

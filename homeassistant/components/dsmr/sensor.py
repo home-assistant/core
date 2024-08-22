@@ -4,19 +4,18 @@ from __future__ import annotations
 
 import asyncio
 from asyncio import CancelledError
-from collections.abc import Callable, Generator
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntEnum
 from functools import partial
+from typing import TYPE_CHECKING
 
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
 from dsmr_parser.clients.rfxtrx_protocol import (
     create_rfxtrx_dsmr_reader,
     create_rfxtrx_tcp_dsmr_reader,
 )
-from dsmr_parser.objects import DSMRObject, MbusDevice, Telegram
 import serial
 
 from homeassistant.components.sensor import (
@@ -25,7 +24,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
@@ -42,11 +40,8 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.util import Throttle
 
-from . import DsmrConfigEntry
 from .const import (
     CONF_DSMR_VERSION,
     CONF_SERIAL_ID,
@@ -62,6 +57,17 @@ from .const import (
     DSMR_PROTOCOL,
     LOGGER,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Generator
+
+    from dsmr_parser.objects import DSMRObject, MbusDevice, Telegram
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import StateType
+
+    from . import DsmrConfigEntry
 
 EVENT_FIRST_TELEGRAM = "dsmr_first_telegram_{}"
 

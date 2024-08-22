@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from contextlib import suppress
 import dataclasses
 from functools import wraps
 from http import HTTPStatus
 import logging
-from typing import Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate
 
 import aiohttp
 from aiohttp import web
@@ -36,7 +35,6 @@ from homeassistant.util.location import async_detect_location_info
 
 from .alexa_config import entity_supported as entity_supported_by_alexa
 from .assist_pipeline import async_create_cloud_pipeline
-from .client import CloudClient
 from .const import (
     DATA_CLOUD,
     PREF_ALEXA_REPORT_STATE,
@@ -52,6 +50,11 @@ from .const import (
 from .google_config import CLOUD_GOOGLE
 from .repairs import async_manage_legacy_subscription_issue
 from .subscription import async_subscription_info
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable, Coroutine, Mapping
+
+    from .client import CloudClient
 
 _LOGGER = logging.getLogger(__name__)
 

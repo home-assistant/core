@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from os import makedirs
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from boschshcpy import SHCRegisterClient, SHCSession
 from boschshcpy.exceptions import (
@@ -19,7 +18,6 @@ import voluptuous as vol
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN
-from homeassistant.core import HomeAssistant
 
 from .const import (
     CONF_HOSTNAME,
@@ -29,6 +27,11 @@ from .const import (
     CONF_SSL_KEY,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

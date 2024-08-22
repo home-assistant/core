@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from pydeconz.models.event import EventType
 from pydeconz.models.sensor.ancillary_control import (
     AncillaryControl,
     AncillaryControlAction,
@@ -26,7 +25,11 @@ from homeassistant.util import slugify
 
 from .const import ATTR_DURATION, ATTR_ROTATION, CONF_ANGLE, CONF_GESTURE, LOGGER
 from .deconz_device import DeconzBase
-from .hub import DeconzHub
+
+if TYPE_CHECKING:
+    from pydeconz.models.event import EventType
+
+    from .hub import DeconzHub
 
 CONF_DECONZ_EVENT = "deconz_event"
 CONF_DECONZ_ALARM_EVENT = "deconz_alarm_event"

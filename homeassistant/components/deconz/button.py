@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from pydeconz.models.event import EventType
 from pydeconz.models.scene import Scene as PydeconzScene
 from pydeconz.models.sensor.presence import Presence
 
@@ -14,13 +14,17 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .deconz_device import DeconzDevice, DeconzSceneMixin
 from .hub import DeconzHub
+
+if TYPE_CHECKING:
+    from pydeconz.models.event import EventType
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 
 @dataclass(frozen=True, kw_only=True)

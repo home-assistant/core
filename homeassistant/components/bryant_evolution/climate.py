@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from evolutionhttp import BryantEvolutionLocalClient
 
@@ -16,11 +16,13 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BryantEvolutionConfigEntry, names
 from .const import CONF_SYSTEM_ZONE, DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aemet_opendata.const import AOD_COORDS
 
@@ -13,9 +13,11 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_UNIQUE_ID,
 )
-from homeassistant.core import HomeAssistant
 
-from . import AemetConfigEntry
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
+    from . import AemetConfigEntry
 
 TO_REDACT_CONFIG = [
     CONF_API_KEY,

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
 from homeassistant.components.device_automation import async_validate_entity_schema
@@ -12,12 +14,14 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_TYPE,
 )
-from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .const import DOMAIN, SERVICE_PRESS
+
+if TYPE_CHECKING:
+    from homeassistant.core import Context, HomeAssistant
+    from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 ACTION_TYPES = {"press"}
 

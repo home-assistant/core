@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 from math import ceil
-from typing import Any
-
-from jaraco.abode.devices.light import Light
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -14,17 +12,22 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired,
     color_temperature_mired_to_kelvin,
 )
 
-from . import AbodeSystem
 from .const import DOMAIN
 from .entity import AbodeDevice
+
+if TYPE_CHECKING:
+    from jaraco.abode.devices.light import Light
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AbodeSystem
 
 
 async def async_setup_entry(

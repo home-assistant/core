@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 import datetime
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -14,16 +14,18 @@ from homeassistant.const import CONF_ENTITY_ID, CONF_EVENT, CONF_OFFSET, CONF_PL
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_time_interval,
 )
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from . import DOMAIN, CalendarEntity, CalendarEvent
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+    from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

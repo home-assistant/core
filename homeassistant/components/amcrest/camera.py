@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any
@@ -25,8 +24,6 @@ from homeassistant.helpers.aiohttp_client import (
     async_get_clientsession,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CAMERA_WEB_SESSION_TIMEOUT,
@@ -41,6 +38,11 @@ from .const import (
 from .helpers import log_update_error, service_signal
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
     from . import AmcrestDevice
 
 _LOGGER = logging.getLogger(__name__)

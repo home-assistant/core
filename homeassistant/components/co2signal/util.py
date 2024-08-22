@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import CONF_COUNTRY_CODE, CONF_LATITUDE, CONF_LONGITUDE
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 
 def get_extra_name(config: Mapping[str, Any]) -> str | None:

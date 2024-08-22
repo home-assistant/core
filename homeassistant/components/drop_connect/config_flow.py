@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any
 from dropmqttapi.discovery import DropDiscovery
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from .const import (
     CONF_COMMAND_TOPIC,
@@ -22,6 +21,9 @@ from .const import (
     DISCOVERY_TOPIC,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import logging
-
-from anthemav.connection import Connection
-from anthemav.protocol import AVR
+from typing import TYPE_CHECKING
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -13,14 +11,19 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC, CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ANTHEMAV_UPDATE_SIGNAL, DOMAIN, MANUFACTURER
+
+if TYPE_CHECKING:
+    from anthemav.connection import Connection
+    from anthemav.protocol import AVR
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
 

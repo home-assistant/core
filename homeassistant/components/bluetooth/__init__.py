@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import datetime
 import logging
 import platform
 from typing import TYPE_CHECKING
@@ -89,6 +88,8 @@ from .storage import BluetoothStorage
 from .util import adapter_title
 
 if TYPE_CHECKING:
+    import datetime
+
     from homeassistant.helpers.typing import ConfigType
 
 __all__ = [

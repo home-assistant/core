@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterable
 import logging
+from typing import TYPE_CHECKING
 
-from hass_nabucasa import Cloud
 from hass_nabucasa.voice import STT_LANGUAGES, VoiceError
 
 from homeassistant.components.stt import (
@@ -19,15 +18,22 @@ from homeassistant.components.stt import (
     SpeechResultState,
     SpeechToTextEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.setup import async_when_setup
 
 from .assist_pipeline import async_migrate_cloud_pipeline_engine
-from .client import CloudClient
 from .const import DATA_CLOUD, DATA_PLATFORMS_SETUP, STT_ENTITY_UNIQUE_ID
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterable
+
+    from hass_nabucasa import Cloud
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .client import CloudClient
 
 _LOGGER = logging.getLogger(__name__)
 

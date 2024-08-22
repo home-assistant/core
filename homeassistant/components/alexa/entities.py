@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator, Iterable
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -86,6 +85,8 @@ from .capabilities import (
 from .const import CONF_DISPLAY_CATEGORIES
 
 if TYPE_CHECKING:
+    from collections.abc import Generator, Iterable
+
     from .config import AbstractConfig
 
 _LOGGER = logging.getLogger(__name__)

@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from dynalite_devices_lib.dynalite_devices import (
     CONF_AREA as dyn_CONF_AREA,
@@ -22,6 +20,10 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import ATTR_AREA, ATTR_HOST, ATTR_PACKET, ATTR_PRESET, LOGGER, PLATFORMS
 from .convert_config import convert_config
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from types import MappingProxyType
 
 
 class DynaliteBridge:

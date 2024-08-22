@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from aioairzone.const import (
     AZD_HOT_WATER,
@@ -20,7 +20,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -28,17 +27,21 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AirzoneConfigEntry
 from .const import TEMP_UNIT_LIB_TO_HASS
-from .coordinator import AirzoneUpdateCoordinator
 from .entity import (
     AirzoneEntity,
     AirzoneHotWaterEntity,
     AirzoneWebServerEntity,
     AirzoneZoneEntity,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AirzoneConfigEntry
+    from .coordinator import AirzoneUpdateCoordinator
 
 HOT_WATER_SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
     SensorEntityDescription(

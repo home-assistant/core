@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from boschshcpy import (
     SHCCamera360,
@@ -13,21 +13,24 @@ from boschshcpy import (
     SHCSmartPlug,
     SHCSmartPlugCompact,
 )
-from boschshcpy.device import SHCDevice
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from .const import DATA_SESSION, DOMAIN
 from .entity import SHCEntity
+
+if TYPE_CHECKING:
+    from boschshcpy.device import SHCDevice
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import StateType
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -7,12 +7,13 @@ from typing import TYPE_CHECKING
 
 from airgradient import AirGradientClient, AirGradientError, Config, Measures
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
 
 if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
     from . import AirGradientConfigEntry
 
 

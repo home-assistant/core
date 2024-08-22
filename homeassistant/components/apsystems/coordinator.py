@@ -4,13 +4,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
-from APsystemsEZ1 import APsystemsEZ1M, ReturnAlarmInfo, ReturnOutputData
-
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
+
+if TYPE_CHECKING:
+    from APsystemsEZ1 import APsystemsEZ1M, ReturnAlarmInfo, ReturnOutputData
+
+    from homeassistant.core import HomeAssistant
 
 
 @dataclass

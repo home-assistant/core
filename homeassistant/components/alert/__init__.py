@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -35,8 +34,6 @@ from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_state_change_event,
 )
-from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import now
 
 from .const import (
@@ -52,6 +49,12 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.helpers.template import Template
+    from homeassistant.helpers.typing import ConfigType
 
 ALERT_SCHEMA = vol.Schema(
     {

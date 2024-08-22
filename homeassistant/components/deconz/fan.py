@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from pydeconz.models.event import EventType
 from pydeconz.models.light.light import Light, LightFanSpeed
 
 from homeassistant.components.fan import DOMAIN, FanEntity, FanEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
@@ -18,6 +15,12 @@ from homeassistant.util.percentage import (
 
 from .deconz_device import DeconzDevice
 from .hub import DeconzHub
+
+if TYPE_CHECKING:
+    from pydeconz.models.event import EventType
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 ORDERED_NAMED_FAN_SPEEDS: list[LightFanSpeed] = [
     LightFanSpeed.PERCENT_25,

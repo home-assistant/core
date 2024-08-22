@@ -5,10 +5,9 @@ from __future__ import annotations
 from datetime import timedelta
 import hashlib
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from androidtv.constants import APPS, KEYS
-from androidtv.setup_async import AndroidTVAsync, FireTVAsync
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -19,13 +18,10 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.const import ATTR_COMMAND
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
 
-from . import AndroidTVConfigEntry
 from .const import (
     CONF_APPS,
     CONF_EXCLUDE_UNNAMED_APPS,
@@ -40,6 +36,14 @@ from .const import (
     SIGNAL_CONFIG_ENTITY,
 )
 from .entity import AndroidTVEntity, adb_decorator
+
+if TYPE_CHECKING:
+    from androidtv.setup_async import AndroidTVAsync, FireTVAsync
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AndroidTVConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

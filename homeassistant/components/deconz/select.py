@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from pydeconz.models.event import EventType
+from typing import TYPE_CHECKING
+
 from pydeconz.models.sensor.presence import (
     Presence,
     PresenceConfigDeviceMode,
@@ -11,13 +12,17 @@ from pydeconz.models.sensor.presence import (
 )
 
 from homeassistant.components.select import DOMAIN, SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .deconz_device import DeconzDevice
 from .hub import DeconzHub
+
+if TYPE_CHECKING:
+    from pydeconz.models.event import EventType
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 SENSITIVITY_TO_DECONZ = {
     "High": PresenceConfigSensitivity.HIGH.value,

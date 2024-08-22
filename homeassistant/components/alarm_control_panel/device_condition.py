@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 import voluptuous as vol
 
@@ -29,7 +29,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.entity import get_supported_features
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DOMAIN
 from .const import (
@@ -42,6 +41,9 @@ from .const import (
     CONDITION_TRIGGERED,
     AlarmControlPanelEntityFeature,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 CONDITION_TYPES: Final[set[str]] = {
     CONDITION_TRIGGERED,

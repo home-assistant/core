@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import API_TEMP_UNITS
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 
 class UnsupportedProperty(HomeAssistantError):

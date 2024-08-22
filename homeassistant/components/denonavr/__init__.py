@@ -1,8 +1,8 @@
 """The denonavr component."""
 
 import logging
+from typing import TYPE_CHECKING
 
-from denonavr import DenonAVR
 from denonavr.exceptions import AvrNetworkError, AvrTimoutError
 
 from homeassistant.config_entries import ConfigEntry
@@ -27,6 +27,9 @@ from .config_flow import (
     DOMAIN,
 )
 from .receiver import ConnectDenonAVR
+
+if TYPE_CHECKING:
+    from denonavr import DenonAVR
 
 CONF_RECEIVER = "receiver"
 UNDO_UPDATE_LISTENER = "undo_update_listener"

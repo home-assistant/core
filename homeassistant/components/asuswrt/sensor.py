@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,15 +17,12 @@ from homeassistant.const import (
     UnitOfInformation,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 from homeassistant.util import slugify
 
-from . import AsusWrtConfigEntry
 from .const import (
     KEY_COORDINATOR,
     KEY_SENSORS,
@@ -34,7 +32,13 @@ from .const import (
     SENSORS_RATES,
     SENSORS_TEMPERATURES,
 )
-from .router import AsusWrtRouter
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AsusWrtConfigEntry
+    from .router import AsusWrtRouter
 
 
 @dataclass(frozen=True)

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from py_dormakaba_dkey import DKEYLock
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -10,15 +10,20 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 from .entity import DormakabaDkeyEntity
-from .models import DormakabaDkeyData
+
+if TYPE_CHECKING:
+    from py_dormakaba_dkey import DKEYLock
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+    from .models import DormakabaDkeyData
 
 BINARY_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(

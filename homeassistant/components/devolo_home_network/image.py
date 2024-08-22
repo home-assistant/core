@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
+from typing import TYPE_CHECKING
 
 from devolo_plc_api import wifi_qr_code
 from devolo_plc_api.device_api import WifiGuestAccessGet
@@ -12,13 +12,18 @@ from devolo_plc_api.device_api import WifiGuestAccessGet
 from homeassistant.components.image import ImageEntity, ImageEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.util.dt as dt_util
 
-from . import DevoloHomeNetworkConfigEntry
 from .const import IMAGE_GUEST_WIFI, SWITCH_GUEST_WIFI
 from .entity import DevoloCoordinatorEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+    from . import DevoloHomeNetworkConfigEntry
 
 PARALLEL_UPDATES = 1
 

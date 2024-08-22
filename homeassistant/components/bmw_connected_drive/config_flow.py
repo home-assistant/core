@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from bimmer_connected.api.authentication import MyBMWAuthentication
 from bimmer_connected.api.regions import get_region_from_name
@@ -24,6 +23,9 @@ from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from . import DOMAIN
 from .const import CONF_ALLOWED_REGIONS, CONF_GCID, CONF_READ_ONLY, CONF_REFRESH_TOKEN
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 DATA_SCHEMA = vol.Schema(
     {

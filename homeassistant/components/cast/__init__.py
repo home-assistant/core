@@ -2,22 +2,24 @@
 
 from __future__ import annotations
 
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
-from pychromecast import Chromecast
-
-from homeassistant.components.media_player import BrowseMedia, MediaType
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
 
 from . import home_assistant_cast
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from pychromecast import Chromecast
+
+    from homeassistant.components.media_player import BrowseMedia, MediaType
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers import device_registry as dr
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 

@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError
 import voluptuous as vol
 
-from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
@@ -20,6 +19,9 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.components.hassio import HassioServiceInfo
 
 
 class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):

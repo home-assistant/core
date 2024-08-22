@@ -4,14 +4,18 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
-from pydiscovergy import Discovergy
 from pydiscovergy.error import DiscovergyClientError, HTTPError, InvalidLogin
 from pydiscovergy.models import Meter, Reading
 
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+if TYPE_CHECKING:
+    from pydiscovergy import Discovergy
+
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

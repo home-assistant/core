@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from ssl import SSLError
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from deluge_client.client import DelugeRPCClient
 import voluptuous as vol
@@ -26,6 +25,9 @@ from .const import (
     DEFAULT_WEB_PORT,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 
 class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):

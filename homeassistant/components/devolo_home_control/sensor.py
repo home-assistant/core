@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from devolo_home_control_api.devices.zwave import Zwave
-from devolo_home_control_api.homecontrol import HomeControl
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -11,11 +10,17 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DevoloHomeControlConfigEntry
 from .devolo_device import DevoloDeviceEntity
+
+if TYPE_CHECKING:
+    from devolo_home_control_api.devices.zwave import Zwave
+    from devolo_home_control_api.homecontrol import HomeControl
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import DevoloHomeControlConfigEntry
 
 DEVICE_CLASS_MAPPING = {
     "battery": SensorDeviceClass.BATTERY,

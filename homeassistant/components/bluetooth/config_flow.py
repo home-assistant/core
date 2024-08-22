@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import platform
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from bluetooth_adapters import (
     ADAPTER_ADDRESS,
@@ -24,10 +24,12 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
     SchemaOptionsFlowHandler,
 )
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import CONF_ADAPTER, CONF_DETAILS, CONF_PASSIVE, DOMAIN
 from .util import adapter_title
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import DiscoveryInfoType
 
 OPTIONS_SCHEMA = vol.Schema(
     {

@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, TypedDict, cast
+from typing import TYPE_CHECKING, Any, TypedDict, cast
 
-from pydeconz.interfaces.groups import GroupHandler
-from pydeconz.interfaces.lights import LightHandler
-from pydeconz.models.event import EventType
 from pydeconz.models.group import Group, TypedGroupAction
 from pydeconz.models.light.light import Light, LightAlert, LightColorMode, LightEffect
 
@@ -26,15 +23,21 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import color_hs_to_xy
 
 from .const import DOMAIN as DECONZ_DOMAIN, POWER_PLUGS
 from .deconz_device import DeconzDevice
 from .hub import DeconzHub
+
+if TYPE_CHECKING:
+    from pydeconz.interfaces.groups import GroupHandler
+    from pydeconz.interfaces.lights import LightHandler
+    from pydeconz.models.event import EventType
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 DECONZ_GROUP = "is_deconz_group"
 EFFECT_TO_DECONZ = {

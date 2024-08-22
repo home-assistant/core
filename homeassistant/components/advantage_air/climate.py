@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
@@ -19,9 +19,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AdvantageAirDataConfigEntry
 from .const import (
     ADVANTAGE_AIR_AUTOFAN_ENABLED,
     ADVANTAGE_AIR_STATE_CLOSE,
@@ -30,7 +28,12 @@ from .const import (
     ADVANTAGE_AIR_STATE_OPEN,
 )
 from .entity import AdvantageAirAcEntity, AdvantageAirZoneEntity
-from .models import AdvantageAirData
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AdvantageAirDataConfigEntry
+    from .models import AdvantageAirData
 
 ADVANTAGE_AIR_HVAC_MODES = {
     "heat": HVACMode.HEAT,

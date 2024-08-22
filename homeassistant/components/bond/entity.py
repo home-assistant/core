@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from asyncio import Lock
-from datetime import datetime
 import logging
+from typing import TYPE_CHECKING
 
 from aiohttp import ClientError
 
@@ -23,8 +23,12 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN
-from .models import BondData
-from .utils import BondDevice
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from .models import BondData
+    from .utils import BondDevice
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from dwdwfsapi import DwdWeatherWarningsAPI
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import location
 
@@ -18,6 +19,9 @@ from .const import (
 )
 from .exceptions import EntityNotFoundError
 from .util import get_position_data
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 type DwdWeatherWarningsConfigEntry = ConfigEntry[DwdWeatherWarningsCoordinator]
 

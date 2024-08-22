@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
-from boschshcpy import SHCDevice, SHCIntrusionSystem
+from typing import TYPE_CHECKING
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from boschshcpy import SHCDevice, SHCIntrusionSystem
+
+    from homeassistant.core import HomeAssistant
 
 
 async def async_remove_devices(

@@ -3,16 +3,19 @@
 from __future__ import annotations
 
 import asyncio
+from typing import TYPE_CHECKING
 
 from pydeconz import DeconzSession, errors
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
 from ..const import LOGGER
 from ..errors import AuthenticationRequired, CannotConnect
 from .config import DeconzConfig
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 
 async def get_deconz_api(

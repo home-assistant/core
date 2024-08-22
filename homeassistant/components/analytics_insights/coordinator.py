@@ -13,7 +13,6 @@ from python_homeassistant_analytics import (
     HomeassistantAnalyticsNotModifiedError,
 )
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -24,6 +23,8 @@ from .const import (
 )
 
 if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
     from . import AnalyticsInsightsConfigEntry
 
 

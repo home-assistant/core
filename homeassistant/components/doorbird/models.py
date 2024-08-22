@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.config_entries import ConfigEntry
 
-from .device import ConfiguredDoorBird
+if TYPE_CHECKING:
+    from .device import ConfiguredDoorBird
 
 type DoorBirdConfigEntry = ConfigEntry[DoorBirdData]
 

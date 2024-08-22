@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-
-from APsystemsEZ1 import ReturnAlarmInfo
+from typing import TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -13,13 +11,20 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ApSystemsConfigEntry, ApSystemsData
 from .coordinator import ApSystemsDataCoordinator
 from .entity import ApSystemsEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from APsystemsEZ1 import ReturnAlarmInfo
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import ApSystemsConfigEntry, ApSystemsData
 
 
 @dataclass(frozen=True, kw_only=True)

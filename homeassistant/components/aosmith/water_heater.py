@@ -1,6 +1,6 @@
 """The water heater platform for the A. O. Smith integration."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from py_aosmith.models import OperationMode as AOSmithOperationMode
 
@@ -18,10 +18,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AOSmithData
 from .const import DOMAIN
 from .coordinator import AOSmithStatusCoordinator
 from .entity import AOSmithStatusEntity
+
+if TYPE_CHECKING:
+    from . import AOSmithData
 
 MODE_HA_TO_AOSMITH = {
     STATE_ECO: AOSmithOperationMode.HYBRID,

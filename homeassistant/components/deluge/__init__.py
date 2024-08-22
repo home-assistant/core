@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from ssl import SSLError
+from typing import TYPE_CHECKING
 
 from deluge_client.client import DelugeRPCClient
 
@@ -15,13 +16,15 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_WEB_PORT, DEFAULT_NAME, DOMAIN
 from .coordinator import DelugeDataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 

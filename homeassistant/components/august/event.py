@@ -2,13 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
-
-from yalexs.activity import Activity
-from yalexs.doorbell import DoorbellDetail
-from yalexs.lock import LockDetail
 
 from homeassistant.components.event import (
     EventDeviceClass,
@@ -16,15 +11,24 @@ from homeassistant.components.event import (
     EventEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AugustConfigEntry, AugustData
 from .entity import AugustDescriptionEntity
 from .util import (
     retrieve_ding_activity,
     retrieve_doorbell_motion_activity,
     retrieve_online_state,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from yalexs.activity import Activity
+    from yalexs.doorbell import DoorbellDetail
+    from yalexs.lock import LockDetail
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AugustConfigEntry, AugustData
 
 
 @dataclass(kw_only=True, frozen=True)

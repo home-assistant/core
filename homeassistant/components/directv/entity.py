@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from directv import DIRECTV
+from typing import TYPE_CHECKING
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from directv import DIRECTV
 
 
 class DIRECTVEntity(Entity):

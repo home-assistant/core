@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from androidtvremote2 import AndroidTVRemote
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import CONF_ENABLE_IME, CONF_ENABLE_IME_DEFAULT_VALUE
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 
 def create_api(hass: HomeAssistant, host: str, enable_ime: bool) -> AndroidTVRemote:

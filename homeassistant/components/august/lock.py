@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientResponseError
 from yalexs.activity import ActivityType, ActivityTypes
@@ -14,12 +13,17 @@ from yalexs.util import get_latest_activity, update_lock_detail_from_activity
 from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntity, LockEntityFeature
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.dt as dt_util
 
-from . import AugustConfigEntry, AugustData
 from .entity import AugustEntityMixin
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AugustConfigEntry, AugustData
 
 _LOGGER = logging.getLogger(__name__)
 

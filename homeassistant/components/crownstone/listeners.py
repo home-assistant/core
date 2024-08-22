@@ -10,9 +10,6 @@ from functools import partial
 from typing import TYPE_CHECKING, cast
 
 from crownstone_cloud.exceptions import CrownstoneNotFoundError
-from crownstone_core.packets.serviceDataParsers.containers.AdvExternalCrownstoneState import (
-    AdvExternalCrownstoneState,
-)
 from crownstone_core.packets.serviceDataParsers.containers.elements.AdvTypes import (
     AdvType,
 )
@@ -22,7 +19,6 @@ from crownstone_sse.const import (
     EVENT_ABILITY_CHANGE_DIMMING,
     EVENT_SWITCH_STATE_UPDATE,
 )
-from crownstone_sse.events import AbilityChangeEvent, SwitchStateUpdateEvent
 from crownstone_uart import UartEventBus, UartTopics
 from crownstone_uart.topics.SystemTopics import SystemTopics
 
@@ -42,6 +38,11 @@ from .const import (
 )
 
 if TYPE_CHECKING:
+    from crownstone_core.packets.serviceDataParsers.containers.AdvExternalCrownstoneState import (
+        AdvExternalCrownstoneState,
+    )
+    from crownstone_sse.events import AbilityChangeEvent, SwitchStateUpdateEvent
+
     from .entry_manager import CrownstoneEntryManager
 
 

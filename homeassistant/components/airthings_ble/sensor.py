@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 import logging
-
-from airthings_ble import AirthingsDevice
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -25,17 +24,21 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import (
     RegistryEntry,
     async_entries_for_device,
 )
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import AirthingsBLEConfigEntry, AirthingsBLEDataUpdateCoordinator
 from .const import DOMAIN, VOLUME_BECQUEREL, VOLUME_PICOCURIE
+
+if TYPE_CHECKING:
+    from airthings_ble import AirthingsDevice
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import StateType
 
 _LOGGER = logging.getLogger(__name__)
 

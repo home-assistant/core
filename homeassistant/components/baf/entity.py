@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from aiobafi6 import Device
+from typing import TYPE_CHECKING
 
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.entity import Entity, EntityDescription
+
+if TYPE_CHECKING:
+    from aiobafi6 import Device
 
 
 class BAFEntity(Entity):

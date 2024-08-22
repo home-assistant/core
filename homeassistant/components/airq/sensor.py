@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -24,14 +23,19 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AirQConfigEntry, AirQCoordinator
 from .const import (
     ACTIVITY_BECQUEREL_PER_CUBIC_METER,
     CONCENTRATION_GRAMS_PER_CUBIC_METER,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import AirQConfigEntry, AirQCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

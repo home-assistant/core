@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from crownstone_cloud import CrownstoneCloud
 from crownstone_cloud.exceptions import (
@@ -11,7 +10,6 @@ from crownstone_cloud.exceptions import (
     CrownstoneUnknownError,
 )
 import serial.tools.list_ports
-from serial.tools.list_ports_common import ListPortInfo
 import voluptuous as vol
 
 from homeassistant.components import usb
@@ -38,6 +36,11 @@ from .const import (
     REFRESH_LIST,
 )
 from .helpers import list_ports_as_str
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from serial.tools.list_ports_common import ListPortInfo
 
 CONFIG_FLOW = "config_flow"
 OPTIONS_FLOW = "options_flow"

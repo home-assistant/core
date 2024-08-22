@@ -1,6 +1,6 @@
 """Websocket commands for the Backup integration."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -8,7 +8,9 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN, LOGGER
-from .manager import BackupManager
+
+if TYPE_CHECKING:
+    from .manager import BackupManager
 
 
 @callback

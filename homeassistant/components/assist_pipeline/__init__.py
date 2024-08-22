@@ -2,13 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterable
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
-
-from homeassistant.components import stt
-from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_DEBUG_RECORDING_DIR,
@@ -41,6 +37,13 @@ from .pipeline import (
     async_update_pipeline,
 )
 from .websocket_api import async_register_websocket_api
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterable
+
+    from homeassistant.components import stt
+    from homeassistant.core import Context, HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
 
 __all__ = (
     "DOMAIN",

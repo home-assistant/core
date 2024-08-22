@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.media_player import (
     BrowseError,
@@ -15,12 +14,17 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.components.media_player.browse_media import BrowseMedia
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BraviaTVConfigEntry
 from .const import SourceType
 from .entity import BraviaTVEntity
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import BraviaTVConfigEntry
 
 
 async def async_setup_entry(

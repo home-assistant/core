@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from bluetooth_adapters import (
     ADAPTER_ADDRESS,
     ADAPTER_MANUFACTURER,
@@ -15,7 +17,9 @@ from bluetooth_data_tools import monotonic_time_coarse
 from homeassistant.core import callback
 
 from .models import BluetoothServiceInfoBleak
-from .storage import BluetoothStorage
+
+if TYPE_CHECKING:
+    from .storage import BluetoothStorage
 
 
 @callback

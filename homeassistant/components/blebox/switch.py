@@ -1,9 +1,8 @@
 """BleBox switch implementation."""
 
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from blebox_uniapi.box import Box
 import blebox_uniapi.switch
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
@@ -13,6 +12,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BleBoxEntity
 from .const import DOMAIN, PRODUCT
+
+if TYPE_CHECKING:
+    from blebox_uniapi.box import Box
 
 SCAN_INTERVAL = timedelta(seconds=5)
 

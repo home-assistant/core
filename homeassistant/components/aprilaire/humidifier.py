@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from pyaprilaire.const import Attribute
 
@@ -14,14 +13,19 @@ from homeassistant.components.humidifier import (
     HumidifierEntity,
     HumidifierEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
-from .coordinator import AprilaireCoordinator
 from .entity import BaseAprilaireEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import StateType
+
+    from .coordinator import AprilaireCoordinator
 
 HUMIDIFIER_ACTION_MAP: dict[StateType, HumidifierAction] = {
     0: HumidifierAction.IDLE,

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from devolo_plc_api.device import Device
+from typing import TYPE_CHECKING
+
 from devolo_plc_api.device_api import ConnectedStationInfo
 
 from homeassistant.components.device_tracker import (
@@ -13,14 +14,19 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import STATE_UNKNOWN, UnitOfFrequency
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from . import DevoloHomeNetworkConfigEntry
 from .const import CONNECTED_WIFI_CLIENTS, DOMAIN, WIFI_APTYPE, WIFI_BANDS
+
+if TYPE_CHECKING:
+    from devolo_plc_api.device import Device
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import DevoloHomeNetworkConfigEntry
 
 PARALLEL_UPDATES = 1
 

@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from hass_nabucasa import Cloud
 import voluptuous as vol
@@ -32,7 +31,6 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.service import async_register_admin_service
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.signal_type import SignalType
 
@@ -64,6 +62,11 @@ from .const import (
 from .prefs import CloudPreferences
 from .repairs import async_manage_legacy_subscription_issue
 from .subscription import async_subscription_info
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    from homeassistant.helpers.typing import ConfigType
 
 DEFAULT_MODE = MODE_PROD
 

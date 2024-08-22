@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -17,6 +16,8 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from .const import DOMAIN as AXIS_DOMAIN
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from .hub import AxisHub
 
 TOPIC_TO_EVENT_TYPE = {

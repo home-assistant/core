@@ -3,20 +3,17 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 import threading
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiohttp
 from amcrest import AmcrestError, ApiWrapper, LoginError
-import httpx
 import voluptuous as vol
 
-from homeassistant.auth.models import User
 from homeassistant.auth.permissions.const import POLICY_CONTROL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -42,7 +39,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import async_extract_entity_ids
-from homeassistant.helpers.typing import ConfigType
 
 from .binary_sensor import BINARY_SENSOR_KEYS, BINARY_SENSORS, check_binary_sensors
 from .camera import CAMERA_SERVICES, STREAM_SOURCE_LIST
@@ -60,6 +56,14 @@ from .const import (
 from .helpers import service_signal
 from .sensor import SENSOR_KEYS
 from .switch import SWITCH_KEYS
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Callable
+
+    import httpx
+
+    from homeassistant.auth.models import User
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

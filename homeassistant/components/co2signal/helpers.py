@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
-
-from aioelectricitymaps import ElectricityMaps
-from aioelectricitymaps.models import CarbonIntensityResponse
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import CONF_COUNTRY_CODE, CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.core import HomeAssistant
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from aioelectricitymaps import ElectricityMaps
+    from aioelectricitymaps.models import CarbonIntensityResponse
+
+    from homeassistant.core import HomeAssistant
 
 
 async def fetch_latest_carbon_intensity(

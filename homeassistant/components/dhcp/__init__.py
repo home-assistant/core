@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 from fnmatch import translate
@@ -11,7 +9,7 @@ from functools import lru_cache
 import itertools
 import logging
 import re
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 import aiodhcpwatcher
 from aiodiscover import DiscoverHosts
@@ -56,10 +54,15 @@ from homeassistant.helpers.event import (
     async_track_state_added_domain,
     async_track_time_interval,
 )
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import DHCPMatcher, async_get_dhcp
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    import asyncio
+    from collections.abc import Callable
+
+    from homeassistant.helpers.typing import ConfigType
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 

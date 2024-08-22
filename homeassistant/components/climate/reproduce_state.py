@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import ATTR_TEMPERATURE
-from homeassistant.core import Context, HomeAssistant, State
 
 from .const import (
     ATTR_FAN_MODE,
@@ -26,6 +24,11 @@ from .const import (
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from homeassistant.core import Context, HomeAssistant, State
 
 
 async def _async_reproduce_states(

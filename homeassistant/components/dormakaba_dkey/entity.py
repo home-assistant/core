@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import abc
-
-from py_dormakaba_dkey import DKEYLock
-from py_dormakaba_dkey.commands import Notifications
+from typing import TYPE_CHECKING
 
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
@@ -14,6 +12,10 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+
+if TYPE_CHECKING:
+    from py_dormakaba_dkey import DKEYLock
+    from py_dormakaba_dkey.commands import Notifications
 
 
 class DormakabaDkeyEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):

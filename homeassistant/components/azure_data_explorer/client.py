@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import io
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from azure.kusto.data import KustoClient, KustoConnectionStringBuilder
 from azure.kusto.data.data_format import DataFormat
@@ -25,6 +24,9 @@ from .const import (
     CONF_AUTHORITY_ID,
     CONF_USE_QUEUED_CLIENT,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 _LOGGER = logging.getLogger(__name__)
 

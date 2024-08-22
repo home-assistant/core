@@ -7,10 +7,9 @@ from collections import namedtuple
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from aioasuswrt.asuswrt import AsusWrt as AsusWrtLegacy
-from aiohttp import ClientSession
 from pyasuswrt import AsusWrtError, AsusWrtHttp
 from pyasuswrt.exceptions import AsusWrtNotAvailableInfoError
 
@@ -22,7 +21,6 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -45,6 +43,11 @@ from .const import (
     SENSORS_TEMPERATURES,
     SENSORS_TEMPERATURES_LEGACY,
 )
+
+if TYPE_CHECKING:
+    from aiohttp import ClientSession
+
+    from homeassistant.core import HomeAssistant
 
 SENSORS_TYPE_BYTES = "sensors_bytes"
 SENSORS_TYPE_COUNT = "sensors_count"

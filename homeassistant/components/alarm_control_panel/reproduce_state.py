@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
 import logging
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -24,9 +23,13 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import Context, HomeAssistant, State
 
 from . import DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from homeassistant.core import Context, HomeAssistant, State
 
 _LOGGER: Final = logging.getLogger(__name__)
 

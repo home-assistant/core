@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import telnetlib  # pylint: disable=deprecated-module
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -14,10 +15,12 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -11,12 +11,17 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BraviaTVConfigEntry
-from .coordinator import BraviaTVCoordinator
 from .entity import BraviaTVEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import BraviaTVConfigEntry
+    from .coordinator import BraviaTVCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)

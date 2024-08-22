@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -13,9 +12,13 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Context, HomeAssistant, State
 
 from .const import DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from homeassistant.core import Context, HomeAssistant, State
 
 VALID_STATES = {STATE_ON, STATE_OFF}
 

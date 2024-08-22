@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import math
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp.client_exceptions import ClientResponseError
 from bond_async import Action, DeviceType, Direction
@@ -16,21 +16,24 @@ from homeassistant.components.fan import (
     FanEntity,
     FanEntityFeature,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
 from homeassistant.util.scaling import int_states_in_range
 
-from . import BondConfigEntry
 from .const import SERVICE_SET_FAN_SPEED_TRACKED_STATE
 from .entity import BondEntity
-from .models import BondData
-from .utils import BondDevice
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import BondConfigEntry
+    from .models import BondData
+    from .utils import BondDevice
 
 _LOGGER = logging.getLogger(__name__)
 

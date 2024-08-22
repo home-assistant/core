@@ -10,13 +10,14 @@ from aiohttp import ClientError
 from auroranoaa import AuroraForecast
 
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_THRESHOLD, DEFAULT_THRESHOLD
 
 if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
     from . import AuroraConfigEntry
 
 _LOGGER = logging.getLogger(__name__)

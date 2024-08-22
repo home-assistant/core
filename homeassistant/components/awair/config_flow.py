@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp.client_exceptions import ClientError
 from python_awair import Awair, AwairLocal, AwairLocalDevice
 from python_awair.exceptions import AuthError, AwairError
-from python_awair.user import AwairUser
 import voluptuous as vol
 
 from homeassistant.components import onboarding, zeroconf
@@ -18,6 +16,11 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from python_awair.user import AwairUser
 
 
 class AwairFlowHandler(ConfigFlow, domain=DOMAIN):

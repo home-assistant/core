@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from aiohttp import web
 from hassil.recognize import (
     MISSING_ENTITY,
     RecognizeResult,
@@ -19,7 +17,6 @@ from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, intent
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util import language as language_util
 
 from .agent_manager import (
@@ -38,6 +35,13 @@ from .default_agent import (
 )
 from .entity import ConversationEntity
 from .models import ConversationInput
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from aiohttp import web
+
+    from homeassistant.helpers.entity_component import EntityComponent
 
 
 @callback

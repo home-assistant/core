@@ -4,15 +4,17 @@ from __future__ import annotations
 
 import logging
 import subprocess
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.components.notify import BaseNotificationService
 from homeassistant.const import CONF_COMMAND
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.process import kill_subprocess
 
 from .const import CONF_COMMAND_TIMEOUT
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

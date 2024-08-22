@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine, Sequence
 from datetime import datetime, timedelta
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
-from aiohttp import ClientSession
 import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
@@ -21,9 +19,15 @@ from homeassistant.core import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine, Sequence
+
+    from aiohttp import ClientSession
+
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

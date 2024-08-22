@@ -9,7 +9,7 @@ from __future__ import annotations
 from contextlib import suppress
 from datetime import datetime, timedelta
 from http import HTTPStatus
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import requests
 import voluptuous as vol
@@ -19,11 +19,13 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import CONF_NAME, UnitOfTime
-from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _RESOURCE = "https://data.dublinked.ie/cgi-bin/rtpi/realtimebusinformation"
 

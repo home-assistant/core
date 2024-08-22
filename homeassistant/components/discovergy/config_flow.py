@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydiscovergy import Discovergy
 from pydiscovergy.authentication import BasicAuth
@@ -21,6 +20,9 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 _LOGGER = logging.getLogger(__name__)
 

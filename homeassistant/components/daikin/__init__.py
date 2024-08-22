@@ -5,13 +5,11 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientConnectionError
-from pydaikin.daikin_base import Appliance
 from pydaikin.factory import DaikinFactory
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -27,6 +25,11 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from homeassistant.util import Throttle
 
 from .const import DOMAIN, KEY_MAC, TIMEOUT
+
+if TYPE_CHECKING:
+    from pydaikin.daikin_base import Appliance
+
+    from homeassistant.config_entries import ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

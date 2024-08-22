@@ -3,23 +3,19 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
 import json
 import logging
+from typing import TYPE_CHECKING
 
 from azure.kusto.data.exceptions import KustoAuthenticationError, KustoServiceError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MATCH_ALL
-from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.json import ExtendedJSONEncoder
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import utcnow
 
 from .client import AzureDataExplorerClient
@@ -33,6 +29,14 @@ from .const import (
     DOMAIN,
     FILTER_STATES,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from datetime import datetime
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import Event, HomeAssistant, State
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
