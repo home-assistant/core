@@ -21,7 +21,12 @@ from homeassistant.helpers import entity
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.util import ulid
 
-from .models import AssistSatelliteState
+from .models import (
+    AssistSatelliteEntityFeature,
+    AssistSatelliteState,
+    PipelineRunConfig,
+    PipelineRunResult,
+)
 
 _CONVERSATION_TIMEOUT_SEC: Final = 5 * 60  # 5 minutes
 
@@ -38,11 +43,82 @@ class AssistSatelliteEntity(entity.Entity):
     _attr_name = None
     _attr_should_poll = False
     _attr_state: AssistSatelliteState | None = AssistSatelliteState.LISTENING_WAKE_WORD
+    _attr_supported_features = AssistSatelliteEntityFeature(0)
 
     _conversation_id: str | None = None
     _conversation_id_time: float | None = None
 
     _run_has_tts: bool = False
+
+    async def async_trigger_pipeline_on_satellite(
+        self,
+        start_stage: PipelineStage,
+        end_stage: PipelineStage,
+        run_config: PipelineRunConfig,
+    ) -> PipelineRunResult | None:
+        """Run a pipeline on the satellite from start to end stage.
+
+        Can be called from a service.
+        Requires TRIGGER_PIPELINE supported feature.
+
+        - announce when start/end = "tts"
+        - listen for wake word when start/end = "wake"
+        - listen for command when start/end = "stt" (no processing)
+        - listen for command when start = "stt", end = "tts" (with processing)
+        """
+        raise NotImplementedError
+
+    async def async_wait_wake(
+        self, wake_words: list[str], announce_text: str | None = None
+    ) -> str | None:
+        """Listen for one or more wake words on the satellite.
+
+        Returns the detected wake word phrase or None.
+        """
+        if announce_text:
+            await self.async_say_text(announce_text)
+
+        result = await self.async_trigger_pipeline_on_satellite(
+            PipelineStage.WAKE_WORD,
+            PipelineStage.WAKE_WORD,
+            PipelineRunConfig(wake_word_names=wake_words),
+        )
+        if result is None:
+            return None
+
+        return result.detected_wake_word
+
+    async def async_get_command(
+        self, process: bool = False, announce_text: str | None = None
+    ) -> str | None:
+        """Get the text of a voice command from the satellite, optionally processing it.
+
+        Returns the spoken text or None.
+        """
+        if announce_text:
+            await self.async_say_text(announce_text)
+
+        if process:
+            end_stage = PipelineStage.TTS
+        else:
+            end_stage = PipelineStage.STT
+
+        result = await self.async_trigger_pipeline_on_satellite(
+            PipelineStage.STT, end_stage, PipelineRunConfig()
+        )
+
+        if result is None:
+            return None
+
+        return result.command_text
+
+    async def async_say_text(self, announce_text: str) -> None:
+        """Speak the text on the satellite."""
+        await self.async_trigger_pipeline_on_satellite(
+            PipelineStage.TTS,
+            PipelineStage.TTS,
+            PipelineRunConfig(announce_text=announce_text),
+        )
 
     async def _async_accept_pipeline_from_satellite(
         self,

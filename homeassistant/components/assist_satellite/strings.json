@@ -10,5 +10,45 @@
         }
       }
     }
+  },
+  "services": {
+    "wait_wake": {
+      "name": "Wait for wake words",
+      "description": "Wait for one or more wake words to be spoken",
+      "fields": {
+        "wake_words": {
+          "name": "Wake words",
+          "description": "Names of wake words to wait for"
+        },
+        "announce_text": {
+          "name": "Announce text",
+          "description": "Text to speak before waiting for wake words"
+        }
+      }
+    },
+    "get_command": {
+      "name": "Get voice command from satellite",
+      "description": "Records and transcribes a command from a voice satellite",
+      "fields": {
+        "process": {
+          "name": "Process command",
+          "description": "Process the text of the command in Home Assistant"
+        },
+        "announce_text": {
+          "name": "announce_text",
+          "description": "Text to speak before recording command"
+        }
+      }
+    },
+    "say_text": {
+      "name": "Say text",
+      "description": "Speak text from a voice satellite",
+      "fields": {
+        "announce_text": {
+          "name": "Announce text",
+          "description": "Text to speak"
+        }
+      }
+    }
   }
 }
