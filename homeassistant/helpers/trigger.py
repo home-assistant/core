@@ -17,7 +17,6 @@ from homeassistant.const import (
     CONF_ENABLED,
     CONF_ID,
     CONF_PLATFORM,
-    CONF_TRIGGER,
     CONF_VARIABLES,
 )
 from homeassistant.core import (
@@ -240,22 +239,13 @@ async def async_validate_trigger_config(
 ) -> list[ConfigType]:
     """Validate triggers."""
     config = []
-
-    async def process_trigger(conf: ConfigType) -> None:
+    for conf in trigger_config:
         platform = await _async_get_trigger_platform(hass, conf)
         if hasattr(platform, "async_validate_trigger_config"):
             conf = await platform.async_validate_trigger_config(hass, conf)
         else:
             conf = platform.TRIGGER_SCHEMA(conf)
         config.append(conf)
-
-    for conf in trigger_config:
-        if conf[CONF_PLATFORM] == "trigger":
-            for subconf in conf[CONF_TRIGGER]:
-                await process_trigger(subconf)
-        else:
-            await process_trigger(conf)
-
     return config
 
 
@@ -321,11 +311,7 @@ async def async_initialize_triggers(
 ) -> CALLBACK_TYPE | None:
     """Initialize triggers."""
     triggers: list[asyncio.Task[CALLBACK_TYPE]] = []
-
-    async def process_trigger(
-        idx: int,
-        conf: ConfigType,
-    ) -> None:
+    for idx, conf in enumerate(trigger_config):
         # Skip triggers that are not enabled
         if CONF_ENABLED in conf:
             enabled = conf[CONF_ENABLED]
@@ -334,9 +320,9 @@ async def async_initialize_triggers(
                     enabled = enabled.async_render(variables, limited=True)
                 except TemplateError as err:
                     log_cb(logging.ERROR, f"Error rendering enabled template: {err}")
-                    return
+                    continue
             if not enabled:
-                return
+                continue
 
         platform = await _async_get_trigger_platform(hass, conf)
         trigger_id = conf.get(CONF_ID, f"{idx}")
@@ -358,13 +344,6 @@ async def async_initialize_triggers(
                 )
             )
         )
-
-    for idx, conf in enumerate(trigger_config):
-        if conf[CONF_PLATFORM] == "trigger":
-            for subidx, subconf in enumerate(conf[CONF_TRIGGER]):
-                await process_trigger(subidx, subconf)
-        else:
-            await process_trigger(idx, conf)
 
     attach_results = await asyncio.gather(*triggers, return_exceptions=True)
     removes: list[Callable[[], None]] = []
