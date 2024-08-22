@@ -100,19 +100,15 @@ class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=ENTRY_TITLE, data=user_input)
 
         device_options = await self.get_usb_devices()
-        first_device_id = list(device_options.keys())[0] if device_options else None
         discovered_device_id = get_serial_by_id(self.device) if self.device else None
         discovered_device_name = (
             device_options.get(discovered_device_id) if discovered_device_id else None
-        )
-        default_device = (
-            discovered_device_id if discovered_device_id else first_device_id
         )
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_DEVICE, default=default_device): vol.In(
+                    vol.Required(CONF_DEVICE, default=discovered_device_id): vol.In(
                         {discovered_device_id: discovered_device_name}
                         if discovered_device_name
                         else device_options
