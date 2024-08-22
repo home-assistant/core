@@ -147,18 +147,10 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Start the KNX integration."""
     hass.data[DATA_HASS_CONFIG] = config
-    conf: ConfigType | None = config.get(DOMAIN)
-
-    if conf is None:
-        # If we have a config entry, setup is done by that config entry.
-        # If there is no config entry, this should fail.
-        return bool(hass.config_entries.async_entries(DOMAIN))
-
-    conf = dict(conf)
-    hass.data[DATA_KNX_CONFIG] = conf
+    if (conf := config.get(DOMAIN)) is not None:
+        hass.data[DATA_KNX_CONFIG] = dict(conf)
 
     register_knx_services(hass)
-
     return True
 
 

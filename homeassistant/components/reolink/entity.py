@@ -190,3 +190,8 @@ class ReolinkChimeCoordinatorEntity(ReolinkChannelCoordinatorEntity):
             serial_number=str(chime.dev_id),
             configuration_url=self._conf_url,
         )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._chime.online and super().available

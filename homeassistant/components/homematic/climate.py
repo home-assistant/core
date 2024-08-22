@@ -125,6 +125,7 @@ class HMThermostat(HMDevice, ClimateEntity):
         for node in HM_HUMI_MAP:
             if node in self._data:
                 return self._data[node]
+        return None
 
     @property
     def current_temperature(self):
@@ -132,6 +133,7 @@ class HMThermostat(HMDevice, ClimateEntity):
         for node in HM_TEMP_MAP:
             if node in self._data:
                 return self._data[node]
+        return None
 
     @property
     def target_temperature(self):

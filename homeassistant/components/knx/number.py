@@ -30,7 +30,7 @@ from .const import (
     DOMAIN,
     KNX_ADDRESS,
 )
-from .knx_entity import KnxEntity
+from .knx_entity import KnxYamlEntity
 from .schema import NumberSchema
 
 
@@ -58,7 +58,7 @@ def _create_numeric_value(xknx: XKNX, config: ConfigType) -> NumericValue:
     )
 
 
-class KNXNumber(KnxEntity, RestoreNumber):
+class KNXNumber(KnxYamlEntity, RestoreNumber):
     """Representation of a KNX number."""
 
     _device: NumericValue

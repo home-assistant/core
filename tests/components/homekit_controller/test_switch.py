@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 
+from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import (
     CharacteristicsTypes,
     InUseValues,
@@ -15,7 +16,7 @@ from homeassistant.helpers import entity_registry as er
 from .common import setup_test_component
 
 
-def create_switch_service(accessory):
+def create_switch_service(accessory: Accessory) -> None:
     """Define outlet characteristics."""
     service = accessory.add_service(ServicesTypes.OUTLET)
 
@@ -26,7 +27,7 @@ def create_switch_service(accessory):
     outlet_in_use.value = False
 
 
-def create_valve_service(accessory):
+def create_valve_service(accessory: Accessory) -> None:
     """Define valve characteristics."""
     service = accessory.add_service(ServicesTypes.VALVE)
 
@@ -43,7 +44,7 @@ def create_valve_service(accessory):
     remaining.value = 99
 
 
-def create_char_switch_service(accessory):
+def create_char_switch_service(accessory: Accessory) -> None:
     """Define swtch characteristics."""
     service = accessory.add_service(ServicesTypes.OUTLET)
 
