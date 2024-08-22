@@ -165,7 +165,7 @@ async def test_nested_trigger_list(
 ) -> None:
     """Test triggers within nested list."""
 
-    automationJSON = {
+    automation = {
         "automation": {
             "trigger": [
                 {
@@ -200,7 +200,7 @@ async def test_nested_trigger_list(
     }
 
     # Test the nested list is flattened as intended
-    validatedTriggers = TRIGGER_SCHEMA(automationJSON["automation"]["trigger"])
+    validatedTriggers = TRIGGER_SCHEMA(automation["automation"]["trigger"])
 
     assert len(validatedTriggers) == 4
     assert validatedTriggers[0]["event_type"] == "trigger_1"
@@ -211,7 +211,7 @@ async def test_nested_trigger_list(
     assert await async_setup_component(
         hass,
         "automation",
-        automationJSON,
+        automation,
     )
 
     hass.bus.async_fire("trigger_1")
