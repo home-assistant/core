@@ -49,6 +49,8 @@ class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    device: str | None = None
+
     @callback
     async def get_usb_devices(self) -> dict[str, str]:
         """Return a list of available USB devices."""
@@ -72,6 +74,7 @@ class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if (
             user_input is not None
+            and CONF_DEVICE in user_input
             and CONF_ID in user_input
             and CONF_PASSWORD in user_input
         ):
@@ -97,16 +100,22 @@ class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=ENTRY_TITLE, data=user_input)
 
         device_options = await self.get_usb_devices()
-        first_device = list(device_options.keys())[0]
-        default_device: str = (
-            user_input.get(CONF_DEVICE, first_device) if user_input else first_device
+        first_device_id = list(device_options.keys())[0] if device_options else None
+        discovered_device_id = get_serial_by_id(self.device) if self.device else None
+        discovered_device_name = (
+            device_options.get(discovered_device_id) if discovered_device_id else None
+        )
+        default_device = (
+            discovered_device_id if discovered_device_id else first_device_id
         )
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_DEVICE, default=default_device): vol.In(
-                        device_options
+                        {discovered_device_id: discovered_device_name}
+                        if discovered_device_name
+                        else device_options
                     ),
                     vol.Required(CONF_ID): str,
                     vol.Required(CONF_PASSWORD): str,
@@ -117,8 +126,5 @@ class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle a step triggered by USB device detection."""
-        device = discovery_info.device
-        user_input = {
-            CONF_DEVICE: device,
-        }
-        return await self.async_step_user(user_input)
+        self.device = discovery_info.device
+        return await self.async_step_user()
