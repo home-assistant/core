@@ -38,23 +38,6 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
     _board_revision: str
     _device_type: str
 
-    # async def async_step_user(
-    #     self, user_input: dict[str, str] | None = None
-    # ) -> ConfigFlowResult:
-    #     """Handle a flow initiated by the user."""
-    #     if user_input is None:
-    #         return self._async_show_setup_form()
-
-    #     self._host = user_input[CONF_HOST]
-
-    #     # obtain serial number
-    #     try:
-    #         await self._get_lektrico_device_settings_and_treat_unique_id()
-    #     except DeviceConnectionError:
-    #         return self._async_show_setup_form(errors={CONF_HOST: "cannot_connect"})
-
-    #     return self._async_create_entry()
-
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
