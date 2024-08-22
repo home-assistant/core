@@ -446,6 +446,9 @@ class ZoneDevice(ClimateEntity):
         """Initialise ZoneDevice."""
         self._controller = controller
         self._zone = zone
+        self._attr_supported_features = (
+            ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+        )
 
         if zone.type != Zone.Type.AUTO:
             self._state_to_pizone = {
