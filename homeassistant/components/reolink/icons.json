@@ -301,6 +301,6 @@
   },
   "services": {
     "ptz_move": "mdi:pan",
-    "chime_play": "mdi:music"
+    "play_chime": "mdi:music"
   }
 }

@@ -95,8 +95,8 @@
         }
       }
     },
-    "chime_play": {
-      "name": "Chime play",
+    "play_chime": {
+      "name": "Play chime",
       "description": "Play a ringtone on a chime.",
       "fields": {
         "device_id": {
