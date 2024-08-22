@@ -356,8 +356,7 @@ async def test_suffix(hass: HomeAssistant) -> None:
 
 
 async def test_total_increasing_reset(hass: HomeAssistant) -> None:
-    """Test derivative sensor state with total_increasing sensor input."""
-    # When the input sensor is reset, the derivative sensor should not record a negative change.
+    """Test derivative sensor state with total_increasing sensor input where it should ignore the reset value."""
     times = [20, 30, 40]
     values = [10, 30, 0]
     config, entity_id = await _setup_sensor(hass, {"unit_time": UnitOfTime.SECONDS})
@@ -377,6 +376,10 @@ async def test_total_increasing_reset(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.power")
     assert state is not None
 
+    # The final state should be the first derivative, because the second derivative is negative
+    # To calculate the first derivative
+    # = (values[1] - values[0]) / (times[1] - times[0])
+    # = (30 - 10) / (30 - 20) = 2
     assert round(float(state.state), config["sensor"]["round"]) == 2.00
 
 

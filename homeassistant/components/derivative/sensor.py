@@ -240,6 +240,9 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             except AssertionError as err:
                 _LOGGER.error("Could not calculate derivative: %s", err)
 
+            # For total inreasing sensors, the value is expected to continuously increase.
+            # A negative derivative for a total increasing sensor likely indicates the
+            # sensor has been reset. To prevent inaccurate data, discard this sample.
             if (
                 new_state.attributes.get(ATTR_STATE_CLASS)
                 == SensorStateClass.TOTAL_INCREASING
