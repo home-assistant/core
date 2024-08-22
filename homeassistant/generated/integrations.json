@@ -6805,6 +6805,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "webrtc": {
+      "name": "WebRTC",
+      "integration_type": "hub",
+      "config_flow": true
+    },
     "wemo": {
       "name": "Belkin WeMo",
       "integration_type": "hub",

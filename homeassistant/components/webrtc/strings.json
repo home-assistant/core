@@ -1,0 +1,20 @@
+{
+  "config": {
+    "step": {},
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "stun_servers": "Stun server addresses"
+        },
+        "data_description": {
+          "stun_servers": "Format should be: host:port"
+        }
+      }
+    }
+  }
+}

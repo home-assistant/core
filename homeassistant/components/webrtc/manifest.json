@@ -1,0 +1,9 @@
+{
+  "domain": "webrtc",
+  "name": "WebRTC",
+  "codeowners": ["@home-assistant/core"],
+  "config_flow": true,
+  "dependencies": ["camera", "http", "lovelace", "websocket_api"],
+  "documentation": "https://www.home-assistant.io/integrations/websocket_api",
+  "quality_scale": "internal"
+}

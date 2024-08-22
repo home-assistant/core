@@ -12,7 +12,7 @@ the offer/answer SDP protocol, other than as a signal path pass through.
 
 Other integrations may use this integration with these steps:
 - Check if this integration is loaded
-- Call is_suported_stream_source for compatibility
+- Call is_supported_stream_source for compatibility
 - Call async_offer_for_stream_source to get back an answer for a client offer
 """
 
