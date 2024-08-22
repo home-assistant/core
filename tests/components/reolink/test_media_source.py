@@ -275,7 +275,7 @@ async def test_browsing_rec_playback_unsupported(
     reolink_connect.api_version.return_value = 0
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     # browse root
@@ -296,7 +296,7 @@ async def test_browsing_errors(
     reolink_connect.api_version.return_value = 1
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     # browse root
@@ -315,7 +315,7 @@ async def test_browsing_not_loaded(
     reolink_connect.api_version.return_value = 1
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     reolink_connect.get_host_data = AsyncMock(side_effect=ReolinkError("Test error"))

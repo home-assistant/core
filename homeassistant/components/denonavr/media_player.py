@@ -152,7 +152,7 @@ async def async_setup_entry(
     )
     platform.async_register_entity_service(
         SERVICE_UPDATE_AUDYSSEY,
-        {},
+        None,
         f"async_{SERVICE_UPDATE_AUDYSSEY}",
     )
 

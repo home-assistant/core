@@ -84,8 +84,6 @@ class KNXExposeSensor:
         self.expose_default = config.get(ExposeSchema.CONF_KNX_EXPOSE_DEFAULT)
         self.expose_type: int | str = config[ExposeSchema.CONF_KNX_EXPOSE_TYPE]
         self.value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
-        if self.value_template is not None:
-            self.value_template.hass = hass
 
         self._remove_listener: Callable[[], None] | None = None
         self.device: ExposeSensor = ExposeSensor(

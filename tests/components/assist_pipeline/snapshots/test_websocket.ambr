@@ -663,9 +663,6 @@
 # name: test_stt_stream_failed.2
   None
 # ---
-# name: test_text_only_pipeline.3
-  None
-# ---
 # name: test_text_only_pipeline[extra_msg0]
   dict({
     'language': 'en',
