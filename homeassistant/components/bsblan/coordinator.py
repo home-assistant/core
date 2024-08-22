@@ -60,4 +60,5 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[BSBLanCoordinatorData]):
                 f"Error while establishing connection with BSB-Lan device at {host}"
             ) from err
 
+        self.update_interval = self._get_update_interval()
         return BSBLanCoordinatorData(state=state)
