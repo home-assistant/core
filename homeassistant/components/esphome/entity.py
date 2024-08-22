@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import math
-from typing import TYPE_CHECKING, Any, Concatenate, Generic, ParamSpec, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Concatenate, Generic, TypeVar, cast
 
 from aioesphomeapi import (
     APIConnectionError,
@@ -30,8 +30,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
 
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
 _InfoT = TypeVar("_InfoT", bound=EntityInfo)
 _EntityT = TypeVar("_EntityT", bound="EsphomeEntity[Any,Any]")
 _StateT = TypeVar("_StateT", bound=EntityState)
@@ -116,7 +114,7 @@ async def platform_async_setup_entry(
     )
 
 
-def esphome_state_property(
+def esphome_state_property[_R, _EntityT: EsphomeEntity[Any, Any]](
     func: Callable[[_EntityT], _R],
 ) -> Callable[[_EntityT], _R | None]:
     """Wrap a state property of an esphome entity.
@@ -139,7 +137,7 @@ def esphome_state_property(
     return _wrapper
 
 
-def convert_api_error_ha_error(
+def convert_api_error_ha_error[**_P, _R, _EntityT: EsphomeEntity[Any, Any]](
     func: Callable[Concatenate[_EntityT, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
     """Decorate ESPHome command calls that send commands/make changes to the device.
@@ -176,7 +174,6 @@ ENTITY_CATEGORIES: EsphomeEnumMapper[EsphomeEntityCategory, EntityCategory | Non
 class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     """Define a base esphome entity."""
 
-    _attr_has_entity_name = True
     _attr_should_poll = False
     _static_info: _InfoT
     _state: _StateT
@@ -201,6 +198,25 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
         )
+        #
+        # If `friendly_name` is set, we use the Friendly naming rules, if
+        # `friendly_name` is not set we make an exception to the naming rules for
+        # backwards compatibility and use the Legacy naming rules.
+        #
+        # Friendly naming
+        # - Friendly name is prepended to entity names
+        # - Device Name is prepended to entity ids
+        # - Entity id is constructed from device name and object id
+        #
+        # Legacy naming
+        # - Device name is not prepended to entity names
+        # - Device name is not prepended to entity ids
+        # - Entity id is constructed from entity name
+        #
+        if not device_info.friendly_name:
+            return
+        self._attr_has_entity_name = True
+        self.entity_id = f"{domain}.{device_info.name}_{entity_info.object_id}"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
