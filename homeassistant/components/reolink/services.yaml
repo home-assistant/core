@@ -24,7 +24,6 @@ play_chime:
       selector:
         device:
           multiple: true
-          translation_key: device_id
           filter:
             integration: reolink
             model: "Reolink Chime"
