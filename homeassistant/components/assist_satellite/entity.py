@@ -52,6 +52,7 @@ class AssistSatelliteEntity(entity.Entity):
         pipeline_entity_id: str | None = None,
         vad_sensitivity_entity_id: str | None = None,
         wake_word_phrase: str | None = None,
+        tts_input: str | None = None,
     ) -> None:
         """Triggers an Assist pipeline in Home Assistant from a satellite."""
         pipeline_id: str | None = None
@@ -120,9 +121,12 @@ class AssistSatelliteEntity(entity.Entity):
             device_id=device_id,
             tts_audio_output="wav",
             wake_word_phrase=wake_word_phrase,
+            tts_input=tts_input,
             audio_settings=AudioSettings(
                 silence_seconds=vad.VadSensitivity.to_seconds(vad_sensitivity)
             ),
+            start_stage=start_stage,
+            end_stage=end_stage,
         )
 
     def on_pipeline_event(self, event: PipelineEvent) -> None:

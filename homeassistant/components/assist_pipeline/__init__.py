@@ -102,6 +102,7 @@ async def async_pipeline_from_audio_stream(
     pipeline_id: str | None = None,
     conversation_id: str | None = None,
     tts_audio_output: str | None = None,
+    tts_input: str | None = None,
     wake_word_settings: WakeWordSettings | None = None,
     audio_settings: AudioSettings | None = None,
     device_id: str | None = None,
@@ -118,6 +119,7 @@ async def async_pipeline_from_audio_stream(
         stt_metadata=stt_metadata,
         stt_stream=stt_stream,
         wake_word_phrase=wake_word_phrase,
+        tts_input=tts_input,
         run=PipelineRun(
             hass,
             context=context,
