@@ -18,14 +18,15 @@ ptz_move:
           step: 1
 
 chime_play:
-  target:
-    device:
-      integration: reolink
-      model: "Reolink Chime"
-    entity:
-      integration: reolink
-      domain: select
   fields:
+    device_id:
+      required: true
+      multiple: true
+      selector:
+        device:
+          filter:
+            integration: reolink
+            model: "Reolink Chime"
     ringtone:
       required: true
       selector:

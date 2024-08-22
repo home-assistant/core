@@ -9,7 +9,7 @@ from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 from homeassistant.components.reolink.const import DOMAIN as REOLINK_DOMAIN
 from homeassistant.components.reolink.services import ATTR_RINGTONE
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_DEVICE_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -38,16 +38,6 @@ async def test_play_chime_service_entity(
     assert entity is not None
     device_id = entity.device_id
 
-    # Test chime play service with entity
-    test_chime.play = AsyncMock()
-    await hass.services.async_call(
-        REOLINK_DOMAIN,
-        "play_chime",
-        {ATTR_ENTITY_ID: [entity_id], ATTR_RINGTONE: "attraction"},
-        blocking=True,
-    )
-    test_chime.play.assert_called_once()
-
     # Test chime play service with device
     test_chime.play = AsyncMock()
     await hass.services.async_call(
@@ -67,21 +57,12 @@ async def test_play_chime_service_entity(
             blocking=True,
         )
 
-    entity_id_non_chime = f"{Platform.SELECT}.{TEST_NVR_NAME}_floodlight_mode"
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            REOLINK_DOMAIN,
-            "play_chime",
-            {ATTR_ENTITY_ID: [entity_id_non_chime], ATTR_RINGTONE: "attraction"},
-            blocking=True,
-        )
-
     test_chime.play = AsyncMock(side_effect=ReolinkError("Test error"))
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             REOLINK_DOMAIN,
             "play_chime",
-            {ATTR_ENTITY_ID: [entity_id], ATTR_RINGTONE: "attraction"},
+            {ATTR_DEVICE_ID: [device_id], ATTR_RINGTONE: "attraction"},
             blocking=True,
         )
 
@@ -90,6 +71,6 @@ async def test_play_chime_service_entity(
         await hass.services.async_call(
             REOLINK_DOMAIN,
             "play_chime",
-            {ATTR_ENTITY_ID: [entity_id], ATTR_RINGTONE: "attraction"},
+            {ATTR_DEVICE_ID: [device_id], ATTR_RINGTONE: "attraction"},
             blocking=True,
         )
