@@ -16,8 +16,10 @@ CHARGERS_PLATFORMS = [Platform.SENSOR]
 # List the platforms that load balancer device supports.
 LB_DEVICES_PLATFORMS = [Platform.SENSOR]
 
+type LektricoConfigEntry = ConfigEntry[LektricoDeviceDataUpdateCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: LektricoConfigEntry) -> bool:
     """Set up Lektrico Charging Station from a config entry."""
     coordinator = LektricoDeviceDataUpdateCoordinator(
         hass,
