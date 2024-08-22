@@ -801,6 +801,12 @@ ignore = [
     "SIM103", # Return the condition {condition} directly
     "SIM108", # Use ternary operator {contents} instead of if-else-block
     "SIM115", # Use context handler for opening files
+    
+    # Moving imports into type-checking blocks can mess with pytest.patch()
+    "TCH001", # Move application import {} into a type-checking block
+    "TCH002", # Move third-party import {} into a type-checking block
+    "TCH003", # Move standard library import {} into a type-checking block
+
     "TRY003", # Avoid specifying long messages outside the exception class
     "TRY400", # Use `logging.exception` instead of `logging.error`
     # Ignored due to performance: https://github.com/charliermarsh/ruff/issues/2923
@@ -884,15 +890,6 @@ mark-parentheses = false
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 "async_timeout".msg = "use asyncio.timeout instead"
 "pytz".msg = "use zoneinfo instead"
-
-[tool.ruff.lint.flake8-type-checking]
-runtime-evaluated-base-classes = [
-    "sqlalchemy.orm.DeclarativeBase",
-    "homeassistant.components.recorder.db_schema.Base",
-    "homeassistant.components.recorder.db_schema.LegacyBase",
-    "tests.components.recorder.db_schema_42.Base",
-    "tests.components.recorder.db_schema_43.Base"
-]
 
 [tool.ruff.lint.isort]
 force-sort-within-sections = true
