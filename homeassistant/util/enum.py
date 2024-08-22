@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING, Any
 
 # https://github.com/python/mypy/issues/5107
 if TYPE_CHECKING:
-
     from collections.abc import Callable
+
     def lru_cache[_T: Callable[..., Any]](func: _T) -> _T:
         """Stub for lru_cache."""
 
