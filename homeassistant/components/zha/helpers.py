@@ -1013,7 +1013,11 @@ def async_get_zha_device_proxy(hass: HomeAssistant, device_id: str) -> ZHADevice
         raise KeyError(f"Device id `{device_id}` not found in registry.")
     zha_gateway_proxy = get_zha_gateway_proxy(hass)
     try:
-        ieee_address = list(registry_device.identifiers)[0][1]
+        ieee_address = next(
+            identifier
+            for domain, identifier in registry_device.identifiers
+            if domain == DOMAIN
+        )
         ieee = EUI64.convert(ieee_address)
     except (IndexError, ValueError) as ex:
         _LOGGER.error(
