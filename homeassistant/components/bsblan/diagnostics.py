@@ -18,10 +18,6 @@ async def async_get_config_entry_diagnostics(
     data: BSBLanData = hass.data[DOMAIN][entry.entry_id]
 
     return {
-        "entry": {
-            "title": entry.title,
-            "data": dict(entry.data),
-        },
         "info": data.info.to_dict(),
         "device": data.device.to_dict(),
         "coordinator_data": {
