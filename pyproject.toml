@@ -768,6 +768,7 @@ select = [
     "SLOT", # flake8-slots
     "T100", # Trace found: {name} used
     "T20", # flake8-print
+    "TCH", # flake8-type-checking
     "TID251", # Banned imports
     "TRY", # tryceratops
     "UP", # pyupgrade
@@ -883,6 +884,15 @@ mark-parentheses = false
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 "async_timeout".msg = "use asyncio.timeout instead"
 "pytz".msg = "use zoneinfo instead"
+
+[tool.ruff.lint.flake8-type-checking]
+runtime-evaluated-base-classes = [
+    "sqlalchemy.orm.DeclarativeBase",
+    "homeassistant.components.recorder.db_schema.Base",
+    "homeassistant.components.recorder.db_schema.LegacyBase",
+    "tests.components.recorder.db_schema_42.Base",
+    "tests.components.recorder.db_schema_43.Base"
+]
 
 [tool.ruff.lint.isort]
 force-sort-within-sections = true
