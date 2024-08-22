@@ -348,6 +348,20 @@ def _add_reference_to_node_class(
     return obj
 
 
+def _raise_if_no_value[NodeT: yaml.nodes.Node, _R](
+    func: Callable[[LoaderType, NodeT], _R],
+) -> Callable[[LoaderType, NodeT], _R]:
+    def wrapper(loader: LoaderType, node: NodeT) -> _R:
+        if not node.value:
+            raise HomeAssistantError(
+                f"{node.start_mark}: {node.tag} needs an argument."
+            )
+        return func(loader, node)
+
+    return wrapper
+
+
+@_raise_if_no_value
 def _include_yaml(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
     """Load another YAML file and embed it using the !include tag.
 
@@ -382,6 +396,7 @@ def _find_files(directory: str, pattern: str) -> Iterator[str]:
                 yield filename
 
 
+@_raise_if_no_value
 def _include_dir_named_yaml(loader: LoaderType, node: yaml.nodes.Node) -> NodeDictClass:
     """Load multiple files from directory as a dictionary."""
     mapping = NodeDictClass()
@@ -399,6 +414,7 @@ def _include_dir_named_yaml(loader: LoaderType, node: yaml.nodes.Node) -> NodeDi
     return _add_reference_to_node_class(mapping, loader, node)
 
 
+@_raise_if_no_value
 def _include_dir_merge_named_yaml(
     loader: LoaderType, node: yaml.nodes.Node
 ) -> NodeDictClass:
@@ -414,6 +430,7 @@ def _include_dir_merge_named_yaml(
     return _add_reference_to_node_class(mapping, loader, node)
 
 
+@_raise_if_no_value
 def _include_dir_list_yaml(
     loader: LoaderType, node: yaml.nodes.Node
 ) -> list[JSON_TYPE]:
@@ -427,6 +444,7 @@ def _include_dir_list_yaml(
     ]
 
 
+@_raise_if_no_value
 def _include_dir_merge_list_yaml(
     loader: LoaderType, node: yaml.nodes.Node
 ) -> JSON_TYPE:

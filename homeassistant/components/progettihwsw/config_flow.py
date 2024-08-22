@@ -1,9 +1,11 @@
 """Config flow for ProgettiHWSW Automation integration."""
 
+from typing import Any
+
 from ProgettiHWSW.ProgettiHWSWAPI import ProgettiHWSWAPI
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -38,7 +40,7 @@ class ProgettiHWSWConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize class variables."""
-        self.s1_in = None
+        self.s1_in: dict[str, Any] | None = None
 
     async def async_step_relay_modes(self, user_input=None):
         """Manage relay modes step."""
@@ -66,7 +68,9 @@ class ProgettiHWSWConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:

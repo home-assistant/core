@@ -50,13 +50,15 @@ class NextBusDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from NextBus."""
-        self.logger.debug("Updating data from API. Routes: %s", str(self._route_stops))
+
+        _route_stops = set(self._route_stops)
+        self.logger.debug("Updating data from API. Routes: %s", str(_route_stops))
 
         def _update_data() -> dict:
             """Fetch data from NextBus."""
             self.logger.debug("Updating data from API (executor)")
             predictions: dict[RouteStop, dict[str, Any]] = {}
-            for route_stop in self._route_stops:
+            for route_stop in _route_stops:
                 prediction_results: list[dict[str, Any]] = []
                 try:
                     prediction_results = self.client.predictions_for_stop(

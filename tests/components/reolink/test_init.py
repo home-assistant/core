@@ -1,10 +1,10 @@
 """Test the Reolink init."""
 
 import asyncio
-from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from reolink_aio.api import Chime
 from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
@@ -25,7 +25,6 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
 
 from .conftest import (
     TEST_CAM_MODEL,
@@ -104,6 +103,7 @@ async def test_failures_parametrized(
 
 async def test_firmware_error_twice(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     reolink_connect: MagicMock,
     config_entry: MockConfigEntry,
 ) -> None:
@@ -112,31 +112,31 @@ async def test_firmware_error_twice(
         side_effect=ReolinkError("Test error")
     )
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.UPDATE]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.UPDATE}.{TEST_NVR_NAME}_firmware"
-    assert hass.states.is_state(entity_id, STATE_OFF)
+    assert hass.states.get(entity_id).state == STATE_OFF
 
-    async_fire_time_changed(
-        hass, utcnow() + FIRMWARE_UPDATE_INTERVAL + timedelta(minutes=1)
-    )
+    freezer.tick(FIRMWARE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 async def test_credential_error_three(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     reolink_connect: MagicMock,
     config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test when the update gives credential error 3 times."""
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -147,9 +147,8 @@ async def test_credential_error_three(
     issue_id = f"config_entry_reauth_{const.DOMAIN}_{config_entry.entry_id}"
     for _ in range(NUM_CRED_ERRORS):
         assert (HOMEASSISTANT_DOMAIN, issue_id) not in issue_registry.issues
-        async_fire_time_changed(
-            hass, utcnow() + DEVICE_UPDATE_INTERVAL + timedelta(seconds=30)
-        )
+        freezer.tick(DEVICE_UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     assert (HOMEASSISTANT_DOMAIN, issue_id) in issue_registry.issues

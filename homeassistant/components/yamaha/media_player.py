@@ -31,6 +31,7 @@ from .const import (
     CURSOR_TYPE_RIGHT,
     CURSOR_TYPE_SELECT,
     CURSOR_TYPE_UP,
+    DISCOVER_TIMEOUT,
     DOMAIN,
     KNOWN_ZONES,
     SERVICE_ENABLE_OUTPUT,
@@ -125,18 +126,33 @@ def _discovery(config_info):
     elif config_info.host is None:
         _LOGGER.debug("Config No Host Supplied Zones")
         zones = []
-        for recv in rxv.find():
+        for recv in rxv.find(DISCOVER_TIMEOUT):
             zones.extend(recv.zone_controllers())
     else:
         _LOGGER.debug("Config Zones")
         zones = None
 
         # Fix for upstream issues in rxv.find() with some hardware.
-        with contextlib.suppress(AttributeError):
-            for recv in rxv.find():
+        with contextlib.suppress(AttributeError, ValueError):
+            for recv in rxv.find(DISCOVER_TIMEOUT):
+                _LOGGER.debug(
+                    "Found Serial %s %s %s",
+                    recv.serial_number,
+                    recv.ctrl_url,
+                    recv.zone,
+                )
                 if recv.ctrl_url == config_info.ctrl_url:
-                    _LOGGER.debug("Config Zones Matched %s", config_info.ctrl_url)
-                    zones = recv.zone_controllers()
+                    _LOGGER.debug(
+                        "Config Zones Matched Serial %s: %s",
+                        recv.ctrl_url,
+                        recv.serial_number,
+                    )
+                    zones = rxv.RXV(
+                        config_info.ctrl_url,
+                        friendly_name=config_info.name,
+                        serial_number=recv.serial_number,
+                        model_name=recv.model_name,
+                    ).zone_controllers()
                     break
 
         if not zones:
@@ -170,7 +186,7 @@ async def async_setup_platform(
 
     entities = []
     for zctrl in zone_ctrls:
-        _LOGGER.debug("Receiver zone: %s", zctrl.zone)
+        _LOGGER.debug("Receiver zone: %s serial %s", zctrl.zone, zctrl.serial_number)
         if config_info.zone_ignore and zctrl.zone in config_info.zone_ignore:
             _LOGGER.debug("Ignore receiver zone: %s %s", config_info.name, zctrl.zone)
             continue

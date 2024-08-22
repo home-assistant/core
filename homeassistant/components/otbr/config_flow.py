@@ -111,7 +111,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            url = user_input[CONF_URL]
+            url = user_input[CONF_URL].rstrip("/")
             try:
                 await self._connect_and_set_dataset(url)
             except (
@@ -124,7 +124,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(DOMAIN)
                 return self.async_create_entry(
                     title="Open Thread Border Router",
-                    data=user_input,
+                    data={CONF_URL: url},
                 )
 
         data_schema = vol.Schema({CONF_URL: str})
@@ -168,7 +168,11 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await self._connect_and_set_dataset(url)
-        except python_otbr_api.OTBRError as exc:
+        except (
+            python_otbr_api.OTBRError,
+            aiohttp.ClientError,
+            TimeoutError,
+        ) as exc:
             _LOGGER.warning("Failed to communicate with OTBR@%s: %s", url, exc)
             return self.async_abort(reason="unknown")
 

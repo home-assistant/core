@@ -673,8 +673,19 @@ _DEPRECATED_POWER_BTU_PER_HOUR: Final = DeprecatedConstantEnum(
 )
 """Deprecated: please use UnitOfPower.BTU_PER_HOUR."""
 
+
 # Reactive power units
-POWER_VOLT_AMPERE_REACTIVE: Final = "var"
+class UnitOfReactivePower(StrEnum):
+    """Reactive power units."""
+
+    VOLT_AMPERE_REACTIVE = "var"
+
+
+_DEPRECATED_POWER_VOLT_AMPERE_REACTIVE: Final = DeprecatedConstantEnum(
+    UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+    "2025.9",
+)
+"""Deprecated: please use UnitOfReactivePower.VOLT_AMPERE_REACTIVE."""
 
 
 # Energy units
