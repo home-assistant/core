@@ -4,16 +4,20 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from aiohttp import ClientConnectionError
 from intellifire4py import IntellifirePollData
-from intellifire4py.intellifire import IntellifireAPILocal
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from intellifire4py.intellifire import IntellifireAPILocal
+
+    from homeassistant.core import HomeAssistant
 
 
 class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData]):

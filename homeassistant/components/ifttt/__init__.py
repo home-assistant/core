@@ -5,21 +5,25 @@ from __future__ import annotations
 from http import HTTPStatus
 import json
 import logging
+from typing import TYPE_CHECKING
 
-from aiohttp import web
 import pyfttt
 import requests
 import voluptuous as vol
 
 from homeassistant.components import webhook
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID
-from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from aiohttp import web
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant, ServiceCall
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from statistics import mean
-from typing import Any, NamedTuple, cast
+from typing import TYPE_CHECKING, Any, NamedTuple, cast
 
 import numpy as np
 
@@ -12,10 +12,8 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_STATE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import IQVIAEntity
 from .const import (
@@ -33,6 +31,10 @@ from .const import (
     TYPE_DISEASE_INDEX,
     TYPE_DISEASE_TODAY,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 ATTR_ALLERGEN_AMOUNT = "allergen_amount"
 ATTR_ALLERGEN_GENUS = "allergen_genus"

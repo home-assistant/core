@@ -6,17 +6,13 @@ import asyncio
 from datetime import timedelta
 from http import HTTPStatus
 import logging
+from typing import TYPE_CHECKING
 
 from aiohttp.client_exceptions import ClientResponseError
 from aiolyric import Lyric
 from aiolyric.exceptions import LyricAuthenticationException, LyricException
-from aiolyric.objects.device import LyricDevice
-from aiolyric.objects.location import LyricLocation
-from aiolyric.objects.priority import LyricAccessory, LyricRoom
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import (
     aiohttp_client,
@@ -37,6 +33,14 @@ from .api import (
     OAuth2SessionLyric,
 )
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from aiolyric.objects.device import LyricDevice
+    from aiolyric.objects.location import LyricLocation
+    from aiolyric.objects.priority import LyricAccessory, LyricRoom
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 

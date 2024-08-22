@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from homeassistant.const import CONF_PLATFORM
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.trigger import (
     TriggerActionType,
     TriggerInfo,
@@ -14,6 +13,9 @@ from homeassistant.helpers.trigger import (
 from homeassistant.helpers.typing import ConfigType
 
 from .triggers import turn_on
+
+if TYPE_CHECKING:
+    from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 
 TRIGGERS = {
     "turn_on": turn_on,

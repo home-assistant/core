@@ -2,23 +2,27 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
-
-from incomfortclient import Heater as InComfortHeater
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import InComfortConfigEntry
-from .coordinator import InComfortDataCoordinator
 from .entity import IncomfortBoilerEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from incomfortclient import Heater as InComfortHeater
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import InComfortConfigEntry
+    from .coordinator import InComfortDataCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)

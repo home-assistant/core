@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from pychromecast import Chromecast
+from typing import TYPE_CHECKING
+
 from pychromecast.const import CAST_TYPE_CHROMECAST
 
 from homeassistant.components.cast import DOMAIN as CAST_DOMAIN
@@ -24,7 +25,11 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from .const import DOMAIN, ConfigNotFound
-from .dashboard import LovelaceConfig
+
+if TYPE_CHECKING:
+    from pychromecast import Chromecast
+
+    from .dashboard import LovelaceConfig
 
 DEFAULT_DASHBOARD = "_default_"
 

@@ -3,13 +3,9 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Callable
-from enum import IntEnum
 import logging
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
-from mysensors import BaseAsyncGateway, Message
-from mysensors.sensor import ChildSensor
 import voluptuous as vol
 
 from homeassistant.const import CONF_NAME, Platform
@@ -34,6 +30,13 @@ from .const import (
     SensorType,
     ValueType,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from enum import IntEnum
+
+    from mysensors import BaseAsyncGateway, Message
+    from mysensors.sensor import ChildSensor
 
 _LOGGER = logging.getLogger(__name__)
 SCHEMAS: Registry[

@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from ndms2_client import Client, ConnectionException, Device, TelnetConnection
-from ndms2_client.client import RouterInfo
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -17,7 +15,6 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -32,6 +29,14 @@ from .const import (
     CONF_TRY_HOTSPOT,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from ndms2_client.client import RouterInfo
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -2,18 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 from math import ceil
-from typing import Generic, TypeVar
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 from motionblindsble.const import (
     MotionBlindType,
     MotionCalibrationType,
     MotionConnectionType,
 )
-from motionblindsble.device import MotionDevice
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -21,15 +19,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from .const import (
     ATTR_BATTERY,
@@ -40,6 +35,15 @@ from .const import (
     DOMAIN,
 )
 from .entity import MotionblindsBLEEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from motionblindsble.device import MotionDevice
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import StateType
 
 _LOGGER = logging.getLogger(__name__)
 

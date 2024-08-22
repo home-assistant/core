@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import namedtuple
 import logging
 import struct
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -21,7 +21,6 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_TYPE,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import (
@@ -43,6 +42,9 @@ from .const import (
     SERIAL,
     DataType,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

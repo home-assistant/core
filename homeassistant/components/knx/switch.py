@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from xknx.devices import Switch as XknxSwitch
 
-from homeassistant import config_entries
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -17,16 +16,13 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType
 
-from . import KNXModule
 from .const import (
     CONF_INVERT,
     CONF_RESPOND_TO_READ,
@@ -45,6 +41,13 @@ from .storage.const import (
     CONF_GA_SWITCH,
     CONF_GA_WRITE,
 )
+
+if TYPE_CHECKING:
+    from homeassistant import config_entries
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
+
+    from . import KNXModule
 
 
 async def async_setup_entry(

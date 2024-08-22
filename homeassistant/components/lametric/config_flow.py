@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from ipaddress import ip_address
-import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from demetriek import (
     CloudDevice,
@@ -23,13 +21,11 @@ from demetriek import (
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.components.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_SERIAL,
     SsdpServiceInfo,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_DEVICE, CONF_HOST, CONF_MAC
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -47,6 +43,13 @@ from homeassistant.helpers.selector import (
 from homeassistant.util.network import is_link_local
 
 from .const import DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    import logging
+
+    from homeassistant.components.dhcp import DhcpServiceInfo
+    from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
 
 
 class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):

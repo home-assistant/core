@@ -3,13 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
-
-from jellyfin_apiclient_python import JellyfinClient
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
 from homeassistant.components.media_player.browse_media import BrowseMedia
-from homeassistant.core import HomeAssistant
 
 from .client_wrapper import get_artwork_url
 from .const import (
@@ -18,6 +15,11 @@ from .const import (
     MEDIA_TYPE_NONE,
     SUPPORTED_COLLECTION_TYPES,
 )
+
+if TYPE_CHECKING:
+    from jellyfin_apiclient_python import JellyfinClient
+
+    from homeassistant.core import HomeAssistant
 
 CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS: dict[str, str] = {
     MediaType.MUSIC: MediaClass.MUSIC,

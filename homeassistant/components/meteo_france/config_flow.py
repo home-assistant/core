@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from meteofrance_api.client import MeteoFranceClient
-from meteofrance_api.model import Place
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigFlow, ConfigFlowResult
@@ -14,6 +13,9 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
 
 from .const import CONF_CITY, DOMAIN
+
+if TYPE_CHECKING:
+    from meteofrance_api.model import Place
 
 _LOGGER = logging.getLogger(__name__)
 

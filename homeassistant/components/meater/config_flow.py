@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from meater import AuthenticationError, MeaterApi, ServiceUnavailableError
 import voluptuous as vol
@@ -13,6 +12,9 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 USER_SCHEMA = vol.Schema(

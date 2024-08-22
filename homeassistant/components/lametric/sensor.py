@@ -2,24 +2,29 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-
-from demetriek import Device
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import LaMetricDataUpdateCoordinator
 from .entity import LaMetricEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from demetriek import Device
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import LaMetricDataUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)

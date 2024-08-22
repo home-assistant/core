@@ -4,14 +4,16 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from datetime import timedelta
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
-from jellyfin_apiclient_python import JellyfinClient
-
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, LOGGER, USER_APP_NAME
+
+if TYPE_CHECKING:
+    from jellyfin_apiclient_python import JellyfinClient
+
+    from homeassistant.core import HomeAssistant
 
 JellyfinDataT = TypeVar(
     "JellyfinDataT",

@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Callable
 import logging
 import socket
 import sys
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from mysensors import BaseAsyncGateway, Message, Sensor, get_const, mysensors
 import voluptuous as vol
@@ -20,7 +19,6 @@ from homeassistant.components.mqtt import (
     async_publish,
     async_subscribe,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -51,6 +49,11 @@ from .helpers import (
     validate_child,
     validate_node,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.config_entries import ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

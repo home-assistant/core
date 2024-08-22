@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from xknx.devices import BinarySensor as XknxBinarySensor
 
-from homeassistant import config_entries
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -17,15 +16,19 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType
 
-from . import KNXModule
 from .const import ATTR_COUNTER, ATTR_SOURCE, DATA_KNX_CONFIG, DOMAIN
 from .knx_entity import KnxYamlEntity
 from .schema import BinarySensorSchema
+
+if TYPE_CHECKING:
+    from homeassistant import config_entries
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType
+
+    from . import KNXModule
 
 
 async def async_setup_entry(

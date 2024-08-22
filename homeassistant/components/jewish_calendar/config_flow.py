@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 import zoneinfo
 
 import voluptuous as vol
@@ -30,7 +30,6 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
 )
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CANDLE_LIGHT_MINUTES,
@@ -43,6 +42,9 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
 
 LANGUAGE = [
     SelectOptionDict(value="hebrew", label="Hebrew"),

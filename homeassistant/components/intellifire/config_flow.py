@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientConnectionError
 from intellifire4py import AsyncUDPFireplaceFinder
@@ -12,11 +11,15 @@ from intellifire4py.exceptions import LoginException
 from intellifire4py.intellifire import IntellifireAPICloud, IntellifireAPILocal
 import voluptuous as vol
 
-from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 from .const import CONF_USER_ID, DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from homeassistant.components.dhcp import DhcpServiceInfo
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 

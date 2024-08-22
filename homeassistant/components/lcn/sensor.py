@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 from itertools import chain
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import pypck
 
 from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_DOMAIN,
@@ -16,9 +15,6 @@ from homeassistant.const import (
     CONF_SOURCE,
     CONF_UNIT_OF_MEASUREMENT,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
 
 from . import LcnEntity
 from .const import (
@@ -32,6 +28,12 @@ from .const import (
     VARIABLES,
 )
 from .helpers import DeviceConnectionType, InputType, get_device_connection
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType
 
 
 def create_lcn_sensor_entity(

@@ -6,6 +6,7 @@ import asyncio
 from functools import partial
 from http import HTTPStatus
 import logging
+from typing import TYPE_CHECKING
 
 import aiohttp
 
@@ -17,10 +18,8 @@ from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -43,6 +42,10 @@ from .const import (
     DOMAIN,
 )
 from .util import supports_push
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 

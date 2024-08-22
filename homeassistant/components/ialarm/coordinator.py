@@ -4,14 +4,17 @@ from __future__ import annotations
 
 import asyncio
 import logging
-
-from pyialarm import IAlarm
+from typing import TYPE_CHECKING
 
 from homeassistant.components.alarm_control_panel import SCAN_INTERVAL
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, IALARM_TO_HASS
+
+if TYPE_CHECKING:
+    from pyialarm import IAlarm
+
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

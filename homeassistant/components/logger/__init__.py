@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import logging
-import re
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
 from homeassistant.const import EVENT_LOGGING_CHANGED  # noqa: F401
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from . import websocket_api
 from .const import (
@@ -29,6 +28,11 @@ from .helpers import (
     set_default_log_level,
     set_log_levels,
 )
+
+if TYPE_CHECKING:
+    import re
+
+    from homeassistant.helpers.typing import ConfigType
 
 _VALID_LOG_LEVEL = vol.All(vol.Upper, vol.In(LOGSEVERITY), LOGSEVERITY.__getitem__)
 

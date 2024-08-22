@@ -3,17 +3,19 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
-
-from pylutron import Output
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, LutronData
 from .entity import LutronDevice
+
+if TYPE_CHECKING:
+    from pylutron import Output
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
 

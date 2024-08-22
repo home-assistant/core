@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from typing import TYPE_CHECKING
 
-from mysensors import Message
 from mysensors.const import SYSTEM_CHILD_ID
 
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import decorator
@@ -19,6 +17,13 @@ from .helpers import (
     discover_mysensors_platform,
     validate_set_msg,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from mysensors import Message
+
+    from homeassistant.const import Platform
 
 HANDLERS: decorator.Registry[
     str, Callable[[HomeAssistant, GatewayId, Message], None]

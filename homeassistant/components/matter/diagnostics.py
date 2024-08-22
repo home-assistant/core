@@ -3,17 +3,19 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from chip.clusters import Objects
 from matter_server.common.helpers.util import dataclass_to_dict, parse_attribute_path
 
 from homeassistant.components.diagnostics import REDACTED
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 
 from .helpers import get_matter, get_node_from_device_entry
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers import device_registry as dr
 
 ATTRIBUTES_TO_REDACT = {Objects.BasicInformation.Attributes.Location}
 

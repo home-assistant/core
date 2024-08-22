@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.weather import (
@@ -33,10 +32,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, sun
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from . import MetWeatherConfigEntry
 from .const import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_SUNNY,
@@ -47,6 +44,13 @@ from .const import (
     FORECAST_MAP,
 )
 from .coordinator import MetDataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from types import MappingProxyType
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import MetWeatherConfigEntry
 
 DEFAULT_NAME = "Met.no"
 

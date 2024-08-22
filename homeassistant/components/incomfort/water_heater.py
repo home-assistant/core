@@ -3,18 +3,21 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
-
-from incomfortclient import Heater as InComfortHeater
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.water_heater import WaterHeaterEntity
 from homeassistant.const import UnitOfTemperature
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import InComfortConfigEntry
-from .coordinator import InComfortDataCoordinator
 from .entity import IncomfortBoilerEntity
+
+if TYPE_CHECKING:
+    from incomfortclient import Heater as InComfortHeater
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import InComfortConfigEntry
+    from .coordinator import InComfortDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

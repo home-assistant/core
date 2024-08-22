@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import collections
-from collections.abc import Callable
 from contextlib import suppress
 import datetime as dt
 from enum import StrEnum
@@ -14,20 +13,18 @@ import hashlib
 from http import HTTPStatus
 import logging
 import secrets
-from typing import Any, Final, Required, TypedDict, final
+from typing import TYPE_CHECKING, Any, Final, Required, TypedDict, final
 from urllib.parse import quote, urlparse
 
 import aiohttp
 from aiohttp import web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
-from aiohttp.typedefs import LooseHeaders
 import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.websocket_api import ERR_NOT_SUPPORTED, ERR_UNKNOWN_ERROR
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
     ATTR_ENTITY_PICTURE,
     SERVICE_MEDIA_NEXT_TRACK,
@@ -51,13 +48,11 @@ from homeassistant.const import (  # noqa: F401
     STATE_PLAYING,
     STATE_STANDBY,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from .browse_media import BrowseMedia, async_process_play_media_url  # noqa: F401
@@ -129,6 +124,15 @@ from .const import (  # noqa: F401
     RepeatMode,
 )
 from .errors import BrowseError
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from aiohttp.typedefs import LooseHeaders
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

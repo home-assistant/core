@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Collection, Iterable
+from typing import TYPE_CHECKING
 
 import sqlalchemy
 from sqlalchemy import lambda_stmt, select, union_all
-from sqlalchemy.sql.elements import ColumnElement
-from sqlalchemy.sql.lambdas import StatementLambdaElement
-from sqlalchemy.sql.selectable import CTE, CompoundSelect, Select
 
 from homeassistant.components.recorder.db_schema import (
     ENTITY_ID_IN_EVENT,
@@ -31,6 +28,13 @@ from .common import (
     select_states,
     select_states_context_only,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Collection, Iterable
+
+    from sqlalchemy.sql.elements import ColumnElement
+    from sqlalchemy.sql.lambdas import StatementLambdaElement
+    from sqlalchemy.sql.selectable import CTE, CompoundSelect, Select
 
 
 def _select_entities_context_ids_sub_query(

@@ -6,7 +6,7 @@ import asyncio
 from datetime import timedelta
 from enum import StrEnum
 import logging
-from typing import Any, Final, TypedDict, final
+from typing import TYPE_CHECKING, Any, Final, TypedDict, final
 
 import voluptuous as vol
 
@@ -24,7 +24,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import ConfigType
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import struct
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -65,7 +64,11 @@ from .const import (
     SIGNAL_STOP_ENTITY,
     DataType,
 )
-from .modbus import ModbusHub
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
 

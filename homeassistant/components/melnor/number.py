@@ -2,25 +2,29 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
-
-from melnor_bluetooth.device import Valve
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTime
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import MelnorDataUpdateCoordinator
 from .models import MelnorZoneEntity, get_entities_for_valves
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
+    from melnor_bluetooth.device import Valve
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import MelnorDataUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)

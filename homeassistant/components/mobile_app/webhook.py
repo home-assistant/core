@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
 from contextlib import suppress
 from functools import lru_cache, wraps
 from http import HTTPStatus
 import logging
 import secrets
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp.web import HTTPBadRequest, Request, Response, json_response
 from nacl.exceptions import CryptoError
@@ -34,7 +33,6 @@ from homeassistant.components.device_tracker import (
 from homeassistant.components.frontend import MANIFEST_JSON
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_DOMAIN,
@@ -116,6 +114,11 @@ from .helpers import (
     safe_registration,
     webhook_response,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
+    from homeassistant.config_entries import ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from xknx import XKNX
+from typing import TYPE_CHECKING
+
 from xknx.devices import Weather as XknxWeather
 
-from homeassistant import config_entries
 from homeassistant.components.weather import WeatherEntity
 from homeassistant.const import (
     CONF_ENTITY_CATEGORY,
@@ -15,14 +15,20 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
 
-from . import KNXModule
 from .const import DATA_KNX_CONFIG, DOMAIN
 from .knx_entity import KnxYamlEntity
 from .schema import WeatherSchema
+
+if TYPE_CHECKING:
+    from xknx import XKNX
+
+    from homeassistant import config_entries
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType
+
+    from . import KNXModule
 
 
 async def async_setup_entry(

@@ -2,16 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
-import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
 from homeassistant.components import lock
 from homeassistant.components.lock import LockEntity, LockEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CODE,
     CONF_NAME,
@@ -20,8 +17,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import subscription
 from .config import MQTT_RW_SCHEMA
@@ -42,6 +37,14 @@ from .models import (
     ReceivePayloadType,
 )
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    import re
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 _LOGGER = logging.getLogger(__name__)
 

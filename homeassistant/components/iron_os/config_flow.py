@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from habluetooth import BluetoothServiceInfoBleak
 import voluptuous as vol
 
 from homeassistant.components.bluetooth.api import async_discovered_service_info
@@ -12,6 +11,9 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 
 from .const import DISCOVERY_SVC_UUID, DOMAIN
+
+if TYPE_CHECKING:
+    from habluetooth import BluetoothServiceInfoBleak
 
 
 class IronOSConfigFlow(ConfigFlow, domain=DOMAIN):

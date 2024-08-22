@@ -2,18 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator, Sequence
 from dataclasses import dataclass
-from datetime import datetime as dt
 import logging
 import time
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy.engine import Result
-from sqlalchemy.engine.row import Row
-
 from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
     bytes_to_uuid_hex_or_none,
     extract_event_type_ids,
@@ -37,7 +31,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
-from homeassistant.util.event_type import EventType
 
 from .const import (
     ATTR_MESSAGE,
@@ -81,6 +74,16 @@ from .models import (
 )
 from .queries import statement_for_request
 from .queries.common import PSEUDO_EVENT_STATE_CHANGED
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Generator, Sequence
+    from datetime import datetime as dt
+
+    from sqlalchemy.engine import Result
+    from sqlalchemy.engine.row import Row
+
+    from homeassistant.components.recorder.filters import Filters
+    from homeassistant.util.event_type import EventType
 
 _LOGGER = logging.getLogger(__name__)
 

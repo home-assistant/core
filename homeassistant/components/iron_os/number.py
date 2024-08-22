@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from pynecil import CharSetting, CommunicationError, LiveDataResponse
 
@@ -15,13 +15,18 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.const import UnitOfTemperature
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import IronOSConfigEntry
 from .const import DOMAIN, MAX_TEMP, MIN_TEMP
 from .entity import IronOSBaseEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import IronOSConfigEntry
 
 
 @dataclass(frozen=True, kw_only=True)

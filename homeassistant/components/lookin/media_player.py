@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import logging
-
-from aiolookin import Remote
+from typing import TYPE_CHECKING
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -12,15 +11,20 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, TYPE_TO_PLATFORM
-from .coordinator import LookinDataUpdateCoordinator
 from .entity import LookinPowerPushRemoteEntity
-from .models import LookinData
+
+if TYPE_CHECKING:
+    from aiolookin import Remote
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import LookinDataUpdateCoordinator
+    from .models import LookinData
 
 LOGGER = logging.getLogger(__name__)
 

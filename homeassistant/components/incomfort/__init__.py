@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from aiohttp import ClientResponseError
 from incomfortclient import IncomfortError, InvalidHeaterList
 import voluptuous as vol
@@ -12,11 +14,13 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import InComfortDataCoordinator, async_connect_gateway
 from .errors import InConfortTimeout, InConfortUnknownError, NoHeaters, NotFound
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
 
 CONFIG_SCHEMA = vol.Schema(
     {

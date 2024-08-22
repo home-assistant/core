@@ -2,15 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
 import logging
+from typing import TYPE_CHECKING
 
-from mysensors import BaseAsyncGateway
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import (
     ATTR_DEVICES,
@@ -25,6 +20,15 @@ from .const import (
 )
 from .device import MySensorsChildEntity, get_mysensors_devices
 from .gateway import finish_setup, gw_stop, setup_gateway
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Mapping
+
+    from mysensors import BaseAsyncGateway
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.const import Platform
+    from homeassistant.helpers.device_registry import DeviceEntry
 
 _LOGGER = logging.getLogger(__name__)
 

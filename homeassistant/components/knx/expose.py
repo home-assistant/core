@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
+from typing import TYPE_CHECKING
 
-from xknx import XKNX
 from xknx.devices import DateDevice, DateTimeDevice, ExposeSensor, TimeDevice
 from xknx.dpt import DPTNumeric, DPTString
 from xknx.exceptions import ConversionError
@@ -28,11 +27,17 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType, StateType
 
 from .const import CONF_RESPOND_TO_READ, KNX_ADDRESS
 from .schema import ExposeSchema
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from xknx import XKNX
+
+    from homeassistant.helpers.template import Template
+    from homeassistant.helpers.typing import ConfigType, StateType
 
 _LOGGER = logging.getLogger(__name__)
 

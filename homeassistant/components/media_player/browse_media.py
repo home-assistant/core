@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import quote
 
 import yarl
@@ -21,6 +20,9 @@ from homeassistant.helpers.network import (
 )
 
 from .const import CONTENT_AUTH_EXPIRY_TIME, MediaClass, MediaType
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 # Paths that we don't need to sign
 PATHS_WITHOUT_AUTH = ("/api/tts_proxy/",)

@@ -5,11 +5,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
-from typing import Literal
-
-from pyipma.api import IPMA_API
-from pyipma.forecast import Forecast as IPMAForecast
-from pyipma.location import Location
+from typing import TYPE_CHECKING, Literal
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -23,15 +19,12 @@ from homeassistant.components.weather import (
     WeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_MODE,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import is_up
 from homeassistant.util import Throttle
 
@@ -44,6 +37,15 @@ from .const import (
     MIN_TIME_BETWEEN_UPDATES,
 )
 from .entity import IPMADevice
+
+if TYPE_CHECKING:
+    from pyipma.api import IPMA_API
+    from pyipma.forecast import Forecast as IPMAForecast
+    from pyipma.location import Location
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
 

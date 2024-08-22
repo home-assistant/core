@@ -5,10 +5,9 @@ from __future__ import annotations
 import logging
 import mimetypes
 import os
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from jellyfin_apiclient_python.api import jellyfin_url
-from jellyfin_apiclient_python.client import JellyfinClient
 
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source.models import (
@@ -17,9 +16,7 @@ from homeassistant.components.media_source.models import (
     MediaSourceItem,
     PlayMedia,
 )
-from homeassistant.core import HomeAssistant
 
-from . import JellyfinConfigEntry
 from .const import (
     COLLECTION_TYPE_MOVIES,
     COLLECTION_TYPE_MUSIC,
@@ -48,6 +45,13 @@ from .const import (
     PLAYABLE_ITEM_TYPES,
     SUPPORTED_COLLECTION_TYPES,
 )
+
+if TYPE_CHECKING:
+    from jellyfin_apiclient_python.client import JellyfinClient
+
+    from homeassistant.core import HomeAssistant
+
+    from . import JellyfinConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 import logging
 import struct
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -37,10 +36,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_hub
 from .base_platform import BaseStructPlatform
@@ -86,7 +82,15 @@ from .const import (
     CONF_WRITE_REGISTERS,
     DataType,
 )
-from .modbus import ModbusHub
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+    from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -3,13 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from functools import partial
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiolifx import products
-from aiolifx.aiolifx import Light
-from aiolifx.message import Message
 from awesomeversion import AwesomeVersion
 
 from homeassistant.components.light import (
@@ -23,7 +20,6 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     ATTR_XY_COLOR,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 import homeassistant.util.color as color_util
@@ -35,6 +31,14 @@ from .const import (
     INFRARED_BRIGHTNESS_VALUES_MAP,
     OVERALL_TIMEOUT,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from aiolifx.aiolifx import Light
+    from aiolifx.message import Message
+
+    from homeassistant.config_entries import ConfigEntry
 
 FIX_MAC_FW = AwesomeVersion("3.70")
 

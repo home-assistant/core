@@ -3,17 +3,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from aiolookin import (
-    Device,
-    LookInHttpProtocol,
-    LookinUDPSubscriptions,
-    MeteoSensor,
-    Remote,
-)
+if TYPE_CHECKING:
+    from aiolookin import (
+        Device,
+        LookInHttpProtocol,
+        LookinUDPSubscriptions,
+        MeteoSensor,
+        Remote,
+    )
 
-from .coordinator import LookinDataUpdateCoordinator
+    from .coordinator import LookinDataUpdateCoordinator
 
 
 @dataclass

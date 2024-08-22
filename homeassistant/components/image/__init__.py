@@ -10,13 +10,12 @@ from datetime import datetime, timedelta
 from functools import cached_property
 import logging
 from random import SystemRandom
-from typing import Final, final
+from typing import TYPE_CHECKING, Final, final
 
 from aiohttp import hdrs, web
 import httpx
 
 from homeassistant.components.http import KEY_AUTHENTICATED, KEY_HASS, HomeAssistantView
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONTENT_TYPE_MULTIPART, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -31,6 +30,9 @@ from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
 from .const import DOMAIN, IMAGE_TIMEOUT
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

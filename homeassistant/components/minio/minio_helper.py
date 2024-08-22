@@ -5,15 +5,17 @@ from __future__ import annotations
 from collections.abc import Iterable
 import json
 import logging
-from queue import Queue
 import re
 import threading
 import time
-from typing import Self
+from typing import TYPE_CHECKING, Self
 from urllib.parse import unquote
 
 from minio import Minio
 from urllib3.exceptions import HTTPError
+
+if TYPE_CHECKING:
+    from queue import Queue
 
 _LOGGER = logging.getLogger(__name__)
 

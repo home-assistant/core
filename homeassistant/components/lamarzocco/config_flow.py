@@ -2,12 +2,11 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from lmcloud.client_cloud import LaMarzoccoCloudClient
 from lmcloud.client_local import LaMarzoccoLocalClient
 from lmcloud.exceptions import AuthFail, RequestNotSuccessful
-from lmcloud.models import LaMarzoccoDeviceInfo
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import BluetoothServiceInfo
@@ -38,6 +37,9 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_USE_BLUETOOTH, DOMAIN
+
+if TYPE_CHECKING:
+    from lmcloud.models import LaMarzoccoDeviceInfo
 
 CONF_MACHINE = "machine"
 

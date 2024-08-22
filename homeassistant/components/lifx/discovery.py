@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Collection, Iterable
+from typing import TYPE_CHECKING
 
 from aiolifx.aiolifx import LifxDiscovery, Light, ScanManager
 
@@ -14,6 +14,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery_flow
 
 from .const import CONF_SERIAL, DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Collection, Iterable
 
 DEFAULT_TIMEOUT = 8.5
 

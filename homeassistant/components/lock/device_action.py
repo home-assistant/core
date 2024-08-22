@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
 from homeassistant.components.device_automation import async_validate_entity_schema
@@ -15,13 +17,15 @@ from homeassistant.const import (
     SERVICE_OPEN,
     SERVICE_UNLOCK,
 )
-from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import get_supported_features
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DOMAIN, LockEntityFeature
+
+if TYPE_CHECKING:
+    from homeassistant.core import Context, HomeAssistant
+    from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 ACTION_TYPES = {"lock", "unlock", "open"}
 

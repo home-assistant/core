@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp.web import Response, json_response
 from nacl.encoding import Base64Encoder, HexEncoder, RawEncoder
@@ -33,6 +32,9 @@ from .const import (
     DATA_DELETED_IDS,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Mapping
 
 _LOGGER = logging.getLogger(__name__)
 

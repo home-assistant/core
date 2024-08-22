@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Final, TypedDict
-
-from pylutron_caseta.smartbridge import Smartbridge
-import voluptuous as vol
+from typing import TYPE_CHECKING, Any, Final, TypedDict
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.device_registry import DeviceInfo
+
+if TYPE_CHECKING:
+    from pylutron_caseta.smartbridge import Smartbridge
+    import voluptuous as vol
+
+    from homeassistant.helpers.device_registry import DeviceInfo
 
 type LutronCasetaConfigEntry = ConfigEntry[LutronCasetaData]
 

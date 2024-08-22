@@ -6,12 +6,10 @@ import logging
 import re
 from typing import TYPE_CHECKING, Any
 
-from bleak.backends.device import BLEDevice
 from motionblindsble.const import DISPLAY_NAME, SETTING_DISCONNECT_TIME, MotionBlindType
 import voluptuous as vol
 
 from homeassistant.components import bluetooth
-from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -39,6 +37,11 @@ from .const import (
     OPTION_DISCONNECT_TIME,
     OPTION_PERMANENT_CONNECTION,
 )
+
+if TYPE_CHECKING:
+    from bleak.backends.device import BLEDevice
+
+    from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 
 _LOGGER = logging.getLogger(__name__)
 

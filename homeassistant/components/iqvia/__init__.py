@@ -3,20 +3,17 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
 from datetime import timedelta
 from functools import partial
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyiqvia import Client
 from pyiqvia.errors import IQVIAError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -35,6 +32,12 @@ from .const import (
     TYPE_DISEASE_FORECAST,
     TYPE_DISEASE_INDEX,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity import EntityDescription
 
 DEFAULT_ATTRIBUTION = "Data provided by IQVIA™"
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)

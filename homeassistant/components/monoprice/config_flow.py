@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pymonoprice import get_monoprice
 from serial import SerialException
@@ -18,7 +18,6 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     CONF_SOURCE_1,
@@ -30,6 +29,9 @@ from .const import (
     CONF_SOURCES,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import VolDictType
 
 _LOGGER = logging.getLogger(__name__)
 

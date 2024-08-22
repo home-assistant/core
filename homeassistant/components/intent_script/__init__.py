@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 import voluptuous as vol
 
 from homeassistant.components.script import CONF_MODE
 from homeassistant.const import CONF_DESCRIPTION, CONF_TYPE, SERVICE_RELOAD
-from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import (
     config_validation as cv,
     intent,
@@ -18,7 +17,10 @@ from homeassistant.helpers import (
     template,
 )
 from homeassistant.helpers.reload import async_integration_yaml_config
-from homeassistant.helpers.typing import ConfigType
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant, ServiceCall
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

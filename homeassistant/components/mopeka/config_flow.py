@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from mopeka_iot_ble import MopekaIOTBluetoothDeviceData as DeviceData
 import voluptuous as vol
@@ -18,6 +17,9 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
 
 from .const import CONF_MEDIUM_TYPE, DEFAULT_MEDIUM_TYPE, DOMAIN, MediumType
+
+if TYPE_CHECKING:
+    from enum import Enum
 
 
 def format_medium_type(medium_type: Enum) -> str:

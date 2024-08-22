@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from contextlib import suppress
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -18,9 +17,6 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.template import Template
-from homeassistant.helpers.trigger import TriggerActionType, TriggerData, TriggerInfo
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.util.json import json_loads
 
 from .. import mqtt
@@ -33,6 +29,17 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.helpers.template import Template
+    from homeassistant.helpers.trigger import (
+        TriggerActionType,
+        TriggerData,
+        TriggerInfo,
+    )
+    from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {

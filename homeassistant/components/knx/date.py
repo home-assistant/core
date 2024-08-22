@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 from datetime import date as dt_date
+from typing import TYPE_CHECKING
 
-from xknx import XKNX
 from xknx.devices import DateDevice as XknxDateDevice
 from xknx.dpt.dpt_11 import KNXDate as XKNXDate
 
-from homeassistant import config_entries
 from homeassistant.components.date import DateEntity
 from homeassistant.const import (
     CONF_ENTITY_CATEGORY,
@@ -17,12 +16,8 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType
 
-from . import KNXModule
 from .const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
@@ -32,6 +27,16 @@ from .const import (
     KNX_ADDRESS,
 )
 from .knx_entity import KnxYamlEntity
+
+if TYPE_CHECKING:
+    from xknx import XKNX
+
+    from homeassistant import config_entries
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType
+
+    from . import KNXModule
 
 
 async def async_setup_entry(

@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Mapping
-from datetime import datetime, timedelta
 import logging
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from aiohttp.client_exceptions import ClientError
 from pykoplenti import (
@@ -17,7 +16,6 @@ from pykoplenti import (
 )
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -26,6 +24,11 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 from .helper import get_hostname_id
+
+if TYPE_CHECKING:
+    from datetime import datetime, timedelta
+
+    from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

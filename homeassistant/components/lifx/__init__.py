@@ -3,17 +3,14 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
 from datetime import datetime, timedelta
 import socket
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from aiolifx.aiolifx import Light
 from aiolifx.connection import LIFXConnection
 import voluptuous as vol
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
@@ -24,7 +21,6 @@ from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
-from homeassistant.helpers.typing import ConfigType
 
 from .const import _LOGGER, DATA_LIFX_MANAGER, DOMAIN, TARGET_ANY
 from .coordinator import LIFXUpdateCoordinator
@@ -32,6 +28,14 @@ from .discovery import async_discover_devices, async_trigger_discovery
 from .manager import LIFXManager
 from .migration import async_migrate_entities_devices, async_migrate_legacy_entries
 from .util import async_entry_is_legacy, async_get_legacy_entry, formatted_serial
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from aiolifx.aiolifx import Light
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.typing import ConfigType
 
 CONF_SERVER = "server"
 CONF_BROADCAST = "broadcast"

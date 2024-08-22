@@ -2,20 +2,23 @@
 
 from __future__ import annotations
 
-from typing import Generic, TypeVar
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 from pylitterbot import Robot
 from pylitterbot.robot import EVENT_UPDATE
 
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
 from .const import DOMAIN
-from .hub import LitterRobotHub
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity import EntityDescription
+
+    from .hub import LitterRobotHub
 
 _RobotT = TypeVar("_RobotT", bound=Robot)
 

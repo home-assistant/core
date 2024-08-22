@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
-from xknx import XKNX
 from xknx.devices import NumericValue
 
-from homeassistant import config_entries
 from homeassistant.components.number import RestoreNumber
 from homeassistant.const import (
     CONF_ENTITY_CATEGORY,
@@ -18,11 +16,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
 
-from . import KNXModule
 from .const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
@@ -32,6 +26,16 @@ from .const import (
 )
 from .knx_entity import KnxYamlEntity
 from .schema import NumberSchema
+
+if TYPE_CHECKING:
+    from xknx import XKNX
+
+    from homeassistant import config_entries
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType
+
+    from . import KNXModule
 
 
 async def async_setup_entry(

@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING, Any
 
 from pyinsteon import devices
 from pyinsteon.address import Address
 from pyinsteon.constants import ALDBStatus, DeviceAction
-from pyinsteon.device_types.device_base import Device
 from pyinsteon.events import OFF_EVENT, OFF_FAST_EVENT, ON_EVENT, ON_FAST_EVENT, Event
 from pyinsteon.managers.link_manager import (
     async_enter_linking_mode,
@@ -43,7 +41,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
     dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_CAT,
@@ -98,6 +95,12 @@ from .schemas import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from pyinsteon.device_types.device_base import Device
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
     from .insteon_entity import InsteonEntity
 
 _LOGGER = logging.getLogger(__name__)

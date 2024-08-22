@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
-from xknx import XKNX
 from xknx.devices.light import ColorTemperatureType, Light as XknxLight, XYYColor
 
 from homeassistant import config_entries
@@ -19,16 +18,13 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
 )
-from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.color as color_util
 
-from . import KNXModule
 from .const import CONF_SYNC_STATE, DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS, ColorTempModes
 from .knx_entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
 from .schema import LightSchema
@@ -57,6 +53,14 @@ from .storage.const import (
     CONF_GA_WRITE,
 )
 from .storage.entity_store_schema import LightColorMode
+
+if TYPE_CHECKING:
+    from xknx import XKNX
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
+
+    from . import KNXModule
 
 
 async def async_setup_entry(

@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from types import TracebackType
-from typing import Self
+from typing import TYPE_CHECKING, Self
 
 from paho.mqtt.client import Client as MQTTClient
+
+if TYPE_CHECKING:
+    from types import TracebackType
 
 _MQTT_LOCK_COUNT = 7
 

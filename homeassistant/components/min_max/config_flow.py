@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
@@ -18,6 +17,9 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 
 from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 _STATISTIC_MEASURES = [
     "min",

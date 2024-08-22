@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
 from homeassistant.components.device_automation import (
@@ -17,11 +19,9 @@ from homeassistant.const import (
     CONF_TYPE,
     SERVICE_TURN_ON,
 )
-from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_supported_features
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType, VolDictType
 
 from . import (
     ATTR_BRIGHTNESS_PCT,
@@ -35,6 +35,10 @@ from . import (
     brightness_supported,
     get_supported_color_modes,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.core import Context, HomeAssistant
+    from homeassistant.helpers.typing import ConfigType, TemplateVarsType, VolDictType
 
 # mypy: disallow-any-generics
 

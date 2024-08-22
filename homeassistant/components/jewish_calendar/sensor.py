@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import date as Date
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from hdate import HDate, HebrewDate, htables
 from hdate.zmanim import Zmanim
@@ -14,15 +13,19 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import SUN_EVENT_SUNSET, EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 from .entity import JewishCalendarEntity
+
+if TYPE_CHECKING:
+    from datetime import date as Date
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
 

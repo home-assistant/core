@@ -4,12 +4,15 @@ from __future__ import annotations
 
 from http import HTTPStatus
 import logging
+from typing import TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorEntity
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 

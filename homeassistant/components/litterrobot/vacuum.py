@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pylitterbot import LitterRobot
 from pylitterbot.enums import LitterBoxStatus
@@ -19,13 +18,18 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.const import STATE_OFF
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from . import LitterRobotConfigEntry
 from .entity import LitterRobotEntity
+
+if TYPE_CHECKING:
+    from datetime import time
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import LitterRobotConfigEntry
 
 SERVICE_SET_SLEEP_MODE = "set_sleep_mode"
 

@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC
-from collections import OrderedDict
-from typing import ClassVar, Final
+from typing import TYPE_CHECKING, ClassVar, Final
 
 import voluptuous as vol
 from xknx.devices.climate import SetpointShiftMode
@@ -65,6 +64,9 @@ from .validation import (
     string_type_validator,
     sync_state_validator,
 )
+
+if TYPE_CHECKING:
+    from collections import OrderedDict
 
 
 ##################

@@ -2,23 +2,27 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from pyisy.constants import ISY_VALUE_UNKNOWN
-from pyisy.helpers import NodeProperty
-from pyisy.nodes import Node
 
 from homeassistant.components.light import ColorMode, LightEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import _LOGGER, CONF_RESTORE_LIGHT_STATE, DOMAIN, UOM_PERCENTAGE
 from .entity import ISYNodeEntity
-from .models import IsyData
+
+if TYPE_CHECKING:
+    from pyisy.helpers import NodeProperty
+    from pyisy.nodes import Node
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.device_registry import DeviceInfo
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .models import IsyData
 
 ATTR_LAST_BRIGHTNESS = "last_brightness"
 

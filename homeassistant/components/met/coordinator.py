@@ -2,29 +2,32 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import timedelta
 import logging
 from random import randrange
-from types import MappingProxyType
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 
 import metno
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     EVENT_CORE_CONFIG_UPDATE,
 )
-from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_TRACK_HOME, DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from types import MappingProxyType
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import Event, HomeAssistant
 
 # Dedicated Home Assistant endpoint - do not change!
 URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/2.0/complete"

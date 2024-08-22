@@ -2,23 +2,20 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import functools
 import logging
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
 from homeassistant.components import tag
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_VALUE_TEMPLATE
 from homeassistant.core import HassJobType, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
 from .const import ATTR_DISCOVERY_HASH, CONF_QOS, CONF_TOPIC
-from .discovery import MQTTDiscoveryPayload
 from .mixins import (
     MqttDiscoveryDeviceUpdateMixin,
     async_handle_schema_error,
@@ -34,8 +31,16 @@ from .models import (
     ReceivePayloadType,
 )
 from .schemas import MQTT_ENTITY_DEVICE_INFO_SCHEMA
-from .subscription import EntitySubscription
 from .util import valid_subscribe_topic
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+    from .discovery import MQTTDiscoveryPayload
+    from .subscription import EntitySubscription
 
 _LOGGER = logging.getLogger(__name__)
 

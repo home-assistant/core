@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
-from typing import Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate
 
 from demetriek import LaMetricConnectionError, LaMetricError
 
@@ -12,8 +11,12 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
-from .coordinator import LaMetricDataUpdateCoordinator
 from .entity import LaMetricEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
+    from .coordinator import LaMetricDataUpdateCoordinator
 
 
 def lametric_exception_handler[_LaMetricEntityT: LaMetricEntity, **_P](

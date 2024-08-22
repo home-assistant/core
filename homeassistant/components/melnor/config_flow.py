@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import async_discovered_service_info
-from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
 
 from .const import DOMAIN, MANUFACTURER_DATA_START, MANUFACTURER_ID
+
+if TYPE_CHECKING:
+    from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 
 
 class MelnorConfigFlow(ConfigFlow, domain=DOMAIN):

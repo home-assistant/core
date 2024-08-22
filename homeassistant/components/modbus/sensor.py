@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
@@ -19,8 +18,6 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -29,7 +26,14 @@ from homeassistant.helpers.update_coordinator import (
 from . import get_hub
 from .base_platform import BaseStructPlatform
 from .const import CONF_SLAVE_COUNT, CONF_VIRTUAL_COUNT
-from .modbus import ModbusHub
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+    from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
 

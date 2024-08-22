@@ -5,19 +5,23 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
-from iottycloud.device import Device
 from iottycloud.verbs import RESULT, STATUS
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, device_registry as dr
-from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import api
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from iottycloud.device import Device
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
+    from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 

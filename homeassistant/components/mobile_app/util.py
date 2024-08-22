@@ -6,7 +6,6 @@ import asyncio
 from typing import TYPE_CHECKING
 
 from homeassistant.components import cloud
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
 from .const import (
@@ -22,6 +21,8 @@ from .const import (
 )
 
 if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+
     from .notify import MobileAppNotificationService
 
 

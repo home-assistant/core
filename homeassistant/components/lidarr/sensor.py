@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import dataclasses
-from typing import Any, Generic
+from typing import TYPE_CHECKING, Any, Generic
 
 from aiopyarr import LidarrQueue, LidarrQueueItem, LidarrRootFolder
 
@@ -15,12 +14,16 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import UnitOfInformation
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LidarrConfigEntry, LidarrEntity
 from .const import BYTE_SIZES
 from .coordinator import LidarrDataUpdateCoordinator, T
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 
 def get_space(data: list[LidarrRootFolder], name: str) -> str:

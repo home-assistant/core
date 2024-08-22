@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from jvcprojector import JvcProjector, JvcProjectorAuthError, JvcProjectorConnectError
 from jvcprojector.projector import DEFAULT_PORT
@@ -15,6 +14,9 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util.network import is_host_valid
 
 from .const import DOMAIN, NAME
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 
 class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):

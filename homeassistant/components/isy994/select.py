@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from pyisy.constants import (
     ATTR_ACTION,
@@ -19,11 +19,8 @@ from pyisy.constants import (
     UOM_INDEX as ISY_UOM_INDEX,
     UOM_TO_STATES,
 )
-from pyisy.helpers import EventListener, NodeProperty
-from pyisy.nodes import Node, NodeChangedEvent
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -33,13 +30,20 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import _LOGGER, DOMAIN, UOM_INDEX
 from .entity import ISYAuxControlEntity
-from .models import IsyData
+
+if TYPE_CHECKING:
+    from pyisy.helpers import EventListener, NodeProperty
+    from pyisy.nodes import Node, NodeChangedEvent
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.device_registry import DeviceInfo
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .models import IsyData
 
 
 def time_string(i: int) -> str:

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from demetriek import (
     AlarmSound,
     Chart,
@@ -33,8 +35,10 @@ from .const import (
     SERVICE_CHART,
     SERVICE_MESSAGE,
 )
-from .coordinator import LaMetricDataUpdateCoordinator
 from .helpers import async_get_coordinator_by_device_id
+
+if TYPE_CHECKING:
+    from .coordinator import LaMetricDataUpdateCoordinator
 
 SERVICE_BASE_SCHEMA = vol.Schema(
     {

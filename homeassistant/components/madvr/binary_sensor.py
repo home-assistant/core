@@ -2,19 +2,24 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MadVRConfigEntry
-from .coordinator import MadVRCoordinator
 from .entity import MadVREntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import MadVRConfigEntry
+    from .coordinator import MadVRCoordinator
 
 _HDR_FLAG = "hdr_flag"
 _OUTGOING_HDR_FLAG = "outgoing_hdr_flag"

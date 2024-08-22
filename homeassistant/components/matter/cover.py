@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from enum import IntEnum
 from math import floor
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from chip.clusters import Objects as clusters
 
@@ -16,15 +16,17 @@ from homeassistant.components.cover import (
     CoverEntityDescription,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import LOGGER
 from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 # The MASK used for extracting bits 0 to 1 of the byte.
 OPERATIONAL_STATUS_MASK = 0b11

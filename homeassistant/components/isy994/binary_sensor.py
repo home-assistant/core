@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyisy.constants import (
     CMD_OFF,
@@ -12,18 +12,14 @@ from pyisy.constants import (
     PROTO_INSTEON,
     PROTO_ZWAVE,
 )
-from pyisy.helpers import NodeProperty
 from pyisy.nodes import Group, Node
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -44,7 +40,15 @@ from .const import (
     TYPE_INSTEON_MOTION,
 )
 from .entity import ISYNodeEntity, ISYProgramEntity
-from .models import IsyData
+
+if TYPE_CHECKING:
+    from pyisy.helpers import NodeProperty
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.device_registry import DeviceInfo
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .models import IsyData
 
 DEVICE_PARENT_REQUIRED = [
     BinarySensorDeviceClass.OPENING,

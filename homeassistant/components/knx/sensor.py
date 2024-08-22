@@ -2,17 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import partial
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from xknx import XKNX
 from xknx.core.connection_state import XknxConnectionState, XknxConnectionType
 from xknx.devices import Sensor as XknxSensor
 
-from homeassistant import config_entries
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     SensorDeviceClass,
@@ -28,15 +25,23 @@ from homeassistant.const import (
     EntityCategory,
     Platform,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.util.enum import try_parse_enum
 
-from . import KNXModule
 from .const import ATTR_SOURCE, DATA_KNX_CONFIG, DOMAIN
 from .knx_entity import KnxYamlEntity
 from .schema import SensorSchema
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from xknx import XKNX
+
+    from homeassistant import config_entries
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, StateType
+
+    from . import KNXModule
 
 SCAN_INTERVAL = timedelta(seconds=10)
 

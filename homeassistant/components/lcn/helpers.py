@@ -6,12 +6,11 @@ import asyncio
 from copy import deepcopy
 from itertools import chain
 import re
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import pypck
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_BINARY_SENSORS,
@@ -31,7 +30,6 @@ from homeassistant.const import (
     CONF_SWITCHES,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
@@ -58,6 +56,10 @@ from .const import (
     THRESHOLDS,
     VARIABLES,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 # typing
 type AddressType = tuple[int, int, bool]

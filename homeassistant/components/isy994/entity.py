@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from pyisy.constants import (
     ATTR_ACTION,
@@ -16,10 +16,6 @@ from pyisy.constants import (
     TAG_ADDRESS,
     TAG_ENABLED,
 )
-from pyisy.helpers import EventListener, NodeProperty
-from pyisy.nodes import Group, Node, NodeChangedEvent
-from pyisy.programs import Program
-from pyisy.variables import Variable
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
@@ -28,6 +24,12 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from pyisy.helpers import EventListener, NodeProperty
+    from pyisy.nodes import Group, Node, NodeChangedEvent
+    from pyisy.programs import Program
+    from pyisy.variables import Variable
 
 
 class ISYEntity(Entity):

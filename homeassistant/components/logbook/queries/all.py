@@ -2,18 +2,23 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from sqlalchemy import lambda_stmt
-from sqlalchemy.sql.lambdas import StatementLambdaElement
-from sqlalchemy.sql.selectable import Select
 
 from homeassistant.components.recorder.db_schema import (
     LAST_UPDATED_INDEX_TS,
     Events,
     States,
 )
-from homeassistant.components.recorder.filters import Filters
 
 from .common import apply_states_filters, select_events_without_states, select_states
+
+if TYPE_CHECKING:
+    from sqlalchemy.sql.lambdas import StatementLambdaElement
+    from sqlalchemy.sql.selectable import Select
+
+    from homeassistant.components.recorder.filters import Filters
 
 
 def all_stmt(

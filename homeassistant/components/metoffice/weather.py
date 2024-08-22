@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
-
-from datapoint.Timestep import Timestep
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -17,11 +15,9 @@ from homeassistant.components.weather import (
     Forecast,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfPressure, UnitOfSpeed, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 
 from . import get_device_info
@@ -36,6 +32,12 @@ from .const import (
     MODE_DAILY,
 )
 from .data import MetOfficeData
+
+if TYPE_CHECKING:
+    from datapoint.Timestep import Timestep
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 
 async def async_setup_entry(

@@ -2,22 +2,26 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from datetime import datetime
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
-from pylitejet import LiteJet
 import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from datetime import datetime
+
+    from pylitejet import LiteJet
+
+    from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+    from homeassistant.helpers.typing import ConfigType
 
 CONF_NUMBER = "number"
 CONF_HELD_MORE_THAN = "held_more_than"

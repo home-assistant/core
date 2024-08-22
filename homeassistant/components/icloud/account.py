@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import operator
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
@@ -13,16 +13,12 @@ from pyicloud.exceptions import (
     PyiCloudNoDevicesException,
     PyiCloudServiceNotActivatedException,
 )
-from pyicloud.services.findmyiphone import AppleDevice
 
 from homeassistant.components.zone import async_active_zone
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_point_in_utc_time
-from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.dt import utcnow
@@ -48,6 +44,13 @@ from .const import (
     DEVICE_STATUS_SET,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from pyicloud.services.findmyiphone import AppleDevice
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+    from homeassistant.helpers.storage import Store
 
 # entity attributes
 ATTR_ACCOUNT_FETCH_INTERVAL = "account_fetch_interval"

@@ -2,16 +2,21 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from typing import TYPE_CHECKING
 
 from aiomealie import Mealplan, MealplanEntryType
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import MealieConfigEntry, MealieMealplanCoordinator
 from .entity import MealieEntity
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import MealieConfigEntry, MealieMealplanCoordinator
 
 
 async def async_setup_entry(

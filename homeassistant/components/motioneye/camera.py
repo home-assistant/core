@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from contextlib import suppress
-from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiohttp
 from jinja2 import Template
@@ -30,7 +29,6 @@ from homeassistant.components.mjpeg import (
     CONF_STILL_IMAGE_URL,
     MjpegCamera,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_NAME,
@@ -42,8 +40,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import (
     MotionEyeEntity,
@@ -65,6 +61,13 @@ from .const import (
     SERVICE_SNAPSHOT,
     TYPE_MOTIONEYE_MJPEG_CAMERA,
 )
+
+if TYPE_CHECKING:
+    from types import MappingProxyType
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 PLATFORMS = [Platform.CAMERA]
 

@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -33,6 +32,9 @@ from .const import (
 )
 from .coordinator import get_api
 from .errors import CannotConnect, LoginError
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 
 class MikrotikFlowHandler(ConfigFlow, domain=DOMAIN):

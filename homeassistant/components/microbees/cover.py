@@ -1,6 +1,6 @@
 """Cover integration microBees."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from microBeesPy import Actuator
 
@@ -16,8 +16,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN
-from .coordinator import MicroBeesUpdateCoordinator
 from .entity import MicroBeesEntity
+
+if TYPE_CHECKING:
+    from .coordinator import MicroBeesUpdateCoordinator
 
 COVER_IDS = {47: "roller_shutter"}
 

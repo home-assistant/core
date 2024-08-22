@@ -3,18 +3,21 @@
 from __future__ import annotations
 
 from functools import wraps
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.json import json_fragment
 
 from .const import CONF_URL_PATH, DOMAIN, ConfigNotFound
-from .dashboard import LovelaceStorage
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.json import json_fragment
+
+    from .dashboard import LovelaceStorage
 
 
 def _handle_errors(func):

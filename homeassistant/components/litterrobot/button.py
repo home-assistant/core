@@ -2,20 +2,24 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import itertools
-from typing import Any, Generic
+from typing import TYPE_CHECKING, Any, Generic
 
 from pylitterbot import FeederRobot, LitterRobot3
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LitterRobotConfigEntry
 from .entity import LitterRobotEntity, _RobotT
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import LitterRobotConfigEntry
 
 
 async def async_setup_entry(

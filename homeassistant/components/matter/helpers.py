@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -13,6 +12,8 @@ from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN, ID_TYPE_DEVICE_ID
 
 if TYPE_CHECKING:
+    import asyncio
+
     from matter_server.client.models.node import MatterEndpoint, MatterNode
     from matter_server.common.models import ServerInfoMessage
 

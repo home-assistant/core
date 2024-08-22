@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -16,7 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     AVAILABILITY_LATEST,
@@ -48,6 +49,9 @@ from .const import (
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
 )
 from .util import valid_subscribe_topic
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
 
 MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
     {

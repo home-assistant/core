@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
@@ -11,18 +11,21 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import parse_datetime
 
-from . import JellyfinConfigEntry
 from .browse_media import build_item_response, build_root_response
 from .client_wrapper import get_artwork_url
 from .const import CONTENT_TYPE_MAP, DOMAIN, LOGGER
-from .coordinator import JellyfinDataUpdateCoordinator
 from .entity import JellyfinEntity
+
+if TYPE_CHECKING:
+    from homeassistant.components.media_player.browse_media import BrowseMedia
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import JellyfinConfigEntry
+    from .coordinator import JellyfinDataUpdateCoordinator
 
 
 async def async_setup_entry(

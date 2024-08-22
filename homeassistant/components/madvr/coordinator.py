@@ -5,9 +5,6 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from madvr.madvr import Madvr
-
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
@@ -15,6 +12,10 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
+    from madvr.madvr import Madvr
+
+    from homeassistant.core import HomeAssistant
+
     from . import MadVRConfigEntry
 
 

@@ -3,18 +3,16 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Mapping
 import contextlib
 from dataclasses import asdict, dataclass
 from enum import StrEnum
 from functools import lru_cache
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.const import EVENT_LOGGING_CHANGED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 from .const import (
@@ -27,6 +25,11 @@ from .const import (
     STORAGE_LOG_KEY,
     STORAGE_VERSION,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from homeassistant.helpers.typing import ConfigType
 
 SAVE_DELAY = 15.0
 # At startup, we want to save after a long delay to avoid

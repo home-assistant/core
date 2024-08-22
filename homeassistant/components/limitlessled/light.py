@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
-from typing import Any, Concatenate, cast
+from typing import TYPE_CHECKING, Any, Concatenate, cast
 
 from limitlessled import Color
 from limitlessled.bridge import Bridge
-from limitlessled.group import Group
 from limitlessled.group.dimmer import DimmerGroup
 from limitlessled.group.rgbw import RgbwGroup
 from limitlessled.group.rgbww import RgbwwGroup
@@ -33,12 +31,18 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE, STATE_ON
-from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.color import color_hs_to_RGB, color_temperature_mired_to_kelvin
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from limitlessled.group import Group
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 

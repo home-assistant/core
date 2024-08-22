@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyisy.constants import (
     ATTR_ACTION,
@@ -12,24 +12,28 @@ from pyisy.constants import (
     PROTO_GROUP,
     TAG_ADDRESS,
 )
-from pyisy.helpers import EventListener
-from pyisy.nodes import Node, NodeChangedEvent
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import ISYAuxControlEntity, ISYNodeEntity, ISYProgramEntity
-from .models import IsyData
+
+if TYPE_CHECKING:
+    from pyisy.helpers import EventListener
+    from pyisy.nodes import Node, NodeChangedEvent
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.device_registry import DeviceInfo
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .models import IsyData
 
 
 @dataclass(frozen=True)

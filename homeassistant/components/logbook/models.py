@@ -2,14 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, Final, NamedTuple, cast
 
-from sqlalchemy.engine.row import Row
-
-from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
     bytes_to_ulid_or_none,
     bytes_to_uuid_hex_or_none,
@@ -18,9 +14,16 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.const import ATTR_ICON, EVENT_STATE_CHANGED
 from homeassistant.core import Context, Event, State, callback
-from homeassistant.util.event_type import EventType
 from homeassistant.util.json import json_loads
 from homeassistant.util.ulid import ulid_to_bytes
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Mapping
+
+    from sqlalchemy.engine.row import Row
+
+    from homeassistant.components.recorder.filters import Filters
+    from homeassistant.util.event_type import EventType
 
 
 @dataclass(slots=True)

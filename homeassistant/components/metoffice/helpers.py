@@ -3,15 +3,18 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 import datapoint
-from datapoint.Site import Site
 
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util.dt import utcnow
 
 from .const import MODE_3HOURLY
 from .data import MetOfficeData
+
+if TYPE_CHECKING:
+    from datapoint.Site import Site
 
 _LOGGER = logging.getLogger(__name__)
 

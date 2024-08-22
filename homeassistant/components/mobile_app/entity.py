@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ICON, CONF_NAME, CONF_UNIQUE_ID, STATE_UNAVAILABLE
 from homeassistant.core import State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -21,6 +20,9 @@ from .const import (
     SIGNAL_SENSOR_UPDATE,
 )
 from .helpers import device_info
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
 
 
 class MobileAppEntity(RestoreEntity):

@@ -5,15 +5,18 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 from time import time
+from typing import TYPE_CHECKING
 
 from lacrosse_view import HTTPError, LaCrosse, Location, LoginError, Sensor
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import SCAN_INTERVAL
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

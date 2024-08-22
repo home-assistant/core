@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-from typing import Any, TypedDict
-
-from lmcloud.const import FirmwareType
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.core import HomeAssistant
 
-from . import LaMarzoccoConfigEntry
+if TYPE_CHECKING:
+    from lmcloud.const import FirmwareType
+
+    from homeassistant.core import HomeAssistant
+
+    from . import LaMarzoccoConfigEntry
 
 TO_REDACT = {
     "serial_number",

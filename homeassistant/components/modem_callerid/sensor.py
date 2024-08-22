@@ -2,16 +2,20 @@
 
 from __future__ import annotations
 
-from phone_modem import PhoneModem
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_IDLE
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CID, DATA_KEY_API, DOMAIN
+
+if TYPE_CHECKING:
+    from phone_modem import PhoneModem
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 
 async def async_setup_entry(

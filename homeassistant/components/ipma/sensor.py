@@ -3,23 +3,27 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-
-from pyipma.api import IPMA_API
-from pyipma.location import Location
-from pyipma.rcm import RCM
-from pyipma.uv import UV
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
 
 from .const import DATA_API, DATA_LOCATION, DOMAIN, MIN_TIME_BETWEEN_UPDATES
 from .entity import IPMADevice
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
+    from pyipma.api import IPMA_API
+    from pyipma.location import Location
+    from pyipma.rcm import RCM
+    from pyipma.uv import UV
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
 

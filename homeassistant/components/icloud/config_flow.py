@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 import os
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
@@ -31,6 +30,9 @@ from .const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 CONF_TRUSTED_DEVICE = "trusted_device"
 CONF_VERIFICATION_CODE = "verification_code"

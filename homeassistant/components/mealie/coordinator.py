@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from aiomealie import (
     MealieAuthenticationError,
@@ -18,12 +19,14 @@ from aiomealie import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
 from .const import LOGGER
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 WEEK = timedelta(days=7)
 

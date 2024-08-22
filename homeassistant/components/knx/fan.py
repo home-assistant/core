@@ -3,26 +3,29 @@
 from __future__ import annotations
 
 import math
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from xknx.devices import Fan as XknxFan
 
-from homeassistant import config_entries
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
 from homeassistant.util.scaling import int_states_in_range
 
-from . import KNXModule
 from .const import DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS
 from .knx_entity import KnxYamlEntity
 from .schema import FanSchema
+
+if TYPE_CHECKING:
+    from homeassistant import config_entries
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType
+
+    from . import KNXModule
 
 DEFAULT_PERCENTAGE: Final = 50
 

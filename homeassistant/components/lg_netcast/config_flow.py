@@ -10,7 +10,6 @@ from pylgnetcast import AccessTokenError, LgNetCastClient, SessionIdError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_HOST,
@@ -26,6 +25,9 @@ from homeassistant.util.network import is_host_valid
 
 from .const import DEFAULT_NAME, DOMAIN
 from .helpers import LGNetCastDetailDiscoveryError, async_discover_netcast_details
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigFlowResult
 
 DISPLAY_ACCESS_TOKEN_INTERVAL = timedelta(seconds=1)
 

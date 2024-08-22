@@ -7,7 +7,7 @@ import contextlib
 from itertools import chain
 import logging
 import ssl
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from pylutron_caseta import BUTTON_STATUS_PRESSED
 from pylutron_caseta.smartbridge import Smartbridge
@@ -21,7 +21,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ACTION_PRESS,
@@ -69,6 +68,9 @@ from .models import (
     LutronKeypadData,
 )
 from .util import serial_to_unique_id
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

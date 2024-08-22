@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 import sqlalchemy
 from sqlalchemy import select
-from sqlalchemy.sql.elements import BooleanClauseList, ColumnElement
 from sqlalchemy.sql.expression import literal
-from sqlalchemy.sql.selectable import Select
 
 from homeassistant.components.recorder.db_schema import (
     EVENTS_CONTEXT_ID_BIN_INDEX,
@@ -27,6 +25,10 @@ from homeassistant.components.recorder.db_schema import (
 from homeassistant.components.recorder.filters import like_domain_matchers
 
 from ..const import ALWAYS_CONTINUOUS_DOMAINS, CONDITIONALLY_CONTINUOUS_DOMAINS
+
+if TYPE_CHECKING:
+    from sqlalchemy.sql.elements import BooleanClauseList, ColumnElement
+    from sqlalchemy.sql.selectable import Select
 
 # Domains that are continuous if there is a UOM set on the entity
 CONDITIONALLY_CONTINUOUS_ENTITY_ID_LIKE = like_domain_matchers(

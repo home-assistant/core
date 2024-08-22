@@ -2,16 +2,20 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
-from mill import Mill
-from mill_local import Mill as MillLocal
-
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from datetime import timedelta
+
+    from mill import Mill
+    from mill_local import Mill as MillLocal
+
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

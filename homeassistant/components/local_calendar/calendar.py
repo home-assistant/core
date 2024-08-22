@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from datetime import date, datetime, timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
 from ical.event import Event
 from ical.exceptions import CalendarParseError
@@ -22,14 +21,19 @@ from homeassistant.components.calendar import (
     CalendarEntityFeature,
     CalendarEvent,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_CALENDAR_NAME, DOMAIN
-from .store import LocalCalendarStore
+
+if TYPE_CHECKING:
+    from ical.calendar import Calendar
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .store import LocalCalendarStore
 
 _LOGGER = logging.getLogger(__name__)
 

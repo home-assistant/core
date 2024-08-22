@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
@@ -10,7 +9,7 @@ import math
 import queue
 import threading
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from influxdb import InfluxDBClient, exceptions
 from influxdb_client import InfluxDBClient as InfluxDBClientV2
@@ -47,7 +46,6 @@ from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
     convert_include_exclude_filter,
 )
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     API_VERSION_2,
@@ -102,6 +100,11 @@ from .const import (
     WRITE_ERROR,
     WROTE_MESSAGE,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

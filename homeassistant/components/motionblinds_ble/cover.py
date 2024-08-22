@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from motionblindsble.const import MotionBlindType, MotionRunningType
-from motionblindsble.device import MotionDevice
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -17,12 +16,16 @@ from homeassistant.components.cover import (
     CoverEntityDescription,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_BLIND_TYPE, CONF_MAC_CODE, DOMAIN, ICON_VERTICAL_BLIND
 from .entity import MotionblindsBLEEntity
+
+if TYPE_CHECKING:
+    from motionblindsble.device import MotionDevice
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
 

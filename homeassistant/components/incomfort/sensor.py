@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
-
-from incomfortclient import Heater as InComfortHeater
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -14,13 +12,18 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import UnitOfPressure, UnitOfTemperature
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
-from . import InComfortConfigEntry
-from .coordinator import InComfortDataCoordinator
 from .entity import IncomfortBoilerEntity
+
+if TYPE_CHECKING:
+    from incomfortclient import Heater as InComfortHeater
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import StateType
+
+    from . import InComfortConfigEntry
+    from .coordinator import InComfortDataCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)

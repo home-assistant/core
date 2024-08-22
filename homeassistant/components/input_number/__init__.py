@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from contextlib import suppress
 import logging
-from typing import Self
+from typing import TYPE_CHECKING, Self
 
 import voluptuous as vol
 
@@ -25,7 +25,9 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType, VolDictType
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType, VolDictType
 
 _LOGGER = logging.getLogger(__name__)
 

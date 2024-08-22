@@ -2,14 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-
-from aiolyric import Lyric
-from aiolyric.objects.device import LyricDevice
-from aiolyric.objects.location import LyricLocation
-from aiolyric.objects.priority import LyricAccessory, LyricRoom
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -17,12 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from . import LyricAccessoryEntity, LyricDeviceEntity
@@ -34,6 +24,20 @@ from .const import (
     PRESET_TEMPORARY_HOLD,
     PRESET_VACATION_HOLD,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from aiolyric import Lyric
+    from aiolyric.objects.device import LyricDevice
+    from aiolyric.objects.location import LyricLocation
+    from aiolyric.objects.priority import LyricAccessory, LyricRoom
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import StateType
+    from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 LYRIC_SETPOINT_STATUS_NAMES = {
     PRESET_NO_HOLD: "Following Schedule",

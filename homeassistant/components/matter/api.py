@@ -2,21 +2,26 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate
 
-from matter_server.client.models.node import MatterNode
 from matter_server.common.errors import MatterError
 from matter_server.common.helpers.util import dataclass_to_dict
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 
-from .adapter import MatterAdapter
 from .helpers import MissingNode, get_matter, node_from_ha_device_id
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
+    from matter_server.client.models.node import MatterNode
+
+    from homeassistant.components.websocket_api import ActiveConnection
+
+    from .adapter import MatterAdapter
 
 ID = "id"
 TYPE = "type"

@@ -3,19 +3,15 @@
 from __future__ import annotations
 
 import socket
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from aiolifx.aiolifx import Light
 from aiolifx.connection import LIFXConnection
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
-from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
     _LOGGER,
@@ -34,6 +30,13 @@ from .util import (
     lifx_features,
     mac_matches_serial_number,
 )
+
+if TYPE_CHECKING:
+    from aiolifx.aiolifx import Light
+
+    from homeassistant.components import zeroconf
+    from homeassistant.components.dhcp import DhcpServiceInfo
+    from homeassistant.helpers.typing import DiscoveryInfoType
 
 
 class LifXConfigFlow(ConfigFlow, domain=DOMAIN):

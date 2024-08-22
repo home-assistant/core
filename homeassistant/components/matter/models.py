@@ -3,15 +3,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 from chip.clusters import Objects as clusters
-from chip.clusters.Objects import ClusterAttributeDescriptor
-from matter_server.client.models.device_types import DeviceType
-from matter_server.client.models.node import MatterEndpoint
 
-from homeassistant.const import Platform
-from homeassistant.helpers.entity import EntityDescription
+if TYPE_CHECKING:
+    from chip.clusters.Objects import ClusterAttributeDescriptor
+    from matter_server.client.models.device_types import DeviceType
+    from matter_server.client.models.node import MatterEndpoint
+
+    from homeassistant.const import Platform
+    from homeassistant.helpers.entity import EntityDescription
 
 type SensorValueTypes = type[
     clusters.uint | int | clusters.Nullable | clusters.float32 | float

@@ -8,9 +8,9 @@ from __future__ import annotations
 
 import datetime
 from random import random
+from typing import TYPE_CHECKING
 
 from homeassistant.components.recorder import DOMAIN as RECORDER_DOMAIN, get_instance
-from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     async_import_statistics,
@@ -18,11 +18,17 @@ from homeassistant.components.recorder.statistics import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import Platform, UnitOfEnergy, UnitOfTemperature, UnitOfVolume
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
+
+if TYPE_CHECKING:
+    from homeassistant.components.recorder.models import (
+        StatisticData,
+        StatisticMetaData,
+    )
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "kitchen_sink"
 

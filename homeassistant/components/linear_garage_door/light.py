@@ -1,6 +1,6 @@
 """Linear garage door light."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from linear_garage_door import Linear
 
@@ -10,8 +10,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import LinearUpdateCoordinator
 from .entity import LinearEntity
+
+if TYPE_CHECKING:
+    from .coordinator import LinearUpdateCoordinator
 
 SUPPORTED_SUBDEVICES = ["Light"]
 

@@ -2,20 +2,25 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, HEV_CYCLE_STATE
-from .coordinator import LIFXUpdateCoordinator
 from .entity import LIFXEntity
 from .util import lifx_features
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import LIFXUpdateCoordinator
 
 HEV_CYCLE_STATE_SENSOR = BinarySensorEntityDescription(
     key=HEV_CYCLE_STATE,

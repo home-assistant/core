@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 import logging
 import time
+from typing import TYPE_CHECKING
 
 from ibeacon_ble import (
     APPLE_MFR_ID,
@@ -16,9 +16,7 @@ from ibeacon_ble import (
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -36,6 +34,12 @@ from .const import (
     UNAVAILABLE_TIMEOUT,
     UPDATE_INTERVAL,
 )
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.device_registry import DeviceRegistry
 
 _LOGGER = logging.getLogger(__name__)
 

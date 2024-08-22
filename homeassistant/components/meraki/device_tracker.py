@@ -5,6 +5,7 @@ from __future__ import annotations
 from http import HTTPStatus
 import json
 import logging
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -16,7 +17,9 @@ from homeassistant.components.device_tracker import (
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 CONF_VALIDATOR = "validator"
 CONF_SECRET = "secret"

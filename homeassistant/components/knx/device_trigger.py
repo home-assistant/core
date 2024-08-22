@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 import voluptuous as vol
 
@@ -11,14 +11,10 @@ from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import selector
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType
 
 from . import KNXModule, trigger
 from .const import DOMAIN
-from .project import KNXProject
 from .trigger import (
     CONF_KNX_DESTINATION,
     CONF_KNX_GROUP_VALUE_READ,
@@ -30,6 +26,13 @@ from .trigger import (
     TELEGRAM_TRIGGER_SCHEMA,
     TRIGGER_SCHEMA as TRIGGER_TRIGGER_SCHEMA,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+    from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+    from homeassistant.helpers.typing import ConfigType
+
+    from .project import KNXProject
 
 TRIGGER_TELEGRAM: Final = "telegram"
 

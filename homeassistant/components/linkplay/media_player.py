@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 import logging
-from typing import Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate
 
-from linkplay.bridge import LinkPlayBridge
 from linkplay.consts import EqualizerMode, LoopMode, PlayingMode, PlayingStatus
 from linkplay.exceptions import LinkPlayException, LinkPlayRequestException
 
@@ -20,15 +18,22 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from . import LinkPlayConfigEntry
 from .const import DOMAIN
 from .utils import get_info_from_project
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
+    from linkplay.bridge import LinkPlayBridge
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import LinkPlayConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 STATE_MAP: dict[PlayingStatus, MediaPlayerState] = {

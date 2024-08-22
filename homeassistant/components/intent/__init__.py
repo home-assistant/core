@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
-from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components import http
@@ -41,7 +40,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.helpers import config_validation as cv, integration_platform, intent
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, TIMER_DATA
 from .timers import (
@@ -58,6 +56,11 @@ from .timers import (
     async_device_supports_timers,
     async_register_timer_handler,
 )
+
+if TYPE_CHECKING:
+    from aiohttp import web
+
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

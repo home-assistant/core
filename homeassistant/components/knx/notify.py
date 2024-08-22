@@ -2,25 +2,29 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from xknx import XKNX
 from xknx.devices import Notification as XknxNotification
 
-from homeassistant import config_entries
 from homeassistant.components.notify import (
     BaseNotificationService,
     NotifyEntity,
     migrate_notify_issue,
 )
 from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, CONF_TYPE, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import KNXModule
 from .const import DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS
 from .knx_entity import KnxYamlEntity
+
+if TYPE_CHECKING:
+    from xknx import XKNX
+
+    from homeassistant import config_entries
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+    from . import KNXModule
 
 
 async def async_get_service(

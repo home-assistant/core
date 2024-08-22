@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable, Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION
-from homeassistant.core import Context, HomeAssistant, State
 
 from . import ATTR_OPTIONS, DOMAIN, SERVICE_SELECT_OPTION, SERVICE_SET_OPTIONS
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
+
+    from homeassistant.core import Context, HomeAssistant, State
 
 ATTR_GROUP = [ATTR_OPTION, ATTR_OPTIONS]
 

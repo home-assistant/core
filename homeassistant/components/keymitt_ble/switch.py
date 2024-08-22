@@ -2,23 +2,26 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
 )
-from homeassistant.helpers.typing import VolDictType
 
 from .const import DOMAIN
-from .coordinator import MicroBotDataUpdateCoordinator
 from .entity import MicroBotEntity
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import VolDictType
+
+    from .coordinator import MicroBotDataUpdateCoordinator
 
 CALIBRATE = "calibrate"
 CALIBRATE_SCHEMA: VolDictType = {

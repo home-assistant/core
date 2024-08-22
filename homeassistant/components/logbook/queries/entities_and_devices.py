@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Collection, Iterable
+from typing import TYPE_CHECKING
 
 from sqlalchemy import lambda_stmt, select, union_all
-from sqlalchemy.sql.elements import ColumnElement
-from sqlalchemy.sql.lambdas import StatementLambdaElement
-from sqlalchemy.sql.selectable import CTE, CompoundSelect, Select
 
 from homeassistant.components.recorder.db_schema import (
     EventData,
@@ -31,6 +28,13 @@ from .entities import (
     apply_event_entity_id_matchers,
     states_select_for_entity_ids,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Collection, Iterable
+
+    from sqlalchemy.sql.elements import ColumnElement
+    from sqlalchemy.sql.lambdas import StatementLambdaElement
+    from sqlalchemy.sql.selectable import CTE, CompoundSelect, Select
 
 
 def _select_entities_device_id_context_ids_sub_query(

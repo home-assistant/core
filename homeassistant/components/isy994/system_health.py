@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-from pyisy import ISY
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components import system_health
 from homeassistant.config_entries import ConfigEntry
@@ -12,7 +10,11 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN, ISY_URL_POSTFIX
-from .models import IsyData
+
+if TYPE_CHECKING:
+    from pyisy import ISY
+
+    from .models import IsyData
 
 
 @callback

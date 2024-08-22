@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from functools import partial
+from typing import TYPE_CHECKING
 
 from hdate import Location
 import voluptuous as vol
@@ -22,7 +23,6 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, ca
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType
 
 from .binary_sensor import BINARY_SENSORS
 from .const import (
@@ -37,6 +37,9 @@ from .const import (
     DOMAIN,
 )
 from .sensor import INFO_SENSORS, TIME_SENSORS
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 

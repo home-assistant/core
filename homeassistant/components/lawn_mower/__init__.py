@@ -5,14 +5,11 @@ from __future__ import annotations
 from datetime import timedelta
 from functools import cached_property
 import logging
-from typing import final
+from typing import TYPE_CHECKING, final
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     DOMAIN,
@@ -22,6 +19,11 @@ from .const import (
     LawnMowerActivity,
     LawnMowerEntityFeature,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

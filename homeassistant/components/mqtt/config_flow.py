@@ -4,11 +4,9 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
-from collections.abc import Callable, Mapping
 import logging
 import queue
 from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
-from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
@@ -99,6 +97,10 @@ from .util import (
     valid_birth_will,
     valid_publish_topic,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Mapping
+    from types import MappingProxyType
 
 _LOGGER = logging.getLogger(__name__)
 

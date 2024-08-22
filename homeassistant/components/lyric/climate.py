@@ -6,11 +6,8 @@ import asyncio
 import enum
 import logging
 from time import localtime, strftime, time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from aiolyric import Lyric
-from aiolyric.objects.device import LyricDevice
-from aiolyric.objects.location import LyricLocation
 import voluptuous as vol
 
 from homeassistant.components.climate import (
@@ -25,20 +22,15 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
     PRECISION_WHOLE,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import LyricDeviceEntity
 from .const import (
@@ -50,6 +42,17 @@ from .const import (
     PRESET_TEMPORARY_HOLD,
     PRESET_VACATION_HOLD,
 )
+
+if TYPE_CHECKING:
+    from aiolyric import Lyric
+    from aiolyric.objects.device import LyricDevice
+    from aiolyric.objects.location import LyricLocation
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import VolDictType
+    from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

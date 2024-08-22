@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
-from datetime import timedelta
 import logging
 import time
+from typing import TYPE_CHECKING
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import NEVER_TIME, POLLING_FALLBACK_SECONDS
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+    from datetime import timedelta
 
 _LOGGER = logging.getLogger(__name__)
 

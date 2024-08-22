@@ -2,21 +2,24 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import Any
-
-from motionblindsble.device import MotionDevice
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_CONNECT, ATTR_DISCONNECT, ATTR_FAVORITE, CONF_MAC_CODE, DOMAIN
 from .entity import MotionblindsBLEEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
+    from motionblindsble.device import MotionDevice
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
 

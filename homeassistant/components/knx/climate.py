@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from xknx import XKNX
 from xknx.devices import (
     Climate as XknxClimate,
     ClimateMode as XknxClimateMode,
@@ -12,7 +11,6 @@ from xknx.devices import (
 )
 from xknx.dpt.dpt_20 import HVACControllerMode, HVACOperationMode
 
-from homeassistant import config_entries
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
@@ -26,14 +24,20 @@ from homeassistant.const import (
     Platform,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
 
-from . import KNXModule
 from .const import CONTROLLER_MODES, CURRENT_HVAC_ACTIONS, DATA_KNX_CONFIG, DOMAIN
 from .knx_entity import KnxYamlEntity
 from .schema import ClimateSchema
+
+if TYPE_CHECKING:
+    from xknx import XKNX
+
+    from homeassistant import config_entries
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType
+
+    from . import KNXModule
 
 ATTR_COMMAND_VALUE = "command_value"
 CONTROLLER_MODES_INV = {value: key for key, value in CONTROLLER_MODES.items()}

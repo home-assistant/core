@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 import csv
 import dataclasses
 from datetime import timedelta
@@ -10,11 +9,10 @@ from enum import IntFlag, StrEnum
 from functools import cached_property
 import logging
 import os
-from typing import Any, Self, cast, final
+from typing import TYPE_CHECKING, Any, Self, cast, final
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -26,9 +24,14 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.typing import ConfigType, VolDictType
 
 DOMAIN = "light"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from pyisy.constants import (
     BACKLIGHT_SUPPORT,
@@ -21,8 +21,6 @@ from pyisy.constants import (
     TAG_FOLDER,
     UOM_INDEX,
 )
-from pyisy.nodes import Group, Node, Nodes
-from pyisy.programs import Programs
 
 from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, Platform
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -53,7 +51,12 @@ from .const import (
     UOM_DOUBLE_TEMP,
     UOM_ISYV4_DEGREES,
 )
-from .models import IsyData
+
+if TYPE_CHECKING:
+    from pyisy.nodes import Group, Node, Nodes
+    from pyisy.programs import Programs
+
+    from .models import IsyData
 
 BINARY_SENSOR_UOMS = ["2", "78"]
 BINARY_SENSOR_ISY_STATES = ["on", "off"]

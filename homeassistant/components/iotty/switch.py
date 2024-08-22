@@ -3,22 +3,26 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
-from iottycloud.device import Device
 from iottycloud.lightswitch import LightSwitch
 from iottycloud.verbs import LS_DEVICE_TYPE_UID
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import IottyConfigEntry
-from .api import IottyProxy
 from .const import DOMAIN
 from .coordinator import IottyDataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from iottycloud.device import Device
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import IottyConfigEntry
+    from .api import IottyProxy
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.const import (
@@ -16,10 +15,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_hub
 from .base_platform import BasePlatform
@@ -34,7 +30,15 @@ from .const import (
     CONF_STATUS_REGISTER,
     CONF_STATUS_REGISTER_TYPE,
 )
-from .modbus import ModbusHub
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+    from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
 

@@ -2,21 +2,25 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from datetime import datetime, time
-from typing import Any, Generic
+from typing import TYPE_CHECKING, Any, Generic
 
 from pylitterbot import LitterRobot3
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from . import LitterRobotConfigEntry
 from .entity import LitterRobotEntity, _RobotT
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+    from datetime import datetime, time
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import LitterRobotConfigEntry
 
 
 @dataclass(frozen=True)

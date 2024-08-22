@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
 from homeassistant.components.device_automation import toggle_entity
 from homeassistant.const import CONF_DOMAIN
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.condition import ConditionCheckerType
-from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.condition import ConditionCheckerType
+    from homeassistant.helpers.typing import ConfigType
 
 # mypy: disallow-any-generics
 

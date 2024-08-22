@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
 from functools import lru_cache
 import logging
 import os
 from pathlib import Path
 import tempfile
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -18,7 +17,6 @@ from homeassistant.const import MAX_LENGTH_STATE_STATE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import create_eager_task
 
 from .const import (
@@ -35,6 +33,11 @@ from .const import (
     DOMAIN,
 )
 from .models import DATA_MQTT, DATA_MQTT_AVAILABLE, ReceiveMessage
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
+    from homeassistant.helpers.typing import ConfigType
 
 AVAILABILITY_TIMEOUT = 50.0
 

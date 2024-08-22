@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.diagnostics import REDACTED, async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_IDENTIFIERS, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .coordinator import Plenticore
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+
+    from .coordinator import Plenticore
 
 TO_REDACT = {CONF_PASSWORD}
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source.error import Unresolvable
@@ -14,10 +14,13 @@ from homeassistant.components.media_source.models import (
 )
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.entity_component import EntityComponent
 
-from . import ImageEntity
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from . import ImageEntity
 
 
 async def async_get_media_source(hass: HomeAssistant) -> ImageMediaSource:

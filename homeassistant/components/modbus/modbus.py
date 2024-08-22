@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import asyncio
 from collections import namedtuple
-from collections.abc import Callable
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pymodbus.client import (
     AsyncModbusSerialClient,
@@ -14,7 +13,6 @@ from pymodbus.client import (
     AsyncModbusUdpClient,
 )
 from pymodbus.exceptions import ModbusException
-from pymodbus.pdu import ModbusResponse
 from pymodbus.transaction import ModbusAsciiFramer, ModbusRtuFramer, ModbusSocketFramer
 import voluptuous as vol
 
@@ -36,7 +34,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_ADDRESS,
@@ -72,6 +69,13 @@ from .const import (
     UDP,
 )
 from .validators import check_config
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from pymodbus.pdu import ModbusResponse
+
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

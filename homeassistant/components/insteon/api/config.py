@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from pyinsteon import async_close, async_connect, devices
 from pyinsteon.address import Address
@@ -10,9 +10,7 @@ import voluptuous as vol
 import voluptuous_serialize
 
 from homeassistant.components import websocket_api
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICE
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from ..const import (
@@ -35,6 +33,10 @@ from ..schemas import (
     build_plm_schema,
 )
 from ..utils import async_get_usb_ports
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 HUB_V1_SCHEMA = build_hub_schema(hub_version=1)
 HUB_V2_SCHEMA = build_hub_schema(hub_version=2)

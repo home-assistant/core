@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 from ndms2_client import Client, ConnectionException, InterfaceInfo, TelnetConnection
@@ -24,7 +24,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     CONF_CONSIDER_HOME,
@@ -39,7 +38,11 @@ from .const import (
     DOMAIN,
     ROUTER,
 )
-from .router import KeeneticRouter
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import VolDictType
+
+    from .router import KeeneticRouter
 
 
 class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):

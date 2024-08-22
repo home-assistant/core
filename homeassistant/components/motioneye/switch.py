@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from motioneye_client.client import MotionEyeClient
 from motioneye_client.const import (
     KEY_MOTION_DETECTION,
     KEY_MOVIES,
@@ -16,14 +14,20 @@ from motioneye_client.const import (
 )
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import MotionEyeEntity, get_camera_from_cameras, listen_for_new_cameras
 from .const import CONF_CLIENT, CONF_COORDINATOR, DOMAIN, TYPE_MOTIONEYE_SWITCH_BASE
+
+if TYPE_CHECKING:
+    from types import MappingProxyType
+
+    from motioneye_client.client import MotionEyeClient
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 MOTIONEYE_SWITCHES = [
     SwitchEntityDescription(

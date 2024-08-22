@@ -7,24 +7,26 @@ import logging
 import pathlib
 import secrets
 import shutil
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import hdrs, web
 from aiohttp.web_request import FileField
 from PIL import Image, ImageOps, UnidentifiedImageError
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.http.static import CACHE_HEADERS
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType, VolDictType
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.components import websocket_api
+    from homeassistant.helpers.typing import ConfigType, VolDictType
 
 _LOGGER = logging.getLogger(__name__)
 STORAGE_KEY = "image"

@@ -4,18 +4,21 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from datetime import timedelta
-from typing import Generic, TypeVar, cast
+from typing import TYPE_CHECKING, Generic, TypeVar, cast
 
 from aiopyarr import LidarrAlbum, LidarrQueue, LidarrRootFolder, exceptions
-from aiopyarr.lidarr_client import LidarrClient
-from aiopyarr.models.host_configuration import PyArrHostConfiguration
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_MAX_RECORDS, DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from aiopyarr.lidarr_client import LidarrClient
+    from aiopyarr.models.host_configuration import PyArrHostConfiguration
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 T = TypeVar("T", bound=list[LidarrRootFolder] | LidarrQueue | str | LidarrAlbum)
 

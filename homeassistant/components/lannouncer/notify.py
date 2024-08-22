@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import socket
+from typing import TYPE_CHECKING
 from urllib.parse import urlencode
 
 import voluptuous as vol
@@ -14,9 +15,11 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 ATTR_METHOD = "method"
 ATTR_METHOD_DEFAULT = "speak"

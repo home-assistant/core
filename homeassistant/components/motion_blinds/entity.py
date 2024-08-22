@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from motionblinds import DEVICE_TYPES_GATEWAY, DEVICE_TYPES_WIFI, MotionGateway
-from motionblinds.motion_blinds import MotionBlind
+from typing import TYPE_CHECKING
 
-from homeassistant.core import CALLBACK_TYPE
+from motionblinds import DEVICE_TYPES_GATEWAY, DEVICE_TYPES_WIFI, MotionGateway
+
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_call_later
@@ -22,6 +22,11 @@ from .const import (
 )
 from .coordinator import DataUpdateCoordinatorMotionBlinds
 from .gateway import device_name
+
+if TYPE_CHECKING:
+    from motionblinds.motion_blinds import MotionBlind
+
+    from homeassistant.core import CALLBACK_TYPE
 
 
 class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlinds]):

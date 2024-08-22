@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from ld2410_ble import LD2410BLE
+if TYPE_CHECKING:
+    from ld2410_ble import LD2410BLE
 
-from .coordinator import LD2410BLECoordinator
+    from .coordinator import LD2410BLECoordinator
 
 
 @dataclass

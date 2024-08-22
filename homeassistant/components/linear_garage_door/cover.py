@@ -1,7 +1,7 @@
 """Cover entity for Linear Garage Doors."""
 
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.cover import (
     CoverDeviceClass,
@@ -13,8 +13,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import LinearUpdateCoordinator
 from .entity import LinearEntity
+
+if TYPE_CHECKING:
+    from .coordinator import LinearUpdateCoordinator
 
 SUPPORTED_SUBDEVICES = ["GDO"]
 PARALLEL_UPDATES = 1

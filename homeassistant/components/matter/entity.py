@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Callable
 from dataclasses import dataclass
 from functools import cached_property
 import logging
@@ -17,14 +16,17 @@ from matter_server.common.models import EventType, ServerInfoMessage
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
-from homeassistant.helpers.typing import UndefinedType
 
 from .const import DOMAIN, ID_TYPE_DEVICE_ID
 from .helpers import get_device_id
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from matter_server.client import MatterClient
     from matter_server.client.models.node import MatterEndpoint
+
+    from homeassistant.helpers.typing import UndefinedType
 
     from .discovery import MatterEntityInfo
 

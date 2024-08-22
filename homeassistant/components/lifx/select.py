@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from aiolifx_themes.themes import ThemeLibrary
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ATTR_THEME,
@@ -16,9 +16,14 @@ from .const import (
     INFRARED_BRIGHTNESS,
     INFRARED_BRIGHTNESS_VALUES_MAP,
 )
-from .coordinator import LIFXUpdateCoordinator
 from .entity import LIFXEntity
 from .util import lifx_features
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import LIFXUpdateCoordinator
 
 THEME_NAMES = [theme_name.lower() for theme_name in ThemeLibrary().themes]
 

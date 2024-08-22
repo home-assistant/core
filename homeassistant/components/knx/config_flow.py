@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import AsyncGenerator
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 import voluptuous as vol
 from xknx import XKNX
@@ -17,7 +16,6 @@ from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.io.gateway_scanner import GatewayDescriptor, GatewayScanner
 from xknx.io.self_description import request_description
 from xknx.io.util import validate_ip as xknx_validate_ip
-from xknx.secure.keyring import Keyring, XMLInterface
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -64,6 +62,11 @@ from .const import (
 )
 from .storage.keyring import DEFAULT_KNX_KEYRING_FILENAME, save_uploaded_knxkeys_file
 from .validation import ia_validator, ip_v4_validator
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
+
+    from xknx.secure.keyring import Keyring, XMLInterface
 
 CONF_KNX_GATEWAY: Final = "gateway"
 CONF_MAX_RATE_LIMIT: Final = 60

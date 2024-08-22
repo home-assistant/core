@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from homeassistant.components.application_credentials import AuthorizationServer
-from homeassistant.core import HomeAssistant
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 OAUTH2_AUTHORIZE = "https://auth.iotty.com/.auth/oauth2/login"
 OAUTH2_TOKEN = "https://auth.iotty.com/.auth/oauth2/token"

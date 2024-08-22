@@ -3,18 +3,16 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime as dt, timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.websocket_api import messages
-from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.json import json_bytes
@@ -29,6 +27,11 @@ from .helpers import (
 )
 from .models import LogbookConfig, async_event_to_row
 from .processor import EventProcessor
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.components.websocket_api.connection import ActiveConnection
 
 MAX_PENDING_LOGBOOK_EVENTS = 2048
 EVENT_COALESCE_TIME = 0.35

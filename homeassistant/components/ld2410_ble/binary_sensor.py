@@ -1,5 +1,7 @@
 """LD2410 BLE integration binary sensor platform."""
 
+from typing import TYPE_CHECKING
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -14,7 +16,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LD2410BLE, LD2410BLECoordinator
 from .const import DOMAIN
-from .models import LD2410BLEData
+
+if TYPE_CHECKING:
+    from .models import LD2410BLEData
 
 ENTITY_DESCRIPTIONS = (
     BinarySensorEntityDescription(

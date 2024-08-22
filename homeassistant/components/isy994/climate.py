@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyisy.constants import (
     CMD_CLIMATE_FAN_SETTING,
@@ -15,7 +15,6 @@ from pyisy.constants import (
     PROP_UOM,
     PROTO_INSTEON,
 )
-from pyisy.nodes import Node
 
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
@@ -28,16 +27,12 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
     Platform,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
 from .const import (
@@ -57,7 +52,16 @@ from .const import (
 )
 from .entity import ISYNodeEntity
 from .helpers import convert_isy_value_to_hass
-from .models import IsyData
+
+if TYPE_CHECKING:
+    from pyisy.nodes import Node
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.device_registry import DeviceInfo
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .models import IsyData
 
 
 async def async_setup_entry(

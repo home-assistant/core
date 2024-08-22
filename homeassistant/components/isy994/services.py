@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyisy.constants import COMMAND_FRIENDLY_NAME
 import voluptuous as vol
@@ -15,12 +15,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.service import entity_service_call
-from homeassistant.helpers.typing import VolDictType
 
 from .const import _LOGGER, DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity import Entity
+    from homeassistant.helpers.typing import VolDictType
 
 # Common Services for All Platforms:
 SERVICE_SEND_PROGRAM_COMMAND = "send_program_command"

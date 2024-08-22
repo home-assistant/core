@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from pykrakenapi.pykrakenapi import KrakenAPI
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pykrakenapi.pykrakenapi import KrakenAPI
 
 
 def get_tradable_asset_pairs(kraken_api: KrakenAPI) -> dict[str, str]:

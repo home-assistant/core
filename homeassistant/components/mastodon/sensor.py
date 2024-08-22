@@ -2,26 +2,30 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
-from . import MastodonConfigEntry
 from .const import (
     ACCOUNT_FOLLOWERS_COUNT,
     ACCOUNT_FOLLOWING_COUNT,
     ACCOUNT_STATUSES_COUNT,
 )
 from .entity import MastodonEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import StateType
+
+    from . import MastodonConfigEntry
 
 
 @dataclass(frozen=True, kw_only=True)

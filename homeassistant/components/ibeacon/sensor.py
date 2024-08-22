@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-
-from ibeacon_ble import iBeaconAdvertisement
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,12 +14,19 @@ from homeassistant.components.sensor import (
 from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT, UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import IBeaconConfigEntry
 from .const import SIGNAL_IBEACON_DEVICE_NEW
-from .coordinator import IBeaconCoordinator
 from .entity import IBeaconEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from ibeacon_ble import iBeaconAdvertisement
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import IBeaconConfigEntry
+    from .coordinator import IBeaconCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)

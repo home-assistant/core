@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -25,9 +27,11 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 CONDITION_TYPES = {
     "is_on",

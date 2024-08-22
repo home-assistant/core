@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -10,14 +10,17 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import IntellifireDataUpdateCoordinator
 from .const import DEFAULT_THERMOSTAT_TEMP, DOMAIN, LOGGER
 from .entity import IntellifireEntity
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import IntellifireDataUpdateCoordinator
 
 INTELLIFIRE_CLIMATES: tuple[ClimateEntityDescription, ...] = (
     ClimateEntityDescription(key="climate", name="Thermostat"),

@@ -1,5 +1,7 @@
 """LD2410 BLE integration sensor platform."""
 
+from typing import TYPE_CHECKING
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -16,7 +18,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LD2410BLE, LD2410BLECoordinator
 from .const import DOMAIN
-from .models import LD2410BLEData
+
+if TYPE_CHECKING:
+    from .models import LD2410BLEData
 
 MOVING_TARGET_DISTANCE_DESCRIPTION = SensorEntityDescription(
     key="moving_target_distance",

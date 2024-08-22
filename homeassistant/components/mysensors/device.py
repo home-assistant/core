@@ -4,10 +4,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import logging
-from typing import Any
-
-from mysensors import BaseAsyncGateway, Sensor
-from mysensors.sensor import ChildSensor
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -31,6 +28,10 @@ from .const import (
     DevId,
     GatewayId,
 )
+
+if TYPE_CHECKING:
+    from mysensors import BaseAsyncGateway, Sensor
+    from mysensors.sensor import ChildSensor
 
 _LOGGER = logging.getLogger(__name__)
 

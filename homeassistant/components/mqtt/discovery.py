@@ -11,7 +11,6 @@ import re
 import time
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HassJobType, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
@@ -21,7 +20,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
-from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.loader import async_get_mqtt
 from homeassistant.util.json import json_loads_object
 from homeassistant.util.signal_type import SignalTypeFormat
@@ -41,6 +39,10 @@ from .const import (
 from .models import DATA_MQTT, MqttOriginInfo, ReceiveMessage
 from .schemas import MQTT_ORIGIN_INFO_SCHEMA
 from .util import async_forward_entry_setup_and_setup_discovery
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.typing import DiscoveryInfoType
 
 ABBREVIATIONS_SET = set(ABBREVIATIONS)
 DEVICE_ABBREVIATIONS_SET = set(DEVICE_ABBREVIATIONS)

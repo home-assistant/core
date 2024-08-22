@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
-from homeassistant.helpers.entity import EntityDescription
+from typing import TYPE_CHECKING
+
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import IntellifireDataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity import EntityDescription
 
 
 class IntellifireEntity(CoordinatorEntity[IntellifireDataUpdateCoordinator]):

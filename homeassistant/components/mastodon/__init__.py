@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from mastodon.Mastodon import Mastodon, MastodonError
 
@@ -14,7 +15,6 @@ from homeassistant.const import (
     CONF_NAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
 from homeassistant.util import slugify
@@ -22,6 +22,9 @@ from homeassistant.util import slugify
 from .const import CONF_BASE_URL, DOMAIN, LOGGER
 from .coordinator import MastodonCoordinator
 from .utils import construct_mastodon_username, create_mastodon_client
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 PLATFORMS: list[Platform] = [Platform.NOTIFY, Platform.SENSOR]
 

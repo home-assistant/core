@@ -10,7 +10,6 @@ import lcn_frontend as lcn_panel
 import voluptuous as vol
 
 from homeassistant.components import panel_custom, websocket_api
-from homeassistant.components.websocket_api import AsyncWebSocketCommandHandler
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -57,7 +56,10 @@ from .schemas import (
 )
 
 if TYPE_CHECKING:
-    from homeassistant.components.websocket_api import ActiveConnection
+    from homeassistant.components.websocket_api import (
+        ActiveConnection,
+        AsyncWebSocketCommandHandler,
+    )
 
 type AsyncLcnWebSocketCommandHandler = Callable[
     [HomeAssistant, ActiveConnection, dict[str, Any], ConfigEntry], Awaitable[None]

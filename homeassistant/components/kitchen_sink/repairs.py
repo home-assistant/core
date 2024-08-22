@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
-from homeassistant.core import HomeAssistant
+
+if TYPE_CHECKING:
+    from homeassistant import data_entry_flow
+    from homeassistant.core import HomeAssistant
 
 
 class DemoFixFlow(RepairsFlow):

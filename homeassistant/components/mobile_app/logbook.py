@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.logbook import (
     LOGBOOK_ENTRY_ENTITY_ID,
@@ -13,9 +12,13 @@ from homeassistant.components.logbook import (
 )
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.util.event_type import EventType
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.util.event_type import EventType
 
 IOS_EVENT_ZONE_ENTERED = "ios.zone_entered"
 IOS_EVENT_ZONE_EXITED = "ios.zone_exited"

@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pykoplenti import ApiClient, ApiException
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 _KNOWN_HOSTNAME_IDS = ("Network:Hostname", "Hostname")
 

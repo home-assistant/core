@@ -2,22 +2,27 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-
-from imgw_pib.model import HydrologicalData
+from typing import TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ImgwPibConfigEntry
-from .coordinator import ImgwPibDataUpdateCoordinator
 from .entity import ImgwPibEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from imgw_pib.model import HydrologicalData
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import ImgwPibConfigEntry
+    from .coordinator import ImgwPibDataUpdateCoordinator
 
 PARALLEL_UPDATES = 1
 

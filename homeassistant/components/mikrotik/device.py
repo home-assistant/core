@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
 from .const import ATTR_DEVICE_TRACKER
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 
 class Device:

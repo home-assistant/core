@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from bleak import BleakError
 from improv_ble_client import (
@@ -27,6 +26,9 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -5,14 +5,12 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import ssl
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import librouteros
 from librouteros.login import plain as login_plain, token as login_token
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -42,6 +40,10 @@ from .const import (
 )
 from .device import Device
 from .errors import CannotConnect, LoginError
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

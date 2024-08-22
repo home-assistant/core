@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 import uuid
 
 import voluptuous as vol
@@ -21,8 +21,10 @@ from .const import (
     RESOURCE_SCHEMA,
     RESOURCE_UPDATE_FIELDS,
 )
-from .dashboard import LovelaceConfig
 from .websocket import websocket_lovelace_resources_impl
+
+if TYPE_CHECKING:
+    from .dashboard import LovelaceConfig
 
 RESOURCE_STORAGE_KEY = f"{DOMAIN}_resources"
 RESOURCES_STORAGE_VERSION = 1

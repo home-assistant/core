@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from phone_modem import PhoneModem
 import serial.tools.list_ports
-from serial.tools.list_ports_common import ListPortInfo
 import voluptuous as vol
 
 from homeassistant.components import usb
@@ -14,6 +13,9 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_NAME
 
 from .const import DEFAULT_NAME, DOMAIN, EXCEPTIONS
+
+if TYPE_CHECKING:
+    from serial.tools.list_ports_common import ListPortInfo
 
 DATA_SCHEMA = vol.Schema({"name": str, "device": str})
 

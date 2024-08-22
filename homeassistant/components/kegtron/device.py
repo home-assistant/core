@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import logging
-
-from kegtron_ble import DeviceKey
+from typing import TYPE_CHECKING
 
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothEntityKey,
 )
+
+if TYPE_CHECKING:
+    from kegtron_ble import DeviceKey
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Coroutine
 from datetime import timedelta
 from functools import wraps
 import logging
 import re
-from typing import Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate
 
 from jsonrpc_base.jsonrpc import ProtocolError, TransportError
 from pykodi import CannotConnectError
@@ -46,10 +45,8 @@ from homeassistant.helpers import (
     entity_platform,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import is_internal_request
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolDictType
 import homeassistant.util.dt as dt_util
 
 from .browse_media import (
@@ -70,6 +67,12 @@ from .const import (
     EVENT_TURN_OFF,
     EVENT_TURN_ON,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable, Coroutine
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolDictType
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
 from homeassistant import config as conf_util
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 
 from . import CONFIG_SCHEMA
 from .const import (
@@ -19,6 +17,10 @@ from .const import (
     CONF_KNX_SECURE_USER_PASSWORD,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 TO_REDACT = {
     CONF_KNX_ROUTING_BACKBONE_KEY,

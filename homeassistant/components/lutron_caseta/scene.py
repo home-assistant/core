@@ -1,8 +1,6 @@
 """Support for Lutron Caseta scenes."""
 
-from typing import Any
-
-from pylutron_caseta.smartbridge import Smartbridge
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
@@ -12,6 +10,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as CASETA_DOMAIN
 from .util import serial_to_unique_id
+
+if TYPE_CHECKING:
+    from pylutron_caseta.smartbridge import Smartbridge
 
 
 async def async_setup_entry(

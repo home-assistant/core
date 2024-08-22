@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import TYPE_CHECKING
 
 from aioimaplib import IMAP4_SSL, AioImapException, Response
 import voluptuous as vol
@@ -24,7 +25,6 @@ from homeassistant.exceptions import (
     ServiceValidationError,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_ENABLE_PUSH, DOMAIN
 from .coordinator import (
@@ -35,6 +35,9 @@ from .coordinator import (
     connect_to_server,
 )
 from .errors import InvalidAuth, InvalidFolder
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 

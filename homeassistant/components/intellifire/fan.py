@@ -2,29 +2,33 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import math
-from typing import Any
-
-from intellifire4py import IntellifireControlAsync, IntellifirePollData
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.fan import (
     FanEntity,
     FanEntityDescription,
     FanEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
 
 from .const import DOMAIN, LOGGER
-from .coordinator import IntellifireDataUpdateCoordinator
 from .entity import IntellifireEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    from intellifire4py import IntellifireControlAsync, IntellifirePollData
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import IntellifireDataUpdateCoordinator
 
 
 @dataclass(frozen=True)

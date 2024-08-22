@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import ssl
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aioimaplib import AioImapException
 import voluptuous as vol
@@ -47,6 +46,9 @@ from .const import (
 )
 from .coordinator import connect_to_server
 from .errors import InvalidAuth, InvalidFolder
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 BOOLEAN_SELECTOR = BooleanSelector()
 CIPHER_SELECTOR = SelectSelector(

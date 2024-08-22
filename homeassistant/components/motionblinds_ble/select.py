@@ -3,18 +3,22 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from motionblindsble.const import MotionBlindType, MotionSpeedLevel
-from motionblindsble.device import MotionDevice
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_SPEED, CONF_MAC_CODE, DOMAIN
 from .entity import MotionblindsBLEEntity
+
+if TYPE_CHECKING:
+    from motionblindsble.device import MotionDevice
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
 

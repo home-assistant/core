@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyisy.constants import ISY_VALUE_UNKNOWN
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
@@ -19,13 +17,18 @@ from homeassistant.helpers.entity_platform import (
 
 from .const import DOMAIN
 from .entity import ISYNodeEntity, ISYProgramEntity
-from .models import IsyData
 from .services import (
     SERVICE_DELETE_USER_CODE_SCHEMA,
     SERVICE_DELETE_ZWAVE_LOCK_USER_CODE,
     SERVICE_SET_USER_CODE_SCHEMA,
     SERVICE_SET_ZWAVE_LOCK_USER_CODE,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.device_registry import DeviceInfo
+
+    from .models import IsyData
 
 VALUE_TO_STATE = {0: False, 100: True}
 

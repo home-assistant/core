@@ -1,13 +1,14 @@
 """Support for LiteJet diagnostics."""
 
-from typing import Any
-
-from pylitejet import LiteJet
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from pylitejet import LiteJet
 
 
 async def async_get_config_entry_diagnostics(

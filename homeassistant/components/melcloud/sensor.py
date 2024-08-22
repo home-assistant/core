@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import dataclasses
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW
-from pymelcloud.atw_device import Zone
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -15,13 +13,20 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfTemperature
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MelCloudDevice
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from pymelcloud.atw_device import Zone
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import MelCloudDevice
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)

@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any
-
-from pyipp import Marker, Printer
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,12 +13,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import ATTR_LOCATION, PERCENTAGE, EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from . import IPPConfigEntry
 from .const import (
     ATTR_COMMAND_SET,
     ATTR_INFO,
@@ -34,6 +27,17 @@ from .const import (
     ATTR_URI_SUPPORTED,
 )
 from .entity import IPPEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from pyipp import Marker, Printer
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import StateType
+
+    from . import IPPConfigEntry
 
 
 @dataclass(frozen=True, kw_only=True)

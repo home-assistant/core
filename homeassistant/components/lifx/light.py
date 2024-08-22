@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import aiolifx_effects as aiolifx_effects_module
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -17,15 +16,11 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, Platform
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     _LOGGER,
@@ -51,6 +46,14 @@ from .manager import (
     LIFXManager,
 )
 from .util import convert_8_to_16, convert_16_to_8, find_hsbk, lifx_features, merge_hsbk
+
+if TYPE_CHECKING:
+    import aiolifx_effects as aiolifx_effects_module
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import VolDictType
 
 LIFX_STATE_SETTLE_DELAY = 0.3
 

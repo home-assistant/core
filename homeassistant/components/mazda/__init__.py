@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 DOMAIN = "mazda"
 

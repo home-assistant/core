@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -29,9 +28,7 @@ from homeassistant.helpers.entityfilter import (
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-from homeassistant.util.event_type import EventType
 
 from . import rest_api, websocket_api
 from .const import (  # noqa: F401
@@ -46,6 +43,12 @@ from .const import (  # noqa: F401
     LOGBOOK_ENTRY_SOURCE,
 )
 from .models import LazyEventPartialState, LogbookConfig
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.helpers.typing import ConfigType
+    from homeassistant.util.event_type import EventType
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA}, extra=vol.ALLOW_EXTRA

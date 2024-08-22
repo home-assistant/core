@@ -2,16 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pypck
 
 from homeassistant.components.scene import DOMAIN as DOMAIN_SCENE, Scene
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_DOMAIN, CONF_ENTITIES, CONF_SCENE
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
 
 from . import LcnEntity
 from .const import (
@@ -24,6 +20,12 @@ from .const import (
     OUTPUT_PORTS,
 )
 from .helpers import DeviceConnectionType, get_device_connection
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType
 
 PARALLEL_UPDATES = 0
 

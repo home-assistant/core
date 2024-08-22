@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -12,11 +12,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import UnitOfTemperature
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
-from . import MadVRConfigEntry
 from .const import (
     ASPECT_DEC,
     ASPECT_INT,
@@ -45,8 +41,17 @@ from .const import (
     TEMP_HDMI,
     TEMP_MAINBOARD,
 )
-from .coordinator import MadVRCoordinator
 from .entity import MadVREntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import StateType
+
+    from . import MadVRConfigEntry
+    from .coordinator import MadVRCoordinator
 
 
 def is_valid_temperature(value: float | None) -> bool:

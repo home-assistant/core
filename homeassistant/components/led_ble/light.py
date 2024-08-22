@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-from led_ble import LEDBLE
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -15,18 +13,23 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
 from .const import DEFAULT_EFFECT_SPEED, DOMAIN
-from .models import LEDBLEData
+
+if TYPE_CHECKING:
+    from led_ble import LEDBLE
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .models import LEDBLEData
 
 
 async def async_setup_entry(

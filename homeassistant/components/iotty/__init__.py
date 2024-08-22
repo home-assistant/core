@@ -4,18 +4,21 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-
-from iottycloud.device import Device
+from typing import TYPE_CHECKING
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
 
 from . import coordinator
+
+if TYPE_CHECKING:
+    from iottycloud.device import Device
+
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

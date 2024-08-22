@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from xknx import XKNX
+from typing import TYPE_CHECKING
+
 from xknx.devices import Device as XknxDevice, RawValue
 
-from homeassistant import config_entries
 from homeassistant.components.select import SelectEntity
 from homeassistant.const import (
     CONF_ENTITY_CATEGORY,
@@ -15,12 +15,8 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType
 
-from . import KNXModule
 from .const import (
     CONF_PAYLOAD_LENGTH,
     CONF_RESPOND_TO_READ,
@@ -32,6 +28,16 @@ from .const import (
 )
 from .knx_entity import KnxYamlEntity
 from .schema import SelectSchema
+
+if TYPE_CHECKING:
+    from xknx import XKNX
+
+    from homeassistant import config_entries
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType
+
+    from . import KNXModule
 
 
 async def async_setup_entry(

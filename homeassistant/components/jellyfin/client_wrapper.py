@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import socket
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from jellyfin_apiclient_python import Jellyfin, JellyfinClient
-from jellyfin_apiclient_python.api import API
 from jellyfin_apiclient_python.connection_manager import (
     CONNECTION_STATE,
     ConnectionManager,
@@ -14,9 +13,13 @@ from jellyfin_apiclient_python.connection_manager import (
 
 from homeassistant import exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 
 from .const import CLIENT_VERSION, ITEM_KEY_IMAGE_TAGS, USER_AGENT, USER_APP_NAME
+
+if TYPE_CHECKING:
+    from jellyfin_apiclient_python.api import API
+
+    from homeassistant.core import HomeAssistant
 
 
 async def validate_input(

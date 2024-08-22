@@ -4,18 +4,21 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 from pylaunches import PyLaunches, PyLaunchesError
-from pylaunches.types import Launch, StarshipResponse
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from pylaunches.types import Launch, StarshipResponse
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

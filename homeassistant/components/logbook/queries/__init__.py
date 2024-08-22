@@ -2,12 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Collection
-from datetime import datetime as dt
+from typing import TYPE_CHECKING
 
-from sqlalchemy.sql.lambdas import StatementLambdaElement
-
-from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import ulid_to_bytes_or_none
 from homeassistant.helpers.json import json_dumps
 
@@ -15,6 +11,14 @@ from .all import all_stmt
 from .devices import devices_stmt
 from .entities import entities_stmt
 from .entities_and_devices import entities_devices_stmt
+
+if TYPE_CHECKING:
+    from collections.abc import Collection
+    from datetime import datetime as dt
+
+    from sqlalchemy.sql.lambdas import StatementLambdaElement
+
+    from homeassistant.components.recorder.filters import Filters
 
 
 def statement_for_request(

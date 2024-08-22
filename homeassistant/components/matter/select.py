@@ -6,18 +6,21 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from chip.clusters import Objects as clusters
-from chip.clusters.Types import Nullable
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
+
+if TYPE_CHECKING:
+    from chip.clusters.Types import Nullable
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 type SelectCluster = (
     clusters.ModeSelect

@@ -5,11 +5,11 @@ from __future__ import annotations
 import contextlib
 import logging
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 from xknx import XKNX
 from xknx.core import XknxConnectionState
-from xknx.core.telegram_queue import TelegramQueue
 from xknx.dpt import DPTBase
 from xknx.exceptions import ConversionError, CouldNotParseTelegram, XKNXException
 from xknx.io import ConnectionConfig, ConnectionType, SecureConfig
@@ -17,7 +17,6 @@ from xknx.telegram import AddressFilter, Telegram
 from xknx.telegram.address import DeviceGroupAddress, GroupAddress, InternalGroupAddress
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EVENT,
     CONF_HOST,
@@ -26,14 +25,11 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.storage import STORAGE_DIR
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_KNX_CONNECTION_TYPE,
@@ -94,6 +90,14 @@ from .services import register_knx_services
 from .storage.config_store import KNXConfigStore
 from .telegrams import STORAGE_KEY as TELEGRAMS_STORAGE_KEY, Telegrams
 from .websocket import register_panel
+
+if TYPE_CHECKING:
+    from xknx.core.telegram_queue import TelegramQueue
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import Event, HomeAssistant
+    from homeassistant.helpers.device_registry import DeviceEntry
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

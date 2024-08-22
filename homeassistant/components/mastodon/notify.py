@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import mimetypes
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
-from mastodon import Mastodon
 from mastodon.Mastodon import MastodonAPIError
 import voluptuous as vol
 
@@ -19,9 +18,13 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_S
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_BASE_URL, DEFAULT_URL, DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from mastodon import Mastodon
+
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 ATTR_MEDIA = "media"
 ATTR_TARGET = "target"

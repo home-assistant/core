@@ -5,13 +5,14 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
-from xknx.devices import Device as XknxDevice
-
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import EntityPlatform
-from homeassistant.helpers.entity_registry import RegistryEntry
 
 if TYPE_CHECKING:
+    from xknx.devices import Device as XknxDevice
+
+    from homeassistant.helpers.entity_platform import EntityPlatform
+    from homeassistant.helpers.entity_registry import RegistryEntry
+
     from . import KNXModule
 
 from .storage.config_store import PlatformControllerBase

@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 import voluptuous as vol
 
@@ -17,7 +16,6 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_player.browse_media import (
     async_process_play_media_url,
 )
-from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.frame import report
@@ -37,6 +35,11 @@ from .const import (
 )
 from .error import MediaSourceError, Unresolvable
 from .models import BrowseMediaSource, MediaSource, MediaSourceItem, PlayMedia
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.components.websocket_api import ActiveConnection
 
 __all__ = [
     "DOMAIN",

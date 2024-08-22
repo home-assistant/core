@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from http import HTTPStatus
-from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
@@ -30,6 +29,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from types import MappingProxyType
 
 
 @callback

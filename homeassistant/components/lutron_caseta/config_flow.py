@@ -6,12 +6,12 @@ import asyncio
 import logging
 import os
 import ssl
+from typing import TYPE_CHECKING
 
 from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY, async_pair
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
@@ -27,6 +27,9 @@ from .const import (
     ERROR_CANNOT_CONNECT,
     STEP_IMPORT_FAILED,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.components import zeroconf
 
 HOSTNAME = "hostname"
 

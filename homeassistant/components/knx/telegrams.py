@@ -3,23 +3,27 @@
 from __future__ import annotations
 
 from collections import deque
-from typing import Final, TypedDict
+from typing import TYPE_CHECKING, Final, TypedDict
 
-from xknx import XKNX
-from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.dpt.dpt import DPTComplexData, DPTEnumData
 from xknx.exceptions import XKNXException
-from xknx.telegram import Telegram
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 import homeassistant.util.dt as dt_util
 from homeassistant.util.signal_type import SignalType
 
 from .const import DOMAIN
-from .project import KNXProject
+
+if TYPE_CHECKING:
+    from xknx import XKNX
+    from xknx.dpt import DPTArray, DPTBase, DPTBinary
+    from xknx.telegram import Telegram
+
+    from homeassistant.core import HomeAssistant
+
+    from .project import KNXProject
 
 STORAGE_VERSION: Final = 1
 STORAGE_KEY: Final = f"{DOMAIN}/telegrams_history.json"

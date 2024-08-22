@@ -2,25 +2,29 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import timedelta
 from http import HTTPStatus
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.filters import Filters
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import InvalidEntityFormatError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from .helpers import async_determine_event_types
 from .processor import EventProcessor
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from aiohttp import web
+
+    from homeassistant.components.recorder.filters import Filters
+    from homeassistant.helpers.typing import ConfigType
 
 
 @callback

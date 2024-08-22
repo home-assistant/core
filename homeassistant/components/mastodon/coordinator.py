@@ -3,15 +3,18 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from mastodon import Mastodon
 from mastodon.Mastodon import MastodonError
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
+
+if TYPE_CHECKING:
+    from mastodon import Mastodon
+
+    from homeassistant.core import HomeAssistant
 
 
 class MastodonCoordinator(DataUpdateCoordinator[dict[str, Any]]):

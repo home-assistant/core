@@ -5,17 +5,21 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 import logging
+from typing import TYPE_CHECKING
 
-from israelrailapi import TrainSchedule
-from israelrailapi.api import TrainRoute
 from israelrailapi.train_station import station_name_to_id
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
 from .const import DEFAULT_SCAN_INTERVAL, DEPARTURES_COUNT, DOMAIN
+
+if TYPE_CHECKING:
+    from israelrailapi import TrainSchedule
+    from israelrailapi.api import TrainRoute
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

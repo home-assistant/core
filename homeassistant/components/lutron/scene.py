@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-from pylutron import Button, Keypad, Lutron
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.scene import Scene
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, LutronData
 from .entity import LutronKeypad
+
+if TYPE_CHECKING:
+    from pylutron import Button, Keypad, Lutron
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 
 async def async_setup_entry(

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
 from typing import TYPE_CHECKING, Any
@@ -12,7 +11,11 @@ from homeassistant.core import HassJobType, HomeAssistant, callback
 from . import debug_info
 from .client import async_subscribe_internal
 from .const import DEFAULT_QOS
-from .models import MessageCallbackType
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from .models import MessageCallbackType
 
 
 @dataclass(slots=True, kw_only=True)

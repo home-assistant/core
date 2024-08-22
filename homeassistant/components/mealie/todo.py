@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from aiomealie import MealieError, MutateShoppingItem, ShoppingItem, ShoppingList
 
 from homeassistant.components.todo import (
@@ -11,14 +13,17 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import MealieConfigEntry, MealieShoppingListCoordinator
 from .entity import MealieEntity
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import MealieConfigEntry, MealieShoppingListCoordinator
 
 TODO_STATUS_MAP = {
     False: TodoItemStatus.NEEDS_ACTION,

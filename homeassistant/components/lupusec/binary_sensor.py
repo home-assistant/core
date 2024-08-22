@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 from functools import partial
 import logging
+from typing import TYPE_CHECKING
 
 import lupupy.constants as CONST
 
@@ -12,12 +13,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN
 from .entity import LupusecBaseSensor
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 SCAN_INTERVAL = timedelta(seconds=2)
 

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from pyisy import ISY
+from typing import TYPE_CHECKING
+
 from pyisy.constants import (
     ATTR_ACTION,
     NC_NODE_ENABLED,
@@ -10,19 +11,24 @@ from pyisy.constants import (
     TAG_ADDRESS,
     TAG_ENABLED,
 )
-from pyisy.helpers import EventListener, NodeProperty
-from pyisy.networking import NetworkCommand
-from pyisy.nodes import Node
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_NETWORK, DOMAIN
-from .models import IsyData
+
+if TYPE_CHECKING:
+    from pyisy import ISY
+    from pyisy.helpers import EventListener, NodeProperty
+    from pyisy.networking import NetworkCommand
+    from pyisy.nodes import Node
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .models import IsyData
 
 
 async def async_setup_entry(

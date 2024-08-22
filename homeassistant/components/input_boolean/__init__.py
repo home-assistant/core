@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 
 import voluptuous as vol
 
@@ -26,8 +26,10 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType, VolDictType
 
 DOMAIN = "input_boolean"
 

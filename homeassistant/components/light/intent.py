@@ -3,15 +3,18 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
 from homeassistant.const import SERVICE_TURN_ON
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, intent
 import homeassistant.util.color as color_util
 
 from . import ATTR_BRIGHTNESS_PCT, ATTR_COLOR_TEMP_KELVIN, ATTR_RGB_COLOR, DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

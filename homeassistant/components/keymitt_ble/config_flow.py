@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from bleak.backends.device import BLEDevice
 from microbot import (
     MicroBotAdvertisement,
     MicroBotApiClient,
@@ -22,6 +21,9 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from bleak.backends.device import BLEDevice
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 

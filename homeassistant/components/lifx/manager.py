@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiolifx_effects
 from aiolifx_themes.themes import Theme, ThemeLibrary
@@ -31,8 +30,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
 
 from .const import ATTR_THEME, DATA_LIFX_MANAGER, DOMAIN
-from .coordinator import LIFXUpdateCoordinator, Light
 from .util import convert_8_to_16, find_hsbk
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from .coordinator import LIFXUpdateCoordinator, Light
 
 SCAN_INTERVAL = timedelta(seconds=10)
 

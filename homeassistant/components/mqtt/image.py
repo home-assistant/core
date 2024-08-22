@@ -4,23 +4,17 @@ from __future__ import annotations
 
 from base64 import b64decode
 import binascii
-from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING, Any
 
-import httpx
 import voluptuous as vol
 
 from homeassistant.components import image
 from homeassistant.components.image import DEFAULT_CONTENT_TYPE, ImageEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolSchemaType
 from homeassistant.util import dt as dt_util
 
 from . import subscription
@@ -34,6 +28,20 @@ from .models import (
 )
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_subscribe_topic
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    import httpx
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
+    from homeassistant.helpers.typing import (
+        ConfigType,
+        DiscoveryInfoType,
+        VolSchemaType,
+    )
 
 _LOGGER = logging.getLogger(__name__)
 

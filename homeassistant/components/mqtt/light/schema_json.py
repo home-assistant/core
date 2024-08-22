@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from contextlib import suppress
 import logging
 from typing import TYPE_CHECKING, Any, cast
@@ -51,7 +50,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, VolSchemaType
 import homeassistant.util.color as color_util
 from homeassistant.util.json import json_loads_object
 from homeassistant.util.yaml import dump as yaml_dump
@@ -66,7 +64,6 @@ from ..const import (
     DOMAIN as MQTT_DOMAIN,
 )
 from ..mixins import MqttEntity
-from ..models import ReceiveMessage
 from ..schemas import MQTT_ENTITY_COMMON_SCHEMA
 from ..util import valid_subscribe_topic
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
@@ -75,6 +72,13 @@ from .schema_basic import (
     CONF_WHITE_SCALE,
     MQTT_LIGHT_ATTRIBUTES_BLOCKED,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.helpers.typing import ConfigType, VolSchemaType
+
+    from ..models import ReceiveMessage
 
 _LOGGER = logging.getLogger(__name__)
 

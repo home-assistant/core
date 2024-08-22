@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-from incomfortclient import Heater as InComfortHeater, Room as InComfortRoom
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -13,14 +11,19 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import InComfortConfigEntry
 from .const import DOMAIN
-from .coordinator import InComfortDataCoordinator
 from .entity import IncomfortEntity
+
+if TYPE_CHECKING:
+    from incomfortclient import Heater as InComfortHeater, Room as InComfortRoom
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import InComfortConfigEntry
+    from .coordinator import InComfortDataCoordinator
 
 
 async def async_setup_entry(

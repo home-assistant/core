@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import PurePath
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from motioneye_client.const import KEY_MEDIA_LIST, KEY_MIME_TYPE, KEY_PATH
 
@@ -16,12 +16,14 @@ from homeassistant.components.media_source.models import (
     MediaSourceItem,
     PlayMedia,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 
 from . import get_media_url, split_motioneye_device_identifier
 from .const import CONF_CLIENT, DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
 
 MIME_TYPE_MAP = {
     "movies": "video/mp4",

@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
@@ -22,7 +21,6 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.core import Context, HomeAssistant, State
 
 from .const import (
     ATTR_INPUT_SOURCE,
@@ -37,6 +35,11 @@ from .const import (
     SERVICE_SELECT_SOURCE,
     MediaPlayerEntityFeature,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from homeassistant.core import Context, HomeAssistant, State
 
 
 async def _async_reproduce_states(

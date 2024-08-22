@@ -4,11 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
-from xknx import XKNX
 from xknx.dpt import DPTBase
-from xknx.telegram.address import DeviceAddressableType
 from xknxproject import XKNXProj
 from xknxproject.models import (
     Device,
@@ -19,11 +17,16 @@ from xknxproject.models import (
 )
 
 from homeassistant.components.file_upload import process_uploaded_file
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from xknx import XKNX
+    from xknx.telegram.address import DeviceAddressableType
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

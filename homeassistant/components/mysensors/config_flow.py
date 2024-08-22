@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from awesomeversion import (
     AwesomeVersion,
@@ -22,7 +22,6 @@ from homeassistant.const import CONF_DEVICE
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     CONF_BAUD_RATE,
@@ -40,6 +39,9 @@ from .const import (
     ConfGatewayType,
 )
 from .gateway import MQTT_COMPONENT, is_serial_port, is_socket_address, try_connect
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import VolDictType
 
 DEFAULT_BAUD_RATE = 115200
 DEFAULT_TCP_PORT = 5003

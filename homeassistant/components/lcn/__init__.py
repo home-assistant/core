@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from functools import partial
 import logging
+from typing import TYPE_CHECKING
 
 import pypck
 
@@ -20,11 +20,9 @@ from homeassistant.const import (
     CONF_RESOURCE,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ADD_ENTITIES_CALLBACKS,
@@ -49,6 +47,12 @@ from .helpers import (
 from .schemas import CONFIG_SCHEMA  # noqa: F401
 from .services import SERVICES
 from .websocket import register_panel_and_ws_api
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

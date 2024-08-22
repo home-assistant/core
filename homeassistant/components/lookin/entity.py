@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import logging
+from typing import TYPE_CHECKING
 
 from aiolookin import (
     POWER_CMD,
@@ -20,7 +21,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MODEL_NAMES
 from .coordinator import LookinDataUpdateCoordinator
-from .models import LookinData
+
+if TYPE_CHECKING:
+    from .models import LookinData
 
 LOGGER = logging.getLogger(__name__)
 

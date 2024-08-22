@@ -2,21 +2,25 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
-
-from intellifire4py import IntellifirePollData
-from intellifire4py.intellifire import IntellifireAPILocal
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import IntellifireDataUpdateCoordinator
 from .entity import IntellifireEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    from intellifire4py import IntellifirePollData
+    from intellifire4py.intellifire import IntellifireAPILocal
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import IntellifireDataUpdateCoordinator
 
 
 @dataclass(frozen=True)

@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
-
-from intellifire4py import IntellifireControlAsync, IntellifirePollData
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -14,13 +11,20 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, LOGGER
-from .coordinator import IntellifireDataUpdateCoordinator
 from .entity import IntellifireEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    from intellifire4py import IntellifireControlAsync, IntellifirePollData
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import IntellifireDataUpdateCoordinator
 
 
 @dataclass(frozen=True)

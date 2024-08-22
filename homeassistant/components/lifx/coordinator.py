@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from datetime import timedelta
 from enum import IntEnum
 from functools import cached_property, partial
 from math import floor, log10
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from aiolifx.aiolifx import (
     Light,
@@ -18,7 +17,6 @@ from aiolifx.aiolifx import (
     TileEffectSkyType,
     TileEffectType,
 )
-from aiolifx.connection import LIFXConnection
 from aiolifx_themes.themes import ThemeLibrary, ThemePainter
 from awesomeversion import AwesomeVersion
 
@@ -55,6 +53,11 @@ from .util import (
     infrared_brightness_value_to_option,
     lifx_features,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from aiolifx.connection import LIFXConnection
 
 LIGHT_UPDATE_INTERVAL = 10
 REQUEST_REFRESH_DELAY = 0.35

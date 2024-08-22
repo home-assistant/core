@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from datapoint.Forecast import Forecast
-from datapoint.Site import Site
-from datapoint.Timestep import Timestep
+if TYPE_CHECKING:
+    from datapoint.Forecast import Forecast
+    from datapoint.Site import Site
+    from datapoint.Timestep import Timestep
 
 
 @dataclass

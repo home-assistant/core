@@ -5,8 +5,8 @@ from __future__ import annotations
 from contextlib import suppress
 from http import HTTPStatus
 import secrets
+from typing import TYPE_CHECKING
 
-from aiohttp.web import Request, Response
 from nacl.secret import SecretBox
 import voluptuous as vol
 
@@ -36,6 +36,9 @@ from .const import (
     SCHEMA_APP_DATA,
 )
 from .util import async_create_cloud_hook
+
+if TYPE_CHECKING:
+    from aiohttp.web import Request, Response
 
 
 class RegistrationsView(HomeAssistantView):

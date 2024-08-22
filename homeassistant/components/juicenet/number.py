@@ -3,21 +3,24 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-
-from pyjuicenet import Api, Charger
+from typing import TYPE_CHECKING
 
 from homeassistant.components.number import (
     DEFAULT_MAX_VALUE,
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, JUICENET_API, JUICENET_COORDINATOR
 from .entity import JuiceNetDevice
+
+if TYPE_CHECKING:
+    from pyjuicenet import Api, Charger
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)

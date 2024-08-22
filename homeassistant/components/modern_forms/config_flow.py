@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiomodernforms import ModernFormsConnectionError, ModernFormsDevice
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import SOURCE_ZEROCONF, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.components import zeroconf
 
 
 class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):

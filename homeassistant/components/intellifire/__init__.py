@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from aiohttp import ClientConnectionError
 from intellifire4py import IntellifireControlAsync
 from intellifire4py.exceptions import LoginException
 from intellifire4py.intellifire import IntellifireAPICloud, IntellifireAPILocal
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -15,11 +16,14 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_USER_ID, DOMAIN, LOGGER
 from .coordinator import IntellifireDataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,

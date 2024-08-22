@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Final
 
 import knx_frontend as knx_panel
 import voluptuous as vol
-from xknx.telegram import Telegram
 from xknxproject.exceptions import XknxProjectException
 
 from homeassistant.components import panel_custom, websocket_api
@@ -33,6 +32,8 @@ from .storage.entity_store_validation import (
 from .telegrams import SIGNAL_KNX_TELEGRAM, TelegramDict
 
 if TYPE_CHECKING:
+    from xknx.telegram import Telegram
+
     from . import KNXModule
 
 

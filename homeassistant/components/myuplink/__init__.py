@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from http import HTTPStatus
+from typing import TYPE_CHECKING
 
 from aiohttp import ClientError, ClientResponseError
 from myuplink import MyUplinkAPI, get_manufacturer, get_model, get_system_name
@@ -16,11 +17,13 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     device_registry as dr,
 )
-from homeassistant.helpers.device_registry import DeviceEntry
 
 from .api import AsyncConfigEntryAuth
 from .const import DOMAIN, OAUTH2_SCOPES
 from .coordinator import MyUplinkDataCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.device_registry import DeviceEntry
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,

@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.uuid import random_uuid_hex
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 PUSH_CONFIRM_TIMEOUT = 10  # seconds
 

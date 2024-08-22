@@ -2,16 +2,20 @@
 
 from __future__ import annotations
 
-from iaqualink.device import AqualinkSensor
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import DOMAIN, SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AqualinkEntity
 from .const import DOMAIN as AQUALINK_DOMAIN
+
+if TYPE_CHECKING:
+    from iaqualink.device import AqualinkSensor
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 PARALLEL_UPDATES = 0
 

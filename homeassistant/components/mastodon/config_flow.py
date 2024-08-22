@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from mastodon.Mastodon import MastodonNetworkError, MastodonUnauthorizedError
 import voluptuous as vol
@@ -19,11 +19,13 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
 from .const import CONF_BASE_URL, DEFAULT_URL, DOMAIN, LOGGER
 from .utils import construct_mastodon_username, create_mastodon_client
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {

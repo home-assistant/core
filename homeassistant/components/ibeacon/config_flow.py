@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 import voluptuous as vol
@@ -16,9 +16,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import VolDictType
 
 from .const import CONF_ALLOW_NAMELESS_UUIDS, DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import VolDictType
 
 
 class IBeaconConfigFlow(ConfigFlow, domain=DOMAIN):

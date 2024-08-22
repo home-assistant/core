@@ -7,11 +7,10 @@ import logging
 import os
 from pathlib import Path
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
 from homeassistant.components.frontend import DATA_PANELS
 from homeassistant.const import CONF_FILENAME
 from homeassistant.core import HomeAssistant, callback
@@ -33,6 +32,9 @@ from .const import (
     STORAGE_DASHBOARD_UPDATE_FIELDS,
     ConfigNotFound,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.components import websocket_api
 
 CONFIG_STORAGE_KEY_DEFAULT = DOMAIN
 CONFIG_STORAGE_KEY = "lovelace.{}"

@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
-from aiohttp import ClientSession
 from myuplink.auth_abstract import AbstractAuth
 
-from homeassistant.helpers import config_entry_oauth2_flow
-
 from .const import API_ENDPOINT
+
+if TYPE_CHECKING:
+    from aiohttp import ClientSession
+
+    from homeassistant.helpers import config_entry_oauth2_flow
 
 
 class AsyncConfigEntryAuth(AbstractAuth):

@@ -2,19 +2,24 @@
 
 from __future__ import annotations
 
-from ibeacon_ble import iBeaconAdvertisement
+from typing import TYPE_CHECKING
 
 from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.device_tracker.config_entry import BaseTrackerEntity
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import IBeaconConfigEntry
 from .const import SIGNAL_IBEACON_DEVICE_NEW
-from .coordinator import IBeaconCoordinator
 from .entity import IBeaconEntity
+
+if TYPE_CHECKING:
+    from ibeacon_ble import iBeaconAdvertisement
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import IBeaconConfigEntry
+    from .coordinator import IBeaconCoordinator
 
 
 async def async_setup_entry(

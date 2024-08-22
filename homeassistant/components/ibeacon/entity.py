@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-
-from ibeacon_ble import iBeaconAdvertisement
+from typing import TYPE_CHECKING
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -13,6 +12,9 @@ from homeassistant.helpers.entity import Entity
 
 from .const import ATTR_MAJOR, ATTR_MINOR, ATTR_SOURCE, ATTR_UUID, DOMAIN
 from .coordinator import IBeaconCoordinator, signal_seen, signal_unavailable
+
+if TYPE_CHECKING:
+    from ibeacon_ble import iBeaconAdvertisement
 
 
 class IBeaconEntity(Entity):

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from functools import partial
 import logging
+from typing import TYPE_CHECKING
 
 from motionblindsble.const import MotionBlindType
 from motionblindsble.crypt import MotionCrypt
@@ -17,12 +18,10 @@ from homeassistant.components.bluetooth import (
     async_ble_device_from_address,
     async_register_callback,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_BLIND_TYPE,
@@ -31,6 +30,10 @@ from .const import (
     OPTION_DISCONNECT_TIME,
     OPTION_PERMANENT_CONNECTION,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

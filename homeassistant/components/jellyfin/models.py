@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from jellyfin_apiclient_python import JellyfinClient
+if TYPE_CHECKING:
+    from jellyfin_apiclient_python import JellyfinClient
 
-from .coordinator import JellyfinDataUpdateCoordinator
+    from .coordinator import JellyfinDataUpdateCoordinator
 
 
 @dataclass

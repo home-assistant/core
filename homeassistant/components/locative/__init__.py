@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from http import HTTPStatus
 import logging
+from typing import TYPE_CHECKING
 
 from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components import webhook
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ID,
     ATTR_LATITUDE,
@@ -18,10 +18,13 @@ from homeassistant.const import (
     STATE_NOT_HOME,
     Platform,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

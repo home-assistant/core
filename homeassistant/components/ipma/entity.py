@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
-from pyipma.api import IPMA_API
-from pyipma.location import Location
+from typing import TYPE_CHECKING
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from pyipma.api import IPMA_API
+    from pyipma.location import Location
 
 
 class IPMADevice(Entity):
