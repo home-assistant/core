@@ -9,7 +9,7 @@
         }
       },
       "reauth_confirm": {
-        "description": "Tailscale API access tokens are valid for 90-days. You can create a fresh Tailscale API access token at https://login.tailscale.com/admin/settings/keys.",
+        "description": "Tailscale API access tokens are valid for 90-days. You can create a fresh Tailscale API access token at {authkeys_url}.",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
