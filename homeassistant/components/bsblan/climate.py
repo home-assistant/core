@@ -23,9 +23,9 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
+from . import BSBLanData
 from .const import ATTR_TARGET_TEMPERATURE, DOMAIN
 from .entity import BSBLanEntity
-from .models import BSBLanData
 
 PARALLEL_UPDATES = 1
 
