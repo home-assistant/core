@@ -87,13 +87,13 @@ class OpenThermClimate(ClimateEntity):
     _current_operation: HVACAction | None = None
     _enable_turn_on_off_backwards_compatibility = False
 
-    def __init__(self, gw_dev, options):
+    def __init__(self, gw_hub, options):
         """Initialize the device."""
-        self._gateway = gw_dev
+        self._gateway = gw_hub
         self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, gw_dev.gw_id, hass=gw_dev.hass
+            ENTITY_ID_FORMAT, gw_hub.hub_id, hass=gw_hub.hass
         )
-        self.friendly_name = gw_dev.name
+        self.friendly_name = gw_hub.name
         self._attr_name = self.friendly_name
         self.floor_temp = options.get(CONF_FLOOR_TEMP, DEFAULT_FLOOR_TEMP)
         self.temp_read_precision = options.get(CONF_READ_PRECISION)
@@ -102,13 +102,13 @@ class OpenThermClimate(ClimateEntity):
         self._unsub_options = None
         self._unsub_updates = None
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, gw_dev.gw_id)},
+            identifiers={(DOMAIN, gw_hub.hub_id)},
             manufacturer="Schelte Bron",
             model="OpenTherm Gateway",
-            name=gw_dev.name,
-            sw_version=gw_dev.gw_version,
+            name=gw_hub.name,
+            sw_version=gw_hub.gw_version,
         )
-        self._attr_unique_id = gw_dev.gw_id
+        self._attr_unique_id = gw_hub.hub_id
 
     @callback
     def update_options(self, entry):
@@ -138,7 +138,7 @@ class OpenThermClimate(ClimateEntity):
     @callback
     def receive_report(self, status):
         """Receive and handle a new report from the Gateway."""
-        self._attr_available = status != gw_vars.DEFAULT_STATUS
+        self._attr_available = self._gateway.connected
         ch_active = status[gw_vars.BOILER].get(gw_vars.DATA_SLAVE_CH_ACTIVE)
         flame_on = status[gw_vars.BOILER].get(gw_vars.DATA_SLAVE_FLAME_ON)
         cooling_active = status[gw_vars.BOILER].get(gw_vars.DATA_SLAVE_COOLING_ACTIVE)

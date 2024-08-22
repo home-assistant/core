@@ -3,7 +3,7 @@
   "services": {
     "create": {
       "name": "Create",
-      "description": "Shows a notification on the **Notifications** panel.",
+      "description": "Shows a notification on the notifications panel.",
       "fields": {
         "message": {
           "name": "Message",
@@ -21,7 +21,7 @@
     },
     "dismiss": {
       "name": "Dismiss",
-      "description": "Removes a notification from the **Notifications** panel.",
+      "description": "Removes a notification from the notifications panel.",
       "fields": {
         "notification_id": {
           "name": "[%key:component::persistent_notification::services::create::fields::notification_id::name%]",
@@ -31,7 +31,7 @@
     },
     "dismiss_all": {
       "name": "Dismiss all",
-      "description": "Removes all notifications from the **Notifications** panel."
+      "description": "Removes all notifications from the notifications panel."
     }
   }
 }

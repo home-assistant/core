@@ -10,7 +10,7 @@ from homeassistant.components.repairs.websocket_api import (
     RepairsFlowIndexView,
     RepairsFlowResourceView,
 )
-from homeassistant.core import DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -23,7 +23,7 @@ async def test_integration_not_found_confirm_step(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test the integration_not_found issue confirm step."""
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
     await hass.async_block_till_done()
     assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
     await hass.async_block_till_done()
@@ -49,7 +49,9 @@ async def test_integration_not_found_confirm_step(
     assert issue["translation_placeholders"] == {"domain": "test1"}
 
     url = RepairsFlowIndexView.url
-    resp = await http_client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
+    resp = await http_client.post(
+        url, json={"handler": HOMEASSISTANT_DOMAIN, "issue_id": issue_id}
+    )
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
@@ -93,7 +95,7 @@ async def test_integration_not_found_ignore_step(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test the integration_not_found issue ignore step."""
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
     await hass.async_block_till_done()
     assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
     await hass.async_block_till_done()
@@ -117,7 +119,9 @@ async def test_integration_not_found_ignore_step(
     assert issue["translation_placeholders"] == {"domain": "test1"}
 
     url = RepairsFlowIndexView.url
-    resp = await http_client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
+    resp = await http_client.post(
+        url, json={"handler": HOMEASSISTANT_DOMAIN, "issue_id": issue_id}
+    )
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 

@@ -3,12 +3,13 @@
 import asyncio
 from contextlib import suppress
 import logging
+from typing import Any
 from urllib.parse import urlparse
 
 import upb_lib
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_FILE_PATH, CONF_HOST, CONF_PROTOCOL
 from homeassistant.exceptions import HomeAssistantError
 
@@ -39,11 +40,12 @@ async def _validate_input(data):
     url = _make_url_from_data(data)
 
     upb = upb_lib.UpbPim({"url": url, "UPStartExportFile": file_path})
+
+    await upb.async_connect(_connected_callback)
+
     if not upb.config_ok:
         _LOGGER.error("Missing or invalid UPB file: %s", file_path)
         raise InvalidUpbFile
-
-    upb.connect(_connected_callback)
 
     with suppress(TimeoutError):
         async with asyncio.timeout(VALIDATE_TIMEOUT):
@@ -81,7 +83,9 @@ class UPBConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the UPB config flow."""
         self.importing = False
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:

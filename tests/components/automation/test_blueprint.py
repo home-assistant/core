@@ -1,8 +1,10 @@
 """Test built-in blueprints."""
 
 import asyncio
+from collections.abc import Iterator
 import contextlib
 from datetime import timedelta
+from os import PathLike
 import pathlib
 from typing import Any
 from unittest.mock import patch
@@ -23,7 +25,9 @@ BUILTIN_BLUEPRINT_FOLDER = pathlib.Path(automation.__file__).parent / "blueprint
 
 
 @contextlib.contextmanager
-def patch_blueprint(blueprint_path: str, data_path):
+def patch_blueprint(
+    blueprint_path: str, data_path: str | PathLike[str]
+) -> Iterator[None]:
     """Patch blueprint loading from a different source."""
     orig_load = models.DomainBlueprints._load_blueprint
 

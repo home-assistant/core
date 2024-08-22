@@ -132,8 +132,10 @@ def _entry_dict(entry: FloorEntry) -> dict[str, Any]:
     """Convert entry to API format."""
     return {
         "aliases": list(entry.aliases),
+        "created_at": entry.created_at.timestamp(),
         "floor_id": entry.floor_id,
         "icon": entry.icon,
         "level": entry.level,
         "name": entry.name,
+        "modified_at": entry.modified_at.timestamp(),
     }

@@ -13,7 +13,7 @@ from systembridgeconnector.exceptions import (
     ConnectionErrorException,
 )
 from systembridgeconnector.websocket_client import WebSocketClient
-from systembridgemodels.modules import GetData
+from systembridgemodels.modules import GetData, Module
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
@@ -24,8 +24,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
-from .data import SystemBridgeData
+from .const import DATA_WAIT_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,16 +47,6 @@ async def _validate_input(
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
-    system_bridge_data = SystemBridgeData()
-
-    async def _async_handle_module(
-        module_name: str,
-        module: Any,
-    ) -> None:
-        """Handle data from the WebSocket client."""
-        _LOGGER.debug("Set new data for: %s", module_name)
-        setattr(system_bridge_data, module_name, module)
-
     websocket_client = WebSocketClient(
         data[CONF_HOST],
         data[CONF_PORT],
@@ -66,17 +55,11 @@ async def _validate_input(
     )
 
     try:
-        async with asyncio.timeout(15):
+        async with asyncio.timeout(DATA_WAIT_TIMEOUT):
             await websocket_client.connect()
-            hass.async_create_task(
-                websocket_client.listen(callback=_async_handle_module)
+            modules_data = await websocket_client.get_data(
+                GetData(modules=[Module.SYSTEM])
             )
-            response = await websocket_client.get_data(GetData(modules=["system"]))
-            _LOGGER.debug("Got response: %s", response)
-            if response is None:
-                raise CannotConnect("No data received")
-            while system_bridge_data.system is None:
-                await asyncio.sleep(0.2)
     except AuthenticationException as exception:
         _LOGGER.warning(
             "Authentication error when connecting to %s: %s",
@@ -98,9 +81,13 @@ async def _validate_input(
     except ValueError as exception:
         raise CannotConnect from exception
 
-    _LOGGER.debug("Got System data: %s", system_bridge_data.system)
+    _LOGGER.debug("Got modules data: %s", modules_data)
+    if modules_data is None or modules_data.system is None:
+        raise CannotConnect("No system data received")
 
-    return {"hostname": data[CONF_HOST], "uuid": system_bridge_data.system.uuid}
+    _LOGGER.debug("Got System data: %s", modules_data.system)
+
+    return {"hostname": data[CONF_HOST], "uuid": modules_data.system.uuid}
 
 
 async def _async_get_info(

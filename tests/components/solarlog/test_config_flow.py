@@ -45,7 +45,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-def init_config_flow(hass):
+def init_config_flow(hass: HomeAssistant) -> config_flow.SolarLogConfigFlow:
     """Init a configuration flow."""
     flow = config_flow.SolarLogConfigFlow()
     flow.hass = hass

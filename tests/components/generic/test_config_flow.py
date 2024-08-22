@@ -638,6 +638,7 @@ async def test_form_stream_other_error(hass: HomeAssistant, user_flow) -> None:
 
 
 @respx.mock
+@pytest.mark.usefixtures("fakeimg_png")
 async def test_form_stream_worker_error(
     hass: HomeAssistant, user_flow: ConfigFlowResult
 ) -> None:

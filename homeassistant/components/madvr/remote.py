@@ -8,13 +8,11 @@ from typing import Any
 
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import MadVRConfigEntry
-from .const import DOMAIN
 from .coordinator import MadVRCoordinator
+from .entity import MadVREntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,10 +31,9 @@ async def async_setup_entry(
     )
 
 
-class MadvrRemote(CoordinatorEntity[MadVRCoordinator], RemoteEntity):
+class MadvrRemote(MadVREntity, RemoteEntity):
     """Remote entity for the madVR integration."""
 
-    _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(
@@ -47,13 +44,6 @@ class MadvrRemote(CoordinatorEntity[MadVRCoordinator], RemoteEntity):
         super().__init__(coordinator)
         self.madvr_client = coordinator.client
         self._attr_unique_id = coordinator.mac
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.mac)},
-            name="madVR Envy",
-            manufacturer="madVR",
-            model="Envy",
-            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)},
-        )
 
     @property
     def is_on(self) -> bool:

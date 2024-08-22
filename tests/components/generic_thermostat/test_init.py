@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.components.generic_thermostat import DOMAIN
+from homeassistant.components.generic_thermostat.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 

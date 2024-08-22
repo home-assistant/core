@@ -332,7 +332,9 @@ async def test_supported_features(hass: HomeAssistant) -> None:
     assert valve.supported_features is None
 
 
-def call_service(hass, service, ent, position=None):
+def call_service(
+    hass: HomeAssistant, service: str, ent: ValveEntity, position: int | None = None
+):
     """Call any service on entity."""
     params = {ATTR_ENTITY_ID: ent.entity_id}
     if position is not None:
@@ -345,21 +347,21 @@ def set_valve_position(ent, position) -> None:
     ent._values["current_valve_position"] = position
 
 
-def is_open(hass, ent):
+def is_open(hass: HomeAssistant, ent: ValveEntity) -> bool:
     """Return if the valve is closed based on the statemachine."""
     return hass.states.is_state(ent.entity_id, STATE_OPEN)
 
 
-def is_opening(hass, ent):
+def is_opening(hass: HomeAssistant, ent: ValveEntity) -> bool:
     """Return if the valve is closed based on the statemachine."""
     return hass.states.is_state(ent.entity_id, STATE_OPENING)
 
 
-def is_closed(hass, ent):
+def is_closed(hass: HomeAssistant, ent: ValveEntity) -> bool:
     """Return if the valve is closed based on the statemachine."""
     return hass.states.is_state(ent.entity_id, STATE_CLOSED)
 
 
-def is_closing(hass, ent):
+def is_closing(hass: HomeAssistant, ent: ValveEntity) -> bool:
     """Return if the valve is closed based on the statemachine."""
     return hass.states.is_state(ent.entity_id, STATE_CLOSING)

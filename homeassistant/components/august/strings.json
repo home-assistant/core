@@ -40,6 +40,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "ding": {
+        "name": "Doorbell ding"
+      },
       "image_capture": {
         "name": "Image capture"
       }
