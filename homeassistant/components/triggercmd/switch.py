@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from triggercmd import client
+from triggercmd import client, ha
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -34,18 +34,19 @@ class TRIGGERcmdSwitch(SwitchEntity):
     _attr_assumed_state = True
     _attr_should_poll = False
 
-    def __init__(self, trigger) -> None:
+    computer_id: str
+    trigger_id: str
+    firmware_version: str
+    model: str
+    hub: ha.Hub
+
+    def __init__(self, trigger: TRIGGERcmdSwitch) -> None:
         """Initialize the switch."""
         self._switch = trigger
-        self._state = False
-        self._assumed_state = False
-        self._attr_unique_id = f"{self._switch.computer_id}.{self._switch.trigger_id}"
+        self._attr_is_on = False
+        self._attr_unique_id = f"{trigger.computer_id}.{trigger.trigger_id}"
         self._attr_name = trigger.trigger_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Information about this entity/device."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._switch.computer_id)},
             name=str(self._switch.computer_id).capitalize(),
             sw_version=self._switch.firmware_version,
@@ -61,23 +62,23 @@ class TRIGGERcmdSwitch(SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
-        return self._state
+        return self._attr_is_on
 
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
-        self._state = True
+        self._attr_is_on = True
         self.async_write_ha_state()
-        self.trigger("on")
+        await self.trigger("on")
 
     async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
-        self._state = False
+        self._attr_is_on = False
         self.async_write_ha_state()
-        self.trigger("off")
+        await self.trigger("off")
 
-    def trigger(self, params):
+    async def trigger(self, params: str):
         """Trigger the command."""
-        r = client.trigger(
+        r = await client.async_trigger(
             self._switch.hub.token,
             {
                 "computer": self._switch.computer_id,
@@ -86,4 +87,4 @@ class TRIGGERcmdSwitch(SwitchEntity):
                 "sender": "Home Assistant",
             },
         )
-        _LOGGER.info("TRIGGERcmd trigger response: %s", r.json())
+        _LOGGER.debug("TRIGGERcmd trigger response: %s", r.json())

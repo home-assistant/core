@@ -3,10 +3,10 @@
     "step": {
       "user": {
         "data": {
-          "token": "TRIGGERcmd token"
+          "token": "token"
         },
         "data_description": {
-          "token": "Token from instructions page"
+          "token": "Token from TRIGGERcmd instructions page"
         }
       }
     },
