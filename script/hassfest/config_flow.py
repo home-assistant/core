@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import pathlib
 from typing import Any
 
 from .brand import validate as validate_brands
@@ -216,10 +215,10 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config.specific_integrations:
         return
 
-    brands = Brand.load_dir(pathlib.Path(config.root / "homeassistant/brands"), config)
+    brands = Brand.load_dir(config.root / "homeassistant/brands", config)
     validate_brands(brands, integrations, config)
 
-    with open(str(config_flow_path)) as fp:
+    with config_flow_path.open() as fp:
         if fp.read() != content:
             config.add_error(
                 "config_flow",
@@ -231,7 +230,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     config.cache["integrations"] = content = _generate_integrations(
         brands, integrations, config
     )
-    with open(str(integrations_path)) as fp:
+    with integrations_path.open() as fp:
         if fp.read() != content + "\n":
             config.add_error(
                 "config_flow",
@@ -245,7 +244,7 @@ def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Generate config flow file."""
     config_flow_path = config.root / "homeassistant/generated/config_flows.py"
     integrations_path = config.root / "homeassistant/generated/integrations.json"
-    with open(str(config_flow_path), "w") as fp:
+    with config_flow_path.open("w") as fp:
         fp.write(f"{config.cache['config_flow']}")
-    with open(str(integrations_path), "w") as fp:
+    with integrations_path.open("w") as fp:
         fp.write(f"{config.cache['integrations']}\n")

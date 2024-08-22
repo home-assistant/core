@@ -35,7 +35,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config.specific_integrations:
         return
 
-    with open(str(usb_path)) as fp:
+    with usb_path.open() as fp:
         current = fp.read()
         if current != content:
             config.add_error(
@@ -49,5 +49,5 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
 def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Generate usb file."""
     usb_path = config.root / "homeassistant/generated/usb.py"
-    with open(str(usb_path), "w") as fp:
+    with usb_path.open("w") as fp:
         fp.write(f"{config.cache['usb']}")

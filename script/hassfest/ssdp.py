@@ -33,7 +33,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config.specific_integrations:
         return
 
-    with open(str(ssdp_path)) as fp:
+    with ssdp_path.open() as fp:
         if fp.read() != content:
             config.add_error(
                 "ssdp",
@@ -45,5 +45,5 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
 def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Generate ssdp file."""
     ssdp_path = config.root / "homeassistant/generated/ssdp.py"
-    with open(str(ssdp_path), "w") as fp:
+    with ssdp_path.open("w") as fp:
         fp.write(f"{config.cache['ssdp']}")

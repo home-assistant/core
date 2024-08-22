@@ -10,7 +10,7 @@ from .model import Config, Integration
 def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate project metadata keys."""
     metadata_path = config.root / "pyproject.toml"
-    with open(metadata_path, "rb") as fp:
+    with metadata_path.open("rb") as fp:
         data = tomllib.load(fp)
 
     try:

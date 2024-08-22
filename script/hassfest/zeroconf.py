@@ -90,7 +90,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config.specific_integrations:
         return
 
-    with open(str(zeroconf_path)) as fp:
+    with zeroconf_path.open() as fp:
         current = fp.read()
         if current != content:
             config.add_error(
@@ -104,5 +104,5 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
 def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Generate zeroconf file."""
     zeroconf_path = config.root / "homeassistant/generated/zeroconf.py"
-    with open(str(zeroconf_path), "w") as fp:
+    with zeroconf_path.open("w") as fp:
         fp.write(f"{config.cache['zeroconf']}")

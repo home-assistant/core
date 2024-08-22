@@ -1,5 +1,7 @@
 """Generate and validate the dockerfile."""
 
+from pathlib import Path
+
 from homeassistant import core
 from homeassistant.util import executor, thread
 
@@ -63,7 +65,7 @@ WORKDIR /config
 
 
 def _get_uv_version() -> str:
-    with open("requirements_test.txt") as fp:
+    with Path("requirements_test.txt").open() as fp:
         for _, line in enumerate(fp):
             if match := PACKAGE_REGEX.match(line):
                 pkg, sep, version = match.groups()

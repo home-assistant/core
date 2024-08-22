@@ -98,7 +98,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config.specific_integrations:
         return
 
-    with open(str(codeowners_path)) as fp:
+    with codeowners_path.open() as fp:
         if fp.read().strip() != content:
             config.add_error(
                 "codeowners",
@@ -111,5 +111,5 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
 def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Generate CODEOWNERS."""
     codeowners_path = config.root / "CODEOWNERS"
-    with open(str(codeowners_path), "w") as fp:
+    with codeowners_path.open("w") as fp:
         fp.write(f"{config.cache['codeowners']}\n")

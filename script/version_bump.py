@@ -2,6 +2,7 @@
 """Helper script to bump the current version."""
 
 import argparse
+from pathlib import Path
 import re
 import subprocess
 
@@ -110,7 +111,7 @@ def bump_version(
 
 def write_version(version):
     """Update Home Assistant constant file with new version."""
-    with open("homeassistant/const.py") as fil:
+    with Path("homeassistant/const.py").open() as fil:
         content = fil.read()
 
     major, minor, patch = str(version).split(".", 2)
@@ -125,24 +126,24 @@ def write_version(version):
         "PATCH_VERSION: Final = .*\n", f'PATCH_VERSION: Final = "{patch}"\n', content
     )
 
-    with open("homeassistant/const.py", "w") as fil:
+    with Path("homeassistant/const.py").open("w") as fil:
         fil.write(content)
 
 
 def write_version_metadata(version: Version) -> None:
     """Update pyproject.toml file with new version."""
-    with open("pyproject.toml", encoding="utf8") as fp:
+    with Path("pyproject.toml").open(encoding="utf8") as fp:
         content = fp.read()
 
     content = re.sub(r"(version\W+=\W).+\n", f'\\g<1>"{version}"\n', content, count=1)
 
-    with open("pyproject.toml", "w", encoding="utf8") as fp:
+    with Path("pyproject.toml").open("w", encoding="utf8") as fp:
         fp.write(content)
 
 
 def write_ci_workflow(version: Version) -> None:
     """Update ci workflow with new version."""
-    with open(".github/workflows/ci.yaml") as fp:
+    with Path(".github/workflows/ci.yaml").open() as fp:
         content = fp.read()
 
     short_version = ".".join(str(version).split(".", maxsplit=2)[:2])
@@ -153,7 +154,7 @@ def write_ci_workflow(version: Version) -> None:
         count=1,
     )
 
-    with open(".github/workflows/ci.yaml", "w") as fp:
+    with Path(".github/workflows/ci.yaml").open("w") as fp:
         fp.write(content)
 
 

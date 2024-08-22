@@ -34,7 +34,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config.specific_integrations:
         return
 
-    with open(str(bluetooth_path)) as fp:
+    with bluetooth_path.open() as fp:
         current = fp.read()
         if current != content:
             config.add_error(
@@ -48,5 +48,5 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
 def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Generate bluetooth file."""
     bluetooth_path = config.root / "homeassistant/generated/bluetooth.py"
-    with open(str(bluetooth_path), "w") as fp:
+    with bluetooth_path.open("w") as fp:
         fp.write(f"{config.cache['bluetooth']}")
