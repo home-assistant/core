@@ -369,6 +369,13 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `°C`, `°F`, `K`
     """
 
+    TOTAL_DISSOLVED_SOLIDS = "tds"
+    """Total dissolved solids.
+
+    Unit of measurement: Concentrations
+    - `PPM`, `PPB`
+    """
+
     VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
     """Amount of VOC.
 
