@@ -108,6 +108,7 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a LCN config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import existing configuration from LCN."""
