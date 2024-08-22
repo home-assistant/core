@@ -36,7 +36,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_config_entry():
+def mock_config_entry() -> MockConfigEntry:
     """Mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -47,7 +47,11 @@ def mock_config_entry():
 
 
 @pytest.fixture
-async def mock_media_player(hass: HomeAssistant, mock_config_entry, mock_mozart_client):
+async def mock_media_player(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_mozart_client: AsyncMock,
+) -> None:
     """Mock media_player entity."""
 
     mock_config_entry.add_to_hass(hass)
@@ -241,14 +245,17 @@ def mock_mozart_client() -> Generator[AsyncMock]:
         # Non-REST API client methods
         client.check_device_connection = AsyncMock()
         client.close_api_client = AsyncMock()
+
+        # WebSocket listener
         client.connect_notifications = AsyncMock()
         client.disconnect_notifications = Mock()
+        client.websocket_connected = False
 
         yield client
 
 
 @pytest.fixture
-def mock_setup_entry():
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock successful setup entry."""
     with patch(
         "homeassistant.components.bang_olufsen.async_setup_entry", return_value=True

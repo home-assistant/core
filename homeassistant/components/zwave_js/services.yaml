@@ -172,14 +172,7 @@ bulk_set_partial_config_parameters:
           filter:
             - integration: zwave_js
           multiple: true
-    label_id:
-      example: battery_level
-      selector:
-        label:
-          multiple: true
     endpoint:
-      example: 1
-      default: 0
       required: false
       selector:
         text:
@@ -247,11 +240,6 @@ set_value:
       required: true
       selector:
         text:
-    endpoint:
-      example: 1
-      required: false
-      selector:
-        text:
     property:
       example: currentValue
       required: true
@@ -305,13 +293,11 @@ multicast_set_value:
         label:
           multiple: true
     broadcast:
-      example: true
       required: false
       selector:
         boolean:
     command_class:
       example: 117
-      required: true
       selector:
         text:
     endpoint:
@@ -371,13 +357,14 @@ ping:
 reset_meter:
   target:
     entity:
-      domain: sensor
       integration: zwave_js
   fields:
     area_id:
       example: living_room
       selector:
         area:
+          device:
+            - integration: zwave_js
           entity:
             - integration: zwave_js
               domain: sensor

@@ -716,14 +716,14 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          pylint --ignore-missing-annotations=y tests
+          pylint tests
       - name: Run pylint (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
         run: |
           . venv/bin/activate
           python --version
-          pylint --ignore-missing-annotations=y tests/components/${{ needs.info.outputs.tests_glob }}
+          pylint tests/components/${{ needs.info.outputs.tests_glob }}
 
   mypy:
     name: Check mypy

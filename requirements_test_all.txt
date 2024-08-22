@@ -599,7 +599,7 @@ datadog==0.15.0
 datapoint==0.9.9
 
 # homeassistant.components.bluetooth
-dbus-fast==2.22.1
+dbus-fast==2.23.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.1
@@ -922,7 +922,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.54
+holidays==0.55
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240809.0
@@ -1768,7 +1768,7 @@ pysmartthings==0.7.8
 pysml==0.0.12
 
 # homeassistant.components.smlight
-pysmlight==0.0.12
+pysmlight==0.0.13
 
 # homeassistant.components.snmp
 pysnmp==6.2.5
@@ -2348,7 +2348,7 @@ yalesmartalarmclient==0.4.0
 yalexs-ble==2.4.3
 
 # homeassistant.components.august
-yalexs==8.1.2
+yalexs==8.1.4
 
 # homeassistant.components.yeelight
 yeelight==0.7.14
