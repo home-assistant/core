@@ -281,10 +281,6 @@
           "description": "[%key:component::zwave_js::services::set_value::fields::entity_id::description%]",
           "name": "[%key:component::zwave_js::services::set_value::fields::entity_id::name%]"
         },
-        "label_id": {
-          "description": "[%key:component::zwave_js::services::set_value::fields::label_id::description%]",
-          "name": "[%key:component::zwave_js::services::set_value::fields::label_id::name%]"
-        },
         "parameter": {
           "description": "[%key:component::zwave_js::services::set_config_parameter::fields::parameter::description%]",
           "name": "[%key:component::zwave_js::services::set_config_parameter::fields::parameter::name%]"
@@ -329,10 +325,6 @@
           "description": "The entity ID(s) to target for this service.",
           "name": "Entity ID(s)"
         },
-        "label_id": {
-          "description": "The label(s) to target for this service. If an label is specified, all zwave_js devices and entities with that label will be targeted for this service.",
-          "name": "Label ID(s)"
-        },
         "method_name": {
           "description": "The name of the API method to call. Refer to the Z-Wave JS Command Class API documentation (https://zwave-js.github.io/node-zwave-js/#/api/CCs/index) for available methods.",
           "name": "Method name"
@@ -371,10 +363,6 @@
           "description": "[%key:component::zwave_js::services::set_value::fields::entity_id::description%]",
           "name": "[%key:component::zwave_js::services::set_value::fields::entity_id::name%]"
         },
-        "label_id": {
-          "description": "[%key:component::zwave_js::services::set_value::fields::label_id::description%]",
-          "name": "[%key:component::zwave_js::services::set_value::fields::label_id::name%]"
-        },
         "options": {
           "description": "[%key:component::zwave_js::services::set_value::fields::options::description%]",
           "name": "[%key:component::zwave_js::services::set_value::fields::options::name%]"
@@ -408,10 +396,6 @@
         "entity_id": {
           "description": "[%key:component::zwave_js::services::set_value::fields::entity_id::description%]",
           "name": "[%key:component::zwave_js::services::set_value::fields::entity_id::name%]"
-        },
-        "label_id": {
-          "description": "[%key:component::zwave_js::services::set_value::fields::label_id::description%]",
-          "name": "[%key:component::zwave_js::services::set_value::fields::label_id::name%]"
         }
       },
       "name": "Ping a node"
@@ -430,10 +414,6 @@
         "entity_id": {
           "description": "[%key:component::zwave_js::services::set_value::fields::entity_id::description%]",
           "name": "[%key:component::zwave_js::services::set_value::fields::entity_id::name%]"
-        },
-        "label_id": {
-          "description": "[%key:component::zwave_js::services::set_value::fields::label_id::description%]",
-          "name": "[%key:component::zwave_js::services::set_value::fields::label_id::name%]"
         },
         "notification_event": {
           "description": "The Notification Event number as defined in the Z-Wave specs.",
@@ -475,10 +455,6 @@
           "description": "[%key:component::zwave_js::services::set_value::fields::entity_id::description%]",
           "name": "[%key:component::zwave_js::services::set_value::fields::entity_id::name%]"
         },
-        "label_id": {
-          "description": "[%key:component::zwave_js::services::set_value::fields::label_id::description%]",
-          "name": "[%key:component::zwave_js::services::set_value::fields::label_id::name%]"
-        },
         "meter_type": {
           "description": "The type of meter to reset. Not all meters support the ability to pick a meter type to reset.",
           "name": "Meter type"
@@ -512,10 +488,6 @@
         "entity_id": {
           "description": "[%key:component::zwave_js::services::set_value::fields::entity_id::description%]",
           "name": "[%key:component::zwave_js::services::set_value::fields::entity_id::name%]"
-        },
-        "label_id": {
-          "description": "[%key:component::zwave_js::services::set_value::fields::label_id::description%]",
-          "name": "[%key:component::zwave_js::services::set_value::fields::label_id::name%]"
         },
         "parameter": {
           "description": "The name (or ID) of the configuration parameter you want to configure.",
@@ -610,10 +582,6 @@
         "entity_id": {
           "description": "The entity ID(s) to target for this service.",
           "name": "Entity ID(s)"
-        },
-        "label_id": {
-          "description": "The label(s) to target for this service. If an label is specified, all zwave_js devices and entities with that label will be targeted for this service.",
-          "name": "Label ID(s)"
         },
         "options": {
           "description": "Set value options map. Refer to the Z-Wave JS documentation for more information on what options can be set.",
