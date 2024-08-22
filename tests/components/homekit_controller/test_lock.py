@@ -2,8 +2,9 @@
 
 from collections.abc import Callable
 
+from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
-from aiohomekit.model.services import ServicesTypes
+from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -11,7 +12,7 @@ from homeassistant.helpers import entity_registry as er
 from .common import setup_test_component
 
 
-def create_lock_service(accessory):
+def create_lock_service(accessory: Accessory) -> Service:
     """Define a lock characteristics as per page 219 of HAP spec."""
     service = accessory.add_service(ServicesTypes.LOCK_MECHANISM)
 
