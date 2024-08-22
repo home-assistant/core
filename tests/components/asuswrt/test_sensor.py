@@ -382,7 +382,7 @@ async def test_memory_sensors_http(hass: HomeAssistant, connect_http) -> None:
     assert hass.states.get(f"{sensor_prefix}_mem_used").state == "640.0"
 
 
-async def test_memory_uptime_http(hass: HomeAssistant, connect_http) -> None:
+async def test_uptime_sensors_http(hass: HomeAssistant, connect_http) -> None:
     """Test creating AsusWRT uptime sensors."""
     config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA_HTTP, SENSORS_UPTIME)
     config_entry.add_to_hass(hass)
