@@ -28,7 +28,7 @@
         "state": {
           "available": "Available",
           "connected": "Connected",
-          "need_auth": "Waiting for Authentication",
+          "need_auth": "Waiting for authentication",
           "paused": "Paused",
           "charging": "Charging",
           "error": "Error",
