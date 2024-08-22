@@ -3,20 +3,23 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-
-from pyfritzhome import FritzhomeDevice
-from pyfritzhome.devicetypes.fritzhomeentitybase import FritzhomeEntityBase
+from typing import TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, UnitOfTemperature
-from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LOGGER, PLATFORMS
 from .coordinator import FritzboxConfigEntry, FritzboxDataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from pyfritzhome import FritzhomeDevice
+    from pyfritzhome.devicetypes.fritzhomeentitybase import FritzhomeEntityBase
+
+    from homeassistant.core import Event, HomeAssistant
+    from homeassistant.helpers.entity import EntityDescription
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FritzboxConfigEntry) -> bool:

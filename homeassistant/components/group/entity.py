@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Callable, Collection, Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import (
@@ -24,6 +23,9 @@ from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import ATTR_AUTO, ATTR_ORDER, DOMAIN, GROUP_ORDER, REG_KEY
 from .registry import GroupIntegrationRegistry, SingleStateType
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Collection, Mapping
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 

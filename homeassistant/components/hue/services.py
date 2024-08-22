@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import TYPE_CHECKING
 
-from aiohue import HueBridgeV1, HueBridgeV2
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import verify_domain_control
 
@@ -21,6 +20,11 @@ from .const import (
     DOMAIN,
     SERVICE_HUE_ACTIVATE_SCENE,
 )
+
+if TYPE_CHECKING:
+    from aiohue import HueBridgeV1, HueBridgeV2
+
+    from homeassistant.core import HomeAssistant, ServiceCall
 
 LOGGER = logging.getLogger(__name__)
 

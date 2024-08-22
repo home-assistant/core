@@ -2,16 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
-from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from awesomeversion import AwesomeVersion
 from pyenphase import AUTH_TOKEN_MIN_VERSION, Envoy, EnvoyError
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -21,7 +18,6 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     DOMAIN,
@@ -29,6 +25,13 @@ from .const import (
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from types import MappingProxyType
+
+    from homeassistant.components import zeroconf
+    from homeassistant.helpers.typing import VolDictType
 
 _LOGGER = logging.getLogger(__name__)
 

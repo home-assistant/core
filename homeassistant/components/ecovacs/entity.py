@@ -2,21 +2,24 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
-from deebot_client.capabilities import Capabilities
-from deebot_client.device import Device
 from deebot_client.events import AvailabilityEvent
 from deebot_client.events.base import Event
-from sucks import EventListener, VacBot
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
+    from deebot_client.capabilities import Capabilities
+    from deebot_client.device import Device
+    from sucks import EventListener, VacBot
 
 CapabilityEntity = TypeVar("CapabilityEntity")
 EventT = TypeVar("EventT", bound=Event)

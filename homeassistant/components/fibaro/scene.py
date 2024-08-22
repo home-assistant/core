@@ -2,19 +2,22 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-from pyfibaro.fibaro_scene import SceneModel
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.scene import Scene
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
-from . import FibaroController
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from pyfibaro.fibaro_scene import SceneModel
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import FibaroController
 
 
 async def async_setup_entry(

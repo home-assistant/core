@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from queue import SimpleQueue
 import shutil
 import tempfile
+from typing import TYPE_CHECKING
 
 from aiohttp import BodyPartReader, web
 import voluptuous as vol
@@ -19,9 +19,13 @@ from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import raise_if_invalid_filename
 from homeassistant.util.ulid import ulid_hex
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+    from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "file_upload"
 

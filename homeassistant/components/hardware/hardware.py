@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.integration_platform import (
@@ -9,7 +11,9 @@ from homeassistant.helpers.integration_platform import (
 )
 
 from .const import DOMAIN
-from .models import HardwareProtocol
+
+if TYPE_CHECKING:
+    from .models import HardwareProtocol
 
 
 async def async_process_hardware_platforms(hass: HomeAssistant) -> None:

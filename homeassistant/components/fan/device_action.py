@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
 from homeassistant.components.device_automation import (
@@ -9,10 +11,12 @@ from homeassistant.components.device_automation import (
     toggle_entity,
 )
 from homeassistant.const import CONF_DOMAIN
-from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.core import Context, HomeAssistant
+    from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 _ACTION_SCHEMA = toggle_entity.ACTION_SCHEMA.extend({vol.Required(CONF_DOMAIN): DOMAIN})
 

@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-from pydrawise.schema import Zone
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.valve import (
     ValveDeviceClass,
@@ -12,13 +10,18 @@ from homeassistant.components.valve import (
     ValveEntityDescription,
     ValveEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import HydrawiseDataUpdateCoordinator
 from .entity import HydrawiseEntity
+
+if TYPE_CHECKING:
+    from pydrawise.schema import Zone
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import HydrawiseDataUpdateCoordinator
 
 VALVE_TYPES: tuple[ValveEntityDescription, ...] = (
     ValveEntityDescription(

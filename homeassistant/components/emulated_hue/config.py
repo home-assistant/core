@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from functools import cache
 import logging
+from typing import TYPE_CHECKING
 
 from homeassistant.components import (
     climate,
@@ -29,7 +30,9 @@ from homeassistant.helpers.event import (
     async_track_state_added_domain,
     async_track_state_removed_domain,
 )
-from homeassistant.helpers.typing import ConfigType
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
 
 SUPPORTED_DOMAINS = {
     climate.DOMAIN,

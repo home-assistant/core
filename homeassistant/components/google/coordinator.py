@@ -2,23 +2,28 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 from datetime import datetime, timedelta
 import itertools
 import logging
+from typing import TYPE_CHECKING
 
 from gcal_sync.api import GoogleCalendarService, ListEventsRequest
 from gcal_sync.exceptions import ApiException
 from gcal_sync.model import Event
-from gcal_sync.sync import CalendarEventSyncManager
 from gcal_sync.timeline import Timeline
 from ical.iter import SortableItemValue
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from gcal_sync.sync import CalendarEventSyncManager
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

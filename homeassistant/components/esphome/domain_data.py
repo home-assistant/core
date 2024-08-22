@@ -4,15 +4,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from functools import cache
-from typing import Self
+from typing import TYPE_CHECKING, Self
 
 from bleak_esphome.backend.cache import ESPHomeBluetoothCache
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
 
 from .const import DOMAIN
 from .entry_data import ESPHomeConfigEntry, ESPHomeStorage, RuntimeEntryData
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 STORAGE_VERSION = 1
 

@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
-from homeassistant.core import HomeAssistant
+from typing import TYPE_CHECKING
 
 from .coordinator import ForecastSolarDataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 
 async def async_get_solar_forecast(

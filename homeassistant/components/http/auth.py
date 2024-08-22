@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
-from datetime import timedelta
 from ipaddress import ip_address
 import logging
 import secrets
 import time
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from aiohttp import hdrs
 from aiohttp.web import Application, Request, StreamResponse, middleware
@@ -18,7 +16,6 @@ from yarl import URL
 
 from homeassistant.auth import jwt_wrapper
 from homeassistant.auth.const import GROUP_ID_READ_ONLY
-from homeassistant.auth.models import User
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.http import current_request
@@ -28,6 +25,12 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util.network import is_local
 
 from .const import KEY_AUTHENTICATED, KEY_HASS_REFRESH_TOKEN_ID, KEY_HASS_USER
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+    from datetime import timedelta
+
+    from homeassistant.auth.models import User
 
 _LOGGER = logging.getLogger(__name__)
 

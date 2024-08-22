@@ -3,16 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
 from functools import lru_cache
 import hashlib
 from http import HTTPStatus
 from ipaddress import ip_address
 import logging
 import time
-from typing import Any
-
-from aiohttp import web
+from typing import TYPE_CHECKING, Any
 
 from homeassistant import core
 from homeassistant.components import (
@@ -65,12 +62,18 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import Event, EventStateChangedData, State
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.json import json_loads
 from homeassistant.util.network import is_local
 
-from .config import Config
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from aiohttp import web
+
+    from homeassistant.core import Event, EventStateChangedData, State
+
+    from .config import Config
 
 _LOGGER = logging.getLogger(__name__)
 _OFF_STATES: dict[str, str] = {cover.DOMAIN: STATE_CLOSED}

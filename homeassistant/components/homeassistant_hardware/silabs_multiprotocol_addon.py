@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 import asyncio
 import dataclasses
 import logging
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 import voluptuous as vol
 import yarl
@@ -40,6 +40,9 @@ from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
 
 from .const import LOGGER, SILABS_FLASHER_ADDON_SLUG, SILABS_MULTIPROTOCOL_ADDON_SLUG
+
+if TYPE_CHECKING:
+    from homeassistant.components.zha.radio_manager import ZhaMultiPANMigrationHelper
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -310,9 +313,6 @@ class OptionsFlowHandler(OptionsFlow, ABC):
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Set up the options flow."""
         # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.zha.radio_manager import (
-            ZhaMultiPANMigrationHelper,
-        )
 
         self.install_task: asyncio.Task | None = None
         self.start_task: asyncio.Task | None = None

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from aiohue.v2.controllers.base import BaseResourcesController
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.models.resource import ResourceTypes
 from aiohue.v2.models.zigbee_connectivity import ConnectivityServiceStatus
@@ -14,15 +13,17 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from ..bridge import HueBridge
 from ..const import CONF_IGNORE_AVAILABILITY, DOMAIN
 
 if TYPE_CHECKING:
+    from aiohue.v2.controllers.base import BaseResourcesController
     from aiohue.v2.models.device_power import DevicePower
     from aiohue.v2.models.grouped_light import GroupedLight
     from aiohue.v2.models.light import Light
     from aiohue.v2.models.light_level import LightLevel
     from aiohue.v2.models.motion import Motion
+
+    from ..bridge import HueBridge
 
     type HueResource = Light | DevicePower | GroupedLight | LightLevel | Motion
 

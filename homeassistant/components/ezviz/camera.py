@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from pyezviz.exceptions import HTTPError, InvalidHost, PyEzvizError
 
@@ -16,7 +17,6 @@ from homeassistant.config_entries import (
     ConfigEntry,
 )
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
@@ -32,8 +32,12 @@ from .const import (
     DOMAIN,
     SERVICE_WAKE_DEVICE,
 )
-from .coordinator import EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
+    from .coordinator import EzvizDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

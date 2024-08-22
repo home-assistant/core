@@ -2,13 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
 import logging
-from typing import Any
-
-from gps3.agps3threaded import AGPS3mechanism
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -24,14 +20,22 @@ from homeassistant.const import (
     UnitOfLength,
     UnitOfSpeed,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from . import GPSDConfigEntry
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from datetime import datetime
+
+    from gps3.agps3threaded import AGPS3mechanism
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import StateType
+
+    from . import GPSDConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

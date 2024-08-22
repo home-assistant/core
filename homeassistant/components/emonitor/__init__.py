@@ -4,15 +4,18 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from aioemonitor import Emonitor
 from aioemonitor.monitor import EmonitorStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 type EmonitorConfigEntry = ConfigEntry[DataUpdateCoordinator[EmonitorStatus]]
 

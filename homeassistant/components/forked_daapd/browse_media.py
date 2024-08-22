@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import quote, unquote
@@ -14,6 +13,8 @@ from homeassistant.helpers.network import is_internal_request
 from .const import CAN_PLAY_TYPE, URI_SCHEMA
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from . import media_player
 
 MEDIA_TYPE_DIRECTORY = "directory"

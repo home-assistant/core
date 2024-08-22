@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Any
 from pyfronius import BadStatusError, FroniusError
 
 from homeassistant.core import callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -29,6 +28,8 @@ from .sensor import (
 )
 
 if TYPE_CHECKING:
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
     from . import FroniusSolarNet
     from .sensor import _FroniusSensorEntity
 

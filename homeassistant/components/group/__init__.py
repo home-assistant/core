@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Collection
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,  # noqa: F401
     ATTR_ICON,
@@ -20,7 +18,6 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.group import (
@@ -28,7 +25,6 @@ from homeassistant.helpers.group import (
     get_entity_ids as _get_entity_ids,
 )
 from homeassistant.helpers.reload import async_reload_integration_platforms
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 #
@@ -55,6 +51,13 @@ from .const import (  # noqa: F401
 )
 from .entity import Group, async_get_component
 from .registry import GroupIntegrationRegistry, async_setup as async_setup_registry
+
+if TYPE_CHECKING:
+    from collections.abc import Collection
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant, ServiceCall
+    from homeassistant.helpers.typing import ConfigType
 
 CONF_ALL = "all"
 

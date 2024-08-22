@@ -2,18 +2,21 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from http import HTTPStatus
 import logging
-from typing import Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate
 
-from aiohttp import web
 import voluptuous as vol
 
-from homeassistant.helpers.typing import VolDictType
-
 from .view import HomeAssistantView
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable, Coroutine
+
+    from aiohttp import web
+
+    from homeassistant.helpers.typing import VolDictType
 
 _LOGGER = logging.getLogger(__name__)
 

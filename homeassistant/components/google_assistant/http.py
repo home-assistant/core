@@ -5,11 +5,10 @@ from __future__ import annotations
 from datetime import timedelta
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 from aiohttp import ClientError, ClientResponseError
-from aiohttp.web import Request, Response
 import jwt
 
 from homeassistant.components import webhook
@@ -44,6 +43,9 @@ from .const import (
 )
 from .helpers import AbstractConfig
 from .smart_home import async_handle_message
+
+if TYPE_CHECKING:
+    from aiohttp.web import Request, Response
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from homeassistant.components.hassio import get_os_info, is_hassio
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     check_multi_pan_addon,
@@ -9,11 +11,13 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
     multi_pan_addon_using_device,
 )
 from homeassistant.config_entries import SOURCE_HARDWARE, ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import discovery_flow
 
 from .const import RADIO_DEVICE, ZHA_HW_DISCOVERY_DATA
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

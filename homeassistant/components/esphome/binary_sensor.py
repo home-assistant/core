@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from aioesphomeapi import BinarySensorInfo, BinarySensorState, EntityInfo
 
 from homeassistant.components.binary_sensor import (
@@ -10,11 +12,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
 from .entity import EsphomeAssistEntity, EsphomeEntity, platform_async_setup_entry
-from .entry_data import ESPHomeConfigEntry
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .entry_data import ESPHomeConfigEntry
 
 
 async def async_setup_entry(

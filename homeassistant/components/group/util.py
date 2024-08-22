@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
 from itertools import groupby
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from homeassistant.core import State
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator
+
+    from homeassistant.core import State
 
 
 def find_state_attributes(states: list[State], key: str) -> Iterator[Any]:

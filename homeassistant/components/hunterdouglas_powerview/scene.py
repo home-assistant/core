@@ -3,19 +3,23 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiopvapi.helpers.constants import ATTR_NAME
-from aiopvapi.resources.scene import Scene as PvScene
 
 from homeassistant.components.scene import Scene
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import STATE_ATTRIBUTE_ROOM_NAME
-from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import HDEntity
-from .model import PowerviewConfigEntry, PowerviewDeviceInfo
+
+if TYPE_CHECKING:
+    from aiopvapi.resources.scene import Scene as PvScene
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import PowerviewShadeUpdateCoordinator
+    from .model import PowerviewConfigEntry, PowerviewDeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 

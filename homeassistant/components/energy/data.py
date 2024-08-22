@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import Counter
-from collections.abc import Awaitable, Callable
-from typing import Literal, TypedDict
+from typing import TYPE_CHECKING, Literal, TypedDict
 
 import voluptuous as vol
 
@@ -13,6 +12,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, singleton, storage
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
 
 STORAGE_VERSION = 1
 STORAGE_KEY = DOMAIN

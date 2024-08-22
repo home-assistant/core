@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import time
-
-from aioecowitt import EcoWittSensor
+from typing import TYPE_CHECKING
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from aioecowitt import EcoWittSensor
 
 
 class EcowittEntity(Entity):

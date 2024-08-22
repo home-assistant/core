@@ -3,17 +3,21 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from elevenlabs import Model
 from elevenlabs.client import AsyncElevenLabs
 from elevenlabs.core import ApiError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 
 from .const import CONF_MODEL
+
+if TYPE_CHECKING:
+    from elevenlabs import Model
+
+    from homeassistant.core import HomeAssistant
 
 PLATFORMS: list[Platform] = [Platform.TTS]
 

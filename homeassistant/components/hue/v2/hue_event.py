@@ -5,10 +5,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
-from aiohue.v2.models.button import Button
-from aiohue.v2.models.relative_rotary import RelativeRotary
 
 from homeassistant.const import CONF_DEVICE_ID, CONF_ID, CONF_TYPE, CONF_UNIQUE_ID
 from homeassistant.core import callback
@@ -22,6 +19,10 @@ CONF_DURATION = "duration"
 CONF_STEPS = "steps"
 
 if TYPE_CHECKING:
+    from aiohue.v2 import HueBridgeV2
+    from aiohue.v2.models.button import Button
+    from aiohue.v2.models.relative_rotary import RelativeRotary
+
     from ..bridge import HueBridge
 
 LOGGER = logging.getLogger(__name__)

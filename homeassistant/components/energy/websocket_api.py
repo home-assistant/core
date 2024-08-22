@@ -8,12 +8,11 @@ from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import functools
 from itertools import chain
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
 from homeassistant.components import recorder, websocket_api
-from homeassistant.components.recorder.statistics import StatisticsRow
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.integration_platform import (
@@ -30,8 +29,12 @@ from .data import (
     EnergyPreferencesUpdate,
     async_get_manager,
 )
-from .types import EnergyPlatform, GetSolarForecastType, SolarForecastType
 from .validate import async_validate
+
+if TYPE_CHECKING:
+    from homeassistant.components.recorder.statistics import StatisticsRow
+
+    from .types import EnergyPlatform, GetSolarForecastType, SolarForecastType
 
 type EnergyWebSocketCommandHandler = Callable[
     [HomeAssistant, websocket_api.ActiveConnection, dict[str, Any], EnergyManager],

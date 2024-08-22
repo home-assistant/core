@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any
 
-import evohomeasync2 as evo
 from evohomeasync2.schema.const import (
     SZ_ACTIVE_FAULTS,
     SZ_SETPOINT_STATUS,
@@ -30,10 +28,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import PRECISION_TENTHS, UnitOfTemperature
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -58,6 +53,14 @@ from .const import (
 from .entity import EvoChild, EvoDevice
 
 if TYPE_CHECKING:
+    from datetime import datetime, timedelta
+
+    import evohomeasync2 as evo
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
     from . import EvoBroker
 
 

@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
-
-from aioguardian import Client
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.valve import (
     ValveDeviceClass,
@@ -15,13 +12,19 @@ from homeassistant.components.valve import (
     ValveEntityDescription,
     ValveEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import GuardianData, ValveControllerEntity, ValveControllerEntityDescription
 from .const import API_VALVE_STATUS, DOMAIN
 from .util import convert_exceptions_to_homeassistant_error
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
+    from aioguardian import Client
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 VALVE_KIND_VALVE = "valve"
 

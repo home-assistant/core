@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import IntEnum
+from typing import TYPE_CHECKING
 
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.characteristics.const import (
@@ -12,15 +12,20 @@ from aiohomekit.model.characteristics.const import (
 )
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
 
 from . import KNOWN_DEVICES
-from .connection import HKDevice
 from .entity import CharacteristicEntity
+
+if TYPE_CHECKING:
+    from enum import IntEnum
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType
+
+    from .connection import HKDevice
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+from typing import TYPE_CHECKING
 
 import aiohttp
 from gassist_text import TextAssistant
@@ -24,7 +25,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_LANGUAGE_CODE,
@@ -39,6 +39,9 @@ from .helpers import (
     async_send_text_commands,
     best_matching_language_code,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
 
 SERVICE_SEND_TEXT_COMMAND = "send_text_command"
 SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND = "command"

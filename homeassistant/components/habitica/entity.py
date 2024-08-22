@@ -6,11 +6,13 @@ from typing import TYPE_CHECKING
 
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, NAME
 from .coordinator import HabiticaDataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity import EntityDescription
 
 
 class HabiticaBase(CoordinatorEntity[HabiticaDataUpdateCoordinator]):

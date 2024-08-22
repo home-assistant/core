@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
 from typing import TYPE_CHECKING, Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
@@ -12,15 +11,18 @@ from aiohomekit.utils import clamp_enum_to_char
 import voluptuous as vol
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, KNOWN_DEVICES, TRIGGERS
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Generator
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+    from homeassistant.helpers.typing import ConfigType
+
     from .connection import HKDevice
 
 TRIGGER_TYPES = {

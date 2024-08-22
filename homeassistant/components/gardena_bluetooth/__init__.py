@@ -3,22 +3,26 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
-from bleak.backends.device import BLEDevice
 from gardena_bluetooth.client import CachedConnection, Client
 from gardena_bluetooth.const import DeviceConfiguration, DeviceInformation
 from gardena_bluetooth.exceptions import CommunicationFailure
 
 from homeassistant.components import bluetooth
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import Coordinator, DeviceUnavailable
+
+if TYPE_CHECKING:
+    from bleak.backends.device import BLEDevice
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,

@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import datetime
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
-import aiohttp
 from gcal_sync.auth import AbstractAuth
 from oauth2client.client import (
     Credentials,
@@ -17,9 +16,7 @@ from oauth2client.client import (
 )
 
 from homeassistant.components.application_credentials import AuthImplementation
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
     async_track_time_interval,
@@ -33,6 +30,12 @@ from .const import (
     DOMAIN,
     FeatureAccess,
 )
+
+if TYPE_CHECKING:
+    import aiohttp
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers import config_entry_oauth2_flow
 
 _LOGGER = logging.getLogger(__name__)
 

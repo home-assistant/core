@@ -2,24 +2,28 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiosomecomfort import SomeComfortError
-from aiosomecomfort.device import Device as SomeComfortDevice
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HoneywellData
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from aiosomecomfort.device import Device as SomeComfortDevice
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import HoneywellData
 
 EMERGENCY_HEAT_KEY = "emergency_heat"
 

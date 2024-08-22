@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
-from datetime import datetime as dt
+from typing import TYPE_CHECKING
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import process_timestamp
-from homeassistant.core import HomeAssistant
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from datetime import datetime as dt
+
+    from homeassistant.core import HomeAssistant
 
 
 def entities_may_have_state_changes_after(

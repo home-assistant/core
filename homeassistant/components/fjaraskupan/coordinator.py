@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from fjaraskupan import Device, State
 
@@ -14,10 +14,14 @@ from homeassistant.components.bluetooth import (
     async_address_present,
     async_ble_device_from_address,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.device_registry import DeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 

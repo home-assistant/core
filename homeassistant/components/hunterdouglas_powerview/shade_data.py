@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import fields
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from aiopvapi.resources.model import PowerviewData
 from aiopvapi.resources.shade import BaseShade, ShadePosition
 
 from .util import async_map_data_by_id
+
+if TYPE_CHECKING:
+    from aiopvapi.resources.model import PowerviewData
 
 POSITION_FIELDS = [field for field in fields(ShadePosition) if field.name != "velocity"]
 

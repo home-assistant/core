@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -20,6 +19,9 @@ from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.util.unit_conversion import DistanceConverter
 
 from .const import DEFAULT_RADIUS_IN_M, DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 DATA_SCHEMA = vol.Schema(
     {

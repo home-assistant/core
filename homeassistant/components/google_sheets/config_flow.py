@@ -2,19 +2,23 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from google.oauth2.credentials import Credentials
 from gspread import Client, GSpreadException
 
-from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from . import GoogleSheetsConfigEntry
 from .const import DEFAULT_ACCESS, DEFAULT_NAME, DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from homeassistant.config_entries import ConfigFlowResult
+
+    from . import GoogleSheetsConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

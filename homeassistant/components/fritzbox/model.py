@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
-from pyfritzhome import FritzhomeDevice
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from pyfritzhome import FritzhomeDevice
 
 
 class ClimateExtraAttributes(TypedDict, total=False):

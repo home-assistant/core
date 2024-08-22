@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import ItemsView, Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -11,8 +10,12 @@ from homeassistant.const import CONF_EVENT_DATA, CONF_PLATFORM, EVENT_STATE_REPO
 from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType
+
+if TYPE_CHECKING:
+    from collections.abc import ItemsView, Mapping
+
+    from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+    from homeassistant.helpers.typing import ConfigType
 
 CONF_EVENT_TYPE = "event_type"
 CONF_EVENT_CONTEXT = "context"

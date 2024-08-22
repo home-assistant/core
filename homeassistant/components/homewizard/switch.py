@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
-
-from homewizard_energy import HomeWizardEnergy
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -14,14 +11,21 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HomeWizardConfigEntry
-from .const import DeviceResponseEntry
-from .coordinator import HWEnergyDeviceUpdateCoordinator
 from .entity import HomeWizardEntity
 from .helpers import homewizard_exception_handler
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    from homewizard_energy import HomeWizardEnergy
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import HomeWizardConfigEntry
+    from .const import DeviceResponseEntry
+    from .coordinator import HWEnergyDeviceUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)

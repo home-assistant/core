@@ -2,12 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Final
-
-from fyta_cli.fyta_models import Plant
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -21,13 +17,21 @@ from homeassistant.const import (
     UnitOfConductivity,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
-from . import FytaConfigEntry
-from .coordinator import FytaCoordinator
 from .entity import FytaPlantEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from datetime import datetime
+
+    from fyta_cli.fyta_models import Plant
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import StateType
+
+    from . import FytaConfigEntry
+    from .coordinator import FytaCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)

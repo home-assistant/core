@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from elmax_api.exceptions import ElmaxApiError
 from elmax_api.model.alarm_status import AlarmArmStatus, AlarmStatus
 from elmax_api.model.command import AreaCommand
-from elmax_api.model.panel import PanelStatus
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
     CodeFormat,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMING,
@@ -22,12 +22,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, InvalidStateError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from .common import ElmaxEntity
 from .const import DOMAIN
-from .coordinator import ElmaxCoordinator
+
+if TYPE_CHECKING:
+    from elmax_api.model.panel import PanelStatus
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import StateType
+
+    from .coordinator import ElmaxCoordinator
 
 
 async def async_setup_entry(

@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Final, NamedTuple
+from typing import TYPE_CHECKING, Any, Final, NamedTuple
 
-from pyhap.characteristic import Characteristic
 from pyhap.const import (
     CATEGORY_FAUCET,
     CATEGORY_OUTLET,
@@ -57,6 +56,9 @@ from .const import (
     TYPE_VALVE,
 )
 from .util import cleanup_name_for_homekit
+
+if TYPE_CHECKING:
+    from pyhap.characteristic import Characteristic
 
 _LOGGER = logging.getLogger(__name__)
 

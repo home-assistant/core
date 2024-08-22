@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
-from pydrawise.schema import Controller, Sensor, Zone
+from typing import TYPE_CHECKING
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import HydrawiseDataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from pydrawise.schema import Controller, Sensor, Zone
+
+    from homeassistant.helpers.entity import EntityDescription
 
 
 class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):

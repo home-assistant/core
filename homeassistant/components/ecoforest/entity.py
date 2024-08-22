@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
-from pyecoforest.models.device import Device
+from typing import TYPE_CHECKING
 
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import EcoforestCoordinator
+
+if TYPE_CHECKING:
+    from pyecoforest.models.device import Device
+
+    from homeassistant.helpers.entity import EntityDescription
 
 
 class EcoforestEntity(CoordinatorEntity[EcoforestCoordinator]):

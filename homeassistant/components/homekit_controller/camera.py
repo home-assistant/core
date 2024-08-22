@@ -2,18 +2,24 @@
 
 from __future__ import annotations
 
-from aiohomekit.model import Accessory
+from typing import TYPE_CHECKING
+
 from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.camera import Camera
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import KNOWN_DEVICES
-from .connection import HKDevice
 from .entity import AccessoryEntity
+
+if TYPE_CHECKING:
+    from aiohomekit.model import Accessory
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .connection import HKDevice
 
 
 class HomeKitCamera(AccessoryEntity, Camera):

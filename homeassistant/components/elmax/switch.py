@@ -2,10 +2,9 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from elmax_api.model.command import SwitchCommand
-from elmax_api.model.panel import PanelStatus
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -14,7 +13,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import ElmaxEntity
 from .const import DOMAIN
-from .coordinator import ElmaxCoordinator
+
+if TYPE_CHECKING:
+    from elmax_api.model.panel import PanelStatus
+
+    from .coordinator import ElmaxCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

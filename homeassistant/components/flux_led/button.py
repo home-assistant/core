@@ -2,22 +2,28 @@
 
 from __future__ import annotations
 
-from flux_led.aio import AIOWifiLedBulb
+from typing import TYPE_CHECKING
+
 from flux_led.protocol import RemoteConfig
 
-from homeassistant import config_entries
 from homeassistant.components.button import (
     ButtonDeviceClass,
     ButtonEntity,
     ButtonEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import FluxLedUpdateCoordinator
 from .entity import FluxBaseEntity
+
+if TYPE_CHECKING:
+    from flux_led.aio import AIOWifiLedBulb
+
+    from homeassistant import config_entries
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import FluxLedUpdateCoordinator
 
 _RESTART_KEY = "restart"
 _UNPAIR_REMOTES_KEY = "unpair_remotes"

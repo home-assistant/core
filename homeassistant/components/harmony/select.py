@@ -3,15 +3,19 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HassJob, HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ACTIVITY_POWER_OFF, DOMAIN
-from .data import HarmonyConfigEntry, HarmonyData
 from .entity import HarmonyEntity
 from .subscriber import HarmonyCallback
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .data import HarmonyConfigEntry, HarmonyData
 
 _LOGGER = logging.getLogger(__name__)
 

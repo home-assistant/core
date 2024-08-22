@@ -3,18 +3,16 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime as dt, timedelta
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.websocket_api import messages
-from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.const import (
     COMPRESSED_STATE_ATTRIBUTES,
     COMPRESSED_STATE_LAST_CHANGED,
@@ -41,6 +39,11 @@ import homeassistant.util.dt as dt_util
 
 from .const import EVENT_COALESCE_TIME, MAX_PENDING_HISTORY_STATES
 from .helpers import entities_may_have_state_changes_after, has_recorder_run_after
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
+
+    from homeassistant.components.websocket_api.connection import ActiveConnection
 
 _LOGGER = logging.getLogger(__name__)
 

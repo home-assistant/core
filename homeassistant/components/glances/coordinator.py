@@ -1,8 +1,7 @@
 """Coordinator for Glances integration."""
 
-from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from glances_api import Glances, exceptions
 
@@ -14,6 +13,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util.dt import parse_duration, utcnow
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+
+if TYPE_CHECKING:
+    from datetime import datetime, timedelta
 
 _LOGGER = logging.getLogger(__name__)
 

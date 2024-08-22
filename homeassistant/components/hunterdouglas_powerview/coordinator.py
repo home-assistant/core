@@ -5,16 +5,20 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from aiopvapi.helpers.aiorequest import PvApiMaintenance
-from aiopvapi.hub import Hub
-from aiopvapi.shades import Shades
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import HUB_EXCEPTIONS
 from .shade_data import PowerviewShadeData
+
+if TYPE_CHECKING:
+    from aiopvapi.hub import Hub
+    from aiopvapi.shades import Shades
+
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

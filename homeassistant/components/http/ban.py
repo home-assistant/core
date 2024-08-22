@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
-from datetime import datetime
 from http import HTTPStatus
 from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
 from socket import gethostbyaddr, herror
-from typing import Any, Concatenate, Final
+from typing import TYPE_CHECKING, Any, Concatenate, Final
 
 from aiohttp.web import (
     AppKey,
@@ -31,6 +29,10 @@ from homeassistant.util import dt as dt_util, yaml
 
 from .const import KEY_HASS
 from .view import HomeAssistantView
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable, Coroutine
+    from datetime import datetime
 
 _LOGGER: Final = logging.getLogger(__name__)
 

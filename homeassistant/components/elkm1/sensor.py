@@ -2,28 +2,31 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from elkm1_lib.const import SettingFormat, ZoneType
-from elkm1_lib.counters import Counter
-from elkm1_lib.elements import Element
-from elkm1_lib.keypads import Keypad
-from elkm1_lib.panel import Panel
-from elkm1_lib.settings import Setting
 from elkm1_lib.util import pretty_const
-from elkm1_lib.zones import Zone
 import voluptuous as vol
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import EntityCategory, UnitOfElectricPotential
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 
 from . import ElkAttachedEntity, ElkEntity, ElkM1ConfigEntry, create_elk_entities
 from .const import ATTR_VALUE, ELK_USER_CODE_SERVICE_SCHEMA
+
+if TYPE_CHECKING:
+    from elkm1_lib.counters import Counter
+    from elkm1_lib.elements import Element
+    from elkm1_lib.keypads import Keypad
+    from elkm1_lib.panel import Panel
+    from elkm1_lib.settings import Setting
+    from elkm1_lib.zones import Zone
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import VolDictType
 
 SERVICE_SENSOR_COUNTER_REFRESH = "sensor_counter_refresh"
 SERVICE_SENSOR_COUNTER_SET = "sensor_counter_set"

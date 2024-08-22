@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
-
-from aiosomecomfort.device import Device
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -14,15 +11,22 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
-from . import HoneywellData
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from aiosomecomfort.device import Device
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import StateType
+
+    from . import HoneywellData
 
 OUTDOOR_TEMPERATURE_STATUS_KEY = "outdoor_temperature"
 OUTDOOR_HUMIDITY_STATUS_KEY = "outdoor_humidity"

@@ -69,16 +69,18 @@ from .const import (
     STABLE_BLE_VERSION_STR,
 )
 from .dashboard import async_get_dashboard
-from .domain_data import DomainData
 
 # Import config flow so that it's added to the registry
-from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .voice_assistant import (
     VoiceAssistantAPIPipeline,
     VoiceAssistantPipeline,
     VoiceAssistantUDPPipeline,
     handle_timer_event,
 )
+
+if TYPE_CHECKING:
+    from .domain_data import DomainData
+    from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 
 _LOGGER = logging.getLogger(__name__)
 

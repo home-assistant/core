@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
+from typing import TYPE_CHECKING
 
 from fyta_cli.fyta_connector import FytaConnector
 
@@ -14,11 +15,13 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import async_get_time_zone
 
 from .const import CONF_EXPIRATION
 from .coordinator import FytaCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

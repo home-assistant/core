@@ -3,18 +3,21 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.components import light
 from homeassistant.components.light import ColorMode, LightEntity, LightEntityFeature
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import EvilGeniusEntity
 from .const import DOMAIN
-from .coordinator import EvilGeniusUpdateCoordinator
 from .util import update_when_done
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import EvilGeniusUpdateCoordinator
 
 HA_NO_EFFECT = "None"
 FIB_NO_EFFECT = "Solid Color"

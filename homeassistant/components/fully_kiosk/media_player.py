@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -12,14 +12,17 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import AUDIOMANAGER_STREAM_MUSIC, DOMAIN, MEDIA_SUPPORT_FULLYKIOSK
-from .coordinator import FullyKioskDataUpdateCoordinator
 from .entity import FullyKioskEntity
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import FullyKioskDataUpdateCoordinator
 
 
 async def async_setup_entry(

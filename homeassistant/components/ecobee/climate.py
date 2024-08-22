@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import collections
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -21,7 +21,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -31,15 +30,12 @@ from homeassistant.const import (
     STATE_ON,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from . import EcobeeData
 from .const import (
     _LOGGER,
     DOMAIN,
@@ -48,6 +44,13 @@ from .const import (
     MANUFACTURER,
 )
 from .util import ecobee_date, ecobee_time, is_indefinite_hold
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant, ServiceCall
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import EcobeeData
 
 ATTR_COOL_TEMP = "cool_temp"
 ATTR_END_DATE = "end_date"

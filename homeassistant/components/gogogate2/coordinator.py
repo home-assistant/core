@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
-from datetime import timedelta
-import logging
+from typing import TYPE_CHECKING
 
 from ismartgate import AbstractGateApi, GogoGate2InfoResponse, ISmartGateInfoResponse
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+    from datetime import timedelta
+    import logging
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.debounce import Debouncer
 
 
 class DeviceDataUpdateCoordinator(

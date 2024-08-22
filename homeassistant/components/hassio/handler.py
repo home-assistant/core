@@ -2,27 +2,30 @@
 
 from __future__ import annotations
 
-import asyncio
-from collections.abc import Callable, Coroutine
 from http import HTTPStatus
 import logging
 import os
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiohttp
 from yarl import URL
 
-from homeassistant.auth.models import RefreshToken
 from homeassistant.components.http import (
     CONF_SERVER_HOST,
     CONF_SERVER_PORT,
     CONF_SSL_CERTIFICATE,
 )
 from homeassistant.const import SERVER_PORT
-from homeassistant.core import HomeAssistant
 from homeassistant.loader import bind_hass
 
 from .const import ATTR_DISCOVERY, ATTR_MESSAGE, ATTR_RESULT, DOMAIN, X_HASS_SOURCE
+
+if TYPE_CHECKING:
+    import asyncio
+    from collections.abc import Callable, Coroutine
+
+    from homeassistant.auth.models import RefreshToken
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

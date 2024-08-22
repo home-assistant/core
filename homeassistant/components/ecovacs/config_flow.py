@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from functools import partial
 import logging
-import ssl
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 from aiohttp import ClientError
@@ -18,9 +17,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_COUNTRY, CONF_MODE, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, selector
-from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.ssl import get_default_no_verify_context
 
 from .const import (
@@ -31,6 +28,12 @@ from .const import (
     InstanceMode,
 )
 from .util import get_client_device_id
+
+if TYPE_CHECKING:
+    import ssl
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import VolDictType
 
 _LOGGER = logging.getLogger(__name__)
 

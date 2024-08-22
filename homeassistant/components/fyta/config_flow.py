@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from fyta_cli.fyta_connector import FytaConnector
 from fyta_cli.fyta_exceptions import (
@@ -12,7 +11,6 @@ from fyta_cli.fyta_exceptions import (
     FytaConnectionError,
     FytaPasswordError,
 )
-from fyta_cli.fyta_models import Credentials
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -23,8 +21,14 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from . import FytaConfigEntry
 from .const import CONF_EXPIRATION, DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from fyta_cli.fyta_models import Credentials
+
+    from . import FytaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

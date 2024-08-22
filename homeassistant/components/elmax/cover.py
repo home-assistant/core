@@ -3,19 +3,22 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from elmax_api.model.command import CoverCommand
 from elmax_api.model.cover_status import CoverStatus
 
 from homeassistant.components.cover import CoverEntity, CoverEntityFeature
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import ElmaxEntity
 from .const import DOMAIN
-from .coordinator import ElmaxCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import ElmaxCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
+from typing import TYPE_CHECKING
+
 from homeassistant.const import CONF_API_KEY, CONF_MODE, Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.start import async_at_started
 from homeassistant.util import dt as dt_util
 
@@ -26,6 +26,10 @@ from .coordinator import (
     HERETransitDataUpdateCoordinator,
 )
 from .model import HERETravelTimeConfig
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 PLATFORMS = [Platform.SENSOR]
 

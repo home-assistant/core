@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import Event, HomeAssistant, callback
@@ -15,11 +16,13 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 from homeassistant.helpers.start import async_at_started
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import EventComponentLoaded
 
 from .const import COMPONENT_LOADED_COOLDOWN, DOMAIN, REQUEST_TIMEOUT
 from .coordinator import AlertUpdateCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
+    from homeassistant.setup import EventComponentLoaded
 
 _LOGGER = logging.getLogger(__name__)
 

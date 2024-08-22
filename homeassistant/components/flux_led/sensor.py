@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
-from homeassistant import config_entries
+from typing import TYPE_CHECKING
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import FluxLedUpdateCoordinator
 from .entity import FluxEntity
+
+if TYPE_CHECKING:
+    from homeassistant import config_entries
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import FluxLedUpdateCoordinator
 
 
 async def async_setup_entry(

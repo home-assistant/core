@@ -5,14 +5,16 @@ from __future__ import annotations
 from functools import partial
 from typing import TYPE_CHECKING
 
-from aioesphomeapi import APIClient, DeviceInfo
 from bleak_esphome import connect_scanner
-from bleak_esphome.backend.cache import ESPHomeBluetoothCache
 
 from homeassistant.components.bluetooth import async_register_scanner
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 
-from .entry_data import RuntimeEntryData
+if TYPE_CHECKING:
+    from aioesphomeapi import APIClient, DeviceInfo
+    from bleak_esphome.backend.cache import ESPHomeBluetoothCache
+
+    from .entry_data import RuntimeEntryData
 
 
 @hass_callback

@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+from typing import TYPE_CHECKING
 
 import aiohomekit
 from aiohomekit.const import (
@@ -18,18 +19,20 @@ from aiohomekit.exceptions import (
     EncryptionError,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_IDENTIFIERS, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import create_eager_task
 
 from .config_flow import normalize_hkid
 from .connection import HKDevice
 from .const import DOMAIN, KNOWN_DEVICES
 from .utils import async_get_controller
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import Event, HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
 
 # Ensure all the controllers get imported in the executor
 # since they are loaded late.

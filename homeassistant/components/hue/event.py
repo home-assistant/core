@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
-from aiohue.v2.models.button import Button
 from aiohue.v2.models.relative_rotary import RelativeRotary, RelativeRotaryDirection
 
 from homeassistant.components.event import (
@@ -14,13 +12,19 @@ from homeassistant.components.event import (
     EventEntity,
     EventEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .bridge import HueBridge
 from .const import DEFAULT_BUTTON_EVENT_TYPES, DEVICE_SPECIFIC_EVENT_TYPES, DOMAIN
 from .v2.entity import HueBaseEntity
+
+if TYPE_CHECKING:
+    from aiohue.v2 import HueBridgeV2
+    from aiohue.v2.models.button import Button
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .bridge import HueBridge
 
 
 async def async_setup_entry(

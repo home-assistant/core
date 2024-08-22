@@ -3,15 +3,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-
-from aiopvapi.helpers.aiorequest import AioRequest
-from aiopvapi.resources.room import Room
-from aiopvapi.resources.scene import Scene
-from aiopvapi.resources.shade import BaseShade
+from typing import TYPE_CHECKING
 
 from homeassistant.config_entries import ConfigEntry
 
-from .coordinator import PowerviewShadeUpdateCoordinator
+if TYPE_CHECKING:
+    from aiopvapi.helpers.aiorequest import AioRequest
+    from aiopvapi.resources.room import Room
+    from aiopvapi.resources.scene import Scene
+    from aiopvapi.resources.shade import BaseShade
+
+    from .coordinator import PowerviewShadeUpdateCoordinator
 
 type PowerviewConfigEntry = ConfigEntry[PowerviewEntryData]
 

@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
 import time
-from typing import Any, NamedTuple, cast
+from typing import TYPE_CHECKING, Any, NamedTuple, cast
 from xml.parsers.expat import ExpatError
 
 from huawei_lte_api.Client import Client
@@ -24,7 +23,6 @@ from requests.exceptions import Timeout
 import voluptuous as vol
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_HW_VERSION,
     ATTR_MODEL,
@@ -39,7 +37,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
@@ -52,7 +49,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatche
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import async_register_admin_service
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ADMIN_SERVICES,
@@ -86,6 +82,13 @@ from .const import (
     UPDATE_SIGNAL,
 )
 from .utils import get_device_macs, non_verifying_requests_session
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant, ServiceCall
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

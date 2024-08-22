@@ -3,13 +3,10 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from aiohue import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
-from aiohue.v2.controllers.lights import LightsController
 from aiohue.v2.models.feature import EffectStatus, TimedEffectStatus
-from aiohue.v2.models.light import Light
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -25,11 +22,8 @@ from homeassistant.components.light import (
     LightEntityFeature,
     filter_supported_color_modes,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from ..bridge import HueBridge
 from ..const import DOMAIN
 from .entity import HueBaseEntity
 from .helpers import (
@@ -37,6 +31,16 @@ from .helpers import (
     normalize_hue_colortemp,
     normalize_hue_transition,
 )
+
+if TYPE_CHECKING:
+    from aiohue import HueBridgeV2
+    from aiohue.v2.controllers.lights import LightsController
+    from aiohue.v2.models.light import Light
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from ..bridge import HueBridge
 
 EFFECT_NONE = "None"
 FALLBACK_MIN_MIREDS = 153  # 6500 K

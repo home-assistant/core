@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, STATE_OFF
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 import homeassistant.helpers.config_validation as cv
 
@@ -18,6 +19,9 @@ from . import (
     SERVICE_TURN_ON,
     HumidifierEntityFeature,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 INTENT_HUMIDITY = "HassHumidifierSetpoint"
 INTENT_MODE = "HassHumidifierMode"

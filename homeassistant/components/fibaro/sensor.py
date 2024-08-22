@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from contextlib import suppress
-
-from pyfibaro.fibaro_device import DeviceModel
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
@@ -13,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
@@ -23,12 +21,17 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import convert
 
 from . import FibaroController, FibaroDevice
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from pyfibaro.fibaro_device import DeviceModel
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 # List of known sensors which represents a fibaro device
 MAIN_SENSOR_TYPES: dict[str, SensorEntityDescription] = {

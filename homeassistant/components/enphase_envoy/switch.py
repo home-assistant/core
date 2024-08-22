@@ -2,23 +2,28 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from pyenphase import Envoy, EnvoyDryContactStatus, EnvoyEnpower
 from pyenphase.const import SupportedFeatures
 from pyenphase.models.dry_contacts import DryContactStatus
-from pyenphase.models.tariff import EnvoyStorageSettings
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 from .entity import EnvoyBaseEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable, Coroutine
+
+    from pyenphase import Envoy, EnvoyDryContactStatus, EnvoyEnpower
+    from pyenphase.models.tariff import EnvoyStorageSettings
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)

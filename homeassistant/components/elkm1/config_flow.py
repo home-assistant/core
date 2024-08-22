@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from elkm1_lib.discovery import ElkSystem
 from elkm1_lib.elk import Elk
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -21,7 +20,6 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.typing import DiscoveryInfoType, VolDictType
 from homeassistant.util import slugify
 from homeassistant.util.network import is_ip_address
 
@@ -33,6 +31,10 @@ from .discovery import (
     async_discover_devices,
     async_update_entry_from_discovery,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.components import dhcp
+    from homeassistant.helpers.typing import DiscoveryInfoType, VolDictType
 
 CONF_DEVICE = "device"
 

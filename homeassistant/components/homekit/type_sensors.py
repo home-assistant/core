@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from pyhap.const import CATEGORY_SENSOR
-from pyhap.service import Service
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import (
@@ -68,6 +66,11 @@ from .util import (
     density_to_air_quality_voc,
     temperature_to_homekit,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from pyhap.service import Service
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -11,8 +11,8 @@ This module generates and stores them in a HA storage.
 
 from __future__ import annotations
 
-from collections.abc import Generator
 import random
+from typing import TYPE_CHECKING
 
 from fnv_hash_fast import fnv1a_32
 
@@ -21,6 +21,9 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 
 from .util import get_aid_storage_filename_for_entry_id
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 AID_MANAGER_STORAGE_VERSION = 1
 AID_MANAGER_SAVE_DELAY = 2

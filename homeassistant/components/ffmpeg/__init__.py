@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from functools import cached_property
 import re
+from typing import TYPE_CHECKING
 
 from haffmpeg.core import HAFFmpeg
 from haffmpeg.tools import IMAGE_JPEG, FFVersion, ImageFrame
@@ -24,9 +25,11 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.system_info import is_official_image
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.signal_type import SignalType
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "ffmpeg"
 

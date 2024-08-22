@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass, field
-from datetime import datetime
 import logging
-from typing import Any, NotRequired, TypedDict
+from typing import TYPE_CHECKING, Any, NotRequired, TypedDict
 
 from homeassistant.core import HassJob, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -48,6 +47,9 @@ from .const import (
 )
 from .coordinator import get_addons_info
 from .handler import HassIO, HassioAPIError
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 ISSUE_KEY_UNHEALTHY = "unhealthy"
 ISSUE_KEY_UNSUPPORTED = "unsupported"

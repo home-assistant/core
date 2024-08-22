@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from functools import partial
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import callback
 from homeassistant.helpers.redact import REDACTED, async_redact_data, partial_redact
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 GOOGLE_MSG_TO_REDACT: dict[str, Callable[[str], str]] = {
     "agentUserId": partial_redact,

@@ -2,20 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
-from typing import Any
-
-from aio_geojson_generic_client.feed_entry import GenericFeedEntry
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.geo_location import GeolocationEvent
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import GeoJsonFeedEntityManager
 from .const import (
     ATTR_EXTERNAL_ID,
     DOMAIN,
@@ -23,6 +17,16 @@ from .const import (
     SIGNAL_UPDATE_ENTITY,
     SOURCE,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from aio_geojson_generic_client.feed_entry import GenericFeedEntry
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import GeoJsonFeedEntityManager
 
 _LOGGER = logging.getLogger(__name__)
 

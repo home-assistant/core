@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
@@ -16,7 +15,6 @@ from huawei_lte_api.exceptions import (
     LoginErrorUsernameWrongException,
     ResponseErrorException,
 )
-from huawei_lte_api.Session import GetResponseType
 from requests.exceptions import SSLError, Timeout
 from url_normalize import url_normalize
 import voluptuous as vol
@@ -51,6 +49,11 @@ from .const import (
     DOMAIN,
 )
 from .utils import get_device_macs, non_verifying_requests_session
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from huawei_lte_api.Session import GetResponseType
 
 _LOGGER = logging.getLogger(__name__)
 

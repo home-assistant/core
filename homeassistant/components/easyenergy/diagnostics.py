@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-
-from . import EasyEnergyDataUpdateCoordinator
 from .const import DOMAIN
-from .coordinator import EasyEnergyData
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+
+    from . import EasyEnergyDataUpdateCoordinator
+    from .coordinator import EasyEnergyData
 
 
 def get_gas_price(data: EasyEnergyData, hours: int) -> float | None:

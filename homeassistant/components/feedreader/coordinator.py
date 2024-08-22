@@ -11,13 +11,15 @@ from urllib.error import URLError
 
 import feedparser
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, EVENT_FEEDREADER
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
 
 DELAY_SAVE = 30
 STORAGE_VERSION = 1

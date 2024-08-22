@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientError
 from pydrawise import auth, client
@@ -14,6 +13,9 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResu
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Mapping
 
 
 class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):

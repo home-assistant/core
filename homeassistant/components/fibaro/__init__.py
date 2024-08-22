@@ -3,18 +3,13 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Callable, Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyfibaro.fibaro_client import FibaroClient
-from pyfibaro.fibaro_device import DeviceModel
-from pyfibaro.fibaro_room import RoomModel
-from pyfibaro.fibaro_scene import SceneModel
 from pyfibaro.fibaro_state_resolver import FibaroEvent, FibaroStateResolver
 from requests.exceptions import HTTPError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ARMED,
     ATTR_BATTERY_LEVEL,
@@ -23,7 +18,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -35,6 +29,16 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
 from .const import CONF_IMPORT_PLUGINS, DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Mapping
+
+    from pyfibaro.fibaro_device import DeviceModel
+    from pyfibaro.fibaro_room import RoomModel
+    from pyfibaro.fibaro_scene import SceneModel
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

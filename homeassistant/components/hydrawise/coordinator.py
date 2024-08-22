@@ -3,16 +3,26 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import timedelta
+from typing import TYPE_CHECKING
 
-from pydrawise import Hydrawise
-from pydrawise.schema import Controller, ControllerWaterUseSummary, Sensor, User, Zone
-
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import now
 
 from .const import DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from datetime import timedelta
+
+    from pydrawise import Hydrawise
+    from pydrawise.schema import (
+        Controller,
+        ControllerWaterUseSummary,
+        Sensor,
+        User,
+        Zone,
+    )
+
+    from homeassistant.core import HomeAssistant
 
 
 @dataclass

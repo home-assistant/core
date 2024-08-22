@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiohttp
 from gcal_sync.api import GoogleCalendarService
@@ -14,7 +13,6 @@ from gcal_sync.model import DateOrDatetime, Event
 import voluptuous as vol
 import yaml
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_ENTITIES,
@@ -22,7 +20,6 @@ from homeassistant.const import (
     CONF_OFFSET,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -52,6 +49,12 @@ from .const import (
     FeatureAccess,
 )
 from .store import LocalCalendarStore
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant, ServiceCall
 
 _LOGGER = logging.getLogger(__name__)
 

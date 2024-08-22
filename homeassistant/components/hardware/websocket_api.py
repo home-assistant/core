@@ -5,7 +5,7 @@ from __future__ import annotations
 import contextlib
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import psutil_home_assistant as ha_psutil
 import voluptuous as vol
@@ -18,7 +18,9 @@ import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 from .hardware import async_process_hardware_platforms
-from .models import HardwareProtocol
+
+if TYPE_CHECKING:
+    from .models import HardwareProtocol
 
 
 @dataclass(slots=True)

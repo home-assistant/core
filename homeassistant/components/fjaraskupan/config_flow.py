@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from fjaraskupan import device_filter
 
 from homeassistant.components.bluetooth import async_discovered_service_info
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_flow import register_discovery_flow
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:

@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 
-from . import EcovacsConfigEntry
 from .const import CONF_OVERRIDE_MQTT_URL, CONF_OVERRIDE_REST_URL
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
+    from . import EcovacsConfigEntry
 
 REDACT_CONFIG = {
     CONF_USERNAME,

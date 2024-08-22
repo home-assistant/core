@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyezviz.client import EzvizClient
 from pyezviz.exceptions import (
@@ -48,6 +47,9 @@ from .const import (
     EU_URL,
     RUSSIA_URL,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_OPTIONS = {

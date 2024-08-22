@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pescea import (
     AbstractDiscoveryService,
     Controller,
@@ -9,7 +11,6 @@ from pescea import (
     discovery_service as pescea_discovery_service,
 )
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
@@ -19,6 +20,9 @@ from .const import (
     DISPATCH_CONTROLLER_RECONNECTED,
     DISPATCH_CONTROLLER_UPDATE,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 
 class DiscoveryServiceListener(Listener):

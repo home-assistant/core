@@ -3,18 +3,22 @@
 from __future__ import annotations
 
 import logging
-
-from feedparser import FeedParserDict
+from typing import TYPE_CHECKING
 
 from homeassistant.components.event import EventEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FeedReaderConfigEntry
 from .const import DOMAIN, EVENT_FEEDREADER
 from .coordinator import FeedReaderCoordinator
+
+if TYPE_CHECKING:
+    from feedparser import FeedParserDict
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import FeedReaderConfigEntry
 
 LOGGER = logging.getLogger(__name__)
 

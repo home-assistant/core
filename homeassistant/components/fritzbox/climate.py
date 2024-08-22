@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -20,7 +20,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxDeviceEntity
 from .const import (
@@ -31,8 +30,12 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
-from .coordinator import FritzboxConfigEntry, FritzboxDataUpdateCoordinator
-from .model import ClimateExtraAttributes
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import FritzboxConfigEntry, FritzboxDataUpdateCoordinator
+    from .model import ClimateExtraAttributes
 
 HVAC_MODES = [HVACMode.HEAT, HVACMode.OFF]
 PRESET_HOLIDAY = "holiday"

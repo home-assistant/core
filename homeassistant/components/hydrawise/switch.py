@@ -2,26 +2,30 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
-
-from pydrawise import Hydrawise, Zone
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_WATERING_TIME, DOMAIN
-from .coordinator import HydrawiseDataUpdateCoordinator
 from .entity import HydrawiseEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
+    from pydrawise import Hydrawise, Zone
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import HydrawiseDataUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)

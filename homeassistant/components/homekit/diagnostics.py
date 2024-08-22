@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-from pyhap.accessory_driver import AccessoryDriver
-from pyhap.state import State
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.core import HomeAssistant
 
 from .accessories import HomeAccessory, HomeBridge
-from .models import HomeKitConfigEntry
+
+if TYPE_CHECKING:
+    from pyhap.accessory_driver import AccessoryDriver
+    from pyhap.state import State
+
+    from homeassistant.core import HomeAssistant
+
+    from .models import HomeKitConfigEntry
 
 TO_REDACT = {"access_token", "entity_picture"}
 

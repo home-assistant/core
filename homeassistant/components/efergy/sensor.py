@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import dataclasses
 from re import sub
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
-from pyefergy import Efergy
 from pyefergy.exceptions import ConnectError, DataError, ServiceError
 
 from homeassistant.components.sensor import (
@@ -16,12 +15,16 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import UnitOfEnergy, UnitOfPower
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import EfergyConfigEntry, EfergyEntity
 from .const import CONF_CURRENT_VALUES, LOGGER
+
+if TYPE_CHECKING:
+    from pyefergy import Efergy
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(

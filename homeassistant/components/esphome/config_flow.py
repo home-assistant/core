@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from collections.abc import Mapping
 import json
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from aioesphomeapi import (
     APIClient,
@@ -21,7 +20,6 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant.components import dhcp, zeroconf
-from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -31,7 +29,6 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.util.json import json_loads_object
 
 from .const import (
@@ -43,6 +40,12 @@ from .const import (
     DOMAIN,
 )
 from .dashboard import async_get_or_create_dashboard_manager, async_set_dashboard_info
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from homeassistant.components.hassio import HassioServiceInfo
+    from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 ERROR_REQUIRES_ENCRYPTION_KEY = "requires_encryption_key"
 ERROR_INVALID_ENCRYPTION_KEY = "invalid_psk"

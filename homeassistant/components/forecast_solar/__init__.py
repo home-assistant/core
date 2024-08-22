@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
 
 from .const import (
     CONF_DAMPING,
@@ -13,6 +14,9 @@ from .const import (
     CONF_MODULES_POWER,
 )
 from .coordinator import ForecastSolarDataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 PLATFORMS = [Platform.SENSOR]
 

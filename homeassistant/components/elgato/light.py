@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from elgato import ElgatoError
 
@@ -13,17 +13,20 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
 )
 
-from . import ElgatorConfigEntry
 from .const import SERVICE_IDENTIFY
-from .coordinator import ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
+    from . import ElgatorConfigEntry
+    from .coordinator import ElgatoDataUpdateCoordinator
 
 PARALLEL_UPDATES = 1
 

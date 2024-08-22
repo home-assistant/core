@@ -2,17 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
-from aiohue.v2.controllers.scenes import ScenesController
 from aiohue.v2.models.scene import Scene as HueScene, ScenePut as HueScenePut
 from aiohue.v2.models.smart_scene import SmartScene as HueSmartScene, SmartSceneState
 import voluptuous as vol
 
 from homeassistant.components.scene import ATTR_TRANSITION, Scene as SceneEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
@@ -20,10 +17,17 @@ from homeassistant.helpers.entity_platform import (
     async_get_current_platform,
 )
 
-from .bridge import HueBridge
 from .const import DOMAIN
 from .v2.entity import HueBaseEntity
 from .v2.helpers import normalize_hue_brightness, normalize_hue_transition
+
+if TYPE_CHECKING:
+    from aiohue.v2 import HueBridgeV2
+    from aiohue.v2.controllers.scenes import ScenesController
+
+    from homeassistant.config_entries import ConfigEntry
+
+    from .bridge import HueBridge
 
 SERVICE_ACTIVATE_SCENE = "activate_scene"
 ATTR_DYNAMIC = "dynamic"

@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 
-from .api import AsyncConfigEntryAuth
 from .const import DOMAIN, MANUFACTURER
+
+if TYPE_CHECKING:
+    from .api import AsyncConfigEntryAuth
 
 
 class GoogleMailEntity(Entity):

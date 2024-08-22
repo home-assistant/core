@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from homewizard_energy.models import Data, ExternalDevice
 
@@ -29,16 +28,21 @@ from homeassistant.const import (
     UnitOfReactivePower,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
-from . import HomeWizardConfigEntry
 from .const import DOMAIN
-from .coordinator import HWEnergyDeviceUpdateCoordinator
 from .entity import HomeWizardEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import StateType
+
+    from . import HomeWizardConfigEntry
+    from .coordinator import HWEnergyDeviceUpdateCoordinator
 
 PARALLEL_UPDATES = 1
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.notify import (
     ATTR_TARGET,
@@ -11,14 +11,17 @@ from homeassistant.components.notify import (
     NotifyEntity,
     migrate_notify_issue,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import Ecobee, EcobeeData
 from .const import DOMAIN
 from .entity import EcobeeBaseEntity
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+    from . import Ecobee, EcobeeData
 
 
 def get_service(

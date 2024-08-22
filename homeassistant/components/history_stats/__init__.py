@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID, CONF_STATE
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device import (
     async_remove_stale_devices_links_keep_entity_device,
 )
@@ -15,6 +15,9 @@ from homeassistant.helpers.template import Template
 from .const import CONF_DURATION, CONF_END, CONF_START, PLATFORMS
 from .coordinator import HistoryStatsUpdateCoordinator
 from .data import HistoryStats
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 type HistoryStatsConfigEntry = ConfigEntry[HistoryStatsUpdateCoordinator]
 

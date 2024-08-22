@@ -2,21 +2,25 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
-
-from fullykiosk import FullyKiosk
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import FullyKioskDataUpdateCoordinator
 from .entity import FullyKioskEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from fullykiosk import FullyKiosk
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import FullyKioskDataUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)

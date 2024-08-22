@@ -9,9 +9,8 @@ import os
 import re
 import secrets
 import socket
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
-from pyhap.accessory import Accessory
 import pyqrcode
 import voluptuous as vol
 
@@ -108,6 +107,9 @@ from .const import (
     VIDEO_CODEC_LIBX264,
 )
 from .models import HomeKitConfigEntry
+
+if TYPE_CHECKING:
+    from pyhap.accessory import Accessory
 
 _LOGGER = logging.getLogger(__name__)
 

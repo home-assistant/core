@@ -2,24 +2,28 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
-from typing import Any
-
-from aio_geojson_geonetnz_quakes.feed_entry import GeonetnzQuakesFeedEntry
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.geo_location import GeolocationEvent
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TIME, UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_conversion import DistanceConverter
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from . import GeonetnzQuakesFeedEntityManager
 from .const import DOMAIN, FEED
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from aio_geojson_geonetnz_quakes.feed_entry import GeonetnzQuakesFeedEntry
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import GeonetnzQuakesFeedEntityManager
 
 _LOGGER = logging.getLogger(__name__)
 

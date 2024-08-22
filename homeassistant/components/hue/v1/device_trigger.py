@@ -20,13 +20,14 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
 )
 from homeassistant.core import CALLBACK_TYPE, callback
-from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType
 
 from ..const import ATTR_HUE_EVENT, CONF_SUBTYPE, DOMAIN
 
 if TYPE_CHECKING:
+    from homeassistant.helpers.device_registry import DeviceEntry
+    from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+    from homeassistant.helpers.typing import ConfigType
+
     from ..bridge import HueBridge
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(

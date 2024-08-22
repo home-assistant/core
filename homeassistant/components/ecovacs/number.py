@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic
+from typing import TYPE_CHECKING, Generic
 
 from deebot_client.capabilities import CapabilitySet
 from deebot_client.events import CleanCountEvent, CutDirectionEvent, VolumeEvent
@@ -15,10 +14,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.const import DEGREE, EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import EcovacsConfigEntry
 from .entity import (
     EcovacsCapabilityEntityDescription,
     EcovacsDescriptionEntity,
@@ -26,6 +22,14 @@ from .entity import (
     EventT,
 )
 from .util import get_supported_entitites
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import EcovacsConfigEntry
 
 
 @dataclass(kw_only=True, frozen=True)

@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
-from .board import FirmataBoard, FirmataPinType
 from .const import PIN_MODE_INPUT, PIN_MODE_PULLUP, PIN_TYPE_ANALOG
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from .board import FirmataBoard, FirmataPinType
 
 _LOGGER = logging.getLogger(__name__)
 

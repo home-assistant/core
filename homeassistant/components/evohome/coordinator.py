@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any
@@ -24,6 +23,8 @@ from .const import CONF_LOCATION_IDX, DOMAIN, GWS, TCS, UTC_OFFSET
 from .helpers import handle_evo_exception
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable
+
     from . import EvoSession
 
 _LOGGER = logging.getLogger(__name__.rpartition(".")[0])

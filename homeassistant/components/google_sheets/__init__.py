@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 import aiohttp
 from google.auth.exceptions import RefreshError
@@ -14,7 +15,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
-from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -28,6 +28,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import ConfigEntrySelector
 
 from .const import DEFAULT_ACCESS, DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant, ServiceCall
 
 type GoogleSheetsConfigEntry = ConfigEntry[OAuth2Session]
 

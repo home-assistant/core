@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from functools import partial
 import logging
-import ssl
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from deebot_client.api_client import ApiClient
 from deebot_client.authentication import Authenticator, create_rest_config
@@ -20,7 +18,6 @@ from deebot_client.util.continents import get_continent
 from sucks import EcoVacsAPI, VacBot
 
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.util.ssl import get_default_no_verify_context
@@ -31,6 +28,12 @@ from .const import (
     CONF_VERIFY_MQTT_CERTIFICATE,
 )
 from .util import get_client_device_id
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    import ssl
+
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

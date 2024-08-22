@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
-from aiohttp import ClientSession
 from electrickiwi_api import AbstractAuth
 
-from homeassistant.helpers import config_entry_oauth2_flow
-
 from .const import API_BASE_URL
+
+if TYPE_CHECKING:
+    from aiohttp import ClientSession
+
+    from homeassistant.helpers import config_entry_oauth2_flow
 
 
 class AsyncConfigEntryAuth(AbstractAuth):

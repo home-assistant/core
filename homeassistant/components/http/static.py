@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.web import FileResponse, Request, StreamResponse
 from aiohttp.web_fileresponse import CONTENT_TYPES, FALLBACK_CONTENT_TYPE
 from aiohttp.web_urldispatcher import StaticResource
 from lru import LRU
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from pathlib import Path
 
 CACHE_TIME: Final = 31 * 86400  # = 1 month
 CACHE_HEADER = f"public, max-age={CACHE_TIME}"

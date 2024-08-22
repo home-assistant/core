@@ -3,16 +3,20 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
 from .const import DOMAIN, FRITZ_SERVICES, SERVICE_SET_GUEST_WIFI_PW
-from .coordinator import AvmWrapper
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant, ServiceCall
+
+    from .coordinator import AvmWrapper
 
 _LOGGER = logging.getLogger(__name__)
 

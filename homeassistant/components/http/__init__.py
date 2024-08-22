@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
-from collections.abc import Collection
 from dataclasses import dataclass
 import datetime
 from functools import partial
@@ -13,15 +11,10 @@ import os
 import socket
 import ssl
 from tempfile import NamedTemporaryFile
-from typing import Any, Final, TypedDict, cast
+from typing import TYPE_CHECKING, Any, Final, TypedDict, cast
 
 from aiohttp import web
-from aiohttp.abc import AbstractStreamWriter
-from aiohttp.http_parser import RawRequestMessage
-from aiohttp.streams import StreamReader
-from aiohttp.typedefs import JSONDecoder, StrOrURL
 from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
-from aiohttp.web_protocol import RequestHandler
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -44,7 +37,6 @@ from homeassistant.helpers.http import (
 )
 from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.setup import (
     SetupPhases,
@@ -66,6 +58,18 @@ from .request_context import setup_request_context
 from .security_filter import setup_security_filter
 from .static import CACHE_HEADERS, CachingStaticResource
 from .web_runner import HomeAssistantTCPSite
+
+if TYPE_CHECKING:
+    import asyncio
+    from collections.abc import Collection
+
+    from aiohttp.abc import AbstractStreamWriter
+    from aiohttp.http_parser import RawRequestMessage
+    from aiohttp.streams import StreamReader
+    from aiohttp.typedefs import JSONDecoder, StrOrURL
+    from aiohttp.web_protocol import RequestHandler
+
+    from homeassistant.helpers.typing import ConfigType
 
 CONF_SERVER_HOST: Final = "server_host"
 CONF_SERVER_PORT: Final = "server_port"

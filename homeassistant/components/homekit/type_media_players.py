@@ -1,9 +1,8 @@
 """Class to hold all media player accessories."""
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from pyhap.characteristic import Characteristic
 from pyhap.const import CATEGORY_SWITCH
 
 from homeassistant.components.media_player import (
@@ -59,6 +58,9 @@ from .const import (
 )
 from .type_remotes import REMOTE_KEYS, RemoteInputSelectAccessory
 from .util import cleanup_name_for_homekit, get_media_player_features
+
+if TYPE_CHECKING:
+    from pyhap.characteristic import Characteristic
 
 _LOGGER = logging.getLogger(__name__)
 

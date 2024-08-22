@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, ValuesView
 import logging
-from typing import Any, NamedTuple, cast
+from typing import TYPE_CHECKING, Any, NamedTuple, cast
 
 import voluptuous as vol
 
@@ -26,16 +26,21 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, State, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback, EntityPlatform
 from homeassistant.helpers.service import (
     async_extract_entity_ids,
     async_register_admin_service,
 )
 from homeassistant.helpers.state import async_reproduce_state
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.loader import async_get_integration
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_platform import (
+        AddEntitiesCallback,
+        EntityPlatform,
+    )
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 
 def _convert_states(states: dict[str, Any]) -> dict[str, State]:

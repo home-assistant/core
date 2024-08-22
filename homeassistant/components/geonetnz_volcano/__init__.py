@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from aio_geojson_geonetnz_volcano import GeonetnzVolcanoFeedManager
 import voluptuous as vol
@@ -21,7 +22,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_conversion import DistanceConverter
 
 from .config_flow import configured_instances
@@ -33,6 +33,9 @@ from .const import (
     IMPERIAL_UNITS,
     PLATFORMS,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

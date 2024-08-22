@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import ssl
+from typing import TYPE_CHECKING
 
-from elmax_api.model.endpoint import DeviceEndpoint
 from elmax_api.model.panel import PanelEntry
 from packaging import version
 
@@ -13,6 +13,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, ELMAX_LOCAL_API_PATH, MIN_APIV2_SUPPORTED_VERSION
 from .coordinator import ElmaxCoordinator
+
+if TYPE_CHECKING:
+    from elmax_api.model.endpoint import DeviceEndpoint
 
 
 def get_direct_api_url(host: str, port: int, use_ssl: bool) -> str:

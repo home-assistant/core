@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 import voluptuous as vol
 
@@ -20,10 +20,12 @@ from homeassistant.core import (
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.config_validation import entity_domain
 from homeassistant.helpers.event import TrackStates, async_track_state_change_filtered
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

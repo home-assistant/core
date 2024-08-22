@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
 import logging
 import os
-from typing import Any, Final, cast
+from typing import TYPE_CHECKING, Any, Final, cast
 
 from fitbit import Fitbit
 from oauthlib.oauth2.rfc6749.errors import OAuth2Error
@@ -41,14 +40,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.json import load_json_object
 
-from .api import FitbitApi
 from .const import (
     ATTR_ACCESS_TOKEN,
     ATTR_LAST_SAVED_AT,
@@ -68,6 +64,14 @@ from .const import (
 from .coordinator import FitbitData, FitbitDeviceCoordinator
 from .exceptions import FitbitApiException, FitbitAuthException
 from .model import FitbitDevice, config_from_entry_data
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+    from .api import FitbitApi
 
 _LOGGER: Final = logging.getLogger(__name__)
 

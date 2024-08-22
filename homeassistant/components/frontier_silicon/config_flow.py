@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 from afsapi import (
@@ -15,7 +14,6 @@ from afsapi import (
 )
 import voluptuous as vol
 
-from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT
 
@@ -26,6 +24,11 @@ from .const import (
     DOMAIN,
     SSDP_ATTR_SPEAKER_NAME,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from homeassistant.components import ssdp
 
 _LOGGER = logging.getLogger(__name__)
 

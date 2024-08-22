@@ -17,8 +17,6 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
 )
 from homeassistant.core import CALLBACK_TYPE, callback
-from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.typing import ConfigType
 
 from ..const import (
     ATTR_HUE_EVENT,
@@ -33,7 +31,9 @@ from ..const import (
 if TYPE_CHECKING:
     from aiohue.v2 import HueBridgeV2
 
+    from homeassistant.helpers.device_registry import DeviceEntry
     from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+    from homeassistant.helpers.typing import ConfigType
 
     from ..bridge import HueBridge
 

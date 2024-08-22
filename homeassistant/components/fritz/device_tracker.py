@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-import datetime
 import logging
+from typing import TYPE_CHECKING
 
 from homeassistant.components.device_tracker import ScannerEntity, SourceType
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_FRITZ, DOMAIN
 from .coordinator import (
@@ -19,6 +17,12 @@ from .coordinator import (
     device_filter_out_from_trackers,
 )
 from .entity import FritzDeviceBase
+
+if TYPE_CHECKING:
+    import datetime
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
 

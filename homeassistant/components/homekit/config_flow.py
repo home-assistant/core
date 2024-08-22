@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 from copy import deepcopy
 from operator import itemgetter
 import random
 import re
 import string
-from typing import Any, Final, TypedDict
+from typing import TYPE_CHECKING, Any, Final, TypedDict
 
 import voluptuous as vol
 
@@ -59,6 +58,9 @@ from .const import (
     VIDEO_CODEC_COPY,
 )
 from .util import async_find_next_available_port, state_needs_accessory_mode
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 CONF_CAMERA_AUDIO = "camera_audio"
 CONF_CAMERA_COPY = "camera_copy"

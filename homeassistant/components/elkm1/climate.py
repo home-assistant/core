@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from elkm1_lib.const import ThermostatFan, ThermostatMode, ThermostatSetting
-from elkm1_lib.elements import Element
-from elkm1_lib.thermostats import Thermostat
 
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
@@ -18,10 +16,15 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import PRECISION_WHOLE
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ElkEntity, ElkM1ConfigEntry, create_elk_entities
+
+if TYPE_CHECKING:
+    from elkm1_lib.elements import Element
+    from elkm1_lib.thermostats import Thermostat
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 SUPPORT_HVAC = [
     HVACMode.OFF,

@@ -2,16 +2,20 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from eufylife_ble_client import EufyLifeBLEDevice
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import ADDRESS, BluetoothCallbackMatcher
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 
 from .const import DOMAIN
 from .models import EufyLifeData
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 

@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from fastdotcom import fast_com
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_INTERVAL, DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 
 class FastdotcomDataUpdateCoordinator(DataUpdateCoordinator[float]):

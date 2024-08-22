@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.logbook import (
     LOGBOOK_ENTRY_ICON,
@@ -12,10 +11,14 @@ from homeassistant.components.logbook import (
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers.typing import NoEventData
-from homeassistant.util.event_type import EventType
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.helpers.typing import NoEventData
+    from homeassistant.util.event_type import EventType
 
 EVENT_TO_NAME: dict[EventType[Any] | str, str] = {
     EVENT_HOMEASSISTANT_STOP: "stopped",

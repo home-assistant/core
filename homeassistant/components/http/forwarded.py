@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from ipaddress import IPv4Network, IPv6Network, ip_address
 import logging
+from typing import TYPE_CHECKING
 
 from aiohttp.hdrs import X_FORWARDED_FOR, X_FORWARDED_HOST, X_FORWARDED_PROTO
 from aiohttp.web import Application, HTTPBadRequest, Request, StreamResponse, middleware
 from hass_nabucasa import remote
 
 from homeassistant.core import callback
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
 
 _LOGGER = logging.getLogger(__name__)
 

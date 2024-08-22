@@ -2,25 +2,20 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import datetime, timedelta
 from enum import StrEnum
 import logging
 import queue
 from threading import Event as ThreadingEvent, Thread
 from time import sleep
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from fritzconnection.core.fritzmonitor import FritzMonitor
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FritzBoxCallMonitorConfigEntry
-from .base import FritzBoxPhonebook
 from .const import (
     ATTR_PREFIXES,
     CONF_PHONEBOOK,
@@ -30,6 +25,15 @@ from .const import (
     SERIAL_NUMBER,
     FritzState,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from homeassistant.core import Event, HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import FritzBoxCallMonitorConfigEntry
+    from .base import FritzBoxPhonebook
 
 _LOGGER = logging.getLogger(__name__)
 

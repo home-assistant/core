@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
 from homeassistant.components.device_automation import (
@@ -22,12 +24,14 @@ from homeassistant.const import (
     CONF_TYPE,
     PERCENTAGE,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType
 
 from . import ATTR_CURRENT_HUMIDITY, DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+    from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+    from homeassistant.helpers.typing import ConfigType
 
 # mypy: disallow-any-generics
 

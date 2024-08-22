@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from hko import LOCATIONS
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LOCATION, Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_DISTRICT, DOMAIN, KEY_DISTRICT, KEY_LOCATION
 from .coordinator import HKOUpdateCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 PLATFORMS: list[Platform] = [Platform.WEATHER]
 

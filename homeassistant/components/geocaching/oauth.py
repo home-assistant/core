@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.application_credentials import (
     AuthImplementation,
     AuthorizationServer,
     ClientCredential,
 )
-from homeassistant.core import HomeAssistant
 
 from .const import ENVIRONMENT, ENVIRONMENT_URLS
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 
 class GeocachingOAuth2Implementation(AuthImplementation):

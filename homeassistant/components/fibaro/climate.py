@@ -4,9 +4,7 @@ from __future__ import annotations
 
 from contextlib import suppress
 import logging
-from typing import Any
-
-from pyfibaro.fibaro_device import DeviceModel
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.climate import (
     ENTITY_ID_FORMAT,
@@ -17,13 +15,17 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FibaroController, FibaroDevice
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from pyfibaro.fibaro_device import DeviceModel
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 PRESET_RESUME = "resume"
 PRESET_MOIST = "moist"

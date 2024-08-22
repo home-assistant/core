@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_LANGUAGE_CODE, DOMAIN
 from .helpers import async_send_text_commands, default_language_code
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 # https://support.google.com/assistant/answer/9071582?hl=en
 LANG_TO_BROADCAST_COMMAND = {

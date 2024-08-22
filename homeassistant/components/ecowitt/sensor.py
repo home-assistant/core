@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
-from datetime import datetime
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from aioecowitt import EcoWittSensor, EcoWittSensorTypes
 
@@ -31,13 +30,18 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfVolumetricFlux,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
-from . import EcowittConfigEntry
 from .entity import EcowittEntity
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import StateType
+
+    from . import EcowittConfigEntry
 
 _METRIC: Final = (
     EcoWittSensorTypes.TEMPERATURE_C,

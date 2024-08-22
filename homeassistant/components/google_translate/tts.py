@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from io import BytesIO
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from gtts import gTTS, gTTSError
 import voluptuous as vol
@@ -16,11 +16,7 @@ from homeassistant.components.tts import (
     TextToSpeechEntity,
     TtsAudioType,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_TLD,
@@ -30,6 +26,12 @@ from .const import (
     SUPPORT_LANGUAGES,
     SUPPORT_TLD,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 

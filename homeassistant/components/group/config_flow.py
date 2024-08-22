@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine, Mapping
 from functools import partial
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
@@ -26,7 +26,6 @@ from .binary_sensor import CONF_ALL, async_create_preview_binary_sensor
 from .button import async_create_preview_button
 from .const import CONF_HIDE_MEMBERS, CONF_IGNORE_NON_NUMERIC, DOMAIN
 from .cover import async_create_preview_cover
-from .entity import GroupEntity
 from .event import async_create_preview_event
 from .fan import async_create_preview_fan
 from .light import async_create_preview_light
@@ -35,6 +34,9 @@ from .media_player import MediaPlayerGroup, async_create_preview_media_player
 from .notify import async_create_preview_notify
 from .sensor import async_create_preview_sensor
 from .switch import async_create_preview_switch
+
+if TYPE_CHECKING:
+    from .entity import GroupEntity
 
 _STATISTIC_MEASURES = [
     "last",

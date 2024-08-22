@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from enum import Enum
 import random
 import string
 from typing import TYPE_CHECKING
@@ -10,14 +9,15 @@ from typing import TYPE_CHECKING
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
-from .entity import (
-    EcovacsCapabilityEntityDescription,
-    EcovacsDescriptionEntity,
-    EcovacsEntity,
-)
-
 if TYPE_CHECKING:
+    from enum import Enum
+
     from .controller import EcovacsController
+    from .entity import (
+        EcovacsCapabilityEntityDescription,
+        EcovacsDescriptionEntity,
+        EcovacsEntity,
+    )
 
 
 def get_client_device_id(hass: HomeAssistant, self_hosted: bool) -> str:

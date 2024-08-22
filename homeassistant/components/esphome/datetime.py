@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from functools import partial
+from typing import TYPE_CHECKING
 
 from aioesphomeapi import DateTimeInfo, DateTimeState
 
@@ -11,6 +11,9 @@ from homeassistant.components.datetime import DateTimeEntity
 import homeassistant.util.dt as dt_util
 
 from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 
 class EsphomeDateTime(EsphomeEntity[DateTimeInfo, DateTimeState], DateTimeEntity):

@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
-from datetime import datetime, timedelta
 import logging
 import math
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -20,7 +18,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -49,14 +46,12 @@ from homeassistant.core import (
 from homeassistant.exceptions import ConditionError
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.device import async_device_info_to_link_from_entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_time_interval,
 )
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolDictType
 
 from .const import (
     CONF_AC_MODE,
@@ -70,6 +65,14 @@ from .const import (
     DOMAIN,
     PLATFORMS,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from datetime import datetime, timedelta
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolDictType
 
 _LOGGER = logging.getLogger(__name__)
 

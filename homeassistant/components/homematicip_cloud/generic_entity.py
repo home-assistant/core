@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homematicip.aio.device import AsyncDevice
 from homematicip.aio.group import AsyncGroup
-from homematicip.base.functionalChannels import FunctionalChannel
 
 from homeassistant.const import ATTR_ID
 from homeassistant.core import callback
@@ -16,7 +15,11 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN as HMIPC_DOMAIN
-from .hap import AsyncHome, HomematicipHAP
+
+if TYPE_CHECKING:
+    from homematicip.base.functionalChannels import FunctionalChannel
+
+    from .hap import AsyncHome, HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 

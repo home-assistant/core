@@ -4,14 +4,12 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from elmax_api.exceptions import ElmaxBadLoginError
 from elmax_api.http import Elmax, ElmaxLocal, GenericElmax
-from elmax_api.model.panel import PanelEntry
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .common import DirectPanel, build_direct_ssl_context, get_direct_api_url
@@ -32,6 +30,12 @@ from .const import (
     POLLING_SECONDS,
 )
 from .coordinator import ElmaxCoordinator
+
+if TYPE_CHECKING:
+    from elmax_api.model.panel import PanelEntry
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import Event, HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

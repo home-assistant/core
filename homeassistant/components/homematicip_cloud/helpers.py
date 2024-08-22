@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 from functools import wraps
 import json
 import logging
-from typing import Any, Concatenate, TypeGuard
-
-from homematicip.base.enums import FunctionalChannelType
-from homematicip.device import Device
+from typing import TYPE_CHECKING, Any, Concatenate, TypeGuard
 
 from homeassistant.exceptions import HomeAssistantError
 
 from . import HomematicipGenericEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
+    from homematicip.base.enums import FunctionalChannelType
+    from homematicip.device import Device
 
 _LOGGER = logging.getLogger(__name__)
 

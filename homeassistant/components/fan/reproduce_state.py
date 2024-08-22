@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -14,7 +13,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Context, HomeAssistant, State
 
 from . import (
     ATTR_DIRECTION,
@@ -27,6 +25,11 @@ from . import (
     SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from homeassistant.core import Context, HomeAssistant, State
 
 _LOGGER = logging.getLogger(__name__)
 

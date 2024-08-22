@@ -2,17 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from flux_led import DeviceType
-from flux_led.aio import AIOWifiLedBulb
 from flux_led.const import MODE_MUSIC
 
-from homeassistant import config_entries
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -24,6 +20,13 @@ from .const import (
 from .coordinator import FluxLedUpdateCoordinator
 from .discovery import async_clear_discovery_cache
 from .entity import FluxBaseEntity, FluxEntity, FluxOnOffEntity
+
+if TYPE_CHECKING:
+    from flux_led.aio import AIOWifiLedBulb
+
+    from homeassistant import config_entries
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 
 async def async_setup_entry(

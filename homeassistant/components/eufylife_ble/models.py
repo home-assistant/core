@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from eufylife_ble_client import EufyLifeBLEDevice
+if TYPE_CHECKING:
+    from eufylife_ble_client import EufyLifeBLEDevice
 
 
 @dataclass

@@ -2,23 +2,27 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from datetime import datetime
 import logging
-from typing import Any
-
-from aio_georss_client.status_update import StatusUpdate
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import GdacsFeedEntityManager
 from .const import DOMAIN, FEED
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from datetime import datetime
+
+    from aio_georss_client.status_update import StatusUpdate
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import GdacsFeedEntityManager
 
 _LOGGER = logging.getLogger(__name__)
 

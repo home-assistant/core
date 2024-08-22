@@ -3,19 +3,23 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-
-from googleapiclient.http import HttpRequest
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import GoogleMailConfigEntry
 from .entity import GoogleMailEntity
+
+if TYPE_CHECKING:
+    from googleapiclient.http import HttpRequest
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import GoogleMailConfigEntry
 
 SCAN_INTERVAL = timedelta(minutes=15)
 

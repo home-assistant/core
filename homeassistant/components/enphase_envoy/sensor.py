@@ -2,22 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass, replace
-import datetime
 import logging
 from operator import attrgetter
 from typing import TYPE_CHECKING
 
-from pyenphase import (
-    EnvoyEncharge,
-    EnvoyEnchargeAggregate,
-    EnvoyEnchargePower,
-    EnvoyEnpower,
-    EnvoyInverter,
-    EnvoySystemConsumption,
-    EnvoySystemProduction,
-)
 from pyenphase.const import PHASENAMES
 from pyenphase.models.meters import (
     CtMeterStatus,
@@ -42,15 +31,31 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 from .entity import EnvoyBaseEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    import datetime
+
+    from pyenphase import (
+        EnvoyEncharge,
+        EnvoyEnchargeAggregate,
+        EnvoyEnchargePower,
+        EnvoyEnpower,
+        EnvoyInverter,
+        EnvoySystemConsumption,
+        EnvoySystemProduction,
+    )
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity import Entity
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 
 ICON = "mdi:flash"
 _LOGGER = logging.getLogger(__name__)

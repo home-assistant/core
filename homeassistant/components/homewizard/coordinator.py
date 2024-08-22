@@ -3,19 +3,23 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from homewizard_energy import HomeWizardEnergy
 from homewizard_energy.const import SUPPORTS_IDENTIFY, SUPPORTS_STATE
 from homewizard_energy.errors import DisabledError, RequestError, UnsupportedError
-from homewizard_energy.models import Device
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, UPDATE_INTERVAL, DeviceResponseEntry
+
+if TYPE_CHECKING:
+    from homewizard_energy.models import Device
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

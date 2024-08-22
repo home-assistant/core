@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from aioecowitt import EcoWittListener
-from aiohttp import web
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
@@ -11,6 +12,9 @@ from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_STOP, Platf
 from homeassistant.core import Event, HomeAssistant, callback
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from aiohttp import web
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 

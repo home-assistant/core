@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 import json
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -23,9 +22,7 @@ from homeassistant.core import HassJob, HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     ACTIVITY_POWER_OFF,
@@ -38,9 +35,16 @@ from .const import (
     SERVICE_CHANGE_CHANNEL,
     SERVICE_SYNC,
 )
-from .data import HarmonyConfigEntry, HarmonyData
 from .entity import HarmonyEntity
 from .subscriber import HarmonyCallback
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import VolDictType
+
+    from .data import HarmonyConfigEntry, HarmonyData
 
 _LOGGER = logging.getLogger(__name__)
 

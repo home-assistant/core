@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiogithubapi import (
     GitHubAPI,
@@ -14,10 +14,12 @@ from aiogithubapi import (
 )
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import FALLBACK_UPDATE_INTERVAL, LOGGER, REFRESH_EVENT_TYPES
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 GRAPHQL_REPOSITORY_QUERY = """
 query ($owner: String!, $repository: String!) {

@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyefergy import Efergy, exceptions
 import voluptuous as vol
@@ -13,6 +12,9 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_NAME, DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 
 class EfergyFlowHandler(ConfigFlow, domain=DOMAIN):

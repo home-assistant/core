@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pyflume import FlumeAuth, FlumeDeviceList
 from requests import Session
 from requests.exceptions import RequestException
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
@@ -34,6 +35,9 @@ from .const import (
     PLATFORMS,
 )
 from .coordinator import FlumeNotificationDataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
 
 SERVICE_LIST_NOTIFICATIONS = "list_notifications"
 CONF_CONFIG_ENTRY = "config_entry"

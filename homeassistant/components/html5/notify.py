@@ -9,6 +9,7 @@ from http import HTTPStatus
 import json
 import logging
 import time
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 import uuid
 
@@ -30,15 +31,17 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import ATTR_NAME, URL_ROOT
-from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import save_json
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import ensure_unique_string
 from homeassistant.util.json import JsonObjectType, load_json_object
 
 from .const import DOMAIN, SERVICE_DISMISS
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant, ServiceCall
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 

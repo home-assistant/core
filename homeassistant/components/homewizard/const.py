@@ -5,10 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-
-from homewizard_energy.models import Data, Device, State, System
+from typing import TYPE_CHECKING
 
 from homeassistant.const import Platform
+
+if TYPE_CHECKING:
+    from homewizard_energy.models import Data, Device, State, System
 
 DOMAIN = "homewizard"
 PLATFORMS = [Platform.BUTTON, Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]

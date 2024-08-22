@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-from ssl import SSLContext
+from typing import TYPE_CHECKING
 
 from aiohttp import web
 from yarl import URL
+
+if TYPE_CHECKING:
+    from ssl import SSLContext
 
 
 class HomeAssistantTCPSite(web.BaseSite):

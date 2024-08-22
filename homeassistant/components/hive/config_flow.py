@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from apyhiveapi import Auth
 from apyhiveapi.helper.hive_exceptions import (
@@ -25,6 +24,9 @@ from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import callback
 
 from .const import CONF_CODE, CONF_DEVICE_NAME, CONFIG_ENTRY_VERSION, DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 
 class HiveFlowHandler(ConfigFlow, domain=DOMAIN):

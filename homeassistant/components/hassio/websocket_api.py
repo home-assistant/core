@@ -3,7 +3,7 @@
 import logging
 from numbers import Number
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -33,7 +33,9 @@ from .const import (
     WS_TYPE_EVENT,
     WS_TYPE_SUBSCRIBE,
 )
-from .handler import HassIO
+
+if TYPE_CHECKING:
+    from .handler import HassIO
 
 SCHEMA_WEBSOCKET_EVENT = vol.Schema(
     {vol.Required(ATTR_WS_EVENT): cv.string},

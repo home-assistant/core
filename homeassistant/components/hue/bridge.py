@@ -3,16 +3,14 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiohttp
 from aiohttp import client_exceptions
 from aiohue import HueBridgeV1, HueBridgeV2, LinkButtonNotPressed, Unauthorized
 from aiohue.errors import AiohueException, BridgeBusy
 
-from homeassistant import core
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_VERSION, CONF_HOST, Platform
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -22,6 +20,11 @@ from .const import DOMAIN
 from .v1.sensor_base import SensorManager
 from .v2.device import async_setup_devices
 from .v2.hue_event import async_setup_hue_events
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant import core
 
 # How long should we sleep if the hub is busy
 HUB_BUSY_SLEEP = 0.5

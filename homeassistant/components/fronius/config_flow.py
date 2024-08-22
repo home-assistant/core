@@ -4,19 +4,21 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from pyfronius import Fronius, FroniusError
 import voluptuous as vol
 
-from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, FroniusConfigEntryData
+
+if TYPE_CHECKING:
+    from homeassistant.components.dhcp import DhcpServiceInfo
+    from homeassistant.core import HomeAssistant
 
 _LOGGER: Final = logging.getLogger(__name__)
 

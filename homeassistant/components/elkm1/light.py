@@ -2,18 +2,21 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-from elkm1_lib.elements import Element
-from elkm1_lib.elk import Elk
-from elkm1_lib.lights import Light
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ElkEntity, ElkM1ConfigEntry, create_elk_entities
-from .models import ELKM1Data
+
+if TYPE_CHECKING:
+    from elkm1_lib.elements import Element
+    from elkm1_lib.elk import Elk
+    from elkm1_lib.lights import Light
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .models import ELKM1Data
 
 
 async def async_setup_entry(

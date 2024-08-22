@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import ipaddress
 import logging
 import socket
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import ParseResult, urlparse
 
 from fritzconnection import FritzConnection
@@ -33,7 +32,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     CONF_OLD_DISCOVERY,
@@ -49,6 +47,11 @@ from .const import (
     ERROR_UPNP_NOT_CONFIGURED,
     FRITZ_AUTH_EXCEPTIONS,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from homeassistant.helpers.typing import VolDictType
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -8,9 +8,7 @@ from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.const import CONF_DEVICE_ID
-from homeassistant.core import CALLBACK_TYPE
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .v1.device_trigger import (
@@ -25,8 +23,9 @@ from .v2.device_trigger import (
 )
 
 if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
+    from homeassistant.core import CALLBACK_TYPE, HomeAssistant
     from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+    from homeassistant.helpers.typing import ConfigType
 
     from .bridge import HueBridge
 

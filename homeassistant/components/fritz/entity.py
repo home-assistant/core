@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
-
-from fritzconnection.lib.fritzstatus import FritzStatus
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -15,6 +12,11 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_DEVICE_NAME, DOMAIN
 from .coordinator import AvmWrapper, FritzDevice
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from fritzconnection.lib.fritzstatus import FritzStatus
 
 
 class FritzDeviceBase(CoordinatorEntity[AvmWrapper]):

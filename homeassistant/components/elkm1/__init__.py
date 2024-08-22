@@ -3,14 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
 from enum import Enum
 import logging
 import re
-from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from elkm1_lib.elements import Element
 from elkm1_lib.elk import Elk, Panel
 from elkm1_lib.util import parse_url
 import voluptuous as vol
@@ -36,7 +33,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 from homeassistant.util.network import is_ip_address
 
@@ -68,6 +64,14 @@ from .discovery import (
     async_update_entry_from_discovery,
 )
 from .models import ELKM1Data
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from types import MappingProxyType
+
+    from elkm1_lib.elements import Element
+
+    from homeassistant.helpers.typing import ConfigType
 
 type ElkM1ConfigEntry = ConfigEntry[ELKM1Data]
 

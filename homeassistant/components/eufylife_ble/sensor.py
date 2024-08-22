@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from eufylife_ble_client import MODEL_TO_NAME
 
-from homeassistant import config_entries
 from homeassistant.components.bluetooth import async_address_present
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -17,11 +16,15 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, UnitOfMass
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import DOMAIN
-from .models import EufyLifeData
+
+if TYPE_CHECKING:
+    from homeassistant import config_entries
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .models import EufyLifeData
 
 IGNORED_STATES = {STATE_UNAVAILABLE, STATE_UNKNOWN}
 

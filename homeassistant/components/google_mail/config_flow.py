@@ -2,19 +2,23 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
-from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from . import GoogleMailConfigEntry
 from .const import DEFAULT_ACCESS, DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from homeassistant.config_entries import ConfigFlowResult
+
+    from . import GoogleMailConfigEntry
 
 
 class OAuth2FlowHandler(

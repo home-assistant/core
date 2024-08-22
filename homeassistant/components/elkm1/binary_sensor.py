@@ -2,17 +2,20 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from elkm1_lib.const import ZoneLogicalStatus, ZoneType
-from elkm1_lib.elements import Element
-from elkm1_lib.zones import Zone
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ElkAttachedEntity, ElkEntity, ElkM1ConfigEntry
+
+if TYPE_CHECKING:
+    from elkm1_lib.elements import Element
+    from elkm1_lib.zones import Zone
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 
 async def async_setup_entry(

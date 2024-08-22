@@ -4,14 +4,16 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate, overload
+from typing import TYPE_CHECKING, Any, Concatenate, overload
 
 from aiohttp.web import Request, Response, StreamResponse
 
-from homeassistant.auth.models import User
 from homeassistant.exceptions import Unauthorized
 
 from .view import HomeAssistantView
+
+if TYPE_CHECKING:
+    from homeassistant.auth.models import User
 
 type _ResponseType = Response | StreamResponse
 type _FuncType[_T, **_P, _R] = Callable[

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import contextlib
 from logging import getLogger
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from aiohttp.client_exceptions import ServerDisconnectedError
 from openwebif.enums import PowerState, RemoteControlCodes, SetVolumeOption
@@ -28,11 +28,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import Enigma2ConfigEntry
 from .const import (
     CONF_DEEP_STANDBY,
     CONF_MAC_ADDRESS,
@@ -50,6 +47,12 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import Enigma2UpdateCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+    from . import Enigma2ConfigEntry
 
 ATTR_MEDIA_CURRENTLY_RECORDING = "media_currently_recording"
 ATTR_MEDIA_DESCRIPTION = "media_description"

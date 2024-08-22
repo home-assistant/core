@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import functools
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from hyperion import client
 from hyperion.const import (
     KEY_COMPONENTID,
     KEY_ORIGIN,
@@ -19,14 +18,12 @@ from hyperion.const import (
 )
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import (
     get_hyperion_device_id,
@@ -42,6 +39,12 @@ from .const import (
     TYPE_HYPERION_SENSOR_BASE,
     TYPE_HYPERION_SENSOR_VISIBLE_PRIORITY,
 )
+
+if TYPE_CHECKING:
+    from hyperion import client
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 SENSORS = [TYPE_HYPERION_SENSOR_VISIBLE_PRIORITY]
 PRIORITY_SENSOR_DESCRIPTION = SensorEntityDescription(

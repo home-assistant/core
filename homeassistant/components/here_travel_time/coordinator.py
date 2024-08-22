@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, time, timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import here_routing
 from here_routing import (
@@ -26,7 +26,6 @@ from here_transit import (
 import voluptuous as vol
 
 from homeassistant.const import UnitOfLength
-from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -35,6 +34,9 @@ from homeassistant.util.unit_conversion import DistanceConverter
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, ROUTE_MODE_FASTEST
 from .model import HERETravelTimeConfig, HERETravelTimeData
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 BACKOFF_MULTIPLIER = 1.1
 

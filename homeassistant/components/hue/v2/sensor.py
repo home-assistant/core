@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.sensors import (
     DevicePowerController,
@@ -25,14 +24,19 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import LIGHT_LUX, PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from ..bridge import HueBridge
 from ..const import DOMAIN
 from .entity import HueBaseEntity
+
+if TYPE_CHECKING:
+    from aiohue.v2 import HueBridgeV2
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from ..bridge import HueBridge
 
 type SensorType = DevicePower | LightLevel | Temperature | ZigbeeConnectivity
 type ControllerType = (

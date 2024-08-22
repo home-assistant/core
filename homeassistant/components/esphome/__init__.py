@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from aioesphomeapi import APIClient
 
 from homeassistant.components import zeroconf
@@ -11,9 +13,7 @@ from homeassistant.const import (
     CONF_PORT,
     __version__ as ha_version,
 )
-from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_NOISE_PSK, DOMAIN
 from .dashboard import async_setup as async_setup_dashboard
@@ -22,6 +22,10 @@ from .domain_data import DomainData
 # Import config flow so that it's added to the registry
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .manager import ESPHomeManager, cleanup_instance
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 

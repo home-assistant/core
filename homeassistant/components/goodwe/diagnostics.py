@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-from goodwe import Inverter
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from typing import TYPE_CHECKING, Any
 
 from .const import DOMAIN, KEY_INVERTER
+
+if TYPE_CHECKING:
+    from goodwe import Inverter
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 
 async def async_get_config_entry_diagnostics(

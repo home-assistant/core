@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from electrasmart.api import STATUS_SUCCESS, Attributes, ElectraAPI, ElectraApiError
 from electrasmart.device import ElectraAirConditioner, OperationMode
@@ -24,12 +24,9 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     API_DELAY,
@@ -40,6 +37,11 @@ from .const import (
     SCAN_INTERVAL_SEC,
     UNAVAILABLE_THRESH_SEC,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 FAN_ELECTRA_TO_HASS = {
     OperationMode.FAN_SPEED_AUTO: FAN_AUTO,

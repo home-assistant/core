@@ -4,17 +4,20 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from aioflo.api import API
 from aioflo.errors import RequestError
 from orjson import JSONDecodeError
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN as FLO_DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from aioflo.api import API
+
+    from homeassistant.core import HomeAssistant
 
 
 class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):

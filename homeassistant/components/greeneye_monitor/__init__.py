@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 import greeneye
 import voluptuous as vol
@@ -16,10 +17,8 @@ from homeassistant.const import (
     Platform,
     UnitOfTime,
 )
-from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CHANNELS,
@@ -37,6 +36,10 @@ from .const import (
     DOMAIN,
     TEMPERATURE_UNIT_CELSIUS,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.core import Event, HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

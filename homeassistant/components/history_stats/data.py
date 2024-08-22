@@ -4,13 +4,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import datetime
+from typing import TYPE_CHECKING
 
 from homeassistant.components.recorder import get_instance, history
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant, State
-from homeassistant.helpers.template import Template
 import homeassistant.util.dt as dt_util
 
 from .helpers import async_calculate_period, floored_timestamp
+
+if TYPE_CHECKING:
+    from homeassistant.core import Event, EventStateChangedData, HomeAssistant, State
+    from homeassistant.helpers.template import Template
 
 MIN_TIME_UTC = datetime.datetime.min.replace(tzinfo=dt_util.UTC)
 

@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import ipaddress
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 from pyfritzhome import Fritzhome, LoginError
@@ -16,6 +15,9 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResu
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 from .const import DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 DATA_SCHEMA_USER = vol.Schema(
     {

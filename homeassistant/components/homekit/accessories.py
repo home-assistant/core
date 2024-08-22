@@ -3,15 +3,13 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
-from uuid import UUID
+from typing import TYPE_CHECKING, Any, cast
 
 from pyhap.accessory import Accessory, Bridge
 from pyhap.accessory_driver import AccessoryDriver
 from pyhap.characteristic import Characteristic
 from pyhap.const import CATEGORY_OTHER
 from pyhap.iid_manager import IIDManager
-from pyhap.service import Service
 from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
@@ -91,7 +89,6 @@ from .const import (
     TYPE_SWITCH,
     TYPE_VALVE,
 )
-from .iidmanager import AccessoryIIDStorage
 from .util import (
     accessory_friendly_name,
     async_dismiss_setup_message,
@@ -101,6 +98,13 @@ from .util import (
     format_version,
     validate_media_player_features,
 )
+
+if TYPE_CHECKING:
+    from uuid import UUID
+
+    from pyhap.service import Service
+
+    from .iidmanager import AccessoryIIDStorage
 
 _LOGGER = logging.getLogger(__name__)
 SWITCH_TYPES = {

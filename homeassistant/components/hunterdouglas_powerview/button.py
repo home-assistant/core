@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from aiopvapi.helpers.constants import (
     ATTR_NAME,
@@ -12,8 +11,6 @@ from aiopvapi.helpers.constants import (
     MOTION_FAVORITE,
     MOTION_JOG,
 )
-from aiopvapi.hub import Hub
-from aiopvapi.resources.shade import BaseShade
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -21,12 +18,20 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
-from .model import PowerviewConfigEntry, PowerviewDeviceInfo
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from aiopvapi.hub import Hub
+    from aiopvapi.resources.shade import BaseShade
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import PowerviewShadeUpdateCoordinator
+    from .model import PowerviewConfigEntry, PowerviewDeviceInfo
 
 
 @dataclass(frozen=True)

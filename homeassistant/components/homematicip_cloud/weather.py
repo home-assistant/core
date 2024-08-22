@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from homematicip.aio.device import (
     AsyncWeatherSensor,
     AsyncWeatherSensorPlus,
@@ -22,13 +24,16 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY,
     WeatherEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfSpeed, UnitOfTemperature
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
-from .hap import HomematicipHAP
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .hap import HomematicipHAP
 
 HOME_WEATHER_CONDITION = {
     WeatherCondition.CLEAR: ATTR_CONDITION_SUNNY,

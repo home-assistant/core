@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING
 
-from fyta_cli.fyta_connector import FytaConnector
 from fyta_cli.fyta_exceptions import (
     FytaAuthentificationError,
     FytaConnectionError,
@@ -16,13 +15,16 @@ from fyta_cli.fyta_exceptions import (
 from fyta_cli.fyta_models import Plant
 
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_EXPIRATION
 
 if TYPE_CHECKING:
+    from fyta_cli.fyta_connector import FytaConnector
+
+    from homeassistant.core import HomeAssistant
+
     from . import FytaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)

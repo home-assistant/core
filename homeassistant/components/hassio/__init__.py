@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import suppress
-from datetime import datetime
 import logging
 import os
 import re
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import voluptuous as vol
 
@@ -39,7 +38,6 @@ from homeassistant.helpers import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.dt import now
@@ -125,6 +123,11 @@ from .http import HassIOView
 from .ingress import async_setup_ingress_view
 from .issues import SupervisorIssues
 from .websocket_api import async_load_websocket_api
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

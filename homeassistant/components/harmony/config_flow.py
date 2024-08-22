@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 from aioharmony.hubconnector_websocket import HubConnector
@@ -28,12 +28,14 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, PREVIOUS_ACTIVE_ACTIVITY, UNIQUE_ID
-from .data import HarmonyConfigEntry
 from .util import (
     find_best_name_for_remote,
     find_unique_id_for_remote,
     get_harmony_client_if_available,
 )
+
+if TYPE_CHECKING:
+    from .data import HarmonyConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

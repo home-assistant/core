@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-
-from electrickiwi_api.model import AccountBalance, Hop
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -14,10 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CURRENCY_DOLLAR, PERCENTAGE
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
@@ -26,6 +21,15 @@ from .coordinator import (
     ElectricKiwiAccountDataCoordinator,
     ElectricKiwiHOPDataCoordinator,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from electrickiwi_api.model import AccountBalance, Hop
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 ATTR_EK_HOP_START = "hop_power_start"
 ATTR_EK_HOP_END = "hop_power_end"

@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Final
-
-from pyfritzhome.fritzhomedevice import FritzhomeDevice
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -15,11 +12,18 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxDeviceEntity
-from .coordinator import FritzboxConfigEntry
 from .model import FritzEntityDescriptionMixinBase
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from pyfritzhome.fritzhomedevice import FritzhomeDevice
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import FritzboxConfigEntry
 
 
 @dataclass(frozen=True)

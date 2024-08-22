@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from homeassistant.components.logbook import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME
 from homeassistant.core import Event, HomeAssistant, callback
@@ -15,6 +15,9 @@ from .const import (
     DOMAIN,
     EVENT_ELKM1_KEYPAD_KEY_PRESSED,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 @callback

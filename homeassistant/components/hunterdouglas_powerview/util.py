@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiopvapi.helpers.constants import ATTR_ID
 
 from homeassistant.core import callback
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 @callback

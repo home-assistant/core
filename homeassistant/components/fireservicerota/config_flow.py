@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyfireservicerota import FireServiceRota, InvalidAuthError
 import voluptuous as vol
@@ -12,6 +11,9 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
 
 from .const import DOMAIN, URL_LIST
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 DATA_SCHEMA = vol.Schema(
     {

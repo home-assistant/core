@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from aioesphomeapi import EntityInfo, SelectInfo, SelectState
 
 from homeassistant.components.assist_pipeline.select import (
@@ -10,7 +12,6 @@ from homeassistant.components.assist_pipeline.select import (
 )
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import (
@@ -20,7 +21,11 @@ from .entity import (
     esphome_state_property,
     platform_async_setup_entry,
 )
-from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 
 
 async def async_setup_entry(

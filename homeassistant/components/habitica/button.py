@@ -2,23 +2,27 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 from http import HTTPStatus
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientResponseError
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HabiticaConfigEntry
 from .const import DOMAIN
-from .coordinator import HabiticaData, HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import HabiticaConfigEntry
+    from .coordinator import HabiticaData, HabiticaDataUpdateCoordinator
 
 
 @dataclass(kw_only=True, frozen=True)

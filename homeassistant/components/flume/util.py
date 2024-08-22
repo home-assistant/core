@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-from pyflume import FlumeDeviceList
+from typing import TYPE_CHECKING, Any
 
 from .const import KEY_DEVICE_LOCATION, KEY_DEVICE_LOCATION_NAME
+
+if TYPE_CHECKING:
+    from pyflume import FlumeDeviceList
 
 
 def get_valid_flume_devices(flume_devices: FlumeDeviceList) -> list[dict[str, Any]]:

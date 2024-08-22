@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from typing import TYPE_CHECKING
 
-from . import GeniusHubConfigEntry
+from homeassistant.components.binary_sensor import BinarySensorEntity
+
 from .entity import GeniusDevice
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import GeniusHubConfigEntry
 
 GH_STATE_ATTR = "outputOnOff"
 GH_TYPE = "Receiver"

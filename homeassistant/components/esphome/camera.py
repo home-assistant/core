@@ -3,18 +3,21 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from functools import partial
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aioesphomeapi import CameraInfo, CameraState
-from aiohttp import web
 
 from homeassistant.components import camera
 from homeassistant.components.camera import Camera
 from homeassistant.core import callback
 
 from .entity import EsphomeEntity, platform_async_setup_entry
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from aiohttp import web
 
 
 class EsphomeCamera(Camera, EsphomeEntity[CameraInfo, CameraState]):

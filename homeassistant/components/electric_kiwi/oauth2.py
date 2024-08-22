@@ -3,17 +3,19 @@
 from __future__ import annotations
 
 import base64
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.components.application_credentials import (
     AuthImplementation,
     AuthorizationServer,
     ClientCredential,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import SCOPE_VALUES
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 
 class ElectricKiwiLocalOAuth2Implementation(AuthImplementation):

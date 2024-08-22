@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from homewizard_energy import HomeWizardEnergy
 from homewizard_energy.errors import DisabledError, RequestError, UnsupportedError
-from homewizard_energy.models import Device
 from voluptuous import Required, Schema
 
 from homeassistant.components import onboarding, zeroconf
@@ -24,6 +22,11 @@ from .const import (
     CONF_SERIAL,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from homewizard_energy.models import Device
 
 _LOGGER = logging.getLogger(__name__)
 

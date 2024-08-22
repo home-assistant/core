@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import functools
 import operator
-from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from google.cloud import texttospeech
 import voluptuous as vol
@@ -32,6 +31,9 @@ from .const import (
     CONF_VOICE,
     DEFAULT_LANG,
 )
+
+if TYPE_CHECKING:
+    from types import MappingProxyType
 
 DEFAULT_VOICE = ""
 

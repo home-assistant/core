@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import functools
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from hyperion import client
 from hyperion.const import (
     KEY_COMPONENT,
     KEY_COMPONENTID_ALL,
@@ -26,7 +25,6 @@ from hyperion.const import (
 )
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -34,7 +32,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
 from . import (
@@ -50,6 +47,12 @@ from .const import (
     SIGNAL_ENTITY_REMOVE,
     TYPE_HYPERION_COMPONENT_SWITCH_BASE,
 )
+
+if TYPE_CHECKING:
+    from hyperion import client
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 COMPONENT_SWITCHES = [
     KEY_COMPONENTID_ALL,

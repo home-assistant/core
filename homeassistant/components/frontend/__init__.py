@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
 from functools import cached_property, lru_cache, partial
 import logging
 import os
 import pathlib
-from typing import Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from aiohttp import hdrs, web, web_urldispatcher
 import jinja2
@@ -16,7 +15,6 @@ from yarl import URL
 
 from homeassistant.components import onboarding, websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, StaticPathConfig
-from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config import async_hass_config_yaml
 from homeassistant.const import (
     CONF_MODE,
@@ -31,11 +29,16 @@ from homeassistant.helpers.icon import async_get_icons
 from homeassistant.helpers.json import json_dumps_sorted
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.hass_dict import HassKey
 
 from .storage import async_setup_frontend_storage
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator
+
+    from homeassistant.components.websocket_api.connection import ActiveConnection
+    from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "frontend"
 CONF_THEMES = "themes"

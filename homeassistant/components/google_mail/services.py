@@ -5,10 +5,8 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
-from googleapiclient.http import HttpRequest
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
@@ -26,6 +24,10 @@ from .const import (
 )
 
 if TYPE_CHECKING:
+    from googleapiclient.http import HttpRequest
+
+    from homeassistant.core import HomeAssistant, ServiceCall
+
     from . import GoogleMailConfigEntry
 
 SERVICE_SET_VACATION = "set_vacation"

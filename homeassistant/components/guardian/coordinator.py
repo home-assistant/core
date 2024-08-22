@@ -2,20 +2,24 @@
 
 from __future__ import annotations
 
-import asyncio
-from collections.abc import Callable, Coroutine
 from datetime import timedelta
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
-from aioguardian import Client
 from aioguardian.errors import GuardianError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
+
+if TYPE_CHECKING:
+    import asyncio
+    from collections.abc import Callable, Coroutine
+
+    from aioguardian import Client
+
+    from homeassistant.config_entries import ConfigEntry
 
 DEFAULT_UPDATE_INTERVAL = timedelta(seconds=30)
 

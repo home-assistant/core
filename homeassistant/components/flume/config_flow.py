@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 import os
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyflume import FlumeAuth, FlumeDeviceList
 from requests.exceptions import RequestException
@@ -18,10 +17,14 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import BASE_TOKEN_FILENAME, DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

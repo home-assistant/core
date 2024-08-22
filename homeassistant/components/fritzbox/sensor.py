@@ -2,12 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Final
-
-from pyfritzhome.fritzhomedevice import FritzhomeDevice
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.components.climate import PRESET_COMFORT, PRESET_ECO
 from homeassistant.components.sensor import (
@@ -26,13 +22,21 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utc_from_timestamp
 
 from . import FritzBoxDeviceEntity
-from .coordinator import FritzboxConfigEntry
 from .model import FritzEntityDescriptionMixinBase
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from datetime import datetime
+
+    from pyfritzhome.fritzhomedevice import FritzhomeDevice
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import StateType
+
+    from .coordinator import FritzboxConfigEntry
 
 
 @dataclass(frozen=True)

@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
 import logging
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from flux_led.aioscanner import AIOBulbScanner
 from flux_led.const import (
@@ -45,6 +44,9 @@ from .const import (
     FLUX_LED_DISCOVERY,
 )
 from .util import format_as_flux_mac, mac_matches_by_one
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 _LOGGER = logging.getLogger(__name__)
 

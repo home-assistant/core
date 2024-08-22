@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Final, cast
+from typing import TYPE_CHECKING, Final, cast
 
 from aiohttp.hdrs import ACCEPT, AUTHORIZATION, CONTENT_TYPE, ORIGIN
-from aiohttp.web import Application
 from aiohttp.web_urldispatcher import (
     AbstractResource,
     AbstractRoute,
@@ -22,6 +21,9 @@ from homeassistant.helpers.http import (
     KEY_ALLOW_CONFIGURED_CORS,
     AllowCorsType,
 )
+
+if TYPE_CHECKING:
+    from aiohttp.web import Application
 
 ALLOWED_CORS_HEADERS: Final[list[str]] = [
     ORIGIN,

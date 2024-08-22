@@ -4,22 +4,18 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Iterable
 from copy import deepcopy
 import ipaddress
 import logging
 import os
 import socket
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp import web
 from pyhap import util as pyhap_util
-from pyhap.characteristic import Characteristic
 from pyhap.const import STANDALONE_AID
 from pyhap.loader import get_loader
-from pyhap.service import Service
 import voluptuous as vol
-from zeroconf.asyncio import AsyncZeroconf
 
 from homeassistant.components import device_automation, network, zeroconf
 from homeassistant.components.binary_sensor import (
@@ -77,7 +73,6 @@ from homeassistant.helpers.service import (
     async_register_admin_service,
 )
 from homeassistant.helpers.start import async_at_started
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 from homeassistant.util.async_ import create_eager_task
 
@@ -139,6 +134,15 @@ from .util import (
     state_needs_accessory_mode,
     validate_entity_config,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from pyhap.characteristic import Characteristic
+    from pyhap.service import Service
+    from zeroconf.asyncio import AsyncZeroconf
+
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

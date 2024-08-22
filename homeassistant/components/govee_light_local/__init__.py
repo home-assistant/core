@@ -6,16 +6,19 @@ import asyncio
 from contextlib import suppress
 from errno import EADDRINUSE
 import logging
+from typing import TYPE_CHECKING
 
 from govee_local_api.controller import LISTENING_PORT
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DISCOVERY_TIMEOUT, DOMAIN
 from .coordinator import GoveeLocalApiCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
 

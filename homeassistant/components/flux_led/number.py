@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Coroutine
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from flux_led.protocol import (
     MUSIC_PIXELS_MAX,
@@ -16,20 +15,24 @@ from flux_led.protocol import (
     SEGMENTS_MAX,
 )
 
-from homeassistant import config_entries
 from homeassistant.components.light import EFFECT_RANDOM
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import FluxLedUpdateCoordinator
 from .entity import FluxEntity
 from .util import _effect_brightness
+
+if TYPE_CHECKING:
+    from collections.abc import Coroutine
+
+    from homeassistant import config_entries
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
 

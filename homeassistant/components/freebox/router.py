@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
 from contextlib import suppress
 from datetime import datetime
 import json
@@ -10,17 +9,12 @@ import logging
 import os
 from pathlib import Path
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from freebox_api import Freepybox
-from freebox_api.api.call import Call
-from freebox_api.api.home import Home
-from freebox_api.api.wifi import Wifi
 from freebox_api.exceptions import HttpRequestError, NotOpenError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
@@ -35,6 +29,16 @@ from .const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Mapping
+
+    from freebox_api.api.call import Call
+    from freebox_api.api.home import Home
+    from freebox_api.api.wifi import Wifi
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

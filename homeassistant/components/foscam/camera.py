@@ -3,15 +3,13 @@
 from __future__ import annotations
 
 import asyncio
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_RTSP_PORT,
@@ -21,8 +19,14 @@ from .const import (
     SERVICE_PTZ,
     SERVICE_PTZ_PRESET,
 )
-from .coordinator import FoscamCoordinator
 from .entity import FoscamEntity
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import FoscamCoordinator
 
 DIR_UP = "up"
 DIR_DOWN = "down"

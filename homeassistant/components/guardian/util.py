@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine, Iterable
 from dataclasses import dataclass
 from datetime import timedelta
 from functools import wraps
@@ -10,7 +9,6 @@ from typing import TYPE_CHECKING, Any, Concatenate
 
 from aioguardian.errors import GuardianError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -18,6 +16,10 @@ from homeassistant.helpers import entity_registry as er
 from .const import LOGGER
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine, Iterable
+
+    from homeassistant.config_entries import ConfigEntry
+
     from . import GuardianEntity
 
 DEFAULT_UPDATE_INTERVAL = timedelta(seconds=30)

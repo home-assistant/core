@@ -5,16 +5,14 @@ from __future__ import annotations
 import datetime
 import json
 import logging
+from typing import TYPE_CHECKING
 
 import growattServer
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle, dt as dt_util
 
 from .const import (
@@ -27,10 +25,16 @@ from .const import (
 )
 from .sensor_types.inverter import INVERTER_SENSOR_TYPES
 from .sensor_types.mix import MIX_SENSOR_TYPES
-from .sensor_types.sensor_entity_description import GrowattSensorEntityDescription
 from .sensor_types.storage import STORAGE_SENSOR_TYPES
 from .sensor_types.tlx import TLX_SENSOR_TYPES
 from .sensor_types.total import TOTAL_SENSOR_TYPES
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .sensor_types.sensor_entity_description import GrowattSensorEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 

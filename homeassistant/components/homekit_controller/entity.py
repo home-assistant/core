@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohomekit.model.characteristics import (
     EVENT_CHARACTERISTICS,
@@ -13,12 +13,14 @@ from aiohomekit.model.characteristics import (
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.core import CALLBACK_TYPE, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType
 
 from .connection import HKDevice, valid_serial_number
 from .utils import folded_name
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.device_registry import DeviceInfo
+    from homeassistant.helpers.typing import ConfigType
 
 
 class HomeKitEntity(Entity):

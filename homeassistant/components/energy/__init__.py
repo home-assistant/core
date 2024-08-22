@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from homeassistant.components import frontend
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
-from homeassistant.helpers.typing import ConfigType
 
 from . import websocket_api
 from .const import DOMAIN
 from .data import async_get_manager
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 

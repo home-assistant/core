@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from pyheos import Heos, HeosError, const as heos_const
 import voluptuous as vol
@@ -19,7 +20,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from . import services
@@ -35,6 +35,9 @@ from .const import (
     SIGNAL_HEOS_PLAYER_ADDED,
     SIGNAL_HEOS_UPDATED,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 

@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
@@ -36,6 +35,9 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 
 async def validate_options(

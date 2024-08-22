@@ -5,7 +5,7 @@ from __future__ import annotations
 from functools import reduce
 import logging
 import multiprocessing
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pycec.cec import CecAdapter
 from pycec.commands import CecCommand, KeyPressCommand, KeyReleaseCommand
@@ -36,7 +36,9 @@ from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import discovery, event
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "hdmi_cec"
 

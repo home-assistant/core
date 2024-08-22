@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientConnectionError
 from aiosomecomfort import (
@@ -14,7 +14,6 @@ from aiosomecomfort import (
     UnauthorizedError,
     UnexpectedResponse,
 )
-from aiosomecomfort.device import Device as SomeComfortDevice
 
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
@@ -31,9 +30,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     device_registry as dr,
@@ -41,10 +38,8 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from . import HoneywellData
 from .const import (
     _LOGGER,
     CONF_COOL_AWAY_TEMPERATURE,
@@ -52,6 +47,15 @@ from .const import (
     DOMAIN,
     RETRY,
 )
+
+if TYPE_CHECKING:
+    from aiosomecomfort.device import Device as SomeComfortDevice
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import HoneywellData
 
 ATTR_FAN_ACTION = "fan_action"
 

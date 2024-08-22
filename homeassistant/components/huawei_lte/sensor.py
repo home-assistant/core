@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from bisect import bisect
-from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 import re
+from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -16,7 +16,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -25,10 +24,6 @@ from homeassistant.const import (
     UnitOfInformation,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from . import HuaweiLteBaseEntityWithDevice, Router
 from .const import (
@@ -44,6 +39,15 @@ from .const import (
     KEY_SMS_SMS_COUNT,
     SENSOR_KEYS,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity import Entity
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import StateType
 
 _LOGGER = logging.getLogger(__name__)
 

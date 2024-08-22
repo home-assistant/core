@@ -6,9 +6,9 @@ characteristics that don't map to a Home Assistant feature.
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import TYPE_CHECKING
 
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 
@@ -17,15 +17,20 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
 
 from . import KNOWN_DEVICES
-from .connection import HKDevice
 from .entity import CharacteristicEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType
+
+    from .connection import HKDevice
 
 _LOGGER = logging.getLogger(__name__)
 

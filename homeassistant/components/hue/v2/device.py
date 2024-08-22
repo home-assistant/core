@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.groups import Room, Zone
 from aiohue.v2.models.device import Device, DeviceArchetypes
@@ -26,6 +25,8 @@ from homeassistant.helpers import device_registry as dr
 from ..const import DOMAIN
 
 if TYPE_CHECKING:
+    from aiohue.v2 import HueBridgeV2
+
     from ..bridge import HueBridge
 
 

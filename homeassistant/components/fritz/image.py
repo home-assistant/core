@@ -2,21 +2,26 @@
 
 from __future__ import annotations
 
-from io import BytesIO
 import logging
+from typing import TYPE_CHECKING
 
 from requests.exceptions import RequestException
 
 from homeassistant.components.image import ImageEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
 from .const import DOMAIN
-from .coordinator import AvmWrapper
 from .entity import FritzBoxBaseEntity
+
+if TYPE_CHECKING:
+    from io import BytesIO
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import AvmWrapper
 
 _LOGGER = logging.getLogger(__name__)
 

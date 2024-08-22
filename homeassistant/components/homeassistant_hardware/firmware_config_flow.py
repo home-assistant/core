@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-import asyncio
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from universal_silabs_flasher.const import ApplicationType
 
@@ -30,13 +29,17 @@ from homeassistant.config_entries import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 
-from . import silabs_multiprotocol_addon
 from .const import ZHA_DOMAIN
 from .util import (
     get_otbr_addon_manager,
     get_zha_device_path,
     get_zigbee_flasher_addon_manager,
 )
+
+if TYPE_CHECKING:
+    import asyncio
+
+    from . import silabs_multiprotocol_addon
 
 _LOGGER = logging.getLogger(__name__)
 

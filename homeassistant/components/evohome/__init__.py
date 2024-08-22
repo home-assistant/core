@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 import evohomeasync as ev1
 from evohomeasync.schema import SZ_SESSION_ID
@@ -36,7 +36,6 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.util.dt as dt_util
 
@@ -60,6 +59,9 @@ from .const import (
 )
 from .coordinator import EvoBroker
 from .helpers import dt_aware_to_naive, dt_local_to_aware, handle_evo_exception
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

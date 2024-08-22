@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import contextlib
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from flux_led.const import (
     ATTR_ID,
@@ -16,7 +16,6 @@ from flux_led.const import (
 from flux_led.scanner import FluxLEDDiscovery
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
     ConfigEntry,
@@ -30,7 +29,6 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import async_wifi_bulb_for_host
 from .const import (
@@ -54,6 +52,10 @@ from .discovery import (
     async_update_entry_from_discovery,
 )
 from .util import format_as_flux_mac, mac_matches_by_one
+
+if TYPE_CHECKING:
+    from homeassistant.components import dhcp
+    from homeassistant.helpers.typing import DiscoveryInfoType
 
 
 class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):

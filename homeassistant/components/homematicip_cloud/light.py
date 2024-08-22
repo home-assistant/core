@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homematicip.aio.device import (
     AsyncBrandDimmer,
@@ -15,7 +15,6 @@ from homematicip.aio.device import (
     AsyncWiredDimmer3,
 )
 from homematicip.base.enums import RGBColorState
-from homematicip.base.functionalChannels import NotificationLightChannel
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -26,12 +25,17 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
-from .hap import HomematicipHAP
+
+if TYPE_CHECKING:
+    from homematicip.base.functionalChannels import NotificationLightChannel
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .hap import HomematicipHAP
 
 
 async def async_setup_entry(

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from datetime import datetime
 import logging
 import statistics
 from typing import TYPE_CHECKING, Any
@@ -24,7 +22,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
@@ -51,17 +48,23 @@ from homeassistant.helpers.entity import (
     get_device_class,
     get_unit_of_measurement,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
     async_delete_issue,
 )
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from .const import CONF_IGNORE_NON_NUMERIC, DOMAIN as GROUP_DOMAIN
 from .entity import GroupEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from datetime import datetime
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 DEFAULT_NAME = "Sensor Group"
 

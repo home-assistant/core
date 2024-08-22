@@ -5,13 +5,12 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from pyfronius import Fronius, FroniusError
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_MODEL, ATTR_SW_VERSION, CONF_HOST, Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -35,6 +34,9 @@ from .coordinator import (
     FroniusPowerFlowUpdateCoordinator,
     FroniusStorageUpdateCoordinator,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 _LOGGER: Final = logging.getLogger(__name__)
 PLATFORMS: Final = [Platform.SENSOR]

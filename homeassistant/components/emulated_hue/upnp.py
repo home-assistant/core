@@ -6,15 +6,17 @@ import asyncio
 from contextlib import suppress
 import logging
 import socket
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from aiohttp import web
 
 from homeassistant import core
 from homeassistant.components.http import HomeAssistantView
 
-from .config import Config
 from .const import HUE_SERIAL_NUMBER, HUE_UUID
+
+if TYPE_CHECKING:
+    from .config import Config
 
 _LOGGER = logging.getLogger(__name__)
 

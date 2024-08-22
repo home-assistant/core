@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from elevenlabs.client import AsyncElevenLabs
 from elevenlabs.core import ApiError
-from elevenlabs.types import Model, Voice as ElevenLabsVoice
 
 from homeassistant.components.tts import (
     ATTR_VOICE,
@@ -15,13 +13,19 @@ from homeassistant.components.tts import (
     TtsAudioType,
     Voice,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import EleventLabsConfigEntry
 from .const import CONF_VOICE, DOMAIN
+
+if TYPE_CHECKING:
+    from elevenlabs.client import AsyncElevenLabs
+    from elevenlabs.types import Model, Voice as ElevenLabsVoice
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import EleventLabsConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

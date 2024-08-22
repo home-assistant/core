@@ -2,23 +2,26 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any, cast
-
-from pyfibaro.fibaro_device import DeviceModel
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.components.binary_sensor import (
     ENTITY_ID_FORMAT,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FibaroController, FibaroDevice
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from pyfibaro.fibaro_device import DeviceModel
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 SENSOR_TYPES = {
     "com.fibaro.floodSensor": ["Flood", "mdi:water", BinarySensorDeviceClass.MOISTURE],

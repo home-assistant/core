@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Generic
+from typing import TYPE_CHECKING, Any, Generic
 
 from deebot_client.capabilities import CapabilityEvent, CapabilityLifeSpan
 from deebot_client.events import (
@@ -17,7 +16,6 @@ from deebot_client.events import (
     StatsEvent,
     TotalStatsEvent,
 )
-from sucks import VacBot
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -33,11 +31,7 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
-from . import EcovacsConfigEntry
 from .const import LEGACY_SUPPORTED_LIFESPANS, SUPPORTED_LIFESPANS
 from .entity import (
     EcovacsCapabilityEntityDescription,
@@ -47,6 +41,17 @@ from .entity import (
     EventT,
 )
 from .util import get_supported_entitites
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from sucks import VacBot
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import StateType
+
+    from . import EcovacsConfigEntry
 
 
 @dataclass(kw_only=True, frozen=True)

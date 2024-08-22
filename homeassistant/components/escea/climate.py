@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Coroutine
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pescea import Controller
 
@@ -16,12 +15,10 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DATA_DISCOVERY_SERVICE,
@@ -33,6 +30,12 @@ from .const import (
     ESCEA_FIREPLACE,
     ESCEA_MANUFACTURER,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Coroutine
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
 

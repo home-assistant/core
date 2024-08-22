@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
-
-from pyfibaro.fibaro_device import DeviceModel
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -13,13 +11,17 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FibaroController, FibaroDevice
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from pyfibaro.fibaro_device import DeviceModel
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 
 async def async_setup_entry(

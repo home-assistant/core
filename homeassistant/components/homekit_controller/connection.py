@@ -8,10 +8,8 @@ from datetime import datetime, timedelta
 from functools import partial
 import logging
 from operator import attrgetter
-from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from aiohomekit import Controller
 from aiohomekit.controller import TransportType
 from aiohomekit.exceptions import (
     AccessoryDisconnectedError,
@@ -23,7 +21,6 @@ from aiohomekit.model.characteristics import Characteristic, CharacteristicsType
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.thread.dataset_store import async_get_preferred_dataset
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_VIA_DEVICE, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -48,6 +45,13 @@ from .const import (
 )
 from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
 from .utils import IidTuple, unique_id_to_iids
+
+if TYPE_CHECKING:
+    from types import MappingProxyType
+
+    from aiohomekit import Controller
+
+    from homeassistant.config_entries import ConfigEntry
 
 RETRY_INTERVAL = 60  # seconds
 MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE = 3

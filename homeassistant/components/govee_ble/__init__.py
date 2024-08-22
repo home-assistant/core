@@ -4,18 +4,21 @@ from __future__ import annotations
 
 from functools import partial
 import logging
+from typing import TYPE_CHECKING
 
 from govee_ble import GoveeBluetoothDeviceData
 
 from homeassistant.components.bluetooth import BluetoothScanningMode
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
 
 from .coordinator import (
     GoveeBLEBluetoothProcessorCoordinator,
     GoveeBLEConfigEntry,
     process_service_info,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.EVENT, Platform.SENSOR]
 

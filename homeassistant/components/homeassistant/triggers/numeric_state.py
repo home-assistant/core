@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -38,8 +36,13 @@ from homeassistant.helpers.event import (
     async_track_same_state,
     async_track_state_change_event,
 )
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from datetime import timedelta
+
+    from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+    from homeassistant.helpers.typing import ConfigType
 
 
 def validate_above_below[_T: dict[str, Any]](value: _T) -> _T:

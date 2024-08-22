@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
-import datetime
 import logging
 import math
+from typing import TYPE_CHECKING
 
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers.template import Template
 import homeassistant.util.dt as dt_util
+
+if TYPE_CHECKING:
+    import datetime
+
+    from homeassistant.helpers.template import Template
 
 _LOGGER = logging.getLogger(__name__)
 

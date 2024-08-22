@@ -7,7 +7,6 @@ from collections import defaultdict
 import logging
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MANUFACTURER, ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -56,6 +55,8 @@ from .const import (
 from .handler import HassIO, HassioAPIError
 
 if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+
     from .issues import SupervisorIssues
 
 _LOGGER = logging.getLogger(__name__)

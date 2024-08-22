@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.bluetooth import async_scanner_by_source
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_PASSWORD
-from homeassistant.core import HomeAssistant
 
 from . import CONF_NOISE_PSK
 from .dashboard import async_get_dashboard
-from .entry_data import ESPHomeConfigEntry
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
+    from .entry_data import ESPHomeConfigEntry
 
 CONF_MAC_ADDRESS = "mac_address"
 

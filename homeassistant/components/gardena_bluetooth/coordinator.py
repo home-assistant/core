@@ -4,24 +4,27 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from gardena_bluetooth.client import Client
 from gardena_bluetooth.exceptions import (
     CharacteristicNoAccess,
     GardenaBluetoothException,
 )
-from gardena_bluetooth.parse import Characteristic, CharacteristicType
 
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
+
+if TYPE_CHECKING:
+    from gardena_bluetooth.client import Client
+    from gardena_bluetooth.parse import Characteristic, CharacteristicType
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.device_registry import DeviceInfo
+    from homeassistant.helpers.entity import EntityDescription
 
 SCAN_INTERVAL = timedelta(seconds=60)
 LOGGER = logging.getLogger(__name__)

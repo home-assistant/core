@@ -5,11 +5,11 @@ from __future__ import annotations
 import asyncio
 from contextlib import suppress
 import logging
+from typing import TYPE_CHECKING
 
 from govee_local_api import GoveeController
 
 from homeassistant.components import network
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow
 
 from .const import (
@@ -19,6 +19,9 @@ from .const import (
     DISCOVERY_TIMEOUT,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

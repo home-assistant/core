@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any
 
 from deebot_client.capabilities import Capabilities, DeviceType
-from deebot_client.device import Device
-from deebot_client.events import BatteryEvent, FanSpeedEvent, RoomsEvent, StateEvent
 from deebot_client.models import CleanAction, CleanMode, Room, State
 import sucks
 
@@ -26,14 +23,22 @@ from homeassistant.components.vacuum import (
 from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
 
-from . import EcovacsConfigEntry
 from .const import DOMAIN
 from .entity import EcovacsEntity, EcovacsLegacyEntity
 from .util import get_name_key
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from deebot_client.device import Device
+    from deebot_client.events import BatteryEvent, FanSpeedEvent, RoomsEvent, StateEvent
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import EcovacsConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

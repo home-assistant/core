@@ -3,11 +3,8 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from flux_led.aiodevice import AIOWifiLedBulb
-
-from homeassistant import config_entries
 from homeassistant.const import (
     ATTR_CONNECTIONS,
     ATTR_HW_VERSION,
@@ -21,13 +18,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_MINOR_VERSION, DOMAIN, SIGNAL_STATE_UPDATED
 from .coordinator import FluxLedUpdateCoordinator
+
+if TYPE_CHECKING:
+    from flux_led.aiodevice import AIOWifiLedBulb
+
+    from homeassistant import config_entries
+    from homeassistant.helpers.device_registry import DeviceInfo
 
 
 def _async_device_info(

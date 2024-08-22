@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
+from typing import TYPE_CHECKING
+
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .board import FirmataPinType
 from .const import DOMAIN, FIRMATA_MANUFACTURER
-from .pin import FirmataBoardPin
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+
+    from .board import FirmataPinType
+    from .pin import FirmataBoardPin
 
 
 class FirmataEntity:

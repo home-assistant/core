@@ -2,21 +2,26 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from aiopvapi.helpers.constants import ATTR_NAME, FUNCTION_SET_POWER
-from aiopvapi.resources.shade import BaseShade
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
-from .model import PowerviewConfigEntry, PowerviewDeviceInfo
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
+    from aiopvapi.resources.shade import BaseShade
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import PowerviewShadeUpdateCoordinator
+    from .model import PowerviewConfigEntry, PowerviewDeviceInfo
 
 
 @dataclass(frozen=True)

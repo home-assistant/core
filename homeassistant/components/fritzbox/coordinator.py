@@ -4,19 +4,23 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
-from pyfritzhome.devicetypes import FritzhomeTemplate
 from requests.exceptions import ConnectionError as RequestConnectionError, HTTPError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from pyfritzhome.devicetypes import FritzhomeTemplate
+
+    from homeassistant.core import HomeAssistant
 
 type FritzboxConfigEntry = ConfigEntry[FritzboxDataUpdateCoordinator]
 

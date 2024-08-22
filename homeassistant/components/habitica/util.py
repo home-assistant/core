@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
-from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 
 def next_due_date(task: dict[str, Any], last_cron: str) -> datetime.date | None:

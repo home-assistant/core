@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiosomecomfort
 import voluptuous as vol
@@ -25,6 +24,9 @@ from .const import (
     DEFAULT_HEAT_AWAY_TEMPERATURE,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 REAUTH_SCHEMA = vol.Schema(
     {

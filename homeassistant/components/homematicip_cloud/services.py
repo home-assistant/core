@@ -4,15 +4,14 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from homematicip.aio.device import AsyncSwitchMeasuring
 from homematicip.aio.group import AsyncHeatingGroup
-from homematicip.aio.home import AsyncHome
 from homematicip.base.helpers import handle_config
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
-from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import comp_entity_ids
@@ -22,6 +21,11 @@ from homeassistant.helpers.service import (
 )
 
 from .const import DOMAIN as HMIPC_DOMAIN
+
+if TYPE_CHECKING:
+    from homematicip.aio.home import AsyncHome
+
+    from homeassistant.core import HomeAssistant, ServiceCall
 
 _LOGGER = logging.getLogger(__name__)
 

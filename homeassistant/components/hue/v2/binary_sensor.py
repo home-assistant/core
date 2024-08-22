@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from functools import partial
+from typing import TYPE_CHECKING
 
-from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.config import (
     EntertainmentConfiguration,
     EntertainmentConfigurationController,
@@ -27,14 +27,19 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from ..bridge import HueBridge
 from ..const import DOMAIN
 from .entity import HueBaseEntity
+
+if TYPE_CHECKING:
+    from aiohue.v2 import HueBridgeV2
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from ..bridge import HueBridge
 
 type SensorType = CameraMotion | Contact | Motion | EntertainmentConfiguration | Tamper
 type ControllerType = (

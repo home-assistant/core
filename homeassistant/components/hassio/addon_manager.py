@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from enum import Enum
 from functools import partial, wraps
-import logging
-from typing import Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -27,6 +25,10 @@ from .handler import (
     async_uninstall_addon,
     async_update_addon,
 )
+
+if TYPE_CHECKING:
+    import asyncio
+    import logging
 
 type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], Awaitable[_R]]
 type _ReturnFuncType[_T, **_P, _R] = Callable[

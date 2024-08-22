@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyemoncms import EmoncmsClient
 import voluptuous as vol
@@ -28,12 +28,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import template
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_EXCLUDE_FEEDID, CONF_ONLY_INCLUDE_FEEDID
 from .coordinator import EmoncmsCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 ATTR_FEEDID = "FeedId"
 ATTR_FEEDNAME = "FeedName"

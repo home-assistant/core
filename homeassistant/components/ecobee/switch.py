@@ -2,21 +2,25 @@
 
 from __future__ import annotations
 
-from datetime import tzinfo
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import EcobeeData
 from .climate import HASS_TO_ECOBEE_HVAC
 from .const import DOMAIN, ECOBEE_AUX_HEAT_ONLY
 from .entity import EcobeeBaseEntity
+
+if TYPE_CHECKING:
+    from datetime import tzinfo
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import EcobeeData
 
 _LOGGER = logging.getLogger(__name__)
 

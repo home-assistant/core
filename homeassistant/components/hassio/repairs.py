@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 from types import MethodType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
 from homeassistant.components.repairs import RepairsFlow
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 
 from . import get_addons_info, get_issues_info
 from .const import (
@@ -22,7 +19,14 @@ from .const import (
     SupervisorIssueContext,
 )
 from .handler import async_apply_suggestion
-from .issues import Issue, Suggestion
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.data_entry_flow import FlowResult
+
+    from .issues import Issue, Suggestion
 
 HELP_URLS = {
     "help_url": "https://www.home-assistant.io/help/",

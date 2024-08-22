@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
-from aiohue.v2.controllers.groups import GroupedLight, Room, Zone
 from aiohue.v2.models.feature import DynamicStatus
 
 from homeassistant.components.light import (
@@ -22,13 +20,10 @@ from homeassistant.components.light import (
     LightEntityDescription,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.helpers.entity_registry as er
 
-from ..bridge import HueBridge
 from ..const import DOMAIN
 from .entity import HueBaseEntity
 from .helpers import (
@@ -36,6 +31,15 @@ from .helpers import (
     normalize_hue_colortemp,
     normalize_hue_transition,
 )
+
+if TYPE_CHECKING:
+    from aiohue.v2 import HueBridgeV2
+    from aiohue.v2.controllers.groups import GroupedLight, Room, Zone
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from ..bridge import HueBridge
 
 
 async def async_setup_entry(

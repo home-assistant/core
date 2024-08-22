@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -27,13 +26,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device import async_device_info_to_link_from_entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import HistoryStatsConfigEntry
 from .const import (
     CONF_DURATION,
     CONF_END,
@@ -50,6 +45,15 @@ from .const import (
 from .coordinator import HistoryStatsUpdateCoordinator
 from .data import HistoryStats
 from .helpers import pretty_ratio
+
+if TYPE_CHECKING:
+    import datetime
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.template import Template
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+    from . import HistoryStatsConfigEntry
 
 UNITS: dict[str, str] = {
     CONF_TYPE_TIME: UnitOfTime.HOURS,

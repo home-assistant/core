@@ -2,16 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from datetime import datetime
 import logging
+from typing import TYPE_CHECKING
 
 from aio_geojson_generic_client import GenericFeedManager
-from aio_geojson_generic_client.feed_entry import GenericFeedEntry
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS, CONF_URL
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -22,6 +18,15 @@ from .const import (
     SIGNAL_DELETE_ENTITY,
     SIGNAL_UPDATE_ENTITY,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from datetime import datetime
+
+    from aio_geojson_generic_client.feed_entry import GenericFeedEntry
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

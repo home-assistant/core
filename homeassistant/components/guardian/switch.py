@@ -2,22 +2,25 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
-from typing import Any
-
-from aioguardian import Client
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import GuardianData, ValveControllerEntity, ValveControllerEntityDescription
 from .const import API_VALVE_STATUS, API_WIFI_STATUS, DOMAIN
 from .util import convert_exceptions_to_homeassistant_error
 from .valve import GuardianValveState
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable, Mapping
+
+    from aioguardian import Client
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 ATTR_AVG_CURRENT = "average_current"
 ATTR_CONNECTED_CLIENTS = "connected_clients"

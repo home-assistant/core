@@ -1,7 +1,7 @@
 """Support for Envisalink devices."""
 
-import asyncio
 import logging
+from typing import TYPE_CHECKING
 
 from pyenvisalink import EnvisalinkAlarmPanel
 import voluptuous as vol
@@ -19,6 +19,9 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
+
+if TYPE_CHECKING:
+    import asyncio
 
 _LOGGER = logging.getLogger(__name__)
 

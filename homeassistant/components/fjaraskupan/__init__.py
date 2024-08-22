@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import TYPE_CHECKING
 
 from fjaraskupan import Device
 
@@ -16,7 +16,6 @@ from homeassistant.components.bluetooth import (
     async_rediscover_address,
     async_register_callback,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -25,11 +24,16 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DISPATCH_DETECTION, DOMAIN
 from .coordinator import FjaraskupanCoordinator
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity import Entity
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,

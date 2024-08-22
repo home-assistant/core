@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
 
 from . import get_entity_ids
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 async def async_reproduce_states(

@@ -1,10 +1,10 @@
 """The Hunter Douglas PowerView integration."""
 
 import logging
+from typing import TYPE_CHECKING
 
 from aiopvapi.helpers.aiorequest import AioRequest
 from aiopvapi.hub import Hub
-from aiopvapi.resources.model import PowerviewData
 from aiopvapi.rooms import Rooms
 from aiopvapi.scenes import Scenes
 from aiopvapi.shades import Shades
@@ -18,6 +18,9 @@ from .const import DOMAIN, HUB_EXCEPTIONS
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .model import PowerviewConfigEntry, PowerviewDeviceInfo, PowerviewEntryData
 from .shade_data import PowerviewShadeData
+
+if TYPE_CHECKING:
+    from aiopvapi.resources.model import PowerviewData
 
 PARALLEL_UPDATES = 1
 

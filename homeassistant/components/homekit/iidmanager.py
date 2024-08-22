@@ -8,7 +8,7 @@ This module generates and stores them in a HA storage.
 
 from __future__ import annotations
 
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 from pyhap.util import uuid_to_hap_type
 
@@ -16,6 +16,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 
 from .util import get_iid_storage_filename_for_entry_id
+
+if TYPE_CHECKING:
+    from uuid import UUID
 
 IID_MANAGER_STORAGE_VERSION = 2
 IID_MANAGER_SAVE_DELAY = 2

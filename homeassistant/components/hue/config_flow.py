@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiohttp
 from aiohue import LinkButtonNotPressed, create_app_key
@@ -13,7 +13,6 @@ from aiohue.util import normalize_bridge_id
 import slugify as unicode_slug
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -37,6 +36,9 @@ from .const import (
     DOMAIN,
 )
 from .errors import CannotConnect
+
+if TYPE_CHECKING:
+    from homeassistant.components import zeroconf
 
 LOGGER = logging.getLogger(__name__)
 

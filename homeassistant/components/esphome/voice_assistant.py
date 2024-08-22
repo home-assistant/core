@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterable, Callable
 import io
 import logging
 import socket
-from typing import cast
+from typing import TYPE_CHECKING, cast
 import wave
 
 from aioesphomeapi import (
@@ -40,8 +39,12 @@ from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.core import Context, HomeAssistant, callback
 
 from .const import DOMAIN
-from .entry_data import RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterable, Callable
+
+    from .entry_data import RuntimeEntryData
 
 _LOGGER = logging.getLogger(__name__)
 

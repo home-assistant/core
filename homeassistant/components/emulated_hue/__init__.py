@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from aiohttp import web
 import voluptuous as vol
@@ -15,9 +16,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from .config import (
     CONF_ADVERTISE_IP,
@@ -51,6 +50,10 @@ from .hue_api import (
     HueUsernameView,
 )
 from .upnp import DescriptionXmlView, async_create_upnp_datagram_endpoint
+
+if TYPE_CHECKING:
+    from homeassistant.core import Event, HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

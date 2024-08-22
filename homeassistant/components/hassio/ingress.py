@@ -3,16 +3,15 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
 from functools import lru_cache
 from ipaddress import ip_address
 import logging
+from typing import TYPE_CHECKING
 from urllib.parse import quote
 
 import aiohttp
 from aiohttp import ClientTimeout, ClientWebSocketResponse, hdrs, web
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPBadRequest
-from multidict import CIMultiDict
 from yarl import URL
 
 from homeassistant.components.http import HomeAssistantView
@@ -23,6 +22,11 @@ from homeassistant.util.async_ import create_eager_task
 
 from .const import X_HASS_SOURCE, X_INGRESS_PATH
 from .http import should_compress
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from multidict import CIMultiDict
 
 _LOGGER = logging.getLogger(__name__)
 

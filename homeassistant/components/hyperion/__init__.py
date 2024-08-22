@@ -3,15 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from contextlib import suppress
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from awesomeversion import AwesomeVersion
 from hyperion import client, const as hyperion_const
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -32,6 +30,11 @@ from .const import (
     SIGNAL_INSTANCE_ADD,
     SIGNAL_INSTANCE_REMOVE,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.config_entries import ConfigEntry
 
 PLATFORMS = [Platform.CAMERA, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
 

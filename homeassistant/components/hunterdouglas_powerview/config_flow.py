@@ -9,15 +9,17 @@ from aiopvapi.helpers.aiorequest import AioRequest
 from aiopvapi.hub import Hub
 import voluptuous as vol
 
-from homeassistant.components import dhcp, zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_NAME
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import async_get_device_info
 from .const import DOMAIN, HUB_EXCEPTIONS
+
+if TYPE_CHECKING:
+    from homeassistant.components import dhcp, zeroconf
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

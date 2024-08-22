@@ -2,17 +2,21 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import CATEGORY_TO_MODEL, DOMAIN, FreeboxHomeCategory
-from .router import FreeboxRouter
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.core import HomeAssistant
+
+    from .router import FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
 

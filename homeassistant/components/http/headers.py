@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from typing import TYPE_CHECKING
 
 from aiohttp.web import Application, Request, StreamResponse, middleware
 from aiohttp.web_exceptions import HTTPException
 
 from homeassistant.core import callback
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
 
 
 @callback

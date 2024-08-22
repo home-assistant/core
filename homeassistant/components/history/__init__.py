@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime as dt, timedelta
 from http import HTTPStatus
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from aiohttp import web
 import voluptuous as vol
@@ -17,12 +17,14 @@ from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant, valid_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA
-from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from . import websocket_api
 from .const import DOMAIN
 from .helpers import entities_may_have_state_changes_after, has_recorder_run_after
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
 
 CONF_ORDER = "use_include_order"
 

@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, ValuesView
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from functools import partial
 import logging
 import re
-from types import MappingProxyType
-from typing import Any, TypedDict, cast
+from typing import TYPE_CHECKING, Any, TypedDict, cast
 
 from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import (
@@ -28,13 +26,10 @@ from homeassistant.components.device_tracker import (
     DEFAULT_CONSIDER_HOME,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -49,6 +44,14 @@ from .const import (
     SERVICE_SET_GUEST_WIFI_PW,
     MeshRoles,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, ValuesView
+    from types import MappingProxyType
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant, ServiceCall
+    from homeassistant.helpers.typing import StateType
 
 _LOGGER = logging.getLogger(__name__)
 

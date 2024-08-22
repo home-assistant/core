@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -9,11 +11,13 @@ from homeassistant.const import CONF_SCAN_INTERVAL, CONF_URL, Platform
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
 from .const import CONF_MAX_ENTRIES, DEFAULT_MAX_ENTRIES, DEFAULT_SCAN_INTERVAL, DOMAIN
 from .coordinator import FeedReaderCoordinator, StoredData
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
 
 type FeedReaderConfigEntry = ConfigEntry[FeedReaderCoordinator]
 

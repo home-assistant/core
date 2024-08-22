@@ -5,13 +5,10 @@ from __future__ import annotations
 import asyncio
 import base64
 import binascii
-from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 import functools
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from aiohttp import web
-from hyperion import client
 from hyperion.const import (
     KEY_IMAGE,
     KEY_IMAGE_STREAM,
@@ -25,14 +22,12 @@ from homeassistant.components.camera import (
     Camera,
     async_get_still_stream,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import (
     get_hyperion_device_id,
@@ -47,6 +42,15 @@ from .const import (
     SIGNAL_ENTITY_REMOVE,
     TYPE_HYPERION_CAMERA,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
+
+    from aiohttp import web
+    from hyperion import client
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 IMAGE_STREAM_JPG_SENTINEL = "data:image/jpg;base64,"
 

@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-from elkm1_lib.tasks import Task
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.scene import Scene
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ElkAttachedEntity, ElkEntity, ElkM1ConfigEntry, create_elk_entities
+
+if TYPE_CHECKING:
+    from elkm1_lib.tasks import Task
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 
 async def async_setup_entry(

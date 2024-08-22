@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from deebot_client.capabilities import Capabilities, DeviceType
-from deebot_client.device import Device
-from deebot_client.events import StateEvent
 from deebot_client.models import CleanAction, State
 
 from homeassistant.components.lawn_mower import (
@@ -15,11 +14,17 @@ from homeassistant.components.lawn_mower import (
     LawnMowerEntityEntityDescription,
     LawnMowerEntityFeature,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import EcovacsConfigEntry
 from .entity import EcovacsEntity
+
+if TYPE_CHECKING:
+    from deebot_client.device import Device
+    from deebot_client.events import StateEvent
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from . import EcovacsConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 from elvia import error as ElviaError
 
 from homeassistant.const import CONF_API_TOKEN
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import CONF_METERING_POINT_ID, LOGGER
@@ -16,6 +15,7 @@ from .importer import ElviaImporter
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -3,15 +3,18 @@
 from __future__ import annotations
 
 from functools import partial
+from typing import TYPE_CHECKING
 
 from holidays import country_holidays
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COUNTRY, Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.setup import SetupPhases, async_pause_setup
 
 from .const import CONF_PROVINCE
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 PLATFORMS: list[Platform] = [Platform.CALENDAR]
 

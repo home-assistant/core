@@ -4,16 +4,18 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
-from flux_led.aio import AIOWifiLedBulb
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import FLUX_LED_EXCEPTIONS
+
+if TYPE_CHECKING:
+    from flux_led.aio import AIOWifiLedBulb
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

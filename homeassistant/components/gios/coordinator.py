@@ -4,17 +4,21 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import TYPE_CHECKING
 
-from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
 from gios import Gios
 from gios.exceptions import GiosError
 from gios.model import GiosSensors
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import API_TIMEOUT, DOMAIN, SCAN_INTERVAL
+
+if TYPE_CHECKING:
+    from aiohttp import ClientSession
+
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

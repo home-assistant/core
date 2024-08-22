@@ -10,7 +10,7 @@ from functools import partial
 import logging
 from numbers import Number
 import statistics
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
@@ -43,15 +43,17 @@ from homeassistant.core import (
     callback,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.start import async_at_started
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util.decorator import Registry
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN, PLATFORMS
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 _LOGGER = logging.getLogger(__name__)
 

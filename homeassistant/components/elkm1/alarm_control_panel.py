@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from elkm1_lib.areas import Area
 from elkm1_lib.const import AlarmState, ArmedStatus, ArmLevel, ArmUpState
-from elkm1_lib.elements import Element
-from elkm1_lib.elk import Elk
 from elkm1_lib.keypads import Keypad
 import voluptuous as vol
 
@@ -26,12 +23,9 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import VolDictType
 
 from . import ElkAttachedEntity, ElkEntity, ElkM1ConfigEntry, create_elk_entities
 from .const import (
@@ -40,7 +34,17 @@ from .const import (
     ATTR_CHANGED_BY_TIME,
     ELK_USER_CODE_SERVICE_SCHEMA,
 )
-from .models import ELKM1Data
+
+if TYPE_CHECKING:
+    from elkm1_lib.areas import Area
+    from elkm1_lib.elements import Element
+    from elkm1_lib.elk import Elk
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import VolDictType
+
+    from .models import ELKM1Data
 
 DISPLAY_MESSAGE_SERVICE_SCHEMA: VolDictType = {
     vol.Optional("clear", default=2): vol.All(vol.Coerce(int), vol.In([0, 1, 2])),

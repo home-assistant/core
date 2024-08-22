@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pymata_express.pymata_express import PymataExpress
 from pymata_express.pymata_express_serial import serial
@@ -27,6 +26,9 @@ from .const import (
     PIN_TYPE_ANALOG,
     PIN_TYPE_DIGITAL,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 _LOGGER = logging.getLogger(__name__)
 

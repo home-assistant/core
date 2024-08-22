@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aioguardian import Client
 from aioguardian.errors import GuardianError
@@ -42,6 +41,9 @@ from .const import (
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
 )
 from .coordinator import GuardianDataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
 
 DATA_PAIRED_SENSOR_MANAGER = "paired_sensor_manager"
 

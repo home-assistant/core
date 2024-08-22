@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sml import SmlGetListResponse
 from sml.asyncio import SmlProtocol
@@ -15,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
     UnitOfElectricCurrent,
@@ -30,7 +28,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from .const import (
@@ -40,6 +37,12 @@ from .const import (
     LOGGER,
     SIGNAL_EDL21_TELEGRAM,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 

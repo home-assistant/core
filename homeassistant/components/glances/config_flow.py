@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from glances_api.exceptions import (
     GlancesApiAuthorizationError,
@@ -23,6 +22,9 @@ from homeassistant.const import (
 
 from . import ServerVersionMismatch, get_api
 from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 DATA_SCHEMA = vol.Schema(
     {

@@ -7,6 +7,7 @@ from datetime import timedelta
 from functools import partial
 import logging
 import random
+from typing import TYPE_CHECKING
 
 import aiohue
 
@@ -37,7 +38,6 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util import color
 
-from ..bridge import HueBridge
 from ..const import (
     CONF_ALLOW_HUE_GROUPS,
     CONF_ALLOW_UNREACHABLE,
@@ -53,6 +53,9 @@ from ..const import (
     REQUEST_REFRESH_DELAY,
 )
 from .helpers import remove_devices
+
+if TYPE_CHECKING:
+    from ..bridge import HueBridge
 
 SCAN_INTERVAL = timedelta(seconds=5)
 

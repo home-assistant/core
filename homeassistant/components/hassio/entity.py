@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -22,6 +21,9 @@ from .const import (
     SUPERVISOR_CONTAINER,
 )
 from .coordinator import HassioDataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity import EntityDescription
 
 
 class HassioAddonEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):

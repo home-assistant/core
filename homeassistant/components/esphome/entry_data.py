@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from functools import partial
 import logging
@@ -44,7 +43,6 @@ from aioesphomeapi import (
     build_unique_id,
 )
 from aioesphomeapi.model import ButtonInfo
-from bleak_esphome.backend.device import ESPHomeBluetoothDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -54,6 +52,11 @@ from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
 from .dashboard import async_get_dashboard
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
+
+    from bleak_esphome.backend.device import ESPHomeBluetoothDevice
 
 type ESPHomeConfigEntry = ConfigEntry[RuntimeEntryData]
 

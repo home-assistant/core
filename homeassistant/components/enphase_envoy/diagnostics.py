@@ -6,7 +6,6 @@ import copy
 from typing import TYPE_CHECKING, Any
 
 from attr import asdict
-from pyenphase.envoy import Envoy
 from pyenphase.exceptions import EnvoyError
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -17,13 +16,18 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util.json import json_loads
 
 from .const import OPTION_DIAGNOSTICS_INCLUDE_FIXTURES
-from .coordinator import EnphaseConfigEntry
+
+if TYPE_CHECKING:
+    from pyenphase.envoy import Envoy
+
+    from homeassistant.core import HomeAssistant
+
+    from .coordinator import EnphaseConfigEntry
 
 CONF_TITLE = "title"
 CLEAN_TEXT = "<<envoyserial>>"

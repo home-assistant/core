@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
-from typing import Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate
 
 from homewizard_energy.errors import DisabledError, RequestError
 
@@ -11,6 +10,9 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 from .entity import HomeWizardEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
 
 
 def homewizard_exception_handler[_HomeWizardEntityT: HomeWizardEntity, **_P](

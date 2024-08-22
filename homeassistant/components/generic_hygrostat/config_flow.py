@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
@@ -27,6 +26,9 @@ from . import (
     DEFAULT_TOLERANCE,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 OPTIONS_SCHEMA = {
     vol.Required(CONF_DEVICE_CLASS): selector.SelectSelector(

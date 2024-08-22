@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
 from dataclasses import replace
 from datetime import datetime, timedelta
 import logging
 from math import ceil
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiopvapi.helpers.constants import (
     ATTR_NAME,
@@ -26,13 +25,18 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from .const import STATE_ATTRIBUTE_ROOM_NAME
-from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
-from .model import PowerviewConfigEntry, PowerviewDeviceInfo
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
+
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import PowerviewShadeUpdateCoordinator
+    from .model import PowerviewConfigEntry, PowerviewDeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 

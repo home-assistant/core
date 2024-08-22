@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from functools import partial
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyhomeworks import exceptions as hw_exceptions
 from pyhomeworks.pyhomeworks import Homeworks
@@ -36,7 +36,6 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaOptionsFlowHandler,
 )
 from homeassistant.helpers.selector import TextSelector
-from homeassistant.helpers.typing import VolDictType
 from homeassistant.util import slugify
 
 from . import DEFAULT_FADE_RATE, calculate_unique_id
@@ -56,6 +55,9 @@ from .const import (
     DEFAULT_LIGHT_NAME,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import VolDictType
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from elkm1_lib import Elk
+if TYPE_CHECKING:
+    from elkm1_lib import Elk
 
 
 @dataclass(slots=True)

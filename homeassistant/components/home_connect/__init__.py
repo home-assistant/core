@@ -4,19 +4,17 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from requests import HTTPError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, CONF_DEVICE, Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
     device_registry as dr,
 )
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from . import api
@@ -36,6 +34,11 @@ from .const import (
     SERVICE_SETTING,
     SERVICE_START_PROGRAM,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

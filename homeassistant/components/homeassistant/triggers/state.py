@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -29,8 +28,13 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
     process_state_match,
 )
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from datetime import timedelta
+
+    from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

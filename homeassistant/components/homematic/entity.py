@@ -5,9 +5,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from datetime import timedelta
 import logging
-
-from pyhomematic import HMConnection
-from pyhomematic.devicetypes.generic import HMGeneric
+from typing import TYPE_CHECKING
 
 from homeassistant.const import ATTR_NAME
 import homeassistant.helpers.config_validation as cv
@@ -24,6 +22,10 @@ from .const import (
     DOMAIN,
     HM_ATTRIBUTE_SUPPORT,
 )
+
+if TYPE_CHECKING:
+    from pyhomematic import HMConnection
+    from pyhomematic.devicetypes.generic import HMGeneric
 
 _LOGGER = logging.getLogger(__name__)
 

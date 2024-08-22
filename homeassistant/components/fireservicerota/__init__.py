@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from pyfireservicerota import (
     ExpiredTokenError,
@@ -13,14 +14,16 @@ from pyfireservicerota import (
     InvalidTokenError,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_USERNAME, Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN, WSS_BWRURL
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 

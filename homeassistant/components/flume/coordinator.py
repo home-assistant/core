@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pyflume
 from pyflume import FlumeAuth, FlumeData, FlumeDeviceList
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -17,6 +16,9 @@ from .const import (
     DOMAIN,
     NOTIFICATION_SCAN_INTERVAL,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 
 class FlumeDeviceDataUpdateCoordinator(DataUpdateCoordinator[None]):

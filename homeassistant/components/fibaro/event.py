@@ -2,21 +2,25 @@
 
 from __future__ import annotations
 
-from pyfibaro.fibaro_device import DeviceModel, SceneEvent
-from pyfibaro.fibaro_state_resolver import FibaroEvent
+from typing import TYPE_CHECKING
 
 from homeassistant.components.event import (
     ENTITY_ID_FORMAT,
     EventDeviceClass,
     EventEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FibaroController, FibaroDevice
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from pyfibaro.fibaro_device import DeviceModel, SceneEvent
+    from pyfibaro.fibaro_state_resolver import FibaroEvent
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 
 async def async_setup_entry(

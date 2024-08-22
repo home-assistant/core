@@ -5,13 +5,16 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from aiohttp import ContentTypeError
-import pyevilgenius
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+if TYPE_CHECKING:
+    import pyevilgenius
+
+    from homeassistant.core import HomeAssistant
 
 UPDATE_INTERVAL = 10
 

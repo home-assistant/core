@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
 import dataclasses
 import functools
+from typing import TYPE_CHECKING
 
 from homeassistant.components import recorder, sensor
 from homeassistant.const import (
@@ -18,6 +18,9 @@ from homeassistant.core import HomeAssistant, callback, valid_entity_id
 
 from . import data
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
 
 ENERGY_USAGE_DEVICE_CLASSES = (sensor.SensorDeviceClass.ENERGY,)
 ENERGY_USAGE_UNITS: dict[str, tuple[UnitOfEnergy, ...]] = {

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import mimetypes
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from google.ai import generativelanguage_v1beta
 from google.api_core.client_options import ClientOptions
@@ -12,7 +13,6 @@ import google.generativeai as genai
 import google.generativeai.types as genai_types
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import (
     HomeAssistant,
@@ -27,9 +27,12 @@ from homeassistant.exceptions import (
     HomeAssistantError,
 )
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_CHAT_MODEL, CONF_PROMPT, DOMAIN, RECOMMENDED_CHAT_MODEL
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.typing import ConfigType
 
 SERVICE_GENERATE_CONTENT = "generate_content"
 CONF_IMAGE_FILENAME = "image_filename"

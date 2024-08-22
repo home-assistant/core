@@ -2,21 +2,25 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
-
-from pyecoforest.api import EcoforestApi
-from pyecoforest.models.device import Device
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import EcoforestCoordinator
 from .entity import EcoforestEntity
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    from pyecoforest.api import EcoforestApi
+    from pyecoforest.models.device import Device
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import EcoforestCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)

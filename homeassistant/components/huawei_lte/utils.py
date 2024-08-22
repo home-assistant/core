@@ -4,14 +4,17 @@ from __future__ import annotations
 
 from contextlib import suppress
 import re
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 import warnings
 
-from huawei_lte_api.Session import GetResponseType
 import requests
 from urllib3.exceptions import InsecureRequestWarning
 
 from homeassistant.helpers.device_registry import format_mac
+
+if TYPE_CHECKING:
+    from huawei_lte_api.Session import GetResponseType
 
 
 def get_device_macs(

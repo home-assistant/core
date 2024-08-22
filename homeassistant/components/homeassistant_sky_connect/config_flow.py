@@ -12,7 +12,6 @@ from homeassistant.components.homeassistant_hardware import (
     firmware_config_flow,
     silabs_multiprotocol_addon,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
 from homeassistant.core import callback
 
 from .const import DOCS_WEB_FLASHER_URL, DOMAIN, HardwareVariant
@@ -22,6 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
 
     class TranslationPlaceholderProtocol(Protocol):
         """Protocol describing `BaseFirmwareInstallFlow`'s translation placeholders."""

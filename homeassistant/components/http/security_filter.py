@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from functools import lru_cache
 import logging
 import re
-from typing import Final
+from typing import TYPE_CHECKING, Final
 from urllib.parse import unquote
 
 from aiohttp.web import Application, HTTPBadRequest, Request, StreamResponse, middleware
 
 from homeassistant.core import callback
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
 
 _LOGGER = logging.getLogger(__name__)
 

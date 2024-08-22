@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyhap.const import CATEGORY_LIGHTBULB
 
@@ -52,6 +51,9 @@ from .const import (
     PROP_MIN_VALUE,
     SERV_LIGHTBULB,
 )
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 _LOGGER = logging.getLogger(__name__)
 

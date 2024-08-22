@@ -3,15 +3,18 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from afsapi import AFSAPI, ConnectionError as FSConnectionError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PIN, Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONF_WEBFSAPI_URL, DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 

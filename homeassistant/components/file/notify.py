@@ -5,7 +5,7 @@ from __future__ import annotations
 from functools import partial
 import logging
 import os
-from typing import Any, TextIO
+from typing import TYPE_CHECKING, Any, TextIO
 
 import voluptuous as vol
 
@@ -18,16 +18,18 @@ from homeassistant.components.notify import (
     NotifyEntityFeature,
     migrate_notify_issue,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FILE_PATH, CONF_FILENAME, CONF_NAME
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from .const import CONF_TIMESTAMP, DEFAULT_NAME, DOMAIN, FILE_ICON
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 

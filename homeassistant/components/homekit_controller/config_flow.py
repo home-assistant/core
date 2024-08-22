@@ -8,11 +8,6 @@ from typing import TYPE_CHECKING, Any, cast
 
 import aiohomekit
 from aiohomekit import Controller, const as aiohomekit_const
-from aiohomekit.controller.abstract import (
-    AbstractDiscovery,
-    AbstractPairing,
-    FinishPairing,
-)
 from aiohomekit.exceptions import AuthenticationError
 from aiohomekit.model.categories import Categories
 from aiohomekit.model.status_flags import StatusFlags
@@ -24,14 +19,21 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.typing import VolDictType
 
 from .const import DOMAIN, KNOWN_DEVICES
 from .storage import async_get_entity_storage
 from .utils import async_get_controller
 
 if TYPE_CHECKING:
+    from aiohomekit.controller.abstract import (
+        AbstractDiscovery,
+        AbstractPairing,
+        FinishPairing,
+    )
+    from aiohomekit.controller.ble.discovery import BleDiscovery
+
     from homeassistant.components import bluetooth
+    from homeassistant.helpers.typing import VolDictType
 
 
 HOMEKIT_DIR = ".homekit"
@@ -370,7 +372,6 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Late imports in case BLE is not available
         # pylint: disable-next=import-outside-toplevel
-        from aiohomekit.controller.ble.discovery import BleDiscovery
 
         # pylint: disable-next=import-outside-toplevel
         from aiohomekit.controller.ble.manufacturer_data import HomeKitAdvertisement

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from govee_ble import ModelInfo, SensorType
 
 from homeassistant.components.bluetooth import (
@@ -16,10 +18,12 @@ from homeassistant.components.event import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import GoveeBLEConfigEntry, format_event_dispatcher_name
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 BUTTON_DESCRIPTIONS = [
     EventEntityDescription(

@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from asyncio import timeout
-from datetime import timedelta
-from logging import Logger
+from typing import TYPE_CHECKING
 
 from elmax_api.exceptions import (
     ElmaxApiError,
@@ -14,19 +13,25 @@ from elmax_api.exceptions import (
     ElmaxPanelBusyError,
 )
 from elmax_api.http import Elmax, GenericElmax
-from elmax_api.model.actuator import Actuator
-from elmax_api.model.area import Area
-from elmax_api.model.cover import Cover
-from elmax_api.model.endpoint import DeviceEndpoint
 from elmax_api.model.panel import PanelEntry, PanelStatus
 from elmax_api.push.push import PushNotificationHandler
 from httpx import ConnectError, ConnectTimeout
 
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_TIMEOUT
+
+if TYPE_CHECKING:
+    from datetime import timedelta
+    from logging import Logger
+
+    from elmax_api.model.actuator import Actuator
+    from elmax_api.model.area import Area
+    from elmax_api.model.cover import Cover
+    from elmax_api.model.endpoint import DeviceEndpoint
+
+    from homeassistant.core import HomeAssistant
 
 
 class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):

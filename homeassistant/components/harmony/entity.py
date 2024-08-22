@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from datetime import datetime
 import logging
+from typing import TYPE_CHECKING
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
 
-from .data import HarmonyData
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from datetime import datetime
+
+    from .data import HarmonyData
 
 _LOGGER = logging.getLogger(__name__)
 

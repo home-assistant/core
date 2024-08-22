@@ -4,9 +4,7 @@ from __future__ import annotations
 
 import base64
 from email.mime.text import MIMEText
-from typing import Any
-
-from googleapiclient.http import HttpRequest
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -16,11 +14,16 @@ from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .api import AsyncConfigEntryAuth
 from .const import ATTR_BCC, ATTR_CC, ATTR_FROM, ATTR_ME, ATTR_SEND, DATA_AUTH
+
+if TYPE_CHECKING:
+    from googleapiclient.http import HttpRequest
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+    from .api import AsyncConfigEntryAuth
 
 
 async def async_get_service(

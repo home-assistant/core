@@ -3,18 +3,21 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAXIMUM, CONF_MINIMUM, CONF_NAME, CONF_PIN
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .board import FirmataPinType
 from .const import CONF_INITIAL_STATE, CONF_PIN_MODE, DOMAIN
 from .entity import FirmataPinEntity
 from .pin import FirmataBoardPin, FirmataPinUsedException, FirmataPWMOutput
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .board import FirmataPinType
 
 _LOGGER = logging.getLogger(__name__)
 

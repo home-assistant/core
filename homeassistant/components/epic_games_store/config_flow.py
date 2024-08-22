@@ -3,15 +3,13 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from epicstore_api import EpicGamesStoreAPI
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.selector import (
     CountrySelector,
     LanguageSelector,
@@ -19,6 +17,10 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import DOMAIN, SUPPORTED_LANGUAGES
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigFlowResult
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

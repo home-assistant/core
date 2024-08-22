@@ -4,14 +4,18 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
-import os
 import pathlib
+from typing import TYPE_CHECKING
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    import os
+
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

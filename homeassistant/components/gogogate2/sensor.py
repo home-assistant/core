@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from itertools import chain
+from typing import TYPE_CHECKING
 
 from ismartgate.common import AbstractDoor, get_configured_doors
 
@@ -11,13 +12,16 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import GoGoGate2Entity, get_data_update_coordinator, sensor_unique_id
-from .coordinator import DeviceDataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import DeviceDataUpdateCoordinator
 
 SENSOR_ID_WIRED = "WIRE"
 

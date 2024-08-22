@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
+from typing import TYPE_CHECKING
 
-from aio_georss_client.status_update import StatusUpdate
 from aio_georss_gdacs import GdacsFeedManager
-from aio_georss_gdacs.feed_entry import FeedEntry
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -32,6 +29,14 @@ from .const import (  # noqa: F401
     FEED,
     PLATFORMS,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from aio_georss_client.status_update import StatusUpdate
+    from aio_georss_gdacs.feed_entry import FeedEntry
+
+    from homeassistant.config_entries import ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

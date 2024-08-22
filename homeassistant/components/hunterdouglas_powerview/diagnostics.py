@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import attr
 
@@ -11,10 +11,13 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import ATTR_CONFIGURATION_URL, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import REDACT_HUB_ADDRESS, REDACT_MAC_ADDRESS, REDACT_SERIAL_NUMBER
-from .model import PowerviewConfigEntry
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.device_registry import DeviceEntry
+
+    from .model import PowerviewConfigEntry
 
 REDACT_CONFIG = {
     CONF_HOST,

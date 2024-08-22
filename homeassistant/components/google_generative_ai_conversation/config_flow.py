@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from functools import partial
 import logging
-from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from google.ai import generativelanguage_v1beta
 from google.api_core.client_options import ClientOptions
@@ -21,7 +19,6 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -53,6 +50,12 @@ from .const import (
     RECOMMENDED_TOP_K,
     RECOMMENDED_TOP_P,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from types import MappingProxyType
+
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

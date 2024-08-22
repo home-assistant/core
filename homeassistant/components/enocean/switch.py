@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from enocean.utils import combine_hex
 import voluptuous as vol
@@ -12,13 +12,15 @@ from homeassistant.components.switch import (
     SwitchEntity,
 )
 from homeassistant.const import CONF_ID, CONF_NAME, Platform
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN, LOGGER
 from .device import EnOceanEntity
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 CONF_CHANNEL = "channel"
 DEFAULT_NAME = "EnOcean Switch"

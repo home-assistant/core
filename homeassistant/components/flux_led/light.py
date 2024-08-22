@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import ast
 import logging
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from flux_led.const import MultiColorEffects
 from flux_led.protocol import MusicMode
@@ -27,8 +27,6 @@ from homeassistant.const import CONF_EFFECT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired,
@@ -62,6 +60,10 @@ from .util import (
     _min_rgbwc_brightness,
     _str_to_multi_color_effect,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import VolDictType
 
 _LOGGER = logging.getLogger(__name__)
 

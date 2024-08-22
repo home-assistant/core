@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
-from pyenphase import EnvoyData
+from typing import TYPE_CHECKING
 
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import EnphaseUpdateCoordinator
+
+if TYPE_CHECKING:
+    from pyenphase import EnvoyData
+
+    from homeassistant.helpers.entity import EntityDescription
 
 
 class EnvoyBaseEntity(CoordinatorEntity[EnphaseUpdateCoordinator]):
