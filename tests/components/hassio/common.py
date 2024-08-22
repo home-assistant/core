@@ -3,10 +3,19 @@
 from __future__ import annotations
 
 from collections.abc import Generator
+import logging
 from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, patch
 
+from homeassistant.components.hassio.addon_manager import AddonManager
 from homeassistant.core import HomeAssistant
+
+LOGGER = logging.getLogger(__name__)
+
+
+def mock_addon_manager(hass: HomeAssistant) -> AddonManager:
+    """Return an AddonManager instance."""
+    return AddonManager(hass, LOGGER, "Test", "test_addon")
 
 
 def mock_discovery_info() -> Any:
@@ -72,7 +81,7 @@ def mock_addon_installed(
         "version": "1.0.0",
     }
     addon_info.return_value["available"] = True
-    addon_info.return_value["hostname"] = "core-matter-server"
+    addon_info.return_value["hostname"] = "core-test-addon"
     addon_info.return_value["state"] = "stopped"
     addon_info.return_value["version"] = "1.0.0"
     return addon_info
@@ -123,3 +132,51 @@ def mock_start_addon() -> Generator[AsyncMock]:
         "homeassistant.components.hassio.addon_manager.async_start_addon"
     ) as start_addon:
         yield start_addon
+
+
+def mock_stop_addon() -> Generator[AsyncMock]:
+    """Mock stop add-on."""
+    with patch(
+        "homeassistant.components.hassio.addon_manager.async_stop_addon"
+    ) as stop_addon:
+        yield stop_addon
+
+
+def mock_restart_addon() -> Generator[AsyncMock]:
+    """Mock restart add-on."""
+    with patch(
+        "homeassistant.components.hassio.addon_manager.async_restart_addon"
+    ) as restart_addon:
+        yield restart_addon
+
+
+def mock_uninstall_addon() -> Generator[AsyncMock]:
+    """Mock uninstall add-on."""
+    with patch(
+        "homeassistant.components.hassio.addon_manager.async_uninstall_addon"
+    ) as uninstall_addon:
+        yield uninstall_addon
+
+
+def mock_set_addon_options() -> Generator[AsyncMock]:
+    """Mock set add-on options."""
+    with patch(
+        "homeassistant.components.hassio.addon_manager.async_set_addon_options"
+    ) as set_options:
+        yield set_options
+
+
+def mock_create_backup() -> Generator[AsyncMock]:
+    """Mock create backup."""
+    with patch(
+        "homeassistant.components.hassio.addon_manager.async_create_backup"
+    ) as create_backup:
+        yield create_backup
+
+
+def mock_update_addon() -> Generator[AsyncMock]:
+    """Mock update add-on."""
+    with patch(
+        "homeassistant.components.hassio.addon_manager.async_update_addon"
+    ) as update_addon:
+        yield update_addon
