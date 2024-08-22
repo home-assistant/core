@@ -274,7 +274,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Lektrico charger based on a config entry."""
-    coordinator: LektricoDeviceDataUpdateCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
 
     sensors_to_be_used: tuple[LektricoSensorEntityDescription, ...]
     if coordinator.device_type == Device.TYPE_1P7K:
