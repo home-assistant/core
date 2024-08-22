@@ -363,8 +363,6 @@ reset_meter:
       example: living_room
       selector:
         area:
-          device:
-            - integration: zwave_js
           entity:
             - integration: zwave_js
               domain: sensor
