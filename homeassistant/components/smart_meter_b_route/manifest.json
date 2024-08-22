@@ -15,8 +15,8 @@
   "requirements": ["pyserial==3.5", "momonga==0.1.1"],
   "usb": [
     {
-      "vid": "1027",
-      "pid": "24597"
+      "vid": "0403",
+      "pid": "6015"
     }
   ]
 }
