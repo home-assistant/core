@@ -53,7 +53,7 @@ class FakeAuth(AbstractAuth):
     from the API.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize FakeAuth."""
         super().__init__(None, None)
         # Tests can set fake responses here.
@@ -109,7 +109,7 @@ async def auth(aiohttp_client: ClientSessionGenerator) -> FakeAuth:
 
 
 @pytest.fixture(autouse=True)
-def cleanup_media_storage(hass):
+def cleanup_media_storage(hass: HomeAssistant) -> Generator[None]:
     """Test cleanup, remove any media storage persisted during the test."""
     tmp_path = str(uuid.uuid4())
     with patch("homeassistant.components.nest.media_source.MEDIA_PATH", new=tmp_path):

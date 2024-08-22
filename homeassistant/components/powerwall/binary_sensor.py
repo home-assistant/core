@@ -8,13 +8,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .entity import PowerWallEntity
-from .models import PowerwallRuntimeData
+from .models import PowerwallConfigEntry
 
 CONNECTED_GRID_STATUSES = {
     GridStatus.TRANSITION_TO_GRID,
@@ -24,11 +22,11 @@ CONNECTED_GRID_STATUSES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: PowerwallConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the powerwall sensors."""
-    powerwall_data: PowerwallRuntimeData = hass.data[DOMAIN][config_entry.entry_id]
+    powerwall_data = entry.runtime_data
     async_add_entities(
         [
             sensor_class(powerwall_data)

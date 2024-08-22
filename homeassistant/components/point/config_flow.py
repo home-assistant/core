@@ -3,12 +3,13 @@
 import asyncio
 from collections import OrderedDict
 import logging
+from typing import Any
 
 from pypoint import PointSession
 import voluptuous as vol
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -59,7 +60,9 @@ class PointFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_auth()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow start."""
         flows = self.hass.data.get(DATA_FLOW_IMPL, {})
 

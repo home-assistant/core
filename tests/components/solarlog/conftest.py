@@ -7,16 +7,10 @@ import pytest
 
 from homeassistant.components.solarlog.const import DOMAIN as SOLARLOG_DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.core import HomeAssistant
 
 from .const import HOST, NAME
 
-from tests.common import (
-    MockConfigEntry,
-    load_json_object_fixture,
-    mock_device_registry,
-    mock_registry,
-)
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -76,15 +70,3 @@ def mock_test_connection():
         return_value=True,
     ):
         yield
-
-
-@pytest.fixture(name="device_reg")
-def device_reg_fixture(hass: HomeAssistant):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture(name="entity_reg")
-def entity_reg_fixture(hass: HomeAssistant):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)

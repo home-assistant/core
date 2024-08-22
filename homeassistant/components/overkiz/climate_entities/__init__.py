@@ -11,6 +11,9 @@ from .atlantic_electrical_heater_with_adjustable_temperature_setpoint import (
 )
 from .atlantic_electrical_towel_dryer import AtlanticElectricalTowelDryer
 from .atlantic_heat_recovery_ventilation import AtlanticHeatRecoveryVentilation
+from .atlantic_pass_apc_heat_pump_main_component import (
+    AtlanticPassAPCHeatPumpMainComponent,
+)
 from .atlantic_pass_apc_heating_zone import AtlanticPassAPCHeatingZone
 from .atlantic_pass_apc_zone_control import AtlanticPassAPCZoneControl
 from .atlantic_pass_apc_zone_control_zone import AtlanticPassAPCZoneControlZone
@@ -43,6 +46,7 @@ WIDGET_TO_CLIMATE_ENTITY = {
     UIWidget.SOMFY_HEATING_TEMPERATURE_INTERFACE: SomfyHeatingTemperatureInterface,
     UIWidget.SOMFY_THERMOSTAT: SomfyThermostat,
     UIWidget.VALVE_HEATING_TEMPERATURE_INTERFACE: ValveHeatingTemperatureInterface,
+    UIWidget.ATLANTIC_PASS_APC_HEAT_PUMP: AtlanticPassAPCHeatPumpMainComponent,
 }
 
 # For Atlantic APC, some devices are standalone and control themselves, some others needs to be

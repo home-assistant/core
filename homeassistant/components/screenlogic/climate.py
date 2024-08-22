@@ -18,16 +18,14 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DOMAIN as SL_DOMAIN
-from .coordinator import ScreenlogicDataUpdateCoordinator
 from .entity import ScreenLogicPushEntity, ScreenLogicPushEntityDescription
+from .types import ScreenLogicConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,13 +41,11 @@ SUPPORTED_PRESETS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ScreenLogicConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[SL_DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator = config_entry.runtime_data
 
     gateway = coordinator.gateway
 

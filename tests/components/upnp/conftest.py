@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine, Generator
 import copy
 from datetime import datetime
 import socket
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, create_autospec, patch
 from urllib.parse import urlparse
 
@@ -153,7 +155,7 @@ def mock_setup_entry():
 
 
 @pytest.fixture(autouse=True)
-async def silent_ssdp_scanner(hass):
+def silent_ssdp_scanner() -> Generator[None]:
     """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
     with (
         patch("homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"),
@@ -174,7 +176,13 @@ async def ssdp_instant_discovery():
     """Instant discovery."""
 
     # Set up device discovery callback.
-    async def register_callback(hass, callback, match_dict):
+    async def register_callback(
+        hass: HomeAssistant,
+        callback: Callable[
+            [ssdp.SsdpServiceInfo, ssdp.SsdpChange], Coroutine[Any, Any, None] | None
+        ],
+        match_dict: dict[str, str] | None = None,
+    ) -> MagicMock:
         """Immediately do callback."""
         await callback(TEST_DISCOVERY, ssdp.SsdpChange.ALIVE)
         return MagicMock()
@@ -201,7 +209,13 @@ async def ssdp_instant_discovery_multi_location():
     test_discovery.ssdp_all_locations = {TEST_LOCATION6, TEST_LOCATION}
 
     # Set up device discovery callback.
-    async def register_callback(hass, callback, match_dict):
+    async def register_callback(
+        hass: HomeAssistant,
+        callback: Callable[
+            [ssdp.SsdpServiceInfo, ssdp.SsdpChange], Coroutine[Any, Any, None] | None
+        ],
+        match_dict: dict[str, str] | None = None,
+    ) -> MagicMock:
         """Immediately do callback."""
         await callback(test_discovery, ssdp.SsdpChange.ALIVE)
         return MagicMock()
@@ -224,7 +238,13 @@ async def ssdp_no_discovery():
     """No discovery."""
 
     # Set up device discovery callback.
-    async def register_callback(hass, callback, match_dict):
+    async def register_callback(
+        hass: HomeAssistant,
+        callback: Callable[
+            [ssdp.SsdpServiceInfo, ssdp.SsdpChange], Coroutine[Any, Any, None] | None
+        ],
+        match_dict: dict[str, str] | None = None,
+    ) -> MagicMock:
         """Don't do callback."""
         return MagicMock()
 
@@ -247,7 +267,7 @@ async def mock_config_entry(
     ssdp_instant_discovery,
     mock_igd_device: IgdDevice,
     mock_mac_address_from_host,
-):
+) -> MockConfigEntry:
     """Create an initialized integration."""
     entry = MockConfigEntry(
         domain=DOMAIN,

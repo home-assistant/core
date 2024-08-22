@@ -77,10 +77,9 @@ def mock_room_status() -> dict[str, Any]:
 
 @pytest.fixture
 def mock_incomfort(
-    hass: HomeAssistant,
     mock_heater_status: dict[str, Any],
     mock_room_status: dict[str, Any],
-) -> Generator[MagicMock, None]:
+) -> Generator[MagicMock]:
     """Mock the InComfort gateway client."""
 
     class MockRoom:

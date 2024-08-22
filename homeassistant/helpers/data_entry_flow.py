@@ -47,7 +47,7 @@ class _BaseFlowManagerView(HomeAssistantView, Generic[_FlowManagerT]):
         data = result.copy()
 
         if (schema := data["data_schema"]) is None:
-            data["data_schema"] = []
+            data["data_schema"] = []  # type: ignore[typeddict-item]  # json result type
         else:
             data["data_schema"] = voluptuous_serialize.convert(
                 schema, custom_serializer=cv.custom_serializer

@@ -10,7 +10,6 @@ import logging
 from typing import Any
 
 from roborock import HomeDataRoom, RoborockException, RoborockInvalidCredentials
-from roborock.code_mappings import RoborockCategory
 from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, UserData
 from roborock.version_1_apis.roborock_mqtt_client_v1 import RoborockMqttClientV1
 from roborock.version_a01_apis import RoborockMqttClientA01
@@ -151,8 +150,7 @@ async def setup_device(
             hass, user_data, device, product_info, home_data_rooms
         )
     if device.pv == "A01":
-        if product_info.category == RoborockCategory.WET_DRY_VAC:
-            return await setup_device_a01(hass, user_data, device, product_info)
+        return await setup_device_a01(hass, user_data, device, product_info)
     _LOGGER.info(
         "Not adding device %s because its protocol version %s or category %s is not supported",
         device.duid,
@@ -176,7 +174,7 @@ async def setup_device_v1(
         if networking is None:
             # If the api does not return an error but does return None for
             # get_networking - then we need to go through cache checking.
-            raise RoborockException("Networking request returned None.")
+            raise RoborockException("Networking request returned None.")  # noqa: TRY301
     except RoborockException as err:
         _LOGGER.warning(
             "Not setting up %s because we could not get the network information of the device. "

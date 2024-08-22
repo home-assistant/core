@@ -3,7 +3,7 @@
 import datetime
 from datetime import timedelta
 from statistics import fmean
-import threading
+import sys
 from unittest.mock import ANY, patch
 
 from freezegun import freeze_time
@@ -35,11 +35,21 @@ from .common import (
     async_wait_recording_done,
     create_engine_test,
     do_adhoc_statistics,
+    get_start_time,
     statistics_during_period,
 )
+from .conftest import InstrumentedMigration
 
 from tests.common import async_fire_time_changed
-from tests.typing import WebSocketGenerator
+from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
+
+
+@pytest.fixture
+async def mock_recorder_before_hass(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+) -> None:
+    """Set up recorder."""
+
 
 DISTANCE_SENSOR_FT_ATTRIBUTES = {
     "device_class": "distance",
@@ -146,12 +156,17 @@ async def test_statistics_during_period(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test statistics_during_period."""
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
 
     hass.config.units = US_CUSTOMARY_SYSTEM
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", 10, attributes=POWER_SENSOR_KW_ATTRIBUTES)
+    hass.states.async_set(
+        "sensor.test",
+        10,
+        attributes=POWER_SENSOR_KW_ATTRIBUTES,
+        timestamp=now.timestamp(),
+    )
     await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, start=now)
@@ -599,7 +614,12 @@ async def test_statistic_during_period(
     }
 
     # Test we can automatically convert units
-    hass.states.async_set("sensor.test", None, attributes=ENERGY_SENSOR_WH_ATTRIBUTES)
+    hass.states.async_set(
+        "sensor.test",
+        None,
+        attributes=ENERGY_SENSOR_WH_ATTRIBUTES,
+        timestamp=now.timestamp(),
+    )
     await client.send_json_auto_id(
         {
             "type": "recorder/statistic_during_period",
@@ -810,7 +830,7 @@ async def test_statistic_during_period_partial_overlap(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
-    frozen_time: datetime,
+    frozen_time: datetime.datetime,
 ) -> None:
     """Test statistic_during_period."""
     client = await hass_ws_client()
@@ -1256,11 +1276,13 @@ async def test_statistics_during_period_unit_conversion(
     converted_value,
 ) -> None:
     """Test statistics_during_period."""
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
 
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", state, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", state, attributes=attributes, timestamp=now.timestamp()
+    )
     await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, start=now)
@@ -1341,12 +1363,16 @@ async def test_sum_statistics_during_period_unit_conversion(
     converted_value,
 ) -> None:
     """Test statistics_during_period."""
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
 
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", 0, attributes=attributes)
-    hass.states.async_set("sensor.test", state, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", 0, attributes=attributes, timestamp=now.timestamp()
+    )
+    hass.states.async_set(
+        "sensor.test", state, attributes=attributes, timestamp=now.timestamp()
+    )
     await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, start=now)
@@ -1462,7 +1488,7 @@ async def test_statistics_during_period_in_the_past(
 ) -> None:
     """Test statistics_during_period in the past."""
     await hass.config.async_set_time_zone("UTC")
-    now = dt_util.utcnow().replace()
+    now = get_start_time(dt_util.utcnow())
 
     hass.config.units = US_CUSTOMARY_SYSTEM
     await async_setup_component(hass, "sensor", {})
@@ -1717,7 +1743,7 @@ async def test_list_statistic_ids(
     unit_class,
 ) -> None:
     """Test list_statistic_ids."""
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
     has_mean = attributes["state_class"] == "measurement"
     has_sum = not has_mean
 
@@ -1731,7 +1757,9 @@ async def test_list_statistic_ids(
     assert response["success"]
     assert response["result"] == []
 
-    hass.states.async_set("sensor.test", 10, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", 10, attributes=attributes, timestamp=now.timestamp()
+    )
     await async_wait_recording_done(hass)
 
     await client.send_json_auto_id({"type": "recorder/list_statistic_ids"})
@@ -1881,7 +1909,7 @@ async def test_list_statistic_ids_unit_change(
     unit_class,
 ) -> None:
     """Test list_statistic_ids."""
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
     has_mean = attributes["state_class"] == "measurement"
     has_sum = not has_mean
 
@@ -1894,7 +1922,9 @@ async def test_list_statistic_ids_unit_change(
     assert response["success"]
     assert response["result"] == []
 
-    hass.states.async_set("sensor.test", 10, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", 10, attributes=attributes, timestamp=now.timestamp()
+    )
     await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, start=now)
@@ -1917,7 +1947,9 @@ async def test_list_statistic_ids_unit_change(
     ]
 
     # Change the state unit
-    hass.states.async_set("sensor.test", 10, attributes=attributes2)
+    hass.states.async_set(
+        "sensor.test", 10, attributes=attributes2, timestamp=now.timestamp()
+    )
 
     await client.send_json_auto_id({"type": "recorder/list_statistic_ids"})
     response = await client.receive_json()
@@ -1956,7 +1988,7 @@ async def test_clear_statistics(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test removing statistics."""
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
 
     units = METRIC_SYSTEM
     attributes = POWER_SENSOR_KW_ATTRIBUTES
@@ -1966,9 +1998,15 @@ async def test_clear_statistics(
     hass.config.units = units
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test1", state, attributes=attributes)
-    hass.states.async_set("sensor.test2", state * 2, attributes=attributes)
-    hass.states.async_set("sensor.test3", state * 3, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test1", state, attributes=attributes, timestamp=now.timestamp()
+    )
+    hass.states.async_set(
+        "sensor.test2", state * 2, attributes=attributes, timestamp=now.timestamp()
+    )
+    hass.states.async_set(
+        "sensor.test3", state * 3, attributes=attributes, timestamp=now.timestamp()
+    )
     await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, start=now)
@@ -2079,7 +2117,7 @@ async def test_update_statistics_metadata(
     new_display_unit,
 ) -> None:
     """Test removing statistics."""
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
 
     units = METRIC_SYSTEM
     attributes = POWER_SENSOR_KW_ATTRIBUTES | {"device_class": None}
@@ -2088,7 +2126,9 @@ async def test_update_statistics_metadata(
     hass.config.units = units
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", state, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", state, attributes=attributes, timestamp=now.timestamp()
+    )
     await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, period="hourly", start=now)
@@ -2168,7 +2208,7 @@ async def test_change_statistics_unit(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test change unit of recorded statistics."""
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
 
     units = METRIC_SYSTEM
     attributes = POWER_SENSOR_KW_ATTRIBUTES | {"device_class": None}
@@ -2177,7 +2217,9 @@ async def test_change_statistics_unit(
     hass.config.units = units
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", state, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", state, attributes=attributes, timestamp=now.timestamp()
+    )
     await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, period="hourly", start=now)
@@ -2313,7 +2355,7 @@ async def test_change_statistics_unit_errors(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test change unit of recorded statistics."""
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
 
     units = METRIC_SYSTEM
     attributes = POWER_SENSOR_KW_ATTRIBUTES | {"device_class": None}
@@ -2367,7 +2409,9 @@ async def test_change_statistics_unit_errors(
     hass.config.units = units
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
-    hass.states.async_set("sensor.test", state, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", state, attributes=attributes, timestamp=now.timestamp()
+    )
     await async_wait_recording_done(hass)
 
     do_adhoc_statistics(hass, period="hourly", start=now)
@@ -2457,7 +2501,7 @@ async def test_recorder_info_bad_recorder_config(
 
     client = await hass_ws_client()
 
-    with patch("homeassistant.components.recorder.migration.migrate_schema"):
+    with patch("homeassistant.components.recorder.migration._migrate_schema"):
         recorder_helper.async_initialize_recorder(hass)
         assert not await async_setup_component(
             hass, recorder.DOMAIN, {recorder.DOMAIN: config}
@@ -2482,7 +2526,7 @@ async def test_recorder_info_no_instance(
     client = await hass_ws_client()
 
     with patch(
-        "homeassistant.components.recorder.websocket_api.get_instance",
+        "homeassistant.components.recorder.basic_websocket_api.get_instance",
         return_value=None,
     ):
         await client.send_json_auto_id({"type": "recorder/info"})
@@ -2493,70 +2537,60 @@ async def test_recorder_info_no_instance(
 
 
 async def test_recorder_info_migration_queue_exhausted(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    async_test_recorder: RecorderInstanceGenerator,
+    instrument_migration: InstrumentedMigration,
 ) -> None:
     """Test getting recorder status when recorder queue is exhausted."""
     assert recorder.util.async_migration_in_progress(hass) is False
 
-    migration_done = threading.Event()
-
-    real_migration = recorder.migration._apply_update
-
-    def stalled_migration(*args):
-        """Make migration stall."""
-        nonlocal migration_done
-        migration_done.wait()
-        return real_migration(*args)
-
     with (
-        patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True),
-        patch("homeassistant.components.recorder.Recorder.async_periodic_statistics"),
         patch(
             "homeassistant.components.recorder.core.create_engine",
             new=create_engine_test,
         ),
         patch.object(recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1),
-        patch.object(recorder.core, "QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY", 0),
-        patch(
-            "homeassistant.components.recorder.migration._apply_update",
-            wraps=stalled_migration,
+        patch.object(
+            recorder.core, "MIN_AVAILABLE_MEMORY_FOR_QUEUE_BACKLOG", sys.maxsize
         ),
     ):
-        recorder_helper.async_initialize_recorder(hass)
-        hass.create_task(
-            async_setup_component(
-                hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
+        async with async_test_recorder(
+            hass, wait_recorder=False, wait_recorder_setup=False
+        ):
+            await hass.async_add_executor_job(
+                instrument_migration.migration_started.wait
             )
-        )
-        await recorder_helper.async_wait_recorder(hass)
-        hass.states.async_set("my.entity", "on", {})
-        await hass.async_block_till_done()
+            assert recorder.util.async_migration_in_progress(hass) is True
+            await recorder_helper.async_wait_recorder(hass)
+            hass.states.async_set("my.entity", "on", {})
+            await hass.async_block_till_done()
 
-        # Detect queue full
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=2))
-        await hass.async_block_till_done()
+            # Detect queue full
+            async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=2))
+            await hass.async_block_till_done()
 
-        client = await hass_ws_client()
+            client = await hass_ws_client()
 
-        # Check the status
-        await client.send_json_auto_id({"type": "recorder/info"})
-        response = await client.receive_json()
-        assert response["success"]
-        assert response["result"]["migration_in_progress"] is True
-        assert response["result"]["recording"] is False
-        assert response["result"]["thread_running"] is True
+            # Check the status
+            await client.send_json_auto_id({"type": "recorder/info"})
+            response = await client.receive_json()
+            assert response["success"]
+            assert response["result"]["migration_in_progress"] is True
+            assert response["result"]["recording"] is False
+            assert response["result"]["thread_running"] is True
 
-    # Let migration finish
-    migration_done.set()
-    await async_wait_recording_done(hass)
+            # Let migration finish
+            instrument_migration.migration_stall.set()
+            await async_wait_recording_done(hass)
 
-    # Check the status after migration finished
-    await client.send_json_auto_id({"type": "recorder/info"})
-    response = await client.receive_json()
-    assert response["success"]
-    assert response["result"]["migration_in_progress"] is False
-    assert response["result"]["recording"] is True
-    assert response["result"]["thread_running"] is True
+            # Check the status after migration finished
+            await client.send_json_auto_id({"type": "recorder/info"})
+            response = await client.receive_json()
+            assert response["success"]
+            assert response["result"]["migration_in_progress"] is False
+            assert response["result"]["recording"] is True
+            assert response["result"]["thread_running"] is True
 
 
 async def test_backup_start_no_recorder(
@@ -2602,7 +2636,7 @@ async def test_get_statistics_metadata(
     unit_class,
 ) -> None:
     """Test get_statistics_metadata."""
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
     has_mean = attributes["state_class"] == "measurement"
     has_sum = not has_mean
 
@@ -2681,10 +2715,14 @@ async def test_get_statistics_metadata(
         }
     ]
 
-    hass.states.async_set("sensor.test", 10, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test", 10, attributes=attributes, timestamp=now.timestamp()
+    )
     await async_wait_recording_done(hass)
 
-    hass.states.async_set("sensor.test2", 10, attributes=attributes)
+    hass.states.async_set(
+        "sensor.test2", 10, attributes=attributes, timestamp=now.timestamp()
+    )
     await async_wait_recording_done(hass)
 
     await client.send_json_auto_id(

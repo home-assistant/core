@@ -61,8 +61,11 @@ PLATFORMS: Final = [
     Platform.COVER,
     Platform.EVENT,
     Platform.LIGHT,
+    Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TEXT,
     Platform.UPDATE,
     Platform.VALVE,
 ]
@@ -174,10 +177,13 @@ async def _async_setup_block_entry(
             await device.initialize()
             if not device.firmware_supported:
                 async_create_issue_unsupported_firmware(hass, entry)
+                await device.shutdown()
                 raise ConfigEntryNotReady
         except (DeviceConnectionError, MacAddressMismatchError) as err:
+            await device.shutdown()
             raise ConfigEntryNotReady(repr(err)) from err
         except InvalidAuthError as err:
+            await device.shutdown()
             raise ConfigEntryAuthFailed(repr(err)) from err
 
         runtime_data.block = ShellyBlockCoordinator(hass, entry, device)
@@ -247,10 +253,13 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
             await device.initialize()
             if not device.firmware_supported:
                 async_create_issue_unsupported_firmware(hass, entry)
+                await device.shutdown()
                 raise ConfigEntryNotReady
         except (DeviceConnectionError, MacAddressMismatchError) as err:
+            await device.shutdown()
             raise ConfigEntryNotReady(repr(err)) from err
         except InvalidAuthError as err:
+            await device.shutdown()
             raise ConfigEntryAuthFailed(repr(err)) from err
 
         runtime_data.rpc = ShellyRpcCoordinator(hass, entry, device)

@@ -38,6 +38,15 @@ class TessieSeatHeaterOptions(StrEnum):
     HIGH = "high"
 
 
+class TessieSeatCoolerOptions(StrEnum):
+    """Tessie seat cooler options."""
+
+    OFF = "off"
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+
 class TessieClimateKeeper(StrEnum):
     """Tessie Climate Keeper Modes."""
 

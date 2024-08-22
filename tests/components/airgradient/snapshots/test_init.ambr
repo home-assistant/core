@@ -20,7 +20,8 @@
     'labels': set({
     }),
     'manufacturer': 'AirGradient',
-    'model': 'I-9PSL',
+    'model': 'AirGradient ONE',
+    'model_id': 'I-9PSL',
     'name': 'Airgradient',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
@@ -51,7 +52,8 @@
     'labels': set({
     }),
     'manufacturer': 'AirGradient',
-    'model': 'O-1PPT',
+    'model': 'AirGradient Open Air',
+    'model_id': 'O-1PPT',
     'name': 'Airgradient',
     'name_by_user': None,
     'primary_config_entry': <ANY>,

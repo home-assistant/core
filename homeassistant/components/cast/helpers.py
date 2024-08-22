@@ -248,7 +248,7 @@ async def _fetch_playlist(hass, url, supported_content_types):
     """Fetch a playlist from the given url."""
     try:
         session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
-        async with session.get(url, timeout=5) as resp:
+        async with session.get(url, timeout=aiohttp.ClientTimeout(total=5)) as resp:
             charset = resp.charset or "utf-8"
             if resp.content_type in supported_content_types:
                 raise PlaylistSupported

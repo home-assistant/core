@@ -1,5 +1,6 @@
 """The tests for lastfm."""
 
+from typing import Any
 from unittest.mock import patch
 
 from pylast import PyLastError, Track
@@ -91,7 +92,7 @@ class MockUser:
         """Get mock now playing."""
         return self._now_playing_result
 
-    def get_friends(self) -> list[any]:
+    def get_friends(self) -> list[Any]:
         """Get mock friends."""
         if len(self._friends) == 0:
             raise PyLastError("network", "status", "Page not found")

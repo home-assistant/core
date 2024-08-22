@@ -1,10 +1,10 @@
 """Test the Reolink config flow."""
 
-from datetime import timedelta
 import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
 
@@ -25,7 +25,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.util.dt import utcnow
 
 from .conftest import (
     DHCP_FORMATTED_MAC,
@@ -166,8 +165,23 @@ async def test_config_flow_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {CONF_HOST: "invalid_auth"}
+    assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
+    reolink_connect.valid_password.return_value = False
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_HOST: TEST_HOST,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {CONF_PASSWORD: "password_incompatible"}
+
+    reolink_connect.valid_password.return_value = True
     reolink_connect.get_host_data.side_effect = ApiError("Test error")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -424,6 +438,7 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) -> No
 )
 async def test_dhcp_ip_update(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     reolink_connect_class: MagicMock,
     reolink_connect: MagicMock,
     last_update_success: bool,
@@ -457,9 +472,8 @@ async def test_dhcp_ip_update(
     if not last_update_success:
         # ensure the last_update_succes is False for the device_coordinator.
         reolink_connect.get_states = AsyncMock(side_effect=ReolinkError("Test error"))
-        async_fire_time_changed(
-            hass, utcnow() + DEVICE_UPDATE_INTERVAL + timedelta(minutes=1)
-        )
+        freezer.tick(DEVICE_UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     dhcp_data = dhcp.DhcpServiceInfo(

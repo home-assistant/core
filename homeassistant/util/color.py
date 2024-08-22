@@ -244,7 +244,7 @@ def color_RGB_to_xy_brightness(
     y = Y / (X + Y + Z)
 
     # Brightness
-    Y = 1 if Y > 1 else Y
+    Y = min(Y, 1)
     brightness = round(Y * 255)
 
     # Check if the given xy value is within the color-reach of the lamp.
