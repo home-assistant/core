@@ -32,8 +32,8 @@ def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
 
 
 @pytest.fixture
-def integration_helper(hass: HomeAssistant, config_flow_fixture: None) -> Generator:
-    """Set up an integration."""
+def setup_test_integration(hass: HomeAssistant, config_flow_fixture: None) -> Generator:
+    """Provide a mock integration for tests."""
 
     config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)
