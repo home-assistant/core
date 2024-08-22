@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import json
@@ -70,7 +71,8 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
         self.email = self.config_entry.data[CONF_EMAIL]
         self.password = self.config_entry.data[CONF_PASSWORD]
         self.api = NiceGOApi()
-        self.ws_connected = False
+        self._unsub_connected: Callable[[], None] | None = None
+        self._unsub_data: Callable[[], None] | None = None
 
     async def _parse_barrier(self, barrier_state: BarrierState) -> NiceGODevice | None:
         """Parse barrier data."""
@@ -178,8 +180,8 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
 
     async def client_listen(self) -> None:
         """Listen to the websocket for updates."""
-        self.api.listen("on_connected", self.on_connected)
-        self.api.listen("on_data", self.on_data)
+        self._unsub_connected = self.api.listen("on_connected", self.on_connected)
+        self._unsub_data = self.api.listen("on_data", self.on_data)
         try:
             await self.api.connect(reconnect=True)
         except ApiError:
@@ -221,3 +223,11 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
         """Handle the websocket connection."""
         _LOGGER.debug("Connected to the websocket")
         await self.api.subscribe(self.organization_id)
+
+    def unsubscribe(self) -> None:
+        """Unsubscribe from the websocket."""
+        if self._unsub_connected is None or self._unsub_data is None:
+            return
+        self._unsub_connected()
+        self._unsub_data()
+        _LOGGER.debug("Unsubscribed from the websocket")
