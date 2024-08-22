@@ -800,7 +800,7 @@ async def test_statistics_sensors_migration(
         (node_base_unique_id, NODE_STATISTICS_KEY_MAP),
     ):
         for new_key, old_key in key_map.items():
-            # If there was nothing to migrate there was nothing removed
+            # If the key has changed, the old entity should not exist
             if new_key != old_key:
                 assert not entity_registry.async_get_entity_id(
                     "sensor", DOMAIN, f"{base_unique_id}_{old_key}"
