@@ -94,7 +94,6 @@ async def platform_async_setup_entry(
     """
     entry_data = entry.runtime_data
     entry_data.info[info_type] = {}
-    entry_data.state.setdefault(state_type, {})
     platform = entity_platform.async_get_current_platform()
     on_static_info_update = functools.partial(
         async_static_info_updated,
@@ -188,6 +187,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     ) -> None:
         """Initialize."""
         self._entry_data = entry_data
+        self._states = cast(dict[int, _StateT], entry_data.state[state_type])
         assert entry_data.device_info is not None
         device_info = entry_data.device_info
         self._device_info = device_info
@@ -265,11 +265,9 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     @callback
     def _update_state_from_entry_data(self) -> None:
         """Update state from entry data."""
-        state = self._entry_data.state
         key = self._key
-        state_type = self._state_type
-        if has_state := key in state[state_type]:
-            self._state = cast(_StateT, state[state_type][key])
+        if has_state := key in self._states:
+            self._state = self._states[key]
         self._has_state = has_state
 
     @callback
