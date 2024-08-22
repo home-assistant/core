@@ -17,7 +17,7 @@ ptz_move:
           max: 64
           step: 1
 
-chime_play:
+play_chime:
   fields:
     device_id:
       required: true
