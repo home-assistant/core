@@ -29,7 +29,7 @@ from homeassistant.components.recorder.db_schema import (
     States,
 )
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import recorder as recorder_helper
 import homeassistant.util.dt as dt_util
 
@@ -47,7 +47,7 @@ async def mock_recorder_before_hass(
     """Set up recorder."""
 
 
-def _get_native_states(hass, entity_id):
+def _get_native_states(hass: HomeAssistant, entity_id: str) -> list[State]:
     with session_scope(hass=hass, read_only=True) as session:
         instance = recorder.get_instance(hass)
         metadata_id = instance.states_meta_manager.get(entity_id, session, True)
@@ -215,7 +215,7 @@ async def test_database_migration_failed(
         # Test error handling in _modify_columns
         (12, "sqlalchemy.engine.base.Connection.execute", False, 1, 0),
         # Test error handling in _drop_foreign_key_constraints
-        (44, "homeassistant.components.recorder.migration.DropConstraint", False, 2, 1),
+        (46, "homeassistant.components.recorder.migration.DropConstraint", False, 2, 1),
     ],
 )
 @pytest.mark.skip_on_db_engine(["sqlite"])

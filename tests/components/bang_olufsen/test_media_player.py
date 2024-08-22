@@ -1,7 +1,8 @@
 """Test the Bang & Olufsen media_player entity."""
 
 from contextlib import nullcontext as does_not_raise
-from unittest.mock import ANY, patch
+import logging
+from unittest.mock import patch
 
 from mozart_api.models import PlaybackContentMetadata
 import pytest
@@ -71,21 +72,21 @@ from tests.typing import WebSocketGenerator
 
 
 async def test_initialization(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_mozart_client
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_mozart_client,
 ) -> None:
     """Test the integration is initialized properly in _initialize, async_added_to_hass and __init__."""
 
+    caplog.set_level(logging.DEBUG)
+
     # Setup entity
-    with patch(
-        "homeassistant.components.bang_olufsen.media_player._LOGGER.debug"
-    ) as mock_logger:
-        mock_config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     # Ensure that the logger has been called with the debug message
-    mock_logger.assert_called_once_with(
-        "Connected to: %s %s running SW %s", "Beosound Balance", "11111111", "1.0.0"
-    )
+    assert "Connected to: Beosound Balance 11111111 running SW 1.0.0" in caplog.text
 
     # Check state (The initial state in this test does not contain all that much.
     # States are tested using simulated WebSocket events.)
@@ -167,7 +168,10 @@ async def test_async_update_playback_metadata(
 
 
 async def test_async_update_playback_error(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_mozart_client,
+    mock_config_entry,
 ) -> None:
     """Test _async_update_playback_error."""
 
@@ -175,18 +179,15 @@ async def test_async_update_playback_error(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     # The async_dispatcher_send function seems to swallow exceptions, making pytest.raises unusable
-    with patch("homeassistant.helpers.dispatcher._LOGGER.error") as mock_logger:
-        async_dispatcher_send(
-            hass,
-            f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.PLAYBACK_ERROR}",
-            TEST_PLAYBACK_ERROR,
-        )
+    async_dispatcher_send(
+        hass,
+        f"{TEST_SERIAL_NUMBER}_{WebsocketNotification.PLAYBACK_ERROR}",
+        TEST_PLAYBACK_ERROR,
+    )
 
-    # The traceback can't be tested, so it is replaced with "ANY"
-    mock_logger.assert_called_once_with(
-        "%s\n%s",
-        "Exception in _async_update_playback_error when dispatching '11111111_playback_error': (PlaybackError(error='Test error', item=None),)",
-        ANY,
+    assert (
+        "Exception in _async_update_playback_error when dispatching '11111111_playback_error': (PlaybackError(error='Test error', item=None),)"
+        in caplog.text
     )
 
 
@@ -731,32 +732,32 @@ async def test_async_play_media_overlay_absolute_volume_uri(
 
 
 async def test_async_play_media_overlay_invalid_offset_volume_tts(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_mozart_client,
+    mock_config_entry,
 ) -> None:
     """Test async_play_media with Home Assistant invalid offset volume and B&O tts."""
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    with patch(
-        "homeassistant.components.bang_olufsen.media_player._LOGGER.warning"
-    ) as mock_logger:
-        await hass.services.async_call(
-            "media_player",
-            "play_media",
-            {
-                ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-                ATTR_MEDIA_CONTENT_ID: "Dette er en test",
-                ATTR_MEDIA_CONTENT_TYPE: "overlay_tts",
-                ATTR_MEDIA_ANNOUNCE: True,
-                ATTR_MEDIA_EXTRA: {
-                    "overlay_offset_volume": 20,
-                    "overlay_tts_language": "da-dk",
-                },
+    await hass.services.async_call(
+        "media_player",
+        "play_media",
+        {
+            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
+            ATTR_MEDIA_CONTENT_ID: "Dette er en test",
+            ATTR_MEDIA_CONTENT_TYPE: "overlay_tts",
+            ATTR_MEDIA_ANNOUNCE: True,
+            ATTR_MEDIA_EXTRA: {
+                "overlay_offset_volume": 20,
+                "overlay_tts_language": "da-dk",
             },
-            blocking=True,
-        )
-        mock_logger.assert_called_once_with("Error setting volume")
+        },
+        blocking=True,
+    )
+    assert "Error setting volume" in caplog.text
 
     mock_mozart_client.post_overlay_play.assert_called_once_with(
         TEST_OVERLAY_INVALID_OFFSET_VOLUME_TTS
