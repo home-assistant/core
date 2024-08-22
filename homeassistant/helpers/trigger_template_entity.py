@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import contextlib
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -31,7 +31,9 @@ from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 from . import config_validation as cv
 from .entity import Entity
 from .template import render_complex
-from .typing import ConfigType
+
+if TYPE_CHECKING:
+    from .typing import ConfigType
 
 CONF_AVAILABILITY = "availability"
 CONF_ATTRIBUTES = "attributes"

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 import functools
@@ -14,6 +13,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Generator
+
     from sqlalchemy.orm.session import Session
 
     from homeassistant.components.recorder import Recorder

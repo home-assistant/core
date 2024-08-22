@@ -7,13 +7,15 @@ to speed up the process.
 
 from __future__ import annotations
 
-from datetime import timedelta
 from functools import lru_cache, partial
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from jwt import DecodeError, PyJWS, PyJWT
 
 from homeassistant.util.json import json_loads
+
+if TYPE_CHECKING:
+    from datetime import timedelta
 
 JWT_TOKEN_CACHE_SIZE = 16
 MAX_TOKEN_SIZE = 8192

@@ -17,10 +17,8 @@ from collections.abc import (
     Mapping,
     ValuesView,
 )
-import concurrent.futures
 from contextlib import suppress
 from dataclasses import dataclass
-import datetime
 import enum
 import functools
 from functools import cached_property
@@ -105,7 +103,6 @@ from .util.async_ import (
     run_callback_threadsafe,
     shutdown_run_callback_threadsafe,
 )
-from .util.event_type import EventType
 from .util.executor import InterruptibleThreadPoolExecutor
 from .util.hass_dict import HassDict
 from .util.json import JsonObjectType
@@ -122,10 +119,14 @@ from .util.unit_system import (
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
+    import concurrent.futures
+    import datetime
+
     from .auth import AuthManager
     from .components.http import ApiConfig, HomeAssistantHTTP
     from .config_entries import ConfigEntries
     from .helpers.entity import StateInfo
+    from .util.event_type import EventType
 
 STOPPING_STAGE_SHUTDOWN_TIMEOUT = 20
 STOP_STAGE_SHUTDOWN_TIMEOUT = 100

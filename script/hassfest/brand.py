@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from .model import Brand, Config, Integration
+if TYPE_CHECKING:
+    from .model import Brand, Config, Integration
 
 BRAND_SCHEMA = vol.Schema(
     {

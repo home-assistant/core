@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
 from voluptuous.schema_builder import _compile_scalar
-import yaml
+
+if TYPE_CHECKING:
+    import voluptuous as vol
+    import yaml
 
 
 class NodeListClass(list):

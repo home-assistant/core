@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Iterable
 import dataclasses
 from enum import Enum
 from functools import cache, partial
 import logging
-from types import ModuleType
 from typing import TYPE_CHECKING, Any, TypedDict, TypeGuard, cast
 
 import voluptuous as vol
@@ -64,10 +62,13 @@ from . import (
 )
 from .group import expand_entity_ids
 from .selector import TargetSelector
-from .typing import ConfigType, TemplateVarsType, VolDictType, VolSchemaType
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable, Coroutine, Iterable
+    from types import ModuleType
+
     from .entity import Entity
+    from .typing import ConfigType, TemplateVarsType, VolDictType, VolSchemaType
 
 CONF_SERVICE_ENTITY_ID = "entity_id"
 

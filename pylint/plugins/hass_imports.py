@@ -4,10 +4,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import re
+from typing import TYPE_CHECKING
 
-from astroid import nodes
 from pylint.checkers import BaseChecker
-from pylint.lint import PyLinter
+
+if TYPE_CHECKING:
+    from astroid import nodes
+    from pylint.lint import PyLinter
 
 
 @dataclass

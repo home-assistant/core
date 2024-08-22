@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 import configparser
 import io
 import os
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.const import REQUIRED_PYTHON_VER
 
-from .model import Config, Integration
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from .model import Config, Integration
 
 # Component modules which should set no_implicit_reexport = true.
 NO_IMPLICIT_REEXPORT_MODULES: set[str] = {

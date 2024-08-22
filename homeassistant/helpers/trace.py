@@ -3,16 +3,19 @@
 from __future__ import annotations
 
 from collections import deque
-from collections.abc import Callable, Coroutine, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import wraps
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from homeassistant.core import ServiceResponse
 import homeassistant.util.dt as dt_util
 
-from .typing import TemplateVarsType
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine, Generator
+
+    from homeassistant.core import ServiceResponse
+
+    from .typing import TemplateVarsType
 
 
 class TraceElement:

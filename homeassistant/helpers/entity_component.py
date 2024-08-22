@@ -3,16 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Iterable
 from datetime import timedelta
 import logging
-from types import ModuleType
-from typing import Any, Generic
+from typing import TYPE_CHECKING, Any, Generic
 
 from typing_extensions import TypeVar
 
 from homeassistant import config as conf_util
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ENTITY_NAMESPACE,
     CONF_SCAN_INTERVAL,
@@ -34,7 +31,14 @@ from homeassistant.setup import async_prepare_setup_platform
 
 from . import config_validation as cv, discovery, entity, service
 from .entity_platform import EntityPlatform
-from .typing import ConfigType, DiscoveryInfoType, VolDictType, VolSchemaType
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
+    from types import ModuleType
+
+    from homeassistant.config_entries import ConfigEntry
+
+    from .typing import ConfigType, DiscoveryInfoType, VolDictType, VolSchemaType
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
 DATA_INSTANCES = "entity_components"

@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import fnmatch
 from functools import lru_cache, partial
 import operator
 import re
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -20,6 +20,9 @@ from homeassistant.const import (
 from homeassistant.core import split_entity_id
 
 from . import config_validation as cv
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 CONF_INCLUDE_DOMAINS = "include_domains"
 CONF_INCLUDE_ENTITY_GLOBS = "include_entity_globs"

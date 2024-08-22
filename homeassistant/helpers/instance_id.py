@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 import uuid
 
-from homeassistant.core import HomeAssistant
-
 from . import singleton, storage
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 DATA_KEY = "core.uuid"
 DATA_VERSION = 1

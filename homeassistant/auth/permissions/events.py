@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from homeassistant.const import (
     EVENT_COMPONENT_LOADED,
@@ -24,7 +24,9 @@ from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.floor_registry import EVENT_FLOOR_REGISTRY_UPDATED
 from homeassistant.helpers.issue_registry import EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED
 from homeassistant.helpers.label_registry import EVENT_LABEL_REGISTRY_UPDATED
-from homeassistant.util.event_type import EventType
+
+if TYPE_CHECKING:
+    from homeassistant.util.event_type import EventType
 
 # These are events that do not contain any sensitive data
 # Except for state_changed, which is handled accordingly.

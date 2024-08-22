@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import attr
 
 from .const import COMPONENT_DIR, TESTS_DIR
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @attr.s

@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import ast
+from typing import TYPE_CHECKING
 
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 
-from .model import Config, Integration
+if TYPE_CHECKING:
+    from .model import Config, Integration
 
 CONFIG_SCHEMA_IGNORE = {
     # Configuration under the homeassistant key is a special case, it's handled by

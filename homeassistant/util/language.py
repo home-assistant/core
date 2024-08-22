@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 from dataclasses import dataclass
 import math
 import operator
 import re
+from typing import TYPE_CHECKING
 
 from homeassistant.const import MATCH_ALL
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 SEPARATOR_RE = re.compile(r"[-_]")
 SAME_LANGUAGES = (

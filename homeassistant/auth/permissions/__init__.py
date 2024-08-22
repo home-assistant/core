@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -12,6 +12,9 @@ from .merge import merge_policies
 from .models import PermissionLookup
 from .types import PolicyType
 from .util import test_all
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 POLICY_SCHEMA = vol.Schema({vol.Optional(CAT_ENTITIES): ENTITY_POLICY_SCHEMA})
 

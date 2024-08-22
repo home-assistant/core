@@ -15,7 +15,6 @@ import os
 from pathlib import Path
 import re
 import shutil
-from types import ModuleType
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
@@ -66,7 +65,6 @@ from .generated.currencies import HISTORIC_CURRENCIES
 from .helpers import config_validation as cv, issue_registry as ir
 from .helpers.entity_values import EntityValues
 from .helpers.translation import async_get_exception_message
-from .helpers.typing import ConfigType
 from .loader import ComponentProtocol, Integration, IntegrationNotFound
 from .requirements import RequirementsNotFound, async_get_integration_with_requirements
 from .util.async_ import create_eager_task
@@ -75,6 +73,11 @@ from .util.package import is_docker_env
 from .util.unit_system import get_unit_system, validate_unit_system
 from .util.yaml import SECRET_YAML, Secrets, YamlTypeError, load_yaml_dict
 from .util.yaml.objects import NodeStrClass
+
+if TYPE_CHECKING:
+    from types import ModuleType
+
+    from .helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

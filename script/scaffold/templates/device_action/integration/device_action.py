@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -13,10 +15,12 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 
 from . import DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.core import Context, HomeAssistant
 
 # TODO specify your supported action types.
 ACTION_TYPES = {"turn_on", "turn_off"}

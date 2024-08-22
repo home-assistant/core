@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
-from logging import Logger
+from typing import TYPE_CHECKING
 
 from homeassistant.core import HassJob, HomeAssistant, callback
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from logging import Logger
 
 
 class Debouncer[_R_co]:

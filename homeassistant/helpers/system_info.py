@@ -10,12 +10,14 @@ import platform
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import __version__ as current_version
-from homeassistant.core import HomeAssistant
 from homeassistant.loader import bind_hass
 from homeassistant.util.package import is_docker_env, is_virtual_env
 
 from .importlib import async_import_module
 from .singleton import singleton
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

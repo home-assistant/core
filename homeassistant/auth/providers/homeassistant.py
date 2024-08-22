@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import asyncio
 import base64
-from collections.abc import Mapping
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import bcrypt
 import voluptuous as vol
@@ -19,6 +18,9 @@ from homeassistant.helpers.storage import Store
 
 from ..models import AuthFlowResult, Credentials, UserMeta
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "auth_provider.homeassistant"

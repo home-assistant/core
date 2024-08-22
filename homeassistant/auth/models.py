@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
 from functools import cached_property
 import secrets
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 import uuid
 
 import attr
@@ -18,6 +17,9 @@ from homeassistant.util import dt as dt_util
 
 from . import permissions as perm_mdl
 from .const import GROUP_ID_ADMIN
+
+if TYPE_CHECKING:
+    from datetime import datetime, timedelta
 
 TOKEN_TYPE_NORMAL = "normal"
 TOKEN_TYPE_SYSTEM = "system"

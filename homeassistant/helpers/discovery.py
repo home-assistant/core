@@ -8,16 +8,20 @@ There are two different types of discoveries that can be fired/listened for.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
-from typing import Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from homeassistant import core, setup
-from homeassistant.const import Platform
 from homeassistant.loader import bind_hass
 
 from ..util.signal_type import SignalTypeFormat
 from .dispatcher import async_dispatcher_connect, async_dispatcher_send_internal
-from .typing import ConfigType, DiscoveryInfoType
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
+    from homeassistant.const import Platform
+
+    from .typing import ConfigType, DiscoveryInfoType
 
 SIGNAL_PLATFORM_DISCOVERED: SignalTypeFormat[DiscoveryDict] = SignalTypeFormat(
     "discovery.platform_discovered_{}"

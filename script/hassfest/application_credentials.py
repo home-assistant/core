@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
-from .model import Config, Integration
+from typing import TYPE_CHECKING
+
 from .serializer import format_python_namespace
+
+if TYPE_CHECKING:
+    from .model import Config, Integration
 
 
 def generate_and_validate(integrations: dict[str, Integration], config: Config) -> str:

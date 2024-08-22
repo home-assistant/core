@@ -3,14 +3,11 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Generator
-from datetime import datetime, timedelta
 from functools import cached_property
 import logging
 from random import randint
 from time import monotonic
-from typing import Any, Generic, Protocol
+from typing import TYPE_CHECKING, Any, Generic, Protocol
 import urllib.error
 
 import aiohttp
@@ -29,6 +26,11 @@ from homeassistant.util.dt import utcnow
 
 from . import entity, event
 from .debounce import Debouncer
+
+if TYPE_CHECKING:
+    import asyncio
+    from collections.abc import Awaitable, Callable, Coroutine, Generator
+    from datetime import datetime, timedelta
 
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True

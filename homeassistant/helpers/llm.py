@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 from functools import cache, partial
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import slugify as unicode_slug
 import voluptuous as vol
@@ -36,7 +35,6 @@ from homeassistant.core import Context, Event, HomeAssistant, callback, split_en
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import yaml
 from homeassistant.util.hass_dict import HassKey
-from homeassistant.util.json import JsonObjectType
 
 from . import (
     area_registry as ar,
@@ -49,6 +47,11 @@ from . import (
     service,
 )
 from .singleton import singleton
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.util.json import JsonObjectType
 
 SCRIPT_PARAMETERS_CACHE: HassKey[dict[str, tuple[str | None, vol.Schema]]] = HassKey(
     "llm_script_parameters_cache"

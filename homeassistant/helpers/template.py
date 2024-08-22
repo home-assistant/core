@@ -21,8 +21,16 @@ import re
 import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
-from types import CodeType, TracebackType
-from typing import Any, Concatenate, Literal, NoReturn, Self, cast, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Concatenate,
+    Literal,
+    NoReturn,
+    Self,
+    cast,
+    overload,
+)
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -68,7 +76,6 @@ from homeassistant.util import (
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
-from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.thread import ThreadWithException
 
 from . import (
@@ -82,7 +89,13 @@ from . import (
 )
 from .singleton import singleton
 from .translation import async_translate_state
-from .typing import TemplateVarsType
+
+if TYPE_CHECKING:
+    from types import CodeType, TracebackType
+
+    from homeassistant.util.read_only_dict import ReadOnlyDict
+
+    from .typing import TemplateVarsType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 

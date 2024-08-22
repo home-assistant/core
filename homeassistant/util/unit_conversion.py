@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from functools import lru_cache
+from typing import TYPE_CHECKING
 
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
@@ -28,6 +28,9 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # Distance conversion constants
 _MM_TO_M = 0.001  # 1 mm = 0.001 m

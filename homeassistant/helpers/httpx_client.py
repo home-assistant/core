@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
 import sys
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 
 import httpx
 
@@ -19,6 +18,9 @@ from homeassistant.util.ssl import (
 )
 
 from .frame import warn_use
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
 
 # We have a lot of integrations that poll every 10-30 seconds
 # and we want to keep the connection open for a while so we

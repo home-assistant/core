@@ -6,12 +6,14 @@ from concurrent.futures import ThreadPoolExecutor
 import contextlib
 import logging
 import sys
-from threading import Thread
 import time
 import traceback
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .thread import async_raise
+
+if TYPE_CHECKING:
+    from threading import Thread
 
 _LOGGER = logging.getLogger(__name__)
 

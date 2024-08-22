@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
-import asyncio
 from contextlib import suppress
 import importlib
 import logging
 import sys
-from types import ModuleType
+from typing import TYPE_CHECKING
 
-from homeassistant.core import HomeAssistant
 from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    import asyncio
+    from types import ModuleType
+
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

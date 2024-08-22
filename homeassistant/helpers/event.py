@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Coroutine, Iterable, Mapping, Sequence
 import copy
@@ -40,7 +39,6 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
-from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
 
 from . import frame
@@ -55,7 +53,13 @@ from .entity_registry import (
 from .ratelimit import KeyedRateLimit
 from .sun import get_astral_event_next
 from .template import RenderInfo, Template, result_as_boolean
-from .typing import TemplateVarsType
+
+if TYPE_CHECKING:
+    import asyncio
+
+    from homeassistant.util.event_type import EventType
+
+    from .typing import TemplateVarsType
 
 _TRACK_STATE_CHANGE_DATA: HassKey[_KeyedEventData[EventStateChangedData]] = HassKey(
     "track_state_change_data"

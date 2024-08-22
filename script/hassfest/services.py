@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import contextlib
 import json
-import pathlib
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -16,7 +15,10 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, selector, service
 from homeassistant.util.yaml import load_yaml_dict
 
-from .model import Config, Integration
+if TYPE_CHECKING:
+    import pathlib
+
+    from .model import Config, Integration
 
 
 def exists(value: Any) -> Any:

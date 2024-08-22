@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 import dataclasses
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Literal, TypedDict
+from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.util.dt import utc_from_timestamp, utcnow
@@ -18,6 +17,9 @@ from .registry import BaseRegistry
 from .singleton import singleton
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 DATA_REGISTRY: HassKey[CategoryRegistry] = HassKey("category_registry")
 EVENT_CATEGORY_REGISTRY_UPDATED: EventType[EventCategoryRegistryUpdatedData] = (

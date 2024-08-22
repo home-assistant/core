@@ -6,7 +6,7 @@ from datetime import timedelta
 import hmac
 import itertools
 from logging import getLogger
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -23,7 +23,9 @@ from .const import (
 )
 from .permissions import system_policies
 from .permissions.models import PermissionLookup
-from .permissions.types import PolicyType
+
+if TYPE_CHECKING:
+    from .permissions.types import PolicyType
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "auth"

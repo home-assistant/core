@@ -4,14 +4,16 @@ from __future__ import annotations
 
 from http import HTTPStatus
 import io
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import parse_qsl
 
 from aiohttp import payload, web
-from aiohttp.typedefs import JSONDecoder
 from multidict import CIMultiDict, MultiDict
 
 from .json import json_loads
+
+if TYPE_CHECKING:
+    from aiohttp.typedefs import JSONDecoder
 
 
 class MockStreamReader:

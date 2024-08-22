@@ -8,10 +8,12 @@ from __future__ import annotations
 
 import asyncio
 import enum
-from types import TracebackType
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 
 from .async_ import run_callback_threadsafe
+
+if TYPE_CHECKING:
+    from types import TracebackType
 
 ZONE_GLOBAL = "global"
 

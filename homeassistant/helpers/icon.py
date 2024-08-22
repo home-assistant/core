@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
 from functools import lru_cache
 import logging
-import pathlib
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import Integration, async_get_integrations
@@ -15,6 +13,10 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import load_json_object
 
 from .translation import build_resources
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    import pathlib
 
 ICON_CACHE: HassKey[_IconsCache] = HassKey("icon_cache")
 

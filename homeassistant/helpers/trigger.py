@@ -8,7 +8,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
 import functools
 import logging
-from typing import Any, Protocol, TypedDict, cast
+from typing import TYPE_CHECKING, Any, Protocol, TypedDict, cast
 
 import voluptuous as vol
 
@@ -33,7 +33,9 @@ from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.hass_dict import HassKey
 
 from .template import Template
-from .typing import ConfigType, TemplateVarsType
+
+if TYPE_CHECKING:
+    from .typing import ConfigType, TemplateVarsType
 
 _PLATFORM_ALIASES = {
     "device": "device_automation",

@@ -3,14 +3,18 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
 from .const import POLICY_CONTROL, POLICY_EDIT, POLICY_READ, SUBCAT_ALL
-from .models import PermissionLookup
-from .types import CategoryType, SubCategoryDict, ValueType
 from .util import SubCatLookupType, compile_policy, lookup_all
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from .models import PermissionLookup
+    from .types import CategoryType, SubCategoryDict, ValueType
 
 SINGLE_ENTITY_SCHEMA = vol.Any(
     True,

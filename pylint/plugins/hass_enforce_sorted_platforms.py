@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from astroid import nodes
 from pylint.checkers import BaseChecker
-from pylint.lint import PyLinter
+
+if TYPE_CHECKING:
+    from pylint.lint import PyLinter
 
 
 class HassEnforceSortedPlatformsChecker(BaseChecker):

@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
-import subprocess
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    import subprocess
 
 
 def kill_subprocess(process: subprocess.Popen[Any]) -> None:

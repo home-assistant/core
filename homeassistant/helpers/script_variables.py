@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import HomeAssistant, callback
 
 from . import template
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 
 class ScriptVariables:

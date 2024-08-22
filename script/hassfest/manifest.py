@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from enum import IntEnum
 import json
-from pathlib import Path
 import subprocess
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 from awesomeversion import (
@@ -20,7 +19,10 @@ from voluptuous.humanize import humanize_error
 from homeassistant.const import Platform
 from homeassistant.helpers import config_validation as cv
 
-from .model import Config, Integration
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from .model import Config, Integration
 
 DOCUMENTATION_URL_SCHEMA = "https"
 DOCUMENTATION_URL_HOST = "www.home-assistant.io"

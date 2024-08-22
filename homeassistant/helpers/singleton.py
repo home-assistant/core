@@ -5,11 +5,13 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 import functools
-from typing import Any, cast, overload
+from typing import TYPE_CHECKING, Any, cast, overload
 
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import bind_hass
-from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.util.hass_dict import HassKey
 
 type _FuncType[_T] = Callable[[HomeAssistant], _T]
 

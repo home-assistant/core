@@ -4,15 +4,13 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Awaitable, Callable, Generator, Mapping
 import contextlib
 import contextvars
 from enum import StrEnum
 from functools import partial
 import logging.handlers
 import time
-from types import ModuleType
-from typing import Any, Final, TypedDict
+from typing import TYPE_CHECKING, Any, Final, TypedDict
 
 from . import config as conf_util, core, loader, requirements
 from .const import (
@@ -31,9 +29,14 @@ from .core import (
 from .exceptions import DependencyError, HomeAssistantError
 from .helpers import issue_registry as ir, singleton, translation
 from .helpers.issue_registry import IssueSeverity, async_create_issue
-from .helpers.typing import ConfigType
 from .util.async_ import create_eager_task
 from .util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable, Generator, Mapping
+    from types import ModuleType
+
+    from .helpers.typing import ConfigType
 
 current_setup_group: contextvars.ContextVar[tuple[str, str | None] | None] = (
     contextvars.ContextVar("current_setup_group", default=None)

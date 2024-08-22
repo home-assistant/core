@@ -9,7 +9,7 @@ import os
 import re
 import subprocess
 import sys
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 from tqdm import tqdm
@@ -20,7 +20,8 @@ from script.gen_requirements_all import (
     normalize_package_name,
 )
 
-from .model import Config, Integration
+if TYPE_CHECKING:
+    from .model import Config, Integration
 
 PACKAGE_REGEX = re.compile(
     r"^(?:--.+\s)?([-_,\.\w\d\[\]]+)(==|>=|<=|~=|!=|<|>|===)*(.*)$"

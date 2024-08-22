@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
 from contextlib import suppress
 import socket
-from ssl import SSLContext
 import sys
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
@@ -29,6 +27,9 @@ from .frame import warn_use
 from .json import json_dumps
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+    from ssl import SSLContext
+
     from aiohttp.typedefs import JSONDecoder
 
 

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import json
+from typing import TYPE_CHECKING
 
-from .model import Config, Integration
+if TYPE_CHECKING:
+    from .model import Config, Integration
 
 
 def validate_json_files(integration: Integration) -> None:

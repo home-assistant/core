@@ -8,14 +8,13 @@ from __future__ import annotations
 import asyncio
 from collections import OrderedDict
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import attr
 import voluptuous as vol
 
 from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import ServiceNotFound
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.storage import Store
@@ -26,6 +25,9 @@ from . import (
     MultiFactorAuthModule,
     SetupFlow,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.data_entry_flow import FlowResult
 
 REQUIREMENTS = ["pyotp==2.8.0"]
 

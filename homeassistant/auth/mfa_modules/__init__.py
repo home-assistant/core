@@ -3,20 +3,23 @@
 from __future__ import annotations
 
 import logging
-import types
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant import data_entry_flow, requirements
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.importlib import async_import_module
 from homeassistant.util.decorator import Registry
 from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    import types
+
+    from homeassistant.core import HomeAssistant
+    from homeassistant.data_entry_flow import FlowResult
 
 MULTI_FACTOR_AUTH_MODULES: Registry[str, type[MultiFactorAuthModule]] = Registry()
 

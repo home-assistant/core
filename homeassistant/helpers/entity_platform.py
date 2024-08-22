@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from contextvars import ContextVar
-from datetime import timedelta
 from logging import Logger, getLogger
 from typing import TYPE_CHECKING, Any, Protocol
 
@@ -50,6 +48,9 @@ from .issue_registry import IssueSeverity, async_create_issue
 from .typing import UNDEFINED, ConfigType, DiscoveryInfoType, VolDictType, VolSchemaType
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable, Coroutine, Iterable
+    from datetime import timedelta
+
     from .entity import Entity
 
 

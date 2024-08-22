@@ -26,10 +26,8 @@ from awesomeversion import (
     AwesomeVersionException,
     AwesomeVersionStrategy,
 )
-import voluptuous as vol
 
 from . import generated
-from .const import Platform
 from .core import HomeAssistant, callback
 from .generated.application_credentials import APPLICATION_CREDENTIALS
 from .generated.bluetooth import BLUETOOTH
@@ -47,7 +45,10 @@ from .util.json import JSON_DECODE_EXCEPTIONS, json_loads
 if TYPE_CHECKING:
     # The relative imports below are guarded by TYPE_CHECKING
     # because they would cause a circular import otherwise.
+    import voluptuous as vol
+
     from .config_entries import ConfigEntry
+    from .const import Platform
     from .helpers import device_registry as dr
     from .helpers.typing import ConfigType
 

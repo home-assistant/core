@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from functools import partial
 import logging
-from types import ModuleType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import Event, HassJob, HomeAssistant, callback
@@ -22,6 +20,10 @@ from homeassistant.loader import (
 from homeassistant.setup import ATTR_COMPONENT, EventComponentLoaded
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.logging import catch_log_exception
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+    from types import ModuleType
 
 _LOGGER = logging.getLogger(__name__)
 DATA_INTEGRATION_PLATFORMS: HassKey[list[IntegrationPlatform]] = HassKey(

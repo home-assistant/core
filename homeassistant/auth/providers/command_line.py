@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
 import logging
 import os
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
@@ -15,6 +14,9 @@ from homeassistant.exceptions import HomeAssistantError
 
 from ..models import AuthFlowResult, Credentials, UserMeta
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 CONF_ARGS = "args"
 CONF_META = "meta"

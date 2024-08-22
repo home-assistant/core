@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 from http import HTTPStatus
-from typing import Any, Generic
+from typing import TYPE_CHECKING, Any, Generic
 
-from aiohttp import web
 from typing_extensions import TypeVar
 import voluptuous as vol
 import voluptuous_serialize
@@ -15,6 +14,9 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 
 from . import config_validation as cv
+
+if TYPE_CHECKING:
+    from aiohttp import web
 
 _FlowManagerT = TypeVar(
     "_FlowManagerT",

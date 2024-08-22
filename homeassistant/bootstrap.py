@@ -89,7 +89,6 @@ from .helpers import (
 from .helpers.dispatcher import async_dispatcher_send_internal
 from .helpers.storage import get_internal_store_manager
 from .helpers.system_info import async_get_system_info, is_official_image
-from .helpers.typing import ConfigType
 from .setup import (
     # _setup_started is marked as protected to make it clear
     # that it is not part of the public API and should not be used
@@ -112,6 +111,7 @@ with contextlib.suppress(ImportError):
 
 
 if TYPE_CHECKING:
+    from .helpers.typing import ConfigType
     from .runner import RuntimeConfig
 
 _LOGGER = logging.getLogger(__name__)

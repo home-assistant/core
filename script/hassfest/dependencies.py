@@ -5,12 +5,15 @@ from __future__ import annotations
 import ast
 from collections import deque
 import multiprocessing
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from homeassistant.const import Platform
 from homeassistant.requirements import DISCOVERY_INTEGRATIONS
 
-from .model import Config, Integration
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from .model import Config, Integration
 
 
 class ImportCollector(ast.NodeVisitor):

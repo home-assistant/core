@@ -2,18 +2,22 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from contextlib import suppress
 from ipaddress import ip_address
+from typing import TYPE_CHECKING
 
 from hass_nabucasa import remote
 import yarl
 
 from homeassistant.components import http
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.util.network import is_ip_address, is_loopback, normalize_url
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.core import HomeAssistant
 
 TYPE_URL_INTERNAL = "internal_url"
 TYPE_URL_EXTERNAL = "external_url"

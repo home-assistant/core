@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import (
@@ -14,9 +13,13 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.util.event_type import EventType
 
-from .typing import NoEventData
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
+
+    from homeassistant.util.event_type import EventType
+
+    from .typing import NoEventData
 
 
 @callback

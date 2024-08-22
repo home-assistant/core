@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 from abc import ABCMeta
-import asyncio
 from collections import deque
-from collections.abc import Callable, Coroutine, Iterable, Mapping
 import dataclasses
 from enum import Enum, IntFlag, auto
 import functools as ft
@@ -59,7 +57,6 @@ from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.frozen_dataclass_compat import FrozenOrThawed
 
 from . import device_registry as dr, entity_registry as er, singleton
-from .device_registry import DeviceInfo, EventDeviceRegistryUpdatedData
 from .event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
@@ -70,6 +67,10 @@ from .typing import UNDEFINED, StateType, UndefinedType
 timer = time.time
 
 if TYPE_CHECKING:
+    import asyncio
+    from collections.abc import Callable, Coroutine, Iterable, Mapping
+
+    from .device_registry import DeviceInfo, EventDeviceRegistryUpdatedData
     from .entity_platform import EntityPlatform
 
 _LOGGER = logging.getLogger(__name__)

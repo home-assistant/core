@@ -10,8 +10,6 @@ from homeassistant import config_entries
 from homeassistant.components import onboarding
 from homeassistant.core import HomeAssistant
 
-from .typing import DiscoveryInfoType
-
 if TYPE_CHECKING:
     import asyncio
 
@@ -21,6 +19,7 @@ if TYPE_CHECKING:
     from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
     from .service_info.mqtt import MqttServiceInfo
+    from .typing import DiscoveryInfoType
 
 type DiscoveryFunctionType[_R] = Callable[[HomeAssistant], _R]
 

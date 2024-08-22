@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from numbers import Number
+from typing import TYPE_CHECKING
 
 from homeassistant.const import PRECISION_HALVES, PRECISION_TENTHS
-from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_conversion import TemperatureConverter
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 
 def display_temp(

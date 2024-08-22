@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-import asyncio
-from collections.abc import Callable, Hashable
 import logging
 import time
+from typing import TYPE_CHECKING
 
 from homeassistant.core import HomeAssistant, callback
+
+if TYPE_CHECKING:
+    import asyncio
+    from collections.abc import Callable, Hashable
 
 _LOGGER = logging.getLogger(__name__)
 

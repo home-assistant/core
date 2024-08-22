@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Collection, Iterable, Mapping
 import shutil
 import subprocess
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Collection, Iterable, Mapping
 
 DEFAULT_GENERATOR = "script.hassfest"
 

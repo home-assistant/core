@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
-import pathlib
 import string
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
@@ -26,6 +24,10 @@ from homeassistant.loader import (
 from homeassistant.util.json import load_json
 
 from . import singleton
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
+    import pathlib
 
 _LOGGER = logging.getLogger(__name__)
 

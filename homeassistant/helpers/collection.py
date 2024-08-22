@@ -8,9 +8,8 @@ from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from dataclasses import dataclass
 from functools import partial
 from itertools import groupby
-import logging
 from operator import attrgetter
-from typing import Any, Generic, TypedDict
+from typing import TYPE_CHECKING, Any, Generic, TypedDict
 
 from typing_extensions import TypeVar
 import voluptuous as vol
@@ -24,9 +23,13 @@ from homeassistant.util import slugify
 
 from . import entity_registry
 from .entity import Entity
-from .entity_component import EntityComponent
-from .storage import Store
-from .typing import ConfigType, VolDictType
+
+if TYPE_CHECKING:
+    import logging
+
+    from .entity_component import EntityComponent
+    from .storage import Store
+    from .typing import ConfigType, VolDictType
 
 STORAGE_VERSION = 1
 SAVE_DELAY = 10

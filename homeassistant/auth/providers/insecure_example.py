@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import hmac
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
@@ -13,6 +12,9 @@ from homeassistant.exceptions import HomeAssistantError
 
 from ..models import AuthFlowResult, Credentials, UserMeta
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 USER_SCHEMA = vol.Schema(
     {

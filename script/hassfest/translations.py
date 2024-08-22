@@ -5,7 +5,7 @@ from __future__ import annotations
 from functools import partial
 import json
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -13,7 +13,8 @@ from voluptuous.humanize import humanize_error
 import homeassistant.helpers.config_validation as cv
 from script.translations import upload
 
-from .model import Config, Integration
+if TYPE_CHECKING:
+    from .model import Config, Integration
 
 UNDEFINED = 0
 REQUIRED = 1

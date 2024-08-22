@@ -6,7 +6,7 @@ from collections import OrderedDict
 import logging
 import os
 from pathlib import Path
-from typing import NamedTuple, Self
+from typing import TYPE_CHECKING, NamedTuple, Self
 
 import voluptuous as vol
 
@@ -32,7 +32,9 @@ from homeassistant.requirements import (
 import homeassistant.util.yaml.loader as yaml_loader
 
 from . import config_validation as cv
-from .typing import ConfigType
+
+if TYPE_CHECKING:
+    from .typing import ConfigType
 
 
 class CheckConfigError(NamedTuple):

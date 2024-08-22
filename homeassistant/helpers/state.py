@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Iterable
 import logging
-from types import ModuleType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.sun import STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON
 from homeassistant.const import (
@@ -23,6 +21,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.loader import IntegrationNotFound, async_get_integration, bind_hass
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from types import ModuleType
 
 _LOGGER = logging.getLogger(__name__)
 

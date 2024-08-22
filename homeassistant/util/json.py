@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import logging
-from os import PathLike
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import orjson
 
 from homeassistant.exceptions import HomeAssistantError
+
+if TYPE_CHECKING:
+    from os import PathLike
 
 _SENTINEL = object()
 _LOGGER = logging.getLogger(__name__)

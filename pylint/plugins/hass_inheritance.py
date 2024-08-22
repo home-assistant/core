@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING
 
-from astroid import nodes
 from pylint.checkers import BaseChecker
-from pylint.lint import PyLinter
+
+if TYPE_CHECKING:
+    from astroid import nodes
+    from pylint.lint import PyLinter
 
 _MODULE_REGEX: re.Pattern[str] = re.compile(r"^homeassistant\.components\.\w+(\.\w+)?$")
 

@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
 import contextlib
 import logging
 import os
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from packaging.requirements import Requirement
 
@@ -16,6 +15,9 @@ from .exceptions import HomeAssistantError
 from .helpers import singleton
 from .loader import Integration, IntegrationNotFound, async_get_integration
 from .util import package as pkg_util
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 # The default is too low when the internet connection is satellite or high latency
 PIP_TIMEOUT = 60

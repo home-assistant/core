@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from .util.event_type import EventType
-
 if TYPE_CHECKING:
+    from collections.abc import Callable, Generator, Sequence
+
     from .core import Context
+    from .util.event_type import EventType
 
 
 _function_cache: dict[str, Callable[[str, str, dict[str, str] | None], str]] = {}

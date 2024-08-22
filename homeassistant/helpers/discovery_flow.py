@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
-from collections.abc import Coroutine
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
-from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import gather_with_limited_concurrency
 from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from collections.abc import Coroutine
+
+    from homeassistant.config_entries import ConfigFlowResult
 
 FLOW_INIT_LIMIT = 20
 DISCOVERY_FLOW_DISPATCHER: HassKey[FlowDispatcher] = HassKey(

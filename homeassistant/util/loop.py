@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import functools
 from functools import cache
 import linecache
 import logging
 import threading
 import traceback
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import async_get_hass_or_none
 from homeassistant.helpers.frame import (
@@ -18,6 +17,9 @@ from homeassistant.helpers.frame import (
     get_integration_frame,
 )
 from homeassistant.loader import async_suggest_report_issue
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Mapping, Sequence
 from contextlib import asynccontextmanager
 from contextvars import ContextVar
 from copy import copy
@@ -13,7 +12,7 @@ from functools import cached_property, partial
 import itertools
 import logging
 from types import MappingProxyType
-from typing import Any, Literal, TypedDict, cast, overload
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast, overload
 
 import async_interrupt
 import voluptuous as vol
@@ -89,7 +88,6 @@ from . import condition, config_validation as cv, service, template
 from .condition import ConditionCheckerType, trace_condition_function
 from .dispatcher import async_dispatcher_connect, async_dispatcher_send_internal
 from .event import async_call_later, async_track_template
-from .script_variables import ScriptVariables
 from .template import Template
 from .trace import (
     TraceElement,
@@ -109,6 +107,11 @@ from .trace import (
 )
 from .trigger import async_initialize_triggers, async_validate_trigger_config
 from .typing import UNDEFINED, ConfigType, TemplateVarsType, UndefinedType
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator, Callable, Mapping, Sequence
+
+    from .script_variables import ScriptVariables
 
 SCRIPT_MODE_PARALLEL = "parallel"
 SCRIPT_MODE_QUEUED = "queued"

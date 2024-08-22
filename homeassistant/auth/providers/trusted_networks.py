@@ -6,7 +6,6 @@ Abort login flow if not access from trusted network.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from ipaddress import (
     IPv4Address,
     IPv4Network,
@@ -15,7 +14,7 @@ from ipaddress import (
     ip_address,
     ip_network,
 )
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
@@ -25,8 +24,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import is_cloud_connection
 
 from .. import InvalidAuthError
-from ..models import AuthFlowResult, Credentials, RefreshToken, UserMeta
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from ..models import AuthFlowResult, Credentials, RefreshToken, UserMeta
 
 type IPAddress = IPv4Address | IPv6Address
 type IPNetwork = IPv4Network | IPv6Network

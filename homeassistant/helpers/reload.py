@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
 import logging
-from typing import Any, Literal, overload
+from typing import TYPE_CHECKING, Any, Literal, overload
 
 from homeassistant import config as conf_util
 from homeassistant.const import SERVICE_RELOAD
@@ -14,11 +13,15 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
-from .entity import Entity
-from .entity_component import EntityComponent
 from .entity_platform import EntityPlatform, async_get_platforms
 from .service import async_register_admin_service
-from .typing import ConfigType
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from .entity import Entity
+    from .entity_component import EntityComponent
+    from .typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

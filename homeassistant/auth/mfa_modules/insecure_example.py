@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
-
-from homeassistant.core import HomeAssistant
 
 from . import (
     MULTI_FACTOR_AUTH_MODULE_SCHEMA,
@@ -14,6 +12,9 @@ from . import (
     MultiFactorAuthModule,
     SetupFlow,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 CONFIG_SCHEMA = MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend(
     {

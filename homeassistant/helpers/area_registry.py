@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Iterable
 import dataclasses
 from datetime import datetime
 from functools import cached_property
-from typing import Any, Literal, TypedDict
+from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
@@ -26,6 +25,9 @@ from .registry import BaseRegistry, RegistryIndexType
 from .singleton import singleton
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 DATA_REGISTRY: HassKey[AreaRegistry] = HassKey("area_registry")
 EVENT_AREA_REGISTRY_UPDATED: EventType[EventAreaRegistryUpdatedData] = EventType(

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Mapping
 from datetime import datetime
 from enum import StrEnum
 from functools import cached_property, lru_cache, partial
@@ -45,6 +44,8 @@ from .singleton import singleton
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from homeassistant.config_entries import ConfigEntry
 
     from . import entity_registry

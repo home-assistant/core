@@ -11,13 +11,12 @@ from __future__ import annotations
 from abc import ABC, ABCMeta, abstractmethod
 import asyncio
 from asyncio import Lock
-from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from json import JSONDecodeError
 import logging
 import secrets
 import time
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp import ClientError, ClientResponseError, client, web
 import jwt
@@ -32,6 +31,9 @@ from homeassistant.util.hass_dict import HassKey
 
 from .aiohttp_client import async_get_clientsession
 from .network import NoURLAvailableError
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
 
 _LOGGER = logging.getLogger(__name__)
 

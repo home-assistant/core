@@ -4,13 +4,10 @@ from __future__ import annotations
 
 import asyncio
 from io import BytesIO
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
-from homeassistant.auth.models import User
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.storage import Store
 
 from . import (
@@ -19,6 +16,11 @@ from . import (
     MultiFactorAuthModule,
     SetupFlow,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.auth.models import User
+    from homeassistant.core import HomeAssistant
+    from homeassistant.data_entry_flow import FlowResult
 
 REQUIREMENTS = ["pyotp==2.8.0", "PyQRCode==1.2.1"]
 

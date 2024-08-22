@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
-import types
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -19,9 +17,14 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
 from homeassistant.util.hass_dict import HassKey
 
-from ..auth_store import AuthStore
 from ..const import MFA_SESSION_EXPIRATION
 from ..models import AuthFlowResult, Credentials, RefreshToken, User, UserMeta
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+    import types
+
+    from ..auth_store import AuthStore
 
 _LOGGER = logging.getLogger(__name__)
 DATA_REQS: HassKey[set[str]] = HassKey("auth_prov_reqs_processed")

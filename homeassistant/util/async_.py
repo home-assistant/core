@@ -11,11 +11,13 @@ from asyncio import (
     gather,
     get_running_loop,
 )
-from collections.abc import Awaitable, Callable, Coroutine
 import concurrent.futures
 import logging
 import threading
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable, Coroutine
 
 _LOGGER = logging.getLogger(__name__)
 

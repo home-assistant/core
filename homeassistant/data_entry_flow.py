@@ -5,7 +5,6 @@ from __future__ import annotations
 import abc
 import asyncio
 from collections import defaultdict
-from collections.abc import Callable, Container, Hashable, Iterable, Mapping
 from contextlib import suppress
 import copy
 from dataclasses import dataclass
@@ -13,7 +12,7 @@ from enum import StrEnum
 from functools import partial
 import logging
 from types import MappingProxyType
-from typing import Any, Generic, Required, TypedDict, cast
+from typing import TYPE_CHECKING, Any, Generic, Required, TypedDict, cast
 
 from typing_extensions import TypeVar
 import voluptuous as vol
@@ -29,6 +28,9 @@ from .helpers.deprecation import (
 from .helpers.frame import report
 from .loader import async_suggest_report_issue
 from .util import uuid as uuid_util
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Container, Hashable, Iterable, Mapping
 
 _LOGGER = logging.getLogger(__name__)
 

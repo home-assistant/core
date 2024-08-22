@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING
 from astroid import nodes
 from astroid.exceptions import NameInferenceError
 from pylint.checkers import BaseChecker
-from pylint.lint import PyLinter
 
 from homeassistant.const import Platform
 
@@ -18,6 +17,7 @@ if TYPE_CHECKING:
     # InferenceResult is available only from astroid >= 2.12.0
     # pre-commit should still work on out of date environments
     from astroid.typing import InferenceResult
+    from pylint.lint import PyLinter
 
 _COMMON_ARGUMENTS: dict[str, list[str]] = {
     "hass": ["HomeAssistant", "HomeAssistant | None"]

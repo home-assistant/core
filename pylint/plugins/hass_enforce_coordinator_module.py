@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
-from astroid import nodes
+from typing import TYPE_CHECKING
+
 from pylint.checkers import BaseChecker
-from pylint.lint import PyLinter
+
+if TYPE_CHECKING:
+    from astroid import nodes
+    from pylint.lint import PyLinter
 
 
 class HassEnforceCoordinatorModule(BaseChecker):

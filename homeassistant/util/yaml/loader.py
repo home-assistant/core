@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
 import fnmatch
 from io import StringIO, TextIOWrapper
 import logging
 import os
 from pathlib import Path
-from typing import Any, TextIO, overload
+from typing import TYPE_CHECKING, Any, TextIO, overload
 
 import yaml
 
@@ -29,6 +28,9 @@ from homeassistant.helpers.frame import report
 
 from .const import SECRET_YAML
 from .objects import Input, NodeDictClass, NodeListClass, NodeStrClass
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator
 
 # mypy: allow-untyped-calls, no-warn-return-any
 

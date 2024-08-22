@@ -5,10 +5,9 @@ from __future__ import annotations
 import asyncio
 from collections import OrderedDict
 from collections.abc import Mapping
-from datetime import datetime, timedelta
 from functools import partial
 import time
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import jwt
 
@@ -29,6 +28,9 @@ from .mfa_modules import MultiFactorAuthModule, auth_mfa_module_from_config
 from .models import AuthFlowResult
 from .providers import AuthProvider, LoginFlow, auth_provider_from_config
 from .providers.homeassistant import HassAuthProvider
+
+if TYPE_CHECKING:
+    from datetime import datetime, timedelta
 
 EVENT_USER_ADDED = "user_added"
 EVENT_USER_UPDATED = "user_updated"

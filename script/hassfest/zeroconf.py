@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from typing import TYPE_CHECKING
 
 from homeassistant.loader import (
     async_process_zeroconf_match_dict,
     homekit_always_discover,
 )
 
-from .model import Config, Integration
 from .serializer import format_python_namespace
+
+if TYPE_CHECKING:
+    from .model import Config, Integration
 
 
 def generate_and_validate(integrations: dict[str, Integration]) -> str:

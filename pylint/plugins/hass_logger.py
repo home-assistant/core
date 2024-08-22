@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from astroid import nodes
 from pylint.checkers import BaseChecker
-from pylint.lint import PyLinter
+
+if TYPE_CHECKING:
+    from pylint.lint import PyLinter
 
 LOGGER_NAMES = ("LOGGER", "_LOGGER")
 LOG_LEVEL_ALLOWED_LOWER_START = ("debug",)

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import orjson
 import voluptuous as vol
@@ -10,8 +10,10 @@ from voluptuous.humanize import humanize_error
 
 import homeassistant.helpers.config_validation as cv
 
-from .model import Config, Integration
 from .translations import translation_key_validator
+
+if TYPE_CHECKING:
+    from .model import Config, Integration
 
 
 def icon_value_validator(value: Any) -> str:

@@ -10,12 +10,14 @@ from functools import cached_property
 import linecache
 import logging
 import sys
-from types import FrameType
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.core import async_get_hass_or_none
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_suggest_report_issue
+
+if TYPE_CHECKING:
+    from types import FrameType
 
 _LOGGER = logging.getLogger(__name__)
 
