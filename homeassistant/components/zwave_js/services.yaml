@@ -173,6 +173,8 @@ bulk_set_partial_config_parameters:
             - integration: zwave_js
           multiple: true
     endpoint:
+      example: 1
+      default: 0
       required: false
       selector:
         text:
