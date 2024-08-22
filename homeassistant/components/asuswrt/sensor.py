@@ -53,14 +53,6 @@ SENSORS_CPU_DEF = {
     SENSORS_CPU[8]: "cpu_core8_usage",
 }
 
-SENSORS_TEMPERATURES_DEF = {
-    SENSORS_TEMPERATURES[0]: "24ghz_temperature",
-    SENSORS_TEMPERATURES[1]: "5ghz_temperature",
-    SENSORS_TEMPERATURES[2]: "cpu_temperature",
-    SENSORS_TEMPERATURES[3]: "5ghz_2_temperature",
-    SENSORS_TEMPERATURES[4]: "6ghz_temperature",
-}
-
 
 @dataclass(frozen=True)
 class AsusWrtSensorEntityDescription(SensorEntityDescription):
@@ -82,19 +74,6 @@ CPU_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = tuple(
         suggested_display_precision=1,
     )
     for sens_key, transl_key in SENSORS_CPU_DEF.items()
-)
-TEMPERATURE_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = tuple(
-    AsusWrtSensorEntityDescription(
-        key=sens_key,
-        translation_key=transl_key,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        suggested_display_precision=1,
-    )
-    for sens_key, transl_key in SENSORS_TEMPERATURES_DEF.items()
 )
 CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     AsusWrtSensorEntityDescription(
@@ -168,6 +147,56 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         suggested_display_precision=1,
     ),
     AsusWrtSensorEntityDescription(
+        key=SENSORS_TEMPERATURES[0],
+        translation_key="24ghz_temperature",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        suggested_display_precision=1,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_TEMPERATURES[1],
+        translation_key="5ghz_temperature",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        suggested_display_precision=1,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_TEMPERATURES[2],
+        translation_key="cpu_temperature",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        suggested_display_precision=1,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_TEMPERATURES[3],
+        translation_key="5ghz_2_temperature",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        suggested_display_precision=1,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_TEMPERATURES[4],
+        translation_key="6ghz_temperature",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        suggested_display_precision=1,
+    ),
+    AsusWrtSensorEntityDescription(
         key=SENSORS_MEMORY[0],
         translation_key="memory_usage",
         state_class=SensorStateClass.MEASUREMENT,
@@ -212,7 +241,8 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-) + (CPU_SENSORS + TEMPERATURE_SENSORS)
+    *CPU_SENSORS,
+)
 
 
 async def async_setup_entry(
