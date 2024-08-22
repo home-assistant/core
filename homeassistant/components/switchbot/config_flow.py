@@ -11,6 +11,7 @@ from switchbot import (
     SwitchbotApiError,
     SwitchbotAuthenticationError,
     SwitchbotLock,
+    SwitchbotModel,
     parse_advertisement_data,
 )
 import voluptuous as vol
@@ -357,19 +358,24 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
             # Update common entity options for all other entities.
             return self.async_create_entry(title="", data=user_input)
 
-        options = {
+        options: dict[vol.Optional, Any] = {
             vol.Optional(
                 CONF_RETRY_COUNT,
                 default=self.config_entry.options.get(
                     CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT
                 ),
-            ): int,
-            vol.Optional(
-                CONF_LOCK_NIGHTLATCH,
-                default=self.config_entry.options.get(
-                    CONF_LOCK_NIGHTLATCH, DEFAULT_LOCK_NIGHTLATCH
-                ),
-            ): bool,
+            ): int
         }
+        if self.config_entry.runtime_data.model == SwitchbotModel.LOCK_PRO:
+            options.update(
+                {
+                    vol.Optional(
+                        CONF_LOCK_NIGHTLATCH,
+                        default=self.config_entry.options.get(
+                            CONF_LOCK_NIGHTLATCH, DEFAULT_LOCK_NIGHTLATCH
+                        ),
+                    ): bool
+                }
+            )
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
