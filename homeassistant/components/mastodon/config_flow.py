@@ -20,6 +20,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import slugify
 
 from .const import CONF_BASE_URL, DEFAULT_URL, DOMAIN, LOGGER
 from .utils import construct_mastodon_username, create_mastodon_client
@@ -47,6 +48,7 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
     config_entry: ConfigEntry
 
     def check_connection(
@@ -105,10 +107,6 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors: dict[str, str] | None = None
         if user_input:
-            self._async_abort_entries_match(
-                {CONF_CLIENT_ID: user_input[CONF_CLIENT_ID]}
-            )
-
             instance, account, errors = await self.hass.async_add_executor_job(
                 self.check_connection,
                 user_input[CONF_BASE_URL],
@@ -119,7 +117,8 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 name = construct_mastodon_username(instance, account)
-                await self.async_set_unique_id(user_input[CONF_CLIENT_ID])
+                await self.async_set_unique_id(slugify(name))
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=name,
                     data=user_input,
@@ -148,7 +147,8 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         if not errors:
-            await self.async_set_unique_id(client_id)
+            name = construct_mastodon_username(instance, account)
+            await self.async_set_unique_id(slugify(name))
             self._abort_if_unique_id_configured()
 
             if not name:

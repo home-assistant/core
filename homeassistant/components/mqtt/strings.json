@@ -23,6 +23,13 @@
   },
   "config": {
     "step": {
+      "user": {
+        "description": "Please choose how you want to connect to the MQTT broker:",
+        "menu_options": {
+          "addon": "Use the official {addon} add-on.",
+          "broker": "Manually enter the MQTT broker connection details"
+        }
+      },
       "broker": {
         "description": "Please enter the connection information of your MQTT broker.",
         "data": {
@@ -63,6 +70,12 @@
           "ws_path": "The WebSocket path to be used for the connection to your MQTT broker."
         }
       },
+      "install_addon": {
+        "title": "Installing add-on"
+      },
+      "start_addon": {
+        "title": "Starting add-on"
+      },
       "hassio_confirm": {
         "title": "MQTT Broker via Home Assistant add-on",
         "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the add-on {addon}?",
@@ -87,6 +100,10 @@
       }
     },
     "abort": {
+      "addon_info_failed": "Failed get info for the {addon} add-on.",
+      "addon_install_failed": "Failed to install the {addon} add-on.",
+      "addon_start_failed": "Failed to start the {addon} add-on.",
+      "addon_connection_failed": "Failed to connect to the {addon} add-on. Check the add-on status and try again later.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
@@ -230,6 +247,10 @@
       "name": "Publish",
       "description": "Publishes a message to an MQTT topic.",
       "fields": {
+        "evaluate_payload": {
+          "name": "Evaluate payload",
+          "description": "When `payload` is a Python bytes literal, evaluate the bytes literal and publish the raw data."
+        },
         "topic": {
           "name": "Topic",
           "description": "Topic to publish to."

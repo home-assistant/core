@@ -445,7 +445,7 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
             try:
                 key_bytes = bytes.fromhex(user_input[CONF_KNX_ROUTING_BACKBONE_KEY])
                 if len(key_bytes) != 16:
-                    raise ValueError
+                    raise ValueError  # noqa: TRY301
             except ValueError:
                 errors[CONF_KNX_ROUTING_BACKBONE_KEY] = "invalid_backbone_key"
             if not errors:
