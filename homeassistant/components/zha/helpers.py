@@ -1019,7 +1019,7 @@ def async_get_zha_device_proxy(hass: HomeAssistant, device_id: str) -> ZHADevice
             if domain == DOMAIN
         )
         ieee = EUI64.convert(ieee_address)
-    except (IndexError, ValueError) as ex:
+    except (StopIteration, ValueError) as ex:
         _LOGGER.error(
             "Unable to determine device IEEE for device with device id `%s`", device_id
         )
