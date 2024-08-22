@@ -91,6 +91,8 @@ def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigT
             f"together with state class `{state_class}`"
         )
 
+    # Only allow `options` to be set for `enum` sensors
+    # to limit the possible sensor values
     if (options := config.get(CONF_OPTIONS)) is not None:
         if not options:
             raise vol.Invalid("An empty options list is not allowed")
