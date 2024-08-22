@@ -9,12 +9,12 @@ from unittest.mock import DEFAULT, AsyncMock, patch
 from homeassistant.core import HomeAssistant
 
 
-def discovery_info_fixture() -> Any:
+def mock_discovery_info() -> Any:
     """Return the discovery info from the supervisor."""
     return DEFAULT
 
 
-def get_addon_discovery_info_fixture(discovery_info: Any) -> Generator[AsyncMock]:
+def mock_get_addon_discovery_info(discovery_info: Any) -> Generator[AsyncMock]:
     """Mock get add-on discovery info."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_get_addon_discovery_info",
@@ -23,7 +23,7 @@ def get_addon_discovery_info_fixture(discovery_info: Any) -> Generator[AsyncMock
         yield get_addon_discovery_info
 
 
-def addon_store_info_fixture() -> Generator[AsyncMock]:
+def mock_addon_store_info() -> Generator[AsyncMock]:
     """Mock Supervisor add-on store info."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_get_addon_store_info"
@@ -37,7 +37,7 @@ def addon_store_info_fixture() -> Generator[AsyncMock]:
         yield addon_store_info
 
 
-def addon_info_fixture() -> Generator[AsyncMock]:
+def mock_addon_info() -> Generator[AsyncMock]:
     """Mock Supervisor add-on info."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_get_addon_info",
@@ -53,7 +53,7 @@ def addon_info_fixture() -> Generator[AsyncMock]:
         yield addon_info
 
 
-def addon_not_installed_fixture(
+def mock_addon_not_installed(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> AsyncMock:
     """Mock add-on not installed."""
@@ -61,7 +61,7 @@ def addon_not_installed_fixture(
     return addon_info
 
 
-def addon_installed_fixture(
+def mock_addon_installed(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> AsyncMock:
     """Mock add-on already installed but not running."""
@@ -78,9 +78,7 @@ def addon_installed_fixture(
     return addon_info
 
 
-def addon_running_fixture(
-    addon_store_info: AsyncMock, addon_info: AsyncMock
-) -> AsyncMock:
+def mock_addon_running(addon_store_info: AsyncMock, addon_info: AsyncMock) -> AsyncMock:
     """Mock add-on already running."""
     addon_store_info.return_value = {
         "available": True,
@@ -95,7 +93,7 @@ def addon_running_fixture(
     return addon_info
 
 
-def install_addon_fixture(
+def mock_install_addon(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> Generator[AsyncMock]:
     """Mock install add-on."""
@@ -119,7 +117,7 @@ def install_addon_fixture(
         yield install_addon
 
 
-def start_addon_fixture() -> Generator[AsyncMock]:
+def mock_start_addon() -> Generator[AsyncMock]:
     """Mock start add-on."""
     with patch(
         "homeassistant.components.hassio.addon_manager.async_start_addon"

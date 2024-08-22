@@ -186,36 +186,36 @@ def mock_legacy_device_tracker_setup() -> Callable[[HomeAssistant, MockScanner],
 def discovery_info_fixture() -> Any:
     """Return the discovery info from the supervisor."""
     # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import discovery_info_fixture
+    from .hassio.common import mock_discovery_info
 
-    return discovery_info_fixture()
+    return mock_discovery_info()
 
 
 @pytest.fixture(name="get_addon_discovery_info")
 def get_addon_discovery_info_fixture(discovery_info: Any) -> Generator[AsyncMock]:
     """Mock get add-on discovery info."""
     # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import get_addon_discovery_info_fixture
+    from .hassio.common import mock_get_addon_discovery_info
 
-    yield from get_addon_discovery_info_fixture(discovery_info)
+    yield from mock_get_addon_discovery_info(discovery_info)
 
 
 @pytest.fixture(name="addon_store_info")
 def addon_store_info_fixture() -> Generator[AsyncMock]:
     """Mock Supervisor add-on store info."""
     # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import addon_store_info_fixture
+    from .hassio.common import mock_addon_store_info
 
-    yield from addon_store_info_fixture()
+    yield from mock_addon_store_info()
 
 
 @pytest.fixture(name="addon_info")
 def addon_info_fixture() -> Generator[AsyncMock]:
     """Mock Supervisor add-on info."""
     # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import addon_info_fixture
+    from .hassio.common import mock_addon_info
 
-    yield from addon_info_fixture()
+    yield from mock_addon_info()
 
 
 @pytest.fixture(name="addon_not_installed")
@@ -224,9 +224,9 @@ def addon_not_installed_fixture(
 ) -> AsyncMock:
     """Mock add-on not installed."""
     # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import addon_not_installed_fixture
+    from .hassio.common import mock_addon_not_installed
 
-    return addon_not_installed_fixture(addon_store_info, addon_info)
+    return mock_addon_not_installed(addon_store_info, addon_info)
 
 
 @pytest.fixture(name="addon_installed")
@@ -235,9 +235,9 @@ def addon_installed_fixture(
 ) -> AsyncMock:
     """Mock add-on already installed but not running."""
     # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import addon_installed_fixture
+    from .hassio.common import mock_addon_installed
 
-    return addon_installed_fixture(addon_store_info, addon_info)
+    return mock_addon_installed(addon_store_info, addon_info)
 
 
 @pytest.fixture(name="addon_running")
@@ -246,9 +246,9 @@ def addon_running_fixture(
 ) -> AsyncMock:
     """Mock add-on already running."""
     # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import addon_running_fixture
+    from .hassio.common import mock_addon_running
 
-    return addon_running_fixture(addon_store_info, addon_info)
+    return mock_addon_running(addon_store_info, addon_info)
 
 
 @pytest.fixture(name="install_addon")
@@ -257,15 +257,15 @@ def install_addon_fixture(
 ) -> Generator[AsyncMock]:
     """Mock install add-on."""
     # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import install_addon_fixture
+    from .hassio.common import mock_install_addon
 
-    yield from install_addon_fixture(addon_store_info, addon_info)
+    yield from mock_install_addon(addon_store_info, addon_info)
 
 
 @pytest.fixture(name="start_addon")
 def start_addon_fixture() -> Generator[AsyncMock]:
     """Mock start add-on."""
     # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import start_addon_fixture
+    from .hassio.common import mock_start_addon
 
-    yield from start_addon_fixture()
+    yield from mock_start_addon()
