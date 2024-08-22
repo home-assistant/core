@@ -38,10 +38,10 @@ from .const import (
 )
 from .helpers import (
     AddressType,
-    DeviceConnectionType,
     InputType,
     async_update_config_entry,
     generate_unique_id,
+    get_device_connection,
     get_device_model,
     import_lcn_config,
     register_lcn_address_devices,
@@ -250,29 +250,22 @@ class LcnEntity(Entity):
     _attr_should_poll = False
 
     def __init__(
-        self, config: ConfigType, entry_id: str, device_connection: DeviceConnectionType
+        self,
+        config: ConfigType,
+        config_entry: config_entries.ConfigEntry,
     ) -> None:
         """Initialize the LCN device."""
         self.config = config
-        self.entry_id = entry_id
-        self.device_connection = device_connection
+        self.config_entry = config_entry
+        self.address: AddressType = self.config[CONF_ADDRESS]
         self._unregister_for_inputs: Callable | None = None
         self._name: str = config[CONF_NAME]
-
-    @property
-    def address(self) -> AddressType:
-        """Return LCN address."""
-        return (
-            self.device_connection.seg_id,
-            self.device_connection.addr_id,
-            self.device_connection.is_group,
-        )
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
         return generate_unique_id(
-            self.entry_id, self.address, self.config[CONF_RESOURCE]
+            self.config_entry.entry_id, self.address, self.config[CONF_RESOURCE]
         )
 
     @property
@@ -291,12 +284,18 @@ class LcnEntity(Entity):
             manufacturer="Issendorff",
             via_device=(
                 DOMAIN,
-                generate_unique_id(self.entry_id, self.config[CONF_ADDRESS]),
+                generate_unique_id(
+                    self.config_entry.entry_id, self.config[CONF_ADDRESS]
+                ),
             ),
         )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
+        # pylint: disable-next=attribute-defined-outside-init
+        self.device_connection = get_device_connection(
+            self.hass, self.config[CONF_ADDRESS], self.config_entry
+        )
         if not self.device_connection.is_group:
             self._unregister_for_inputs = self.device_connection.register_for_inputs(
                 self.input_received
