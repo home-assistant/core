@@ -1087,9 +1087,9 @@ async def test_async_play_media_url_m3u(
 )
 async def test_async_browse_media(
     hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     mock_mozart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    hass_ws_client: WebSocketGenerator,
     child: dict[str, str | bool | None],
     present: bool,
 ) -> None:

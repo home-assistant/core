@@ -16,9 +16,9 @@ from tests.common import MockConfigEntry
 
 async def test_setup_entry(
     hass: HomeAssistant,
+    device_registry: DeviceRegistry,
     mock_config_entry: MockConfigEntry,
     mock_mozart_client: AsyncMock,
-    device_registry: DeviceRegistry,
 ) -> None:
     """Test async_setup_entry."""
 
