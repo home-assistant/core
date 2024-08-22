@@ -643,11 +643,16 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 playlists = soco.get_sonos_playlists(complete_result=True)
                 playlist = next((p for p in playlists if p.title == media_id), None)
             if not playlist:
-                _LOGGER.error('Could not find a Sonos playlist named "%s"', media_id)
-            else:
-                soco.clear_queue()
-                soco.add_to_queue(playlist, timeout=LONG_SERVICE_TIMEOUT)
-                soco.play_from_queue(0)
+                raise ServiceValidationError(
+                    translation_domain=SONOS_DOMAIN,
+                    translation_key="invalid_sonos_playlist",
+                    translation_placeholders={
+                        "name": media_id,
+                    },
+                )
+            soco.clear_queue()
+            soco.add_to_queue(playlist, timeout=LONG_SERVICE_TIMEOUT)
+            soco.play_from_queue(0)
         elif media_type in PLAYABLE_MEDIA_TYPES:
             item = media_browser.get_media(self.media.library, media_id, media_type)
 

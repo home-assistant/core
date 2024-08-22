@@ -1,10 +1,11 @@
 """Tests for the Sonos Media Player platform."""
 
-import logging
 from typing import Any
 from unittest.mock import patch
 
 import pytest
+from soco.data_structures import SearchResult
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
@@ -44,10 +45,10 @@ from homeassistant.const import (
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
-    STATE_IDLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     CONNECTION_UPNP,
@@ -93,15 +94,18 @@ async def test_device_registry_not_portable(
 
 
 async def test_entity_basic(
-    hass: HomeAssistant, async_autosetup_sonos, discover
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    discover,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test basic state and attributes."""
-    state = hass.states.get("media_player.zone_a")
-    assert state.state == STATE_IDLE
-    attributes = state.attributes
-    assert attributes["friendly_name"] == "Zone A"
-    assert attributes["is_volume_muted"] is False
-    assert attributes["volume_level"] == 0.19
+    entity_id = "media_player.zone_a"
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+    state = hass.states.get(entity_entry.entity_id)
+    assert state == snapshot(name=f"{entity_entry.entity_id}-state")
 
 
 @pytest.mark.parametrize(
@@ -531,8 +535,10 @@ async def test_play_media_music_library_playlist_dne(
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     soco_mock.music_library.get_playlists.return_value = _mock_playlists
 
-    with caplog.at_level(logging.ERROR):
-        caplog.clear()
+    with pytest.raises(
+        ServiceValidationError,
+        match=f"Could not find Sonos playlist: {media_content_id}",
+    ):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -544,8 +550,53 @@ async def test_play_media_music_library_playlist_dne(
             blocking=True,
         )
     assert soco_mock.play_uri.call_count == 0
-    assert media_content_id in caplog.text
-    assert "playlist" in caplog.text
+
+
+async def test_play_sonos_playlist(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    soco: MockSoCo,
+    sonos_playlists: SearchResult,
+) -> None:
+    """Test that sonos playlists can be played."""
+
+    # Test a successful call
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "playlist",
+            ATTR_MEDIA_CONTENT_ID: "sample playlist",
+        },
+        blocking=True,
+    )
+    assert soco.clear_queue.call_count == 1
+    assert soco.add_to_queue.call_count == 1
+    soco.add_to_queue.asset_called_with(
+        sonos_playlists[0], timeout=LONG_SERVICE_TIMEOUT
+    )
+
+    # Test playing a non-existent playlist
+    soco.clear_queue.reset_mock()
+    soco.add_to_queue.reset_mock()
+    media_content_id: str = "bad playlist"
+    with pytest.raises(
+        ServiceValidationError,
+        match=f"Could not find Sonos playlist: {media_content_id}",
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: "playlist",
+                ATTR_MEDIA_CONTENT_ID: media_content_id,
+            },
+            blocking=True,
+        )
+    assert soco.clear_queue.call_count == 0
+    assert soco.add_to_queue.call_count == 0
 
 
 @pytest.mark.parametrize(

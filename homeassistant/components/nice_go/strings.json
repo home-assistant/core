@@ -17,6 +17,30 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
+  "entity": {
+    "light": {
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
+    "switch": {
+      "vacation_mode": {
+        "name": "Vacation mode"
+      }
+    },
+    "event": {
+      "barrier_obstructed": {
+        "name": "Barrier obstructed",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "barrier_obstructed": "Barrier obstructed"
+            }
+          }
+        }
+      }
+    }
+  },
   "issues": {
     "firmware_update_required": {
       "title": "Firmware update required",
