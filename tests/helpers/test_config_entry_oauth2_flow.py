@@ -873,7 +873,9 @@ async def test_implementation_provider(hass: HomeAssistant, local_impl) -> None:
 
     provider_source = []
 
-    async def async_provide_implementation(hass, domain):
+    async def async_provide_implementation(
+        hass: HomeAssistant, domain: str
+    ) -> list[config_entry_oauth2_flow.AbstractOAuth2Implementation]:
         """Mock implementation provider."""
         return provider_source
 

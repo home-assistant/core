@@ -164,7 +164,7 @@ pyOpenSSL>=24.0.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==4.25.1
+protobuf==4.25.4
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
@@ -178,9 +178,6 @@ websockets>=11.0.1
 # pysnmplib is no longer maintained and does not work with newer
 # python
 pysnmplib==1000000000.0.0
-# pysnmp is no longer maintained and does not work with newer
-# python
-pysnmp==1000000000.0.0
 
 # The get-mac package has been replaced with getmac. Installing get-mac alongside getmac
 # breaks getmac due to them both sharing the same python package name inside 'getmac'.
