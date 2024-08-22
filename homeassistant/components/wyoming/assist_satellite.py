@@ -1,12 +1,11 @@
 """Support for Wyoming satellite services."""
 
 import asyncio
-from collections.abc import AsyncGenerator
+from collections import defaultdict, deque
 import io
 import logging
 import time
 from typing import Final
-from uuid import uuid4
 import wave
 
 from wyoming.asr import Transcribe, Transcript
@@ -18,20 +17,23 @@ from wyoming.info import Describe, Info
 from wyoming.ping import Ping, Pong
 from wyoming.pipeline import PipelineStage, RunPipeline
 from wyoming.satellite import PauseSatellite, RunSatellite
+from wyoming.snd import Played
 from wyoming.timer import TimerCancelled, TimerFinished, TimerStarted, TimerUpdated
 from wyoming.tts import Synthesize, SynthesizeVoice
 from wyoming.vad import VoiceStarted, VoiceStopped
 from wyoming.wake import Detect, Detection
 
-from homeassistant.components import assist_pipeline, intent, stt, tts
-from homeassistant.components.assist_pipeline import select as pipeline_select
-from homeassistant.components.assist_pipeline.vad import VadSensitivity
+from homeassistant.components import assist_pipeline, assist_satellite, intent, tts
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.async_ import queue_to_iterable
 
 from .const import DOMAIN
 from .data import WyomingService
 from .devices import SatelliteDevice
+from .entity import WyomingEntity
+from .models import DomainDataItem
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,19 +43,47 @@ _RESTART_SECONDS: Final = 3
 _PING_TIMEOUT: Final = 5
 _PING_SEND_DELAY: Final = 2
 _PIPELINE_FINISH_TIMEOUT: Final = 1
-_CONVERSATION_TIMEOUT_SEC: Final = 5 * 60  # 5 minutes
+_STOP_CHUNK: Final = b""
 
 # Wyoming stage -> Assist stage
-_STAGES: dict[PipelineStage, assist_pipeline.PipelineStage] = {
+_ASSIST_STAGES: dict[PipelineStage, assist_pipeline.PipelineStage] = {
     PipelineStage.WAKE: assist_pipeline.PipelineStage.WAKE_WORD,
     PipelineStage.ASR: assist_pipeline.PipelineStage.STT,
     PipelineStage.HANDLE: assist_pipeline.PipelineStage.INTENT,
     PipelineStage.TTS: assist_pipeline.PipelineStage.TTS,
 }
+_WYOMING_STAGES: dict[assist_pipeline.PipelineStage, PipelineStage] = {
+    assist_pipeline.PipelineStage.WAKE_WORD: PipelineStage.WAKE,
+    assist_pipeline.PipelineStage.STT: PipelineStage.ASR,
+    assist_pipeline.PipelineStage.INTENT: PipelineStage.HANDLE,
+    assist_pipeline.PipelineStage.TTS: PipelineStage.TTS,
+}
 
 
-class WyomingSatellite:
-    """Remove voice satellite running the Wyoming protocol."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up VoIP Assist satellite entity."""
+    domain_data: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
+    assert domain_data.satellite_device is not None
+
+    async_add_entities(
+        [
+            WyomingSatellite(
+                hass, config_entry, domain_data.service, domain_data.satellite_device
+            )
+        ]
+    )
+
+
+class WyomingSatellite(WyomingEntity, assist_satellite.AssistSatelliteEntity):
+    """Remote voice satellite running the Wyoming protocol."""
+
+    _attr_supported_features = (
+        assist_satellite.AssistSatelliteEntityFeature.TRIGGER_PIPELINE
+    )
 
     def __init__(
         self,
@@ -63,6 +93,9 @@ class WyomingSatellite:
         device: SatelliteDevice,
     ) -> None:
         """Initialize satellite."""
+        WyomingEntity.__init__(self, device)
+        assist_satellite.AssistSatelliteEntity.__init__(self)
+
         self.hass = hass
         self.config_entry = config_entry
         self.service = service
@@ -70,19 +103,170 @@ class WyomingSatellite:
         self.is_running = True
 
         self._client: AsyncTcpClient | None = None
-        self._chunk_converter = AudioChunkConverter(rate=16000, width=2, channels=1)
+        self._chunk_converter = AudioChunkConverter(
+            rate=assist_pipeline.SAMPLE_RATE,
+            width=assist_pipeline.SAMPLE_WIDTH,
+            channels=assist_pipeline.SAMPLE_CHANNELS,
+        )
         self._is_pipeline_running = False
         self._pipeline_ended_event = asyncio.Event()
-        self._audio_queue: asyncio.Queue[bytes | None] = asyncio.Queue()
-        self._pipeline_id: str | None = None
+        self._audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
         self._muted_changed_event = asyncio.Event()
 
-        self._conversation_id: str | None = None
-        self._conversation_id_time: float | None = None
+        # Results of remotely triggered pipelines
+        self._pipeline_result_futures: dict[
+            assist_pipeline.PipelineStage, deque[asyncio.Future]
+        ] = defaultdict(deque)
+        self._played_timeout_id: int | None = None
 
         self.device.set_is_muted_listener(self._muted_changed)
         self.device.set_pipeline_listener(self._pipeline_changed)
         self.device.set_audio_settings_listener(self._audio_settings_changed)
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        self.config_entry.async_create_background_task(
+            self.hass, self.run(), "wyoming_satellite_run"
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        self.stop()
+
+    async def async_trigger_pipeline_on_satellite(
+        self,
+        start_stage: assist_pipeline.PipelineStage,
+        end_stage: assist_pipeline.PipelineStage,
+        run_config: assist_satellite.PipelineRunConfig,
+    ) -> assist_satellite.PipelineRunResult | None:
+        """Run a pipeline on the satellite from start to end stage."""
+        if self._client is None:
+            return None  # not connected
+
+        result_future: asyncio.Future[str | None] = asyncio.Future()
+        self._pipeline_result_futures[start_stage].append(result_future)
+
+        await self._client.write_event(
+            RunPipeline(
+                start_stage=_WYOMING_STAGES[start_stage],
+                end_stage=_WYOMING_STAGES[end_stage],
+                wake_word_names=run_config.wake_word_names,
+                announce_text=run_config.announce_text,
+            ).event()
+        )
+
+        # Wait for result
+        result = await result_future
+        if start_stage == assist_pipeline.PipelineStage.WAKE_WORD:
+            return assist_satellite.PipelineRunResult(detected_wake_word=result)
+
+        if start_stage == assist_pipeline.PipelineStage.STT:
+            return assist_satellite.PipelineRunResult(command_text=result)
+
+        return None
+
+    def on_pipeline_event(self, event: assist_pipeline.PipelineEvent) -> None:
+        """Translate pipeline events into Wyoming events."""
+        super().on_pipeline_event(event)
+
+        if self._client is None:
+            return  # stopping
+
+        if event.type == assist_pipeline.PipelineEventType.RUN_END:
+            # Pipeline run is complete
+            self._is_pipeline_running = False
+            self._pipeline_ended_event.set()
+            self.device.set_is_active(False)
+        elif event.type == assist_pipeline.PipelineEventType.WAKE_WORD_START:
+            self.hass.add_job(self._client.write_event(Detect().event()))
+        elif event.type == assist_pipeline.PipelineEventType.WAKE_WORD_END:
+            # Wake word detection
+            # Inform client of wake word detection
+            if event.data and (wake_word_output := event.data.get("wake_word_output")):
+                detected_wake_word = wake_word_output["wake_word_id"]
+                detection = Detection(
+                    name=detected_wake_word,
+                    timestamp=wake_word_output.get("timestamp"),
+                )
+                self.hass.add_job(self._client.write_event(detection.event()))
+
+                # Set result for remote pipeline trigger
+                if result_futures := self._pipeline_result_futures[
+                    assist_pipeline.PipelineStage.WAKE_WORD
+                ]:
+                    result_futures.popleft().set_result(detected_wake_word)
+        elif event.type == assist_pipeline.PipelineEventType.STT_START:
+            # Speech-to-text
+            self.device.set_is_active(True)
+
+            if event.data:
+                self.hass.add_job(
+                    self._client.write_event(
+                        Transcribe(language=event.data["metadata"]["language"]).event()
+                    )
+                )
+        elif event.type == assist_pipeline.PipelineEventType.STT_VAD_START:
+            # User started speaking
+            if event.data:
+                self.hass.add_job(
+                    self._client.write_event(
+                        VoiceStarted(timestamp=event.data["timestamp"]).event()
+                    )
+                )
+        elif event.type == assist_pipeline.PipelineEventType.STT_VAD_END:
+            # User stopped speaking
+            if event.data:
+                self.hass.add_job(
+                    self._client.write_event(
+                        VoiceStopped(timestamp=event.data["timestamp"]).event()
+                    )
+                )
+        elif event.type == assist_pipeline.PipelineEventType.STT_END:
+            # Speech-to-text transcript
+            if event.data:
+                # Inform client of transript
+                stt_text = event.data["stt_output"]["text"]
+                self.hass.add_job(
+                    self._client.write_event(Transcript(text=stt_text).event())
+                )
+
+                # Set result for remote pipeline trigger
+                if result_futures := self._pipeline_result_futures[
+                    assist_pipeline.PipelineStage.STT
+                ]:
+                    result_futures.popleft().set_result(stt_text)
+        elif event.type == assist_pipeline.PipelineEventType.TTS_START:
+            # Text-to-speech text
+            if event.data:
+                # Inform client of text
+                self.hass.add_job(
+                    self._client.write_event(
+                        Synthesize(
+                            text=event.data["tts_input"],
+                            voice=SynthesizeVoice(
+                                name=event.data.get("voice"),
+                                language=event.data.get("language"),
+                            ),
+                        ).event()
+                    )
+                )
+        elif event.type == assist_pipeline.PipelineEventType.TTS_END:
+            # TTS stream
+            if event.data and (tts_output := event.data["tts_output"]):
+                media_id = tts_output["media_id"]
+                self.hass.add_job(self._stream_tts(media_id))
+        elif event.type == assist_pipeline.PipelineEventType.ERROR:
+            # Pipeline error
+            if event.data:
+                self.hass.add_job(
+                    self._client.write_event(
+                        Error(
+                            text=event.data["message"], code=event.data["code"]
+                        ).event()
+                    )
+                )
+
+    # -------------------------------------------------------------------------
 
     async def run(self) -> None:
         """Run and maintain a connection to satellite."""
@@ -125,6 +309,9 @@ class WyomingSatellite:
 
     def stop(self) -> None:
         """Signal satellite task to stop running."""
+        # Cancel any running pipeline
+        self._audio_queue.put_nowait(_STOP_CHUNK)
+
         # Tell satellite to stop running
         self._send_pause()
 
@@ -173,7 +360,7 @@ class WyomingSatellite:
         """Run when device muted status changes."""
         if self.device.is_muted:
             # Cancel any running pipeline
-            self._audio_queue.put_nowait(None)
+            self._audio_queue.put_nowait(_STOP_CHUNK)
 
             # Send pause event so satellite can react immediately
             self._send_pause()
@@ -185,13 +372,13 @@ class WyomingSatellite:
         """Run when device pipeline changes."""
 
         # Cancel any running pipeline
-        self._audio_queue.put_nowait(None)
+        self._audio_queue.put_nowait(_STOP_CHUNK)
 
     def _audio_settings_changed(self) -> None:
         """Run when device audio settings."""
 
         # Cancel any running pipeline
-        self._audio_queue.put_nowait(None)
+        self._audio_queue.put_nowait(_STOP_CHUNK)
 
     async def _connect_and_loop(self) -> None:
         """Connect to satellite and run pipelines until an error occurs."""
@@ -222,7 +409,9 @@ class WyomingSatellite:
 
     async def _run_pipeline_loop(self) -> None:
         """Run a pipeline one or more times."""
-        assert self._client is not None
+        if self._client is None:
+            return  # stopping
+
         client_info: Info | None = None
         wake_word_phrase: str | None = None
         run_pipeline: RunPipeline | None = None
@@ -302,7 +491,7 @@ class WyomingSatellite:
                 elif AudioStop.is_type(client_event.type) and self._is_pipeline_running:
                     # Stop pipeline
                     _LOGGER.debug("Client requested pipeline to stop")
-                    self._audio_queue.put_nowait(b"")
+                    self._audio_queue.put_nowait(_STOP_CHUNK)
                 elif Info.is_type(client_event.type):
                     client_info = Info.from_event(client_event)
                     _LOGGER.debug("Updated client info: %s", client_info)
@@ -328,7 +517,19 @@ class WyomingSatellite:
                             if found_phrase:
                                 break
 
+                    if result_futures := self._pipeline_result_futures[
+                        assist_pipeline.PipelineStage.WAKE_WORD
+                    ]:
+                        result_futures.popleft().set_result(wake_word_phrase)
+
                     _LOGGER.debug("Client detected wake word: %s", wake_word_phrase)
+                elif Played.is_type(client_event.type):
+                    # Set result for remote pipeline trigger
+                    self._played_timeout_id = None
+                    if result_futures := self._pipeline_result_futures[
+                        assist_pipeline.PipelineStage.TTS
+                    ]:
+                        result_futures.popleft().set_result(None)
                 else:
                     _LOGGER.debug("Unexpected event from satellite: %s", client_event)
 
@@ -344,8 +545,8 @@ class WyomingSatellite:
         """Run a pipeline once."""
         _LOGGER.debug("Received run information: %s", run_pipeline)
 
-        start_stage = _STAGES.get(run_pipeline.start_stage)
-        end_stage = _STAGES.get(run_pipeline.end_stage)
+        start_stage = _ASSIST_STAGES.get(run_pipeline.start_stage)
+        end_stage = _ASSIST_STAGES.get(run_pipeline.end_stage)
 
         if start_stage is None:
             raise ValueError(f"Invalid start stage: {start_stage}")
@@ -353,168 +554,38 @@ class WyomingSatellite:
         if end_stage is None:
             raise ValueError(f"Invalid end stage: {end_stage}")
 
-        pipeline_id = pipeline_select.get_chosen_pipeline(
-            self.hass,
-            DOMAIN,
-            self.device.satellite_id,
-        )
-        pipeline = assist_pipeline.async_get_pipeline(self.hass, pipeline_id)
-        assert pipeline is not None
-
         # We will push audio in through a queue
         self._audio_queue = asyncio.Queue()
-        stt_stream = self._stt_stream()
 
         # Start pipeline running
-        _LOGGER.debug(
-            "Starting pipeline %s from %s to %s",
-            pipeline.name,
-            start_stage,
-            end_stage,
-        )
-
-        # Reset conversation id, if necessary
-        if (self._conversation_id_time is None) or (
-            (time.monotonic() - self._conversation_id_time) > _CONVERSATION_TIMEOUT_SEC
-        ):
-            self._conversation_id = None
-
-        if self._conversation_id is None:
-            self._conversation_id = str(uuid4())
-
-        # Update timeout
-        self._conversation_id_time = time.monotonic()
-
         self._is_pipeline_running = True
         self._pipeline_ended_event.clear()
         self.config_entry.async_create_background_task(
             self.hass,
-            assist_pipeline.async_pipeline_from_audio_stream(
-                self.hass,
-                context=Context(),
-                event_callback=self._event_callback,
-                stt_metadata=stt.SpeechMetadata(
-                    language=pipeline.language,
-                    format=stt.AudioFormats.WAV,
-                    codec=stt.AudioCodecs.PCM,
-                    bit_rate=stt.AudioBitRates.BITRATE_16,
-                    sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-                    channel=stt.AudioChannels.CHANNEL_MONO,
+            self._async_accept_pipeline_from_satellite(
+                queue_to_iterable(self._audio_queue),
+                start_stage,
+                end_stage,
+                pipeline_entity_id=self.device.get_pipeline_entity_id(self.hass),
+                vad_sensitivity_entity_id=self.device.get_vad_sensitivity_entity_id(
+                    self.hass
                 ),
-                stt_stream=stt_stream,
-                start_stage=start_stage,
-                end_stage=end_stage,
-                tts_audio_output="wav",
-                pipeline_id=pipeline_id,
-                audio_settings=assist_pipeline.AudioSettings(
-                    noise_suppression_level=self.device.noise_suppression_level,
-                    auto_gain_dbfs=self.device.auto_gain,
-                    volume_multiplier=self.device.volume_multiplier,
-                    silence_seconds=VadSensitivity.to_seconds(
-                        self.device.vad_sensitivity
-                    ),
-                ),
-                device_id=self.device.device_id,
                 wake_word_phrase=wake_word_phrase,
-                conversation_id=self._conversation_id,
+                tts_input=run_pipeline.announce_text,
             ),
             name="wyoming satellite pipeline",
         )
 
     async def _send_delayed_ping(self) -> None:
         """Send ping to satellite after a delay."""
-        assert self._client is not None
+        if self._client is None:
+            return  # stopping
 
         try:
             await asyncio.sleep(_PING_SEND_DELAY)
             await self._client.write_event(Ping().event())
         except ConnectionError:
             pass  # handled with timeout
-
-    def _event_callback(self, event: assist_pipeline.PipelineEvent) -> None:
-        """Translate pipeline events into Wyoming events."""
-        assert self._client is not None
-
-        if event.type == assist_pipeline.PipelineEventType.RUN_END:
-            # Pipeline run is complete
-            self._is_pipeline_running = False
-            self._pipeline_ended_event.set()
-            self.device.set_is_active(False)
-        elif event.type == assist_pipeline.PipelineEventType.WAKE_WORD_START:
-            self.hass.add_job(self._client.write_event(Detect().event()))
-        elif event.type == assist_pipeline.PipelineEventType.WAKE_WORD_END:
-            # Wake word detection
-            # Inform client of wake word detection
-            if event.data and (wake_word_output := event.data.get("wake_word_output")):
-                detection = Detection(
-                    name=wake_word_output["wake_word_id"],
-                    timestamp=wake_word_output.get("timestamp"),
-                )
-                self.hass.add_job(self._client.write_event(detection.event()))
-        elif event.type == assist_pipeline.PipelineEventType.STT_START:
-            # Speech-to-text
-            self.device.set_is_active(True)
-
-            if event.data:
-                self.hass.add_job(
-                    self._client.write_event(
-                        Transcribe(language=event.data["metadata"]["language"]).event()
-                    )
-                )
-        elif event.type == assist_pipeline.PipelineEventType.STT_VAD_START:
-            # User started speaking
-            if event.data:
-                self.hass.add_job(
-                    self._client.write_event(
-                        VoiceStarted(timestamp=event.data["timestamp"]).event()
-                    )
-                )
-        elif event.type == assist_pipeline.PipelineEventType.STT_VAD_END:
-            # User stopped speaking
-            if event.data:
-                self.hass.add_job(
-                    self._client.write_event(
-                        VoiceStopped(timestamp=event.data["timestamp"]).event()
-                    )
-                )
-        elif event.type == assist_pipeline.PipelineEventType.STT_END:
-            # Speech-to-text transcript
-            if event.data:
-                # Inform client of transript
-                stt_text = event.data["stt_output"]["text"]
-                self.hass.add_job(
-                    self._client.write_event(Transcript(text=stt_text).event())
-                )
-        elif event.type == assist_pipeline.PipelineEventType.TTS_START:
-            # Text-to-speech text
-            if event.data:
-                # Inform client of text
-                self.hass.add_job(
-                    self._client.write_event(
-                        Synthesize(
-                            text=event.data["tts_input"],
-                            voice=SynthesizeVoice(
-                                name=event.data.get("voice"),
-                                language=event.data.get("language"),
-                            ),
-                        ).event()
-                    )
-                )
-        elif event.type == assist_pipeline.PipelineEventType.TTS_END:
-            # TTS stream
-            if event.data and (tts_output := event.data["tts_output"]):
-                media_id = tts_output["media_id"]
-                self.hass.add_job(self._stream_tts(media_id))
-        elif event.type == assist_pipeline.PipelineEventType.ERROR:
-            # Pipeline error
-            if event.data:
-                self.hass.add_job(
-                    self._client.write_event(
-                        Error(
-                            text=event.data["message"], code=event.data["code"]
-                        ).event()
-                    )
-                )
 
     async def _connect(self) -> None:
         """Connect to satellite over TCP."""
@@ -537,62 +608,78 @@ class WyomingSatellite:
 
     async def _stream_tts(self, media_id: str) -> None:
         """Stream TTS WAV audio to satellite in chunks."""
-        assert self._client is not None
-
-        extension, data = await tts.async_get_media_source_audio(self.hass, media_id)
-        if extension != "wav":
-            raise ValueError(f"Cannot stream audio format to satellite: {extension}")
-
-        with io.BytesIO(data) as wav_io, wave.open(wav_io, "rb") as wav_file:
-            sample_rate = wav_file.getframerate()
-            sample_width = wav_file.getsampwidth()
-            sample_channels = wav_file.getnchannels()
-            _LOGGER.debug("Streaming %s TTS sample(s)", wav_file.getnframes())
-
-            timestamp = 0
-            await self._client.write_event(
-                AudioStart(
-                    rate=sample_rate,
-                    width=sample_width,
-                    channels=sample_channels,
-                    timestamp=timestamp,
-                ).event()
-            )
-
-            # Stream audio chunks
-            while audio_bytes := wav_file.readframes(_SAMPLES_PER_CHUNK):
-                chunk = AudioChunk(
-                    rate=sample_rate,
-                    width=sample_width,
-                    channels=sample_channels,
-                    audio=audio_bytes,
-                    timestamp=timestamp,
-                )
-                await self._client.write_event(chunk.event())
-                timestamp += chunk.seconds
-
-            await self._client.write_event(AudioStop(timestamp=timestamp).event())
-            _LOGGER.debug("TTS streaming complete")
-
-    async def _stt_stream(self) -> AsyncGenerator[bytes]:
-        """Yield audio chunks from a queue."""
         try:
-            is_first_chunk = True
-            while chunk := await self._audio_queue.get():
-                if is_first_chunk:
-                    is_first_chunk = False
-                    _LOGGER.debug("Receiving audio from satellite")
+            if self._client is None:
+                return  # stopping
 
-                yield chunk
-        except asyncio.CancelledError:
-            pass  # ignore
+            extension, data = await tts.async_get_media_source_audio(
+                self.hass, media_id
+            )
+            if extension != "wav":
+                raise ValueError(
+                    f"Cannot stream audio format to satellite: {extension}"
+                )
+
+            with io.BytesIO(data) as wav_io, wave.open(wav_io, "rb") as wav_file:
+                sample_rate = wav_file.getframerate()
+                sample_width = wav_file.getsampwidth()
+                sample_channels = wav_file.getnchannels()
+                num_frames = wav_file.getnframes()
+                _LOGGER.debug("Streaming %s TTS sample(s)", num_frames)
+
+                wav_seconds = num_frames / sample_rate
+                self._played_timeout_id = time.monotonic_ns()
+                self.config_entry.async_create_background_task(
+                    self.hass,
+                    self._tts_played_timeout(self._played_timeout_id, wav_seconds + 1),
+                    "wyoming tts timeout",
+                )
+
+                timestamp = 0
+                await self._client.write_event(
+                    AudioStart(
+                        rate=sample_rate,
+                        width=sample_width,
+                        channels=sample_channels,
+                        timestamp=timestamp,
+                    ).event()
+                )
+
+                # Stream audio chunks
+                while audio_bytes := wav_file.readframes(_SAMPLES_PER_CHUNK):
+                    chunk = AudioChunk(
+                        rate=sample_rate,
+                        width=sample_width,
+                        channels=sample_channels,
+                        audio=audio_bytes,
+                        timestamp=timestamp,
+                    )
+                    await self._client.write_event(chunk.event())
+                    timestamp += chunk.seconds
+
+                await self._client.write_event(AudioStop(timestamp=timestamp).event())
+                _LOGGER.debug("TTS streaming complete")
+        finally:
+            self.tts_response_finished()
+
+    async def _tts_played_timeout(self, timeout_id: int, timeout_sec: float) -> None:
+        """Set pipeline result after timeout if Played message is not received."""
+        await asyncio.sleep(timeout_sec)
+        if self._played_timeout_id != timeout_id:
+            return
+
+        if result_futures := self._pipeline_result_futures[
+            assist_pipeline.PipelineStage.TTS
+        ]:
+            result_futures.popleft().set_result(None)
 
     @callback
     def _handle_timer(
         self, event_type: intent.TimerEventType, timer: intent.TimerInfo
     ) -> None:
         """Forward timer events to satellite."""
-        assert self._client is not None
+        if self._client is None:
+            return  # stopping
 
         _LOGGER.debug("Timer event: type=%s, info=%s", event_type, timer)
         event: Event | None = None

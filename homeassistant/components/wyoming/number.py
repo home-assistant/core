@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import WyomingSatelliteEntity
+from .entity import WyomingEntity
 
 if TYPE_CHECKING:
     from .models import DomainDataItem
@@ -30,9 +30,9 @@ async def async_setup_entry(
     item: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
 
     # Setup is only forwarded for satellites
-    assert item.satellite is not None
+    assert item.satellite_device is not None
 
-    device = item.satellite.device
+    device = item.satellite_device
     async_add_entities(
         [
             WyomingSatelliteAutoGainNumber(device),
@@ -41,7 +41,7 @@ async def async_setup_entry(
     )
 
 
-class WyomingSatelliteAutoGainNumber(WyomingSatelliteEntity, RestoreNumber):
+class WyomingSatelliteAutoGainNumber(WyomingEntity, RestoreNumber):
     """Entity to represent auto gain amount."""
 
     entity_description = NumberEntityDescription(
@@ -70,7 +70,7 @@ class WyomingSatelliteAutoGainNumber(WyomingSatelliteEntity, RestoreNumber):
         self._device.set_auto_gain(auto_gain)
 
 
-class WyomingSatelliteVolumeMultiplierNumber(WyomingSatelliteEntity, RestoreNumber):
+class WyomingSatelliteVolumeMultiplierNumber(WyomingEntity, RestoreNumber):
     """Entity to represent microphone volume multiplier."""
 
     entity_description = NumberEntityDescription(

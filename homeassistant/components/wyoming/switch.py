@@ -12,7 +12,7 @@ from homeassistant.helpers import restore_state
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import WyomingSatelliteEntity
+from .entity import WyomingEntity
 
 if TYPE_CHECKING:
     from .models import DomainDataItem
@@ -27,13 +27,13 @@ async def async_setup_entry(
     item: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
 
     # Setup is only forwarded for satellites
-    assert item.satellite is not None
+    assert item.satellite_device is not None
 
-    async_add_entities([WyomingSatelliteMuteSwitch(item.satellite.device)])
+    async_add_entities([WyomingSatelliteMuteSwitch(item.satellite_device)])
 
 
 class WyomingSatelliteMuteSwitch(
-    WyomingSatelliteEntity, restore_state.RestoreEntity, SwitchEntity
+    WyomingEntity, restore_state.RestoreEntity, SwitchEntity
 ):
     """Entity to represent if satellite is muted."""
 
@@ -51,7 +51,7 @@ class WyomingSatelliteMuteSwitch(
 
         # Default to off
         self._attr_is_on = (state is not None) and (state.state == STATE_ON)
-        self._device.is_muted = self._attr_is_on
+        self._device.set_is_muted(self._attr_is_on)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on."""

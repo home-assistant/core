@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import WyomingSatelliteEntity
+from .entity import WyomingEntity
 
 if TYPE_CHECKING:
     from .models import DomainDataItem
@@ -28,12 +28,12 @@ async def async_setup_entry(
     item: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
 
     # Setup is only forwarded for satellites
-    assert item.satellite is not None
+    assert item.satellite_device is not None
 
-    async_add_entities([WyomingSatelliteAssistInProgress(item.satellite.device)])
+    async_add_entities([WyomingSatelliteAssistInProgress(item.satellite_device)])
 
 
-class WyomingSatelliteAssistInProgress(WyomingSatelliteEntity, BinarySensorEntity):
+class WyomingSatelliteAssistInProgress(WyomingEntity, BinarySensorEntity):
     """Entity to represent Assist is in progress for satellite."""
 
     entity_description = BinarySensorEntityDescription(
