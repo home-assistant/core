@@ -29,6 +29,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import IntegrationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import LektricoDeviceDataUpdateCoordinator
 from .entity import LektricoEntity
@@ -38,7 +39,7 @@ from .entity import LektricoEntity
 class LektricoSensorEntityDescription(SensorEntityDescription):
     """A class that describes the Lektrico sensor entities."""
 
-    value_fn: Callable[[dict[str, Any]], float | str | int]
+    value_fn: Callable[[dict[str, Any]], StateType]
 
 
 SENSORS_FOR_CHARGERS: tuple[LektricoSensorEntityDescription, ...] = (
@@ -317,6 +318,6 @@ class LektricoSensor(LektricoEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
 
     @property
-    def native_value(self) -> float | str | int:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
