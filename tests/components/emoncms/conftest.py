@@ -63,14 +63,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Mock configuration entry."""
-    return MockConfigEntry(
-        domain=DOMAIN, title=SENSOR_NAME, data=FLOW_RESULT, entry_id="XXXXXXXXXXXXXX"
-    )
-
-
-@pytest.fixture
 async def emoncms_client() -> AsyncGenerator[AsyncMock]:
     """Mock pyemoncms success response."""
     with (

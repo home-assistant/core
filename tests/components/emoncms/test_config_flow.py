@@ -4,7 +4,7 @@ import copy
 from unittest.mock import AsyncMock
 
 from homeassistant.components.emoncms.const import CONF_ONLY_INCLUDE_FEEDID, DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_PLATFORM, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -77,11 +77,11 @@ async def test_flow_import_failure(
 
 async def test_flow_import_already_configured(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    config_entry: MockConfigEntry,
     emoncms_client: AsyncMock,
 ) -> None:
     """Test we abort import data set when entry is already configured."""
-    mock_config_entry.add_to_hass(hass)
+    config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
@@ -92,6 +92,35 @@ async def test_flow_import_already_configured(
 
 
 USER_INPUT = {
+    CONF_URL: "http://1.1.1.1",
+    CONF_API_KEY: "my_api_key",
+}
+
+
+async def test_user_flow(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    emoncms_client: AsyncMock,
+) -> None:
+    """Test we get the user form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == SENSOR_NAME
+    assert result["data"] == USER_INPUT
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+USER_OPTIONS = {
     CONF_ONLY_INCLUDE_FEEDID: ["1"],
 }
 
@@ -114,7 +143,7 @@ async def test_options_flow(
     await hass.async_block_till_done()
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input=USER_INPUT,
+        user_input=USER_OPTIONS,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == CONFIG_ENTRY
