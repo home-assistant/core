@@ -1730,6 +1730,7 @@ _base_trigger_validator_schema = TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_
 
 
 def _base_trigger_list_flatten(triggers: list[Any]) -> list[Any]:
+    """Flatten trigger arrays containing 'triggers:' sublists into a single list of triggers."""
     flatlist = []
     for t in triggers:
         if CONF_TRIGGERS in t and len(t.keys()) == 1:
