@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import contextlib
 import json
 import logging
@@ -146,72 +147,26 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         """Turn on the dispatchers."""
         await self._initialize()
 
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{CONNECTION_STATUS}",
-                self._async_update_connection_state,
-            )
-        )
+        signal_handlers: dict[str, Callable] = {
+            CONNECTION_STATUS: self._async_update_connection_state,
+            WebsocketNotification.BEOLINK: self._async_update_beolink,
+            WebsocketNotification.PLAYBACK_ERROR: self._async_update_playback_error,
+            WebsocketNotification.PLAYBACK_METADATA: self._async_update_playback_metadata_and_beolink,
+            WebsocketNotification.PLAYBACK_PROGRESS: self._async_update_playback_progress,
+            WebsocketNotification.PLAYBACK_STATE: self._async_update_playback_state,
+            WebsocketNotification.REMOTE_MENU_CHANGED: self._async_update_sources,
+            WebsocketNotification.SOURCE_CHANGE: self._async_update_source_change,
+            WebsocketNotification.VOLUME: self._async_update_volume,
+        }
 
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{WebsocketNotification.PLAYBACK_ERROR}",
-                self._async_update_playback_error,
+        for signal, signal_handler in signal_handlers.items():
+            self.async_on_remove(
+                async_dispatcher_connect(
+                    self.hass,
+                    f"{self._unique_id}_{signal}",
+                    signal_handler,
+                )
             )
-        )
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{WebsocketNotification.PLAYBACK_METADATA}",
-                self._async_update_playback_metadata_and_beolink,
-            )
-        )
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{WebsocketNotification.PLAYBACK_PROGRESS}",
-                self._async_update_playback_progress,
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{WebsocketNotification.PLAYBACK_STATE}",
-                self._async_update_playback_state,
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{WebsocketNotification.REMOTE_MENU_CHANGED}",
-                self._async_update_sources,
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{WebsocketNotification.SOURCE_CHANGE}",
-                self._async_update_source_change,
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{WebsocketNotification.VOLUME}",
-                self._async_update_volume,
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{WebsocketNotification.BEOLINK}",
-                self._async_update_beolink,
-            )
-        )
 
     async def _initialize(self) -> None:
         """Initialize connection dependent variables."""

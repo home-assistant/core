@@ -3,7 +3,6 @@
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 import homeassistant.helpers.entity_registry as er
 
 from .const import ATTR_POWER, ATTR_POWER_P3, DOMAIN
@@ -11,7 +10,6 @@ from .coordinator import ElecPricesDataUpdateCoordinator
 from .helpers import get_enabled_sensor_keys
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

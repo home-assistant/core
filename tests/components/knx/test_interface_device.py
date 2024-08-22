@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from xknx.core import XknxConnectionState, XknxConnectionType
 from xknx.telegram import IndividualAddress
 
@@ -10,7 +11,6 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
 from .conftest import KNXTestKit
 
@@ -19,7 +19,10 @@ from tests.typing import WebSocketGenerator
 
 
 async def test_diagnostic_entities(
-    hass: HomeAssistant, knx: KNXTestKit, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test diagnostic entities."""
     await knx.setup_integration({})
@@ -50,7 +53,8 @@ async def test_diagnostic_entities(
     knx.xknx.connection_manager.cemi_count_outgoing_error = 2
 
     events = async_capture_events(hass, "state_changed")
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert len(events) == 3  # 5 polled sensors - 2 disabled

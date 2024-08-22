@@ -51,7 +51,7 @@ def _create_device(data):
     return _Device(ip_address, mac, host, status, name)
 
 
-_Device = namedtuple("_Device", ["ip_address", "mac", "host", "status", "name"])
+_Device = namedtuple("_Device", ["ip_address", "mac", "host", "status", "name"])  # noqa: PYI024
 
 
 class BTSmartHubScanner(DeviceScanner):

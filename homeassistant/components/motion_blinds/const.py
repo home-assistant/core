@@ -6,7 +6,7 @@ DOMAIN = "motion_blinds"
 MANUFACTURER = "Motionblinds, Coulisse B.V."
 DEFAULT_GATEWAY_NAME = "Motionblinds Gateway"
 
-PLATFORMS = [Platform.COVER, Platform.SENSOR]
+PLATFORMS = [Platform.BUTTON, Platform.COVER, Platform.SENSOR]
 
 CONF_WAIT_FOR_PUSH = "wait_for_push"
 CONF_INTERFACE = "interface"

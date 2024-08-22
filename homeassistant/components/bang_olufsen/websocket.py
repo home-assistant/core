@@ -93,7 +93,6 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         self, notification: WebsocketNotificationTag
     ) -> None:
         """Send notification dispatch."""
-
         # Try to match the notification type with available WebsocketNotification members
         notification_type = try_parse_enum(WebsocketNotification, notification.value)
 
@@ -167,11 +166,6 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         software_status = await self._client.get_softwareupdate_status()
 
         # Update the HA device if the sw version does not match
-        if not self._device:
-            self._device = get_device(self.hass, self._unique_id)
-
-        assert self._device
-
         if software_status.software_version != self._device.sw_version:
             device_registry = dr.async_get(self.hass)
 
@@ -182,10 +176,6 @@ class BangOlufsenWebsocket(BangOlufsenBase):
 
     def on_all_notifications_raw(self, notification: dict) -> None:
         """Receive all notifications."""
-        if not self._device:
-            self._device = get_device(self.hass, self._unique_id)
-
-        assert self._device
 
         # Add the device_id and serial_number to the notification
         notification["device_id"] = self._device.id

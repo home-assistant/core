@@ -20,6 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
+from . import KNXModule
 from .const import (
     CONF_PAYLOAD_LENGTH,
     CONF_RESPOND_TO_READ,
@@ -29,7 +30,7 @@ from .const import (
     DOMAIN,
     KNX_ADDRESS,
 )
-from .knx_entity import KnxEntity
+from .knx_entity import KnxYamlEntity
 from .schema import SelectSchema
 
 
@@ -39,10 +40,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up select(s) for KNX platform."""
-    xknx: XKNX = hass.data[DOMAIN].xknx
+    knx_module: KNXModule = hass.data[DOMAIN]
     config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.SELECT]
 
-    async_add_entities(KNXSelect(xknx, entity_config) for entity_config in config)
+    async_add_entities(KNXSelect(knx_module, entity_config) for entity_config in config)
 
 
 def _create_raw_value(xknx: XKNX, config: ConfigType) -> RawValue:
@@ -58,14 +59,17 @@ def _create_raw_value(xknx: XKNX, config: ConfigType) -> RawValue:
     )
 
 
-class KNXSelect(KnxEntity, SelectEntity, RestoreEntity):
+class KNXSelect(KnxYamlEntity, SelectEntity, RestoreEntity):
     """Representation of a KNX select."""
 
     _device: RawValue
 
-    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
+    def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize a KNX select."""
-        super().__init__(_create_raw_value(xknx, config))
+        super().__init__(
+            knx_module=knx_module,
+            device=_create_raw_value(knx_module.xknx, config),
+        )
         self._option_payloads: dict[str, int] = {
             option[SelectSchema.CONF_OPTION]: option[CONF_PAYLOAD]
             for option in config[SelectSchema.CONF_OPTIONS]

@@ -48,7 +48,15 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import percentage
 
-from .const import DEV_MODEL_TH_SENSOR_YS8017_EC, DEV_MODEL_TH_SENSOR_YS8017_UC, DOMAIN
+from .const import (
+    DEV_MODEL_TH_SENSOR_YS8004_EC,
+    DEV_MODEL_TH_SENSOR_YS8004_UC,
+    DEV_MODEL_TH_SENSOR_YS8014_EC,
+    DEV_MODEL_TH_SENSOR_YS8014_UC,
+    DEV_MODEL_TH_SENSOR_YS8017_EC,
+    DEV_MODEL_TH_SENSOR_YS8017_UC,
+    DOMAIN,
+)
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
@@ -109,6 +117,10 @@ MCU_DEV_TEMPERATURE_SENSOR = [
 ]
 
 NONE_HUMIDITY_SENSOR_MODELS = [
+    DEV_MODEL_TH_SENSOR_YS8004_EC,
+    DEV_MODEL_TH_SENSOR_YS8004_UC,
+    DEV_MODEL_TH_SENSOR_YS8014_EC,
+    DEV_MODEL_TH_SENSOR_YS8014_UC,
     DEV_MODEL_TH_SENSOR_YS8017_UC,
     DEV_MODEL_TH_SENSOR_YS8017_EC,
 ]

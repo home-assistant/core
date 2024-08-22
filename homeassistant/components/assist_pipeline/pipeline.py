@@ -51,11 +51,13 @@ from homeassistant.util.limited_size_dict import LimitedSizeDict
 
 from .audio_enhancer import AudioEnhancer, EnhancedAudioChunk, MicroVadEnhancer
 from .const import (
+    BYTES_PER_CHUNK,
     CONF_DEBUG_RECORDING_DIR,
     DATA_CONFIG,
     DATA_LAST_WAKE_UP,
     DATA_MIGRATIONS,
     DOMAIN,
+    MS_PER_CHUNK,
     SAMPLE_CHANNELS,
     SAMPLE_RATE,
     SAMPLE_WIDTH,
@@ -502,9 +504,6 @@ class AudioSettings:
     is_vad_enabled: bool = True
     """True if VAD is used to determine the end of the voice command."""
 
-    samples_per_chunk: int | None = None
-    """Number of samples that will be in each audio chunk (None for no chunking)."""
-
     silence_seconds: float = 0.5
     """Seconds of silence after voice command has ended."""
 
@@ -524,11 +523,6 @@ class AudioSettings:
             or (self.noise_suppression_level > 0)
             or (self.auto_gain_dbfs > 0)
         )
-
-    @property
-    def is_chunking_enabled(self) -> bool:
-        """True if chunk size is set."""
-        return self.samples_per_chunk is not None
 
 
 @dataclass
@@ -566,7 +560,9 @@ class PipelineRun:
     audio_enhancer: AudioEnhancer | None = None
     """VAD/noise suppression/auto gain"""
 
-    audio_chunking_buffer: AudioBuffer | None = None
+    audio_chunking_buffer: AudioBuffer = field(
+        default_factory=lambda: AudioBuffer(BYTES_PER_CHUNK)
+    )
     """Buffer used when splitting audio into chunks for audio processing"""
 
     _device_id: str | None = None
@@ -599,22 +595,12 @@ class PipelineRun:
                 self.audio_settings.is_vad_enabled,
             )
 
-        self.audio_chunking_buffer = AudioBuffer(self.samples_per_chunk * SAMPLE_WIDTH)
-
     def __eq__(self, other: object) -> bool:
         """Compare pipeline runs by id."""
         if isinstance(other, PipelineRun):
             return self.id == other.id
 
         return False
-
-    @property
-    def samples_per_chunk(self) -> int:
-        """Return number of samples expected in each audio chunk."""
-        if self.audio_enhancer is not None:
-            return self.audio_enhancer.samples_per_chunk or SAMPLES_PER_CHUNK
-
-        return self.audio_settings.samples_per_chunk or SAMPLES_PER_CHUNK
 
     @callback
     def process_event(self, event: PipelineEvent) -> None:
@@ -728,7 +714,7 @@ class PipelineRun:
         # after wake-word-detection.
         num_audio_chunks_to_buffer = int(
             (wake_word_settings.audio_seconds_to_buffer * SAMPLE_RATE)
-            / self.samples_per_chunk
+            / SAMPLES_PER_CHUNK
         )
 
         stt_audio_buffer: deque[EnhancedAudioChunk] | None = None
@@ -1216,60 +1202,31 @@ class PipelineRun:
         self.debug_recording_thread = None
 
     async def process_volume_only(
-        self,
-        audio_stream: AsyncIterable[bytes],
-        sample_rate: int = SAMPLE_RATE,
-        sample_width: int = SAMPLE_WIDTH,
+        self, audio_stream: AsyncIterable[bytes]
     ) -> AsyncGenerator[EnhancedAudioChunk]:
         """Apply volume transformation only (no VAD/audio enhancements) with optional chunking."""
-        assert self.audio_chunking_buffer is not None
-
-        bytes_per_chunk = self.samples_per_chunk * sample_width
-        ms_per_sample = sample_rate // 1000
-        ms_per_chunk = self.samples_per_chunk // ms_per_sample
         timestamp_ms = 0
-
         async for chunk in audio_stream:
             if self.audio_settings.volume_multiplier != 1.0:
                 chunk = _multiply_volume(chunk, self.audio_settings.volume_multiplier)
 
-            if self.audio_settings.is_chunking_enabled:
-                for sub_chunk in chunk_samples(
-                    chunk, bytes_per_chunk, self.audio_chunking_buffer
-                ):
-                    yield EnhancedAudioChunk(
-                        audio=sub_chunk,
-                        timestamp_ms=timestamp_ms,
-                        is_speech=None,  # no VAD
-                    )
-                    timestamp_ms += ms_per_chunk
-            else:
-                # No chunking
+            for sub_chunk in chunk_samples(
+                chunk, BYTES_PER_CHUNK, self.audio_chunking_buffer
+            ):
                 yield EnhancedAudioChunk(
-                    audio=chunk,
+                    audio=sub_chunk,
                     timestamp_ms=timestamp_ms,
                     is_speech=None,  # no VAD
                 )
-                timestamp_ms += (len(chunk) // sample_width) // ms_per_sample
+                timestamp_ms += MS_PER_CHUNK
 
     async def process_enhance_audio(
-        self,
-        audio_stream: AsyncIterable[bytes],
-        sample_rate: int = SAMPLE_RATE,
-        sample_width: int = SAMPLE_WIDTH,
+        self, audio_stream: AsyncIterable[bytes]
     ) -> AsyncGenerator[EnhancedAudioChunk]:
-        """Split audio into 10 ms chunks and apply VAD/noise suppression/auto gain/volume transformation."""
+        """Split audio into chunks and apply VAD/noise suppression/auto gain/volume transformation."""
         assert self.audio_enhancer is not None
-        assert self.audio_enhancer.samples_per_chunk is not None
-        assert self.audio_chunking_buffer is not None
 
-        bytes_per_chunk = self.audio_enhancer.samples_per_chunk * sample_width
-        ms_per_sample = sample_rate // 1000
-        ms_per_chunk = (
-            self.audio_enhancer.samples_per_chunk // sample_width
-        ) // ms_per_sample
         timestamp_ms = 0
-
         async for dirty_samples in audio_stream:
             if self.audio_settings.volume_multiplier != 1.0:
                 # Static gain
@@ -1279,10 +1236,10 @@ class PipelineRun:
 
             # Split into chunks for audio enhancements/VAD
             for dirty_chunk in chunk_samples(
-                dirty_samples, bytes_per_chunk, self.audio_chunking_buffer
+                dirty_samples, BYTES_PER_CHUNK, self.audio_chunking_buffer
             ):
                 yield self.audio_enhancer.enhance_chunk(dirty_chunk, timestamp_ms)
-                timestamp_ms += ms_per_chunk
+                timestamp_ms += MS_PER_CHUNK
 
 
 def _multiply_volume(chunk: bytes, volume_multiplier: float) -> bytes:
