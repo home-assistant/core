@@ -25,28 +25,38 @@ from yalexs.activity import (
     DoorOperationActivity,
     LockOperationActivity,
 )
+from yalexs.api_async import ApiAsync
+from yalexs.authenticator_async import Authentication
 from yalexs.authenticator_common import AuthenticationState
 from yalexs.const import Brand
 from yalexs.doorbell import Doorbell, DoorbellDetail
 from yalexs.lock import Lock, LockDetail
 from yalexs.pubnub_async import AugustPubNub
 
-from homeassistant.components.yale.const import CONF_BRAND, CONF_LOGIN_METHOD, DOMAIN
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
+from homeassistant.components.yale.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
 
 
-def _mock_get_config(brand: Brand = Brand.YALE_HOME):
+def _mock_get_config(brand: Brand = Brand.YALE_GLOBAL):
     """Return a default yale config."""
     return {
         DOMAIN: {
-            CONF_LOGIN_METHOD: "email",
-            CONF_USERNAME: "mocked_username",
-            CONF_PASSWORD: "mocked_password",
-            CONF_BRAND: brand,
+            "auth_implementation": "yale",
+            "token": {
+                "access_token": "access_token",
+                "expires_in": 1,
+                "refresh_token": "refresh_token",
+                "expires_at": time.time() + 3600,
+                "service": "yale",
+            },
         }
     }
 
@@ -65,8 +75,13 @@ def _timetoken():
 @patch("yalexs.manager.gateway.ApiAsync")
 @patch("yalexs.manager.gateway.AuthenticatorAsync.async_authenticate")
 async def _mock_setup_yale(
-    hass, api_instance, pubnub_mock, authenticate_mock, api_mock, brand
-):
+    hass: HomeAssistant,
+    api_instance: ApiAsync,
+    pubnub_mock: AugustPubNub,
+    authenticate_mock: Authentication,
+    api_mock: MagicMock,
+    brand: Brand,
+) -> ConfigEntry:
     """Set up yale integration."""
     authenticate_mock.side_effect = MagicMock(
         return_value=_mock_yale_authentication(
@@ -80,12 +95,24 @@ async def _mock_setup_yale(
         options={},
     )
     entry.add_to_hass(hass)
+    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, "cloud", {})
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential("1", "2"),
+        DOMAIN,
+    )
+
     with (
         patch(
             "yalexs.manager.data.async_create_pubnub",
             return_value=AsyncMock(),
         ),
         patch("yalexs.manager.data.AugustPubNub", return_value=pubnub_mock),
+        patch(
+            "homeassistant.components.yale.config_entry_oauth2_flow.async_get_config_entry_implementation"
+        ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -107,13 +134,13 @@ async def _create_yale_with_devices(
 
 
 async def _create_yale_api_with_devices(
-    hass,
-    devices,
-    api_call_side_effects=None,
-    activities=None,
-    pubnub=None,
+    hass: HomeAssistant,
+    devices: Iterable[LockDetail | DoorbellDetail],
+    api_call_side_effects: dict[str, Any] | None = None,
+    activities: dict[str, Any] | None = None,
+    pubnub: AugustPubNub | None = None,
     brand=Brand.YALE_HOME,
-):
+) -> tuple[ConfigEntry, ApiAsync]:
     if api_call_side_effects is None:
         api_call_side_effects = {}
     if pubnub is None:
@@ -215,8 +242,11 @@ async def _create_yale_api_with_devices(
 
 
 async def _mock_setup_yale_with_api_side_effects(
-    hass, api_call_side_effects, pubnub, brand=Brand.YALE_HOME
-):
+    hass: HomeAssistant,
+    api_call_side_effects: dict[str, Any],
+    pubnub: AugustPubNub,
+    brand=Brand.YALE_HOME,
+) -> tuple[ApiAsync, ConfigEntry]:
     api_instance = MagicMock(name="Api", brand=brand)
 
     if api_call_side_effects["get_lock_detail"]:
@@ -279,13 +309,13 @@ def _mock_yale_authentication(token_text, token_timestamp, state):
     return authentication
 
 
-def _mock_yale_lock(lockid="mocklockid1", houseid="mockhouseid1"):
+def _mock_yale_lock(lockid="mocklockid1", houseid="mockhouseid1") -> Lock:
     return Lock(lockid, _mock_yale_lock_data(lockid=lockid, houseid=houseid))
 
 
 def _mock_yale_doorbell(
     deviceid="mockdeviceid1", houseid="mockhouseid1", brand=Brand.YALE_HOME
-):
+) -> Doorbell:
     return Doorbell(
         deviceid,
         _mock_yale_doorbell_data(deviceid=deviceid, houseid=houseid, brand=brand),
@@ -293,8 +323,10 @@ def _mock_yale_doorbell(
 
 
 def _mock_yale_doorbell_data(
-    deviceid="mockdeviceid1", houseid="mockhouseid1", brand=Brand.YALE_HOME
-):
+    deviceid: str = "mockdeviceid1",
+    houseid: str = "mockhouseid1",
+    brand=Brand.YALE_HOME,
+) -> dict[str, Any]:
     return {
         "_id": deviceid,
         "DeviceID": deviceid,
@@ -314,7 +346,9 @@ def _mock_yale_doorbell_data(
     }
 
 
-def _mock_yale_lock_data(lockid="mocklockid1", houseid="mockhouseid1"):
+def _mock_yale_lock_data(
+    lockid: str = "mocklockid1", houseid: str = "mockhouseid1"
+) -> dict[str, Any]:
     return {
         "_id": lockid,
         "LockID": lockid,
