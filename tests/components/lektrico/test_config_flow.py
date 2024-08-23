@@ -47,7 +47,6 @@ async def test_user_setup(
             CONF_HOST: MOCKED_DEVICE_IP_ADDRESS,
         },
     )
-    await hass.async_block_till_done()
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == f"{MOCKED_DEVICE_TYPE}_{MOCKED_DEVICE_SERIAL_NUMBER}"
@@ -59,7 +58,6 @@ async def test_user_setup(
     }
     assert "result" in result
     assert len(mock_setup_entry.mock_calls) == 1
-
     assert result.get("result").unique_id == MOCKED_DEVICE_SERIAL_NUMBER
 
 
@@ -88,7 +86,6 @@ async def test_user_setup_already_exists(
             CONF_HOST: MOCKED_DEVICE_IP_ADDRESS,
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -112,7 +109,6 @@ async def test_user_setup_device_offline(
             CONF_HOST: MOCKED_DEVICE_IP_ADDRESS,
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
