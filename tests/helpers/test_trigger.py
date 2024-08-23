@@ -6,7 +6,6 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
-from homeassistant.helpers.config_validation import TRIGGER_SCHEMA
 from homeassistant.helpers.trigger import (
     DATA_PLUGGABLE_ACTIONS,
     PluggableAction,
@@ -165,53 +164,42 @@ async def test_nested_trigger_list(
 ) -> None:
     """Test triggers within nested list."""
 
-    automation = {
-        "automation": {
-            "trigger": [
-                {
-                    "triggers": {
-                        "platform": "event",
-                        "event_type": "trigger_1",
-                    },
-                },
-                {
-                    "platform": "event",
-                    "event_type": "trigger_2",
-                },
-                {"triggers": []},
-                {"triggers": None},
-                {
-                    "triggers": [
-                        {
-                            "platform": "event",
-                            "event_type": "trigger_3",
-                        },
-                        {
-                            "platform": "event",
-                            "event_type": "trigger_4",
-                        },
-                    ],
-                },
-            ],
-            "action": {
-                "service": "test.automation",
-            },
-        }
-    }
-
-    # Test the nested list is flattened as intended
-    validatedTriggers = TRIGGER_SCHEMA(automation["automation"]["trigger"])
-
-    assert len(validatedTriggers) == 4
-    assert validatedTriggers[0]["event_type"] == "trigger_1"
-    assert validatedTriggers[1]["event_type"] == "trigger_2"
-    assert validatedTriggers[2]["event_type"] == "trigger_3"
-    assert validatedTriggers[3]["event_type"] == "trigger_4"
-
     assert await async_setup_component(
         hass,
         "automation",
-        automation,
+        {
+            "automation": {
+                "trigger": [
+                    {
+                        "triggers": {
+                            "platform": "event",
+                            "event_type": "trigger_1",
+                        },
+                    },
+                    {
+                        "platform": "event",
+                        "event_type": "trigger_2",
+                    },
+                    {"triggers": []},
+                    {"triggers": None},
+                    {
+                        "triggers": [
+                            {
+                                "platform": "event",
+                                "event_type": "trigger_3",
+                            },
+                            {
+                                "platform": "event",
+                                "event_type": "trigger_4",
+                            },
+                        ],
+                    },
+                ],
+                "action": {
+                    "service": "test.automation",
+                },
+            }
+        },
     )
 
     hass.bus.async_fire("trigger_1")
