@@ -38,7 +38,6 @@ async def test_number(
 
     assert hass.states.get(entity_id).state == "80"
 
-    reolink_connect.set_volume = AsyncMock()
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
@@ -47,7 +46,7 @@ async def test_number(
     )
     reolink_connect.set_volume.assert_called_with(0, volume=50)
 
-    reolink_connect.set_volume = AsyncMock(side_effect=ReolinkError("Test error"))
+    reolink_connect.set_volume.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
@@ -56,9 +55,7 @@ async def test_number(
             blocking=True,
         )
 
-    reolink_connect.set_volume = AsyncMock(
-        side_effect=InvalidParameterError("Test error")
-    )
+    reolink_connect.set_volume.side_effect = InvalidParameterError("Test error")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
@@ -86,7 +83,6 @@ async def test_chime_number(
 
     assert hass.states.get(entity_id).state == "3"
 
-    test_chime.set_option = AsyncMock()
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
@@ -95,7 +91,7 @@ async def test_chime_number(
     )
     test_chime.set_option.assert_called_with(volume=2)
 
-    test_chime.set_option = AsyncMock(side_effect=ReolinkError("Test error"))
+    test_chime.set_option.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
@@ -104,7 +100,7 @@ async def test_chime_number(
             blocking=True,
         )
 
-    test_chime.set_option = AsyncMock(side_effect=InvalidParameterError("Test error"))
+    test_chime.set_option.side_effect = InvalidParameterError("Test error")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
