@@ -11,9 +11,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_IDLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
 
-from .conftest import TEST_DUO_MODEL, TEST_NVR_NAME, TEST_UID, TEST_UID_CAM
+from .conftest import TEST_DUO_MODEL, TEST_NVR_NAME
 
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
@@ -46,25 +45,14 @@ async def test_camera(
     assert await async_get_stream_source(hass, entity_id) is not None
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_camera_no_stream_source(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     reolink_connect: MagicMock,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test camera entity with no stream source."""
-    unique_id = f"{TEST_UID}_{TEST_UID_CAM}_snapshots_sub"
     entity_id = f"{Platform.CAMERA}.{TEST_NVR_NAME}_snapshots_fluent"
-
-    # enable the snapshots camera entity
-    entity_registry.async_get_or_create(
-        domain=Platform.CAMERA,
-        platform=DOMAIN,
-        unique_id=unique_id,
-        config_entry=config_entry,
-        suggested_object_id=f"{TEST_NVR_NAME}_snapshots_fluent",
-        disabled_by=None,
-    )
 
     reolink_connect.model = TEST_DUO_MODEL
     reolink_connect.get_stream_source.return_value = None
