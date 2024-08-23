@@ -393,7 +393,7 @@ async def test_token_updated(
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_ring_client,
-    mock_ring_auth_class,
+    mock_ring_init_auth_class,
 ) -> None:
     """Test that the token value is updated in the config entry.
 
@@ -402,8 +402,8 @@ async def test_token_updated(
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    assert mock_ring_auth_class.call_count == 1
-    token_updater = mock_ring_auth_class.call_args.args[2]
+    assert mock_ring_init_auth_class.call_count == 1
+    token_updater = mock_ring_init_auth_class.call_args.args[2]
     assert mock_config_entry.data[CONF_TOKEN] == {"access_token": "mock-token"}
 
     mock_ring_client.async_update_devices.side_effect = lambda: token_updater(
