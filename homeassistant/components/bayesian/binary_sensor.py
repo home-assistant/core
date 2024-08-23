@@ -6,7 +6,7 @@ from collections import OrderedDict
 from collections.abc import Callable
 import logging
 import math
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 from uuid import UUID
 
 import voluptuous as vol
@@ -101,9 +101,7 @@ def _above_greater_than_below(configs: list[dict[str, Any]]) -> list:
 
 def _no_overlapping(configs: list[dict]) -> list[dict]:
     numeric_configs = [
-        config
-        for config in configs
-        if config[CONF_PLATFORM] == CONF_NUMERIC_STATE
+        config for config in configs if config[CONF_PLATFORM] == CONF_NUMERIC_STATE
     ]
     if len(numeric_configs) < 2:
         return configs
@@ -162,7 +160,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             vol.All(
                 [vol.Any(TEMPLATE_SCHEMA, STATE_SCHEMA, NUMERIC_STATE_SCHEMA)],
                 _above_greater_than_below,
-                _no_overlaping,
+                _no_overlapping,
                 cv.ensure_list,
             )
         ),
@@ -500,7 +498,7 @@ class BayesianBinarySensor(BinarySensorEntity):
         entity_id = entity_observation.entity_id
         # if we are dealing with numeric_state observations entity_id cannot be None
         if TYPE_CHECKING:
-            assert (entity_id is not None)
+            assert entity_id is not None
 
         entity = self.hass.states.get(entity_id)
         if entity is None:
