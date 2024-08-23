@@ -4,7 +4,8 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL, const
+from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL
+from homeassistant.components.reolink.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -33,7 +34,7 @@ async def test_sensors(
     unique_id = f"{TEST_UID}_wifi_signal"
     entity_registry.async_get_or_create(
         domain=Platform.SENSOR,
-        platform=const.DOMAIN,
+        platform=DOMAIN,
         unique_id=unique_id,
         config_entry=config_entry,
         suggested_object_id=f"{TEST_NVR_NAME}_wi_fi_signal",
@@ -44,7 +45,7 @@ async def test_sensors(
     unique_id = f"{TEST_UID}_0_storage"
     entity_registry.async_get_or_create(
         domain=Platform.SENSOR,
-        platform=const.DOMAIN,
+        platform=DOMAIN,
         unique_id=unique_id,
         config_entry=config_entry,
         suggested_object_id=f"{TEST_NVR_NAME}_sd_0_storage",
@@ -89,7 +90,7 @@ async def test_HDD_sensors(
     unique_id = f"{TEST_UID}_0_storage"
     entity_registry.async_get_or_create(
         domain=Platform.SENSOR,
-        platform=const.DOMAIN,
+        platform=DOMAIN,
         unique_id=unique_id,
         config_entry=config_entry,
         suggested_object_id=f"{TEST_NVR_NAME}_hdd_0_storage",
