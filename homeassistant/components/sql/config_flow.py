@@ -31,8 +31,9 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import callback
+from homeassistant.core import async_get_hass, callback
 from homeassistant.helpers import selector
+from homeassistant.helpers.template import Template
 
 from .const import CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
 from .util import resolve_db_url
@@ -50,7 +51,7 @@ OPTIONS_SCHEMA: vol.Schema = vol.Schema(
         ): selector.TextSelector(),
         vol.Required(
             CONF_QUERY,
-        ): selector.TextSelector(selector.TextSelectorConfig(multiline=True)),
+        ): selector.TemplateSelector(),
         vol.Optional(
             CONF_UNIT_OF_MEASUREMENT,
         ): selector.TextSelector(),
@@ -89,6 +90,7 @@ CONFIG_SCHEMA: vol.Schema = vol.Schema(
 
 def validate_sql_select(value: str) -> str:
     """Validate that value is a SQL SELECT query."""
+    value = Template(value, async_get_hass()).async_render()
     if len(query := sqlparse.parse(value.lstrip().lstrip(";"))) > 1:
         raise MultipleResultsFound
     if len(query) == 0 or (query_type := query[0].get_type()) == "UNKNOWN":
@@ -96,7 +98,7 @@ def validate_sql_select(value: str) -> str:
     if query_type != "SELECT":
         _LOGGER.debug("The SQL query %s is of type %s", query, query_type)
         raise SQLParseError
-    return str(query[0])
+    return value
 
 
 def validate_query(db_url: str, query: str, column: str) -> bool:
@@ -160,10 +162,10 @@ class SQLConfigFlow(ConfigFlow, domain=DOMAIN):
             db_url_for_validation = None
 
             try:
-                query = validate_sql_select(query)
+                test_query = validate_sql_select(query)
                 db_url_for_validation = resolve_db_url(self.hass, db_url)
                 await self.hass.async_add_executor_job(
-                    validate_query, db_url_for_validation, query, column
+                    validate_query, db_url_for_validation, test_query, column
                 )
             except NoSuchColumnError:
                 errors["column"] = "column_invalid"
@@ -226,10 +228,10 @@ class SQLOptionsFlowHandler(OptionsFlowWithConfigEntry):
             name = self.options.get(CONF_NAME, self.config_entry.title)
 
             try:
-                query = validate_sql_select(query)
+                test_query = validate_sql_select(query)
                 db_url_for_validation = resolve_db_url(self.hass, db_url)
                 await self.hass.async_add_executor_job(
-                    validate_query, db_url_for_validation, query, column
+                    validate_query, db_url_for_validation, test_query, column
                 )
             except NoSuchColumnError:
                 errors["column"] = "column_invalid"

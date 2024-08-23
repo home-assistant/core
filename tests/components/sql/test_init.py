@@ -13,6 +13,7 @@ from homeassistant.components.sql import validate_sql_select
 from homeassistant.components.sql.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 
 from . import YAML_CONFIG_INVALID, YAML_CONFIG_NO_DB, init_integration
@@ -57,33 +58,39 @@ async def test_setup_invalid_config(
 async def test_invalid_query(hass: HomeAssistant) -> None:
     """Test invalid query."""
     with pytest.raises(vol.Invalid):
-        validate_sql_select("DROP TABLE *")
+        validate_sql_select(Template("DROP TABLE *"))
 
     with pytest.raises(vol.Invalid):
-        validate_sql_select("SELECT5 as value")
+        validate_sql_select(Template("SELECT5 as value"))
 
     with pytest.raises(vol.Invalid):
-        validate_sql_select(";;")
+        validate_sql_select(Template(";;"))
 
 
 async def test_query_no_read_only(hass: HomeAssistant) -> None:
     """Test query no read only."""
     with pytest.raises(vol.Invalid):
-        validate_sql_select("UPDATE states SET state = 999999 WHERE state_id = 11125")
+        validate_sql_select(
+            Template("UPDATE states SET state = 999999 WHERE state_id = 11125")
+        )
 
 
 async def test_query_no_read_only_cte(hass: HomeAssistant) -> None:
     """Test query no read only CTE."""
     with pytest.raises(vol.Invalid):
         validate_sql_select(
-            "WITH test AS (SELECT state FROM states) UPDATE states SET states.state = test.state;"
+            Template(
+                "WITH test AS (SELECT state FROM states) UPDATE states SET states.state = test.state;"
+            )
         )
 
 
 async def test_multiple_queries(hass: HomeAssistant) -> None:
     """Test multiple queries."""
     with pytest.raises(vol.Invalid):
-        validate_sql_select("SELECT 5 as value; UPDATE states SET state = 10;")
+        validate_sql_select(
+            Template("SELECT 5 as value; UPDATE states SET state = 10;")
+        )
 
 
 async def test_remove_configured_db_url_if_not_needed_when_not_needed(

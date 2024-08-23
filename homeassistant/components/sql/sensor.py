@@ -75,7 +75,7 @@ async def async_setup_platform(
         return
 
     name: Template = conf[CONF_NAME]
-    query_str: str = conf[CONF_QUERY]
+    query: Template = conf[CONF_QUERY]
     value_template: Template | None = conf.get(CONF_VALUE_TEMPLATE)
     column_name: str = conf[CONF_COLUMN_NAME]
     unique_id: str | None = conf.get(CONF_UNIQUE_ID)
@@ -90,7 +90,7 @@ async def async_setup_platform(
     await async_setup_sensor(
         hass,
         trigger_entity_config,
-        query_str,
+        query,
         column_name,
         value_template,
         unique_id,
@@ -119,6 +119,7 @@ async def async_setup_entry(
         except TemplateError:
             value_template = None
 
+    query = Template(query_str, hass)
     name_template = Template(name, hass)
     trigger_entity_config = {CONF_NAME: name_template, CONF_UNIQUE_ID: entry.entry_id}
     for key in TRIGGER_ENTITY_OPTIONS:
@@ -129,7 +130,7 @@ async def async_setup_entry(
     await async_setup_sensor(
         hass,
         trigger_entity_config,
-        query_str,
+        query,
         column_name,
         value_template,
         entry.entry_id,
@@ -172,7 +173,7 @@ def _async_get_or_init_domain_data(hass: HomeAssistant) -> SQLData:
 async def async_setup_sensor(
     hass: HomeAssistant,
     trigger_entity_config: ConfigType,
-    query_str: str,
+    query: Template,
     column_name: str,
     value_template: Template | None,
     unique_id: str | None,
@@ -209,9 +210,10 @@ async def async_setup_sensor(
     else:
         return
 
-    upper_query = query_str.upper()
+    rendered_query = query.async_render()
+    upper_query = rendered_query.upper()
     if uses_recorder_db:
-        redacted_query = redact_credentials(query_str)
+        redacted_query = redact_credentials(rendered_query)
 
         issue_key = unique_id if unique_id else redacted_query
         # If the query has a unique id and they fix it we can dismiss the issue
@@ -247,17 +249,20 @@ async def async_setup_sensor(
 
     # MSSQL uses TOP and not LIMIT
     if not ("LIMIT" in upper_query or "SELECT TOP" in upper_query):
+        query_str = query.template
         if "mssql" in db_url:
             query_str = upper_query.replace("SELECT", "SELECT TOP 1")
+            query = Template(query_str, hass)
         else:
             query_str = query_str.replace(";", "") + " LIMIT 1;"
+            query = Template(query_str, hass)
 
     async_add_entities(
         [
             SQLSensor(
                 trigger_entity_config,
                 sessmaker,
-                query_str,
+                query,
                 column_name,
                 value_template,
                 yaml,
@@ -309,7 +314,7 @@ class SQLSensor(ManualTriggerSensorEntity):
         self,
         trigger_entity_config: ConfigType,
         sessmaker: scoped_session,
-        query: str,
+        query: Template,
         column: str,
         value_template: Template | None,
         yaml: bool,
@@ -323,7 +328,7 @@ class SQLSensor(ManualTriggerSensorEntity):
         self.sessionmaker = sessmaker
         self._attr_extra_state_attributes = {}
         self._use_database_executor = use_database_executor
-        self._lambda_stmt = _generate_lambda_stmt(query)
+        self._lambda_stmt = _generate_lambda_stmt(query.async_render())
         if not yaml and (unique_id := trigger_entity_config.get(CONF_UNIQUE_ID)):
             self._attr_name = None
             self._attr_has_entity_name = True
@@ -346,6 +351,7 @@ class SQLSensor(ManualTriggerSensorEntity):
 
     async def async_update(self) -> None:
         """Retrieve sensor data from the query using the right executor."""
+        self._lambda_stmt = _generate_lambda_stmt(self._query.async_render())
         if self._use_database_executor:
             data = await get_instance(self.hass).async_add_executor_job(self._update)
         else:
@@ -362,7 +368,7 @@ class SQLSensor(ManualTriggerSensorEntity):
         except SQLAlchemyError as err:
             _LOGGER.error(
                 "Error executing query %s: %s",
-                self._query,
+                self._query.template,
                 redact_credentials(str(err)),
             )
             sess.rollback()
@@ -370,7 +376,7 @@ class SQLSensor(ManualTriggerSensorEntity):
             return None
 
         for res in result.mappings():
-            _LOGGER.debug("Query %s result in %s", self._query, res.items())
+            _LOGGER.debug("Query %s result in %s", self._query.template, res.items())
             data = res[self._column_name]
             for key, value in res.items():
                 if isinstance(value, decimal.Decimal):
@@ -392,7 +398,7 @@ class SQLSensor(ManualTriggerSensorEntity):
             self._attr_native_value = data
 
         if data is None:
-            _LOGGER.warning("%s returned no results", self._query)
+            _LOGGER.warning("%s returned no results", self._query.template)
 
         sess.close()
         return data
