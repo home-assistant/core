@@ -1,6 +1,6 @@
 """Test the Reolink button platform."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from reolink_aio.exceptions import ReolinkError
@@ -32,7 +32,6 @@ async def test_button(
 
     entity_id = f"{Platform.BUTTON}.{TEST_NVR_NAME}_ptz_up"
 
-    reolink_connect.set_ptz_command = AsyncMock()
     await hass.services.async_call(
         BUTTON_DOMAIN,
         "press",
@@ -41,7 +40,7 @@ async def test_button(
     )
     reolink_connect.set_ptz_command.assert_called_once()
 
-    reolink_connect.set_ptz_command = AsyncMock(side_effect=ReolinkError("Test error"))
+    reolink_connect.set_ptz_command.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
@@ -50,7 +49,7 @@ async def test_button(
             blocking=True,
         )
 
-    reolink_connect.set_ptz_command = AsyncMock()
+    reolink_connect.set_ptz_command.reset_mock()
     await hass.services.async_call(
         const.DOMAIN,
         "ptz_move",
@@ -59,7 +58,7 @@ async def test_button(
     )
     reolink_connect.set_ptz_command.assert_called_with(0, command="Up", speed=5)
 
-    reolink_connect.set_ptz_command = AsyncMock(side_effect=ReolinkError("Test error"))
+    reolink_connect.set_ptz_command.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             const.DOMAIN,
@@ -94,7 +93,6 @@ async def test_host_button(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    reolink_connect.reboot = AsyncMock()
     await hass.services.async_call(
         BUTTON_DOMAIN,
         "press",
@@ -103,7 +101,7 @@ async def test_host_button(
     )
     reolink_connect.reboot.assert_called_once()
 
-    reolink_connect.reboot = AsyncMock(side_effect=ReolinkError("Test error"))
+    reolink_connect.reboot.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
