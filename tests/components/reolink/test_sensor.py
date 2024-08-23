@@ -2,8 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-from freezegun.api import FrozenDateTimeFactory
-
 from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL
 from homeassistant.components.reolink.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -13,7 +11,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import TEST_NVR_NAME, TEST_UID
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 
 async def test_sensors(
