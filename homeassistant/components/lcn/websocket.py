@@ -10,6 +10,7 @@ import lcn_frontend as lcn_panel
 import voluptuous as vol
 
 from homeassistant.components import panel_custom, websocket_api
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.components.websocket_api import AsyncWebSocketCommandHandler
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -76,10 +77,14 @@ async def register_panel_and_ws_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_delete_entity)
 
     if DOMAIN not in hass.data.get("frontend_panels", {}):
-        hass.http.register_static_path(
-            URL_BASE,
-            path=lcn_panel.locate_dir(),
-            cache_headers=lcn_panel.is_prod_build,
+        await hass.http.async_register_static_paths(
+            [
+                StaticPathConfig(
+                    URL_BASE,
+                    path=lcn_panel.locate_dir(),
+                    cache_headers=lcn_panel.is_prod_build,
+                )
+            ]
         )
         await panel_custom.async_register_panel(
             hass=hass,
