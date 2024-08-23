@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import BSBLanData
@@ -19,8 +23,10 @@ class BSBLanEntity(CoordinatorEntity[BSBLanUpdateCoordinator]):
         """Initialize BSBLan entity."""
         super().__init__(coordinator, data)
         host = self.coordinator.config_entry.data["host"]
+        mac = self.coordinator.config_entry.data["mac"]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, data.device.MAC)},
+            connections={(CONNECTION_NETWORK_MAC, format_mac(mac))},
             name=data.device.name,
             manufacturer="BSBLAN Inc.",
             model=data.info.device_identification.value,
