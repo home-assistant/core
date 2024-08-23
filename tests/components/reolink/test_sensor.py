@@ -2,23 +2,22 @@
 
 from unittest.mock import MagicMock, patch
 
-from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL
-from homeassistant.components.reolink.const import DOMAIN
+import pytest
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 
-from .conftest import TEST_NVR_NAME, TEST_UID
+from .conftest import TEST_NVR_NAME
 
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     reolink_connect: MagicMock,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sensor entities."""
     reolink_connect.ptz_pan_position.return_value = 1200
@@ -26,28 +25,6 @@ async def test_sensors(
     reolink_connect.wifi_signal = 3
     reolink_connect.hdd_list = [0]
     reolink_connect.hdd_storage.return_value = 95
-
-    # enable the wifi_signal entity
-    unique_id = f"{TEST_UID}_wifi_signal"
-    entity_registry.async_get_or_create(
-        domain=Platform.SENSOR,
-        platform=DOMAIN,
-        unique_id=unique_id,
-        config_entry=config_entry,
-        suggested_object_id=f"{TEST_NVR_NAME}_wi_fi_signal",
-        disabled_by=None,
-    )
-
-    # enable the SD entity
-    unique_id = f"{TEST_UID}_0_storage"
-    entity_registry.async_get_or_create(
-        domain=Platform.SENSOR,
-        platform=DOMAIN,
-        unique_id=unique_id,
-        config_entry=config_entry,
-        suggested_object_id=f"{TEST_NVR_NAME}_sd_0_storage",
-        disabled_by=None,
-    )
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SENSOR]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -64,28 +41,17 @@ async def test_sensors(
     assert hass.states.get(entity_id).state == "95"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_hdd_sensors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     reolink_connect: MagicMock,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test hdd sensor entity."""
     reolink_connect.hdd_list = [0]
     reolink_connect.hdd_type.return_value = "HDD"
     reolink_connect.hdd_storage.return_value = 85
     reolink_connect.hdd_available.return_value = False
-
-    # enable the HDD entity
-    unique_id = f"{TEST_UID}_0_storage"
-    entity_registry.async_get_or_create(
-        domain=Platform.SENSOR,
-        platform=DOMAIN,
-        unique_id=unique_id,
-        config_entry=config_entry,
-        suggested_object_id=f"{TEST_NVR_NAME}_hdd_0_storage",
-        disabled_by=None,
-    )
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SENSOR]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
