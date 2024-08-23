@@ -30,6 +30,7 @@ from yalexs.authenticator_common import Authentication, AuthenticationState
 from yalexs.const import Brand
 from yalexs.doorbell import Doorbell, DoorbellDetail
 from yalexs.lock import Lock, LockDetail
+from yalexs.manager.ratelimit import _RateLimitChecker
 from yalexs.pubnub_async import AugustPubNub
 
 from homeassistant.components.application_credentials import (
@@ -96,9 +97,7 @@ async def _mock_setup_yale(
 
     with (
         patch("yalexs.manager.gateway.ApiAsync") as api_mock,
-        patch(
-            "yalexs.manager.gateway.AuthenticatorAsync.async_authenticate"
-        ) as authenticate_mock,
+        patch.object(_RateLimitChecker, "register_wakeup") as authenticate_mock,
         patch(
             "yalexs.manager.data.async_create_pubnub",
             return_value=AsyncMock(),
@@ -114,7 +113,7 @@ async def _mock_setup_yale(
             )
         )
         api_mock.return_value = api_instance
-        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
     return entry
 
