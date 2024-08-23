@@ -25,15 +25,20 @@ class ViCareEntity(Entity):
         unique_id_suffix: str,
     ) -> None:
         """Initialize the entity."""
+        gatewaySerial = device_config.getConfig().serial
+        deviceSerial = device.getSerial()
+        identifier = f"{gatewaySerial}-{deviceSerial}"
+
         self._api: PyViCareDevice | PyViCareHeatingDeviceComponent = (
             component if component else device
         )
-        self._attr_unique_id = f"{device.getSerial()}-{unique_id_suffix}"
+        self._attr_unique_id = f"{identifier}-{unique_id_suffix}"
         if component:
             self._attr_unique_id += f"-{component.id}"
+
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.getSerial())},
-            serial_number=device.getSerial(),
+            identifiers={(DOMAIN, identifier)},
+            serial_number=deviceSerial,
             name=device_config.getModel(),
             manufacturer="Viessmann",
             model=device_config.getModel(),
