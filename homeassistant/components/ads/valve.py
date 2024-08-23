@@ -22,11 +22,11 @@ from . import AdsEntity
 SCAN_INTERVAL = timedelta(seconds=5)
 DEFAULT_NAME = "ADS Valve"
 
-CONF_ADS_VAR_STATE = "adsvar_state"
+CONF_ADS_VAR = "adsvar"
 
 PLATFORM_SCHEMA = VALVE_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_ADS_VAR_STATE): cv.string,
+        vol.Optional(CONF_ADS_VAR): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
@@ -40,14 +40,14 @@ def setup_platform(
 ) -> None:
     """Set up the valve platform for ADS."""
     ads_hub = hass.data.get(ads.DATA_ADS)
-    ads_var_state = config.get(CONF_ADS_VAR_STATE)
+    ads_var = config.get(CONF_ADS_VAR)
     name = config[CONF_NAME]
 
     add_entities(
         [
             AdsValve(
                 ads_hub,
-                ads_var_state,
+                ads_var,
                 name,
             )
         ]
@@ -60,12 +60,12 @@ class AdsValve(AdsEntity, ValveEntity):
     def __init__(
         self,
         ads_hub,
-        ads_var_state,
+        ads_var,
         name,
     ):
         """Initialize AdsValve entity."""
-        super().__init__(ads_hub, name, ads_var_state)
-        self._ads_var_state = ads_var_state
+        super().__init__(ads_hub, name, ads_var)
+        self._ads_var_state = ads_var
         self._name = name
         self._attr_is_closed = False
         self._attr_supported_features = (
@@ -75,8 +75,8 @@ class AdsValve(AdsEntity, ValveEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register device notification."""
-        if self._ads_var_state:
-            await self.async_initialize_device(self._ads_var_state, pyads.PLCTYPE_BOOL)
+        if self._ads_var:
+            await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_BOOL)
 
         self.async_schedule_update_ha_state(True)
 
@@ -102,22 +102,20 @@ class AdsValve(AdsEntity, ValveEntity):
 
     async def async_open_valve(self) -> None:
         """Open the valve."""
-        self._ads_hub.write_by_name(self._ads_var_state, True, pyads.PLCTYPE_BOOL)
+        self._ads_hub.write_by_name(self._ads_var, True, pyads.PLCTYPE_BOOL)
         self._attr_is_closed = False
         self.async_schedule_update_ha_state(True)
 
     async def async_close_valve(self) -> None:
         """Close the valve."""
-        self._ads_hub.write_by_name(self._ads_var_state, False, pyads.PLCTYPE_BOOL)
+        self._ads_hub.write_by_name(self._ads_var, False, pyads.PLCTYPE_BOOL)
         self._attr_is_closed = True
         self.async_schedule_update_ha_state(True)
 
     async def async_update(self) -> None:
         """Retrieve the latest state from the ADS device."""
         # Read the valve state from the ADS device
-        state_value = self._ads_hub.read_by_name(
-            self._ads_var_state, pyads.PLCTYPE_BOOL
-        )
+        state_value = self._ads_hub.read_by_name(self._ads_var, pyads.PLCTYPE_BOOL)
         self._attr_is_closed = not state_value
 
         self.async_write_ha_state()
