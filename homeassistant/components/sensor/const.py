@@ -140,6 +140,12 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `ppm` (parts per million)
     """
 
+    CONCENTRATION = "concentration"
+    """Concentration.
+
+    Unit of measurement: `µg/m³` `mg/m³` `μg/ft³ `p/m³` `g/L` `ppm` `ppb`
+    """
+
     CONDUCTIVITY = "conductivity"
     """Conductivity.
 
