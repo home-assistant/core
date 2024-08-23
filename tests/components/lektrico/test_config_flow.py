@@ -130,6 +130,7 @@ async def test_discovered_zeroconf(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
+    assert result.get("step_id") == "confirm"
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result2["type"] is FlowResultType.CREATE_ENTRY
@@ -167,5 +168,6 @@ async def test_discovered_zeroconf_device_connection_error(
         context={"source": SOURCE_ZEROCONF},
         data=MOCKED_DEVICE_ZEROCONF_DATA,
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_HOST: "cannot_connect"}
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"

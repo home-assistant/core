@@ -96,7 +96,7 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             await self._get_lektrico_device_settings_and_treat_unique_id()
         except DeviceConnectionError:
-            return self._async_show_setup_form(errors={CONF_HOST: "cannot_connect"})
+            return self.async_abort(reason="cannot_connect")
 
         self.context["title_placeholders"] = {
             "serial_number": self._serial_number,
