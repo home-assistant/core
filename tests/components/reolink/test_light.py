@@ -22,12 +22,12 @@ from .conftest import TEST_NVR_NAME
 from tests.common import MockConfigEntry
 
 
-async def test_light(
+async def test_light_state(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     reolink_connect: MagicMock,
 ) -> None:
-    """Test light entity with floodlight."""
+    """Test light entity state with floodlight."""
     reolink_connect.whiteled_state.return_value = True
     reolink_connect.whiteled_brightness.return_value = 100
 
@@ -41,6 +41,41 @@ async def test_light(
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
     assert state.attributes["brightness"] == 255
+
+
+async def test_light_brightness_none(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+) -> None:
+    """Test light entity with floodlight and brightness returning None."""
+    reolink_connect.whiteled_state.return_value = True
+    reolink_connect.whiteled_brightness.return_value = None
+
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.LIGHT]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_id = f"{Platform.LIGHT}.{TEST_NVR_NAME}_floodlight"
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes["brightness"] is None
+
+
+async def test_light_turn_off(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+) -> None:
+    """Test light turn off service."""
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.LIGHT]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_id = f"{Platform.LIGHT}.{TEST_NVR_NAME}_floodlight"
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -59,7 +94,20 @@ async def test_light(
             blocking=True,
         )
 
-    reolink_connect.set_whiteled.side_effect = None
+
+async def test_light_turn_on(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+) -> None:
+    """Test light turn on service."""
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.LIGHT]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_id = f"{Platform.LIGHT}.{TEST_NVR_NAME}_floodlight"
+
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -96,24 +144,3 @@ async def test_light(
             {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 51},
             blocking=True,
         )
-
-
-async def test_light_brightness_none(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    reolink_connect: MagicMock,
-) -> None:
-    """Test light entity with floodlight and brightness returning None."""
-    reolink_connect.whiteled_state.return_value = True
-    reolink_connect.whiteled_brightness.return_value = None
-
-    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.LIGHT]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    entity_id = f"{Platform.LIGHT}.{TEST_NVR_NAME}_floodlight"
-
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
-    assert state.attributes["brightness"] is None
