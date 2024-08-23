@@ -258,7 +258,7 @@ aioharmony==0.2.10
 aiohomekit==3.2.3
 
 # homeassistant.components.hue
-aiohue==4.7.2
+aiohue==4.7.3
 
 # homeassistant.components.imap
 aioimaplib==1.1.0
@@ -470,7 +470,7 @@ apsystems-ez1==2.2.1
 aqualogic==2.6
 
 # homeassistant.components.aranet
-aranet4==2.3.4
+aranet4==2.4.0
 
 # homeassistant.components.arcam_fmj
 arcam-fmj==1.5.2
@@ -703,7 +703,7 @@ datadog==0.15.0
 datapoint==0.9.9
 
 # homeassistant.components.bluetooth
-dbus-fast==2.22.1
+dbus-fast==2.23.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.1
@@ -1059,7 +1059,7 @@ ha-philipsjs==3.2.2
 habitipy==0.3.1
 
 # homeassistant.components.bluetooth
-habluetooth==3.1.3
+habluetooth==3.3.2
 
 # homeassistant.components.cloud
 hass-nabucasa==0.81.1
@@ -1099,7 +1099,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.54
+holidays==0.55
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240809.0
@@ -1241,6 +1241,9 @@ lakeside==0.13
 
 # homeassistant.components.laundrify
 laundrify-aio==1.2.2
+
+# homeassistant.components.lcn
+lcn-frontend==0.1.5
 
 # homeassistant.components.ld2410_ble
 ld2410-ble==0.1.1
@@ -1520,7 +1523,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.6.0
+opower==0.7.0
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2211,7 +2214,7 @@ pysmartthings==0.7.8
 pysml==0.0.12
 
 # homeassistant.components.smlight
-pysmlight==0.0.12
+pysmlight==0.0.13
 
 # homeassistant.components.snmp
 pysnmp==6.2.5
@@ -2807,7 +2810,7 @@ transmission-rpc==7.0.3
 ttls==1.8.3
 
 # homeassistant.components.thethingsnetwork
-ttn_client==1.1.0
+ttn_client==1.2.0
 
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.1.9
@@ -2967,7 +2970,7 @@ yalexs-ble==2.4.3
 
 # homeassistant.components.august
 # homeassistant.components.yale
-yalexs==8.1.2
+yalexs==8.3.3
 
 # homeassistant.components.yeelight
 yeelight==0.7.14
