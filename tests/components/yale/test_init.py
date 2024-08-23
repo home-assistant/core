@@ -1,6 +1,6 @@
 """The tests for the yale platform."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from aiohttp import ClientResponseError
 import pytest
@@ -26,13 +26,11 @@ from .mocks import (
     _create_yale_with_devices,
     _mock_doorsense_enabled_yale_lock_detail,
     _mock_doorsense_missing_yale_lock_detail,
-    _mock_get_config,
     _mock_inoperative_yale_lock_detail,
     _mock_lock_with_offline_key,
     _mock_operative_yale_lock_detail,
 )
 
-from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
 
@@ -70,7 +68,7 @@ async def test_yale_late_auth_failure(hass: HomeAssistant) -> None:
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
     flows = hass.config_entries.flow.async_progress()
 
-    assert flows[0]["step_id"] == "reauth_validate"
+    assert flows[0]["step_id"] == "pick_implementation"
 
 
 async def test_unlock_throws_yale_api_http_error(hass: HomeAssistant) -> None:
@@ -172,31 +170,6 @@ async def test_lock_has_doorsense(hass: HomeAssistant) -> None:
         "binary_sensor.missing_with_doorsense_name_door"
     )
     assert binary_sensor_missing_doorsense_id_name_open is None
-
-
-async def test_auth_fails(hass: HomeAssistant) -> None:
-    """Config entry state is SETUP_ERROR when auth fails."""
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=_mock_get_config()[DOMAIN],
-        title="Yale yale",
-    )
-    config_entry.add_to_hass(hass)
-    assert hass.config_entries.flow.async_progress() == []
-
-    with patch(
-        "yalexs.authenticator_async.AuthenticatorAsync.async_authenticate",
-        side_effect=ClientResponseError(None, None, status=401),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.SETUP_ERROR
-
-    flows = hass.config_entries.flow.async_progress()
-
-    assert flows[0]["step_id"] == "reauth_validate"
 
 
 async def test_load_unload(hass: HomeAssistant) -> None:
