@@ -1329,6 +1329,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/smarty/ @z0mbieprocess
 /homeassistant/components/smhi/ @gjohansson-ST
 /tests/components/smhi/ @gjohansson-ST
+/homeassistant/components/smlight/ @tl-sl
+/tests/components/smlight/ @tl-sl
 /homeassistant/components/sms/ @ocalvo
 /tests/components/sms/ @ocalvo
 /homeassistant/components/snapcast/ @luar123

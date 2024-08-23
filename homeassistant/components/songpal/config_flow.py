@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 from urllib.parse import urlparse
 
 from songpal import Device, SongpalException
@@ -36,7 +37,9 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the flow."""
         self.conf: SongpalConfig | None = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self.async_show_form(

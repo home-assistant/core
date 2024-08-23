@@ -275,7 +275,7 @@ async def test_no_connection_state(
                     "item": {
                         "deviceId": "1",
                         "desired": '{"key": "value"}',
-                        "reported": '{"displayName":"Test Garage 1", "migrationStatus":"DONE", "barrierStatus": "1,100,0", "deviceFwVersion": "1.0.0", "lightStatus": "1,100"}',
+                        "reported": '{"displayName":"Test Garage 1", "migrationStatus":"DONE", "barrierStatus": "1,100,0", "deviceFwVersion": "1.0.0", "lightStatus": "1,100", "vcnMode": false}',
                         "connectionState": None,
                         "version": None,
                         "timestamp": None,
