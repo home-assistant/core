@@ -14,6 +14,7 @@ from homeassistant.components.androidtv.const import (
     CONF_APPS,
     CONF_EXCLUDE_UNNAMED_APPS,
     CONF_SCREENCAP,
+    CONF_SCREENCAP_INTERVAL,
     CONF_STATE_DETECTION_RULES,
     CONF_TURN_OFF_COMMAND,
     CONF_TURN_ON_COMMAND,
@@ -801,6 +802,9 @@ async def test_get_image_http(
     """
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
     config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry, options={CONF_SCREENCAP_INTERVAL: 2}
+    )
 
     with (
         patchers.patch_connect(True)[patch_key],
@@ -828,21 +832,27 @@ async def test_get_image_http(
     content = await resp.read()
     assert content == b"image"
 
-    next_update = utcnow() + timedelta(seconds=30)
+    next_update = utcnow() + timedelta(minutes=1)
     with (
         patchers.patch_shell("11")[patch_key],
         patchers.PATCH_SCREENCAP as patch_screen_cap,
-        patch("homeassistant.util.utcnow", return_value=next_update),
+        patch(
+            "homeassistant.components.androidtv.media_player.utcnow",
+            return_value=next_update,
+        ),
     ):
         async_fire_time_changed(hass, next_update, True)
         await hass.async_block_till_done()
         patch_screen_cap.assert_not_called()
 
-    next_update = utcnow() + timedelta(seconds=60)
+    next_update = utcnow() + timedelta(minutes=2)
     with (
         patchers.patch_shell("11")[patch_key],
         patchers.PATCH_SCREENCAP as patch_screen_cap,
-        patch("homeassistant.util.utcnow", return_value=next_update),
+        patch(
+            "homeassistant.components.androidtv.media_player.utcnow",
+            return_value=next_update,
+        ),
     ):
         async_fire_time_changed(hass, next_update, True)
         await hass.async_block_till_done()
@@ -854,6 +864,9 @@ async def test_get_image_http_fail(hass: HomeAssistant) -> None:
 
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
     config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry, options={CONF_SCREENCAP_INTERVAL: 2}
+    )
 
     with (
         patchers.patch_connect(True)[patch_key],
@@ -885,7 +898,7 @@ async def test_get_image_disabled(hass: HomeAssistant) -> None:
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
     config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
-        config_entry, options={CONF_SCREENCAP: False}
+        config_entry, options={CONF_SCREENCAP_INTERVAL: 0}
     )
 
     with (
@@ -1133,7 +1146,7 @@ async def test_options_reload(hass: HomeAssistant) -> None:
         with patchers.PATCH_SETUP_ENTRY as setup_entry_call:
             # change an option that not require integration reload
             hass.config_entries.async_update_entry(
-                config_entry, options={CONF_SCREENCAP: False}
+                config_entry, options={CONF_EXCLUDE_UNNAMED_APPS: True}
             )
             await hass.async_block_till_done()
 
@@ -1147,3 +1160,20 @@ async def test_options_reload(hass: HomeAssistant) -> None:
 
             assert setup_entry_call.called
             assert config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_screencap_options_migration(hass: HomeAssistant) -> None:
+    """Test changing an option that will cause integration reload."""
+    patch_key, _, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
+    config_entry.options = {CONF_SCREENCAP: False}
+    config_entry.add_to_hass(hass)
+
+    with (
+        patchers.patch_connect(True)[patch_key],
+        patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key],
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert CONF_SCREENCAP not in config_entry.options
+        assert config_entry.options[CONF_SCREENCAP_INTERVAL] == 0
