@@ -1250,7 +1250,7 @@ openhomedevice==2.2.0
 openwebifpy==4.2.7
 
 # homeassistant.components.opower
-opower==0.6.0
+opower==0.7.0
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2348,7 +2348,7 @@ yalesmartalarmclient==0.4.0
 yalexs-ble==2.4.3
 
 # homeassistant.components.august
-yalexs==8.1.2
+yalexs==8.1.4
 
 # homeassistant.components.yeelight
 yeelight==0.7.14

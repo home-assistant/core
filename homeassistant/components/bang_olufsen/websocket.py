@@ -105,7 +105,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
                 self.hass,
                 f"{self._unique_id}_{WebsocketNotification.BEOLINK}",
             )
-        elif notification_type is WebsocketNotification.REMOTE_MENU_CHANGED.value:
+        elif notification_type is WebsocketNotification.REMOTE_MENU_CHANGED:
             async_dispatcher_send(
                 self.hass,
                 f"{self._unique_id}_{WebsocketNotification.REMOTE_MENU_CHANGED}",
