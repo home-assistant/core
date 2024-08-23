@@ -682,6 +682,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             self.entry.async_create_background_task(
                 self.hass, self._async_connected(), "rpc device init", eager_start=True
             )
+            # Make sure entities are marked available
             self.async_set_updated_data(None)
         elif update_type is RpcUpdateType.DISCONNECTED:
             self.entry.async_create_background_task(
@@ -690,6 +691,8 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                 "rpc device disconnected",
                 eager_start=True,
             )
+            # Make sure entities are marked as unavailable
+            self.async_set_updated_data(None)
         elif update_type is RpcUpdateType.STATUS:
             self.async_set_updated_data(None)
             if self.sleep_period:
@@ -711,7 +714,8 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         """Shutdown the coordinator."""
         if self.device.connected:
             try:
-                await async_stop_scanner(self.device)
+                if not self.sleep_period:
+                    await async_stop_scanner(self.device)
                 await super().shutdown()
             except InvalidAuthError:
                 self.entry.async_start_reauth(self.hass)

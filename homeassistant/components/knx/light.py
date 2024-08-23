@@ -226,7 +226,7 @@ def _create_ui_light(xknx: XKNX, knx_config: ConfigType, name: str) -> XknxLight
     group_address_color_temp_state = None
     color_temperature_type = ColorTemperatureType.UINT_2_BYTE
     if ga_color_temp := knx_config.get(CONF_GA_COLOR_TEMP):
-        if ga_color_temp[CONF_DPT] == ColorTempModes.RELATIVE:
+        if ga_color_temp[CONF_DPT] == ColorTempModes.RELATIVE.value:
             group_address_tunable_white = ga_color_temp[CONF_GA_WRITE]
             group_address_tunable_white_state = [
                 ga_color_temp[CONF_GA_STATE],
@@ -239,7 +239,7 @@ def _create_ui_light(xknx: XKNX, knx_config: ConfigType, name: str) -> XknxLight
                 ga_color_temp[CONF_GA_STATE],
                 *ga_color_temp[CONF_GA_PASSIVE],
             ]
-            if ga_color_temp[CONF_DPT] == ColorTempModes.ABSOLUTE_FLOAT:
+            if ga_color_temp[CONF_DPT] == ColorTempModes.ABSOLUTE_FLOAT.value:
                 color_temperature_type = ColorTemperatureType.FLOAT_2_BYTE
 
     _color_dpt = get_dpt(CONF_GA_COLOR)

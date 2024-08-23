@@ -172,10 +172,17 @@ async def async_browse_media(
 
     # Check for config entry specifier, and extract Spotify URI
     parsed_url = yarl.URL(media_content_id)
+    host = parsed_url.host
 
     if (
-        parsed_url.host is None
-        or (entry := hass.config_entries.async_get_entry(parsed_url.host)) is None
+        host is None
+        # config entry ids can be upper or lower case. Yarl always returns host
+        # names in lower case, so we need to look for the config entry in both
+        or (
+            entry := hass.config_entries.async_get_entry(host)
+            or hass.config_entries.async_get_entry(host.upper())
+        )
+        is None
         or not isinstance(entry.runtime_data, HomeAssistantSpotifyData)
     ):
         raise BrowseError("Invalid Spotify account specified")

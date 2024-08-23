@@ -6,6 +6,7 @@ from pyflick.authentication import AuthException
 
 from homeassistant import config_entries
 from homeassistant.components.flick_electric.const import DOMAIN
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -15,7 +16,7 @@ from tests.common import MockConfigEntry
 CONF = {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"}
 
 
-async def _flow_submit(hass):
+async def _flow_submit(hass: HomeAssistant) -> ConfigFlowResult:
     return await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},

@@ -420,6 +420,74 @@ async def test_mqtt_publish_action_call_with_template_payload_renders_template(
     mqtt_mock.reset_mock()
 
 
+@pytest.mark.parametrize(
+    ("attr_payload", "payload", "evaluate_payload", "literal_eval_calls"),
+    [
+        ("b'\\xde\\xad\\xbe\\xef'", b"\xde\xad\xbe\xef", True, 1),
+        ("b'\\xde\\xad\\xbe\\xef'", "b'\\xde\\xad\\xbe\\xef'", False, 0),
+        ("DEADBEEF", "DEADBEEF", False, 0),
+        (
+            "b'\\xde",
+            "b'\\xde",
+            True,
+            1,
+        ),  # Bytes literal is invalid, fall back to string
+    ],
+)
+async def test_mqtt_publish_action_call_with_raw_data(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    attr_payload: str,
+    payload: str | bytes,
+    evaluate_payload: bool,
+    literal_eval_calls: int,
+) -> None:
+    """Test the mqtt publish action call raw data.
+
+    When `payload` represents a `bytes` object, it should be published
+    as raw data if `evaluate_payload` is set.
+    """
+    mqtt_mock = await mqtt_mock_entry()
+    await hass.services.async_call(
+        mqtt.DOMAIN,
+        mqtt.SERVICE_PUBLISH,
+        {
+            mqtt.ATTR_TOPIC: "test/topic",
+            mqtt.ATTR_PAYLOAD: attr_payload,
+            mqtt.ATTR_EVALUATE_PAYLOAD: evaluate_payload,
+        },
+        blocking=True,
+    )
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0][1] == payload
+
+    with patch(
+        "homeassistant.components.mqtt.models.literal_eval"
+    ) as literal_eval_mock:
+        await hass.services.async_call(
+            mqtt.DOMAIN,
+            mqtt.SERVICE_PUBLISH,
+            {
+                mqtt.ATTR_TOPIC: "test/topic",
+                mqtt.ATTR_PAYLOAD: attr_payload,
+            },
+            blocking=True,
+        )
+        literal_eval_mock.assert_not_called()
+
+        await hass.services.async_call(
+            mqtt.DOMAIN,
+            mqtt.SERVICE_PUBLISH,
+            {
+                mqtt.ATTR_TOPIC: "test/topic",
+                mqtt.ATTR_PAYLOAD: attr_payload,
+                mqtt.ATTR_EVALUATE_PAYLOAD: evaluate_payload,
+            },
+            blocking=True,
+        )
+        assert len(literal_eval_mock.mock_calls) == literal_eval_calls
+
+
 # The use of a payload_template in an mqtt publish action call
 # has been deprecated with HA Core 2024.8.0 and will be removed with HA Core 2025.2.0
 async def test_publish_action_call_with_bad_payload_template(
@@ -2390,7 +2458,6 @@ async def test_multi_platform_discovery(
         "PayloadSentinel",
         "PublishPayloadType",
         "ReceiveMessage",
-        "ReceivePayloadType",
         "async_prepare_subscribe_topics",
         "async_publish",
         "async_subscribe",

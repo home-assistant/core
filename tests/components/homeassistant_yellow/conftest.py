@@ -6,6 +6,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from homeassistant.core import HomeAssistant
+
 
 @pytest.fixture(autouse=True)
 def mock_zha_config_flow_setup() -> Generator[None]:
@@ -122,7 +124,7 @@ def set_addon_options_fixture():
 def install_addon_side_effect_fixture(addon_store_info, addon_info):
     """Return the install add-on side effect."""
 
-    async def install_addon(hass, slug):
+    async def install_addon(hass: HomeAssistant, slug: str) -> None:
         """Mock install add-on."""
         addon_store_info.return_value = {
             "installed": "1.0.0",
