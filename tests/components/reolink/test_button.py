@@ -34,7 +34,7 @@ async def test_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        "press",
+        SERVICE_PRESS,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -44,7 +44,7 @@ async def test_button(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            "press",
+            SERVICE_PRESS,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
@@ -95,7 +95,7 @@ async def test_host_button(
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
-        "press",
+        SERVICE_PRESS,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -105,7 +105,7 @@ async def test_host_button(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             BUTTON_DOMAIN,
-            "press",
+            SERVICE_PRESS,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
