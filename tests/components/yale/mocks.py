@@ -87,7 +87,6 @@ async def _mock_setup_yale(
     )
     entry.add_to_hass(hass)
     assert await async_setup_component(hass, "application_credentials", {})
-    assert await async_setup_component(hass, "cloud", {})
     await async_import_client_credential(
         hass,
         DOMAIN,
