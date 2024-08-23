@@ -269,6 +269,9 @@
     },
     "temp_out_of_range": {
       "message": "Provided temperature {check_temp} is not valid. Accepted range is {min_temp} to {max_temp}."
+    },
+    "low_temp_higher_than_high_temp": {
+      "message": "Target low temperature can not be higher than target high temperature."
     }
   }
 }
