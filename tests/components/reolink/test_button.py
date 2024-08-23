@@ -49,7 +49,7 @@ async def test_button(
             blocking=True,
         )
 
-    reolink_connect.set_ptz_command.reset_mock()
+    reolink_connect.set_ptz_command.side_effect = None
     await hass.services.async_call(
         const.DOMAIN,
         "ptz_move",
