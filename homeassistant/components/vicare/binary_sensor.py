@@ -112,6 +112,7 @@ def _build_entities(
 
     entities: list[ViCareBinarySensor] = []
     for device in device_list:
+        # add device entities
         entities.extend(
             [
                 ViCareBinarySensor(
@@ -124,6 +125,7 @@ def _build_entities(
                 if is_supported(description.key, description, device.api)
             ]
         )
+        # add component entities
         for component_list, entity_description_list in (
             (get_circuits(device.api), CIRCUIT_SENSORS),
             (get_burners(device.api), BURNER_SENSORS),

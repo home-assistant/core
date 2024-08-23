@@ -233,32 +233,35 @@ def _build_entities(
 ) -> list[ViCareNumber]:
     """Create ViCare number entities for a device."""
 
-    entities: list[ViCareNumber] = [
-        ViCareNumber(
-            device.config,
-            device.api,
-            None,
-            description,
+    entities: list[ViCareNumber] = []
+    for device in device_list:
+        # add device entities
+        entities.extend(
+            [
+                ViCareNumber(
+                    device.config,
+                    device.api,
+                    None,
+                    description,
+                )
+                for description in DEVICE_ENTITY_DESCRIPTIONS
+                if is_supported(description.key, description, device.api)
+            ]
         )
-        for device in device_list
-        for description in DEVICE_ENTITY_DESCRIPTIONS
-        if is_supported(description.key, description, device.api)
-    ]
-
-    entities.extend(
-        [
-            ViCareNumber(
-                device.config,
-                device.api,
-                circuit,
-                description,
-            )
-            for device in device_list
-            for circuit in get_circuits(device.api)
-            for description in CIRCUIT_ENTITY_DESCRIPTIONS
-            if is_supported(description.key, description, circuit)
-        ]
-    )
+        # add component entities
+        entities.extend(
+            [
+                ViCareNumber(
+                    device.config,
+                    device.api,
+                    circuit,
+                    description,
+                )
+                for circuit in get_circuits(device.api)
+                for description in CIRCUIT_ENTITY_DESCRIPTIONS
+                if is_supported(description.key, description, circuit)
+            ]
+        )
     return entities
 
 

@@ -865,16 +865,20 @@ def _build_entities(
 
     entities: list[ViCareSensor] = []
     for device in device_list:
-        entities.extend([
-            ViCareSensor(
-                device.config,
-                device.api,
-                None,
-                description,
-            )
-            for description in GLOBAL_SENSORS
-            if is_supported(description.key, description, device.api)
-        ])
+        # add device entities
+        entities.extend(
+            [
+                ViCareSensor(
+                    device.config,
+                    device.api,
+                    None,
+                    description,
+                )
+                for description in GLOBAL_SENSORS
+                if is_supported(description.key, description, device.api)
+            ]
+        )
+        # add component entities
         for component_list, entity_description_list in (
             (get_circuits(device.api), CIRCUIT_SENSORS),
             (get_burners(device.api), BURNER_SENSORS),
