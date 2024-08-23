@@ -88,6 +88,7 @@ async def mock_vicare_gas_boiler(
         return_value=MockPyViCare(fixtures),
     ):
         await setup_integration(hass, mock_config_entry)
+
         yield mock_config_entry
 
 
