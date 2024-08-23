@@ -71,26 +71,15 @@ async def test_siren(
     reolink_connect.set_siren.assert_called_with(0, False, None)
 
 
+@pytest.mark.parametrize("attr", ["set_volume", "set_siren"])
 @pytest.mark.parametrize(
-    ("attr", "value", "expected"),
+    ("value", "expected"),
     [
         (
-            "set_volume",
             AsyncMock(side_effect=ReolinkError("Test error")),
             HomeAssistantError,
         ),
         (
-            "set_volume",
-            AsyncMock(side_effect=InvalidParameterError("Test error")),
-            ServiceValidationError,
-        ),
-        (
-            "set_siren",
-            AsyncMock(side_effect=ReolinkError("Test error")),
-            HomeAssistantError,
-        ),
-        (
-            "set_siren",
             AsyncMock(side_effect=InvalidParameterError("Test error")),
             ServiceValidationError,
         ),
