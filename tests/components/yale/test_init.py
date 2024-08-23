@@ -41,20 +41,9 @@ from tests.typing import WebSocketGenerator
 async def test_yale_api_is_failing(hass: HomeAssistant) -> None:
     """Config entry state is SETUP_RETRY when yale api is failing."""
 
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=_mock_get_config()[DOMAIN],
-        title="Yale yale",
+    config_entry = await _create_yale_with_devices(
+        hass, authenticate_side_effect=ClientResponseError(None, None, status=500)
     )
-    config_entry.add_to_hass(hass)
-
-    with patch(
-        "yalexs.authenticator_async.AuthenticatorAsync.async_authenticate",
-        side_effect=ClientResponseError(None, None, status=500),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
