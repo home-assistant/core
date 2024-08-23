@@ -71,23 +71,13 @@ def _timetoken() -> str:
     return str(time.time_ns())[:-2]
 
 
-@patch("yalexs.manager.gateway.ApiAsync")
-@patch("yalexs.manager.gateway.AuthenticatorAsync.async_authenticate")
 async def _mock_setup_yale(
     hass: HomeAssistant,
     api_instance: ApiAsync,
     pubnub_mock: AugustPubNub,
-    authenticate_mock: Authentication,
-    api_mock: MagicMock,
     brand: Brand,
 ) -> ConfigEntry:
     """Set up yale integration."""
-    authenticate_mock.side_effect = MagicMock(
-        return_value=_mock_yale_authentication(
-            "original_token", 1234, AuthenticationState.AUTHENTICATED
-        )
-    )
-    api_mock.return_value = api_instance
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=_mock_get_config(brand)[DOMAIN],
@@ -104,6 +94,10 @@ async def _mock_setup_yale(
     )
 
     with (
+        patch("yalexs.manager.gateway.ApiAsync") as api_mock,
+        patch(
+            "yalexs.manager.gateway.AuthenticatorAsync.async_authenticate"
+        ) as authenticate_mock,
         patch(
             "yalexs.manager.data.async_create_pubnub",
             return_value=AsyncMock(),
@@ -113,6 +107,12 @@ async def _mock_setup_yale(
             "homeassistant.components.yale.config_entry_oauth2_flow.async_get_config_entry_implementation"
         ),
     ):
+        authenticate_mock.side_effect = MagicMock(
+            return_value=_mock_yale_authentication(
+                "original_token", 1234, AuthenticationState.AUTHENTICATED
+            )
+        )
+        api_mock.return_value = api_instance
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
     return entry
