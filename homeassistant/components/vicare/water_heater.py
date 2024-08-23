@@ -72,7 +72,6 @@ def _build_entities(
             device.config,
             device.api,
             circuit,
-            "domestic_hot_water",
         )
         for device in device_list
         for circuit in get_circuits(device.api)
@@ -104,20 +103,19 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
     _attr_min_temp = VICARE_TEMP_WATER_MIN
     _attr_max_temp = VICARE_TEMP_WATER_MAX
     _attr_operation_list = list(HA_TO_VICARE_HVAC_DHW)
+    _attr_translation_key = "domestic_hot_water"
+    _attributes: dict[str, Any] = {}
 
     def __init__(
         self,
         device_config: PyViCareDeviceConfig,
         device: PyViCareDevice,
         circuit: PyViCareHeatingCircuit,
-        translation_key: str,
     ) -> None:
         """Initialize the DHW water_heater device."""
         super().__init__(device_config, device, None, circuit.id)
         self._circuit = circuit
-        self._attributes: dict[str, Any] = {}
         self._current_mode = None
-        self._attr_translation_key = translation_key
 
     def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
