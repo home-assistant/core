@@ -11,6 +11,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_ON,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -38,7 +39,7 @@ async def test_light(
     entity_id = f"{Platform.LIGHT}.{TEST_NVR_NAME}_floodlight"
 
     state = hass.states.get(entity_id)
-    assert state.state == "on"
+    assert state.state == STATE_ON
     assert state.attributes["brightness"] == 255
 
     await hass.services.async_call(
@@ -114,5 +115,5 @@ async def test_light_brightness_none(
     entity_id = f"{Platform.LIGHT}.{TEST_NVR_NAME}_floodlight"
 
     state = hass.states.get(entity_id)
-    assert state.state == "on"
+    assert state.state == STATE_ON
     assert state.attributes["brightness"] is None
