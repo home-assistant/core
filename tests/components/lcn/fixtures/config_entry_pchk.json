@@ -9,14 +9,14 @@
   "devices": [
     {
       "address": [0, 7, false],
-      "name": "",
+      "name": "TestModule",
       "hardware_serial": -1,
       "software_serial": -1,
       "hardware_type": -1
     },
     {
       "address": [0, 5, true],
-      "name": "",
+      "name": "TestGroup",
       "hardware_serial": -1,
       "software_serial": -1,
       "hardware_type": -1
