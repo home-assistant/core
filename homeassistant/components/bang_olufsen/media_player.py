@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import contextlib
 import json
 import logging
 from typing import Any, cast
@@ -355,9 +354,13 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         # If the device is a listener.
         if self._remote_leader is not None:
-            # Add leader if added in Home Assistant
+            # Add leader if available in Home Assistant
             leader = self._get_entity_id_from_jid(self._remote_leader.jid)
-            group_members.append(leader if leader is not None else "leader_unavailable")
+            group_members.append(
+                leader
+                if leader is not None
+                else f"leader_not_in_hass-{self._remote_leader.jid}"
+            )
 
             # Add self
             group_members.append(
@@ -375,10 +378,17 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
                     cast(str, self._get_entity_id_from_jid(self._beolink_jid))
                 )
 
-                # Get the friendly names for the listeners from the peers
+                # Get the entity_ids of the listeners if available in Home Assistant
                 group_members.extend(
                     [
-                        cast(str, self._get_entity_id_from_jid(beolink_listener.jid))
+                        listener
+                        if (
+                            listener := self._get_entity_id_from_jid(
+                                beolink_listener.jid
+                            )
+                        )
+                        is not None
+                        else f"listener_not_in_hass-{beolink_listener.jid}"
                         for beolink_listener in beolink_listeners
                     ]
                 )
@@ -399,23 +409,27 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
     def _get_beolink_jid(self, entity_id: str) -> str | None:
         """Get beolink JID from entity_id."""
-        jid = None
 
         entity_registry = er.async_get(self.hass)
 
+        # Check for valid bang_olufsen media_player entity
         entity_entry = entity_registry.async_get(entity_id)
-        if entity_entry:
-            config_entry = cast(
-                ConfigEntry,
-                self.hass.config_entries.async_get_entry(
-                    cast(str, entity_entry.config_entry_id)
-                ),
-            )
 
-            with contextlib.suppress(KeyError):
-                jid = cast(str, config_entry.data[CONF_BEOLINK_JID])
+        try:
+            assert entity_entry
+            assert entity_entry.domain == Platform.MEDIA_PLAYER
+            assert entity_entry.platform == DOMAIN
+            assert entity_entry.config_entry_id is not None
+        except AssertionError:
+            return None
 
-        return jid
+        config_entry = self.hass.config_entries.async_get_entry(
+            entity_entry.config_entry_id
+        )
+        assert config_entry
+
+        # Return JID
+        return cast(str, config_entry.data[CONF_BEOLINK_JID])
 
     @property
     def state(self) -> MediaPlayerState:
