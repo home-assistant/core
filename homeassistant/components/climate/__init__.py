@@ -919,8 +919,8 @@ async def async_service_temperature_set(
     temp_unit = entity.temperature_unit
 
     if (
-        (target_low_temp := kwargs.get(ATTR_TARGET_TEMP_LOW))
-        and (target_high_temp := kwargs.get(ATTR_TARGET_TEMP_HIGH))
+        (target_low_temp := service_call.data.get(ATTR_TARGET_TEMP_LOW))
+        and (target_high_temp := service_call.data.get(ATTR_TARGET_TEMP_HIGH))
         and target_low_temp > target_high_temp
     ):
         # Ensure target_low_temp is not higher than target_high_temp.
