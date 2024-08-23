@@ -1054,7 +1054,9 @@ async def test_temperature_validation(
 
 
 async def test_temperature_range_deadband(
-    hass: HomeAssistant, config_flow_fixture: None, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    register_test_integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test temperature range with deadband."""
 
@@ -1079,40 +1081,15 @@ async def test_temperature_range_deadband(
             self._attr_target_temperature_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
             self._attr_target_temperature_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
 
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
-        return True
-
-    async def async_setup_entry_climate_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test climate platform via config entry."""
-        async_add_entities(
-            [MockClimateEntityTargetTemp(name="test", entity_id="climate.test")]
-        )
-
-    mock_integration(
-        hass,
-        MockModule(
-            "test",
-            async_setup_entry=async_setup_entry_init,
-        ),
-        built_in=False,
-    )
-    mock_platform(
-        hass,
-        "test.climate",
-        MockPlatform(async_setup_entry=async_setup_entry_climate_platform),
+    test_climate = MockClimateEntityTargetTemp(
+        name="Test",
+        unique_id="unique_climate_test",
     )
 
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[test_climate], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")
@@ -1165,7 +1142,7 @@ async def test_temperature_range_deadband(
     assert state.attributes[ATTR_MIN_TEMP_RANGE] == 3.0
 
     assert (
-        "Moved low temperature from 18 °C to 17 °C due to range 3 and high temperature is 20 °C"
+        "Moved low temperature from 18 °C to 17 °C and high temperature 20 °C to 20 °C due to deadband set to 3"
         in caplog.text
     )
 
@@ -1182,18 +1159,21 @@ async def test_temperature_range_deadband(
             blocking=True,
         )
 
-    # Raises due to low_temp falls outside of allowed range
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {
-                "entity_id": "climate.test",
-                ATTR_TARGET_TEMP_HIGH: 12,
-                ATTR_TARGET_TEMP_LOW: 10,
-            },
-            blocking=True,
-        )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "climate.test",
+            ATTR_TARGET_TEMP_HIGH: 12,
+            ATTR_TARGET_TEMP_LOW: 10,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get("climate.test")
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] == 10.0
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 13.0
+    assert state.attributes[ATTR_MIN_TEMP_RANGE] == 3.0
 
     hass.config.units.temperature_unit = UnitOfTemperature.FAHRENHEIT
 
@@ -1228,20 +1208,19 @@ async def test_temperature_range_deadband(
     assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 60.0
     assert state.attributes[ATTR_MIN_TEMP_RANGE] == 5.0
 
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {
-                "entity_id": "climate.test",
-                ATTR_TARGET_TEMP_HIGH: 54,
-                ATTR_TARGET_TEMP_LOW: 50,
-            },
-            blocking=True,
-        )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "climate.test",
+            ATTR_TARGET_TEMP_HIGH: 54,
+            ATTR_TARGET_TEMP_LOW: 50,
+        },
+        blocking=True,
+    )
     state = hass.states.get("climate.test")
-    assert state.attributes[ATTR_TARGET_TEMP_LOW] == 55.0
-    assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 60.0
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] == 50.0
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 55.0
     assert state.attributes[ATTR_MIN_TEMP_RANGE] == 5.0
 
     hass.config.units.temperature_unit = UnitOfTemperature.CELSIUS

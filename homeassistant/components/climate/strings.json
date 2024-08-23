@@ -272,9 +272,6 @@
     },
     "low_temp_higher_than_high_temp": {
       "message": "Target low temperature can not be higher than target high temperature."
-    },
-    "outside_tolerance": {
-      "message": "Ensuring range of {range} made target low temperature {target_low} move out of the allowed minimum temperature {min_temp}."
     }
   }
 }

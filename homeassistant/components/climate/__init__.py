@@ -1009,30 +1009,27 @@ async def async_service_temperature_set(
 
         # Ensure deadband between target temperatures.
         initial_low_temp = target_low_temp
+        initial_high_temp = target_high_temp
         if (target_high_temp - target_low_temp) < min_temp_range:
             target_low_temp = target_high_temp - min_temp_range
-
-        # Guard target_low_temp isn't lower than entity low_temp
+        # Increasing the target temperatures if needed when
+        # target_low_temp is below min_temp
         if target_low_temp < min_temp:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="outside_tolerance",
-                translation_placeholders={
-                    "min_temp": str(min_temp),
-                    "target_low": str(target_low_temp),
-                    "range": str(min_temp_range),
-                },
-            )
+            target_low_temp = min_temp
+            target_high_temp = target_low_temp + min_temp_range
 
         _LOGGER.debug(
-            "Moved low temperature from %d %s to %d %s due to range %d and high temperature is %d %s",
+            "Moved low temperature from %d %s to %d %s and high temperature %d %s to %d %s"
+            " due to deadband set to %d",
             initial_low_temp,
             temp_unit,
             target_low_temp,
             temp_unit,
-            min_temp_range,
+            initial_high_temp,
+            temp_unit,
             target_high_temp,
             temp_unit,
+            min_temp_range,
         )
 
         kwargs[ATTR_TARGET_TEMP_HIGH] = target_high_temp
