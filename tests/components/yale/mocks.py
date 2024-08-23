@@ -106,11 +106,7 @@ async def _mock_setup_yale(
             "homeassistant.components.yale.config_entry_oauth2_flow.async_get_config_entry_implementation"
         ),
     ):
-        authenticate_mock.side_effect = authenticate_side_effect or MagicMock(
-            return_value=_mock_yale_authentication(
-                "original_token", 1234, AuthenticationState.AUTHENTICATED
-            )
-        )
+        authenticate_mock.side_effect = authenticate_side_effect
         api_mock.return_value = api_instance
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
