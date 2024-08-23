@@ -187,10 +187,20 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 else UnitOfVolume.CENTUM_CUBIC_FEET,
             )
 
-            async_add_external_statistics(self.hass, cost_metadata, cost_statistics)
+            _LOGGER.debug(
+                "Adding %s statistics for %s",
+                len(consumption_statistics),
+                consumption_statistic_id,
+            )
             async_add_external_statistics(
                 self.hass, consumption_metadata, consumption_statistics
             )
+            _LOGGER.debug(
+                "Adding %s statistics for %s",
+                len(cost_statistics),
+                cost_statistic_id,
+            )
+            async_add_external_statistics(self.hass, cost_metadata, cost_statistics)
 
     async def _async_get_cost_reads(
         self, account: Account, time_zone_str: str, start_time: float | None = None
