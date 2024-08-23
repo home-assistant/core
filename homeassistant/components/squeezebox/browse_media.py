@@ -33,7 +33,7 @@ SQUEEZEBOX_ID_BY_TYPE = {
     MediaType.TRACK: "track_id",
     MediaType.PLAYLIST: "playlist_id",
     MediaType.GENRE: "genre_id",
-    "favorite": "item_id",
+    "Favorites": "item_id",
 }
 
 CONTENT_TYPE_MEDIA_CLASS = {
@@ -96,10 +96,11 @@ async def build_item_response(entity, player, payload):
         for item in result["items"]:
             item_id = str(item["id"])
             item_thumbnail = None
-            child_item_type = item_type
-            child_media_class = CONTENT_TYPE_MEDIA_CLASS[item_type]
-            can_expand = child_media_class["children"] is not None
-            can_play = True
+            if item_type:
+                child_item_type = item_type
+                child_media_class = CONTENT_TYPE_MEDIA_CLASS[item_type]
+                can_expand = child_media_class["children"] is not None
+                can_play = True
 
             if search_type == "Favorites":
                 if "album_id" in item:
@@ -107,14 +108,17 @@ async def build_item_response(entity, player, payload):
                     child_item_type = MediaType.ALBUM
                     child_media_class = CONTENT_TYPE_MEDIA_CLASS[MediaType.ALBUM]
                     can_expand = True
+                    can_play = True
                 elif item["hasitems"]:
                     child_item_type = "Favorites"
                     child_media_class = CONTENT_TYPE_MEDIA_CLASS["Favorites"]
                     can_expand = True
                     can_play = False
                 else:
+                    child_item_type = "Favorites"
                     child_media_class = CONTENT_TYPE_MEDIA_CLASS[MediaType.TRACK]
                     can_expand = False
+                    can_play = True
 
             if artwork_track_id := item.get("artwork_track_id"):
                 if internal_request:
