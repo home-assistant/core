@@ -27,7 +27,7 @@ class ViCareEntity(Entity):
         """Initialize the entity."""
         gatewaySerial = device_config.getConfig().serial
         deviceSerial = device.getSerial()
-        identifier = f"{gatewaySerial}-{deviceSerial}"
+        identifier = f"{gatewaySerial}_{deviceSerial}"
 
         self._api: PyViCareDevice | PyViCareHeatingDeviceComponent = (
             component if component else device

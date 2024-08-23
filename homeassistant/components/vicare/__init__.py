@@ -120,22 +120,20 @@ async def async_migrate_devices(
     """Migrate old entry."""
     registry = dr.async_get(hass)
 
-    old_serial: str = device.config.getConfig().serial
-    new_serial: str = device.api.getSerial()
+    gateway_serial: str = device.config.getConfig().serial
+    device_serial: str = device.api.getSerial()
 
-    if new_serial == old_serial:
-        return
+    old_identifier = gateway_serial
+    new_identifier = f"{gateway_serial}_{device_serial}"
 
     # Migrate devices
     for device_entry in dr.async_entries_for_config_entry(registry, entry.entry_id):
-        if device_entry.serial_number == old_serial:
-            _LOGGER.debug(
-                "Migrating device %s serial to %s", device_entry.name, new_serial
-            )
+        if device_entry.identifiers == {(DOMAIN, old_identifier)}:
+            _LOGGER.debug("Migrating device %s", device_entry.name)
             registry.async_update_device(
                 device_entry.id,
-                serial_number=new_serial,
-                new_identifiers={(DOMAIN, new_serial)},
+                serial_number=device_serial,
+                new_identifiers={(DOMAIN, new_identifier)},
             )
 
 
@@ -143,20 +141,24 @@ async def async_migrate_entities(
     hass: HomeAssistant, entry: ConfigEntry, device: ViCareDevice
 ) -> None:
     """Migrate old entry."""
-    old_serial: str = device.config.getConfig().serial
-    new_serial: str = device.api.getSerial()
+    gateway_serial: str = device.config.getConfig().serial
+    device_serial: str = device.api.getSerial()
+    new_identifier = f"{gateway_serial}_{device_serial}"
 
     @callback
     def _update_unique_id(
         entity_entry: er.RegistryEntry,
     ) -> dict[str, str] | None:
         """Update unique ID of entity entry."""
-        if entity_entry.unique_id.startswith(new_serial):
+        if not entity_entry.unique_id.startswith(gateway_serial):
+            # belongs to other device/gateway
+            return None
+        if entity_entry.unique_id.startswith(f"{gateway_serial}_"):
             # Already correct, nothing to do
             return None
 
         unique_id_parts = entity_entry.unique_id.split("-")
-        unique_id_parts[0] = new_serial
+        unique_id_parts[0] = new_identifier
         entity_new_unique_id = "-".join(unique_id_parts)
 
         _LOGGER.debug(
@@ -166,9 +168,6 @@ async def async_migrate_entities(
             entity_new_unique_id,
         )
         return {"new_unique_id": entity_new_unique_id}
-
-    if new_serial == old_serial:
-        return
 
     # Migrate entities
     await er.async_migrate_entries(hass, entry.entry_id, _update_unique_id)
