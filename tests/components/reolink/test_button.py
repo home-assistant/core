@@ -6,7 +6,7 @@ import pytest
 from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.reolink import const
+from homeassistant.components.reolink.const import DOMAIN
 from homeassistant.components.reolink.button import ATTR_SPEED
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, Platform
@@ -51,7 +51,7 @@ async def test_button(
 
     reolink_connect.set_ptz_command.side_effect = None
     await hass.services.async_call(
-        const.DOMAIN,
+        DOMAIN,
         "ptz_move",
         {ATTR_ENTITY_ID: entity_id, ATTR_SPEED: 5},
         blocking=True,
@@ -61,7 +61,7 @@ async def test_button(
     reolink_connect.set_ptz_command.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            const.DOMAIN,
+            DOMAIN,
             "ptz_move",
             {ATTR_ENTITY_ID: entity_id, ATTR_SPEED: 5},
             blocking=True,
@@ -81,7 +81,7 @@ async def test_host_button(
     # enable the reboot button entity
     entity_registry.async_get_or_create(
         domain=Platform.BUTTON,
-        platform=const.DOMAIN,
+        platform=DOMAIN,
         unique_id=unique_id,
         config_entry=config_entry,
         suggested_object_id=f"{TEST_NVR_NAME}_reboot",

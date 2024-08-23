@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 from aiohttp import ClientResponseError
 import pytest
 
-from homeassistant.components.reolink import const
+from homeassistant.components.reolink.const import DOMAIN
 from homeassistant.components.webhook import async_handle_webhook
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -32,7 +32,7 @@ async def test_webhook_callback(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    webhook_id = f"{const.DOMAIN}_{TEST_UID.replace(':', '')}_ONVIF"
+    webhook_id = f"{DOMAIN}_{TEST_UID.replace(':', '')}_ONVIF"
 
     signal_all = MagicMock()
     signal_ch = MagicMock()
