@@ -101,7 +101,9 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
                 translation_domain=DOMAIN, translation_key="start_failed"
             ) from exc
         finally:
-            self.coordinator.async_set_updated_data(self.coordinator.device.luba_msg)
+            self.coordinator.async_set_updated_data(
+                self.coordinator.devices.mower(self.coordinator.device_name)
+            )
 
     async def async_dock(self) -> None:
         """Start docking."""
@@ -121,7 +123,9 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
                 translation_domain=DOMAIN, translation_key="dock_failed"
             ) from exc
         finally:
-            self.coordinator.async_set_updated_data(self.coordinator.device.luba_msg)
+            self.coordinator.async_set_updated_data(
+                self.coordinator.devices.mower(self.coordinator.device_name)
+            )
 
     async def async_pause(self) -> None:
         """Pause mower."""
@@ -133,4 +137,6 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
                 translation_domain=DOMAIN, translation_key="pause_failed"
             ) from exc
         finally:
-            self.coordinator.async_set_updated_data(self.coordinator.device.luba_msg)
+            self.coordinator.async_set_updated_data(
+                self.coordinator.devices.mower(self.coordinator.device_name)
+            )
