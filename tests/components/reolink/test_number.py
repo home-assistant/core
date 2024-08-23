@@ -1,6 +1,6 @@
 """Test the Reolink number platform."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from reolink_aio.api import Chime
@@ -83,6 +83,7 @@ async def test_chime_number(
 
     assert hass.states.get(entity_id).state == "3"
 
+    test_chime.set_option = AsyncMock()
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,

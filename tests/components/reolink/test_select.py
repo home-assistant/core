@@ -1,6 +1,6 @@
 """Test the Reolink select platform."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -118,6 +118,7 @@ async def test_chime_select(
     entity_id = f"{Platform.SELECT}.test_chime_visitor_ringtone"
     assert hass.states.get(entity_id).state == "pianokey"
 
+    test_chime.set_tone = AsyncMock()
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
