@@ -701,8 +701,8 @@ async def test_async_select_source(
 
 async def test_async_select_sound_mode(
     hass: HomeAssistant,
-    mock_mozart_client,
-    mock_config_entry,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test async_select_sound_mode."""
 
