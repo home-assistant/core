@@ -31,6 +31,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "ethernet": {
+        "name": "Ethernet"
+      },
+      "wifi": {
+        "name": "Wi-Fi"
+      }
+    },
     "sensor": {
       "zigbee_temperature": {
         "name": "Zigbee chip temp"
