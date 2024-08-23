@@ -7,7 +7,8 @@ import pytest
 from reolink_aio.api import Chime
 from reolink_aio.exceptions import ReolinkError
 
-from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL, const
+from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL
+from homeassistant.components.reolink.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -42,14 +43,14 @@ async def test_cleanup_hdr_switch_(
 
     entity_registry.async_get_or_create(
         domain=domain,
-        platform=const.DOMAIN,
+        platform=DOMAIN,
         unique_id=original_id,
         config_entry=config_entry,
         suggested_object_id=original_id,
         disabled_by=er.RegistryEntryDisabler.USER,
     )
 
-    assert entity_registry.async_get_entity_id(domain, const.DOMAIN, original_id)
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id)
 
     # setup CH 0 and host entities/device
     with patch("homeassistant.components.reolink.PLATFORMS", [domain]):
@@ -57,7 +58,7 @@ async def test_cleanup_hdr_switch_(
     await hass.async_block_till_done()
 
     assert (
-        entity_registry.async_get_entity_id(domain, const.DOMAIN, original_id) is None
+        entity_registry.async_get_entity_id(domain, DOMAIN, original_id) is None
     )
 
 
@@ -77,23 +78,23 @@ async def test_hdr_switch_deprecated_repair_issue(
 
     entity_registry.async_get_or_create(
         domain=domain,
-        platform=const.DOMAIN,
+        platform=DOMAIN,
         unique_id=original_id,
         config_entry=config_entry,
         suggested_object_id=original_id,
         disabled_by=None,
     )
 
-    assert entity_registry.async_get_entity_id(domain, const.DOMAIN, original_id)
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id)
 
     # setup CH 0 and host entities/device
     with patch("homeassistant.components.reolink.PLATFORMS", [domain]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entity_registry.async_get_entity_id(domain, const.DOMAIN, original_id)
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id)
 
-    assert (const.DOMAIN, "hdr_switch_deprecated") in issue_registry.issues
+    assert (DOMAIN, "hdr_switch_deprecated") in issue_registry.issues
 
 
 async def test_switch(
