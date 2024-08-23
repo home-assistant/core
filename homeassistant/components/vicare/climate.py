@@ -152,7 +152,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         super().__init__(device_config, device, circuit, self._attr_translation_key)
         self._device = device
 
-        self._attributes["vicare_programs"] = self._circuit.getPrograms()
+        self._attributes["vicare_programs"] = self._api.getPrograms()
         self._attr_preset_modes = [
             preset
             for heating_program in self._attributes["vicare_programs"]
@@ -195,12 +195,12 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
 
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attributes["heating_curve_slope"] = (
-                    self._circuit.getHeatingCurveSlope()
+                    self._api.getHeatingCurveSlope()
                 )
 
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attributes["heating_curve_shift"] = (
-                    self._circuit.getHeatingCurveShift()
+                    self._api.getHeatingCurveShift()
                 )
 
             with suppress(PyViCareNotSupportedFeatureError):
