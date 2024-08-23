@@ -17,7 +17,6 @@ from homeassistant.const import (
     CONF_DEVICES,
     CONF_DOMAIN,
     CONF_ENTITIES,
-    CONF_ENTITY_ID,
     CONF_NAME,
     CONF_RESOURCE,
 )
@@ -153,19 +152,6 @@ async def websocket_get_entity_configs(
         ]
     else:
         entity_configs = config_entry.data[CONF_ENTITIES]
-
-    entity_registry = er.async_get(hass)
-    for entity_config in entity_configs:
-        entity_unique_id = generate_unique_id(
-            config_entry.entry_id,
-            entity_config[CONF_ADDRESS],
-            entity_config[CONF_RESOURCE],
-        )
-        entity_id = entity_registry.async_get_entity_id(
-            entity_config[CONF_DOMAIN], DOMAIN, entity_unique_id
-        )
-
-        entity_config[CONF_ENTITY_ID] = entity_id
 
     connection.send_result(msg["id"], entity_configs)
 
