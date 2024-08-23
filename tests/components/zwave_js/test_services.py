@@ -216,9 +216,9 @@ async def test_set_config_parameter(
     client.async_send_command_no_wait.reset_mock()
 
     # Test using label ID
-    label_reg = async_get_label_reg(hass)
-    label = label_reg.async_create("test")
-    ent_reg.async_update_entity(entity_entry.entity_id, labels={label.label_id})
+    label_registry = lr.async_get(hass)
+    label = label_registry.async_create("test")
+    entity_registry.async_update_entity(entity_entry.entity_id, labels={label.label_id})
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_CONFIG_PARAMETER,
@@ -704,9 +704,9 @@ async def test_bulk_set_config_parameters(
     client.async_send_command_no_wait.reset_mock()
 
     # Test using label ID
-    label_reg = async_get_label_reg(hass)
-    label = label_reg.async_create("test")
-    dev_reg.async_update_device(device.id, labels={label.label_id})
+    label_registry = lr.async_get(hass)
+    label = label_registry.async_create("test")
+    device_registry.async_update_device(device.id, labels={label.label_id})
     await hass.services.async_call(
         DOMAIN,
         SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
@@ -1131,9 +1131,9 @@ async def test_set_value(
     client.async_send_command.reset_mock()
 
     # Test using label ID
-    label_reg = async_get_label_reg(hass)
-    label = label_reg.async_create("test")
-    dev_reg.async_update_device(device.id, labels={label.label_id})
+    label_registry = lr.async_get(hass)
+    label = label_registry.async_create("test")
+    device_registry.async_update_device(device.id, labels={label.label_id})
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_VALUE,
@@ -1471,19 +1471,19 @@ async def test_multicast_set_value(
     client.async_send_command.reset_mock()
 
     # Test using label ID
-    dev_reg = async_get_dev_reg(hass)
-    device_eurotronic = dev_reg.async_get_device(
+    device_registry = dr.async_get(hass)
+    device_eurotronic = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, climate_eurotronic_spirit_z)}
     )
     assert device_eurotronic
-    device_danfoss = dev_reg.async_get_device(
+    device_danfoss = device_registry.async_get_device(
         identifiers={get_device_id(client.driver, climate_danfoss_lc_13)}
     )
     assert device_danfoss
-    label_reg = async_get_label_reg(hass)
-    label = label_reg.async_create("test")
-    dev_reg.async_update_device(device_eurotronic.id, labels={label.label_id})
-    dev_reg.async_update_device(device_danfoss.id, labels={label.label_id})
+    label_registry = lr.async_get(hass)
+    label = label_registry.async_create("test")
+    device_registry.async_update_device(device_eurotronic.id, labels={label.label_id})
+    device_registry.async_update_device(device_danfoss.id, labels={label.label_id})
     await hass.services.async_call(
         DOMAIN,
         SERVICE_MULTICAST_SET_VALUE,
@@ -1890,10 +1890,12 @@ async def test_ping(
     client.async_send_command.reset_mock()
 
     # Test successful ping call with label
-    label_reg = async_get_label_reg(hass)
-    label = label_reg.async_create("test")
-    dev_reg.async_update_device(device_radio_thermostat.id, labels={label.label_id})
-    dev_reg.async_update_device(device_danfoss.id, labels={label.label_id})
+    label_registry = lr.async_get(hass)
+    label = label_registry.async_create("test")
+    device_registry.async_update_device(
+        device_radio_thermostat.id, labels={label.label_id}
+    )
+    device_registry.async_update_device(device_danfoss.id, labels={label.label_id})
     await hass.services.async_call(
         DOMAIN,
         SERVICE_PING,
@@ -2090,9 +2092,9 @@ async def test_invoke_cc_api(
     client.async_send_command_no_wait.reset_mock()
 
     # Test successful invoke_cc_api call without an endpoint (include label)
-    label_reg = async_get_label_reg(hass)
-    label = label_reg.async_create("test")
-    dev_reg.async_update_device(device_danfoss.id, labels={label.label_id})
+    label_registry = lr.async_get(hass)
+    label = label_registry.async_create("test")
+    device_registry.async_update_device(device_danfoss.id, labels={label.label_id})
 
     client.async_send_command.return_value = {"response": True}
     client.async_send_command_no_wait.return_value = {"response": True}
