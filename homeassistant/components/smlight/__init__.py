@@ -11,6 +11,7 @@ from .coordinator import SmDataUpdateCoordinator
 PLATFORMS: list[Platform] = [
     Platform.BUTTON,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 type SmConfigEntry = ConfigEntry[SmDataUpdateCoordinator]
 
