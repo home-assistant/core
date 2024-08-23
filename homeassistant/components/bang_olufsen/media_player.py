@@ -363,9 +363,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             )
 
             # Add self
-            group_members.append(
-                cast(str, self._get_entity_id_from_jid(self._beolink_jid))
-            )
+            group_members.append(self.entity_id)
 
         # If not listener, check if leader.
         else:
@@ -374,9 +372,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             # Check if the device is a leader.
             if len(beolink_listeners) > 0:
                 # Add self
-                group_members.append(
-                    cast(str, self._get_entity_id_from_jid(self._beolink_jid))
-                )
+                group_members.append(self.entity_id)
 
                 # Get the entity_ids of the listeners if available in Home Assistant
                 group_members.extend(
