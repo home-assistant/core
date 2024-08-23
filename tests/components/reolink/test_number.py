@@ -1,6 +1,6 @@
 """Test the Reolink number platform."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from reolink_aio.api import Chime
