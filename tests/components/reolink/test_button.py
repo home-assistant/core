@@ -12,7 +12,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
 
 from .conftest import TEST_NVR_NAME, TEST_UID
 
@@ -68,30 +67,19 @@ async def test_button(
         )
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_host_button(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     reolink_connect: MagicMock,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test host button entity with reboot."""
-    unique_id = f"{TEST_UID}_reboot"
-    entity_id = f"{Platform.BUTTON}.{TEST_NVR_NAME}_reboot"
-
-    # enable the reboot button entity
-    entity_registry.async_get_or_create(
-        domain=Platform.BUTTON,
-        platform=DOMAIN,
-        unique_id=unique_id,
-        config_entry=config_entry,
-        suggested_object_id=f"{TEST_NVR_NAME}_reboot",
-        disabled_by=None,
-    )
-
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.BUTTON]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_id = f"{Platform.BUTTON}.{TEST_NVR_NAME}_reboot"
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
