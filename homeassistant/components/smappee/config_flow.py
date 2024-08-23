@@ -1,6 +1,7 @@
 """Config flow for Smappee."""
 
 import logging
+from typing import Any
 
 from pysmappee import helper, mqtt
 import voluptuous as vol
@@ -106,7 +107,9 @@ class SmappeeFlowHandler(
             data={CONF_IP_ADDRESS: ip_address, CONF_SERIALNUMBER: serial_number},
         )
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
 
         # If there is a CLOUD entry already, abort a new LOCAL entry
