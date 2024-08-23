@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from snapcast.control.cient import Snapclient
+from snapcast.control.client import Snapclient
 from snapcast.control.group import Snapgroup
 from snapcast.control.server import Snapserver
 import voluptuous as vol
