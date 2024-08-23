@@ -28,7 +28,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'burner',
-    'unique_id': 'gateway0-burner_active-0',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-burner_active-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -75,7 +75,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'circulation_pump',
-    'unique_id': 'gateway0-circulationpump_active-0',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-circulationpump_active-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -122,7 +122,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'circulation_pump',
-    'unique_id': 'gateway0-circulationpump_active-1',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-circulationpump_active-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -169,7 +169,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'domestic_hot_water_charging',
-    'unique_id': 'gateway0-charging_active',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-charging_active',
     'unit_of_measurement': None,
   })
 # ---
@@ -216,7 +216,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'domestic_hot_water_circulation_pump',
-    'unique_id': 'gateway0-dhw_circulationpump_active',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-dhw_circulationpump_active',
     'unit_of_measurement': None,
   })
 # ---
@@ -263,7 +263,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'domestic_hot_water_pump',
-    'unique_id': 'gateway0-dhw_pump_active',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-dhw_pump_active',
     'unit_of_measurement': None,
   })
 # ---
@@ -310,7 +310,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'frost_protection',
-    'unique_id': 'gateway0-frost_protection_active-0',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-frost_protection_active-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -356,7 +356,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'frost_protection',
-    'unique_id': 'gateway0-frost_protection_active-1',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-frost_protection_active-1',
     'unit_of_measurement': None,
   })
 # ---
