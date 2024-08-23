@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from contextlib import contextmanager
 import json
 import os
 import time
@@ -72,14 +73,10 @@ def _timetoken() -> str:
     return str(time.time_ns())[:-2]
 
 
-async def _mock_setup_yale(
-    hass: HomeAssistant,
-    api_instance: ApiAsync,
-    pubnub_mock: AugustPubNub,
-    brand: Brand,
-    authenticate_side_effect: MagicMock,
+async def mock_yale_config_entry_and_client_credentials(
+    hass: HomeAssistant, brand: Brand
 ) -> ConfigEntry:
-    """Set up yale integration."""
+    """Mock yale config entry and client credentials."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=_mock_get_config(brand)[DOMAIN],
@@ -93,20 +90,37 @@ async def _mock_setup_yale(
         ClientCredential("1", "2"),
         DOMAIN,
     )
+    return entry
 
+
+@contextmanager
+def patch_yale_setup():
+    """Patch yale setup process."""
     with (
         patch("yalexs.manager.gateway.ApiAsync") as api_mock,
         patch.object(_RateLimitChecker, "register_wakeup") as authenticate_mock,
-        patch(
-            "yalexs.manager.data.async_create_pubnub",
-            return_value=AsyncMock(),
-        ),
-        patch("yalexs.manager.data.AugustPubNub", return_value=pubnub_mock),
+        patch("yalexs.manager.data.async_create_pubnub", return_value=AsyncMock()),
+        patch("yalexs.manager.data.AugustPubNub") as pubnub_mock,
         patch(
             "homeassistant.components.yale.config_entry_oauth2_flow.async_get_config_entry_implementation"
         ),
     ):
+        yield api_mock, authenticate_mock, pubnub_mock
+
+
+async def _mock_setup_yale(
+    hass: HomeAssistant,
+    api_instance: ApiAsync,
+    pubnub_mock: AugustPubNub,
+    brand: Brand,
+    authenticate_side_effect: MagicMock,
+) -> ConfigEntry:
+    """Set up yale integration."""
+    entry = await mock_yale_config_entry_and_client_credentials(hass, brand)
+    with patch_yale_setup() as patched_setup:
+        api_mock, authenticate_mock, pubnub_mock_ = patched_setup
         authenticate_mock.side_effect = authenticate_side_effect
+        pubnub_mock_.return_value = pubnub_mock
         api_mock.return_value = api_instance
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
