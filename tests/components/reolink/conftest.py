@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from reolink_aio.api import Chime
 
-from homeassistant.components.reolink.const import CONF_USE_HTTPS, DOMAIN
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
+from homeassistant.components.reolink.const import CONF_USE_HTTPS, DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,

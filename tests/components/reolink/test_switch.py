@@ -41,9 +41,7 @@ async def test_cleanup_hdr_switch_(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (
-        entity_registry.async_get_entity_id(domain, DOMAIN, original_id) is None
-    )
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id) is None
 
 
 async def test_hdr_switch_deprecated_repair_issue(

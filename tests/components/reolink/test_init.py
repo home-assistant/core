@@ -436,13 +436,10 @@ async def test_migrate_entity_ids(
     assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id)
     assert entity_registry.async_get_entity_id(domain, DOMAIN, new_id) is None
 
-    assert device_registry.async_get_device(
-        identifiers={(DOMAIN, original_dev_id)}
-    )
+    assert device_registry.async_get_device(identifiers={(DOMAIN, original_dev_id)})
     if new_dev_id != original_dev_id:
         assert (
-            device_registry.async_get_device(identifiers={(DOMAIN, new_dev_id)})
-            is None
+            device_registry.async_get_device(identifiers={(DOMAIN, new_dev_id)}) is None
         )
 
     # setup CH 0 and host entities/device
@@ -450,16 +447,12 @@ async def test_migrate_entity_ids(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (
-        entity_registry.async_get_entity_id(domain, DOMAIN, original_id) is None
-    )
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id) is None
     assert entity_registry.async_get_entity_id(domain, DOMAIN, new_id)
 
     if new_dev_id != original_dev_id:
         assert (
-            device_registry.async_get_device(
-                identifiers={(DOMAIN, original_dev_id)}
-            )
+            device_registry.async_get_device(identifiers={(DOMAIN, original_dev_id)})
             is None
         )
     assert device_registry.async_get_device(identifiers={(DOMAIN, new_dev_id)})
