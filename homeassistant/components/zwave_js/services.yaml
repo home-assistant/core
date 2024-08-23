@@ -242,6 +242,11 @@ set_value:
       required: true
       selector:
         text:
+    endpoint:
+      example: 1
+      required: false
+      selector:
+        text:
     property:
       example: currentValue
       required: true
@@ -295,11 +300,13 @@ multicast_set_value:
         label:
           multiple: true
     broadcast:
+      example: true
       required: false
       selector:
         boolean:
     command_class:
       example: 117
+      required: true
       selector:
         text:
     endpoint:
