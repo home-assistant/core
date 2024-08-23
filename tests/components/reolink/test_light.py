@@ -58,7 +58,7 @@ async def test_light(
             blocking=True,
         )
 
-    reolink_connect.set_whiteled.reset_mock()
+    reolink_connect.set_whiteled.side_effect = None
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
