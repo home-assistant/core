@@ -23,8 +23,7 @@ COMMAND_EXCEPTIONS = (
     TimeoutError,
 )
 
-CONF_USE_BLUETOOTH: Final = "use_bluetooth"
 CONF_STAY_CONNECTED_BLUETOOTH: Final = "stay_connected_bluetooth"
-CONF_USE_WIFI: Final = "use_wifi"
 CONF_ACCOUNTNAME: Final = "account_name"
-CONF_DEVICELIST: Final = "device_list"
+CONF_USE_WIFI: Final = "use_wifi"
+CONF_DEVICE_NAME: Final = "device_name"
