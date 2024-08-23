@@ -157,10 +157,38 @@ async def _create_yale_api_with_devices(
     brand: Brand = Brand.YALE_HOME,
     authenticate_side_effect: MagicMock | None = None,
 ) -> tuple[ConfigEntry, ApiAsync]:
-    if api_call_side_effects is None:
-        api_call_side_effects = {}
     if pubnub is None:
         pubnub = AugustPubNub()
+    if api_call_side_effects is None:
+        api_call_side_effects = {}
+    if devices is None:
+        devices = ()
+
+    update_api_call_side_effects(api_call_side_effects, devices, activities)
+
+    api_instance = await make_mock_api(api_call_side_effects, brand)
+    entry = await _mock_setup_yale(
+        hass,
+        api_instance,
+        pubnub,
+        brand=brand,
+        authenticate_side_effect=authenticate_side_effect,
+    )
+    if any(device for device in devices if isinstance(device, LockDetail)):
+        # Ensure we sync status when the integration is loaded if there
+        # are any locks
+        assert api_instance.async_status_async.mock_calls
+
+    return entry, api_instance
+
+
+def update_api_call_side_effects(
+    api_call_side_effects: dict[str, Any],
+    devices: Iterable[LockDetail | DoorbellDetail],
+    activities: dict[str, Any] | None = None,
+) -> None:
+    """Update side effects dict from devices and activities."""
+
     device_data = {"doorbells": [], "locks": []}
     for device in devices or ():
         if isinstance(device, LockDetail):
@@ -244,22 +272,6 @@ async def _create_yale_api_with_devices(
     api_call_side_effects.setdefault(
         "async_unlatch_return_activities", unlock_return_activities_side_effect
     )
-
-    api_instance = await make_mock_api(api_call_side_effects, brand)
-    entry = await _mock_setup_yale(
-        hass,
-        api_instance,
-        pubnub,
-        brand=brand,
-        authenticate_side_effect=authenticate_side_effect,
-    )
-
-    if device_data["locks"]:
-        # Ensure we sync status when the integration is loaded if there
-        # are any locks
-        assert api_instance.async_status_async.mock_calls
-
-    return entry, api_instance
 
 
 async def make_mock_api(
