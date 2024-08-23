@@ -74,7 +74,7 @@ async def test_sensors(
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
-async def test_HDD_sensors(
+async def test_hdd_sensors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
