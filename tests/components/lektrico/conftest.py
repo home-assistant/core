@@ -2,7 +2,7 @@
 
 from ipaddress import ip_address
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -37,14 +37,59 @@ def _mocked_device_config() -> dict[str, Any]:
     }
 
 
+def _mocked_device_info() -> dict[str, Any]:
+    return {
+        "charger_state": "Available",
+        "charging_time": 0,
+        "instant_power": 0,
+        "session_energy": 0.0,
+        "temperature": 34.5,
+        "total_charged_energy": 0,
+        "install_current": 6,
+        "current_limit_reason": "Installation current",
+        "voltage_l1": 220.0,
+        "current_l1": 0.0,
+    }
+
+
 @pytest.fixture
-def mock_device_config():
-    """Override device_config() for 1P7K or 3P7K devices."""
-    with patch(
-        "homeassistant.components.lektrico.config_flow.Device.device_config",
-        return_value=_mocked_device_config(),
-    ) as mocked_device_config:
-        yield mocked_device_config
+def mock_device():
+    """Patch Device class."""
+    with patch("homeassistant.components.lektrico.config_flow.Device") as MockDevice:
+        # Mock metodele specifice dacă ai nevoie de ele
+        MockDevice.return_value.device_config = AsyncMock(
+            return_value=_mocked_device_config()
+        )
+        MockDevice.return_value.device_info = AsyncMock(
+            return_value=_mocked_device_info()
+        )
+
+        MockDevice.return_value.send_charge_start = AsyncMock(
+            return_value={"status": "success"}
+        )
+        MockDevice.return_value.send_charge_stop = AsyncMock(
+            return_value={"status": "success"}
+        )
+        MockDevice.return_value.send_reset = AsyncMock(
+            return_value={"status": "success"}
+        )
+        MockDevice.return_value.set_auth = AsyncMock(return_value={"status": "success"})
+        MockDevice.return_value.set_led_max_brightness = AsyncMock(
+            return_value={"status": "success"}
+        )
+        MockDevice.return_value.set_dynamic_current = AsyncMock(
+            return_value={"status": "success"}
+        )
+        MockDevice.return_value.set_user_current = AsyncMock(
+            return_value={"status": "success"}
+        )
+        MockDevice.return_value.set_load_balancing_mode = AsyncMock(
+            return_value={"status": "success"}
+        )
+        MockDevice.return_value.set_charger_locked = AsyncMock(return_value=True)
+        MockDevice.return_value.set_relay_mode = AsyncMock(return_value=True)
+
+        yield MockDevice
 
 
 @pytest.fixture
