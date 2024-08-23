@@ -40,8 +40,11 @@ from .const import (
     CONF_ADB_SERVER_IP,
     CONF_ADB_SERVER_PORT,
     CONF_ADBKEY,
+    CONF_SCREENCAP,
+    CONF_SCREENCAP_INTERVAL,
     CONF_STATE_DETECTION_RULES,
     DEFAULT_ADB_SERVER_PORT,
+    DEFAULT_SCREENCAP_INTERVAL,
     DEVICE_ANDROIDTV,
     DEVICE_FIRETV,
     PROP_ETHMAC,
@@ -157,8 +160,28 @@ async def async_connect_androidtv(
     return aftv, None
 
 
+def _migrate_old_screencap_option(
+    hass: HomeAssistant, entry: AndroidTVConfigEntry
+) -> None:
+    """Migrate from old screencap to new screencap_interval option."""
+    if CONF_SCREENCAP not in entry.options:
+        return
+
+    # if old option is present with value false, means that we need
+    # to set the new CONF_SCREENCAP_INTERVAL to 0 otherwise we set default
+    old_options = entry.options.copy()
+    old_value = old_options.pop(CONF_SCREENCAP)
+    new_value = DEFAULT_SCREENCAP_INTERVAL if old_value else 0
+
+    hass.config_entries.async_update_entry(
+        entry, options={**old_options, CONF_SCREENCAP_INTERVAL: new_value}
+    )
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: AndroidTVConfigEntry) -> bool:
     """Set up Android Debug Bridge platform."""
+
+    _migrate_old_screencap_option(hass, entry)
 
     state_det_rules = entry.options.get(CONF_STATE_DETECTION_RULES)
     if CONF_ADB_SERVER_IP not in entry.data:
