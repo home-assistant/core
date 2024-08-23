@@ -33,7 +33,7 @@ class YaleConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
-        return await self.async_step_pick_implementation()
+        return await self.async_step_user()
 
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an entry for the flow."""
