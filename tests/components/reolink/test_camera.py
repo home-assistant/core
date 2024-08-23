@@ -6,7 +6,7 @@ import pytest
 from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.camera import async_get_image, async_get_stream_source
-from homeassistant.components.reolink import const
+from homeassistant.components.reolink.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_IDLE, Platform
 from homeassistant.core import HomeAssistant
@@ -59,7 +59,7 @@ async def test_camera_no_stream_source(
     # enable the snapshots camera entity
     entity_registry.async_get_or_create(
         domain=Platform.CAMERA,
-        platform=const.DOMAIN,
+        platform=DOMAIN,
         unique_id=unique_id,
         config_entry=config_entry,
         suggested_object_id=f"{TEST_NVR_NAME}_snapshots_fluent",
