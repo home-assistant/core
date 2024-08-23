@@ -1,7 +1,5 @@
 """The tests for the Ring component."""
 
-from unittest.mock import AsyncMock, patch
-
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from ring_doorbell import AuthenticationError, RingError, RingTimeout
@@ -392,34 +390,25 @@ async def test_update_unique_id_no_update(
 
 async def test_token_updated(
     hass: HomeAssistant,
-    mock_ring_devices,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
+    mock_ring_client,
+    mock_ring_auth_class,
 ) -> None:
     """Test that the token value is updated in the config entry.
 
     This simulates the api calling the callback.
     """
-
-    class mock_client:
-        """Mock client will call the token updater on the second refresh."""
-
-        def __init__(self, auth):
-            self.token_updater = auth.token_updater
-            self.devices = lambda: mock_ring_devices
-            self.async_update_data = AsyncMock()
-            self.async_update_dings = AsyncMock()
-
-        async def async_update_devices(self):
-            self.token_updater({"access_token": "new-mock-token"})
-
     mock_config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.ring.Ring", new=mock_client):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    await hass.async_block_till_done()
+    assert mock_ring_auth_class.call_count == 1
+    token_updater = mock_ring_auth_class.call_args.args[2]
     assert mock_config_entry.data[CONF_TOKEN] == {"access_token": "mock-token"}
 
+    mock_ring_client.async_update_devices.side_effect = lambda: token_updater(
+        {"access_token": "new-mock-token"}
+    )
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
