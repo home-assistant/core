@@ -53,6 +53,9 @@
       },
       "semi_locked": {
         "name": "Semi locked"
+      },
+      "uncalibrated": {
+        "name": "Lock uncalibrated"
       }
     },
     "sensor": {

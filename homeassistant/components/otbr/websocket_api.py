@@ -17,7 +17,7 @@ from homeassistant.components.thread import async_add_dataset, async_get_dataset
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DEFAULT_CHANNEL, DOMAIN
+from .const import DATA_OTBR, DEFAULT_CHANNEL, DOMAIN
 from .util import (
     OTBRData,
     compose_default_network_name,
@@ -47,11 +47,11 @@ async def websocket_info(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Get OTBR info."""
-    if DOMAIN not in hass.data:
+    if DATA_OTBR not in hass.data:
         connection.send_error(msg["id"], "not_loaded", "No OTBR API loaded")
         return
 
-    data: OTBRData = hass.data[DOMAIN]
+    data = hass.data[DATA_OTBR]
 
     try:
         border_agent_id = await data.get_border_agent_id()
@@ -99,11 +99,11 @@ def async_get_otbr_data(
         hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
         """Fetch OTBR data and pass to orig_func."""
-        if DOMAIN not in hass.data:
+        if DATA_OTBR not in hass.data:
             connection.send_error(msg["id"], "not_loaded", "No OTBR API loaded")
             return
 
-        data: OTBRData = hass.data[DOMAIN]
+        data = hass.data[DATA_OTBR]
 
         try:
             extended_address = await data.get_extended_address()

@@ -18,7 +18,9 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_LLM_HASS_API, CONF_URL
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -40,7 +42,6 @@ from .const import (
     DEFAULT_KEEP_ALIVE,
     DEFAULT_MAX_HISTORY,
     DEFAULT_MODEL,
-    DEFAULT_PROMPT,
     DEFAULT_TIMEOUT,
     DOMAIN,
     MODEL_NAMES,
@@ -208,25 +209,52 @@ class OllamaOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
+            if user_input[CONF_LLM_HASS_API] == "none":
+                user_input.pop(CONF_LLM_HASS_API)
             return self.async_create_entry(
                 title=_get_title(self.model), data=user_input
             )
 
         options = self.config_entry.options or MappingProxyType({})
-        schema = ollama_config_option_schema(options)
+        schema = ollama_config_option_schema(self.hass, options)
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(schema),
         )
 
 
-def ollama_config_option_schema(options: MappingProxyType[str, Any]) -> dict:
+def ollama_config_option_schema(
+    hass: HomeAssistant, options: MappingProxyType[str, Any]
+) -> dict:
     """Ollama options schema."""
+    hass_apis: list[SelectOptionDict] = [
+        SelectOptionDict(
+            label="No control",
+            value="none",
+        )
+    ]
+    hass_apis.extend(
+        SelectOptionDict(
+            label=api.name,
+            value=api.id,
+        )
+        for api in llm.async_get_apis(hass)
+    )
+
     return {
         vol.Optional(
             CONF_PROMPT,
-            description={"suggested_value": options.get(CONF_PROMPT, DEFAULT_PROMPT)},
+            description={
+                "suggested_value": options.get(
+                    CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
+                )
+            },
         ): TemplateSelector(),
+        vol.Optional(
+            CONF_LLM_HASS_API,
+            description={"suggested_value": options.get(CONF_LLM_HASS_API)},
+            default="none",
+        ): SelectSelector(SelectSelectorConfig(options=hass_apis)),
         vol.Optional(
             CONF_MAX_HISTORY,
             description={

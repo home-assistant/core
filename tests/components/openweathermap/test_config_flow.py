@@ -45,7 +45,7 @@ CONFIG = {
 VALID_YAML_CONFIG = {CONF_API_KEY: "foo"}
 
 
-def _create_mocked_owm_client(is_valid: bool):
+def _create_mocked_owm_factory(is_valid: bool):
     current_weather = CurrentWeather(
         date_time=datetime.fromtimestamp(1714063536, tz=UTC),
         temperature=6.84,
@@ -118,18 +118,18 @@ def _create_mocked_owm_client(is_valid: bool):
 def mock_owm_client():
     """Mock config_flow OWMClient."""
     with patch(
-        "homeassistant.components.openweathermap.OWMClient",
-    ) as owm_client_mock:
-        yield owm_client_mock
+        "homeassistant.components.openweathermap.create_owm_client",
+    ) as mock:
+        yield mock
 
 
 @pytest.fixture(name="config_flow_owm_client_mock")
 def mock_config_flow_owm_client():
     """Mock config_flow OWMClient."""
     with patch(
-        "homeassistant.components.openweathermap.utils.OWMClient",
-    ) as config_flow_owm_client_mock:
-        yield config_flow_owm_client_mock
+        "homeassistant.components.openweathermap.utils.create_owm_client",
+    ) as mock:
+        yield mock
 
 
 async def test_successful_config_flow(
@@ -138,7 +138,7 @@ async def test_successful_config_flow(
     config_flow_owm_client_mock,
 ) -> None:
     """Test that the form is served with valid input."""
-    mock = _create_mocked_owm_client(True)
+    mock = _create_mocked_owm_factory(True)
     owm_client_mock.return_value = mock
     config_flow_owm_client_mock.return_value = mock
 
@@ -177,7 +177,7 @@ async def test_abort_config_flow(
     config_flow_owm_client_mock,
 ) -> None:
     """Test that the form is served with same data."""
-    mock = _create_mocked_owm_client(True)
+    mock = _create_mocked_owm_factory(True)
     owm_client_mock.return_value = mock
     config_flow_owm_client_mock.return_value = mock
 
@@ -200,7 +200,7 @@ async def test_config_flow_options_change(
     config_flow_owm_client_mock,
 ) -> None:
     """Test that the options form."""
-    mock = _create_mocked_owm_client(True)
+    mock = _create_mocked_owm_factory(True)
     owm_client_mock.return_value = mock
     config_flow_owm_client_mock.return_value = mock
 
@@ -261,7 +261,7 @@ async def test_form_invalid_api_key(
     config_flow_owm_client_mock,
 ) -> None:
     """Test that the form is served with no input."""
-    config_flow_owm_client_mock.return_value = _create_mocked_owm_client(False)
+    config_flow_owm_client_mock.return_value = _create_mocked_owm_factory(False)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
     )
@@ -269,7 +269,7 @@ async def test_form_invalid_api_key(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_api_key"}
 
-    config_flow_owm_client_mock.return_value = _create_mocked_owm_client(True)
+    config_flow_owm_client_mock.return_value = _create_mocked_owm_factory(True)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=CONFIG
     )
@@ -282,7 +282,7 @@ async def test_form_api_call_error(
     config_flow_owm_client_mock,
 ) -> None:
     """Test setting up with api call error."""
-    config_flow_owm_client_mock.return_value = _create_mocked_owm_client(True)
+    config_flow_owm_client_mock.return_value = _create_mocked_owm_factory(True)
     config_flow_owm_client_mock.side_effect = RequestError("oops")
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=CONFIG

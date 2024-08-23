@@ -1,11 +1,12 @@
 """Config flow for HLK-SW16."""
 
 import asyncio
+from typing import Any
 
 from hlk_sw16 import create_hlk_sw16_connection
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -73,7 +74,9 @@ class SW16FlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle import."""
         return await self.async_step_user(user_input)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
