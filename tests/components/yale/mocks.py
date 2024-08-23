@@ -245,8 +245,13 @@ async def _create_yale_api_with_devices(
         "async_unlatch_return_activities", unlock_return_activities_side_effect
     )
 
-    api_instance, entry = await _mock_setup_yale_with_api_side_effects(
-        hass, api_call_side_effects, pubnub, brand, authenticate_side_effect
+    api_instance = await make_mock_api(api_call_side_effects, brand)
+    entry = await _mock_setup_yale(
+        hass,
+        api_instance,
+        pubnub,
+        brand=brand,
+        authenticate_side_effect=authenticate_side_effect,
     )
 
     if device_data["locks"]:
@@ -257,13 +262,11 @@ async def _create_yale_api_with_devices(
     return entry, api_instance
 
 
-async def _mock_setup_yale_with_api_side_effects(
-    hass: HomeAssistant,
+async def make_mock_api(
     api_call_side_effects: dict[str, Any],
-    pubnub: AugustPubNub,
     brand: Brand = Brand.YALE_HOME,
-    authenticate_side_effect: MagicMock | None = None,
-) -> tuple[ApiAsync, ConfigEntry]:
+) -> ApiAsync:
+    """Make a mock ApiAsync instance."""
     api_instance = MagicMock(name="Api", brand=brand)
 
     if api_call_side_effects["get_lock_detail"]:
@@ -313,13 +316,7 @@ async def _mock_setup_yale_with_api_side_effects(
     api_instance.async_unlatch_async = AsyncMock()
     api_instance.async_unlatch = AsyncMock()
 
-    return api_instance, await _mock_setup_yale(
-        hass,
-        api_instance,
-        pubnub,
-        brand=brand,
-        authenticate_side_effect=authenticate_side_effect,
-    )
+    return api_instance
 
 
 def _mock_yale_authentication(
