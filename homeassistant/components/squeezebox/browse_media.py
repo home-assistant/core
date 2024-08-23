@@ -1,7 +1,6 @@
 """Support for media browsing."""
 
 import contextlib
-from urllib.parse import unquote
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -51,24 +50,6 @@ CONTENT_TYPE_MEDIA_CLASS = {
     MediaType.PLAYLIST: {"item": MediaClass.PLAYLIST, "children": MediaClass.TRACK},
 }
 
-FAVORITE_CONTENT_TYPES = {
-    "favorite": {
-        "media_content_class": "favorite",
-        "can_play": True,
-        "can_expand": False,
-    },
-    "folder": {
-        "media_content_class": "Favorites",
-        "can_play": False,
-        "can_expand": True,
-    },
-    "album": {
-        "media_content_class": MediaType.ALBUM,
-        "can_play": True,
-        "can_expand": True,
-    },
-}
-
 CONTENT_TYPE_TO_CHILD_TYPE = {
     MediaType.ALBUM: MediaType.TRACK,
     MediaType.PLAYLIST: MediaType.PLAYLIST,
@@ -79,45 +60,10 @@ CONTENT_TYPE_TO_CHILD_TYPE = {
     "Tracks": MediaType.TRACK,
     "Playlists": MediaType.PLAYLIST,
     "Genres": MediaType.GENRE,
-    "Favorites": MediaType.TRACK,
-}
-
-LIBRARY_ICONS = {
-    "Artists": "html/images/artists.png",
-    "Albums": "html/images/albums.png",
-    "Tracks": "html/images/musicfolder.png",
-    "Playlists": "html/images/playlists.png",
-    "Genres": "html/images/genres.png",
-    "Favorites": "html/images/favorites.png",
+    "Favorites": None,  # can only be determined after inspecting the item
 }
 
 BROWSE_LIMIT = 1000
-
-
-def _lms_prefix(player):
-    return (player.generate_image_url_from_track_id("")).split("music/")[0]
-
-
-async def _get_album_id(player, url):
-    _album_seach_string = unquote(url)[15:].split("&contributor.name=")
-    _album_title = _album_seach_string[0]
-    _album_contributor = (
-        _album_seach_string[1] if len(_album_seach_string) > 1 else None
-    )
-
-    _command = ["albums"]
-    _command.extend(["0", str(BROWSE_LIMIT), f"search:{_album_title}", "tags:a"])
-
-    _album_result = await player.async_query(*_command)
-
-    if _album_contributor is None or _album_result["count"] == 1:
-        _album_id = _album_result["albums_loop"][0]["id"]
-    else:
-        for _album in _album_result["albums_loop"]:
-            if _album["artist"] == _album_contributor:
-                _album_id = _album["id"]
-                break
-    return str(_album_id)
 
 
 async def build_item_response(entity, player, payload):
@@ -132,106 +78,67 @@ async def build_item_response(entity, player, payload):
 
     children = None
 
-    if search_type == "Favorites":
-        _command = ["favorites"]
-        _command.extend(
-            [
-                "items",
-                "0",
-                str(BROWSE_LIMIT),
-                f"item_id:{search_id if search_id != "Favorites" else ""}",
-                "want_url:1",
-            ]
-        )
-
-        result = await player.async_query(*_command)
-
-        if result is not None and result.get("loop_loop"):
-            children = []
-            item_type = CONTENT_TYPE_TO_CHILD_TYPE[search_type]
-            child_media_class = CONTENT_TYPE_MEDIA_CLASS[item_type]
-
-            for item in result["loop_loop"]:
-                if item.get("type") != "audio" and item.get("hasitems") != 1:
-                    continue
-
-                if item["image"].startswith("/imageproxy/"):
-                    _icon = unquote(
-                        item["image"].split("/imageproxy/")[1].split("/image.png")[0]
-                    )
-                elif item.get("hasitems") == 1:
-                    _icon = _lms_prefix(player) + "html/images/musicfolder.png"
-                else:
-                    _start = 1 if item["image"].startswith("/") else 0
-                    _icon = _lms_prefix(player) + item["image"][_start:]
-
-                if item.get("url", "").startswith("db:album.title"):
-                    _type = "album"
-                    _album_id = await _get_album_id(player, item.get("url"))
-
-                elif item.get("hasitems") == 1:
-                    _type = "folder"
-                else:
-                    _type = "favorite"
-
-                children.append(
-                    BrowseMedia(
-                        title=item["name"],
-                        media_class=child_media_class["item"],
-                        media_content_id=item["id"]
-                        if _type != "album"
-                        else str(_album_id),
-                        media_content_type=FAVORITE_CONTENT_TYPES[_type][
-                            "media_content_class"
-                        ],
-                        can_play=FAVORITE_CONTENT_TYPES[_type]["can_play"],
-                        can_expand=FAVORITE_CONTENT_TYPES[_type]["can_expand"],
-                        thumbnail=_icon,
-                    )
-                )
-
+    if search_id and search_id != search_type:
+        browse_id = (SQUEEZEBOX_ID_BY_TYPE[search_type], search_id)
     else:
-        if search_id and search_id != search_type:
-            browse_id = (SQUEEZEBOX_ID_BY_TYPE[search_type], search_id)
-        else:
-            browse_id = None
+        browse_id = None
 
-        result = await player.async_browse(
-            MEDIA_TYPE_TO_SQUEEZEBOX[search_type],
-            limit=BROWSE_LIMIT,
-            browse_id=browse_id,
-        )
+    result = await player.async_browse(
+        MEDIA_TYPE_TO_SQUEEZEBOX[search_type],
+        limit=BROWSE_LIMIT,
+        browse_id=browse_id,
+    )
 
-        if result is not None and result.get("items"):
-            item_type = CONTENT_TYPE_TO_CHILD_TYPE[search_type]
+    if result is not None and result.get("items"):
+        item_type = CONTENT_TYPE_TO_CHILD_TYPE[search_type]
+
+        children = []
+        for item in result["items"]:
+            item_id = str(item["id"])
+            item_thumbnail = None
+            child_item_type = item_type
             child_media_class = CONTENT_TYPE_MEDIA_CLASS[item_type]
+            can_expand = child_media_class["children"] is not None
+            can_play = True
 
-            children = []
-            for item in result["items"]:
-                item_id = str(item["id"])
-                item_thumbnail = None
+            if search_type == "Favorites":
+                if "album_id" in item:
+                    item_id = str(item["album_id"])
+                    child_item_type = MediaType.ALBUM
+                    child_media_class = CONTENT_TYPE_MEDIA_CLASS[MediaType.ALBUM]
+                    can_expand = True
+                elif item["hasitems"]:
+                    child_item_type = "Favorites"
+                    child_media_class = CONTENT_TYPE_MEDIA_CLASS["Favorites"]
+                    can_expand = True
+                    can_play = False
+                else:
+                    child_media_class = CONTENT_TYPE_MEDIA_CLASS[MediaType.TRACK]
+                    can_expand = False
 
-                if artwork_track_id := item.get("artwork_track_id"):
-                    if internal_request:
-                        item_thumbnail = player.generate_image_url_from_track_id(
-                            artwork_track_id
-                        )
-                    else:
-                        item_thumbnail = entity.get_browse_image_url(
-                            item_type, item_id, artwork_track_id
-                        )
-
-                children.append(
-                    BrowseMedia(
-                        title=item["title"],
-                        media_class=child_media_class["item"],
-                        media_content_id=item_id,
-                        media_content_type=item_type,
-                        can_play=True,
-                        can_expand=child_media_class["children"] is not None,
-                        thumbnail=item_thumbnail,
+            if artwork_track_id := item.get("artwork_track_id"):
+                if internal_request:
+                    item_thumbnail = player.generate_image_url_from_track_id(
+                        artwork_track_id
                     )
+                else:
+                    item_thumbnail = entity.get_browse_image_url(
+                        item_type, item_id, artwork_track_id
+                    )
+            else:
+                item_thumbnail = item.get("image_url")  # will not be proxied by HA
+
+            children.append(
+                BrowseMedia(
+                    title=item["title"],
+                    media_class=child_media_class["item"],
+                    media_content_id=item_id,
+                    media_content_type=child_item_type,
+                    can_play=can_play,
+                    can_expand=can_expand,
+                    thumbnail=item_thumbnail,
                 )
+            )
 
     if children is None:
         raise BrowseError(f"Media not found: {search_type} / {search_id}")
@@ -262,23 +169,12 @@ async def library_payload(hass, player):
 
     for item in LIBRARY:
         media_class = CONTENT_TYPE_MEDIA_CLASS[item]
-        _library_contents_exist = False
 
-        if item == "Favorites":
-            _command = ["favorites"]
-            _command.extend(["items"])
-            result = await player.async_query(*_command)
-            if result is not None and result.get("count", 0) > 0:
-                _library_contents_exist = True
-        else:
-            result = await player.async_browse(
-                MEDIA_TYPE_TO_SQUEEZEBOX[item],
-                limit=1,
-            )
-            if result is not None and result.get("items") is not None:
-                _library_contents_exist = True
-
-        if _library_contents_exist:
+        result = await player.async_browse(
+            MEDIA_TYPE_TO_SQUEEZEBOX[item],
+            limit=1,
+        )
+        if result is not None and result.get("items") is not None:
             library_info["children"].append(
                 BrowseMedia(
                     title=item,
@@ -287,7 +183,6 @@ async def library_payload(hass, player):
                     media_content_type=item,
                     can_play=item != "Favorites",
                     can_expand=True,
-                    thumbnail=_lms_prefix(player) + LIBRARY_ICONS[item],
                 )
             )
 
