@@ -243,7 +243,7 @@ aioharmony==0.2.10
 aiohomekit==3.2.3
 
 # homeassistant.components.hue
-aiohue==4.7.2
+aiohue==4.7.3
 
 # homeassistant.components.imap
 aioimaplib==1.1.0
@@ -1250,7 +1250,7 @@ openhomedevice==2.2.0
 openwebifpy==4.2.7
 
 # homeassistant.components.opower
-opower==0.6.0
+opower==0.7.0
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6

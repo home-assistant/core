@@ -318,7 +318,7 @@ async def test_browsing_not_loaded(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    reolink_connect.get_host_data = AsyncMock(side_effect=ReolinkError("Test error"))
+    reolink_connect.get_host_data.side_effect = ReolinkError("Test error")
     config_entry2 = MockConfigEntry(
         domain=const.DOMAIN,
         unique_id=format_mac(TEST_MAC2),
