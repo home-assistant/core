@@ -19,7 +19,6 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 async def test_sensors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
     reolink_connect: MagicMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -66,18 +65,10 @@ async def test_sensors(
     entity_id = f"{Platform.SENSOR}.{TEST_NVR_NAME}_sd_0_storage"
     assert hass.states.get(entity_id).state == "95"
 
-    reolink_connect.hdd_available.return_value = False
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-
 
 async def test_hdd_sensors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
     reolink_connect: MagicMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -85,6 +76,7 @@ async def test_hdd_sensors(
     reolink_connect.hdd_list = [0]
     reolink_connect.hdd_type.return_value = "HDD"
     reolink_connect.hdd_storage.return_value = 85
+    reolink_connect.hdd_available.return_value = False
 
     # enable the HDD entity
     unique_id = f"{TEST_UID}_0_storage"
@@ -103,4 +95,4 @@ async def test_hdd_sensors(
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.SENSOR}.{TEST_NVR_NAME}_hdd_0_storage"
-    assert hass.states.get(entity_id).state == "85"
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
