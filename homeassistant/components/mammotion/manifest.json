@@ -19,5 +19,5 @@
   "documentation": "https://www.home-assistant.io/integrations/mammotion",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["pymammotion==0.2.0"]
+  "requirements": ["pymammotion==0.2.4"]
 }
