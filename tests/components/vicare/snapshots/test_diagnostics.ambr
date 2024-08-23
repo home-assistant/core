@@ -10,7 +10,7 @@
             }),
             'deviceId': '0',
             'feature': 'device.messages.errors.raw',
-            'gatewayId': '1234gatewayId5678',
+            'gatewayId': '################',
             'isEnabled': True,
             'isReady': True,
             'properties': dict({
