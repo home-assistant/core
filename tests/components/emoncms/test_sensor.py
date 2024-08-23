@@ -19,7 +19,7 @@ from homeassistant.setup import async_setup_component
 from . import setup_integration
 from .conftest import EMONCMS_FAILURE, FLOW_RESULT, SENSOR_NAME, get_feed
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 YAML = {
     CONF_PLATFORM: "emoncms",
@@ -108,7 +108,10 @@ FLOW_RESULT_SINGLE_FEED[CONF_ONLY_INCLUDE_FEEDID] = ["1"]
 def config_single_feed() -> MockConfigEntry:
     """Mock emoncms config entry with a single feed exposed."""
     return MockConfigEntry(
-        domain=DOMAIN, title=SENSOR_NAME, data=FLOW_RESULT_SINGLE_FEED
+        domain=DOMAIN,
+        title=SENSOR_NAME,
+        data=FLOW_RESULT_SINGLE_FEED,
+        entry_id="XXXXXXXX",
     )
 
 
@@ -128,12 +131,9 @@ async def test_coordinator_update(
     }
     await setup_integration(hass, config_single_feed)
 
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, config_single_feed.entry_id
+    await snapshot_platform(
+        hass, entity_registry, snapshot, config_single_feed.entry_id
     )
-    for entity_entry in entity_entries:
-        state = hass.states.get(entity_entry.entity_id)
-        assert state == snapshot(name=entity_entry.entity_id)
 
     async def skip_time() -> None:
         freezer.tick(60)
@@ -146,6 +146,10 @@ async def test_coordinator_update(
     }
 
     await skip_time()
+
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_single_feed.entry_id
+    )
 
     for entity_entry in entity_entries:
         state = hass.states.get(entity_entry.entity_id)
