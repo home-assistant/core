@@ -74,7 +74,7 @@ def upcoming_event_url(entity: str = TEST_ENTITY) -> str:
 class Client:
     """Test client with helper methods for calendar websocket."""
 
-    def __init__(self, client):
+    def __init__(self, client) -> None:
         """Initialize Client."""
         self.client = client
         self.id = 0
