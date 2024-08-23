@@ -9,7 +9,7 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -29,6 +29,44 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             key=DPCode.ALARM_TIME,
             translation_key="time",
             entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Early Product "QT" device (for Pool Chlorinator)
+    "qt": (
+        NumberEntityDescription(
+            key=DPCode.VOLUME,
+            translation_key="volume",
+            device_class=NumberDeviceClass.VOLUME_STORAGE,
+            native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+            entity_category=EntityCategory.CONFIG,
+            max_value=200,
+            min_value=5,
+        ),
+        NumberEntityDescription(
+            key=DPCode.CHLORINATE,
+            translation_key="chlorinate_time",
+            native_unit_of_measurement=UnitOfTime.HOURS,
+            entity_category=EntityCategory.CONFIG,
+            max_value=24,
+            min_value=1,
+        ),
+        NumberEntityDescription(
+            key=DPCode.REVERSE,
+            translation_key="reverse_time",
+            native_unit_of_measurement=UnitOfTime.HOURS,
+            entity_category=EntityCategory.CONFIG,
+            max_value=8,
+            min_value=2,
+            step=2,
+        ),
+        NumberEntityDescription(
+            key=DPCode.OUTPUT_SET,
+            translation_key="output_set",
+            native_unit_of_measurement=PERCENTAGE,
+            entity_category=EntityCategory.CONFIG,
+            max_value=100,
+            min_value=20,
+            step=20,
         ),
     ),
     # Smart Kettle

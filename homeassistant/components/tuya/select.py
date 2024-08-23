@@ -307,6 +307,13 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Early Product "QT" device (for Pool Chlorinator)
+    "qt": (
+        SelectEntityDescription(
+            key=DPCode.HEALTH,
+            translation_key="health",
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)

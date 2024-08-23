@@ -14,10 +14,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    CONCENTRATION_GRAMS_PER_LITER,
     PERCENTAGE,
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfMass,
     UnitOfPower,
     UnitOfTime,
 )
@@ -1166,6 +1168,43 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
+    # # Early Product "QT" device (for Pool Chlorinator)
+    "qt": (
+        TuyaSensorEntityDescription(
+            key=DPCode.WATER_TEMPERATURE,
+            translation_key="temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.OUTPUT,
+            translation_key="output_power",
+            device_class=SensorDeviceClass.POWER_FACTOR,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.SALINITY,
+            translation_key="salinity",
+            native_unit_of_measurement=CONCENTRATION_GRAMS_PER_LITER,
+            device_class=SensorDeviceClass.CONCENTRATION,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.SALT_DOSAGE,
+            translation_key="salt_dosage",
+            native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+            device_class=SensorDeviceClass.WEIGHT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TOTAL_RUNNING_TIME,
+            translation_key="total_running_time",
+            native_unit_of_measurement=UnitOfTime.HOURS,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_class=SensorDeviceClass.DURATION,
+            state_class=SensorStateClass.TOTAL_INCREASING,
         ),
     ),
 }

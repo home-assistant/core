@@ -713,6 +713,27 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             translation_key="switch",
         ),
     ),
+    # Early Product "QT" device (for Pool Chlorinator)
+    "qt": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            translation_key="switch",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.BOOST_MODE,
+            translation_key="boost_mode",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.DATA_TIP,
+            translation_key="data_tip",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.TIP_SHOW,
+            translation_key="tip_show",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
 }
 
 # Socket (duplicate of `pc`)

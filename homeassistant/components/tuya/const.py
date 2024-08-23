@@ -18,6 +18,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     Platform,
+    UnitOfConductivity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -118,6 +119,7 @@ class DPCode(StrEnum):
     BATTERY_PERCENTAGE = "battery_percentage"  # Battery percentage
     BATTERY_STATE = "battery_state"  # Battery state
     BATTERY_VALUE = "battery_value"  # Battery value
+    BOOST_MODE = "boost_mode"
     BRIGHT_CONTROLLER = "bright_controller"
     BRIGHT_STATE = "bright_state"  # Brightness status
     BRIGHT_VALUE = "bright_value"  # Brightness
@@ -137,6 +139,7 @@ class DPCode(StrEnum):
     CH4_SENSOR_STATE = "ch4_sensor_state"
     CH4_SENSOR_VALUE = "ch4_sensor_value"
     CHILD_LOCK = "child_lock"  # Child lock
+    CHLORINATE = "clorinate" # Hours to run the chlorination cycle
     CISTERN = "cistern"
     CLEAN_AREA = "clean_area"
     CLEAN_TIME = "clean_time"
@@ -170,6 +173,7 @@ class DPCode(StrEnum):
     CUR_NEUTRAL = "cur_neutral"  # Total reverse energy
     CUR_POWER = "cur_power"  # Actual power
     CUR_VOLTAGE = "cur_voltage"  # Actual voltage
+    DATA_TIP = "data_tip"
     DECIBEL_SENSITIVITY = "decibel_sensitivity"
     DECIBEL_SWITCH = "decibel_switch"
     DEHUMIDITY_SET_ENUM = "dehumidify_set_enum"
@@ -206,6 +210,7 @@ class DPCode(StrEnum):
     GAS_SENSOR_STATE = "gas_sensor_state"
     GAS_SENSOR_STATUS = "gas_sensor_status"
     GAS_SENSOR_VALUE = "gas_sensor_value"
+    HEALTH = "hp"
     HUMIDIFIER = "humidifier"  # Humidification
     HUMIDITY = "humidity"  # Humidity
     HUMIDITY_CURRENT = "humidity_current"  # Current humidity
@@ -235,6 +240,9 @@ class DPCode(StrEnum):
     MUFFLING = "muffling"  # Muffling
     NEAR_DETECTION = "near_detection"
     OPPOSITE = "opposite"
+    OUTPUT = "output"
+    OUTPUT_SET = "set_output"
+    OXYGEN = "oxygen"  # Oxygen bar
     PAUSE = "pause"
     PERCENT_CONTROL = "percent_control"
     PERCENT_CONTROL_2 = "percent_control_2"
@@ -261,7 +269,6 @@ class DPCode(StrEnum):
     PRESSURE_VALUE = "pressure_value"
     PUMP = "pump"
     PUMP_RESET = "pump_reset"  # Water pump reset
-    OXYGEN = "oxygen"  # Oxygen bar
     RECORD_MODE = "record_mode"
     RECORD_SWITCH = "record_switch"  # Recording switch
     RELAY_STATUS = "relay_status"
@@ -271,8 +278,11 @@ class DPCode(StrEnum):
     RESET_FILTER = "reset_filter"
     RESET_MAP = "reset_map"
     RESET_ROLL_BRUSH = "reset_roll_brush"
+    REVERSE = "reverse"
     REVERSE_ENERGY_TOTAL = "reverse_energy_total"
     ROLL_BRUSH = "roll_brush"
+    SALINITY = "salinity"
+    SALT_DOSAGE = "salt_dosage"
     SEEK = "seek"
     SENSITIVITY = "sensitivity"  # Sensitivity
     SENSOR_HUMIDITY = "sensor_humidity"
@@ -342,6 +352,7 @@ class DPCode(StrEnum):
     TEMPER_ALARM = "temper_alarm"  # Tamper alarm
     TIME_TOTAL = "time_total"
     TIME_USE = "time_use"  # Total seconds of irrigation
+    TIP_SHOW = "tip_show"
     TOTAL_CLEAN_AREA = "total_clean_area"
     TOTAL_CLEAN_COUNT = "total_clean_count"
     TOTAL_CLEAN_TIME = "total_clean_time"
@@ -349,6 +360,7 @@ class DPCode(StrEnum):
     TOTAL_TIME = "total_time"
     TOTAL_PM = "total_pm"
     TOTAL_POWER = "total_power"
+    TOTAL_RUNNING_TIME = "total_running_time"
     TVOC = "tvoc"
     UPPER_TEMP = "upper_temp"
     UPPER_TEMP_F = "upper_temp_f"
@@ -360,12 +372,14 @@ class DPCode(StrEnum):
     VOC_VALUE = "voc_value"
     VOICE_SWITCH = "voice_switch"
     VOICE_TIMES = "voice_times"
+    VOLUME = "volume"
     VOLUME_SET = "volume_set"
     WARM = "warm"  # Heat preservation
     WARM_TIME = "warm_time"  # Heat preservation time
     WATER = "water"
     WATER_RESET = "water_reset"  # Resetting of water usage days
     WATER_SET = "water_set"  # Water level
+    WATER_TEMPERATURE = "water_temp"
     WATERSENSOR_STATE = "watersensor_state"
     WEATHER_DELAY = "weather_delay"
     WET = "wet"  # Humidification
@@ -455,12 +469,12 @@ UNITS = (
     UnitOfMeasurement(
         unit=UnitOfVolume.CUBIC_FEET,
         aliases={"ft3"},
-        device_classes={SensorDeviceClass.GAS},
+        device_classes={SensorDeviceClass.GAS,SensorDeviceClass.VOLUME,SensorDeviceClass.VOLUME_STORAGE},
     ),
     UnitOfMeasurement(
         unit=UnitOfVolume.CUBIC_METERS,
         aliases={"m3"},
-        device_classes={SensorDeviceClass.GAS},
+        device_classes={SensorDeviceClass.GAS,SensorDeviceClass.VOLUME,SensorDeviceClass.VOLUME_STORAGE},
     ),
     UnitOfMeasurement(
         unit=LIGHT_LUX,
