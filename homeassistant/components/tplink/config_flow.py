@@ -419,7 +419,8 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._discovered_device = await Device.connect(
                     config=DeviceConfig(host)
                 )
-            except:  # noqa: E722
+            except Exception:  # noqa: BLE001
+                # Raise the original error instead of the fallback error
                 raise ex from ex
         else:
             if self._discovered_device.config.uses_http:
