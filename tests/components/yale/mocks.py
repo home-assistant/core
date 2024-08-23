@@ -26,8 +26,7 @@ from yalexs.activity import (
     LockOperationActivity,
 )
 from yalexs.api_async import ApiAsync
-from yalexs.authenticator_async import Authentication
-from yalexs.authenticator_common import AuthenticationState
+from yalexs.authenticator_common import Authentication, AuthenticationState
 from yalexs.const import Brand
 from yalexs.doorbell import Doorbell, DoorbellDetail
 from yalexs.lock import Lock, LockDetail
@@ -61,14 +60,14 @@ def _mock_get_config(brand: Brand = Brand.YALE_GLOBAL):
     }
 
 
-def _mock_authenticator(auth_state):
+def _mock_authenticator(auth_state: AuthenticationState) -> Authentication:
     """Mock an yale authenticator."""
     authenticator = MagicMock()
     type(authenticator).state = PropertyMock(return_value=auth_state)
     return authenticator
 
 
-def _timetoken():
+def _timetoken() -> str:
     return str(time.time_ns())[:-2]
 
 
@@ -139,7 +138,7 @@ async def _create_yale_api_with_devices(
     api_call_side_effects: dict[str, Any] | None = None,
     activities: dict[str, Any] | None = None,
     pubnub: AugustPubNub | None = None,
-    brand=Brand.YALE_HOME,
+    brand: Brand = Brand.YALE_HOME,
 ) -> tuple[ConfigEntry, ApiAsync]:
     if api_call_side_effects is None:
         api_call_side_effects = {}
@@ -245,7 +244,7 @@ async def _mock_setup_yale_with_api_side_effects(
     hass: HomeAssistant,
     api_call_side_effects: dict[str, Any],
     pubnub: AugustPubNub,
-    brand=Brand.YALE_HOME,
+    brand: Brand = Brand.YALE_HOME,
 ) -> tuple[ApiAsync, ConfigEntry]:
     api_instance = MagicMock(name="Api", brand=brand)
 
@@ -299,7 +298,9 @@ async def _mock_setup_yale_with_api_side_effects(
     return api_instance, await _mock_setup_yale(hass, api_instance, pubnub, brand=brand)
 
 
-def _mock_yale_authentication(token_text, token_timestamp, state):
+def _mock_yale_authentication(
+    token_text: str, token_timestamp: float, state: AuthenticationState
+) -> Authentication:
     authentication = MagicMock(name="yalexs.authentication")
     type(authentication).state = PropertyMock(return_value=state)
     type(authentication).access_token = PropertyMock(return_value=token_text)
@@ -309,7 +310,7 @@ def _mock_yale_authentication(token_text, token_timestamp, state):
     return authentication
 
 
-def _mock_yale_lock(lockid="mocklockid1", houseid="mockhouseid1") -> Lock:
+def _mock_yale_lock(lockid: str = "mocklockid1", houseid: str = "mockhouseid1") -> Lock:
     return Lock(lockid, _mock_yale_lock_data(lockid=lockid, houseid=houseid))
 
 
@@ -325,7 +326,7 @@ def _mock_yale_doorbell(
 def _mock_yale_doorbell_data(
     deviceid: str = "mockdeviceid1",
     houseid: str = "mockhouseid1",
-    brand=Brand.YALE_HOME,
+    brand: Brand = Brand.YALE_HOME,
 ) -> dict[str, Any]:
     return {
         "_id": deviceid,
