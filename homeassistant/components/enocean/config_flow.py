@@ -1,8 +1,10 @@
 """Config flows for the ENOcean integration."""
 
+from typing import Any
+
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE
 
 from . import dongle
@@ -32,7 +34,9 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.create_enocean_entry(data)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle an EnOcean config flow start."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
