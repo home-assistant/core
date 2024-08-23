@@ -1,6 +1,6 @@
 """Test the Reolink light platform."""
 
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
@@ -41,7 +41,6 @@ async def test_light(
     assert state.state == "on"
     assert state.attributes["brightness"] == 255
 
-    reolink_connect.set_whiteled = AsyncMock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
@@ -50,7 +49,7 @@ async def test_light(
     )
     reolink_connect.set_whiteled.assert_called_with(0, state=False)
 
-    reolink_connect.set_whiteled = AsyncMock(side_effect=ReolinkError("Test error"))
+    reolink_connect.set_whiteled.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -59,7 +58,7 @@ async def test_light(
             blocking=True,
         )
 
-    reolink_connect.set_whiteled = AsyncMock()
+    reolink_connect.set_whiteled.reset_mock()
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -70,7 +69,7 @@ async def test_light(
         [call(0, brightness=20), call(0, state=True)]
     )
 
-    reolink_connect.set_whiteled = AsyncMock(side_effect=ReolinkError("Test error"))
+    reolink_connect.set_whiteled.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -79,7 +78,7 @@ async def test_light(
             blocking=True,
         )
 
-    reolink_connect.set_whiteled = AsyncMock(side_effect=ReolinkError("Test error"))
+    reolink_connect.set_whiteled.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -88,9 +87,7 @@ async def test_light(
             blocking=True,
         )
 
-    reolink_connect.set_whiteled = AsyncMock(
-        side_effect=InvalidParameterError("Test error")
-    )
+    reolink_connect.set_whiteled.side_effect = InvalidParameterError("Test error")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             LIGHT_DOMAIN,
