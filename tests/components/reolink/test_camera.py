@@ -1,6 +1,6 @@
 """Test the Reolink camera platform."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from reolink_aio.exceptions import ReolinkError
@@ -38,7 +38,7 @@ async def test_camera(
     reolink_connect.get_snapshot.return_value = b"image"
     assert (await async_get_image(hass, entity_id)).content == b"image"
 
-    reolink_connect.get_snapshot = AsyncMock(side_effect=ReolinkError("Test error"))
+    reolink_connect.get_snapshot.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
         await async_get_image(hass, entity_id)
 
