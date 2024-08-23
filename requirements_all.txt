@@ -100,7 +100,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.7.1
 
 # homeassistant.components.vicare
-PyViCare==2.32.0
+PyViCare-neo==0.2.1
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -258,7 +258,7 @@ aioharmony==0.2.10
 aiohomekit==3.2.3
 
 # homeassistant.components.hue
-aiohue==4.7.2
+aiohue==4.7.3
 
 # homeassistant.components.imap
 aioimaplib==1.1.0
@@ -359,7 +359,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==11.2.0
+aioshelly==11.2.4
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -404,7 +404,7 @@ aiowatttime==0.1.1
 aiowebostv==0.4.2
 
 # homeassistant.components.withings
-aiowithings==3.0.2
+aiowithings==3.0.3
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.5
@@ -464,13 +464,13 @@ apprise==1.8.0
 aprslib==0.7.2
 
 # homeassistant.components.apsystems
-apsystems-ez1==1.3.3
+apsystems-ez1==2.2.1
 
 # homeassistant.components.aqualogic
 aqualogic==2.6
 
 # homeassistant.components.aranet
-aranet4==2.3.4
+aranet4==2.4.0
 
 # homeassistant.components.arcam_fmj
 arcam-fmj==1.5.2
@@ -703,7 +703,7 @@ datadog==0.15.0
 datapoint==0.9.9
 
 # homeassistant.components.bluetooth
-dbus-fast==2.22.1
+dbus-fast==2.23.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.1
@@ -741,7 +741,7 @@ devolo-home-control-api==0.18.3
 devolo-plc-api==1.4.1
 
 # homeassistant.components.chacon_dio
-dio-chacon-wifi-api==1.2.0
+dio-chacon-wifi-api==1.2.1
 
 # homeassistant.components.directv
 directv==0.4.0
@@ -1059,7 +1059,7 @@ ha-philipsjs==3.2.2
 habitipy==0.3.1
 
 # homeassistant.components.bluetooth
-habluetooth==3.1.3
+habluetooth==3.3.2
 
 # homeassistant.components.cloud
 hass-nabucasa==0.81.1
@@ -1099,7 +1099,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.54
+holidays==0.55
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240809.0
@@ -1241,6 +1241,9 @@ lakeside==0.13
 
 # homeassistant.components.laundrify
 laundrify-aio==1.2.2
+
+# homeassistant.components.lcn
+lcn-frontend==0.1.5
 
 # homeassistant.components.ld2410_ble
 ld2410-ble==0.1.1
@@ -1426,7 +1429,7 @@ nextdns==3.1.0
 nibe==2.11.0
 
 # homeassistant.components.nice_go
-nice-go==0.1.6
+nice-go==0.3.0
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
@@ -1520,7 +1523,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.6.0
+opower==0.7.0
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1915,7 +1918,7 @@ pyhiveapi==0.5.16
 pyhomematic==0.1.77
 
 # homeassistant.components.homeworks
-pyhomeworks==1.1.1
+pyhomeworks==1.1.2
 
 # homeassistant.components.ialarm
 pyialarm==2.2.0
@@ -2184,7 +2187,7 @@ pyserial==3.5
 pysesame2==1.0.1
 
 # homeassistant.components.seventeentrack
-pyseventeentrack==1.0.0
+pyseventeentrack==1.0.1
 
 # homeassistant.components.sia
 pysiaalarm==3.1.1
@@ -2209,6 +2212,9 @@ pysmartthings==0.7.8
 
 # homeassistant.components.edl21
 pysml==0.0.12
+
+# homeassistant.components.smlight
+pysmlight==0.0.13
 
 # homeassistant.components.snmp
 pysnmp==6.2.5
@@ -2307,7 +2313,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.7.1
 
 # homeassistant.components.linkplay
-python-linkplay==0.0.6
+python-linkplay==0.0.8
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
@@ -2344,7 +2350,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==2.5.0
+python-roborock==2.6.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
@@ -2804,7 +2810,7 @@ transmission-rpc==7.0.3
 ttls==1.8.3
 
 # homeassistant.components.thethingsnetwork
-ttn_client==1.1.0
+ttn_client==1.2.0
 
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.1.9
@@ -2962,7 +2968,7 @@ yalesmartalarmclient==0.4.0
 yalexs-ble==2.4.3
 
 # homeassistant.components.august
-yalexs==8.0.2
+yalexs==8.3.3
 
 # homeassistant.components.yeelight
 yeelight==0.7.14
