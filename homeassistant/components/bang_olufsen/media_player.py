@@ -359,7 +359,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             group_members.append(
                 leader
                 if leader is not None
-                else f"leader_not_in_hass-{self._remote_leader.jid}"
+                else f"leader_not_in_hass-{self._remote_leader.friendly_name}"
             )
 
             # Add self
