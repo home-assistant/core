@@ -13,7 +13,7 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .conftest import TEST_NVR_NAME, TEST_UID
+from .conftest import TEST_NVR_NAME
 
 from tests.common import MockConfigEntry
 
@@ -79,7 +79,7 @@ async def test_host_button(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.BUTTON}.{TEST_NVR_NAME}_reboot"
+    entity_id = f"{Platform.BUTTON}.{TEST_NVR_NAME}_restart"
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
