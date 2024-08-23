@@ -14,7 +14,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from . import LcnEntity
-from .const import CONF_DOMAIN_DATA, CONF_MOTOR, CONF_REVERSE_TIME
+from .const import (
+    ADD_ENTITIES_CALLBACKS,
+    CONF_DOMAIN_DATA,
+    CONF_MOTOR,
+    CONF_REVERSE_TIME,
+    DOMAIN,
+)
 from .helpers import DeviceConnectionType, InputType, get_device_connection
 
 PARALLEL_UPDATES = 0
@@ -40,6 +46,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LCN cover entities from a config entry."""
+    hass.data[DOMAIN][config_entry.entry_id][ADD_ENTITIES_CALLBACKS].update(
+        {DOMAIN_COVER: (async_add_entities, create_lcn_cover_entity)}
+    )
 
     async_add_entities(
         create_lcn_cover_entity(hass, entity_config, config_entry)
