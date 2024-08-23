@@ -133,6 +133,7 @@ class DemoClimate(ClimateEntity):
             self._attr_supported_features |= (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             )
+            self._attr_min_temperature_range = 3
         self._attr_supported_features |= (
             ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
         )
