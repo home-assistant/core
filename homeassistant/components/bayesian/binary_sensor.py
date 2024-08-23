@@ -99,11 +99,11 @@ def _above_greater_than_below(configs: list[dict[str, Any]]) -> list:
     return configs
 
 
-def _no_overlaping(configs: list[dict]) -> list[dict]:
+def _no_overlapping(configs: list[dict]) -> list[dict]:
     numeric_configs = [
         config
         for config in configs
-        if config.get(CONF_PLATFORM, None) == CONF_NUMERIC_STATE
+        if config[CONF_PLATFORM] == CONF_NUMERIC_STATE
     ]
     if len(numeric_configs) < 2:
         return configs
@@ -116,9 +116,8 @@ def _no_overlaping(configs: list[dict]) -> list[dict]:
     for _, config in enumerate(numeric_configs):
         above = config.get(CONF_ABOVE, -math.inf)
         below = config.get(CONF_BELOW, math.inf)
-        entity_id: str = str(config.get(CONF_ENTITY_ID))
-        d.setdefault(entity_id, [])
-        d[entity_id].append(NumericConfig(above, below))
+        entity_id: str = str(config[CONF_ENTITY_ID])
+        d.setdefault(entity_id, []).append(NumericConfig(above, below))
 
     for ent_id, intervals in d.items():
         intervals = sorted(intervals, key=lambda tup: tup.above)
@@ -128,7 +127,7 @@ def _no_overlaping(configs: list[dict]) -> list[dict]:
                 continue
             if tup.below > intervals[i + 1].above:
                 raise vol.Invalid(
-                    f"For bayesian numeric state entities with more than one range like {ent_id}, they must not overlap, but above:{tup.above}, below:{tup.below} overlaps with above:{intervals[i+1].above}, below:{intervals[i+1].below}."
+                    f"Ranges for bayesian numeric state entities must not overlap, but {ent_id} has overlapping ranges, above:{tup.above}, below:{tup.below} overlaps with above:{intervals[i+1].above}, below:{intervals[i+1].below}."
                 )
     return configs
 
@@ -500,9 +499,8 @@ class BayesianBinarySensor(BinarySensorEntity):
         """Return True if numeric condition is met, return False if not, return None otherwise."""
         entity_id = entity_observation.entity_id
         # if we are dealing with numeric_state observations entity_id cannot be None
-        assert (
-            entity_id is not None
-        ), "Whilst processing the numeric state entity_id was found to be None when that should be impossible"
+        if TYPE_CHECKING:
+            assert (entity_id is not None)
 
         entity = self.hass.states.get(entity_id)
         if entity is None:
