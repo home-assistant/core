@@ -34,6 +34,7 @@ TEST_UID_CAM = "DEF7654321D89GHT"
 TEST_PORT = 1234
 TEST_NVR_NAME = "test_reolink_name"
 TEST_NVR_NAME2 = "test2_reolink_name"
+TEST_CAM_NAME = "test_reolink_cam"
 TEST_USE_HTTPS = True
 TEST_HOST_MODEL = "RLN8-410"
 TEST_ITEM_NUMBER = "P000"
