@@ -159,8 +159,7 @@ async def websocket_get_entity_configs(
         entity_configs = config_entry.data[CONF_ENTITIES]
 
     for entity_config in entity_configs:
-        entity = get_entity_entry(hass, entity_config, config_entry)
-        if entity is None:
+        if (entity := get_entity_entry(hass, entity_config, config_entry)) is None:
             continue
         entity_config[CONF_NAME] = entity.name or entity.original_name
 
@@ -459,7 +458,8 @@ def get_entity_entry(
         entity_config[CONF_ADDRESS],
         resource,
     )
-    entity_id = entity_registry.async_get_entity_id(domain_name, DOMAIN, unique_id)
-    if entity_id is None:
+    if (
+        entity_id := entity_registry.async_get_entity_id(domain_name, DOMAIN, unique_id)
+    ) is None:
         return None
     return entity_registry.async_get(entity_id)
