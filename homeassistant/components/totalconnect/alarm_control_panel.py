@@ -168,7 +168,9 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
     def _disarm(self, code: str | None = None) -> None:
         """Disarm synchronous."""
         if self._attr_code_arm_required and self._location.usercode != code:
-            raise ServiceValidationError("User entered incorrect alarm code.")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="invalid_pin"
+            )
         ArmingHelper(self._partition).disarm()
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:

@@ -77,5 +77,10 @@
         "name": "Bypass"
       }
     }
+  },
+  "exceptions": {
+    "invalid_pin": {
+      "message": "User entered incorrect alarm PIN code."
+    }
   }
 }
