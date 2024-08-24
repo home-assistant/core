@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import CONTENT_TYPE_JSON
@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_PAGE_ACCESS_TOKEN = "page_access_token"
 BASE_URL = "https://graph.facebook.com/v2.6/me/messages"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_PAGE_ACCESS_TOKEN): cv.string}
 )
 

@@ -17,6 +17,7 @@ import orjson
 import pytest
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.components import group
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -3990,6 +3991,48 @@ async def test_device_attr(
     assert info.rate_limit is None
 
 
+async def test_config_entry_attr(hass: HomeAssistant) -> None:
+    """Test config entry attr."""
+    info = {
+        "domain": "mock_light",
+        "title": "mock title",
+        "source": config_entries.SOURCE_BLUETOOTH,
+        "disabled_by": config_entries.ConfigEntryDisabler.USER,
+    }
+    config_entry = MockConfigEntry(**info)
+    config_entry.add_to_hass(hass)
+
+    info["state"] = config_entries.ConfigEntryState.NOT_LOADED
+
+    for key, value in info.items():
+        tpl = template.Template(
+            "{{ config_entry_attr('" + config_entry.entry_id + "', '" + key + "') }}",
+            hass,
+        )
+        assert tpl.async_render(parse_result=False) == str(value)
+
+    for config_entry_id, key in (
+        (config_entry.entry_id, "invalid_key"),
+        (56, "domain"),
+    ):
+        with pytest.raises(TemplateError):
+            template.Template(
+                "{{ config_entry_attr("
+                + json.dumps(config_entry_id)
+                + ", '"
+                + key
+                + "') }}",
+                hass,
+            ).async_render()
+
+    assert (
+        template.Template(
+            "{{ config_entry_attr('invalid_id', 'domain') }}", hass
+        ).async_render(parse_result=False)
+        == "None"
+    )
+
+
 async def test_issues(hass: HomeAssistant, issue_registry: ir.IssueRegistry) -> None:
     """Test issues function."""
     # Test no issues
@@ -6193,3 +6236,48 @@ async def test_template_thread_safety_checks(hass: HomeAssistant) -> None:
         await hass.async_add_executor_job(template_obj.async_render_to_info)
 
     assert template_obj.async_render_to_info().result() == 23
+
+
+@pytest.mark.parametrize(
+    ("cola", "colb", "expected"),
+    [
+        ([1, 2], [3, 4], [(1, 3), (2, 4)]),
+        ([1, 2], [3, 4, 5], [(1, 3), (2, 4)]),
+        ([1, 2, 3, 4], [3, 4], [(1, 3), (2, 4)]),
+    ],
+)
+def test_zip(hass: HomeAssistant, cola, colb, expected) -> None:
+    """Test zip."""
+    assert (
+        template.Template("{{ zip(cola, colb) | list }}", hass).async_render(
+            {"cola": cola, "colb": colb}
+        )
+        == expected
+    )
+    assert (
+        template.Template(
+            "[{% for a, b in zip(cola, colb) %}({{a}}, {{b}}), {% endfor %}]", hass
+        ).async_render({"cola": cola, "colb": colb})
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("col", "expected"),
+    [
+        ([(1, 3), (2, 4)], [(1, 2), (3, 4)]),
+        (["ax", "by", "cz"], [("a", "b", "c"), ("x", "y", "z")]),
+    ],
+)
+def test_unzip(hass: HomeAssistant, col, expected) -> None:
+    """Test unzipping using zip."""
+    assert (
+        template.Template("{{ zip(*col) | list }}", hass).async_render({"col": col})
+        == expected
+    )
+    assert (
+        template.Template(
+            "{% set a, b = zip(*col) %}[{{a}}, {{b}}]", hass
+        ).async_render({"col": col})
+        == expected
+    )

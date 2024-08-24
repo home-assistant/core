@@ -1,0 +1,42 @@
+{
+  "entity": {
+    "sensor": {
+      "air_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "air_density": {
+        "default": "mdi:format-line-weight"
+      },
+      "feels_like": {
+        "default": "mdi:thermometer"
+      },
+      "heat_index": {
+        "default": "mdi:sun-thermometer"
+      },
+      "wet_bulb_temperature": {
+        "default": "mdi:thermometer-water"
+      },
+      "wet_bulb_globe_temperature": {
+        "default": "mdi:thermometer-water"
+      },
+      "lightning_strike_count": {
+        "default": "mdi:lightning-bolt"
+      },
+      "lightning_strike_count_last_1hr": {
+        "default": "mdi:lightning-bolt"
+      },
+      "lightning_strike_count_last_3hr": {
+        "default": "mdi:lightning-bolt"
+      },
+      "lightning_strike_last_distance": {
+        "default": "mdi:lightning-bolt"
+      },
+      "lightning_strike_last_epoch": {
+        "default": "mdi:lightning-bolt"
+      },
+      "wind_chill": {
+        "default": "mdi:snowflake-thermometer"
+      }
+    }
+  }
+}

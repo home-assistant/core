@@ -18,6 +18,7 @@ from nextdns import (
     NextDns,
     Settings,
 )
+from tenacity import RetryError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
@@ -84,9 +85,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NextDnsConfigEntry) -> b
 
     websession = async_get_clientsession(hass)
     try:
-        async with asyncio.timeout(10):
-            nextdns = await NextDns.create(websession, api_key)
-    except (ApiError, ClientConnectorError, TimeoutError) as err:
+        nextdns = await NextDns.create(websession, api_key)
+    except (ApiError, ClientConnectorError, RetryError, TimeoutError) as err:
         raise ConfigEntryNotReady from err
 
     tasks = []

@@ -408,7 +408,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 ):
                     data[attribute] = attribute_templ
                 else:
-                    attribute_templ.hass = hass
                     try:
                         data[attribute] = attribute_templ.async_render(
                             parse_result=False
@@ -702,7 +701,7 @@ class TelegramNotificationService:
                 }
                 if message_tag is not None:
                     event_data[ATTR_MESSAGE_TAG] = message_tag
-                if kwargs_msg[ATTR_MESSAGE_THREAD_ID] is not None:
+                if kwargs_msg.get(ATTR_MESSAGE_THREAD_ID) is not None:
                     event_data[ATTR_MESSAGE_THREAD_ID] = kwargs_msg[
                         ATTR_MESSAGE_THREAD_ID
                     ]

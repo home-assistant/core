@@ -1,6 +1,6 @@
 """Common fixtures for the Gardena Bluetooth tests."""
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable, Coroutine, Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -10,7 +10,6 @@ from gardena_bluetooth.const import DeviceInformation
 from gardena_bluetooth.exceptions import CharacteristicNotFound
 from gardena_bluetooth.parse import Characteristic
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.gardena_bluetooth.const import DOMAIN
 from homeassistant.components.gardena_bluetooth.coordinator import SCAN_INTERVAL

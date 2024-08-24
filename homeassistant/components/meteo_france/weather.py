@@ -165,6 +165,7 @@ class MeteoFranceWeather(
         wind_bearing = self.coordinator.data.current_forecast["wind"]["direction"]
         if wind_bearing != -1:
             return wind_bearing
+        return None
 
     def _forecast(self, mode: str) -> list[Forecast]:
         """Return the forecast."""

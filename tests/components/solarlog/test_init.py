@@ -50,7 +50,9 @@ async def test_raise_config_entry_not_ready_when_offline(
 
 
 async def test_migrate_config_entry(
-    hass: HomeAssistant, device_reg: DeviceRegistry, entity_reg: EntityRegistry
+    hass: HomeAssistant,
+    device_registry: DeviceRegistry,
+    entity_registry: EntityRegistry,
 ) -> None:
     """Test successful migration of entry data."""
     entry = MockConfigEntry(
@@ -64,13 +66,13 @@ async def test_migrate_config_entry(
     )
     entry.add_to_hass(hass)
 
-    device = device_reg.async_get_or_create(
+    device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.entry_id)},
         manufacturer="Solar-Log",
         name="solarlog",
     )
-    sensor_entity = entity_reg.async_get_or_create(
+    sensor_entity = entity_registry.async_get_or_create(
         config_entry=entry,
         platform=DOMAIN,
         domain=Platform.SENSOR,
@@ -85,7 +87,7 @@ async def test_migrate_config_entry(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_migrated = entity_reg.async_get(sensor_entity.entity_id)
+    entity_migrated = entity_registry.async_get(sensor_entity.entity_id)
     assert entity_migrated
     assert entity_migrated.unique_id == f"{entry.entry_id}_last_updated"
 

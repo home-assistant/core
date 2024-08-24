@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Coroutine
 from functools import lru_cache
 import logging
 import os
@@ -14,7 +15,8 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import MAX_LENGTH_STATE_STATE, STATE_UNKNOWN, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import create_eager_task
@@ -34,11 +36,113 @@ from .const import (
 )
 from .models import DATA_MQTT, DATA_MQTT_AVAILABLE, ReceiveMessage
 
-AVAILABILITY_TIMEOUT = 30.0
+AVAILABILITY_TIMEOUT = 50.0
 
 TEMP_DIR_NAME = f"home-assistant-{DOMAIN}"
 
 _VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
+
+_LOGGER = logging.getLogger(__name__)
+
+
+class EnsureJobAfterCooldown:
+    """Ensure a cool down period before executing a job.
+
+    When a new execute request arrives we cancel the current request
+    and start a new one.
+
+    We allow patching this util, as we generally have exceptions
+    for sleeps/waits/debouncers/timers causing long run times in tests.
+    """
+
+    def __init__(
+        self, timeout: float, callback_job: Callable[[], Coroutine[Any, None, None]]
+    ) -> None:
+        """Initialize the timer."""
+        self._loop = asyncio.get_running_loop()
+        self._timeout = timeout
+        self._callback = callback_job
+        self._task: asyncio.Task | None = None
+        self._timer: asyncio.TimerHandle | None = None
+        self._next_execute_time = 0.0
+
+    def set_timeout(self, timeout: float) -> None:
+        """Set a new timeout period."""
+        self._timeout = timeout
+
+    async def _async_job(self) -> None:
+        """Execute after a cooldown period."""
+        try:
+            await self._callback()
+        except HomeAssistantError as ha_error:
+            _LOGGER.error("%s", ha_error)
+
+    @callback
+    def _async_task_done(self, task: asyncio.Task) -> None:
+        """Handle task done."""
+        self._task = None
+
+    @callback
+    def async_execute(self) -> asyncio.Task:
+        """Execute the job."""
+        if self._task:
+            # Task already running,
+            # so we schedule another run
+            self.async_schedule()
+            return self._task
+
+        self._async_cancel_timer()
+        self._task = create_eager_task(self._async_job())
+        self._task.add_done_callback(self._async_task_done)
+        return self._task
+
+    @callback
+    def _async_cancel_timer(self) -> None:
+        """Cancel any pending task."""
+        if self._timer:
+            self._timer.cancel()
+            self._timer = None
+
+    @callback
+    def async_schedule(self) -> None:
+        """Ensure we execute after a cooldown period."""
+        # We want to reschedule the timer in the future
+        # every time this is called.
+        next_when = self._loop.time() + self._timeout
+        if not self._timer:
+            self._timer = self._loop.call_at(next_when, self._async_timer_reached)
+            return
+
+        if self._timer.when() < next_when:
+            # Timer already running, set the next execute time
+            # if it fires too early, it will get rescheduled
+            self._next_execute_time = next_when
+
+    @callback
+    def _async_timer_reached(self) -> None:
+        """Handle timer fire."""
+        self._timer = None
+        if self._loop.time() >= self._next_execute_time:
+            self.async_execute()
+            return
+        # Timer fired too early because there were multiple
+        # calls async_schedule. Reschedule the timer.
+        self._timer = self._loop.call_at(
+            self._next_execute_time, self._async_timer_reached
+        )
+
+    async def async_cleanup(self) -> None:
+        """Cleanup any pending task."""
+        self._async_cancel_timer()
+        if not self._task:
+            return
+        self._task.cancel()
+        try:
+            await self._task
+        except asyncio.CancelledError:
+            pass
+        except Exception:
+            _LOGGER.exception("Error cleaning up task")
 
 
 def platforms_from_config(config: list[ConfigType]) -> set[Platform | str]:

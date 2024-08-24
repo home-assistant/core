@@ -11,7 +11,7 @@ from PIL import Image
 import voluptuous as vol
 
 from homeassistant.components.camera import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
     Camera,
     async_get_image,
     async_get_mjpeg_stream,
@@ -45,12 +45,12 @@ MODE_CROP = "crop"
 DEFAULT_BASENAME = "Camera Proxy"
 DEFAULT_QUALITY = 75
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_CACHE_IMAGES, False): cv.boolean,
-        vol.Optional(CONF_FORCE_RESIZE, False): cv.boolean,
+        vol.Optional(CONF_CACHE_IMAGES, default=False): cv.boolean,
+        vol.Optional(CONF_FORCE_RESIZE, default=False): cv.boolean,
         vol.Optional(CONF_MODE, default=MODE_RESIZE): vol.In([MODE_RESIZE, MODE_CROP]),
         vol.Optional(CONF_IMAGE_QUALITY): int,
         vol.Optional(CONF_IMAGE_REFRESH_RATE): float,

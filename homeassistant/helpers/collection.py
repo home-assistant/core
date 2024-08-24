@@ -26,7 +26,7 @@ from . import entity_registry
 from .entity import Entity
 from .entity_component import EntityComponent
 from .storage import Store
-from .typing import ConfigType
+from .typing import ConfigType, VolDictType
 
 STORAGE_VERSION = 1
 SAVE_DELAY = 10
@@ -515,8 +515,8 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
         storage_collection: _StorageCollectionT,
         api_prefix: str,
         model_name: str,
-        create_schema: dict,
-        update_schema: dict,
+        create_schema: VolDictType,
+        update_schema: VolDictType,
     ) -> None:
         """Initialize a websocket CRUD."""
         self.storage_collection = storage_collection
@@ -536,12 +536,7 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
         return f"{self.model_name}_id"
 
     @callback
-    def async_setup(
-        self,
-        hass: HomeAssistant,
-        *,
-        create_create: bool = True,
-    ) -> None:
+    def async_setup(self, hass: HomeAssistant) -> None:
         """Set up the websocket commands."""
         websocket_api.async_register_command(
             hass,
@@ -552,20 +547,19 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
             ),
         )
 
-        if create_create:
-            websocket_api.async_register_command(
-                hass,
-                f"{self.api_prefix}/create",
-                websocket_api.require_admin(
-                    websocket_api.async_response(self.ws_create_item)
-                ),
-                websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-                    {
-                        **self.create_schema,
-                        vol.Required("type"): f"{self.api_prefix}/create",
-                    }
-                ),
-            )
+        websocket_api.async_register_command(
+            hass,
+            f"{self.api_prefix}/create",
+            websocket_api.require_admin(
+                websocket_api.async_response(self.ws_create_item)
+            ),
+            websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+                {
+                    **self.create_schema,
+                    vol.Required("type"): f"{self.api_prefix}/create",
+                }
+            ),
+        )
 
         websocket_api.async_register_command(
             hass,
@@ -648,8 +642,8 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
                 }
                 for change in change_set
             ]
-            for connection, msg_id in self._subscribers:
-                connection.send_message(websocket_api.event_message(msg_id, json_msg))
+            for conn, msg_id in self._subscribers:
+                conn.send_message(websocket_api.event_message(msg_id, json_msg))
 
         if not self._subscribers:
             self._remove_subscription = (

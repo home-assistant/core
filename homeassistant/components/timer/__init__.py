@@ -26,7 +26,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,7 +66,7 @@ SERVICE_FINISH = "finish"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
-STORAGE_FIELDS = {
+STORAGE_FIELDS: VolDictType = {
     vol.Required(CONF_NAME): cv.string,
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_DURATION, default=DEFAULT_DURATION): cv.time_period,
@@ -159,9 +159,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         {vol.Optional(ATTR_DURATION, default=DEFAULT_DURATION): cv.time_period},
         "async_start",
     )
-    component.async_register_entity_service(SERVICE_PAUSE, {}, "async_pause")
-    component.async_register_entity_service(SERVICE_CANCEL, {}, "async_cancel")
-    component.async_register_entity_service(SERVICE_FINISH, {}, "async_finish")
+    component.async_register_entity_service(SERVICE_PAUSE, None, "async_pause")
+    component.async_register_entity_service(SERVICE_CANCEL, None, "async_cancel")
+    component.async_register_entity_service(SERVICE_FINISH, None, "async_finish")
     component.async_register_entity_service(
         SERVICE_CHANGE,
         {vol.Optional(ATTR_DURATION, default=DEFAULT_DURATION): cv.time_period},

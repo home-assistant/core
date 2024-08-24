@@ -10,7 +10,6 @@ from uiprotect.data import (
     DoorbellMessageType,
     ModelType,
     ProtectAdoptableDeviceModel,
-    ProtectModelWithId,
 )
 
 from homeassistant.components.text import TextEntity, TextEntityDescription
@@ -18,7 +17,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .data import UFPConfigEntry
+from .data import ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity, async_all_device_entities
 from .models import PermRequired, ProtectEntityDescription, ProtectSetableKeysMixin, T
 
@@ -89,7 +88,7 @@ class ProtectDeviceText(ProtectDeviceEntity, TextEntity):
     _state_attrs = ("_attr_available", "_attr_native_value")
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         self._attr_native_value = self.entity_description.get_ufp_value(self.device)
 

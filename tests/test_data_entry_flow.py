@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.util.decorator import Registry
 
 from .common import (
@@ -1075,3 +1076,25 @@ def test_deprecated_constants(
     import_and_test_deprecated_constant_enum(
         caplog, data_entry_flow, enum, "RESULT_TYPE_", "2025.1"
     )
+
+
+def test_section_in_serializer() -> None:
+    """Test section with custom_serializer."""
+    assert cv.custom_serializer(
+        data_entry_flow.section(
+            vol.Schema(
+                {
+                    vol.Optional("option_1", default=False): bool,
+                    vol.Required("option_2"): int,
+                }
+            ),
+            {"collapsed": False},
+        )
+    ) == {
+        "expanded": True,
+        "schema": [
+            {"default": False, "name": "option_1", "optional": True, "type": "boolean"},
+            {"name": "option_2", "required": True, "type": "integer"},
+        ],
+        "type": "expandable",
+    }

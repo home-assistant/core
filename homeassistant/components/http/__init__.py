@@ -22,7 +22,6 @@ from aiohttp.streams import StreamReader
 from aiohttp.typedefs import JSONDecoder, StrOrURL
 from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
 from aiohttp.web_protocol import RequestHandler
-from aiohttp_fast_url_dispatcher import FastUrlDispatcher, attach_fast_url_dispatcher
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -335,10 +334,6 @@ class HomeAssistantHTTP:
                 "max_field_size": MAX_LINE_SIZE,
             },
         )
-        # By default aiohttp does a linear search for routing rules,
-        # we have a lot of routes, so use a dict lookup with a fallback
-        # to the linear search.
-        attach_fast_url_dispatcher(self.app, FastUrlDispatcher())
         self.hass = hass
         self.ssl_certificate = ssl_certificate
         self.ssl_peer_certificate = ssl_peer_certificate
@@ -483,7 +478,7 @@ class HomeAssistantHTTP:
         frame.report(
             "calls hass.http.register_static_path which is deprecated because "
             "it does blocking I/O in the event loop, instead "
-            "call `await hass.http.async_register_static_path("
+            "call `await hass.http.async_register_static_paths("
             f'[StaticPathConfig("{url_path}", "{path}", {cache_headers})])`; '
             "This function will be removed in 2025.7",
             exclude_integrations={"http"},

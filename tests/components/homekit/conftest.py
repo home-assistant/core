@@ -4,7 +4,6 @@ from asyncio import AbstractEventLoop
 from collections.abc import Generator
 from contextlib import suppress
 import os
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -13,13 +12,13 @@ from homeassistant.components.device_tracker.legacy import YAML_DEVICES
 from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import BRIDGE_NAME, EVENT_HOMEKIT_CHANGED
 from homeassistant.components.homekit.iidmanager import AccessoryIIDStorage
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 
 from tests.common import async_capture_events
 
 
 @pytest.fixture
-def iid_storage(hass):
+def iid_storage(hass: HomeAssistant) -> Generator[AccessoryIIDStorage]:
     """Mock the iid storage."""
     with patch.object(AccessoryIIDStorage, "_async_schedule_save"):
         yield AccessoryIIDStorage(hass, "")
@@ -28,7 +27,7 @@ def iid_storage(hass):
 @pytest.fixture
 def run_driver(
     hass: HomeAssistant, event_loop: AbstractEventLoop, iid_storage: AccessoryIIDStorage
-) -> Generator[HomeDriver, Any, None]:
+) -> Generator[HomeDriver]:
     """Return a custom AccessoryDriver instance for HomeKit accessory init.
 
     This mock does not mock async_stop, so the driver will not be stopped
@@ -57,7 +56,7 @@ def run_driver(
 @pytest.fixture
 def hk_driver(
     hass: HomeAssistant, event_loop: AbstractEventLoop, iid_storage: AccessoryIIDStorage
-) -> Generator[HomeDriver, Any, None]:
+) -> Generator[HomeDriver]:
     """Return a custom AccessoryDriver instance for HomeKit accessory init."""
     with (
         patch("pyhap.accessory_driver.AsyncZeroconf"),
@@ -89,7 +88,7 @@ def mock_hap(
     event_loop: AbstractEventLoop,
     iid_storage: AccessoryIIDStorage,
     mock_zeroconf: MagicMock,
-) -> Generator[HomeDriver, Any, None]:
+) -> Generator[HomeDriver]:
     """Return a custom AccessoryDriver instance for HomeKit accessory init."""
     with (
         patch("pyhap.accessory_driver.AsyncZeroconf"),
@@ -122,13 +121,13 @@ def mock_hap(
 
 
 @pytest.fixture
-def events(hass):
+def events(hass: HomeAssistant) -> list[Event]:
     """Yield caught homekit_changed events."""
     return async_capture_events(hass, EVENT_HOMEKIT_CHANGED)
 
 
 @pytest.fixture
-def demo_cleanup(hass):
+def demo_cleanup(hass: HomeAssistant) -> Generator[None]:
     """Clean up device tracker demo file."""
     yield
     with suppress(FileNotFoundError):

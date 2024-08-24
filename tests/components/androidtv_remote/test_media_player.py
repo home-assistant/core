@@ -345,7 +345,7 @@ async def test_browse_media(
     )
     response = await client.receive_json()
     assert response["success"]
-    assert {
+    assert response["result"] == {
         "title": "Applications",
         "media_class": "directory",
         "media_content_type": "apps",
@@ -377,7 +377,7 @@ async def test_browse_media(
                 "thumbnail": "",
             },
         ],
-    } == response["result"]
+    }
 
 
 async def test_media_player_connection_closed(

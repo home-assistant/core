@@ -10,8 +10,8 @@ from syrupy import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.ping.const import CONF_IMPORTED_BY, DOMAIN
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -64,29 +64,3 @@ async def test_disabled_after_import(
     assert entry
     assert entry.disabled
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-
-
-async def test_import_issue_creation(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test if import issue is raised."""
-
-    await async_setup_component(
-        hass,
-        "binary_sensor",
-        {
-            "binary_sensor": {
-                "platform": "ping",
-                "name": "test",
-                "host": "127.0.0.1",
-                "count": 1,
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    issue = issue_registry.async_get_issue(
-        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
-    )
-    assert issue

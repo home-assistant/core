@@ -51,7 +51,9 @@ class ProsegurConfigFlow(ConfigFlow, domain=DOMAIN):
     user_input: dict
     contracts: list[dict[str, str]]
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
 

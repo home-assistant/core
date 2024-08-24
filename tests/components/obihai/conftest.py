@@ -1,10 +1,10 @@
 """Define test fixtures for Obihai."""
 
+from collections.abc import Generator
 from socket import gaierror
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 
 @pytest.fixture

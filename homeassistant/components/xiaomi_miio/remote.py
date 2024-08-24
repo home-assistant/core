@@ -16,7 +16,7 @@ from homeassistant.components.remote import (
     ATTR_DELAY_SECS,
     ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as REMOTE_PLATFORM_SCHEMA,
     RemoteEntity,
 )
 from homeassistant.const import (
@@ -49,7 +49,7 @@ COMMAND_SCHEMA = vol.Schema(
     {vol.Required(CONF_COMMAND): vol.All(cv.ensure_list, [cv.string])}
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = REMOTE_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_HOST): cv.string,
@@ -170,12 +170,12 @@ async def async_setup_platform(
     )
     platform.async_register_entity_service(
         SERVICE_SET_REMOTE_LED_ON,
-        {},
+        None,
         async_service_led_on_handler,
     )
     platform.async_register_entity_service(
         SERVICE_SET_REMOTE_LED_OFF,
-        {},
+        None,
         async_service_led_off_handler,
     )
 

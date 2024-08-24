@@ -5,8 +5,8 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from bring_api.bring import Bring
-from bring_api.exceptions import (
+from bring_api import (
+    Bring,
     BringAuthException,
     BringParseException,
     BringRequestException,
@@ -14,7 +14,9 @@ from bring_api.exceptions import (
 from bring_api.types import BringItemsResponse, BringList
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -49,8 +51,20 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
         except BringParseException as e:
             raise UpdateFailed("Unable to parse response from bring") from e
         except BringAuthException as e:
+            # try to recover by refreshing access token, otherwise
+            # initiate reauth flow
+            try:
+                await self.bring.retrieve_new_access_token()
+            except (BringRequestException, BringParseException) as exc:
+                raise UpdateFailed("Refreshing authentication token failed") from exc
+            except BringAuthException as exc:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="setup_authentication_exception",
+                    translation_placeholders={CONF_EMAIL: self.bring.mail},
+                ) from exc
             raise UpdateFailed(
-                "Unable to retrieve data from bring, authentication failed"
+                "Authentication failed but re-authentication was successful, trying again later"
             ) from e
 
         list_dict: dict[str, BringData] = {}

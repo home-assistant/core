@@ -23,6 +23,7 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
 )
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.util import slugify
 
 from .const import (
@@ -37,7 +38,7 @@ from .const import (
 RESULT_SUCCESS = "success"
 
 
-def _base_schema(user_input: dict[str, Any]) -> vol.Schema:
+def _base_schema(user_input: dict[str, Any]) -> VolDictType:
     return {
         vol.Required(
             CONF_TRACKED_ENTITIES, default=user_input.get(CONF_TRACKED_ENTITIES, [])

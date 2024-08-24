@@ -2,6 +2,7 @@
   "domain": "dovado",
   "name": "Dovado",
   "codeowners": [],
+  "disabled": "This integration is disabled because it uses non-open source code to operate.",
   "documentation": "https://www.home-assistant.io/integrations/dovado",
   "iot_class": "local_polling",
   "requirements": ["dovado==0.4.1"]

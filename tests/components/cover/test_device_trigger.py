@@ -29,7 +29,6 @@ from tests.common import (
     async_fire_time_changed,
     async_get_device_automation_capabilities,
     async_get_device_automations,
-    async_mock_service,
     setup_test_component_platform,
 )
 
@@ -37,12 +36,6 @@ from tests.common import (
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
 def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
     """Stub copying the blueprints to the config folder."""
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 @pytest.mark.parametrize(
@@ -381,7 +374,7 @@ async def test_if_fires_on_state_change(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for state triggers firing."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -496,36 +489,36 @@ async def test_if_fires_on_state_change(
     # Fake that the entity is opened.
     hass.states.async_set(entry.entity_id, STATE_OPEN)
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
     assert (
-        calls[0].data["some"]
+        service_calls[0].data["some"]
         == f"opened - device - {entry.entity_id} - closed - open - None"
     )
 
     # Fake that the entity is closed.
     hass.states.async_set(entry.entity_id, STATE_CLOSED)
     await hass.async_block_till_done()
-    assert len(calls) == 2
+    assert len(service_calls) == 2
     assert (
-        calls[1].data["some"]
+        service_calls[1].data["some"]
         == f"closed - device - {entry.entity_id} - open - closed - None"
     )
 
     # Fake that the entity is opening.
     hass.states.async_set(entry.entity_id, STATE_OPENING)
     await hass.async_block_till_done()
-    assert len(calls) == 3
+    assert len(service_calls) == 3
     assert (
-        calls[2].data["some"]
+        service_calls[2].data["some"]
         == f"opening - device - {entry.entity_id} - closed - opening - None"
     )
 
     # Fake that the entity is closing.
     hass.states.async_set(entry.entity_id, STATE_CLOSING)
     await hass.async_block_till_done()
-    assert len(calls) == 4
+    assert len(service_calls) == 4
     assert (
-        calls[3].data["some"]
+        service_calls[3].data["some"]
         == f"closing - device - {entry.entity_id} - opening - closing - None"
     )
 
@@ -534,7 +527,7 @@ async def test_if_fires_on_state_change_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for state triggers firing."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -583,9 +576,9 @@ async def test_if_fires_on_state_change_legacy(
     # Fake that the entity is opened.
     hass.states.async_set(entry.entity_id, STATE_OPEN)
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
     assert (
-        calls[0].data["some"]
+        service_calls[0].data["some"]
         == f"opened - device - {entry.entity_id} - closed - open - None"
     )
 
@@ -594,7 +587,7 @@ async def test_if_fires_on_state_change_with_for(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for triggers firing with delay."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -640,17 +633,17 @@ async def test_if_fires_on_state_change_with_for(
         },
     )
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.states.async_set(entry.entity_id, STATE_OPEN)
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
     await hass.async_block_till_done()
     assert (
-        calls[0].data["some"]
+        service_calls[0].data["some"]
         == f"turn_off device - {entry.entity_id} - closed - open - 0:00:05"
     )
 
@@ -660,7 +653,7 @@ async def test_if_fires_on_position(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     mock_cover_entities: list[MockCover],
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for position triggers."""
     setup_test_component_platform(hass, DOMAIN, mock_cover_entities)
@@ -769,9 +762,13 @@ async def test_if_fires_on_position(
         ent.entity_id, STATE_OPEN, attributes={"current_position": 50}
     )
     await hass.async_block_till_done()
-    assert len(calls) == 3
+    assert len(service_calls) == 3
     assert sorted(
-        [calls[0].data["some"], calls[1].data["some"], calls[2].data["some"]]
+        [
+            service_calls[0].data["some"],
+            service_calls[1].data["some"],
+            service_calls[2].data["some"],
+        ]
     ) == sorted(
         [
             (
@@ -791,9 +788,9 @@ async def test_if_fires_on_position(
         ent.entity_id, STATE_CLOSED, attributes={"current_position": 45}
     )
     await hass.async_block_till_done()
-    assert len(calls) == 4
+    assert len(service_calls) == 4
     assert (
-        calls[3].data["some"]
+        service_calls[3].data["some"]
         == f"is_pos_lt_90 - device - {entry.entity_id} - closed - closed - None"
     )
 
@@ -801,9 +798,9 @@ async def test_if_fires_on_position(
         ent.entity_id, STATE_CLOSED, attributes={"current_position": 90}
     )
     await hass.async_block_till_done()
-    assert len(calls) == 5
+    assert len(service_calls) == 5
     assert (
-        calls[4].data["some"]
+        service_calls[4].data["some"]
         == f"is_pos_gt_45 - device - {entry.entity_id} - closed - closed - None"
     )
 
@@ -812,7 +809,7 @@ async def test_if_fires_on_tilt_position(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     mock_cover_entities: list[MockCover],
 ) -> None:
     """Test for tilt position triggers."""
@@ -924,9 +921,13 @@ async def test_if_fires_on_tilt_position(
         ent.entity_id, STATE_OPEN, attributes={"current_tilt_position": 50}
     )
     await hass.async_block_till_done()
-    assert len(calls) == 3
+    assert len(service_calls) == 3
     assert sorted(
-        [calls[0].data["some"], calls[1].data["some"], calls[2].data["some"]]
+        [
+            service_calls[0].data["some"],
+            service_calls[1].data["some"],
+            service_calls[2].data["some"],
+        ]
     ) == sorted(
         [
             (
@@ -946,9 +947,9 @@ async def test_if_fires_on_tilt_position(
         ent.entity_id, STATE_CLOSED, attributes={"current_tilt_position": 45}
     )
     await hass.async_block_till_done()
-    assert len(calls) == 4
+    assert len(service_calls) == 4
     assert (
-        calls[3].data["some"]
+        service_calls[3].data["some"]
         == f"is_pos_lt_90 - device - {entry.entity_id} - closed - closed - None"
     )
 
@@ -956,8 +957,8 @@ async def test_if_fires_on_tilt_position(
         ent.entity_id, STATE_CLOSED, attributes={"current_tilt_position": 90}
     )
     await hass.async_block_till_done()
-    assert len(calls) == 5
+    assert len(service_calls) == 5
     assert (
-        calls[4].data["some"]
+        service_calls[4].data["some"]
         == f"is_pos_gt_45 - device - {entry.entity_id} - closed - closed - None"
     )

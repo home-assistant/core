@@ -37,7 +37,7 @@ TEST_PORT_SERIAL = "usb01"
 class ReadResult:
     """Storage class for register read results."""
 
-    def __init__(self, register_words):
+    def __init__(self, register_words) -> None:
         """Init."""
         self.registers = register_words
         self.bits = register_words
@@ -61,7 +61,7 @@ def register_words_fixture():
 
 
 @pytest.fixture(name="config_addon")
-def config_addon_fixture():
+def config_addon_fixture() -> dict[str, Any] | None:
     """Add extra configuration items."""
     return None
 
@@ -192,7 +192,9 @@ async def mock_test_state_fixture(
 
 
 @pytest.fixture(name="mock_modbus_ha")
-async def mock_modbus_ha_fixture(hass, mock_modbus):
+async def mock_modbus_ha_fixture(
+    hass: HomeAssistant, mock_modbus: mock.AsyncMock
+) -> mock.AsyncMock:
     """Load homeassistant to allow service calls."""
     assert await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()

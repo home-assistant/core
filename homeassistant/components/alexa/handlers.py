@@ -21,6 +21,7 @@ from homeassistant.components import (
     light,
     media_player,
     number,
+    remote,
     timer,
     vacuum,
     valve,
@@ -185,6 +186,8 @@ async def async_api_turn_on(
         service = fan.SERVICE_TURN_ON
     elif domain == humidifier.DOMAIN:
         service = humidifier.SERVICE_TURN_ON
+    elif domain == remote.DOMAIN:
+        service = remote.SERVICE_TURN_ON
     elif domain == vacuum.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if (
@@ -234,6 +237,8 @@ async def async_api_turn_off(
         service = climate.SERVICE_TURN_OFF
     elif domain == fan.DOMAIN:
         service = fan.SERVICE_TURN_OFF
+    elif domain == remote.DOMAIN:
+        service = remote.SERVICE_TURN_OFF
     elif domain == humidifier.DOMAIN:
         service = humidifier.SERVICE_TURN_OFF
     elif domain == vacuum.DOMAIN:
@@ -1200,6 +1205,17 @@ async def async_api_set_mode(
             msg = f"Entity '{entity.entity_id}' does not support Mode '{mode}'"
             raise AlexaInvalidValueError(msg)
 
+    # Remote Activity
+    elif instance == f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}":
+        activity = mode.split(".")[1]
+        activities: list[str] | None = entity.attributes.get(remote.ATTR_ACTIVITY_LIST)
+        if activity != PRESET_MODE_NA and activities and activity in activities:
+            service = remote.SERVICE_TURN_ON
+            data[remote.ATTR_ACTIVITY] = activity
+        else:
+            msg = f"Entity '{entity.entity_id}' does not support Mode '{mode}'"
+            raise AlexaInvalidValueError(msg)
+
     # Water heater operation mode
     elif instance == f"{water_heater.DOMAIN}.{water_heater.ATTR_OPERATION_MODE}":
         operation_mode = mode.split(".")[1]
@@ -1497,7 +1513,7 @@ async def async_api_adjust_range(
     if instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
         service = SERVICE_SET_COVER_POSITION
-        if not (current := entity.attributes.get(cover.ATTR_POSITION)):
+        if not (current := entity.attributes.get(cover.ATTR_CURRENT_POSITION)):
             msg = f"Unable to determine {entity.entity_id} current position"
             raise AlexaInvalidValueError(msg)
         position = response_value = min(100, max(0, range_delta + current))

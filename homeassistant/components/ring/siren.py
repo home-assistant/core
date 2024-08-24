@@ -47,8 +47,8 @@ class RingChimeSiren(RingEntity[RingChime], SirenEntity):
         self._attr_unique_id = f"{self._device.id}-siren"
 
     @exception_wrap
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Play the test sound on a Ring Chime device."""
         tone = kwargs.get(ATTR_TONE) or RingEventKind.DING.value
 
-        self._device.test_sound(kind=tone)
+        await self._device.async_test_sound(kind=tone)

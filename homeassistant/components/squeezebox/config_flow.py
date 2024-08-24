@@ -1,9 +1,9 @@
-"""Config flow for Logitech Squeezebox integration."""
+"""Config flow for Squeezebox integration."""
 
 import asyncio
 from http import HTTPStatus
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
@@ -64,7 +64,7 @@ def _base_schema(discovery_info=None):
 
 
 class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Logitech Squeezebox."""
+    """Handle a config flow for Squeezebox."""
 
     VERSION = 1
 
@@ -102,7 +102,7 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         # update with suggested values from discovery
         self.data_schema = _base_schema(self.discovery_info)
 
-    async def _validate_input(self, data):
+    async def _validate_input(self, data: dict[str, Any]) -> str | None:
         """Validate the user input allows us to connect.
 
         Retrieve unique id and abort if already configured.
@@ -129,7 +129,11 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(status["uuid"])
             self._abort_if_unique_id_configured()
 
-    async def async_step_user(self, user_input=None):
+        return None
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input and CONF_HOST in user_input:
