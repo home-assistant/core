@@ -1,5 +1,6 @@
 """Common methods used across tests for TotalConnect."""
 
+from typing import Any
 from unittest.mock import patch
 
 from total_connect_client import ArmingState, ResultCode, ZoneStatus, ZoneType
@@ -11,6 +12,7 @@ from homeassistant.components.totalconnect.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -402,7 +404,9 @@ TOTALCONNECT_REQUEST = (
 )
 
 
-async def setup_platform(hass, platform, code_required=False):
+async def setup_platform(
+    hass: HomeAssistant, platform: Any, code_required: bool = False
+) -> MockConfigEntry:
     """Set up the TotalConnect platform."""
     # first set up a config entry and add it to hass
     if code_required:
