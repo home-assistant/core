@@ -10,6 +10,7 @@ import lcn_frontend as lcn_panel
 import voluptuous as vol
 
 from homeassistant.components import panel_custom, websocket_api
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.components.websocket_api import AsyncWebSocketCommandHandler
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -17,7 +18,6 @@ from homeassistant.const import (
     CONF_DEVICES,
     CONF_DOMAIN,
     CONF_ENTITIES,
-    CONF_ENTITY_ID,
     CONF_NAME,
     CONF_RESOURCE,
 )
@@ -77,10 +77,14 @@ async def register_panel_and_ws_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_delete_entity)
 
     if DOMAIN not in hass.data.get("frontend_panels", {}):
-        hass.http.register_static_path(
-            URL_BASE,
-            path=lcn_panel.locate_dir(),
-            cache_headers=lcn_panel.is_prod_build,
+        await hass.http.async_register_static_paths(
+            [
+                StaticPathConfig(
+                    URL_BASE,
+                    path=lcn_panel.locate_dir(),
+                    cache_headers=lcn_panel.is_prod_build,
+                )
+            ]
         )
         await panel_custom.async_register_panel(
             hass=hass,
@@ -153,19 +157,6 @@ async def websocket_get_entity_configs(
         ]
     else:
         entity_configs = config_entry.data[CONF_ENTITIES]
-
-    entity_registry = er.async_get(hass)
-    for entity_config in entity_configs:
-        entity_unique_id = generate_unique_id(
-            config_entry.entry_id,
-            entity_config[CONF_ADDRESS],
-            entity_config[CONF_RESOURCE],
-        )
-        entity_id = entity_registry.async_get_entity_id(
-            entity_config[CONF_DOMAIN], DOMAIN, entity_unique_id
-        )
-
-        entity_config[CONF_ENTITY_ID] = entity_id
 
     connection.send_result(msg["id"], entity_configs)
 
