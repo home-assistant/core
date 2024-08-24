@@ -36,7 +36,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
@@ -383,7 +383,9 @@ async def test_disarm_code_required(hass: HomeAssistant) -> None:
         # runtime user entered code is bad
         DATA_WITH_CODE = DATA.copy()
         DATA_WITH_CODE["code"] = "666"
-        with pytest.raises(HomeAssistantError, matches="User entered incorrect alarm code") as err:
+        with pytest.raises(
+            ServiceValidationError, matches="User entered incorrect alarm PIN code."
+        ):
             await hass.services.async_call(
                 ALARM_DOMAIN, SERVICE_ALARM_DISARM, DATA_WITH_CODE, blocking=True
             )
