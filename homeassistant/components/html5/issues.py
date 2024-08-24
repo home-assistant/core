@@ -12,6 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 SUCCESSFUL_IMPORT_TRANSLATION_KEY = "deprecated_yaml"
 FAILED_IMPORT_TRANSLATION_KEY = "deprecated_yaml_import_issue"
 
+
 @callback
 def async_create_html5_issue(hass: HomeAssistant, import_success: bool) -> None:
     """Create issues for HTML5."""
