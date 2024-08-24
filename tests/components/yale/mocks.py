@@ -80,7 +80,7 @@ def _timetoken() -> str:
 
 async def mock_yale_config_entry_and_client_credentials(
     hass: HomeAssistant,
-) -> ConfigEntry:
+) -> MockConfigEntry:
     """Mock yale config entry and client credentials."""
     entry = mock_config_entry()
     entry.add_to_hass(hass)
