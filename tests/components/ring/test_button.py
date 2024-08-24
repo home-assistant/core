@@ -28,11 +28,11 @@ async def test_button_opens_door(
     await setup_platform(hass, Platform.BUTTON)
 
     mock_intercom = mock_ring_devices.get_device(185036587)
-    mock_intercom.open_door.assert_not_called()
+    mock_intercom.async_open_door.assert_not_called()
 
     await hass.services.async_call(
         "button", "press", {"entity_id": "button.ingress_open_door"}, blocking=True
     )
 
     await hass.async_block_till_done(wait_background_tasks=True)
-    mock_intercom.open_door.assert_called_once()
+    mock_intercom.async_open_door.assert_called_once()
