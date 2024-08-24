@@ -19,6 +19,7 @@ from yalexs.activity import (
     ACTIVITY_ACTIONS_LOCK_OPERATION,
     SOURCE_LOCK_OPERATE,
     SOURCE_LOG,
+    Activity,
     BridgeOperationActivity,
     DoorbellDingActivity,
     DoorbellMotionActivity,
@@ -414,19 +415,21 @@ def _mock_yale_lock_data(
     }
 
 
-async def _mock_operative_yale_lock_detail(hass):
+async def _mock_operative_yale_lock_detail(hass: HomeAssistant) -> LockDetail:
     return await _mock_lock_from_fixture(hass, "get_lock.online.json")
 
 
-async def _mock_lock_with_offline_key(hass):
+async def _mock_lock_with_offline_key(hass: HomeAssistant) -> LockDetail:
     return await _mock_lock_from_fixture(hass, "get_lock.online_with_keys.json")
 
 
-async def _mock_inoperative_yale_lock_detail(hass):
+async def _mock_inoperative_yale_lock_detail(hass: HomeAssistant) -> LockDetail:
     return await _mock_lock_from_fixture(hass, "get_lock.offline.json")
 
 
-async def _mock_activities_from_fixture(hass, path):
+async def _mock_activities_from_fixture(
+    hass: HomeAssistant, path: str
+) -> list[Activity]:
     json_dict = await _load_json_fixture(hass, path)
     activities = []
     for activity_json in json_dict:
@@ -437,36 +440,38 @@ async def _mock_activities_from_fixture(hass, path):
     return activities
 
 
-async def _mock_lock_from_fixture(hass, path):
+async def _mock_lock_from_fixture(hass: HomeAssistant, path: str) -> LockDetail:
     json_dict = await _load_json_fixture(hass, path)
     return LockDetail(json_dict)
 
 
-async def _mock_doorbell_from_fixture(hass, path):
+async def _mock_doorbell_from_fixture(hass: HomeAssistant, path: str) -> LockDetail:
     json_dict = await _load_json_fixture(hass, path)
     return DoorbellDetail(json_dict)
 
 
-async def _load_json_fixture(hass, path):
+async def _load_json_fixture(hass: HomeAssistant, path: str) -> dict[str, Any]:
     fixture = await hass.async_add_executor_job(
         load_fixture, os.path.join("yale", path)
     )
     return json.loads(fixture)
 
 
-async def _mock_doorsense_enabled_yale_lock_detail(hass):
+async def _mock_doorsense_enabled_yale_lock_detail(hass: HomeAssistant) -> LockDetail:
     return await _mock_lock_from_fixture(hass, "get_lock.online_with_doorsense.json")
 
 
-async def _mock_doorsense_missing_yale_lock_detail(hass):
+async def _mock_doorsense_missing_yale_lock_detail(hass: HomeAssistant) -> LockDetail:
     return await _mock_lock_from_fixture(hass, "get_lock.online_missing_doorsense.json")
 
 
-async def _mock_lock_with_unlatch(hass):
+async def _mock_lock_with_unlatch(hass: HomeAssistant) -> LockDetail:
     return await _mock_lock_from_fixture(hass, "get_lock.online_with_unlatch.json")
 
 
-def _mock_lock_operation_activity(lock, action, offset):
+def _mock_lock_operation_activity(
+    lock: Lock, action: str, offset: float
+) -> LockOperationActivity:
     return LockOperationActivity(
         SOURCE_LOCK_OPERATE,
         {
@@ -478,7 +483,9 @@ def _mock_lock_operation_activity(lock, action, offset):
     )
 
 
-def _mock_door_operation_activity(lock, action, offset):
+def _mock_door_operation_activity(
+    lock: Lock, action: str, offset: float
+) -> DoorOperationActivity:
     return DoorOperationActivity(
         SOURCE_LOCK_OPERATE,
         {
@@ -490,7 +497,7 @@ def _mock_door_operation_activity(lock, action, offset):
     )
 
 
-def _activity_from_dict(activity_dict):
+def _activity_from_dict(activity_dict: dict[str, Any]) -> Activity | None:
     action = activity_dict.get("action")
 
     activity_dict["dateTime"] = time.time() * 1000
