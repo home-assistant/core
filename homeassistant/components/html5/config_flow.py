@@ -1,6 +1,7 @@
 """Config flow for the html5 component."""
 
 import binascii
+import logging
 from typing import cast
 
 from cryptography.hazmat.backends import default_backend
@@ -13,10 +14,11 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
 
 from .const import ATTR_VAPID_EMAIL, ATTR_VAPID_PRV_KEY, ATTR_VAPID_PUB_KEY, DOMAIN
 from .issues import async_create_html5_issue
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def vapid_generate_private_key():

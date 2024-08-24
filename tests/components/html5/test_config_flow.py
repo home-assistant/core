@@ -98,7 +98,6 @@ async def test_step_user_new_form(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("key", "value"),
     [
-        (ATTR_VAPID_EMAIL, "invalid"),
         (ATTR_VAPID_PRV_KEY, "invalid"),
     ],
 )
@@ -170,7 +169,6 @@ async def test_step_import_good(
 @pytest.mark.parametrize(
     ("key", "value"),
     [
-        (ATTR_VAPID_EMAIL, "invalid"),
         (ATTR_VAPID_PRV_KEY, "invalid"),
     ],
 )
