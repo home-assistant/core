@@ -1,40 +1,23 @@
 """Test emoncms sensor."""
 
-import copy
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.emoncms.const import CONF_ONLY_INCLUDE_FEEDID, DOMAIN
+from homeassistant.components.emoncms.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_PLATFORM, CONF_URL
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-from .conftest import EMONCMS_FAILURE, FLOW_RESULT, SENSOR_NAME, get_feed
+from .conftest import EMONCMS_FAILURE, get_feed
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-
-YAML = {
-    CONF_PLATFORM: "emoncms",
-    CONF_API_KEY: "my_api_key",
-    CONF_ID: 1,
-    CONF_URL: "http://1.1.1.1",
-    CONF_ONLY_INCLUDE_FEEDID: [1, 2],
-    "scan_interval": 30,
-}
-
-
-@pytest.fixture
-def emoncms_yaml_config() -> ConfigType:
-    """Mock emoncms configuration from yaml."""
-    return {"sensor": YAML}
 
 
 async def test_deprecated_yaml(
@@ -50,20 +33,6 @@ async def test_deprecated_yaml(
 
     assert issue_registry.async_get_issue(
         domain=HOMEASSISTANT_DOMAIN, issue_id=f"deprecated_yaml_{DOMAIN}"
-    )
-
-
-FLOW_RESULT_NO_FEED = copy.deepcopy(FLOW_RESULT)
-FLOW_RESULT_NO_FEED[CONF_ONLY_INCLUDE_FEEDID] = None
-
-
-@pytest.fixture
-def config_no_feed() -> MockConfigEntry:
-    """Mock emoncms config entry with no feed selected."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        title=SENSOR_NAME,
-        data=FLOW_RESULT_NO_FEED,
     )
 
 
@@ -98,21 +67,6 @@ async def test_no_feed_broadcast(
         entity_registry, config_entry.entry_id
     )
     assert entity_entries == []
-
-
-FLOW_RESULT_SINGLE_FEED = copy.deepcopy(FLOW_RESULT)
-FLOW_RESULT_SINGLE_FEED[CONF_ONLY_INCLUDE_FEEDID] = ["1"]
-
-
-@pytest.fixture
-def config_single_feed() -> MockConfigEntry:
-    """Mock emoncms config entry with a single feed exposed."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        title=SENSOR_NAME,
-        data=FLOW_RESULT_SINGLE_FEED,
-        entry_id="XXXXXXXX",
-    )
 
 
 async def test_coordinator_update(

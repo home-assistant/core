@@ -1,12 +1,14 @@
 """Fixtures for emoncms integration tests."""
 
 from collections.abc import AsyncGenerator, Generator
+import copy
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant.components.emoncms.const import CONF_ONLY_INCLUDE_FEEDID, DOMAIN
-from homeassistant.const import CONF_API_KEY, CONF_URL
+from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_PLATFORM, CONF_URL
+from homeassistant.helpers.typing import ConfigType
 
 from tests.common import MockConfigEntry
 
@@ -42,6 +44,20 @@ FLOW_RESULT = {
 
 SENSOR_NAME = "emoncms@1.1.1.1"
 
+YAML = {
+    CONF_PLATFORM: "emoncms",
+    CONF_API_KEY: "my_api_key",
+    CONF_ID: 1,
+    CONF_URL: "http://1.1.1.1",
+    CONF_ONLY_INCLUDE_FEEDID: [1],
+}
+
+
+@pytest.fixture
+def emoncms_yaml_config() -> ConfigType:
+    """Mock emoncms configuration from yaml."""
+    return {"sensor": YAML}
+
 
 @pytest.fixture
 def config_entry() -> MockConfigEntry:
@@ -50,6 +66,35 @@ def config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title=SENSOR_NAME,
         data=FLOW_RESULT,
+    )
+
+
+FLOW_RESULT_NO_FEED = copy.deepcopy(FLOW_RESULT)
+FLOW_RESULT_NO_FEED[CONF_ONLY_INCLUDE_FEEDID] = None
+
+
+@pytest.fixture
+def config_no_feed() -> MockConfigEntry:
+    """Mock emoncms config entry with no feed selected."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=SENSOR_NAME,
+        data=FLOW_RESULT_NO_FEED,
+    )
+
+
+FLOW_RESULT_SINGLE_FEED = copy.deepcopy(FLOW_RESULT)
+FLOW_RESULT_SINGLE_FEED[CONF_ONLY_INCLUDE_FEEDID] = ["1"]
+
+
+@pytest.fixture
+def config_single_feed() -> MockConfigEntry:
+    """Mock emoncms config entry with a single feed exposed."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=SENSOR_NAME,
+        data=FLOW_RESULT_SINGLE_FEED,
+        entry_id="XXXXXXXX",
     )
 
 

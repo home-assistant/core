@@ -1,48 +1,17 @@
 """Test emoncms config flow."""
 
-import copy
 from unittest.mock import AsyncMock
 
 from homeassistant.components.emoncms.const import CONF_ONLY_INCLUDE_FEEDID, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_PLATFORM, CONF_URL
+from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
-from .conftest import EMONCMS_FAILURE, FLOW_RESULT, SENSOR_NAME
+from .conftest import EMONCMS_FAILURE, FLOW_RESULT_SINGLE_FEED, SENSOR_NAME, YAML
 
 from tests.common import MockConfigEntry
-
-YAML = {
-    CONF_PLATFORM: "emoncms",
-    CONF_API_KEY: "my_api_key",
-    CONF_ID: 1,
-    CONF_URL: "http://1.1.1.1",
-}
-
-
-async def test_flow_import_all_feeds(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    emoncms_client: AsyncMock,
-) -> None:
-    """YAML import of all feeds - success test."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=YAML,
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == SENSOR_NAME
-    assert result["data"] == FLOW_RESULT
-
-
-YAML_INCL_FEED = copy.deepcopy(YAML)
-YAML_INCL_FEED[CONF_ONLY_INCLUDE_FEEDID] = [2]
-
-FLOW_RESULT_INCL_FEED = copy.deepcopy(FLOW_RESULT)
-FLOW_RESULT_INCL_FEED[CONF_ONLY_INCLUDE_FEEDID] = ["2"]
 
 
 async def test_flow_import_include_feeds(
@@ -54,11 +23,11 @@ async def test_flow_import_include_feeds(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
-        data=YAML_INCL_FEED,
+        data=YAML,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == SENSOR_NAME
-    assert result["data"] == FLOW_RESULT_INCL_FEED
+    assert result["data"] == FLOW_RESULT_SINGLE_FEED
 
 
 async def test_flow_import_failure(

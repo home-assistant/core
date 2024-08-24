@@ -109,12 +109,6 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
         include_only_feeds = None
         if import_info.get(CONF_ONLY_INCLUDE_FEEDID) is not None:
             include_only_feeds = list(map(str, import_info[CONF_ONLY_INCLUDE_FEEDID]))
-        if not include_only_feeds:
-            emoncms_result = await get_feed_list(self.hass, url, api_key)
-            if emoncms_result[CONF_SUCCESS]:
-                include_only_feeds = [
-                    feed[FEED_ID] for feed in emoncms_result[CONF_MESSAGE]
-                ]
         config = {
             CONF_API_KEY: api_key,
             CONF_ONLY_INCLUDE_FEEDID: include_only_feeds,
