@@ -50,7 +50,7 @@ async def test_yale_is_offline(hass: HomeAssistant) -> None:
     """Config entry state is SETUP_RETRY when yale is offline."""
 
     config_entry = await _create_yale_with_devices(
-        hass, authenticate_side_effect=YaleApiError("offline", TimeoutError())
+        hass, authenticate_side_effect=TimeoutError
     )
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
