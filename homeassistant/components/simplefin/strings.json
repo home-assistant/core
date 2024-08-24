@@ -8,7 +8,7 @@
         }
       },
       "reauth_confirm": {
-        "title": "SimpleFin - Re-authentication Required",
+        "title": "[%key:common::config_flow::title::reauth%]",
         "description": "Please enter either a new Claim Token or an Access URL.",
         "data": {
           "api_token": "Claim Token or Access URL"
