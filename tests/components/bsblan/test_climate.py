@@ -15,13 +15,13 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 class MockStateValue:
     """Mock class for a BSBLan State value."""
 
-    def __init__(self, value):
+    def __init__(self, value) -> None:
         """Initialize the mock class."""
         self.value = value
 
 
 @pytest.fixture
-def mock_state():
+def mock_state() -> MagicMock:
     """Create a mock BSBLan State object."""
     state = MagicMock(spec=State)
     state.current_temperature = MockStateValue("22.5")
@@ -31,7 +31,7 @@ def mock_state():
 
 
 @pytest.fixture
-def coordinator_mock(mock_state):
+def coordinator_mock(mock_state) -> MagicMock:
     """Create a mock BSBLan coordinator."""
     coordinator = AsyncMock()
     coordinator.data = BSBLanCoordinatorData(state=mock_state())
@@ -39,7 +39,7 @@ def coordinator_mock(mock_state):
 
 
 @pytest.fixture
-def mock_bsblan_data(coordinator_mock):
+def mock_bsblan_data(coordinator_mock) -> MagicMock:
     """Create a mock BSBLanData object."""
 
     # Create a mock BSBLanData object
@@ -57,30 +57,30 @@ def mock_bsblan_data(coordinator_mock):
 
 
 @pytest.fixture
-def climate(mock_bsblan_data):
+def climate(mock_bsblan_data) -> BSBLANClimate:
     """Create a BSBLANClimate object."""
     return BSBLANClimate(mock_bsblan_data)
 
 
-async def test_current_temperature_missing(climate, coordinator_mock):
+async def test_current_temperature_missing(climate, coordinator_mock) -> None:
     """Test the current temperature property when the value is missing."""
     coordinator_mock.data.state.current_temperature.value = "---"
     assert climate.current_temperature is None
 
 
-async def test_current_temperature_valid(climate, coordinator_mock):
+async def test_current_temperature_valid(climate, coordinator_mock) -> None:
     """Test the current temperature property when the value is valid."""
     coordinator_mock.data.state.current_temperature.value = "22.5"
     assert climate.current_temperature == 22.5
 
 
-async def test_target_temperature(climate, coordinator_mock):
+async def test_target_temperature(climate, coordinator_mock) -> None:
     """Test the target temperature property."""
     coordinator_mock.data.state.target_temperature.value = "21.0"
     assert climate.target_temperature == 21.0
 
 
-async def test_hvac_mode(climate, coordinator_mock):
+async def test_hvac_mode(climate, coordinator_mock) -> None:
     """Test the hvac mode property."""
     coordinator_mock.data.state.hvac_mode.value = HVACMode.HEAT
     assert climate.hvac_mode == HVACMode.HEAT
@@ -89,7 +89,7 @@ async def test_hvac_mode(climate, coordinator_mock):
     assert climate.hvac_mode == HVACMode.AUTO
 
 
-async def test_preset_mode(climate, coordinator_mock):
+async def test_preset_mode(climate, coordinator_mock) -> None:
     """Test the preset mode property."""
     coordinator_mock.data.state.hvac_mode.value = HVACMode.AUTO
     assert climate.preset_mode == PRESET_NONE
@@ -98,14 +98,14 @@ async def test_preset_mode(climate, coordinator_mock):
     assert climate.preset_mode == PRESET_ECO
 
 
-async def test_async_set_hvac_mode(climate):
+async def test_async_set_hvac_mode(climate) -> None:
     """Test setting the hvac mode."""
     climate.async_set_data = AsyncMock()
     await climate.async_set_hvac_mode(HVACMode.HEAT)
     climate.async_set_data.assert_called_once_with(hvac_mode=HVACMode.HEAT)
 
 
-async def test_async_set_preset_mode_auto(climate, coordinator_mock):
+async def test_async_set_preset_mode_auto(climate, coordinator_mock) -> None:
     """Test setting the preset mode when the hvac mode is auto."""
     climate.async_set_data = AsyncMock()
     coordinator_mock.data.state.hvac_mode.value = HVACMode.AUTO
@@ -113,7 +113,7 @@ async def test_async_set_preset_mode_auto(climate, coordinator_mock):
     climate.async_set_data.assert_called_once_with(preset_mode=PRESET_ECO)
 
 
-async def test_async_set_preset_mode_not_auto(climate, coordinator_mock):
+async def test_async_set_preset_mode_not_auto(climate, coordinator_mock) -> None:
     """Test setting the preset mode when the hvac mode is not auto."""
     climate.async_set_data = AsyncMock()
     coordinator_mock.data.state.hvac_mode.value = HVACMode.HEAT
@@ -121,14 +121,14 @@ async def test_async_set_preset_mode_not_auto(climate, coordinator_mock):
         await climate.async_set_preset_mode(PRESET_ECO)
 
 
-async def test_async_set_temperature(climate):
+async def test_async_set_temperature(climate) -> None:
     """Test setting the temperature."""
     climate.async_set_data = AsyncMock()
     await climate.async_set_temperature(temperature=22.0)
     climate.async_set_data.assert_called_once_with(temperature=22.0)
 
 
-async def test_async_set_data_temperature(climate):
+async def test_async_set_data_temperature(climate) -> None:
     """Test setting the temperature."""
     climate.coordinator.client.thermostat = AsyncMock()
     climate.coordinator.async_request_refresh = AsyncMock()
@@ -139,7 +139,7 @@ async def test_async_set_data_temperature(climate):
     climate.coordinator.async_request_refresh.assert_called_once()
 
 
-async def test_async_set_data_hvac_mode(climate):
+async def test_async_set_data_hvac_mode(climate) -> None:
     """Test setting the hvac mode."""
     climate.coordinator.client.thermostat = AsyncMock()
     climate.coordinator.async_request_refresh = AsyncMock()
@@ -150,7 +150,7 @@ async def test_async_set_data_hvac_mode(climate):
     climate.coordinator.async_request_refresh.assert_called_once()
 
 
-async def test_async_set_data_preset_mode(climate):
+async def test_async_set_data_preset_mode(climate) -> None:
     """Test setting the preset mode."""
     climate.coordinator.client.thermostat = AsyncMock()
     climate.coordinator.async_request_refresh = AsyncMock()
@@ -159,7 +159,7 @@ async def test_async_set_data_preset_mode(climate):
     climate.coordinator.async_request_refresh.assert_called_once()
 
 
-async def test_async_set_data_preset_mode_none(climate):
+async def test_async_set_data_preset_mode_none(climate) -> None:
     """Test setting the preset mode to none."""
     climate.coordinator.client.thermostat = AsyncMock()
     climate.coordinator.async_request_refresh = AsyncMock()
@@ -170,14 +170,14 @@ async def test_async_set_data_preset_mode_none(climate):
     climate.coordinator.async_request_refresh.assert_called_once()
 
 
-async def test_async_set_data_error(climate):
+async def test_async_set_data_error(climate) -> None:
     """Test setting the data with an error."""
     climate.coordinator.client.thermostat = AsyncMock(side_effect=BSBLANError)
     with pytest.raises(HomeAssistantError):
         await climate.async_set_data(temperature=22.0)
 
 
-async def test_temperature_unit(climate, mock_bsblan_data):
+async def test_temperature_unit(climate, mock_bsblan_data) -> None:
     """Test the temperature unit property."""
     assert climate.temperature_unit == UnitOfTemperature.CELSIUS
 
