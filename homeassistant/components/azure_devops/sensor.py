@@ -130,7 +130,6 @@ BASE_WORK_ITEM_SENSOR_DESCRIPTIONS: tuple[
     AzureDevOpsWorkItemSensorEntityDescription(
         key="work_item_count",
         translation_key="work_item_count",
-        icon="mdi:ticket",
         value_fn=lambda work_item_state: len(work_item_state.work_items),
     ),
 )
