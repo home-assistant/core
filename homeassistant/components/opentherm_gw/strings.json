@@ -16,6 +16,17 @@
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
     }
   },
+  "device": {
+    "boiler_device": {
+      "name": "OpenTherm Boiler"
+    },
+    "gateway_device": {
+      "name": "OpenTherm Gateway"
+    },
+    "thermostat_device": {
+      "name": "OpenTherm Thermostat"
+    }
+  },
   "options": {
     "step": {
       "init": {

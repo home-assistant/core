@@ -1,5 +1,10 @@
 """Constants for the opentherm_gw integration."""
 
+from enum import StrEnum
+from typing import Final
+
+from pyotgw import vars as gw_vars
+
 ATTR_GW_ID = "gateway_id"
 ATTR_LEVEL = "level"
 ATTR_DHW_OVRD = "dhw_override"
@@ -19,6 +24,10 @@ CONNECTION_TIMEOUT = 10
 DATA_GATEWAYS = "gateways"
 DATA_OPENTHERM_GW = "opentherm_gw"
 
+DEVICE_IDENT_BOILER: Final = "boiler"
+DEVICE_IDENT_GATEWAY: Final = "gateway"
+DEVICE_IDENT_THERMOSTAT: Final = "thermostat"
+
 DOMAIN = "opentherm_gw"
 
 SERVICE_RESET_GATEWAY = "reset_gateway"
@@ -33,3 +42,11 @@ SERVICE_SET_MAX_MOD = "set_max_modulation"
 SERVICE_SET_OAT = "set_outside_temperature"
 SERVICE_SET_SB_TEMP = "set_setback_temperature"
 SERVICE_SEND_TRANSP_CMD = "send_transparent_command"
+
+
+class OpenThermDataSource(StrEnum):
+    """List valid OpenTherm data sources."""
+
+    BOILER = gw_vars.BOILER
+    GATEWAY = gw_vars.OTGW
+    THERMOSTAT = gw_vars.THERMOSTAT
