@@ -45,14 +45,18 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
 
+USER_ID = "a76c25e5-49aa-4c14-cd0c-48a6931e2081"
 
-def _mock_get_config(brand: Brand = Brand.YALE_GLOBAL):
+
+def _mock_get_config(
+    brand: Brand = Brand.YALE_GLOBAL, jwt: str | None = None
+) -> dict[str, Any]:
     """Return a default yale config."""
     return {
         DOMAIN: {
             "auth_implementation": "yale",
             "token": {
-                "access_token": "access_token",
+                "access_token": jwt or "access_token",
                 "expires_in": 1,
                 "refresh_token": "refresh_token",
                 "expires_at": time.time() + 3600,
@@ -74,15 +78,27 @@ def _timetoken() -> str:
 
 
 async def mock_yale_config_entry_and_client_credentials(
-    hass: HomeAssistant, brand: Brand
+    hass: HomeAssistant,
 ) -> ConfigEntry:
     """Mock yale config entry and client credentials."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=_mock_get_config(brand)[DOMAIN],
-        options={},
-    )
+    entry = mock_config_entry()
     entry.add_to_hass(hass)
+    await mock_client_credentials(hass)
+    return entry
+
+
+def mock_config_entry(jwt: str | None = None) -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data=_mock_get_config(jwt=jwt)[DOMAIN],
+        options={},
+        unique_id=USER_ID,
+    )
+
+
+async def mock_client_credentials(hass: HomeAssistant) -> ClientCredential:
+    """Mock client credentials."""
     assert await async_setup_component(hass, "application_credentials", {})
     await async_import_client_credential(
         hass,
@@ -90,7 +106,6 @@ async def mock_yale_config_entry_and_client_credentials(
         ClientCredential("1", "2"),
         DOMAIN,
     )
-    return entry
 
 
 @contextmanager
@@ -112,11 +127,10 @@ async def _mock_setup_yale(
     hass: HomeAssistant,
     api_instance: ApiAsync,
     pubnub_mock: AugustPubNub,
-    brand: Brand,
     authenticate_side_effect: MagicMock,
 ) -> ConfigEntry:
     """Set up yale integration."""
-    entry = await mock_yale_config_entry_and_client_credentials(hass, brand)
+    entry = await mock_yale_config_entry_and_client_credentials(hass)
     with patch_yale_setup() as patched_setup:
         api_mock, authenticate_mock, pubnub_mock_ = patched_setup
         authenticate_mock.side_effect = authenticate_side_effect
@@ -171,7 +185,6 @@ async def _create_yale_api_with_devices(
         hass,
         api_instance,
         pubnub,
-        brand=brand,
         authenticate_side_effect=authenticate_side_effect,
     )
     if any(device for device in devices if isinstance(device, LockDetail)):
