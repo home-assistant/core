@@ -32,7 +32,7 @@ class YaleGateway(Gateway):
 
     async def async_refresh_access_token_if_needed(self) -> None:
         """Refresh the access token if needed."""
-        await self.async_get_access_token()
+        await self._oauth_session.async_ensure_token_valid()
 
     async def async_authenticate(self) -> Authentication:
         """Authenticate with the details provided to setup."""
