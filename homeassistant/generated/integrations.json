@@ -6303,6 +6303,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "touchlinesl": {
+      "name": "Roth Touchline SL",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "tplink": {
       "name": "TP-Link",
       "integrations": {
