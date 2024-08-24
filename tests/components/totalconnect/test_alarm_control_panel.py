@@ -383,12 +383,10 @@ async def test_disarm_code_required(hass: HomeAssistant) -> None:
         # runtime user entered code is bad
         DATA_WITH_CODE = DATA.copy()
         DATA_WITH_CODE["code"] = "666"
-        with pytest.raises(HomeAssistantError) as err:
+        with pytest.raises(HomeAssistantError, matches="User entered incorrect alarm code") as err:
             await hass.services.async_call(
                 ALARM_DOMAIN, SERVICE_ALARM_DISARM, DATA_WITH_CODE, blocking=True
             )
-        await hass.async_block_till_done()
-        assert f"{err.value}" == "User entered incorrect alarm code."
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_AWAY
         # code check means the call to total_connect never happens
         assert mock_request.call_count == 1
