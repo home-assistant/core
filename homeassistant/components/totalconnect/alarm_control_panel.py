@@ -23,7 +23,7 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -168,7 +168,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
     def _disarm(self, code: str | None = None) -> None:
         """Disarm synchronous."""
         if self._attr_code_arm_required and self._location.usercode != code:
-            raise HomeAssistantError("User entered incorrect alarm code.")
+            raise ServiceValidationError("User entered incorrect alarm code.")
         ArmingHelper(self._partition).disarm()
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
