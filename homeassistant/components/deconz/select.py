@@ -20,17 +20,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .deconz_device import DeconzDevice
 from .hub import DeconzHub
 
-FAN_MODE_TO_DECONZ = {
-    "Off": AirPurifierFanMode.OFF,
-    "Auto": AirPurifierFanMode.AUTO,
-    "Speed 1": AirPurifierFanMode.SPEED_1,
-    "Speed 2": AirPurifierFanMode.SPEED_2,
-    "Speed 3": AirPurifierFanMode.SPEED_3,
-    "Speed 4": AirPurifierFanMode.SPEED_4,
-    "Speed 5": AirPurifierFanMode.SPEED_5,
-}
-DECONZ_TO_FAN_MODE = {value: key for key, value in FAN_MODE_TO_DECONZ.items()}
-
 SENSITIVITY_TO_DECONZ = {
     "High": PresenceConfigSensitivity.HIGH.value,
     "Medium": PresenceConfigSensitivity.MEDIUM.value,
