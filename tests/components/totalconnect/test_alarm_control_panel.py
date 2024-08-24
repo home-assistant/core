@@ -61,6 +61,7 @@ from .common import (
     RESPONSE_UNKNOWN,
     RESPONSE_USER_CODE_INVALID,
     TOTALCONNECT_REQUEST,
+    USERCODES,
     setup_platform,
 )
 
@@ -373,7 +374,7 @@ async def test_disarm_failure(hass: HomeAssistant) -> None:
 async def test_disarm_code_required(hass: HomeAssistant) -> None:
     """Test disarm with code."""
     responses = [RESPONSE_ARMED_AWAY, RESPONSE_DISARM_SUCCESS, RESPONSE_DISARMED]
-    entry = await setup_platform(hass, ALARM_DOMAIN, code_required=True)
+    await setup_platform(hass, ALARM_DOMAIN, code_required=True)
     with patch(TOTALCONNECT_REQUEST, side_effect=responses) as mock_request:
         await async_update_entity(hass, ENTITY_ID)
         await hass.async_block_till_done()
@@ -394,9 +395,7 @@ async def test_disarm_code_required(hass: HomeAssistant) -> None:
         assert mock_request.call_count == 1
 
         # runtime user entered code that is in config
-        DATA_WITH_CODE["code"] = (
-            hass.data[DOMAIN][entry.entry_id].client.locations[LOCATION_ID].usercode
-        )
+        DATA_WITH_CODE["code"] = USERCODES[LOCATION_ID]
         await hass.services.async_call(
             ALARM_DOMAIN, SERVICE_ALARM_DISARM, DATA_WITH_CODE, blocking=True
         )
