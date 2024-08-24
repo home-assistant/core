@@ -19,11 +19,7 @@ class YaleConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=
 
     VERSION = 1
     DOMAIN = DOMAIN
-
-    def __init__(self) -> None:
-        """Instantiate config flow."""
-        self.reauth_entry: ConfigEntry | None = None
-        super().__init__()
+    reauth_entry: ConfigEntry | None = None
 
     @property
     def logger(self) -> logging.Logger:
