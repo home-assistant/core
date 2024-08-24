@@ -1,11 +1,10 @@
 """The tests for the yale platform."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from aiohttp import ClientResponseError
 import pytest
-from yalexs.authenticator_common import AuthenticationState
-from yalexs.exceptions import AugustApiAIOHTTPError
+from yalexs.exceptions import InvalidAuth, YaleApiError
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.yale.const import DOMAIN
@@ -27,81 +26,49 @@ from .mocks import (
     _create_yale_with_devices,
     _mock_doorsense_enabled_yale_lock_detail,
     _mock_doorsense_missing_yale_lock_detail,
-    _mock_get_config,
     _mock_inoperative_yale_lock_detail,
     _mock_lock_with_offline_key,
     _mock_operative_yale_lock_detail,
-    _mock_yale_authentication,
 )
 
-from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
 
 async def test_yale_api_is_failing(hass: HomeAssistant) -> None:
     """Config entry state is SETUP_RETRY when yale api is failing."""
 
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=_mock_get_config()[DOMAIN],
-        title="Yale yale",
+    config_entry = await _create_yale_with_devices(
+        hass,
+        authenticate_side_effect=YaleApiError(
+            "offline", ClientResponseError(None, None, status=500)
+        ),
     )
-    config_entry.add_to_hass(hass)
-
-    with patch(
-        "yalexs.authenticator_async.AuthenticatorAsync.async_authenticate",
-        side_effect=ClientResponseError(None, None, status=500),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_yale_is_offline(hass: HomeAssistant) -> None:
     """Config entry state is SETUP_RETRY when yale is offline."""
 
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=_mock_get_config()[DOMAIN],
-        title="Yale yale",
+    config_entry = await _create_yale_with_devices(
+        hass, authenticate_side_effect=TimeoutError
     )
-    config_entry.add_to_hass(hass)
-
-    with patch(
-        "yalexs.authenticator_async.AuthenticatorAsync.async_authenticate",
-        side_effect=TimeoutError,
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_yale_late_auth_failure(hass: HomeAssistant) -> None:
     """Test we can detect a late auth failure."""
-    aiohttp_client_response_exception = ClientResponseError(None, None, status=401)
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=_mock_get_config()[DOMAIN],
-        title="Yale yale",
-    )
-    config_entry.add_to_hass(hass)
-
-    with patch(
-        "yalexs.authenticator_async.AuthenticatorAsync.async_authenticate",
-        side_effect=AugustApiAIOHTTPError(
-            "This should bubble up as its user consumable",
-            aiohttp_client_response_exception,
+    config_entry = await _create_yale_with_devices(
+        hass,
+        authenticate_side_effect=InvalidAuth(
+            "authfailed", ClientResponseError(None, None, status=401)
         ),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    )
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
     flows = hass.config_entries.flow.async_progress()
 
-    assert flows[0]["step_id"] == "reauth_validate"
+    assert flows[0]["step_id"] == "pick_implementation"
 
 
 async def test_unlock_throws_yale_api_http_error(hass: HomeAssistant) -> None:
@@ -110,7 +77,7 @@ async def test_unlock_throws_yale_api_http_error(hass: HomeAssistant) -> None:
     aiohttp_client_response_exception = ClientResponseError(None, None, status=400)
 
     def _unlock_return_activities_side_effect(access_token, device_id):
-        raise AugustApiAIOHTTPError(
+        raise YaleApiError(
             "This should bubble up as its user consumable",
             aiohttp_client_response_exception,
         )
@@ -140,7 +107,7 @@ async def test_lock_throws_yale_api_http_error(hass: HomeAssistant) -> None:
     aiohttp_client_response_exception = ClientResponseError(None, None, status=400)
 
     def _lock_return_activities_side_effect(access_token, device_id):
-        raise AugustApiAIOHTTPError(
+        raise YaleApiError(
             "This should bubble up as its user consumable",
             aiohttp_client_response_exception,
         )
@@ -203,157 +170,6 @@ async def test_lock_has_doorsense(hass: HomeAssistant) -> None:
         "binary_sensor.missing_with_doorsense_name_door"
     )
     assert binary_sensor_missing_doorsense_id_name_open is None
-
-
-async def test_auth_fails(hass: HomeAssistant) -> None:
-    """Config entry state is SETUP_ERROR when auth fails."""
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=_mock_get_config()[DOMAIN],
-        title="Yale yale",
-    )
-    config_entry.add_to_hass(hass)
-    assert hass.config_entries.flow.async_progress() == []
-
-    with patch(
-        "yalexs.authenticator_async.AuthenticatorAsync.async_authenticate",
-        side_effect=ClientResponseError(None, None, status=401),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.SETUP_ERROR
-
-    flows = hass.config_entries.flow.async_progress()
-
-    assert flows[0]["step_id"] == "reauth_validate"
-
-
-async def test_bad_password(hass: HomeAssistant) -> None:
-    """Config entry state is SETUP_ERROR when the password has been changed."""
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=_mock_get_config()[DOMAIN],
-        title="Yale yale",
-    )
-    config_entry.add_to_hass(hass)
-    assert hass.config_entries.flow.async_progress() == []
-
-    with patch(
-        "yalexs.authenticator_async.AuthenticatorAsync.async_authenticate",
-        return_value=_mock_yale_authentication(
-            "original_token", 1234, AuthenticationState.BAD_PASSWORD
-        ),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.SETUP_ERROR
-
-    flows = hass.config_entries.flow.async_progress()
-
-    assert flows[0]["step_id"] == "reauth_validate"
-
-
-async def test_http_failure(hass: HomeAssistant) -> None:
-    """Config entry state is SETUP_RETRY when yale is offline."""
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=_mock_get_config()[DOMAIN],
-        title="Yale yale",
-    )
-    config_entry.add_to_hass(hass)
-    assert hass.config_entries.flow.async_progress() == []
-
-    with patch(
-        "yalexs.authenticator_async.AuthenticatorAsync.async_authenticate",
-        side_effect=ClientResponseError(None, None, status=500),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
-
-    assert hass.config_entries.flow.async_progress() == []
-
-
-async def test_unknown_auth_state(hass: HomeAssistant) -> None:
-    """Config entry state is SETUP_ERROR when yale is in an unknown auth state."""
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=_mock_get_config()[DOMAIN],
-        title="Yale yale",
-    )
-    config_entry.add_to_hass(hass)
-    assert hass.config_entries.flow.async_progress() == []
-
-    with patch(
-        "yalexs.authenticator_async.AuthenticatorAsync.async_authenticate",
-        return_value=_mock_yale_authentication("original_token", 1234, None),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.SETUP_ERROR
-
-    flows = hass.config_entries.flow.async_progress()
-
-    assert flows[0]["step_id"] == "reauth_validate"
-
-
-async def test_requires_validation_state(hass: HomeAssistant) -> None:
-    """Config entry state is SETUP_ERROR when yale requires validation."""
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=_mock_get_config()[DOMAIN],
-        title="Yale yale",
-    )
-    config_entry.add_to_hass(hass)
-    assert hass.config_entries.flow.async_progress() == []
-
-    with patch(
-        "yalexs.authenticator_async.AuthenticatorAsync.async_authenticate",
-        return_value=_mock_yale_authentication(
-            "original_token", 1234, AuthenticationState.REQUIRES_VALIDATION
-        ),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.SETUP_ERROR
-
-    assert len(hass.config_entries.flow.async_progress()) == 1
-    assert hass.config_entries.flow.async_progress()[0]["context"]["source"] == "reauth"
-
-
-async def test_unknown_auth_http_401(hass: HomeAssistant) -> None:
-    """Config entry state is SETUP_ERROR when yale gets an http."""
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=_mock_get_config()[DOMAIN],
-        title="Yale yale",
-    )
-    config_entry.add_to_hass(hass)
-    assert hass.config_entries.flow.async_progress() == []
-
-    with patch(
-        "yalexs.authenticator_async.AuthenticatorAsync.async_authenticate",
-        return_value=_mock_yale_authentication("original_token", 1234, None),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.SETUP_ERROR
-
-    flows = hass.config_entries.flow.async_progress()
-
-    assert flows[0]["step_id"] == "reauth_validate"
 
 
 async def test_load_unload(hass: HomeAssistant) -> None:
