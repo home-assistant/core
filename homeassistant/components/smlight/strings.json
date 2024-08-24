@@ -56,6 +56,18 @@
         "name": "Wi-Fi"
       }
     },
+    "event": {
+      "event": {
+        "name": "Event",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "core": "Core reboot"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "zigbee_temperature": {
         "name": "Zigbee chip temp"

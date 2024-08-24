@@ -16,6 +16,7 @@ from .coordinator import SmDataUpdateCoordinator, SmFirmwareUpdateCoordinator
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.EVENT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
