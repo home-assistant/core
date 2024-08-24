@@ -177,13 +177,13 @@ def create_climate_entity(
             ):
                 support_flags |= ClimateEntityFeature.SWING_MODE
                 supported_swing_modes = []
-                if capabilities[mode].get(TADO_SWING_SETTING):
+                if TADO_SWING_SETTING in capabilities[mode]:
                     supported_swing_modes.append(
                         TADO_TO_HA_SWING_MODE_MAP[TADO_SWING_ON]
                     )
-                if capabilities[mode].get(TADO_VERTICAL_SWING_SETTING):
+                if TADO_VERTICAL_SWING_SETTING in capabilities[mode]:
                     supported_swing_modes.append(SWING_VERTICAL)
-                if capabilities[mode].get(TADO_HORIZONTAL_SWING_SETTING):
+                if TADO_HORIZONTAL_SWING_SETTING in capabilities[mode]:
                     supported_swing_modes.append(SWING_HORIZONTAL)
                 if (
                     SWING_HORIZONTAL in supported_swing_modes
@@ -192,9 +192,10 @@ def create_climate_entity(
                     supported_swing_modes.append(SWING_BOTH)
                 supported_swing_modes.append(TADO_TO_HA_SWING_MODE_MAP[TADO_SWING_OFF])
 
-            if not capabilities[mode].get(TADO_FANSPEED_SETTING) and not capabilities[
-                mode
-            ].get(TADO_FANLEVEL_SETTING):
+            if (
+                TADO_FANSPEED_SETTING not in capabilities[mode]
+                and TADO_FANLEVEL_SETTING not in capabilities[mode]
+            ):
                 continue
 
             support_flags |= ClimateEntityFeature.FAN_MODE
@@ -202,7 +203,7 @@ def create_climate_entity(
             if supported_fan_modes:
                 continue
 
-            if capabilities[mode].get(TADO_FANSPEED_SETTING):
+            if TADO_FANSPEED_SETTING in capabilities[mode]:
                 supported_fan_modes = generate_supported_fanmodes(
                     TADO_TO_HA_FAN_MODE_MAP_LEGACY,
                     capabilities[mode][TADO_FANSPEED_SETTING],
