@@ -1083,8 +1083,10 @@ async def test_play_media_announce(
 
     # Test receiving a websocket exception
     sonos_websocket.play_clip.reset_mock()
-    sonos_websocket.play_clip.side_effect = SonosWebsocketError("The error message")
-    with pytest.raises(HomeAssistantError) as hae:
+    sonos_websocket.play_clip.side_effect = SonosWebsocketError("Error Message")
+    with pytest.raises(
+        HomeAssistantError, match="Error when calling Sonos websocket: Error Message"
+    ):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -1098,13 +1100,15 @@ async def test_play_media_announce(
         )
     assert sonos_websocket.play_clip.call_count == 1
     sonos_websocket.play_clip.assert_called_with(content_id, volume=None)
-    assert "The error message" in str(hae.value)
 
     # Test receiving a non success result
     sonos_websocket.play_clip.reset_mock()
     sonos_websocket.play_clip.side_effect = None
-    sonos_websocket.play_clip.return_value = [{"success": 0}, {}]
-    with pytest.raises(HomeAssistantError) as hae:
+    retval = {"success": 0}
+    sonos_websocket.play_clip.return_value = [retval, {}]
+    with pytest.raises(
+        HomeAssistantError, match=f"Announcing clip {content_id} failed {retval}"
+    ):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -1117,5 +1121,3 @@ async def test_play_media_announce(
             blocking=True,
         )
     assert sonos_websocket.play_clip.call_count == 1
-    assert "'success': 0" in str(hae.value)
-    assert content_id in str(hae.value)
