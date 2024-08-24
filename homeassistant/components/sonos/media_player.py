@@ -542,8 +542,13 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 raise HomeAssistantError(
                     f"Error when calling Sonos websocket: {exc}"
                 ) from exc
-            if response["success"]:
+            if response.get("success"):
                 return
+            raise HomeAssistantError(
+                translation_domain=SONOS_DOMAIN,
+                translation_key="websocket_error",
+                translation_placeholders={"media_id": media_id, "response": response},
+            )
 
         if spotify.is_spotify_media_type(media_type):
             media_type = spotify.resolve_spotify_media_type(media_type)
