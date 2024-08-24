@@ -36,13 +36,8 @@ class YaleGateway(Gateway):
 
     async def async_authenticate(self) -> Authentication:
         """Authenticate with the details provided to setup."""
-        self._async_setup_authentication()
-
-    def _async_setup_authentication(self) -> Authentication:
-        """Set up the authentication."""
-        token = self._oauth_session.token
-        access_token = token["access_token"]
+        await self._oauth_session.async_ensure_token_valid()
         self.authentication = Authentication(
-            AuthenticationState.AUTHENTICATED, None, access_token, None
+            AuthenticationState.AUTHENTICATED, None, None, None
         )
         return self.authentication
