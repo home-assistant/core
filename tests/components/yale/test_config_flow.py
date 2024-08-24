@@ -1,6 +1,7 @@
 """Test the yale config flow."""
 
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -23,6 +24,15 @@ from tests.typing import ClientSessionGenerator
 CLIENT_ID = "1"
 
 
+@pytest.fixture
+def mock_setup_entry() -> Generator[Mock, None, None]:
+    """Patch setup entry."""
+    with patch(
+        "homeassistant.components.yale.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
 @pytest.mark.usefixtures("client_credentials")
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
@@ -30,6 +40,7 @@ async def test_full_flow(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     jwt: str,
+    mock_setup_entry: Mock,
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -67,14 +78,10 @@ async def test_full_flow(
         },
     )
 
-    with patch(
-        "homeassistant.components.yale.async_setup_entry",
-        return_value=True,
-    ) as mock_setup:
-        await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.unique_id == USER_ID
 
@@ -87,6 +94,7 @@ async def test_reauth(
     aioclient_mock: AiohttpClientMocker,
     mock_config_entry: MockConfigEntry,
     reauth_jwt: str,
+    mock_setup_entry: Mock,
 ) -> None:
     """Test the reauthentication case updates the existing config entry."""
 
@@ -123,12 +131,9 @@ async def test_reauth(
             "expires_at": 1697753347,
         },
     )
-    with patch(
-        "homeassistant.components.yale.async_setup_entry",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
@@ -150,6 +155,7 @@ async def test_reauth_wrong_account(
     mock_config_entry: MockConfigEntry,
     reauth_jwt_wrong_account: str,
     jwt: str,
+    mock_setup_entry: Mock,
 ) -> None:
     """Test the reauthentication aborts, if user tries to reauthenticate with another account."""
     assert mock_config_entry.data["token"]["access_token"] == jwt
@@ -187,12 +193,8 @@ async def test_reauth_wrong_account(
         },
     )
 
-    with patch(
-        "homeassistant.components.yale.async_setup_entry",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
