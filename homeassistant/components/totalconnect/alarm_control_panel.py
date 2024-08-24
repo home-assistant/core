@@ -78,7 +78,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
         coordinator: TotalConnectDataUpdateCoordinator,
         location: TotalConnectLocation,
         partition_id: int,
-        require_code: bool = False,
+        require_code: bool,
     ) -> None:
         """Initialize the TotalConnect status."""
         super().__init__(coordinator, location)
