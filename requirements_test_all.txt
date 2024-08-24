@@ -36,7 +36,7 @@ Mastodon.py==1.8.1
 Pillow==10.4.0
 
 # homeassistant.components.plex
-PlexAPI==4.15.14
+PlexAPI==4.15.16
 
 # homeassistant.components.progettihwsw
 ProgettiHWSW==0.1.3
