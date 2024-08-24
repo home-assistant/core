@@ -78,13 +78,12 @@ def _timetoken() -> str:
     return str(time.time_ns())[:-2]
 
 
-async def mock_yale_config_entry_and_client_credentials(
+async def mock_yale_config_entry(
     hass: HomeAssistant,
 ) -> MockConfigEntry:
     """Mock yale config entry and client credentials."""
     entry = mock_config_entry()
     entry.add_to_hass(hass)
-    await mock_client_credentials(hass)
     return entry
 
 
@@ -131,7 +130,7 @@ async def _mock_setup_yale(
     authenticate_side_effect: MagicMock,
 ) -> ConfigEntry:
     """Set up yale integration."""
-    entry = await mock_yale_config_entry_and_client_credentials(hass)
+    entry = await mock_yale_config_entry(hass)
     with patch_yale_setup() as patched_setup:
         api_mock, authenticate_mock, pubnub_mock_ = patched_setup
         authenticate_mock.side_effect = authenticate_side_effect

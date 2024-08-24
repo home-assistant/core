@@ -53,7 +53,7 @@ def load_reauth_jwt_wrong_account_fixture() -> str:
     return load_fixture("reauth_jwt_wrong_account", DOMAIN).strip("\n")
 
 
-@pytest.fixture(name="client_credentials")
+@pytest.fixture(name="client_credentials", autouse=True)
 async def mock_client_credentials_fixture(hass: HomeAssistant) -> None:
     """Mock client credentials."""
     await mock_client_credentials(hass)
