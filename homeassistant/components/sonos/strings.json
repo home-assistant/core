@@ -181,7 +181,7 @@
     "invalid_sonos_playlist": {
       "message": "Could not find Sonos playlist: {name}"
     },
-    "websocket_error": {
+    "announce_media_error": {
       "message": "Announcing clip {media_id} failed {response}"
     }
   }

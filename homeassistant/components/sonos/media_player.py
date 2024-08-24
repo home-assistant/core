@@ -546,7 +546,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 return
             raise HomeAssistantError(
                 translation_domain=SONOS_DOMAIN,
-                translation_key="websocket_error",
+                translation_key="announce_media_error",
                 translation_placeholders={"media_id": media_id, "response": response},
             )
 
