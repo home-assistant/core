@@ -64,6 +64,7 @@ from .utils import (
     get_host,
     get_http_port,
     get_rpc_device_wakeup_period,
+    get_rpc_ws_url,
     update_device_fw_info,
 )
 
@@ -645,6 +646,14 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         """
         if not self.sleep_period:
             await self._async_connect_ble_scanner()
+        else:
+            await self._async_setup_outbound_websocket()
+
+    async def _async_setup_outbound_websocket(self) -> None:
+        """Set up outbound websocket if it is not enabled."""
+        ws_config = await self.device.ws_getconfig()
+        if not ws_config["server"] and (ws_url := get_rpc_ws_url(self.hass)):
+            await self.device.update_outbound_websocket(ws_url)
 
     async def _async_connect_ble_scanner(self) -> None:
         """Connect BLE scanner."""
