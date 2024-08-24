@@ -54,7 +54,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DeakoConfigEntry) -> boo
 
 async def async_unload_entry(hass: HomeAssistant, entry: DeakoConfigEntry) -> bool:
     """Unload a config entry."""
-    if entry.runtime_data is not None:
-        await entry.runtime_data.disconnect()
+    await entry.runtime_data.disconnect()
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
