@@ -18,8 +18,6 @@ import homeassistant.helpers.config_validation as cv
 from .const import ATTR_VAPID_EMAIL, ATTR_VAPID_PRV_KEY, ATTR_VAPID_PUB_KEY, DOMAIN
 from .issues import async_create_html5_issue
 
-EMAIL_REGEX = r"^([a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$"
-
 
 def vapid_generate_private_key():
     """Generate a VAPID private key."""
@@ -50,10 +48,6 @@ class HTML5ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Create an HTML5 entry."""
         errors = {}
         flow_result = None
-        try:
-            cv.matches_regex(EMAIL_REGEX)(data[ATTR_VAPID_EMAIL])
-        except vol.Invalid:
-            errors[ATTR_VAPID_EMAIL] = "invalid_email"
 
         if not data.get(ATTR_VAPID_PRV_KEY):
             data[ATTR_VAPID_PRV_KEY] = vapid_generate_private_key()
@@ -63,6 +57,9 @@ class HTML5ConfigFlow(ConfigFlow, domain=DOMAIN):
             data[ATTR_VAPID_PUB_KEY] = vapid_get_public_key(data[ATTR_VAPID_PRV_KEY])
         except (ValueError, binascii.Error):
             errors[ATTR_VAPID_PRV_KEY] = "invalid_prv_key"
+         except Exception:
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
 
         if not errors:
             config = {
