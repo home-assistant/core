@@ -448,7 +448,7 @@ async def async_create_or_update_device_in_config_entry(
 def get_entity_entry(
     hass: HomeAssistant, entity_config: dict, config_entry: ConfigEntry
 ) -> er.RegistryEntry | None:
-    """Get entity_id from entity_config."""
+    """Get entity RegistryEntry from entity_config."""
     entity_registry = er.async_get(hass)
     domain_name = entity_config[CONF_DOMAIN]
     domain_data = entity_config[CONF_DOMAIN_DATA]
