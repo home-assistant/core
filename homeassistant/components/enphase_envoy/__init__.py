@@ -64,4 +64,11 @@ async def async_remove_config_entry_device(
         for inverter in envoy_data.inverters:
             if str(inverter) in dev_ids:
                 return False
+    if envoy_data and envoy_data.encharge_inventory:
+        for encharge in envoy_data.encharge_inventory:
+            if str(encharge) in dev_ids:
+                return False
+    if envoy_data and envoy_data.enpower:
+        if str(envoy_data.enpower.serial_number) in dev_ids:
+            return False
     return True
