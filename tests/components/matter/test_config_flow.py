@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from ipaddress import ip_address
-from typing import Any
-from unittest.mock import DEFAULT, AsyncMock, MagicMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
 import pytest
@@ -93,20 +92,9 @@ def supervisor_fixture() -> Generator[MagicMock]:
         yield is_hassio
 
 
-@pytest.fixture(name="discovery_info")
-def discovery_info_fixture() -> Any:
-    """Return the discovery info from the supervisor."""
-    return DEFAULT
-
-
-@pytest.fixture(name="get_addon_discovery_info", autouse=True)
-def get_addon_discovery_info_fixture(discovery_info: Any) -> Generator[AsyncMock]:
+@pytest.fixture(autouse=True)
+def mock_get_addon_discovery_info(get_addon_discovery_info: AsyncMock) -> None:
     """Mock get add-on discovery info."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_get_addon_discovery_info",
-        return_value=discovery_info,
-    ) as get_addon_discovery_info:
-        yield get_addon_discovery_info
 
 
 @pytest.fixture(name="addon_setup_time", autouse=True)

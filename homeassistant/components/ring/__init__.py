@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from functools import partial
 import logging
 from typing import Any, cast
 
@@ -13,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import APPLICATION_NAME, CONF_TOKEN, __version__
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DOMAIN, PLATFORMS
@@ -35,17 +35,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
 
     def token_updater(token: dict[str, Any]) -> None:
-        """Handle from sync context when token is updated."""
-        hass.loop.call_soon_threadsafe(
-            partial(
-                hass.config_entries.async_update_entry,
-                entry,
-                data={**entry.data, CONF_TOKEN: token},
-            )
+        """Handle from async context when token is updated."""
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, CONF_TOKEN: token},
         )
 
     auth = Auth(
-        f"{APPLICATION_NAME}/{__version__}", entry.data[CONF_TOKEN], token_updater
+        f"{APPLICATION_NAME}/{__version__}",
+        entry.data[CONF_TOKEN],
+        token_updater,
+        http_client_session=async_get_clientsession(hass),
     )
     ring = Ring(auth)
 
