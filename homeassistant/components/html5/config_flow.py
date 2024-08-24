@@ -57,7 +57,7 @@ class HTML5ConfigFlow(ConfigFlow, domain=DOMAIN):
             data[ATTR_VAPID_PUB_KEY] = vapid_get_public_key(data[ATTR_VAPID_PRV_KEY])
         except (ValueError, binascii.Error):
             errors[ATTR_VAPID_PRV_KEY] = "invalid_prv_key"
-         except Exception:
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
 
