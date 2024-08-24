@@ -1,5 +1,6 @@
 {
   "services": {
+    "reboot_gateway": "mdi:reload",
     "reset_gateway": "mdi:reload",
     "set_central_heating_ovrd": "mdi:heat-wave",
     "set_clock": "mdi:clock",

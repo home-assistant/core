@@ -29,24 +29,18 @@
     }
   },
   "services": {
+    "reboot_gateway": {
+      "name": "Reboot gateway",
+      "description": "Reboots the OpenTherm Gateway."
+    },
     "reset_gateway": {
       "name": "Reset gateway",
-      "description": "Resets the OpenTherm Gateway.",
-      "fields": {
-        "gateway_id": {
-          "name": "Gateway ID",
-          "description": "The gateway_id of the OpenTherm Gateway."
-        }
-      }
+      "description": "Resets the OpenTherm Gateway."
     },
     "set_central_heating_ovrd": {
       "name": "Set central heating override",
       "description": "Sets the central heating override option on the gateway. When overriding the control setpoint (via a set_control_setpoint action with a value other than 0), the gateway automatically enables the central heating override to start heating. This action can then be used to control the central heating override status. To return control of the central heating to the thermostat, use the set_control_setpoint action with temperature value 0. You will only need this if you are writing your own software thermostat.\n.",
       "fields": {
-        "gateway_id": {
-          "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
-          "description": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::description%]"
-        },
         "ch_override": {
           "name": "Central heating override",
           "description": "The desired boolean value for the central heating override."
@@ -57,28 +51,16 @@
       "name": "Set clock",
       "description": "Sets the clock and day of the week on the connected thermostat.",
       "fields": {
-        "gateway_id": {
-          "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
-          "description": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::description%]"
-        },
-        "date": {
-          "name": "Date",
-          "description": "Optional date from which the day of the week will be extracted. Defaults to today."
-        },
-        "time": {
-          "name": "Time",
-          "description": "Optional time in 24h format which will be provided to the thermostat. Defaults to the current time."
+        "datetime": {
+          "name": "Date and Time",
+          "description": "Optional date and time to send to the thermostat. Defaults to now."
         }
       }
     },
     "set_control_setpoint": {
-      "name": "Set control set point",
+      "name": "Set control setpoint",
       "description": "Sets the central heating control setpoint override on the gateway. You will only need this if you are writing your own software thermostat.\n.",
       "fields": {
-        "gateway_id": {
-          "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
-          "description": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::description%]"
-        },
         "temperature": {
           "name": "Temperature",
           "description": "The central heating setpoint to set on the gateway. Values between 0 and 90 are accepted, but not all boilers support this range. A value of 0 disables the central heating setpoint override.\n."
@@ -89,10 +71,6 @@
       "name": "Set hot water override",
       "description": "Sets the domestic hot water enable option on the gateway.",
       "fields": {
-        "gateway_id": {
-          "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
-          "description": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::description%]"
-        },
         "dhw_override": {
           "name": "Domestic hot water override",
           "description": "Control the domestic hot water enable option. If the boiler has been configured to let the room unit control when to keep a small amount of water preheated, this command can influence that. Value should be 0 or 1 to enable the override in off or on state, or \"A\" to disable the override.\n."
@@ -100,13 +78,9 @@
       }
     },
     "set_hot_water_setpoint": {
-      "name": "Set hot water set point",
+      "name": "Set hot water setpoint",
       "description": "Sets the domestic hot water setpoint on the gateway.",
       "fields": {
-        "gateway_id": {
-          "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
-          "description": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::description%]"
-        },
         "temperature": {
           "name": "Temperature",
           "description": "The domestic hot water setpoint to set on the gateway. Not all boilers support this feature. Values between 0 and 90 are accepted, but not all boilers support this range. Check the values of the slave_dhw_min_setp and slave_dhw_max_setp sensors to see the supported range on your boiler.\n."
@@ -117,10 +91,6 @@
       "name": "Set gpio mode",
       "description": "Changes the function of the GPIO pins of the gateway.",
       "fields": {
-        "gateway_id": {
-          "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
-          "description": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::description%]"
-        },
         "id": {
           "name": "ID",
           "description": "The ID of the GPIO pin."
@@ -135,10 +105,6 @@
       "name": "Set LED mode",
       "description": "Changes the function of the LEDs of the gateway.",
       "fields": {
-        "gateway_id": {
-          "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
-          "description": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::description%]"
-        },
         "id": {
           "name": "ID",
           "description": "The ID of the LED."
@@ -153,10 +119,6 @@
       "name": "Set max modulation",
       "description": "Overrides the maximum relative modulation level. You will only need this if you are writing your own software thermostat.\n.",
       "fields": {
-        "gateway_id": {
-          "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
-          "description": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::description%]"
-        },
         "level": {
           "name": "Level",
           "description": "The modulation level to provide to the gateway. Provide a value of -1 to clear the override and forward the value from the thermostat again.\n."
@@ -167,10 +129,6 @@
       "name": "Set outside temperature",
       "description": "Provides an outside temperature to the thermostat. If your thermostat is unable to display an outside temperature and does not support OTC (Outside Temperature Correction), this has no effect.\n.",
       "fields": {
-        "gateway_id": {
-          "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
-          "description": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::description%]"
-        },
         "temperature": {
           "name": "Temperature",
           "description": "The temperature to provide to the thermostat. Values between -40.0 and 64.0 will be accepted, but not all thermostats can display the full range. Any value above 64.0 will clear a previously configured value (suggestion: 99)\n."
@@ -181,10 +139,6 @@
       "name": "Set setback temperature",
       "description": "Configures the setback temperature to be used with the GPIO away mode function.",
       "fields": {
-        "gateway_id": {
-          "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
-          "description": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::description%]"
-        },
         "temperature": {
           "name": "Temperature",
           "description": "The setback temperature to configure on the gateway."
@@ -195,10 +149,6 @@
       "name": "Send transparent command",
       "description": "Sends custom otgw commands (https://otgw.tclcode.com/firmware.html) through a transparent interface.",
       "fields": {
-        "gateway_id": {
-          "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
-          "description": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::description%]"
-        },
         "transp_cmd": {
           "name": "Command",
           "description": "The command to be sent to the OpenTherm Gateway."
@@ -208,6 +158,20 @@
           "description": "The argument of the command to be sent to the OpenTherm Gateway."
         }
       }
+    }
+  },
+  "issues": {
+    "attr_date_or_attr_time_in_set_clock_service_call": {
+      "title": "Deprecated action parameters used",
+      "description": "The `date` and `time` parameters for action `opentherm_gw.set_clock` have been deprecated. Please update your configuration to use the combined `datetime` parameter instead."
+    },
+    "gw_id_in_service_call": {
+      "title": "Deprecated use of gateway_id",
+      "description": "The use of the `gateway_id` parameter in OpenTherm Gateway actions is deprecated. Please update your configuration to use the `target` parameter instead."
+    },
+    "reset_gateway_renamed_to_reboot_gateway": {
+      "title": "Action has been renamed",
+      "description": "The action `opentherm_gw.reset_gateway` has been renamed to `opentherm_gw.reboot_gateway`. Please update your configuration accordingly."
     }
   }
 }

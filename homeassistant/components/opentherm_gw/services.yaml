@@ -1,48 +1,39 @@
 # Describes the format for available opentherm_gw services
 
+reboot_gateway:
+  target:
+    entity:
+      integration: opentherm_gw
+
 reset_gateway:
-  fields:
-    gateway_id:
-      required: true
-      example: "opentherm_gateway"
-      selector:
-        text:
+  target:
+    entity:
+      integration: opentherm_gw
 
 set_central_heating_ovrd:
+  target:
+    entity:
+      integration: opentherm_gw
   fields:
-    gateway_id:
-      required: true
-      example: "opentherm_gateway"
-      selector:
-        text:
     ch_override:
       required: true
       selector:
         boolean:
 
 set_clock:
+  target:
+    entity:
+      integration: opentherm_gw
   fields:
-    gateway_id:
-      required: true
-      example: "opentherm_gateway"
+    datetime:
       selector:
-        text:
-    date:
-      example: "2018-10-23"
-      selector:
-        text:
-    time:
-      example: "19:34"
-      selector:
-        text:
+        datetime:
 
 set_control_setpoint:
+  target:
+    entity:
+      integration: opentherm_gw
   fields:
-    gateway_id:
-      required: true
-      example: "opentherm_gateway"
-      selector:
-        text:
     temperature:
       required: true
       selector:
@@ -53,12 +44,10 @@ set_control_setpoint:
           unit_of_measurement: "°"
 
 set_hot_water_ovrd:
+  target:
+    entity:
+      integration: opentherm_gw
   fields:
-    gateway_id:
-      required: true
-      example: "opentherm_gateway"
-      selector:
-        text:
     dhw_override:
       required: true
       example: "1"
@@ -66,13 +55,12 @@ set_hot_water_ovrd:
         text:
 
 set_hot_water_setpoint:
+  target:
+    entity:
+      integration: opentherm_gw
   fields:
-    gateway_id:
-      required: true
-      example: "opentherm_gateway"
-      selector:
-        text:
     temperature:
+      required: true
       selector:
         number:
           min: 0
@@ -81,12 +69,10 @@ set_hot_water_setpoint:
           unit_of_measurement: "°"
 
 set_gpio_mode:
+  target:
+    entity:
+      integration: opentherm_gw
   fields:
-    gateway_id:
-      required: true
-      example: "opentherm_gateway"
-      selector:
-        text:
     id:
       required: true
       selector:
@@ -102,12 +88,10 @@ set_gpio_mode:
           max: 7
 
 set_led_mode:
+  target:
+    entity:
+      integration: opentherm_gw
   fields:
-    gateway_id:
-      required: true
-      example: "opentherm_gateway"
-      selector:
-        text:
     id:
       required: true
       selector:
@@ -138,12 +122,10 @@ set_led_mode:
             - "X"
 
 set_max_modulation:
+  target:
+    entity:
+      integration: opentherm_gw
   fields:
-    gateway_id:
-      required: true
-      example: "opentherm_gateway"
-      selector:
-        text:
     level:
       required: true
       selector:
@@ -152,12 +134,10 @@ set_max_modulation:
           max: 100
 
 set_outside_temperature:
+  target:
+    entity:
+      integration: opentherm_gw
   fields:
-    gateway_id:
-      required: true
-      example: "opentherm_gateway"
-      selector:
-        text:
     temperature:
       required: true
       selector:
@@ -167,12 +147,10 @@ set_outside_temperature:
           unit_of_measurement: "°"
 
 set_setback_temperature:
+  target:
+    entity:
+      integration: opentherm_gw
   fields:
-    gateway_id:
-      required: true
-      example: "opentherm_gateway"
-      selector:
-        text:
     temperature:
       required: true
       selector:
@@ -183,12 +161,10 @@ set_setback_temperature:
           unit_of_measurement: "°"
 
 send_transparent_command:
+  target:
+    entity:
+      integration: opentherm_gw
   fields:
-    gateway_id:
-      required: true
-      example: "opentherm_gateway"
-      selector:
-        text:
     transp_cmd:
       required: true
       selector:
