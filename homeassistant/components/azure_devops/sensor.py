@@ -164,17 +164,19 @@ async def async_setup_entry(
         if build.project and build.definition
     ]
 
-    for description in BASE_WORK_ITEM_SENSOR_DESCRIPTIONS:  # type: ignore [assignment]
-        for wits_key, work_item_type_state in enumerate(coordinator.data.work_items):
-            for state_key, _ in enumerate(work_item_type_state.state_items):
-                entities.append(
-                    AzureDevOpsWorkItemSensor(
-                        coordinator,
-                        description,  # type: ignore [arg-type]
-                        wits_key,
-                        state_key,
-                    )
-                )
+    entities.extend(
+        [
+            AzureDevOpsWorkItemSensor(
+                coordinator,
+                description,
+                key,
+                state_key,
+            )
+            for description in BASE_WORK_ITEM_SENSOR_DESCRIPTIONS
+            for key, work_item_type_state in enumerate(coordinator.data.work_items)
+            for state_key, _ in enumerate(work_item_type_state.state_items)
+        ]
+    )
 
     async_add_entities(entities)
 
