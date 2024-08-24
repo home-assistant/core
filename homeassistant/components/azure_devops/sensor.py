@@ -153,17 +153,16 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     initial_builds: list[Build] = coordinator.data.builds
 
-    entities: list[AzureDevOpsBuildSensor | AzureDevOpsWorkItemSensor] = []
-    for description in BASE_BUILD_SENSOR_DESCRIPTIONS:
-        for key, build in enumerate(initial_builds):
-            if build.project and build.definition:
-                entities.append(
-                    AzureDevOpsBuildSensor(
-                        coordinator,
-                        description,
-                        key,
-                    )
-                )
+    entities: list[SensorEntity] = [
+        AzureDevOpsBuildSensor(
+            coordinator,
+            description,
+            key,
+        )
+        for description in BASE_BUILD_SENSOR_DESCRIPTIONS
+        for key, build in enumerate(initial_builds)
+        if build.project and build.definition
+    ]
 
     for description in BASE_WORK_ITEM_SENSOR_DESCRIPTIONS:  # type: ignore [assignment]
         for wits_key, work_item_type_state in enumerate(coordinator.data.work_items):
@@ -239,8 +238,8 @@ class AzureDevOpsWorkItemSensor(AzureDevOpsEntity, SensorEntity):
         self.wits_key = wits_key
         self.state_key = state_key
         self._attr_unique_id = (
-            f"{self.coordinator.data.organization}_"
-            f"{self.coordinator.data.project.id}_"
+            f"{coordinator.data.organization}_"
+            f"{coordinator.data.project.id}_"
             f"{self.work_item_type.name}_"
             f"{self.work_item_state.name}_"
             f"{description.key}"
