@@ -258,7 +258,7 @@ aiolifx-effects==0.3.2
 aiolifx-themes==0.5.0
 
 # homeassistant.components.lifx
-aiolifx==1.0.6
+aiolifx==1.0.8
 
 # homeassistant.components.livisi
 aiolivisi==0.0.19
@@ -527,7 +527,7 @@ bluetooth-auto-recovery==1.4.2
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.19.4
+bluetooth-data-tools==1.20.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -777,7 +777,7 @@ freebox-api==1.1.0
 fritzconnection[qr]==1.13.2
 
 # homeassistant.components.fyta
-fyta_cli==0.6.0
+fyta_cli==0.6.3
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
@@ -839,7 +839,7 @@ google-cloud-pubsub==2.13.11
 google-generativeai==0.6.0
 
 # homeassistant.components.nest
-google-nest-sdm==4.0.7
+google-nest-sdm==5.0.0
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -2350,7 +2350,7 @@ yalexs-ble==2.4.3
 
 # homeassistant.components.august
 # homeassistant.components.yale
-yalexs==8.4.0
+yalexs==8.4.1
 
 # homeassistant.components.yeelight
 yeelight==0.7.14
