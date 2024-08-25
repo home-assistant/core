@@ -1289,6 +1289,33 @@ async def test_discovery_timeout_connect(
     assert mock_connect["connect"].call_count == 1
 
 
+async def test_discovery_timeout_connect_legacy_error(
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
+    mock_init,
+) -> None:
+    """Test discovery tries legacy connect on timeout."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_discovery["discover_single"].side_effect = TimeoutError
+    mock_connect["connect"].side_effect = KasaException
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+    assert mock_connect["connect"].call_count == 0
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: IP_ADDRESS}
+    )
+    await hass.async_block_till_done()
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+    assert mock_connect["connect"].call_count == 1
+
+
 async def test_reauth_update_other_flows(
     hass: HomeAssistant,
     mock_discovery: AsyncMock,

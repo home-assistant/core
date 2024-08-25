@@ -1,9 +1,11 @@
 """Config flow for growatt server integration."""
 
+from typing import Any
+
 import growattServer
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
 
@@ -21,11 +23,11 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialise growatt server flow."""
-        self.api = None
+        self.api: growattServer.GrowattApi | None = None
         self.user_id = None
-        self.data = {}
+        self.data: dict[str, Any] = {}
 
     @callback
     def _async_show_user_form(self, errors=None):
@@ -42,7 +44,9 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
         if not user_input:
             return self._async_show_user_form()
