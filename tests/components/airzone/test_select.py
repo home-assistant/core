@@ -2,16 +2,19 @@
 
 from unittest.mock import patch
 
+from aioairzone.common import OperationMode
 from aioairzone.const import (
     API_COLD_ANGLE,
     API_DATA,
     API_HEAT_ANGLE,
+    API_MODE,
     API_SLEEP,
     API_SYSTEM_ID,
     API_ZONE_ID,
 )
 import pytest
 
+from homeassistant.components.climate import HVACMode
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, SERVICE_SELECT_OPTION
 from homeassistant.core import HomeAssistant
@@ -67,6 +70,9 @@ async def test_airzone_create_selects(hass: HomeAssistant) -> None:
     state = hass.states.get("select.salon_heat_angle")
     assert state.state == "90deg"
 
+    state = hass.states.get("select.salon_mode")
+    assert state.state == HVACMode.HEAT
+
     state = hass.states.get("select.salon_sleep")
     assert state.state == "off"
 
@@ -113,6 +119,50 @@ async def test_airzone_select_sleep(hass: HomeAssistant) -> None:
 
     state = hass.states.get("select.dorm_1_sleep")
     assert state.state == "30m"
+
+
+async def test_airzone_select_mode(hass: HomeAssistant) -> None:
+    """Test select HVAC mode."""
+
+    await async_init_integration(hass)
+
+    put_hvac_mode = {
+        API_DATA: [
+            {
+                API_SYSTEM_ID: 1,
+                API_ZONE_ID: 1,
+                API_MODE: OperationMode.COOLING,
+            }
+        ]
+    }
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.salon_mode",
+                ATTR_OPTION: "Invalid",
+            },
+            blocking=True,
+        )
+
+    with patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.put_hvac",
+        return_value=put_hvac_mode,
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.salon_mode",
+                ATTR_OPTION: HVACMode.COOL,
+            },
+            blocking=True,
+        )
+
+    state = hass.states.get("select.salon_mode")
+    assert state.state == HVACMode.COOL
 
 
 async def test_airzone_select_grille_angle(hass: HomeAssistant) -> None:
