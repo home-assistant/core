@@ -18,7 +18,7 @@
       }
     },
     "water_heater": {
-      "heat_pump": {
+      "domestic_hot_water": {
         "default": "mdi:heat-pump",
         "state": {
           "off": "mdi:heat-pump-outline"

@@ -102,8 +102,14 @@
         }
       }
     },
+    "switch": {
+      "power": {
+        "name": "Power"
+      }
+    },
     "water_heater": {
-      "heat_pump": {
+      "domestic_hot_water": {
+        "name": "Hot water",
         "state": {
           "force_hot_water": "Heat now",
           "auto": "Automatic"

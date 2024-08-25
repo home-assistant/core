@@ -12,3 +12,5 @@ ATTR_VANE_VERTICAL_POSITIONS = "vane_vertical_positions"
 
 SERVICE_SET_VANE_HORIZONTAL = "set_vane_horizontal"
 SERVICE_SET_VANE_VERTICAL = "set_vane_vertical"
+
+STATE_OFF = "off"

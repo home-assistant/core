@@ -23,9 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, MelCloudDevice
-from .const import ATTR_STATUS
-
-STATE_OFF = "off"
+from .const import ATTR_STATUS, STATE_OFF
 
 
 async def async_setup_entry(
@@ -51,8 +49,7 @@ class AtwWaterHeater(WaterHeaterEntity):
         | WaterHeaterEntityFeature.OPERATION_MODE
     )
     _attr_has_entity_name = True
-    _attr_name = None
-    _attr_translation_key = "heat_pump"
+    _attr_translation_key = "domestic_hot_water"
 
     def __init__(self, api: MelCloudDevice, device: AtwDevice) -> None:
         """Initialize water heater device."""
@@ -86,14 +83,16 @@ class AtwWaterHeater(WaterHeaterEntity):
     @property
     def current_operation(self) -> str | None:
         """Return current operation as reported by pymelcloud."""
-        if not self._device.power:
+        if self._device.power is False:
             return STATE_OFF
         return self._device.operation_mode
 
     @property
     def operation_list(self) -> list[str]:
         """Return the list of available operation modes as reported by pymelcloud."""
-        return [STATE_OFF, *self._device.operation_modes]
+        if not self._device.power:
+            return [STATE_OFF]
+        return self._device.operation_modes
 
     @property
     def current_temperature(self) -> float | None:
@@ -117,9 +116,6 @@ class AtwWaterHeater(WaterHeaterEntity):
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
-        if operation_mode == STATE_OFF:
-            await self.async_turn_off()
-            return
 
         await self._device.set(
             {PROPERTY_POWER: True, PROPERTY_OPERATION_MODE: operation_mode}
