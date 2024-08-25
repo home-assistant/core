@@ -119,6 +119,9 @@
       },
       "night_mode": {
         "name": "LED night mode"
+      },
+      "vpn_enabled": {
+        "name": "VPN enabled"
       }
     },
     "update": {
