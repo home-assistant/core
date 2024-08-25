@@ -189,7 +189,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
             LOGGER.debug("Device %s connected, no platforms to setup", self.name)
             return True
 
-        LOGGER.debug("Device %s is online, resuming setup", self.entry.title)
+        LOGGER.debug("Device %s is online, resuming setup", self.name)
         platforms = self._pending_platforms
         self._pending_platforms = None
 
