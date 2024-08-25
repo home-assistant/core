@@ -694,11 +694,10 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
     @callback
     def _async_handle_rpc_device_online(self) -> None:
         """Handle device going online."""
-        if self.device.connected:
-            LOGGER.debug("Device %s already connected", self.name)
-            return
-        if self._connect_task and not self._connect_task.done():
-            LOGGER.debug("Device %s already connecting", self.name)
+        if self.device.connected or (
+            self._connect_task and not self._connect_task.done()
+        ):
+            LOGGER.debug("Device %s already connected/connecting", self.name)
             return
         self._connect_task = self.entry.async_create_background_task(
             self.hass,
