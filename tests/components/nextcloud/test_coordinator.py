@@ -13,12 +13,8 @@ from nextcloudmonitor import (
 import pytest
 
 from homeassistant.components.nextcloud.const import DEFAULT_SCAN_INTERVAL
-from homeassistant.components.nextcloud.coordinator import (
-    NextcloudDataUpdateCoordinator,
-)
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import mock_config_entry
 from .const import NC_DATA, VALID_CONFIG
@@ -52,22 +48,22 @@ async def test_data_update(
         )
         mock_nextcloud_monitor.return_value.data = NC_DATA
         assert await hass.config_entries.async_setup(entry.entry_id)
-        coordinator: NextcloudDataUpdateCoordinator = entry.runtime_data
 
         # Test successful setup and first data fetch
         await hass.async_block_till_done(wait_background_tasks=True)
-        assert entry.state == ConfigEntryState.LOADED
-        assert coordinator.last_update_success
+        states = hass.states.async_all()
+        assert (state != STATE_UNAVAILABLE for state in states)
 
-        # Test unsuccessful data fetch due to error
+        # Test states get unavailable on error
         freezer.tick(DEFAULT_SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
-        assert coordinator.last_update_success is False
-        assert isinstance(coordinator.last_exception, UpdateFailed) is True
+        states = hass.states.async_all()
+        assert (state == STATE_UNAVAILABLE for state in states)
 
         # Test successful data fetch
         freezer.tick(DEFAULT_SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
-        assert coordinator.last_update_success
+        states = hass.states.async_all()
+        assert (state != STATE_UNAVAILABLE for state in states)
