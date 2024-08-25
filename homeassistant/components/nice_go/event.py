@@ -48,4 +48,4 @@ class NiceGOEventEntity(NiceGOEntity, EventEntity):
         if data["deviceId"] == self.data.id:
             _LOGGER.debug("Barrier obstructed event for %s, triggering", self.data.name)
             self._trigger_event(EVENT_BARRIER_OBSTRUCTED)
-            self.schedule_update_ha_state()
+            self.async_write_ha_state()
