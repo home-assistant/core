@@ -483,12 +483,17 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         if not self.sleep_period:
             await self.async_request_refresh()
         elif not self._came_online_once:
+            LOGGER.debug(
+                "Sleepy device %s is online, trying to poll and configure", self.name
+            )
             # Zeroconf told us the device is online, try to poll
             # the device and if possible, set up the outbound
             # websocket so the device will send us updates
             # instead of relying on polling it fast enough before
             # it goes to sleep again
             self._async_handle_rpc_device_online()
+        else:
+            LOGGER.debug("Sleepy device %s is online, already came online", self.name)
 
     def update_sleep_period(self) -> bool:
         """Check device sleep period & update if changed."""
