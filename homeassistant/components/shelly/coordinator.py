@@ -475,7 +475,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._ota_event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._input_event_listeners: list[Callable[[dict[str, Any]], None]] = []
-
+        self._connect_task: asyncio.Task | None = None
         entry.async_on_unload(entry.add_update_listener(self._async_update_listener))
 
     async def async_device_online(self) -> None:
@@ -696,7 +696,10 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         if self.device.connected:
             LOGGER.debug("Device %s already connected", self.name)
             return
-        self.entry.async_create_background_task(
+        if self._connect_task and not self._connect_task.done():
+            LOGGER.debug("Device %s already connecting", self.name)
+            return
+        self._connect_task = self.entry.async_create_background_task(
             self.hass,
             self._async_device_connect_task(),
             "rpc device online",
