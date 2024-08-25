@@ -49,7 +49,14 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
         try:
             user_response = await self.api.user.get()
             tasks_response = await self.api.tasks.user.get()
-            tasks_response.extend(await self.api.tasks.user.get(type="completedTodos"))
+            tasks_response.extend(
+                [
+                    {"id": task["_id"], **task}
+                    for task in await self.api.tasks.user.get(type="completedTodos")
+                    if task.get("_id")
+                ]
+            )
+
         except ClientResponseError as error:
             raise UpdateFailed(f"Error communicating with API: {error}") from error
 
