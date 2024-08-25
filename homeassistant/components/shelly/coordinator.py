@@ -622,13 +622,12 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             if not self.connected:  # Already disconnected
                 return
             self.connected = False
+            # Sleeping devices send data and disconnect
+            # There are no disconnect events for sleeping devices
+            # but we do need to make sure self.connected is False
+            if self.sleep_period:
+                return
             self._async_run_disconnected_events()
-
-        # Sleeping devices send data and disconnect
-        # There are no disconnect events for sleeping devices
-        # but we do need to make sure self.connected is False
-        if self.sleep_period:
-            return
 
         # Try to reconnect right away if triggered by disconnect event
         if reconnect:
