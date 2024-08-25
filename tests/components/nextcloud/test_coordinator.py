@@ -7,8 +7,10 @@ from nextcloudmonitor import (
     NextcloudMonitor,
     NextcloudMonitorAuthorizationError,
     NextcloudMonitorConnectionError,
+    NextcloudMonitorError,
     NextcloudMonitorRequestError,
 )
+import pytest
 
 from homeassistant.components.nextcloud.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.nextcloud.coordinator import (
@@ -24,9 +26,16 @@ from .const import NC_DATA, VALID_CONFIG
 from tests.common import async_fire_time_changed
 
 
+@pytest.mark.parametrize(
+    ("error"),
+    [
+        (NextcloudMonitorAuthorizationError),
+        (NextcloudMonitorConnectionError),
+        (NextcloudMonitorRequestError),
+    ],
+)
 async def test_data_update(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, error: NextcloudMonitorError
 ) -> None:
     """Test a coordinator data updates."""
     entry = mock_config_entry(VALID_CONFIG)
@@ -39,13 +48,7 @@ async def test_data_update(
     ):
         mock_nextcloud_monitor.return_value.update = Mock(
             return_value=True,
-            side_effect=[
-                None,
-                NextcloudMonitorAuthorizationError,
-                NextcloudMonitorConnectionError,
-                NextcloudMonitorRequestError,
-                None,
-            ],
+            side_effect=[None, error, None],
         )
         mock_nextcloud_monitor.return_value.data = NC_DATA
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -56,21 +59,7 @@ async def test_data_update(
         assert entry.state == ConfigEntryState.LOADED
         assert coordinator.last_update_success
 
-        # Test unsuccessful data fetch due to NextcloudMonitorAuthorizationError
-        freezer.tick(DEFAULT_SCAN_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
-        assert coordinator.last_update_success is False
-        assert isinstance(coordinator.last_exception, UpdateFailed) is True
-
-        # Test unsuccessful data fetch due to NextcloudMonitorConnectionError
-        freezer.tick(DEFAULT_SCAN_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done(wait_background_tasks=True)
-        assert coordinator.last_update_success is False
-        assert isinstance(coordinator.last_exception, UpdateFailed) is True
-
-        # Test unsuccessful data fetch due to NextcloudMonitorRequestError
+        # Test unsuccessful data fetch due to error
         freezer.tick(DEFAULT_SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
