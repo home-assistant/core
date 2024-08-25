@@ -1181,6 +1181,9 @@ insteon-frontend-home-assistant==0.5.0
 # homeassistant.components.intellifire
 intellifire4py==2.2.2
 
+# homeassistant.components.aruba_instant_on
+ion-client==1.0.0
+
 # homeassistant.components.iotty
 iottycloud==0.1.3
 

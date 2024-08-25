@@ -477,6 +477,12 @@
         }
       }
     },
+    "aruba_instant_on": {
+      "name": "Aruba Instant On",
+      "integration_type": "hub",
+      "config_flow": false,
+      "iot_class": "local_polling"
+    },
     "arve": {
       "name": "Arve",
       "integration_type": "hub",
