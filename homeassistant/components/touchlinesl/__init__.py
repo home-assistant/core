@@ -8,8 +8,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
 type TouchlineSLConfigEntry = ConfigEntry[TouchlineSL]
@@ -17,9 +15,6 @@ type TouchlineSLConfigEntry = ConfigEntry[TouchlineSL]
 
 async def async_setup_entry(hass: HomeAssistant, entry: TouchlineSLConfigEntry) -> bool:
     """Set up Roth Touchline SL from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = entry.data
-
     account = TouchlineSL(
         username=entry.data[CONF_USERNAME], password=entry.data[CONF_PASSWORD]
     )
