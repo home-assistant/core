@@ -179,14 +179,11 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
             self.entry.async_start_reauth(self.hass)
             return False
 
-        LOGGER.debug("Connected to Shelly Device - %s", self.name)
-
         if not self.device.firmware_supported:
             async_create_issue_unsupported_firmware(self.hass, self.entry)
             return False
 
         if not self._pending_platforms:
-            LOGGER.debug("Device %s connected, no platforms to setup", self.name)
             return True
 
         LOGGER.debug("Device %s is online, resuming setup", self.name)
@@ -495,8 +492,6 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             # instead of relying on polling it fast enough before
             # it goes to sleep again
             self._async_handle_rpc_device_online()
-        else:
-            LOGGER.debug("Sleepy device %s is online, already came online", self.name)
 
     def update_sleep_period(self) -> bool:
         """Check device sleep period & update if changed."""
