@@ -180,6 +180,12 @@
     },
     "invalid_sonos_playlist": {
       "message": "Could not find Sonos playlist: {name}"
+    },
+    "invalid_media": {
+      "message": "Could not find media in library: {media_id}"
+    },
+    "invalid_content_type": {
+      "message": "Sonos does not support media content type: {media_type}"
     }
   }
 }

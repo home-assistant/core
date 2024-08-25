@@ -228,6 +228,52 @@ async def test_play_media_library(
         )
 
 
+async def test_play_media_library_content_error(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+) -> None:
+    """Test playing local library with a variety of options."""
+    media_content_type: str = "album"
+    media_content_id: str = "A:ALBUM/UnknowAlbum"
+    with pytest.raises(
+        ServiceValidationError,
+        match=f"Could not find media in library: {media_content_id}",
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: media_content_type,
+                ATTR_MEDIA_CONTENT_ID: media_content_id,
+            },
+            blocking=True,
+        )
+
+
+async def test_play_media_library_content_type_error(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+) -> None:
+    """Test playing local library with a variety of options."""
+    media_content_type: str = "UnknownContent"
+    media_content_id: str = "A:ALBUM/UnknowAlbum"
+    with pytest.raises(
+        ServiceValidationError,
+        match=f"Sonos does not support media content type: {media_content_type}",
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: media_content_type,
+                ATTR_MEDIA_CONTENT_ID: media_content_id,
+            },
+            blocking=True,
+        )
+
+
 _track_url = "S://192.168.42.100/music/iTunes/The%20Beatles/A%20Hard%20Day%2fs%I%20Should%20Have%20Known%20Better.mp3"
 
 
