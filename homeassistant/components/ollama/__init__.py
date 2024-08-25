@@ -18,6 +18,7 @@ from .const import (
     CONF_KEEP_ALIVE,
     CONF_MAX_HISTORY,
     CONF_MODEL,
+    CONF_NUM_CTX,
     CONF_PROMPT,
     DEFAULT_TIMEOUT,
     DOMAIN,
@@ -30,6 +31,7 @@ __all__ = [
     "CONF_PROMPT",
     "CONF_MODEL",
     "CONF_MAX_HISTORY",
+    "CONF_NUM_CTX",
     "CONF_KEEP_ALIVE",
     "DOMAIN",
 ]
