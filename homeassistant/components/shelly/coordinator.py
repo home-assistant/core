@@ -618,16 +618,18 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
 
     async def _async_disconnected(self, reconnect: bool) -> None:
         """Handle device disconnected."""
-        # Sleeping devices send data and disconnect
-        # There are no disconnect events for sleeping devices
-        if self.sleep_period:
-            return
-
         async with self._connection_lock:
             if not self.connected:  # Already disconnected
                 return
             self.connected = False
             self._async_run_disconnected_events()
+
+        # Sleeping devices send data and disconnect
+        # There are no disconnect events for sleeping devices
+        # but we do need to make sure self.connected is False
+        if self.sleep_period:
+            return
+
         # Try to reconnect right away if triggered by disconnect event
         if reconnect:
             await self.async_request_refresh()
@@ -670,11 +672,15 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
 
     async def _async_setup_outbound_websocket(self) -> None:
         """Set up outbound websocket if it is not enabled."""
+        config = self.device.config
         if (
-            "ws" in self.device.config
-            and not self.device.config["ws"]["server"]
+            (ws_config := config.get("ws"))
+            and not ws_config["server"]
             and (ws_url := get_rpc_ws_url(self.hass))
         ):
+            LOGGER.debug(
+                "Setting up outbound websocket for device %s - %s", self.name, ws_url
+            )
             await self.device.update_outbound_websocket(ws_url)
 
     async def _async_connect_ble_scanner(self) -> None:
