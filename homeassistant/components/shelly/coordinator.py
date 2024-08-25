@@ -482,7 +482,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         """Handle device going online."""
         if not self.sleep_period:
             await self.async_request_refresh()
-        elif not self._came_online_once:
+        elif not self._came_online_once or not self.device.initialized:
             LOGGER.debug(
                 "Sleepy device %s is online, trying to poll and configure", self.name
             )
