@@ -43,7 +43,7 @@ WORKDIR /usr/src
 # Setup hass-release
 RUN git clone --depth 1 https://github.com/home-assistant/hass-release \
     && uv pip install --system -e hass-release/ \
-    && sudo chown -R vscode /usr/src/hass-release/data
+    && chown -R vscode /usr/src/hass-release/data
 
 USER vscode
 ENV VIRTUAL_ENV="/home/vscode/.local/ha-venv"
