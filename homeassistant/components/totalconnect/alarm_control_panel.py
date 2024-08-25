@@ -152,8 +152,9 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
+        self._check_usercode(code)
         try:
-            await self.hass.async_add_executor_job(self._disarm, code)
+            await self.hass.async_add_executor_job(self._disarm)
         except UsercodeInvalid as error:
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
@@ -165,19 +166,13 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             ) from error
         await self.coordinator.async_request_refresh()
 
-    def _disarm(self, code: str | None = None) -> None:
+    def _disarm(self) -> None:
         """Disarm synchronous."""
-        if (
-            self._attr_code_arm_required
-            and self.coordinator.client.usercodes[self._location.location_id] != code
-        ):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN, translation_key="invalid_pin"
-            )
         ArmingHelper(self._partition).disarm()
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
+        self._check_usercode(code)
         try:
             await self.hass.async_add_executor_job(self._arm_home)
         except UsercodeInvalid as error:
@@ -197,6 +192,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
+        self._check_usercode(code)
         try:
             await self.hass.async_add_executor_job(self._arm_away)
         except UsercodeInvalid as error:
@@ -216,6 +212,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
+        self._check_usercode(code)
         try:
             await self.hass.async_add_executor_job(self._arm_night)
         except UsercodeInvalid as error:
@@ -270,3 +267,13 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
     def _arm_away_instant(self):
         """Arm away instant synchronous."""
         ArmingHelper(self._partition).arm_away_instant()
+
+    def _check_usercode(self, code):
+        """Check if the run-time entered code matches configured code."""
+        if (
+            self._attr_code_arm_required
+            and self.coordinator.client.usercodes[self._location.location_id] != code
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="invalid_pin"
+            )
