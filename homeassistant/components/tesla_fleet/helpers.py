@@ -46,7 +46,7 @@ async def handle_command(command) -> dict[str, Any]:
     return result
 
 
-async def handle_vehicle_command(command) -> dict[str, Any]:
+async def handle_vehicle_command(command) -> bool:
     """Handle a vehicle command."""
     result = await handle_command(command)
     if (response := result.get("response")) is None:
