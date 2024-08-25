@@ -488,11 +488,15 @@ class DmsDeviceSource:
             object_id, metadata_filter=DLNA_BROWSE_FILTER
         )
 
-        children = await self._device.async_browse_direct_children(
-            object_id,
-            metadata_filter=DLNA_BROWSE_FILTER,
-            sort_criteria=self._sort_criteria,
-        )
+        children = None
+        try:
+            children = await self._device.async_browse_direct_children(
+                object_id,
+                metadata_filter=DLNA_BROWSE_FILTER,
+                sort_criteria=self._sort_criteria,
+            )
+        except UpnpError as err:
+            LOGGER.debug("Couldn't retrieve children: %r", err)
 
         return self._didl_to_media_source(base_object, children)
 
