@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 from total_connect_client.exceptions import (
@@ -371,7 +372,9 @@ async def test_disarm_failure(hass: HomeAssistant) -> None:
         assert mock_request.call_count == 3
 
 
-async def test_disarm_code_required(hass: HomeAssistant) -> None:
+async def test_disarm_code_required(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test disarm with code."""
     responses = [RESPONSE_ARMED_AWAY, RESPONSE_DISARM_SUCCESS, RESPONSE_DISARMED]
     await setup_platform(hass, ALARM_DOMAIN, code_required=True)
@@ -385,7 +388,7 @@ async def test_disarm_code_required(hass: HomeAssistant) -> None:
         DATA_WITH_CODE = DATA.copy()
         DATA_WITH_CODE["code"] = "666"
         with pytest.raises(
-            ServiceValidationError, matches="User entered incorrect alarm PIN code."
+            ServiceValidationError, match="User entered incorrect alarm PIN code"
         ):
             await hass.services.async_call(
                 ALARM_DOMAIN, SERVICE_ALARM_DISARM, DATA_WITH_CODE, blocking=True
@@ -402,7 +405,8 @@ async def test_disarm_code_required(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert mock_request.call_count == 2
 
-        async_fire_time_changed(hass, dt_util.utcnow() + DELAY)
+        freezer.tick(DELAY)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert mock_request.call_count == 3
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
