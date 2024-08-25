@@ -75,11 +75,10 @@ class AuroraABBConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialise the config flow."""
-        self.config = None
         self._com_ports_list: list[str] | None = None
-        self._default_com_port = None
+        self._default_com_port: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

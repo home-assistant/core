@@ -586,10 +586,10 @@ async def async_enable_logging(
     logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
-    sys.excepthook = lambda *args: logging.getLogger(None).exception(
+    sys.excepthook = lambda *args: logging.getLogger().exception(
         "Uncaught exception", exc_info=args
     )
-    threading.excepthook = lambda args: logging.getLogger(None).exception(
+    threading.excepthook = lambda args: logging.getLogger().exception(
         "Uncaught thread exception",
         exc_info=(  # type: ignore[arg-type]
             args.exc_type,
@@ -616,10 +616,9 @@ async def async_enable_logging(
             _create_log_file, err_log_path, log_rotate_days
         )
 
-        err_handler.setLevel(logging.INFO if verbose else logging.WARNING)
         err_handler.setFormatter(logging.Formatter(fmt, datefmt=FORMAT_DATETIME))
 
-        logger = logging.getLogger("")
+        logger = logging.getLogger()
         logger.addHandler(err_handler)
         logger.setLevel(logging.INFO if verbose else logging.WARNING)
 

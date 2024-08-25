@@ -5,6 +5,8 @@ from __future__ import annotations
 import functools
 from typing import Any
 
+from zha.application.platforms.fan.const import FanEntityFeature as ZHAFanEntityFeature
+
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -15,6 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .entity import ZHAEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
+    EntityData,
     async_add_entities as zha_async_add_entities,
     convert_zha_error_to_ha_error,
     get_zha_data,
@@ -43,13 +46,29 @@ async def async_setup_entry(
 class ZhaFan(FanEntity, ZHAEntity):
     """Representation of a ZHA fan."""
 
-    _attr_supported_features = (
-        FanEntityFeature.SET_SPEED
-        | FanEntityFeature.TURN_OFF
-        | FanEntityFeature.TURN_ON
-    )
     _attr_translation_key: str = "fan"
     _enable_turn_on_off_backwards_compatibility = False
+
+    def __init__(self, entity_data: EntityData) -> None:
+        """Initialize the ZHA fan."""
+        super().__init__(entity_data)
+        features = FanEntityFeature(0)
+        zha_features: ZHAFanEntityFeature = self.entity_data.entity.supported_features
+
+        if ZHAFanEntityFeature.DIRECTION in zha_features:
+            features |= FanEntityFeature.DIRECTION
+        if ZHAFanEntityFeature.OSCILLATE in zha_features:
+            features |= FanEntityFeature.OSCILLATE
+        if ZHAFanEntityFeature.PRESET_MODE in zha_features:
+            features |= FanEntityFeature.PRESET_MODE
+        if ZHAFanEntityFeature.SET_SPEED in zha_features:
+            features |= FanEntityFeature.SET_SPEED
+        if ZHAFanEntityFeature.TURN_ON in zha_features:
+            features |= FanEntityFeature.TURN_ON
+        if ZHAFanEntityFeature.TURN_OFF in zha_features:
+            features |= FanEntityFeature.TURN_OFF
+
+        self._attr_supported_features = features
 
     @property
     def preset_mode(self) -> str | None:

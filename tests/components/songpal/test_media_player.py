@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
@@ -54,12 +55,12 @@ SUPPORT_SONGPAL = (
 )
 
 
-def _get_attributes(hass):
+def _get_attributes(hass: HomeAssistant) -> dict[str, Any]:
     state = hass.states.get(ENTITY_ID)
     return state.as_dict()["attributes"]
 
 
-async def _call(hass, service, **argv):
+async def _call(hass: HomeAssistant, service: str, **argv: Any) -> None:
     await hass.services.async_call(
         media_player.DOMAIN,
         service,

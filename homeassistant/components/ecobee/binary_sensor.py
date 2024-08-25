@@ -46,7 +46,7 @@ class EcobeeBinarySensor(BinarySensorEntity):
         self.index = sensor_index
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str | None:
         """Return a unique identifier for this sensor."""
         for sensor in self.data.ecobee.get_remote_sensors(self.index):
             if sensor["name"] == self.sensor_name:
@@ -54,6 +54,7 @@ class EcobeeBinarySensor(BinarySensorEntity):
                     return f"{sensor['code']}-{self.device_class}"
                 thermostat = self.data.ecobee.get_thermostat(self.index)
                 return f"{thermostat['identifier']}-{sensor['id']}-{self.device_class}"
+        return None
 
     @property
     def device_info(self) -> DeviceInfo | None:
