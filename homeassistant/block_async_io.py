@@ -7,7 +7,6 @@ from dataclasses import dataclass
 import glob
 from http.client import HTTPConnection
 import importlib
-import logging
 import os
 from pathlib import Path
 from ssl import SSLContext
@@ -56,6 +55,7 @@ def _check_stat_call_allowed(mapped_args: dict[str, Any]) -> bool:
     args = mapped_args["args"]
     path = args[0] if type(args[0]) is str else str(args[0])  # noqa: E721
     return path.startswith(ALLOWED_FILE_PREFIXES)
+
 
 @dataclass(slots=True, frozen=True)
 class BlockingCall:
