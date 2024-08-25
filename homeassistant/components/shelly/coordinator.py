@@ -628,7 +628,6 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             if self.sleep_period:
                 return
             self._async_run_disconnected_events()
-
         # Try to reconnect right away if triggered by disconnect event
         if reconnect:
             await self.async_request_refresh()
