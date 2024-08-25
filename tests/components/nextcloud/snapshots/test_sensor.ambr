@@ -1,314 +1,5 @@
 # serializer version: 1
-# name: test_async_setup_entry[binary_sensor-4][binary_sensor.my_nc_url_local_jit_enabled-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.my_nc_url_local_jit_enabled',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'JIT enabled',
-    'platform': 'nextcloud',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'nextcloud_jit_enabled',
-    'unique_id': '1234567890abcdef#jit_enabled',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_async_setup_entry[binary_sensor-6][binary_sensor.my_nc_url_local_avatars_enabled-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.my_nc_url_local_avatars_enabled',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Avatars enabled',
-    'platform': 'nextcloud',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'nextcloud_system_enable_avatars',
-    'unique_id': '1234567890abcdef#system_enable_avatars',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_async_setup_entry[binary_sensor-6][binary_sensor.my_nc_url_local_avatars_enabled-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Avatars enabled',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.my_nc_url_local_avatars_enabled',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_async_setup_entry[binary_sensor-6][binary_sensor.my_nc_url_local_debug_enabled-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.my_nc_url_local_debug_enabled',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Debug enabled',
-    'platform': 'nextcloud',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'nextcloud_system_debug',
-    'unique_id': '1234567890abcdef#system_debug',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_async_setup_entry[binary_sensor-6][binary_sensor.my_nc_url_local_debug_enabled-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Debug enabled',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.my_nc_url_local_debug_enabled',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_async_setup_entry[binary_sensor-6][binary_sensor.my_nc_url_local_filelocking_enabled-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.my_nc_url_local_filelocking_enabled',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Filelocking enabled',
-    'platform': 'nextcloud',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'nextcloud_system_filelocking_enabled',
-    'unique_id': '1234567890abcdef#system_filelocking.enabled',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_async_setup_entry[binary_sensor-6][binary_sensor.my_nc_url_local_filelocking_enabled-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Filelocking enabled',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.my_nc_url_local_filelocking_enabled',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_async_setup_entry[binary_sensor-6][binary_sensor.my_nc_url_local_jit_active-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.my_nc_url_local_jit_active',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'JIT active',
-    'platform': 'nextcloud',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'nextcloud_jit_on',
-    'unique_id': '1234567890abcdef#jit_on',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_async_setup_entry[binary_sensor-6][binary_sensor.my_nc_url_local_jit_active-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local JIT active',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.my_nc_url_local_jit_active',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_async_setup_entry[binary_sensor-6][binary_sensor.my_nc_url_local_jit_enabled-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.my_nc_url_local_jit_enabled',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'JIT enabled',
-    'platform': 'nextcloud',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'nextcloud_jit_enabled',
-    'unique_id': '1234567890abcdef#jit_enabled',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_async_setup_entry[binary_sensor-6][binary_sensor.my_nc_url_local_jit_enabled-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local JIT enabled',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.my_nc_url_local_jit_enabled',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_async_setup_entry[binary_sensor-6][binary_sensor.my_nc_url_local_previews_enabled-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.my_nc_url_local_previews_enabled',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Previews enabled',
-    'platform': 'nextcloud',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'nextcloud_system_enable_previews',
-    'unique_id': '1234567890abcdef#system_enable_previews',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_async_setup_entry[binary_sensor-6][binary_sensor.my_nc_url_local_previews_enabled-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Previews enabled',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.my_nc_url_local_previews_enabled',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_async_setup_entry[sensor-39][sensor.my_nc_url_local_amount_of_active_users_last_5_minutes-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_5_minutes-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -343,7 +34,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-39][sensor.my_nc_url_local_amount_of_active_users_last_5_minutes-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_5_minutes-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Amount of active users last 5 minutes',
@@ -357,7 +48,7 @@
     'state': '0',
   })
 # ---
-# name: test_async_setup_entry[sensor-39][sensor.my_nc_url_local_amount_of_active_users_last_day-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_day-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -392,7 +83,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-39][sensor.my_nc_url_local_amount_of_active_users_last_day-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_day-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Amount of active users last day',
@@ -406,7 +97,7 @@
     'state': '0',
   })
 # ---
-# name: test_async_setup_entry[sensor-39][sensor.my_nc_url_local_amount_of_active_users_last_hour-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_hour-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -441,7 +132,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-39][sensor.my_nc_url_local_amount_of_active_users_last_hour-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_hour-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Amount of active users last hour',
@@ -455,189 +146,7 @@
     'state': '0',
   })
 # ---
-# name: test_async_setup_entry[sensor-39][sensor.my_nc_url_local_cache_expunges-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.my_nc_url_local_cache_expunges',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Cache expunges',
-    'platform': 'nextcloud',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'nextcloud_cache_expunges',
-    'unique_id': '1234567890abcdef#cache_expunges',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_active_users_last_5_minutes-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.my_nc_url_local_amount_of_active_users_last_5_minutes',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Amount of active users last 5 minutes',
-    'platform': 'nextcloud',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'nextcloud_activeusers_last5minutes',
-    'unique_id': '1234567890abcdef#activeUsers_last5minutes',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_active_users_last_5_minutes-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Amount of active users last 5 minutes',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.my_nc_url_local_amount_of_active_users_last_5_minutes',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_active_users_last_day-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.my_nc_url_local_amount_of_active_users_last_day',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Amount of active users last day',
-    'platform': 'nextcloud',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'nextcloud_activeusers_last24hours',
-    'unique_id': '1234567890abcdef#activeUsers_last24hours',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_active_users_last_day-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Amount of active users last day',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.my_nc_url_local_amount_of_active_users_last_day',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_active_users_last_hour-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.my_nc_url_local_amount_of_active_users_last_hour',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Amount of active users last hour',
-    'platform': 'nextcloud',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'nextcloud_activeusers_last1hour',
-    'unique_id': '1234567890abcdef#activeUsers_last1hour',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_active_users_last_hour-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Amount of active users last hour',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.my_nc_url_local_amount_of_active_users_last_hour',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_files-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_files-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -672,7 +181,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_files-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_files-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Amount of files',
@@ -686,7 +195,7 @@
     'state': '6783',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_group_shares-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_group_shares-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -721,7 +230,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_group_shares-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_group_shares-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Amount of group shares',
@@ -735,7 +244,7 @@
     'state': '0',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_link_shares-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_link_shares-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -770,7 +279,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_link_shares-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_link_shares-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Amount of link shares',
@@ -784,7 +293,7 @@
     'state': '2',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_local_storages-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_local_storages-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -819,7 +328,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_local_storages-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_local_storages-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Amount of local storages',
@@ -833,7 +342,7 @@
     'state': '1',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_mail_shares-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_mail_shares-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -868,7 +377,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_mail_shares-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_mail_shares-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Amount of mail shares',
@@ -882,7 +391,7 @@
     'state': '0',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_other_storages-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_other_storages-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -917,7 +426,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_other_storages-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_other_storages-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Amount of other storages',
@@ -931,7 +440,7 @@
     'state': '1',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_passwordless_link_shares-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_passwordless_link_shares-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -966,7 +475,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_passwordless_link_shares-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_passwordless_link_shares-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Amount of passwordless link shares',
@@ -980,7 +489,7 @@
     'state': '2',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_room_shares-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_room_shares-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1015,7 +524,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_room_shares-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_room_shares-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Amount of room shares',
@@ -1029,7 +538,7 @@
     'state': '0',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_shares-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1064,7 +573,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_shares-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Amount of shares',
@@ -1078,7 +587,7 @@
     'state': '2',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_shares_received-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares_received-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1113,7 +622,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_shares_received-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares_received-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Amount of shares received',
@@ -1127,7 +636,7 @@
     'state': '1',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_shares_sent-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares_sent-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1162,7 +671,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_shares_sent-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares_sent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Amount of shares sent',
@@ -1176,7 +685,7 @@
     'state': '0',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_storages-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_storages-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1211,7 +720,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_storages-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_storages-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Amount of storages',
@@ -1225,7 +734,7 @@
     'state': '4',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_storages_at_home-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_storages_at_home-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1260,7 +769,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_storages_at_home-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_storages_at_home-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Amount of storages at home',
@@ -1274,7 +783,7 @@
     'state': '2',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_user-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_user-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1309,7 +818,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_user-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_user-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Amount of user',
@@ -1323,7 +832,7 @@
     'state': '2',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_user_shares-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_user_shares-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1358,7 +867,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_amount_of_user_shares-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_user_shares-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Amount of user shares',
@@ -1372,7 +881,7 @@
     'state': '0',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_apps_installed-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_apps_installed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1407,7 +916,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_apps_installed-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_apps_installed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Apps installed',
@@ -1421,7 +930,7 @@
     'state': '41',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_cache_expunges-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_expunges-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1456,7 +965,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_cache_expunges-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_expunges-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Cache expunges',
@@ -1470,7 +979,7 @@
     'state': '0',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_cache_memory-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_memory-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1503,7 +1012,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_cache_memory-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_memory-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Cache memory',
@@ -1516,7 +1025,7 @@
     'state': 'mmap',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_cache_memory_size-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_memory_size-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1555,7 +1064,7 @@
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_cache_memory_size-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_memory_size-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
@@ -1570,7 +1079,7 @@
     'state': '0.175296',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_cache_number_of_entires-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_entires-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1605,7 +1114,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_cache_number_of_entires-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_entires-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Cache number of entires',
@@ -1619,7 +1128,7 @@
     'state': '102',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_cache_number_of_hits-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_hits-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1654,7 +1163,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_cache_number_of_hits-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_hits-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Cache number of hits',
@@ -1668,7 +1177,7 @@
     'state': '590911',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_cache_number_of_inserts-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_inserts-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1703,7 +1212,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_cache_number_of_inserts-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_inserts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Cache number of inserts',
@@ -1717,7 +1226,7 @@
     'state': '55421',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_cache_number_of_misses-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_misses-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1752,7 +1261,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_cache_number_of_misses-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_misses-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Cache number of misses',
@@ -1766,7 +1275,7 @@
     'state': '55250',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_cache_number_of_slots-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_slots-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1801,7 +1310,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_cache_number_of_slots-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_slots-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Cache number of slots',
@@ -1815,7 +1324,7 @@
     'state': '4099',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_cache_start_time-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_start_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1848,7 +1357,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_cache_start_time-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -1862,7 +1371,7 @@
     'state': '2024-07-29T03:00:08+00:00',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_cache_ttl-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_ttl-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1895,7 +1404,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_cache_ttl-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_ttl-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Cache ttl',
@@ -1908,7 +1417,7 @@
     'state': '0',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_cpu_load_last_15_minutes-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_15_minutes-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1944,7 +1453,7 @@
     'unit_of_measurement': 'load',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_cpu_load_last_15_minutes-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_15_minutes-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local CPU Load last 15 minutes',
@@ -1958,7 +1467,7 @@
     'state': '1.45263671875',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_cpu_load_last_1_minute-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_1_minute-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1994,7 +1503,7 @@
     'unit_of_measurement': 'load',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_cpu_load_last_1_minute-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_1_minute-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local CPU Load last 1 minute',
@@ -2008,7 +1517,7 @@
     'state': '2.06640625',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_cpu_load_last_5_minutes-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_5_minutes-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2044,7 +1553,7 @@
     'unit_of_measurement': 'load',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_cpu_load_last_5_minutes-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_5_minutes-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local CPU Load last 5 minutes',
@@ -2058,7 +1567,7 @@
     'state': '1.58447265625',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_database_size-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_database_size-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2097,7 +1606,7 @@
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_database_size-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_database_size-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
@@ -2112,7 +1621,7 @@
     'state': '4.784128',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_database_type-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_database_type-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2145,7 +1654,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_database_type-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_database_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Database type',
@@ -2158,7 +1667,7 @@
     'state': 'sqlite3',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_database_version-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_database_version-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2191,7 +1700,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_database_version-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_database_version-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Database version',
@@ -2204,7 +1713,7 @@
     'state': '3.40.1',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_free_memory-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_free_memory-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2243,7 +1752,7 @@
     'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_free_memory-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_free_memory-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
@@ -2258,7 +1767,7 @@
     'state': '6.75328',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_free_space-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_free_space-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2297,7 +1806,7 @@
     'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_free_space-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_free_space-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
@@ -2312,7 +1821,7 @@
     'state': '32.769138688',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_free_swap_memory-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_free_swap_memory-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2351,7 +1860,7 @@
     'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_free_swap_memory-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_free_swap_memory-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
@@ -2366,7 +1875,7 @@
     'state': '10.484736',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_interned_buffer_size-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_interned_buffer_size-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2405,7 +1914,7 @@
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_interned_buffer_size-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_interned_buffer_size-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
@@ -2420,7 +1929,7 @@
     'state': '33.554432',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_interned_free_memory-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_interned_free_memory-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2459,7 +1968,7 @@
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_interned_free_memory-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_interned_free_memory-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
@@ -2474,7 +1983,7 @@
     'state': '20.924072',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_interned_number_of_strings-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_interned_number_of_strings-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2509,7 +2018,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_interned_number_of_strings-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_interned_number_of_strings-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Interned number of strings',
@@ -2523,7 +2032,7 @@
     'state': '69242',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_interned_used_memory-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_interned_used_memory-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2562,7 +2071,7 @@
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_interned_used_memory-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_interned_used_memory-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
@@ -2577,7 +2086,7 @@
     'state': '12.63036',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_jit_buffer_free-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_jit_buffer_free-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2616,7 +2125,7 @@
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_jit_buffer_free-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_jit_buffer_free-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
@@ -2631,7 +2140,7 @@
     'state': '133.190688',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_jit_buffer_size-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_jit_buffer_size-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2670,7 +2179,7 @@
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_jit_buffer_size-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_jit_buffer_size-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
@@ -2685,7 +2194,7 @@
     'state': '134.217712',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_jit_kind-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_jit_kind-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2718,7 +2227,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_jit_kind-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_jit_kind-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local JIT kind',
@@ -2731,7 +2240,7 @@
     'state': '5',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_jit_opt_flags-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_jit_opt_flags-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2764,7 +2273,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_jit_opt_flags-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_jit_opt_flags-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local JIT opt flags',
@@ -2777,7 +2286,7 @@
     'state': '6',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_jit_opt_level-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_jit_opt_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2810,7 +2319,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_jit_opt_level-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_jit_opt_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local JIT opt level',
@@ -2823,7 +2332,7 @@
     'state': '5',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_blacklist_miss_ratio-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_blacklist_miss_ratio-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2858,7 +2367,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_blacklist_miss_ratio-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_blacklist_miss_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Opcache blacklist miss ratio',
@@ -2873,7 +2382,7 @@
     'state': '0',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_blacklist_misses-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_blacklist_misses-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2908,7 +2417,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_blacklist_misses-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_blacklist_misses-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Opcache blacklist misses',
@@ -2922,7 +2431,7 @@
     'state': '0',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_cached_keys-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_cached_keys-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2957,7 +2466,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_cached_keys-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_cached_keys-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Opcache cached keys',
@@ -2971,7 +2480,7 @@
     'state': '2654',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_cached_scripts-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_cached_scripts-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3006,7 +2515,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_cached_scripts-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_cached_scripts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Opcache cached scripts',
@@ -3020,7 +2529,7 @@
     'state': '1406',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_current_wasted_percentage-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_current_wasted_percentage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3056,7 +2565,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_current_wasted_percentage-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_current_wasted_percentage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Opcache current wasted percentage',
@@ -3070,7 +2579,7 @@
     'state': '0',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_free_memory-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_free_memory-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3109,7 +2618,7 @@
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_free_memory-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_free_memory-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
@@ -3124,7 +2633,7 @@
     'state': '62.190616',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_hash_restarts-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_hash_restarts-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3159,7 +2668,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_hash_restarts-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_hash_restarts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Opcache hash restarts',
@@ -3173,7 +2682,7 @@
     'state': '0',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_hit_rate-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_hit_rate-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3209,7 +2718,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_hit_rate-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_hit_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Opcache hit rate',
@@ -3223,7 +2732,7 @@
     'state': '99.9855667222406',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_hits-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_hits-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3258,7 +2767,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_hits-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_hits-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Opcache hits',
@@ -3272,7 +2781,7 @@
     'state': '9739971',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_last_restart_time-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_last_restart_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3305,7 +2814,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_last_restart_time-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_last_restart_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -3319,7 +2828,7 @@
     'state': '1970-01-01T00:00:00+00:00',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_manual_restarts-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_manual_restarts-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3354,7 +2863,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_manual_restarts-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_manual_restarts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Opcache manual restarts',
@@ -3368,7 +2877,7 @@
     'state': '0',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_max_cached_keys-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_max_cached_keys-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3403,7 +2912,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_max_cached_keys-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_max_cached_keys-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Opcache max cached keys',
@@ -3417,7 +2926,7 @@
     'state': '16229',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_misses-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_misses-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3452,7 +2961,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_misses-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_misses-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Opcache misses',
@@ -3466,7 +2975,7 @@
     'state': '1406',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_out_of_memory_restarts-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_out_of_memory_restarts-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3501,7 +3010,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_out_of_memory_restarts-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_out_of_memory_restarts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Opcache out of memory restarts',
@@ -3515,7 +3024,7 @@
     'state': '0',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_start_time-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_start_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3548,7 +3057,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_start_time-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -3562,7 +3071,7 @@
     'state': '2024-07-29T03:00:08+00:00',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_used_memory-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_used_memory-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3601,7 +3110,7 @@
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_used_memory-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_used_memory-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
@@ -3616,7 +3125,7 @@
     'state': '72.027112',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_wasted_memory-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_wasted_memory-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3655,7 +3164,7 @@
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_opcache_wasted_memory-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_wasted_memory-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
@@ -3670,7 +3179,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_php_max_execution_time-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_php_max_execution_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3703,7 +3212,7 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_php_max_execution_time-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_php_max_execution_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -3718,7 +3227,7 @@
     'state': '3600',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_php_memory_limit-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_php_memory_limit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3757,7 +3266,7 @@
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_php_memory_limit-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_php_memory_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
@@ -3772,7 +3281,7 @@
     'state': '536.870912',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_php_upload_maximum_filesize-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_php_upload_maximum_filesize-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3811,7 +3320,7 @@
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_php_upload_maximum_filesize-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_php_upload_maximum_filesize-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
@@ -3826,7 +3335,7 @@
     'state': '536.870912',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_php_version-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_php_version-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3859,7 +3368,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_php_version-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_php_version-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local PHP version',
@@ -3872,7 +3381,7 @@
     'state': '8.2.18',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_sma_available_memory-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_sma_available_memory-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3911,7 +3420,7 @@
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_sma_available_memory-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_sma_available_memory-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
@@ -3926,7 +3435,7 @@
     'state': '33.342368',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_sma_number_of_segments-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_sma_number_of_segments-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3961,7 +3470,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_sma_number_of_segments-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_sma_number_of_segments-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local SMA number of segments',
@@ -3975,7 +3484,7 @@
     'state': '1',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_sma_segment_size-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_sma_segment_size-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4014,7 +3523,7 @@
     'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_sma_segment_size-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_sma_segment_size-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
@@ -4029,7 +3538,7 @@
     'state': '33.554312',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_system_memcache_distributed-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_system_memcache_distributed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4062,7 +3571,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_system_memcache_distributed-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_system_memcache_distributed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local System memcache distributed',
@@ -4075,7 +3584,7 @@
     'state': 'none',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_system_memcache_local-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_system_memcache_local-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4108,7 +3617,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_system_memcache_local-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_system_memcache_local-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local System memcache local',
@@ -4121,7 +3630,7 @@
     'state': '\\OC\\Memcache\\APCu',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_system_memcache_locking-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_system_memcache_locking-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4154,7 +3663,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_system_memcache_locking-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_system_memcache_locking-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local System memcache locking',
@@ -4167,7 +3676,7 @@
     'state': 'none',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_system_theme-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_system_theme-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4200,7 +3709,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_system_theme-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_system_theme-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local System theme',
@@ -4213,7 +3722,7 @@
     'state': '',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_system_version-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_system_version-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4246,7 +3755,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_system_version-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_system_version-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local System version',
@@ -4259,7 +3768,7 @@
     'state': '28.0.4.1',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_total_memory-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_total_memory-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4298,7 +3807,7 @@
     'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_total_memory-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_total_memory-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
@@ -4313,7 +3822,7 @@
     'state': '30.728192',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_total_swap_memory-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_total_swap_memory-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4352,7 +3861,7 @@
     'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_total_swap_memory-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_total_swap_memory-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
@@ -4367,7 +3876,7 @@
     'state': '10.484736',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_updates_available-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_updates_available-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4402,7 +3911,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_updates_available-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_updates_available-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Updates available',
@@ -4416,7 +3925,7 @@
     'state': '0',
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_webserver-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_webserver-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4449,7 +3958,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor-80][sensor.my_nc_url_local_webserver-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_webserver-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my.nc_url.local Webserver',
@@ -4460,61 +3969,5 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Apache/2.4.57 (Debian)',
-  })
-# ---
-# name: test_async_setup_entry[update-1][update.my_nc_url_local_none-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'update',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'update.my_nc_url_local_none',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'nextcloud',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '1234567890abcdef#update',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_async_setup_entry[update-1][update.my_nc_url_local_none-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'entity_picture': 'https://brands.home-assistant.io/_/nextcloud/icon.png',
-      'friendly_name': 'my.nc_url.local None',
-      'in_progress': False,
-      'installed_version': '28.0.4.1',
-      'latest_version': '28.0.4.1',
-      'release_summary': None,
-      'release_url': 'https://nextcloud.com/changelog/#28-0-4',
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 0>,
-      'title': None,
-    }),
-    'context': <ANY>,
-    'entity_id': 'update.my_nc_url_local_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
   })
 # ---

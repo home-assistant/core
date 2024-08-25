@@ -32,7 +32,7 @@ async def init_integration(
     ):
         mock_nextcloud_monitor.update = Mock(return_value=True)
         mock_nextcloud_monitor.return_value.data = data
-        await hass.config_entries.async_setup(entry.entry_id)
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     return entry

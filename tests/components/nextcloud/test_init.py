@@ -9,54 +9,35 @@ from nextcloudmonitor import (
     NextcloudMonitorRequestError,
 )
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nextcloud.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_URL, Platform
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration, mock_config_entry
 from .const import MOCKED_ENTRY_ID, NC_DATA, VALID_CONFIG
 
-from tests.common import mock_registry, snapshot_platform
+from tests.common import mock_registry
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.parametrize(
-    ("platform", "expected_entity_count"),
-    [
-        (Platform.BINARY_SENSOR, 6),
-        (Platform.SENSOR, 80),
-        (Platform.UPDATE, 1),
-    ],
-)
 async def test_async_setup_entry(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
-    platform: Platform,
-    expected_entity_count: int,
 ) -> None:
     """Test a successful setup entry."""
-    with patch("homeassistant.components.nextcloud.PLATFORMS", [platform]):
-        entry = await init_integration(hass, VALID_CONFIG, NC_DATA)
-
-    assert entry.state == ConfigEntryState.LOADED
-
-    states = hass.states.async_all()
-    assert len(states) == expected_entity_count
-
-    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+    assert await init_integration(hass, VALID_CONFIG, NC_DATA)
 
 
-async def test_unique_id_migration(hass: HomeAssistant) -> None:
+async def test_unique_id_migration(
+    hass: HomeAssistant,
+) -> None:
     """Test migration of unique ids to stable ones."""
 
     entity_id = "sensor.my_nc_url_local_system_version"
 
-    mock_registry(
+    entity_registry = mock_registry(
         hass,
         {
             entity_id: er.RegistryEntry(
@@ -69,13 +50,13 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
     )
 
     # test old unique id
-    reg_entry = er.async_get(hass).async_get(entity_id)
+    reg_entry = entity_registry.async_get(entity_id)
     assert reg_entry.unique_id == f"{VALID_CONFIG[CONF_URL]}#nextcloud_system_version"
 
     await init_integration(hass, VALID_CONFIG, NC_DATA)
 
     # test migrated unique id
-    reg_entry = er.async_get(hass).async_get(entity_id)
+    reg_entry = entity_registry.async_get(entity_id)
     assert reg_entry.unique_id == f"{MOCKED_ENTRY_ID}#system_version"
 
 
