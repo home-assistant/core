@@ -102,6 +102,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         self._pending_platforms: list[Platform] | None = None
         device_name = device.name if device.initialized else entry.title
         interval_td = timedelta(seconds=update_interval)
+        self._connected_once = False
         super().__init__(hass, LOGGER, name=device_name, update_interval=interval_td)
 
         self._debounced_reload: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
@@ -177,6 +178,8 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         except InvalidAuthError:
             self.entry.async_start_reauth(self.hass)
             return False
+
+        self._connected_once = True
 
         if not self.device.firmware_supported:
             async_create_issue_unsupported_firmware(self.hass, self.entry)
@@ -478,12 +481,13 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
 
     async def async_device_online(self) -> None:
         """Handle device going online."""
-        if self.sleep_period:
-            # Zeroconf told us the device is online, try to setup
-            # the outbound websocket if it is not enabled
-            self._async_handle_rpc_device_online()
-        else:
+        if not self.sleep_period:
             await self.async_request_refresh()
+        elif not self._connected_once:
+            # Zeroconf told us the device is online, try to setup
+            # the outbound websocket if it is not enabled if we have
+            # not connected to the device yet
+            self._async_handle_rpc_device_online()
 
     def update_sleep_period(self) -> bool:
         """Check device sleep period & update if changed."""
