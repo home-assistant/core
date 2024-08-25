@@ -585,4 +585,4 @@ def get_rpc_ws_url(hass: HomeAssistant) -> str | None:
         return None
     url = URL(raw_url)
     ws_url = url.with_scheme("wss" if url.scheme == "https" else "ws")
-    return str(ws_url.joinpath(API_WS_URL))
+    return str(ws_url.joinpath(API_WS_URL.removeprefix("/")))

@@ -476,6 +476,15 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
 
         entry.async_on_unload(entry.add_update_listener(self._async_update_listener))
 
+    async def async_device_online(self) -> None:
+        """Handle device going online."""
+        if self.sleep_period:
+            # Zeroconf told us the device is online, try to setup
+            # the outbound websocket if it is not enabled
+            self._async_handle_rpc_device_online()
+        else:
+            await self.async_request_refresh()
+
     def update_sleep_period(self) -> bool:
         """Check device sleep period & update if changed."""
         if (
@@ -672,21 +681,26 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         )
 
     @callback
+    def _async_handle_rpc_device_online(self) -> None:
+        """Handle device going online."""
+        if self.device.connected:
+            LOGGER.debug("Device %s already connected", self.name)
+            return
+        self.entry.async_create_background_task(
+            self.hass,
+            self._async_device_connect_task(),
+            "rpc device online",
+            eager_start=True,
+        )
+
+    @callback
     def _async_handle_update(
         self, device_: RpcDevice, update_type: RpcUpdateType
     ) -> None:
         """Handle device update."""
         LOGGER.debug("Shelly %s handle update, type: %s", self.name, update_type)
         if update_type is RpcUpdateType.ONLINE:
-            if self.device.connected:
-                LOGGER.debug("Device %s already connected", self.name)
-                return
-            self.entry.async_create_background_task(
-                self.hass,
-                self._async_device_connect_task(),
-                "rpc device online",
-                eager_start=True,
-            )
+            self._async_handle_rpc_device_online()
         elif update_type is RpcUpdateType.INITIALIZED:
             self.entry.async_create_background_task(
                 self.hass, self._async_connected(), "rpc device init", eager_start=True
@@ -807,14 +821,13 @@ def get_rpc_coordinator_by_device_id(
 async def async_reconnect_soon(hass: HomeAssistant, entry: ShellyConfigEntry) -> None:
     """Try to reconnect soon."""
     if (
-        not entry.data.get(CONF_SLEEP_PERIOD)
-        and not hass.is_stopping
-        and entry.state == ConfigEntryState.LOADED
+        not hass.is_stopping
+        and entry.state is ConfigEntryState.LOADED
         and (coordinator := entry.runtime_data.rpc)
     ):
         entry.async_create_background_task(
             hass,
-            coordinator.async_request_refresh(),
+            coordinator.async_device_online(),
             "reconnect soon",
             eager_start=True,
         )
