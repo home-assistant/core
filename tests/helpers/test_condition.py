@@ -996,11 +996,11 @@ async def test_time_using_time(hass: HomeAssistant) -> None:
     """Test time conditions using time entities."""
     hass.states.async_set(
         "time.am",
-        "2021-06-03 13:00:00.000000+00:00",  # 6 am local time
+        "06:00:00",  # 6 am local time
     )
     hass.states.async_set(
         "time.pm",
-        "2020-06-01 01:00:00.000000+00:00",  # 6 pm local time
+        "18:00:00",  # 6 pm local time
     )
     hass.states.async_set(
         "time.invalid_timestamp",

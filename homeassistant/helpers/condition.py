@@ -827,9 +827,13 @@ def time(
                 after_entity.attributes.get("minute", 59),
                 after_entity.attributes.get("second", 59),
             )
+        elif after_entity.domain == "time":
+            try:
+                after = datetime.strptime(after_entity.state, "%H:%M:%S").time()
+            except ValueError:
+                return False
         elif (
-            after_entity.domain == "time"
-            or after_entity.attributes.get(ATTR_DEVICE_CLASS)
+            after_entity.attributes.get(ATTR_DEVICE_CLASS)
             == SensorDeviceClass.TIMESTAMP
         ) and after_entity.state not in (
             STATE_UNAVAILABLE,
@@ -853,9 +857,13 @@ def time(
                 before_entity.attributes.get("minute", 59),
                 before_entity.attributes.get("second", 59),
             )
+        elif before_entity.domain == "time":
+            try:
+                before = datetime.strptime(before_entity.state, "%H:%M:%S").time()
+            except ValueError:
+                return False
         elif (
-            before_entity.domain == "time"
-            or before_entity.attributes.get(ATTR_DEVICE_CLASS)
+            before_entity.attributes.get(ATTR_DEVICE_CLASS)
             == SensorDeviceClass.TIMESTAMP
         ) and before_entity.state not in (
             STATE_UNAVAILABLE,
