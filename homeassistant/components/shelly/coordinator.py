@@ -102,6 +102,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         self._pending_platforms: list[Platform] | None = None
         device_name = device.name if device.initialized else entry.title
         interval_td = timedelta(seconds=update_interval)
+        self._came_online_once = False
         super().__init__(hass, LOGGER, name=device_name, update_interval=interval_td)
 
         self._debounced_reload: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
@@ -373,6 +374,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         """Handle device update."""
         LOGGER.debug("Shelly %s handle update, type: %s", self.name, update_type)
         if update_type is BlockUpdateType.ONLINE:
+            self._came_online_once = True
             self.entry.async_create_background_task(
                 self.hass,
                 self._async_device_connect_task(),
@@ -480,7 +482,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         """Handle device going online."""
         if not self.sleep_period:
             await self.async_request_refresh()
-        elif not self.device.initialized:
+        elif not self._came_online_once:
             LOGGER.debug(
                 "Sleepy device %s is online, trying to poll and configure", self.name
             )
@@ -711,6 +713,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         """Handle device update."""
         LOGGER.debug("Shelly %s handle update, type: %s", self.name, update_type)
         if update_type is RpcUpdateType.ONLINE:
+            self._came_online_once = True
             self._async_handle_rpc_device_online()
         elif update_type is RpcUpdateType.INITIALIZED:
             self.entry.async_create_background_task(
