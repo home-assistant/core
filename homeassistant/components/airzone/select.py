@@ -63,7 +63,7 @@ SLEEP_DICT: Final[dict[str, int]] = {
 }
 
 
-MASTER_ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
+MAIN_ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
     AirzoneSelectDescription(
         api_param=API_MODE,
         key=AZD_MODE,
@@ -128,7 +128,7 @@ async def async_setup_entry(
                     zones_data.get(system_zone_id),
                 )
                 for system_zone_id in new_zones
-                for description in MASTER_ZONE_SELECT_TYPES
+                for description in MAIN_ZONE_SELECT_TYPES
                 if description.key in zones_data.get(system_zone_id)
                 and zones_data.get(system_zone_id).get(AZD_MASTER) is True
             )
