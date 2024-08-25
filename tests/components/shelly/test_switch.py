@@ -118,13 +118,14 @@ async def test_block_restored_motion_switch(
     entry = await init_integration(
         hass, 1, sleep_period=1000, model=model, skip_setup=True
     )
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         SWITCH_DOMAIN,
         "test_name_motion_detection",
         "sensor_0-motionActive",
         entry,
+        device_id=device.id,
     )
 
     mock_restore_cache(hass, [State(entity_id, STATE_OFF)])
@@ -154,13 +155,14 @@ async def test_block_restored_motion_switch_no_last_state(
     entry = await init_integration(
         hass, 1, sleep_period=1000, model=model, skip_setup=True
     )
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         SWITCH_DOMAIN,
         "test_name_motion_detection",
         "sensor_0-motionActive",
         entry,
+        device_id=device.id,
     )
     monkeypatch.setattr(mock_block_device, "initialized", False)
     await hass.config_entries.async_setup(entry.entry_id)
