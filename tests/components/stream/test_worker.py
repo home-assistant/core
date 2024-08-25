@@ -283,7 +283,12 @@ class MockPyAv:
         return self.container
 
 
-def run_worker(hass, stream, stream_source, stream_settings=None):
+def run_worker(
+    hass: HomeAssistant,
+    stream: Stream,
+    stream_source: str,
+    stream_settings: StreamSettings | None = None,
+) -> None:
     """Run the stream worker under test."""
     stream_state = StreamState(hass, stream.outputs, stream._diagnostics)
     stream_worker(
@@ -296,7 +301,12 @@ def run_worker(hass, stream, stream_source, stream_settings=None):
     )
 
 
-async def async_decode_stream(hass, packets, py_av=None, stream_settings=None):
+async def async_decode_stream(
+    hass: HomeAssistant,
+    packets: PacketSequence,
+    py_av: MockPyAv | None = None,
+    stream_settings: StreamSettings | None = None,
+) -> FakePyAvBuffer:
     """Start a stream worker that decodes incoming stream packets into output segments."""
     stream = Stream(
         hass,

@@ -1,6 +1,6 @@
 """Config flow to configure Heos."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 from pyheos import Heos, HeosError
@@ -51,7 +51,9 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(DOMAIN, raise_on_progress=False)
         return self.async_create_entry(title=format_title(host), data={CONF_HOST: host})
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Obtain host and validate connection."""
         self.hass.data.setdefault(DATA_DISCOVERED_HOSTS, {})
         # Only a single entry is needed for all devices

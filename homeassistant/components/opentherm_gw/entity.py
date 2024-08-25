@@ -2,15 +2,23 @@
 
 import logging
 
+import pyotgw.vars as gw_vars
+
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 
-from . import OpenThermGatewayDevice
-from .const import DOMAIN, TRANSLATE_SOURCE
+from . import OpenThermGatewayHub
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+TRANSLATE_SOURCE = {
+    gw_vars.BOILER: "Boiler",
+    gw_vars.OTGW: None,
+    gw_vars.THERMOSTAT: "Thermostat",
+}
 
 
 class OpenThermEntityDescription(EntityDescription):
@@ -29,27 +37,27 @@ class OpenThermEntity(Entity):
 
     def __init__(
         self,
-        gw_dev: OpenThermGatewayDevice,
+        gw_hub: OpenThermGatewayHub,
         source: str,
         description: OpenThermEntityDescription,
     ) -> None:
         """Initialize the entity."""
         self.entity_description = description
-        self._gateway = gw_dev
+        self._gateway = gw_hub
         self._source = source
         friendly_name_format = (
             f"{description.friendly_name_format} ({TRANSLATE_SOURCE[source]})"
             if TRANSLATE_SOURCE[source] is not None
             else description.friendly_name_format
         )
-        self._attr_name = friendly_name_format.format(gw_dev.name)
-        self._attr_unique_id = f"{gw_dev.gw_id}-{source}-{description.key}"
+        self._attr_name = friendly_name_format.format(gw_hub.name)
+        self._attr_unique_id = f"{gw_hub.hub_id}-{source}-{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, gw_dev.gw_id)},
+            identifiers={(DOMAIN, gw_hub.hub_id)},
             manufacturer="Schelte Bron",
             model="OpenTherm Gateway",
-            name=gw_dev.name,
-            sw_version=gw_dev.gw_version,
+            name=gw_hub.name,
+            sw_version=gw_hub.gw_version,
         )
 
     async def async_added_to_hass(self) -> None:

@@ -1,6 +1,7 @@
 """Config flow for Vilfo Router integration."""
 
 import logging
+from typing import Any
 
 from vilfo import Client as VilfoClient
 from vilfo.exceptions import (
@@ -9,7 +10,7 @@ from vilfo.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_ID, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -99,7 +100,9 @@ class DomainConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
