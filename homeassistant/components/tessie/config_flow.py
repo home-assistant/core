@@ -38,6 +38,7 @@ class TessieConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get configuration from the user."""
         errors: dict[str, str] = {}
         if user_input:
+            self._async_abort_entries_match(dict(user_input))
             try:
                 await get_state_of_all_vehicles(
                     session=async_get_clientsession(self.hass),

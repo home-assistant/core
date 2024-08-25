@@ -26,6 +26,9 @@ async def async_get_config_entry_diagnostics(
                 "entity_id": sensor.entity_id,
                 "extra_attributes": sensor.extra_state_attributes,
                 "last_sensor_data": restored_last_extra_data,
+                "period": sensor._period,  # noqa: SLF001
+                "cron": sensor._cron_pattern,  # noqa: SLF001
+                "source": sensor._sensor_source_id,  # noqa: SLF001
             }
         )
 

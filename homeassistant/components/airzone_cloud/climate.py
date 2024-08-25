@@ -53,13 +53,12 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import AirzoneCloudConfigEntry
 from .coordinator import AirzoneUpdateCoordinator
 from .entity import (
     AirzoneAidooEntity,
@@ -119,10 +118,12 @@ HVAC_MODE_HASS_TO_LIB: Final[dict[HVACMode, OperationMode]] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AirzoneCloudConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add Airzone climate from a config_entry."""
-    coordinator: AirzoneUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     entities: list[AirzoneClimate] = []
 

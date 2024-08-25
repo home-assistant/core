@@ -51,8 +51,8 @@ MOCK_TELEGRAMS = [
 def assert_telegram_history(telegrams: list[TelegramDict]) -> bool:
     """Assert that the mock telegrams are equal to the given telegrams. Omitting timestamp."""
     assert len(telegrams) == len(MOCK_TELEGRAMS)
-    for index in range(len(telegrams)):
-        test_telegram = copy(telegrams[index])  # don't modify the original
+    for index, value in enumerate(telegrams):
+        test_telegram = copy(value)  # don't modify the original
         comp_telegram = MOCK_TELEGRAMS[index]
         assert datetime.fromisoformat(test_telegram["timestamp"])
         if isinstance(test_telegram["payload"], tuple):

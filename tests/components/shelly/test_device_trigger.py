@@ -68,7 +68,7 @@ async def test_get_triggers_block_device(
                 CONF_SUBTYPE: "button1",
                 "metadata": {},
             }
-            for type_ in ["single", "long"]
+            for type_ in ("single", "long")
         ]
 
     triggers = await async_get_device_automations(
@@ -94,14 +94,14 @@ async def test_get_triggers_rpc_device(
             CONF_SUBTYPE: "button1",
             "metadata": {},
         }
-        for trigger_type in [
+        for trigger_type in (
             "btn_down",
             "btn_up",
             "single_push",
             "double_push",
             "triple_push",
             "long_push",
-        ]
+        )
     ]
 
     triggers = await async_get_device_automations(
@@ -127,7 +127,7 @@ async def test_get_triggers_button(
             CONF_SUBTYPE: "button",
             "metadata": {},
         }
-        for trigger_type in ["single", "double", "triple", "long"]
+        for trigger_type in ("single", "double", "triple", "long")
     ]
 
     triggers = await async_get_device_automations(
@@ -178,7 +178,7 @@ async def test_get_triggers_for_invalid_device_id(
 async def test_if_fires_on_click_event_block_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     mock_block_device: Mock,
 ) -> None:
     """Test for click_event trigger firing for block device."""
@@ -215,14 +215,14 @@ async def test_if_fires_on_click_event_block_device(
     hass.bus.async_fire(EVENT_SHELLY_CLICK, message)
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "test_trigger_single_click"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "test_trigger_single_click"
 
 
 async def test_if_fires_on_click_event_rpc_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     mock_rpc_device: Mock,
 ) -> None:
     """Test for click_event trigger firing for rpc device."""
@@ -259,14 +259,14 @@ async def test_if_fires_on_click_event_rpc_device(
     hass.bus.async_fire(EVENT_SHELLY_CLICK, message)
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "test_trigger_single_push"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "test_trigger_single_push"
 
 
 async def test_validate_trigger_block_device_not_ready(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     mock_block_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -304,14 +304,14 @@ async def test_validate_trigger_block_device_not_ready(
     hass.bus.async_fire(EVENT_SHELLY_CLICK, message)
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "test_trigger_single_click"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "test_trigger_single_click"
 
 
 async def test_validate_trigger_rpc_device_not_ready(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -349,8 +349,8 @@ async def test_validate_trigger_rpc_device_not_ready(
     hass.bus.async_fire(EVENT_SHELLY_CLICK, message)
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "test_trigger_single_push"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "test_trigger_single_push"
 
 
 async def test_validate_trigger_invalid_triggers(
@@ -391,7 +391,7 @@ async def test_validate_trigger_invalid_triggers(
 async def test_rpc_no_runtime_data(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -429,14 +429,14 @@ async def test_rpc_no_runtime_data(
     hass.bus.async_fire(EVENT_SHELLY_CLICK, message)
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "test_trigger_single_push"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "test_trigger_single_push"
 
 
 async def test_block_no_runtime_data(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     mock_block_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -474,5 +474,5 @@ async def test_block_no_runtime_data(
     hass.bus.async_fire(EVENT_SHELLY_CLICK, message)
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "test_trigger_single"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "test_trigger_single"

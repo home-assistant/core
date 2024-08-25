@@ -405,13 +405,13 @@ async def test_expand_entity_ids_does_not_return_duplicates(
         order=None,
     )
 
-    assert ["light.bowl", "light.ceiling"] == sorted(
+    assert sorted(
         group.expand_entity_ids(hass, [test_group.entity_id, "light.Ceiling"])
-    )
+    ) == ["light.bowl", "light.ceiling"]
 
-    assert ["light.bowl", "light.ceiling"] == sorted(
+    assert sorted(
         group.expand_entity_ids(hass, ["light.bowl", test_group.entity_id])
-    )
+    ) == ["light.bowl", "light.ceiling"]
 
 
 async def test_expand_entity_ids_recursive(hass: HomeAssistant) -> None:
@@ -439,7 +439,7 @@ async def test_expand_entity_ids_recursive(hass: HomeAssistant) -> None:
 
 async def test_expand_entity_ids_ignores_non_strings(hass: HomeAssistant) -> None:
     """Test that non string elements in lists are ignored."""
-    assert [] == group.expand_entity_ids(hass, [5, True])
+    assert group.expand_entity_ids(hass, [5, True]) == []
 
 
 async def test_get_entity_ids(hass: HomeAssistant) -> None:
@@ -460,9 +460,10 @@ async def test_get_entity_ids(hass: HomeAssistant) -> None:
         order=None,
     )
 
-    assert ["light.bowl", "light.ceiling"] == sorted(
-        group.get_entity_ids(hass, test_group.entity_id)
-    )
+    assert sorted(group.get_entity_ids(hass, test_group.entity_id)) == [
+        "light.bowl",
+        "light.ceiling",
+    ]
 
 
 async def test_get_entity_ids_with_domain_filter(hass: HomeAssistant) -> None:
@@ -482,19 +483,19 @@ async def test_get_entity_ids_with_domain_filter(hass: HomeAssistant) -> None:
         order=None,
     )
 
-    assert ["switch.ac"] == group.get_entity_ids(
+    assert group.get_entity_ids(
         hass, mixed_group.entity_id, domain_filter="switch"
-    )
+    ) == ["switch.ac"]
 
 
 async def test_get_entity_ids_with_non_existing_group_name(hass: HomeAssistant) -> None:
     """Test get_entity_ids with a non existing group."""
-    assert [] == group.get_entity_ids(hass, "non_existing")
+    assert group.get_entity_ids(hass, "non_existing") == []
 
 
 async def test_get_entity_ids_with_non_group_state(hass: HomeAssistant) -> None:
     """Test get_entity_ids with a non group state."""
-    assert [] == group.get_entity_ids(hass, "switch.AC")
+    assert group.get_entity_ids(hass, "switch.AC") == []
 
 
 async def test_group_being_init_before_first_tracked_state_is_set_to_on(
@@ -620,12 +621,12 @@ async def test_expand_entity_ids_expands_nested_groups(hass: HomeAssistant) -> N
         order=None,
     )
 
-    assert [
+    assert sorted(group.expand_entity_ids(hass, ["group.group_of_groups"])) == [
         "light.test_1",
         "light.test_2",
         "switch.test_1",
         "switch.test_2",
-    ] == sorted(group.expand_entity_ids(hass, ["group.group_of_groups"]))
+    ]
 
 
 async def test_set_assumed_state_based_on_tracked(hass: HomeAssistant) -> None:
@@ -1236,7 +1237,7 @@ async def test_group_mixed_domains_on(hass: HomeAssistant) -> None:
     hass.states.async_set("binary_sensor.alexander_garage_side_door_open", "on")
     hass.states.async_set("cover.small_garage_door", "open")
 
-    for domain in ["lock", "binary_sensor", "cover"]:
+    for domain in ("lock", "binary_sensor", "cover"):
         assert await async_setup_component(hass, domain, {})
     assert await async_setup_component(
         hass,
@@ -1261,7 +1262,7 @@ async def test_group_mixed_domains_off(hass: HomeAssistant) -> None:
     hass.states.async_set("binary_sensor.alexander_garage_side_door_open", "off")
     hass.states.async_set("cover.small_garage_door", "closed")
 
-    for domain in ["lock", "binary_sensor", "cover"]:
+    for domain in ("lock", "binary_sensor", "cover"):
         assert await async_setup_component(hass, domain, {})
     assert await async_setup_component(
         hass,

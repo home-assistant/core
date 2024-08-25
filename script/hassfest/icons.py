@@ -47,6 +47,19 @@ def ensure_not_same_as_default(value: dict) -> dict:
     return value
 
 
+DATA_ENTRY_ICONS_SCHEMA = vol.Schema(
+    {
+        "step": {
+            str: {
+                "section": {
+                    str: icon_value_validator,
+                }
+            }
+        }
+    }
+)
+
+
 def icon_schema(integration_type: str, no_entity_platform: bool) -> vol.Schema:
     """Create an icon schema."""
 
@@ -73,6 +86,11 @@ def icon_schema(integration_type: str, no_entity_platform: bool) -> vol.Schema:
 
     schema = vol.Schema(
         {
+            vol.Optional("config"): DATA_ENTRY_ICONS_SCHEMA,
+            vol.Optional("issues"): vol.Schema(
+                {str: {"fix_flow": DATA_ENTRY_ICONS_SCHEMA}}
+            ),
+            vol.Optional("options"): DATA_ENTRY_ICONS_SCHEMA,
             vol.Optional("services"): state_validator,
         }
     )

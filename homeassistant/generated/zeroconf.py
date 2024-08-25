@@ -68,6 +68,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX B10": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX BR30": {
         "always_discover": True,
         "domain": "lifx",
@@ -157,6 +161,10 @@ HOMEKIT = {
         "domain": "lifx",
     },
     "LIFX String": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX T10": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -404,6 +412,12 @@ ZEROCONF = {
             "domain": "apple_tv",
         },
     ],
+    "_czc._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "czc*",
+        },
+    ],
     "_daap._tcp.local.": [
         {
             "domain": "forked_daapd",
@@ -583,6 +597,11 @@ ZEROCONF = {
             "name": "gateway*",
         },
     ],
+    "_linkplay._tcp.local.": [
+        {
+            "domain": "linkplay",
+        },
+    ],
     "_lookin._tcp.local.": [
         {
             "domain": "lookin",
@@ -638,6 +657,11 @@ ZEROCONF = {
         {
             "domain": "yeelight",
             "name": "yeelink-*",
+        },
+    ],
+    "_musc._tcp.local.": [
+        {
+            "domain": "bluesound",
         },
     ],
     "_nanoleafapi._tcp.local.": [
@@ -731,6 +755,9 @@ ZEROCONF = {
         },
     ],
     "_slzb-06._tcp.local.": [
+        {
+            "domain": "smlight",
+        },
         {
             "domain": "zha",
             "name": "slzb-06*",

@@ -75,6 +75,13 @@ class Selector[_T: Mapping[str, Any]]:
 
         self.config = self.CONFIG_SCHEMA(config)
 
+    def __eq__(self, other: object) -> bool:
+        """Check equality."""
+        if not isinstance(other, Selector):
+            return NotImplemented
+
+        return self.selector_type == other.selector_type and self.config == other.config
+
     def serialize(self) -> dict[str, dict[str, _T]]:
         """Serialize Selector for voluptuous_serialize."""
         return {"selector": {self.selector_type: self.config}}
@@ -278,7 +285,7 @@ class AssistPipelineSelector(Selector[AssistPipelineSelectorConfig]):
 
     CONFIG_SCHEMA = vol.Schema({})
 
-    def __init__(self, config: AssistPipelineSelectorConfig) -> None:
+    def __init__(self, config: AssistPipelineSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
@@ -430,10 +437,10 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
         range_min = self.config.get("min")
         range_max = self.config.get("max")
 
-        if not range_min:
+        if range_min is None:
             range_min = self.config.get("min_mireds")
 
-        if not range_max:
+        if range_max is None:
             range_max = self.config.get("max_mireds")
 
         value: int = vol.All(
@@ -517,7 +524,7 @@ class ConstantSelector(Selector[ConstantSelectorConfig]):
         }
     )
 
-    def __init__(self, config: ConstantSelectorConfig | None = None) -> None:
+    def __init__(self, config: ConstantSelectorConfig) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
@@ -560,7 +567,7 @@ class QrCodeSelector(Selector[QrCodeSelectorConfig]):
         }
     )
 
-    def __init__(self, config: QrCodeSelectorConfig | None = None) -> None:
+    def __init__(self, config: QrCodeSelectorConfig) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
@@ -588,7 +595,7 @@ class ConversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
         }
     )
 
-    def __init__(self, config: ConversationAgentSelectorConfig) -> None:
+    def __init__(self, config: ConversationAgentSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
@@ -718,6 +725,7 @@ class DurationSelectorConfig(TypedDict, total=False):
     """Class to represent a duration selector config."""
 
     enable_day: bool
+    enable_millisecond: bool
     allow_negative: bool
 
 
@@ -732,6 +740,8 @@ class DurationSelector(Selector[DurationSelectorConfig]):
             # Enable day field in frontend. A selection with `days` set is allowed
             # even if `enable_day` is not set
             vol.Optional("enable_day"): cv.boolean,
+            # Enable millisecond field in frontend.
+            vol.Optional("enable_millisecond"): cv.boolean,
             # Allow negative durations. Will default to False in HA Core 2025.6.0.
             vol.Optional("allow_negative"): cv.boolean,
         }
@@ -820,7 +830,7 @@ class FloorSelectorConfig(TypedDict, total=False):
 
 
 @SELECTORS.register("floor")
-class FloorSelector(Selector[AreaSelectorConfig]):
+class FloorSelector(Selector[FloorSelectorConfig]):
     """Selector of a single or list of floors."""
 
     selector_type = "floor"
@@ -934,7 +944,7 @@ class LanguageSelector(Selector[LanguageSelectorConfig]):
         }
     )
 
-    def __init__(self, config: LanguageSelectorConfig) -> None:
+    def __init__(self, config: LanguageSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
@@ -1159,7 +1169,7 @@ class SelectSelector(Selector[SelectSelectorConfig]):
         }
     )
 
-    def __init__(self, config: SelectSelectorConfig | None = None) -> None:
+    def __init__(self, config: SelectSelectorConfig) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 
@@ -1175,7 +1185,7 @@ class SelectSelector(Selector[SelectSelectorConfig]):
                     for option in cast(Sequence[SelectOptionDict], config_options)
                 ]
 
-        parent_schema = vol.In(options)
+        parent_schema: vol.In | vol.Any = vol.In(options)
         if self.config["custom_value"]:
             parent_schema = vol.Any(parent_schema, str)
 
@@ -1434,7 +1444,7 @@ class FileSelector(Selector[FileSelectorConfig]):
         }
     )
 
-    def __init__(self, config: FileSelectorConfig | None = None) -> None:
+    def __init__(self, config: FileSelectorConfig) -> None:
         """Instantiate a selector."""
         super().__init__(config)
 

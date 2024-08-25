@@ -1,12 +1,12 @@
 """Test fixtures for calendar sensor platforms."""
 
+from collections.abc import Generator
 import datetime
 import secrets
 from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.calendar import DOMAIN, CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry, ConfigFlow

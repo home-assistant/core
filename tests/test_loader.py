@@ -25,20 +25,20 @@ from .common import MockModule, async_get_persistent_notifications, mock_integra
 async def test_circular_component_dependencies(hass: HomeAssistant) -> None:
     """Test if we can detect circular dependencies of components."""
     mock_integration(hass, MockModule("mod1"))
-    mock_integration(hass, MockModule("mod2", ["mod1"]))
-    mock_integration(hass, MockModule("mod3", ["mod1"]))
-    mod_4 = mock_integration(hass, MockModule("mod4", ["mod2", "mod3"]))
+    mock_integration(hass, MockModule("mod2", dependencies=["mod1"]))
+    mock_integration(hass, MockModule("mod3", dependencies=["mod1"]))
+    mod_4 = mock_integration(hass, MockModule("mod4", dependencies=["mod2", "mod3"]))
 
     deps = await loader._async_component_dependencies(hass, mod_4)
     assert deps == {"mod1", "mod2", "mod3", "mod4"}
 
     # Create a circular dependency
-    mock_integration(hass, MockModule("mod1", ["mod4"]))
+    mock_integration(hass, MockModule("mod1", dependencies=["mod4"]))
     with pytest.raises(loader.CircularDependency):
         await loader._async_component_dependencies(hass, mod_4)
 
     # Create a different circular dependency
-    mock_integration(hass, MockModule("mod1", ["mod3"]))
+    mock_integration(hass, MockModule("mod1", dependencies=["mod3"]))
     with pytest.raises(loader.CircularDependency):
         await loader._async_component_dependencies(hass, mod_4)
 
@@ -59,7 +59,7 @@ async def test_circular_component_dependencies(hass: HomeAssistant) -> None:
 
 async def test_nonexistent_component_dependencies(hass: HomeAssistant) -> None:
     """Test if we can detect nonexistent dependencies of components."""
-    mod_1 = mock_integration(hass, MockModule("mod1", ["nonexistent"]))
+    mod_1 = mock_integration(hass, MockModule("mod1", dependencies=["nonexistent"]))
     with pytest.raises(loader.IntegrationNotFound):
         await loader._async_component_dependencies(hass, mod_1)
 
@@ -106,9 +106,8 @@ async def test_helpers_wrapper(hass: HomeAssistant) -> None:
     assert result == ["hello"]
 
 
-async def test_custom_component_name(
-    hass: HomeAssistant, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_custom_component_name(hass: HomeAssistant) -> None:
     """Test the name attribute of custom components."""
     with pytest.raises(loader.IntegrationNotFound):
         await loader.async_get_integration(hass, "test_standalone")
@@ -137,10 +136,9 @@ async def test_custom_component_name(
     assert TEST == 5
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_log_warning_custom_component(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that we log a warning when loading a custom component."""
 
@@ -151,10 +149,9 @@ async def test_log_warning_custom_component(
     assert "We found a custom integration test " in caplog.text
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_custom_integration_version_not_valid(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that we log a warning when custom integrations have a invalid version."""
     with pytest.raises(loader.IntegrationNotFound):
@@ -180,10 +177,10 @@ async def test_custom_integration_version_not_valid(
         loader.BlockedIntegration(AwesomeVersion("2.0.0"), "breaks Home Assistant"),
     ],
 )
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_custom_integration_version_blocked(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
     blocked_versions,
 ) -> None:
     """Test that we log a warning when custom integrations have a blocked version."""
@@ -207,10 +204,10 @@ async def test_custom_integration_version_blocked(
         loader.BlockedIntegration(AwesomeVersion("1.0.0"), "breaks Home Assistant"),
     ],
 )
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_custom_integration_version_not_blocked(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
     blocked_versions,
 ) -> None:
     """Test that we log a warning when custom integrations have a blocked version."""
@@ -493,9 +490,8 @@ async def test_async_get_platforms_caches_failures_when_component_loaded(
     assert integration.get_platform_cached("light") is None
 
 
-async def test_get_integration_legacy(
-    hass: HomeAssistant, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_get_integration_legacy(hass: HomeAssistant) -> None:
     """Test resolving integration."""
     integration = await loader.async_get_integration(hass, "test_embedded")
     assert integration.get_component().DOMAIN == "test_embedded"
@@ -503,9 +499,8 @@ async def test_get_integration_legacy(
     assert integration.get_platform_cached("switch") is not None
 
 
-async def test_get_integration_custom_component(
-    hass: HomeAssistant, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_get_integration_custom_component(hass: HomeAssistant) -> None:
     """Test resolving integration."""
     integration = await loader.async_get_integration(hass, "test_package")
 
@@ -663,7 +658,9 @@ def _get_test_integration(
     )
 
 
-def _get_test_integration_with_application_credentials(hass, name):
+def _get_test_integration_with_application_credentials(
+    hass: HomeAssistant, name: str
+) -> loader.Integration:
     """Return a generated test integration with application_credentials support."""
     return loader.Integration(
         hass,
@@ -683,7 +680,9 @@ def _get_test_integration_with_application_credentials(hass, name):
     )
 
 
-def _get_test_integration_with_zeroconf_matcher(hass, name, config_flow):
+def _get_test_integration_with_zeroconf_matcher(
+    hass: HomeAssistant, name: str, config_flow: bool
+) -> loader.Integration:
     """Return a generated test integration with a zeroconf matcher."""
     return loader.Integration(
         hass,
@@ -702,7 +701,9 @@ def _get_test_integration_with_zeroconf_matcher(hass, name, config_flow):
     )
 
 
-def _get_test_integration_with_legacy_zeroconf_matcher(hass, name, config_flow):
+def _get_test_integration_with_legacy_zeroconf_matcher(
+    hass: HomeAssistant, name: str, config_flow: bool
+) -> loader.Integration:
     """Return a generated test integration with a legacy zeroconf matcher."""
     return loader.Integration(
         hass,
@@ -729,7 +730,9 @@ def _get_test_integration_with_legacy_zeroconf_matcher(hass, name, config_flow):
     )
 
 
-def _get_test_integration_with_dhcp_matcher(hass, name, config_flow):
+def _get_test_integration_with_dhcp_matcher(
+    hass: HomeAssistant, name: str, config_flow: bool
+) -> loader.Integration:
     """Return a generated test integration with a dhcp matcher."""
     return loader.Integration(
         hass,
@@ -753,7 +756,9 @@ def _get_test_integration_with_dhcp_matcher(hass, name, config_flow):
     )
 
 
-def _get_test_integration_with_bluetooth_matcher(hass, name, config_flow):
+def _get_test_integration_with_bluetooth_matcher(
+    hass: HomeAssistant, name: str, config_flow: bool
+) -> loader.Integration:
     """Return a generated test integration with a bluetooth matcher."""
     return loader.Integration(
         hass,
@@ -772,7 +777,9 @@ def _get_test_integration_with_bluetooth_matcher(hass, name, config_flow):
     )
 
 
-def _get_test_integration_with_usb_matcher(hass, name, config_flow):
+def _get_test_integration_with_usb_matcher(
+    hass: HomeAssistant, name: str, config_flow: bool
+) -> loader.Integration:
     """Return a generated test integration with a usb matcher."""
     return loader.Integration(
         hass,
@@ -802,9 +809,8 @@ def _get_test_integration_with_usb_matcher(hass, name, config_flow):
     )
 
 
-async def test_get_custom_components(
-    hass: HomeAssistant, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_get_custom_components(hass: HomeAssistant) -> None:
     """Verify that custom components are cached."""
     test_1_integration = _get_test_integration(hass, "test_1", False)
     test_2_integration = _get_test_integration(hass, "test_2", True)
@@ -1000,9 +1006,8 @@ async def test_get_mqtt(hass: HomeAssistant) -> None:
         assert mqtt["test_2"] == ["test_2/discovery"]
 
 
-async def test_import_platform_executor(
-    hass: HomeAssistant, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_import_platform_executor(hass: HomeAssistant) -> None:
     """Test import a platform in the executor."""
     integration = await loader.async_get_integration(
         hass, "test_package_loaded_executor"
@@ -1125,7 +1130,10 @@ CUSTOM_ISSUE_TRACKER = "https://blablabla.com"
     ],
 )
 async def test_async_get_issue_tracker(
-    hass, domain: str | None, module: str | None, issue_tracker: str | None
+    hass: HomeAssistant,
+    domain: str | None,
+    module: str | None,
+    issue_tracker: str | None,
 ) -> None:
     """Test async_get_issue_tracker."""
     mock_integration(hass, MockModule("bla_built_in"))
@@ -1187,7 +1195,7 @@ async def test_async_get_issue_tracker(
     ],
 )
 async def test_async_get_issue_tracker_no_hass(
-    hass, domain: str | None, module: str | None, issue_tracker: str
+    hass: HomeAssistant, domain: str | None, module: str | None, issue_tracker: str
 ) -> None:
     """Test async_get_issue_tracker."""
     mock_integration(hass, MockModule("bla_built_in"))
@@ -1220,7 +1228,7 @@ REPORT_CUSTOM_UNKNOWN = "report it to the custom integration author"
     ],
 )
 async def test_async_suggest_report_issue(
-    hass, domain: str | None, module: str | None, report_issue: str
+    hass: HomeAssistant, domain: str | None, module: str | None, report_issue: str
 ) -> None:
     """Test async_suggest_report_issue."""
     mock_integration(hass, MockModule("bla_built_in"))
@@ -1339,10 +1347,9 @@ async def test_async_get_component_preloads_config_and_config_flow(
     }
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_async_get_component_loads_loop_if_already_in_sys_modules(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Verify async_get_component does not create an executor job if the module is already in sys.modules."""
     integration = await loader.async_get_integration(
@@ -1404,10 +1411,8 @@ async def test_async_get_component_loads_loop_if_already_in_sys_modules(
     assert module is module_mock
 
 
-async def test_async_get_component_concurrent_loads(
-    hass: HomeAssistant,
-    enable_custom_integrations: None,
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_async_get_component_concurrent_loads(hass: HomeAssistant) -> None:
     """Verify async_get_component waits if the first load if called again when still in progress."""
     integration = await loader.async_get_integration(
         hass, "test_package_loaded_executor"
@@ -1717,9 +1722,8 @@ async def test_async_get_platform_raises_after_import_failure(
     assert "loaded_executor=False" not in caplog.text
 
 
-async def test_platforms_exists(
-    hass: HomeAssistant, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_platforms_exists(hass: HomeAssistant) -> None:
     """Test platforms_exists."""
     original_os_listdir = os.listdir
 
@@ -1775,10 +1779,9 @@ async def test_platforms_exists(
     assert integration.platforms_are_loaded(["other"]) is False
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_async_get_platforms_loads_loop_if_already_in_sys_modules(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Verify async_get_platforms does not create an executor job.
 
@@ -1878,10 +1881,8 @@ async def test_async_get_platforms_loads_loop_if_already_in_sys_modules(
     assert integration.get_platform_cached("light") is light_module_mock
 
 
-async def test_async_get_platforms_concurrent_loads(
-    hass: HomeAssistant,
-    enable_custom_integrations: None,
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_async_get_platforms_concurrent_loads(hass: HomeAssistant) -> None:
     """Verify async_get_platforms waits if the first load if called again.
 
     Case is for when when a second load is called
@@ -1942,17 +1943,17 @@ async def test_async_get_platforms_concurrent_loads(
     assert integration.get_platform_cached("button") is button_module_mock
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_integration_warnings(
-    hass: HomeAssistant,
-    enable_custom_integrations: None,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test integration warnings."""
     await loader.async_get_integration(hass, "test_package_loaded_loop")
     assert "configured to to import its code in the event loop" in caplog.text
 
 
-async def test_has_services(hass: HomeAssistant, enable_custom_integrations) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_has_services(hass: HomeAssistant) -> None:
     """Test has_services."""
     integration = await loader.async_get_integration(hass, "test")
     assert integration.has_services is False

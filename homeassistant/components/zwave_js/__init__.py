@@ -142,6 +142,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass.config_entries.async_update_entry(
                 entry, unique_id=str(entry.unique_id)
             )
+
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    services = ZWaveServices(hass, ent_reg, dev_reg)
+    services.async_register()
+
     return True
 
 
@@ -179,11 +185,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async_delete_issue(hass, DOMAIN, "invalid_server_version")
     LOGGER.info("Connected to Zwave JS Server")
-
-    dev_reg = dr.async_get(hass)
-    ent_reg = er.async_get(hass)
-    services = ZWaveServices(hass, ent_reg, dev_reg)
-    services.async_register()
 
     # Set up websocket API
     async_register_api(hass)
@@ -330,7 +331,7 @@ class DriverEvents:
         """Set up platform if needed."""
         if platform not in self.platform_setup_tasks:
             self.platform_setup_tasks[platform] = self.hass.async_create_task(
-                self.hass.config_entries.async_late_forward_entry_setups(
+                self.hass.config_entries.async_forward_entry_setups(
                     self.config_entry, [platform]
                 )
             )

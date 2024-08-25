@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components.image_processing import (
     ATTR_CONFIDENCE,
     CONF_CONFIDENCE,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as IMAGE_PROCESSING_PLATFORM_SCHEMA,
     ImageProcessingFaceEntity,
 )
 from homeassistant.components.microsoft_face import DATA_MICROSOFT_FACE
@@ -24,7 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_GROUP = "group"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_GROUP): cv.slugify})
+PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_GROUP): cv.slugify}
+)
 
 
 async def async_setup_platform(

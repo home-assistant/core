@@ -25,7 +25,7 @@ def get_device_id(mac: str) -> tuple[str, str]:
     return (BLUETOOTH_DOMAIN, mac)
 
 
-async def _async_setup_bthome_device(hass, mac: str):
+async def _async_setup_bthome_device(hass: HomeAssistant, mac: str) -> MockConfigEntry:
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=mac,

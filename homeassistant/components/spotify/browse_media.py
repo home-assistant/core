@@ -5,7 +5,7 @@ from __future__ import annotations
 from enum import StrEnum
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from spotipy import Spotify
 import yarl
@@ -20,10 +20,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 
 from .const import DOMAIN, MEDIA_PLAYER_PREFIX, MEDIA_TYPE_SHOW, PLAYABLE_MEDIA_TYPES
+from .models import HomeAssistantSpotifyData
 from .util import fetch_image_url
-
-if TYPE_CHECKING:
-    from . import HomeAssistantSpotifyData
 
 BROWSE_LIMIT = 48
 
@@ -174,10 +172,17 @@ async def async_browse_media(
 
     # Check for config entry specifier, and extract Spotify URI
     parsed_url = yarl.URL(media_content_id)
+    host = parsed_url.host
 
     if (
-        parsed_url.host is None
-        or (entry := hass.config_entries.async_get_entry(parsed_url.host)) is None
+        host is None
+        # config entry ids can be upper or lower case. Yarl always returns host
+        # names in lower case, so we need to look for the config entry in both
+        or (
+            entry := hass.config_entries.async_get_entry(host)
+            or hass.config_entries.async_get_entry(host.upper())
+        )
+        is None
         or not isinstance(entry.runtime_data, HomeAssistantSpotifyData)
     ):
         raise BrowseError("Invalid Spotify account specified")

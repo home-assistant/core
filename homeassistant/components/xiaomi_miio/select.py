@@ -50,6 +50,7 @@ from .const import (
     MODEL_AIRPURIFIER_3H,
     MODEL_AIRPURIFIER_4,
     MODEL_AIRPURIFIER_4_PRO,
+    MODEL_AIRPURIFIER_COMPACT,
     MODEL_AIRPURIFIER_M1,
     MODEL_AIRPURIFIER_M2,
     MODEL_AIRPURIFIER_MA2,
@@ -127,6 +128,9 @@ MODEL_TO_ATTR_MAP: dict[str, list] = {
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
     ],
     MODEL_AIRPURIFIER_4_PRO: [
+        AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
+    ],
+    MODEL_AIRPURIFIER_COMPACT: [
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
     ],
     MODEL_AIRPURIFIER_M1: [

@@ -62,16 +62,18 @@ async def async_discover_devices(
         targets = [address]
     else:
         targets = [
-            str(address)
-            for address in await network.async_get_ipv4_broadcast_addresses(hass)
+            str(broadcast_address)
+            for broadcast_address in await network.async_get_ipv4_broadcast_addresses(
+                hass
+            )
         ]
 
     scanner = AIODiscovery30303()
     for idx, discovered in enumerate(
         await asyncio.gather(
             *[
-                scanner.async_scan(timeout=timeout, address=address)
-                for address in targets
+                scanner.async_scan(timeout=timeout, address=target_address)
+                for target_address in targets
             ],
             return_exceptions=True,
         )

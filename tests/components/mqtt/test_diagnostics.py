@@ -26,7 +26,6 @@ default_config = {
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
     hass_client: ClientSessionGenerator,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:

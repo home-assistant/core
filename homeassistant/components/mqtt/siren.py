@@ -31,8 +31,9 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import json_dumps
+from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType, VolSchemaType
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads_object
 
 from . import subscription
@@ -51,7 +52,6 @@ from .models import (
     MqttValueTemplate,
     PublishPayloadType,
     ReceiveMessage,
-    ReceivePayloadType,
 )
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 
@@ -142,7 +142,7 @@ class MqttSiren(MqttEntity, SirenEntity):
     _optimistic: bool
 
     @staticmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 

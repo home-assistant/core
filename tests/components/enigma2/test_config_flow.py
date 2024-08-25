@@ -168,7 +168,7 @@ async def test_form_import_errors(
     assert result["reason"] == error_type
 
 
-async def test_options_flow(hass: HomeAssistant, user_flow: str):
+async def test_options_flow(hass: HomeAssistant, user_flow: str) -> None:
     """Test the form options."""
 
     with patch(

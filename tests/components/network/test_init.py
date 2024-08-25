@@ -36,6 +36,7 @@ def _mock_cond_socket(sockname):
     class CondMockSock(MagicMock):
         def connect(self, addr):
             """Mock connect that stores addr."""
+            # pylint: disable-next=attribute-defined-outside-init
             self._addr = addr[0]
 
         def getsockname(self):

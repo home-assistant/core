@@ -28,12 +28,17 @@ STALE_TOKEN_THRESHOLD = timedelta(days=30).total_seconds()
 _LOGGER = logging.getLogger(__name__)
 
 
+type EnphaseConfigEntry = ConfigEntry[EnphaseUpdateCoordinator]
+
+
 class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """DataUpdateCoordinator to gather data from any envoy."""
 
     envoy_serial_number: str
 
-    def __init__(self, hass: HomeAssistant, envoy: Envoy, entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, envoy: Envoy, entry: EnphaseConfigEntry
+    ) -> None:
         """Initialize DataUpdateCoordinator for the envoy."""
         self.envoy = envoy
         entry_data = entry.data

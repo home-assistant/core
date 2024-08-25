@@ -55,6 +55,8 @@ def _test_selector(
     config = {selector_type: schema}
     selector.validate_selector(config)
     selector_instance = selector.selector(config)
+    assert selector_instance == selector.selector(config)
+    assert selector_instance != 5
     # We do not allow enums in the config, as they cannot serialize
     assert not any(isinstance(val, Enum) for val in selector_instance.config.values())
 
@@ -737,12 +739,13 @@ def test_attribute_selector_schema(
             (
                 {"seconds": 10},
                 {"days": 10},  # Days is allowed also if `enable_day` is not set
+                {"milliseconds": 500},
             ),
             (None, {}),
         ),
         (
-            {"enable_day": True},
-            ({"seconds": 10}, {"days": 10}),
+            {"enable_day": True, "enable_millisecond": True},
+            ({"seconds": 10}, {"days": 10}, {"milliseconds": 500}),
             (None, {}),
         ),
         (

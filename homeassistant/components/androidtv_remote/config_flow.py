@@ -24,11 +24,21 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
-from .const import CONF_ENABLE_IME, DOMAIN
+from .const import CONF_APP_ICON, CONF_APP_NAME, CONF_APPS, CONF_ENABLE_IME, DOMAIN
 from .helpers import create_api, get_enable_ime
 
 _LOGGER = logging.getLogger(__name__)
+
+APPS_NEW_ID = "NewApp"
+CONF_APP_DELETE = "app_delete"
+CONF_APP_ID = "app_id"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -213,21 +223,108 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
 class AndroidTVRemoteOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """Android TV Remote options flow."""
 
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        super().__init__(config_entry)
+        self._apps: dict[str, Any] = self.options.setdefault(CONF_APPS, {})
+        self._conf_app_id: str | None = None
+
+    @callback
+    def _save_config(self, data: dict[str, Any]) -> ConfigFlowResult:
+        """Save the updated options."""
+        new_data = {k: v for k, v in data.items() if k not in [CONF_APPS]}
+        if self._apps:
+            new_data[CONF_APPS] = self._apps
+
+        return self.async_create_entry(title="", data=new_data)
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            if sel_app := user_input.get(CONF_APPS):
+                return await self.async_step_apps(None, sel_app)
+            return self._save_config(user_input)
 
+        apps_list = {
+            k: f"{v[CONF_APP_NAME]} ({k})" if CONF_APP_NAME in v else k
+            for k, v in self._apps.items()
+        }
+        apps = [SelectOptionDict(value=APPS_NEW_ID, label="Add new")] + [
+            SelectOptionDict(value=k, label=v) for k, v in apps_list.items()
+        ]
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
                 {
+                    vol.Optional(CONF_APPS): SelectSelector(
+                        SelectSelectorConfig(
+                            options=apps, mode=SelectSelectorMode.DROPDOWN
+                        )
+                    ),
                     vol.Required(
                         CONF_ENABLE_IME,
                         default=get_enable_ime(self.config_entry),
                     ): bool,
                 }
             ),
+        )
+
+    async def async_step_apps(
+        self, user_input: dict[str, Any] | None = None, app_id: str | None = None
+    ) -> ConfigFlowResult:
+        """Handle options flow for apps list."""
+        if app_id is not None:
+            self._conf_app_id = app_id if app_id != APPS_NEW_ID else None
+            return self._async_apps_form(app_id)
+
+        if user_input is not None:
+            app_id = user_input.get(CONF_APP_ID, self._conf_app_id)
+            if app_id:
+                if user_input.get(CONF_APP_DELETE, False):
+                    self._apps.pop(app_id)
+                else:
+                    self._apps[app_id] = {
+                        CONF_APP_NAME: user_input.get(CONF_APP_NAME, ""),
+                        CONF_APP_ICON: user_input.get(CONF_APP_ICON, ""),
+                    }
+
+        return await self.async_step_init()
+
+    @callback
+    def _async_apps_form(self, app_id: str) -> ConfigFlowResult:
+        """Return configuration form for apps."""
+
+        app_schema = {
+            vol.Optional(
+                CONF_APP_NAME,
+                description={
+                    "suggested_value": self._apps[app_id].get(CONF_APP_NAME, "")
+                    if app_id in self._apps
+                    else ""
+                },
+            ): str,
+            vol.Optional(
+                CONF_APP_ICON,
+                description={
+                    "suggested_value": self._apps[app_id].get(CONF_APP_ICON, "")
+                    if app_id in self._apps
+                    else ""
+                },
+            ): str,
+        }
+        if app_id == APPS_NEW_ID:
+            data_schema = vol.Schema({**app_schema, vol.Optional(CONF_APP_ID): str})
+        else:
+            data_schema = vol.Schema(
+                {**app_schema, vol.Optional(CONF_APP_DELETE, default=False): bool}
+            )
+
+        return self.async_show_form(
+            step_id="apps",
+            data_schema=data_schema,
+            description_placeholders={
+                "app_id": f"`{app_id}`" if app_id != APPS_NEW_ID else "",
+            },
         )

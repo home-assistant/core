@@ -331,7 +331,7 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity, SwitchEntity):
         self._name = f"{self._friendly_name} {self._description}"
         self._unique_id = f"{self._avm_wrapper.unique_id}-{slugify(self._description)}"
 
-        self._attributes: dict[str, str] = {}
+        self._attributes: dict[str, str | None] = {}
         self._is_available = True
 
     @property
@@ -355,7 +355,7 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity, SwitchEntity):
         return self._is_available
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
+    def extra_state_attributes(self) -> dict[str, str | None]:
         """Return device attributes."""
         return self._attributes
 

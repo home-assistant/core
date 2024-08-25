@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.filesize.const import DOMAIN
 from homeassistant.const import CONF_FILE_PATH

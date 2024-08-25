@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CertExpiryConfigEntry) -
 
     async def _async_finish_startup(_: HomeAssistant) -> None:
         await coordinator.async_refresh()
-        await hass.config_entries.async_late_forward_entry_setups(entry, PLATFORMS)
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async_at_started(hass, _async_finish_startup)
     return True

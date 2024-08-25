@@ -25,7 +25,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:thermometer-lines',
+    'original_icon': None,
     'original_name': None,
     'platform': 'incomfort',
     'previous_unique_id': None,
@@ -42,7 +42,6 @@
       'display_code': <DisplayCode.STANDBY: 126>,
       'display_text': 'standby',
       'friendly_name': 'Boiler',
-      'icon': 'mdi:thermometer-lines',
       'is_burning': False,
       'max_temp': 80.0,
       'min_temp': 30.0,

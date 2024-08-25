@@ -9,18 +9,22 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries, loader, setup
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_COMPONENT_LOADED, EVENT_HOMEASSISTANT_START
-from homeassistant.core import CoreState, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import discovery, translation
-from homeassistant.helpers.config_validation import (
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    CoreState,
+    HomeAssistant,
+    callback,
 )
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, discovery, translation
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.issue_registry import IssueRegistry
+from homeassistant.helpers.typing import ConfigType
 
 from .common import (
     MockConfigEntry,
@@ -88,8 +92,8 @@ async def test_validate_platform_config(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test validating platform configuration."""
-    platform_schema = PLATFORM_SCHEMA.extend({"hello": str})
-    platform_schema_base = PLATFORM_SCHEMA_BASE.extend({})
+    platform_schema = cv.PLATFORM_SCHEMA.extend({"hello": str})
+    platform_schema_base = cv.PLATFORM_SCHEMA_BASE.extend({})
     mock_integration(
         hass,
         MockModule("platform_conf", platform_schema_base=platform_schema_base),
@@ -149,8 +153,8 @@ async def test_validate_platform_config_2(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test component PLATFORM_SCHEMA_BASE prio over PLATFORM_SCHEMA."""
-    platform_schema = PLATFORM_SCHEMA.extend({"hello": str})
-    platform_schema_base = PLATFORM_SCHEMA_BASE.extend({"hello": "world"})
+    platform_schema = cv.PLATFORM_SCHEMA.extend({"hello": str})
+    platform_schema_base = cv.PLATFORM_SCHEMA_BASE.extend({"hello": "world"})
     mock_integration(
         hass,
         MockModule(
@@ -163,7 +167,7 @@ async def test_validate_platform_config_2(
     mock_platform(
         hass,
         "whatever.platform_conf",
-        MockPlatform("whatever", platform_schema=platform_schema),
+        MockPlatform(platform_schema=platform_schema),
     )
 
     with assert_setup_component(1):
@@ -183,8 +187,8 @@ async def test_validate_platform_config_3(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test fallback to component PLATFORM_SCHEMA."""
-    component_schema = PLATFORM_SCHEMA_BASE.extend({"hello": str})
-    platform_schema = PLATFORM_SCHEMA.extend({"cheers": str, "hello": "world"})
+    component_schema = cv.PLATFORM_SCHEMA_BASE.extend({"hello": str})
+    platform_schema = cv.PLATFORM_SCHEMA.extend({"cheers": str, "hello": "world"})
     mock_integration(
         hass, MockModule("platform_conf", platform_schema=component_schema)
     )
@@ -192,7 +196,7 @@ async def test_validate_platform_config_3(
     mock_platform(
         hass,
         "whatever.platform_conf",
-        MockPlatform("whatever", platform_schema=platform_schema),
+        MockPlatform(platform_schema=platform_schema),
     )
 
     with assert_setup_component(1):
@@ -210,8 +214,8 @@ async def test_validate_platform_config_3(
 
 async def test_validate_platform_config_4(hass: HomeAssistant) -> None:
     """Test entity_namespace in PLATFORM_SCHEMA."""
-    component_schema = PLATFORM_SCHEMA_BASE
-    platform_schema = PLATFORM_SCHEMA
+    component_schema = cv.PLATFORM_SCHEMA_BASE
+    platform_schema = cv.PLATFORM_SCHEMA
     mock_integration(
         hass,
         MockModule("platform_conf", platform_schema_base=component_schema),
@@ -240,9 +244,26 @@ async def test_validate_platform_config_4(hass: HomeAssistant) -> None:
     hass.config.components.remove("platform_conf")
 
 
-async def test_component_not_found(hass: HomeAssistant) -> None:
-    """setup_component should not crash if component doesn't exist."""
+async def test_component_not_found(
+    hass: HomeAssistant, issue_registry: IssueRegistry
+) -> None:
+    """setup_component should raise a repair issue if component doesn't exist."""
     assert await setup.async_setup_component(hass, "non_existing", {}) is False
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, "integration_not_found.non_existing"
+    )
+    assert issue
+    assert issue.translation_key == "integration_not_found"
+
+
+async def test_component_missing_not_raising_in_safe_mode(
+    hass: HomeAssistant, issue_registry: IssueRegistry
+) -> None:
+    """setup_component should not raise an issue if component doesn't exist in safe."""
+    hass.config.safe_mode = True
+    assert await setup.async_setup_component(hass, "non_existing", {}) is False
+    assert len(issue_registry.issues) == 0
 
 
 async def test_component_not_double_initialized(hass: HomeAssistant) -> None:
@@ -279,9 +300,10 @@ async def test_component_not_setup_twice_if_loaded_during_other_setup(
     """Test component setup while waiting for lock is not set up twice."""
     result = []
 
-    async def async_setup(hass, config):
+    async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Tracking Setup."""
         result.append(1)
+        return True
 
     mock_integration(hass, MockModule("comp", async_setup=async_setup))
 
@@ -326,9 +348,9 @@ async def test_component_exception_setup(hass: HomeAssistant) -> None:
     """Test component that raises exception during setup."""
     setup.async_set_domains_to_be_loaded(hass, {"comp"})
 
-    def exception_setup(hass, config):
+    def exception_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Raise exception."""
-        raise Exception("fail!")
+        raise Exception("fail!")  # noqa: TRY002
 
     mock_integration(hass, MockModule("comp", setup=exception_setup))
 
@@ -340,9 +362,9 @@ async def test_component_base_exception_setup(hass: HomeAssistant) -> None:
     """Test component that raises exception during setup."""
     setup.async_set_domains_to_be_loaded(hass, {"comp"})
 
-    def exception_setup(hass, config):
+    def exception_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Raise exception."""
-        raise BaseException("fail!")
+        raise BaseException("fail!")  # noqa: TRY002
 
     mock_integration(hass, MockModule("comp", setup=exception_setup))
 
@@ -358,11 +380,11 @@ async def test_component_setup_with_validation_and_dependency(
 ) -> None:
     """Test all config is passed to dependencies."""
 
-    def config_check_setup(hass, config):
+    def config_check_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Test that config is passed in."""
         if config.get("comp_a", {}).get("valid", False):
             return True
-        raise Exception(f"Config not passed in: {config}")
+        raise Exception(f"Config not passed in: {config}")  # noqa: TRY002
 
     platform = MockPlatform()
 
@@ -385,7 +407,9 @@ async def test_component_setup_with_validation_and_dependency(
 
 async def test_platform_specific_config_validation(hass: HomeAssistant) -> None:
     """Test platform that specifies config."""
-    platform_schema = PLATFORM_SCHEMA.extend({"valid": True}, extra=vol.PREVENT_EXTRA)
+    platform_schema = cv.PLATFORM_SCHEMA.extend(
+        {"valid": True}, extra=vol.PREVENT_EXTRA
+    )
 
     mock_setup = Mock(spec_set=True)
 
@@ -478,7 +502,7 @@ async def test_all_work_done_before_start(hass: HomeAssistant) -> None:
     """Test all init work done till start."""
     call_order = []
 
-    async def component1_setup(hass, config):
+    async def component1_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Set up mock component."""
         await discovery.async_discover(
             hass, "test_component2", {}, "test_component2", {}
@@ -488,7 +512,7 @@ async def test_all_work_done_before_start(hass: HomeAssistant) -> None:
         )
         return True
 
-    def component_track_setup(hass, config):
+    def component_track_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Set up mock component."""
         call_order.append(1)
         return True
@@ -532,7 +556,7 @@ async def test_component_warn_slow_setup(hass: HomeAssistant) -> None:
 async def test_platform_no_warn_slow(hass: HomeAssistant) -> None:
     """Do not warn for long entity setup time."""
     mock_integration(
-        hass, MockModule("test_component1", platform_schema=PLATFORM_SCHEMA)
+        hass, MockModule("test_component1", platform_schema=cv.PLATFORM_SCHEMA)
     )
     with patch.object(hass.loop, "call_later") as mock_call:
         result = await setup.async_setup_component(hass, "test_component1", {})
@@ -564,7 +588,7 @@ async def test_when_setup_already_loaded(hass: HomeAssistant) -> None:
     """Test when setup."""
     calls = []
 
-    async def mock_callback(hass, component):
+    async def mock_callback(hass: HomeAssistant, component: str) -> None:
         """Mock callback."""
         calls.append(component)
 
@@ -592,7 +616,7 @@ async def test_async_when_setup_or_start_already_loaded(hass: HomeAssistant) -> 
     """Test when setup or start."""
     calls = []
 
-    async def mock_callback(hass, component):
+    async def mock_callback(hass: HomeAssistant, component: str) -> None:
         """Mock callback."""
         calls.append(component)
 
@@ -638,7 +662,7 @@ async def test_parallel_entry_setup(hass: HomeAssistant, mock_handlers) -> None:
 
     calls = []
 
-    async def mock_async_setup_entry(hass, entry):
+    async def mock_async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Mock setting up an entry."""
         calls.append(entry.data["value"])
         await asyncio.sleep(0)
@@ -1056,7 +1080,7 @@ async def test_async_start_setup_simple_integration_end_to_end(
     }
 
 
-async def test_async_get_setup_timings(hass) -> None:
+async def test_async_get_setup_timings(hass: HomeAssistant) -> None:
     """Test we can get the setup timings from the setup time data."""
     setup_time = setup._setup_times(hass)
     # Mock setup time data
@@ -1176,19 +1200,17 @@ async def test_loading_component_loads_translations(hass: HomeAssistant) -> None
     assert translation.async_translations_loaded(hass, {"comp"}) is True
 
 
-async def test_importing_integration_in_executor(
-    hass: HomeAssistant, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_importing_integration_in_executor(hass: HomeAssistant) -> None:
     """Test we can import an integration in an executor."""
     assert await setup.async_setup_component(hass, "test_package_loaded_executor", {})
     assert await setup.async_setup_component(hass, "test_package_loaded_executor", {})
     await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_async_prepare_setup_platform(
-    hass: HomeAssistant,
-    enable_custom_integrations: None,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we can prepare a platform setup."""
     integration = await loader.async_get_integration(hass, "test")

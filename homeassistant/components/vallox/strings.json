@@ -87,6 +87,9 @@
       },
       "efficiency": {
         "name": "Efficiency"
+      },
+      "profile_duration": {
+        "name": "Profile duration"
       }
     },
     "switch": {

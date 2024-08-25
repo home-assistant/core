@@ -50,11 +50,7 @@ from homeassistant.const import (  # noqa: F401
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.config_validation import (
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.deprecation import (
     all_with_deprecated_constants,
     check_if_deprecated_constant,
@@ -68,7 +64,6 @@ from homeassistant.helpers.typing import UNDEFINED, ConfigType, StateType, Undef
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
-from . import group as group_pre_import  # noqa: F401
 from .const import (  # noqa: F401
     _DEPRECATED_STATE_CLASS_MEASUREMENT,
     _DEPRECATED_STATE_CLASS_TOTAL,
@@ -94,7 +89,8 @@ from .websocket_api import async_setup as async_setup_ws_api
 _LOGGER: Final = logging.getLogger(__name__)
 
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
-
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL: Final = timedelta(seconds=30)
 
 __all__ = [
@@ -384,15 +380,9 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         ):
             if not self._invalid_suggested_unit_of_measurement_reported:
                 self._invalid_suggested_unit_of_measurement_reported = True
-                report_issue = self._suggest_report_issue()
-                # This should raise in Home Assistant Core 2024.5
-                _LOGGER.warning(
-                    (
-                        "%s sets an invalid suggested_unit_of_measurement. Please %s. "
-                        "This warning will become an error in Home Assistant Core 2024.5"
-                    ),
-                    type(self),
-                    report_issue,
+                raise ValueError(
+                    f"Entity {type(self)} suggest an incorrect "
+                    f"unit of measurement: {suggested_unit_of_measurement}."
                 )
             return False
 
@@ -404,9 +394,18 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         suggested_unit_of_measurement = self.suggested_unit_of_measurement
 
         if suggested_unit_of_measurement is None:
-            # Fallback to suggested by the unit conversion rules
+            # Fallback to unit suggested by the unit conversion rules from device class
             suggested_unit_of_measurement = self.hass.config.units.get_converted_unit(
                 self.device_class, self.native_unit_of_measurement
+            )
+
+        if suggested_unit_of_measurement is None and (
+            unit_converter := UNIT_CONVERTERS.get(self.device_class)
+        ):
+            # If the device class is not known by the unit system but has a unit converter,
+            # fall back to the unit suggested by the unit converter's unit class.
+            suggested_unit_of_measurement = self.hass.config.units.get_converted_unit(
+                unit_converter.UNIT_CLASS, self.native_unit_of_measurement
             )
 
         if suggested_unit_of_measurement is None:

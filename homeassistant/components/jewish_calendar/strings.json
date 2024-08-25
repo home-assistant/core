@@ -1,4 +1,15 @@
 {
+  "entity": {
+    "sensor": {
+      "hebrew_date": {
+        "state_attributes": {
+          "hebrew_year": { "name": "Hebrew Year" },
+          "hebrew_month_name": { "name": "Hebrew Month Name" },
+          "hebrew_day": { "name": "Hebrew Day" }
+        }
+      }
+    }
+  },
   "config": {
     "step": {
       "user": {

@@ -1,8 +1,10 @@
 """Coordinator for FYTA integration."""
 
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING
 
 from fyta_cli.fyta_connector import FytaConnector
 from fyta_cli.fyta_exceptions import (
@@ -11,8 +13,8 @@ from fyta_cli.fyta_exceptions import (
     FytaPasswordError,
     FytaPlantError,
 )
+from fyta_cli.fyta_models import Plant
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -20,13 +22,16 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_EXPIRATION
 
+if TYPE_CHECKING:
+    from . import FytaConfigEntry
+
 _LOGGER = logging.getLogger(__name__)
 
 
-class FytaCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
+class FytaCoordinator(DataUpdateCoordinator[dict[int, Plant]]):
     """Fyta custom coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: FytaConfigEntry
 
     def __init__(self, hass: HomeAssistant, fyta: FytaConnector) -> None:
         """Initialize my coordinator."""
@@ -40,7 +45,7 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
 
     async def _async_update_data(
         self,
-    ) -> dict[int, dict[str, Any]]:
+    ) -> dict[int, Plant]:
         """Fetch data from API endpoint."""
 
         if (
@@ -56,7 +61,6 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
 
     async def renew_authentication(self) -> bool:
         """Renew access token for FYTA API."""
-        credentials: dict[str, Any] = {}
 
         try:
             credentials = await self.fyta.login()
@@ -66,8 +70,8 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
             raise ConfigEntryAuthFailed from ex
 
         new_config_entry = {**self.config_entry.data}
-        new_config_entry[CONF_ACCESS_TOKEN] = credentials[CONF_ACCESS_TOKEN]
-        new_config_entry[CONF_EXPIRATION] = credentials[CONF_EXPIRATION].isoformat()
+        new_config_entry[CONF_ACCESS_TOKEN] = credentials.access_token
+        new_config_entry[CONF_EXPIRATION] = credentials.expiration.isoformat()
 
         self.hass.config_entries.async_update_entry(
             self.config_entry, data=new_config_entry

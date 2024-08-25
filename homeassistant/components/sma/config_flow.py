@@ -43,7 +43,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize."""
-        self._data = {
+        self._data: dict[str, Any] = {
             CONF_HOST: vol.UNDEFINED,
             CONF_SSL: False,
             CONF_VERIFY_SSL: True,

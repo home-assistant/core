@@ -41,6 +41,7 @@ CONF_IS_ATMOSPHERIC_PRESSURE = "is_atmospheric_pressure"
 CONF_IS_BATTERY_LEVEL = "is_battery_level"
 CONF_IS_CO = "is_carbon_monoxide"
 CONF_IS_CO2 = "is_carbon_dioxide"
+CONF_IS_CONDUCTIVITY = "is_conductivity"
 CONF_IS_CURRENT = "is_current"
 CONF_IS_DATA_RATE = "is_data_rate"
 CONF_IS_DATA_SIZE = "is_data_size"
@@ -90,6 +91,7 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.BATTERY: [{CONF_TYPE: CONF_IS_BATTERY_LEVEL}],
     SensorDeviceClass.CO: [{CONF_TYPE: CONF_IS_CO}],
     SensorDeviceClass.CO2: [{CONF_TYPE: CONF_IS_CO2}],
+    SensorDeviceClass.CONDUCTIVITY: [{CONF_TYPE: CONF_IS_CONDUCTIVITY}],
     SensorDeviceClass.CURRENT: [{CONF_TYPE: CONF_IS_CURRENT}],
     SensorDeviceClass.DATA_RATE: [{CONF_TYPE: CONF_IS_DATA_RATE}],
     SensorDeviceClass.DATA_SIZE: [{CONF_TYPE: CONF_IS_DATA_SIZE}],
@@ -153,6 +155,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_BATTERY_LEVEL,
                     CONF_IS_CO,
                     CONF_IS_CO2,
+                    CONF_IS_CONDUCTIVITY,
                     CONF_IS_CURRENT,
                     CONF_IS_DATA_RATE,
                     CONF_IS_DATA_SIZE,

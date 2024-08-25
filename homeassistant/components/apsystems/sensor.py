@@ -132,6 +132,7 @@ class ApSystemsSensorWithDescription(
     """Base sensor to be used with description."""
 
     entity_description: ApsystemsLocalApiSensorDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -147,4 +148,4 @@ class ApSystemsSensorWithDescription(
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        return self.entity_description.value_fn(self.coordinator.data.output_data)

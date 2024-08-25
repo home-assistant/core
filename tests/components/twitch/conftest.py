@@ -1,11 +1,11 @@
 """Configure tests for the Twitch integration."""
 
+from collections.abc import Generator
 import time
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from twitchAPI.object.api import FollowedChannel, Stream, TwitchUser, UserSubscription
-from typing_extensions import Generator
 
 from homeassistant.components.application_credentials import (
     ClientCredential,

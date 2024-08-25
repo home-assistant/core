@@ -1,4 +1,11 @@
 {
+  "entity": {
+    "binary_sensor": {
+      "wash_cycle": {
+        "name": "Cycle"
+      }
+    }
+  },
   "config": {
     "step": {
       "init": {

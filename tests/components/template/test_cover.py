@@ -267,11 +267,11 @@ async def test_template_position(
     hass.states.async_set("cover.test", STATE_OPEN)
     attrs = {}
 
-    for set_state, pos, test_state in [
+    for set_state, pos, test_state in (
         (STATE_CLOSED, 42, STATE_OPEN),
         (STATE_OPEN, 0.0, STATE_CLOSED),
         (STATE_CLOSED, None, STATE_UNKNOWN),
-    ]:
+    ):
         attrs["position"] = pos
         hass.states.async_set("cover.test", set_state, attributes=attrs)
         await hass.async_block_till_done()
@@ -704,12 +704,12 @@ async def test_set_position_optimistic(
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("current_position") == 42.0
 
-    for service, test_state in [
+    for service, test_state in (
         (SERVICE_CLOSE_COVER, STATE_CLOSED),
         (SERVICE_OPEN_COVER, STATE_OPEN),
         (SERVICE_TOGGLE, STATE_CLOSED),
         (SERVICE_TOGGLE, STATE_OPEN),
-    ]:
+    ):
         await hass.services.async_call(
             DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
         )
@@ -753,12 +753,12 @@ async def test_set_tilt_position_optimistic(
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("current_tilt_position") == 42.0
 
-    for service, pos in [
+    for service, pos in (
         (SERVICE_CLOSE_COVER_TILT, 0.0),
         (SERVICE_OPEN_COVER_TILT, 100.0),
         (SERVICE_TOGGLE_COVER_TILT, 0.0),
         (SERVICE_TOGGLE_COVER_TILT, 100.0),
-    ]:
+    ):
         await hass.services.async_call(
             DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
         )

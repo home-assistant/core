@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from datetime import UTC, datetime, time, timedelta
 from unittest.mock import AsyncMock, _patch, patch
 
 from melnor_bluetooth.device import Device
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 from homeassistant.components.melnor.const import DOMAIN

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterable, Mapping
+from collections.abc import AsyncGenerator, Mapping
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
@@ -95,7 +95,7 @@ async def mock_entity_id(
     config_entry_mock: MockConfigEntry,
     ssdp_scanner_mock: Mock,
     dmr_device_mock: Mock,
-) -> AsyncIterable[str]:
+) -> AsyncGenerator[str]:
     """Fixture to set up a mock DlnaDmrEntity in a connected state.
 
     Yields the entity ID. Cleans up the entity after the test is complete.
@@ -145,7 +145,7 @@ async def mock_disconnected_entity_id(
     config_entry_mock: MockConfigEntry,
     ssdp_scanner_mock: Mock,
     dmr_device_mock: Mock,
-) -> AsyncIterable[str]:
+) -> AsyncGenerator[str]:
     """Fixture to set up a mock DlnaDmrEntity in a disconnected state.
 
     Yields the entity ID. Cleans up the entity after the test is complete.
@@ -458,7 +458,7 @@ async def test_available_device(
     assert device.name == "device_name"
 
     # Check entity state gets updated when device changes state
-    for dev_state, ent_state in [
+    for dev_state, ent_state in (
         (None, MediaPlayerState.ON),
         (TransportState.STOPPED, MediaPlayerState.IDLE),
         (TransportState.PLAYING, MediaPlayerState.PLAYING),
@@ -468,7 +468,7 @@ async def test_available_device(
         (TransportState.RECORDING, MediaPlayerState.IDLE),
         (TransportState.NO_MEDIA_PRESENT, MediaPlayerState.IDLE),
         (TransportState.VENDOR_DEFINED, ha_const.STATE_UNKNOWN),
-    ]:
+    ):
         dmr_device_mock.profile_device.available = True
         dmr_device_mock.transport_state = dev_state
         await async_update_entity(hass, mock_entity_id)
@@ -595,7 +595,7 @@ async def test_attributes(
     assert attrs[mp.ATTR_MEDIA_EPISODE] == "S1E23"
 
     # shuffle and repeat is based on device's play mode
-    for play_mode, shuffle, repeat in [
+    for play_mode, shuffle, repeat in (
         (PlayMode.NORMAL, False, RepeatMode.OFF),
         (PlayMode.SHUFFLE, True, RepeatMode.OFF),
         (PlayMode.REPEAT_ONE, False, RepeatMode.ONE),
@@ -603,12 +603,12 @@ async def test_attributes(
         (PlayMode.RANDOM, True, RepeatMode.ALL),
         (PlayMode.DIRECT_1, False, RepeatMode.OFF),
         (PlayMode.INTRO, False, RepeatMode.OFF),
-    ]:
+    ):
         dmr_device_mock.play_mode = play_mode
         attrs = await get_attrs(hass, mock_entity_id)
         assert attrs[mp.ATTR_MEDIA_SHUFFLE] is shuffle
         assert attrs[mp.ATTR_MEDIA_REPEAT] == repeat
-    for bad_play_mode in [None, PlayMode.VENDOR_DEFINED]:
+    for bad_play_mode in (None, PlayMode.VENDOR_DEFINED):
         dmr_device_mock.play_mode = bad_play_mode
         attrs = await get_attrs(hass, mock_entity_id)
         assert mp.ATTR_MEDIA_SHUFFLE not in attrs
@@ -944,7 +944,7 @@ async def test_shuffle_repeat_modes(
     """Test setting repeat and shuffle modes."""
     # Test shuffle with all variations of existing play mode
     dmr_device_mock.valid_play_modes = {mode.value for mode in PlayMode}
-    for init_mode, shuffle_set, expect_mode in [
+    for init_mode, shuffle_set, expect_mode in (
         (PlayMode.NORMAL, False, PlayMode.NORMAL),
         (PlayMode.SHUFFLE, False, PlayMode.NORMAL),
         (PlayMode.REPEAT_ONE, False, PlayMode.REPEAT_ONE),
@@ -955,7 +955,7 @@ async def test_shuffle_repeat_modes(
         (PlayMode.REPEAT_ONE, True, PlayMode.RANDOM),
         (PlayMode.REPEAT_ALL, True, PlayMode.RANDOM),
         (PlayMode.RANDOM, True, PlayMode.RANDOM),
-    ]:
+    ):
         dmr_device_mock.play_mode = init_mode
         await hass.services.async_call(
             mp.DOMAIN,
@@ -966,7 +966,7 @@ async def test_shuffle_repeat_modes(
         dmr_device_mock.async_set_play_mode.assert_awaited_with(expect_mode)
 
     # Test repeat with all variations of existing play mode
-    for init_mode, repeat_set, expect_mode in [
+    for init_mode, repeat_set, expect_mode in (
         (PlayMode.NORMAL, RepeatMode.OFF, PlayMode.NORMAL),
         (PlayMode.SHUFFLE, RepeatMode.OFF, PlayMode.SHUFFLE),
         (PlayMode.REPEAT_ONE, RepeatMode.OFF, PlayMode.NORMAL),
@@ -982,7 +982,7 @@ async def test_shuffle_repeat_modes(
         (PlayMode.REPEAT_ONE, RepeatMode.ALL, PlayMode.REPEAT_ALL),
         (PlayMode.REPEAT_ALL, RepeatMode.ALL, PlayMode.REPEAT_ALL),
         (PlayMode.RANDOM, RepeatMode.ALL, PlayMode.RANDOM),
-    ]:
+    ):
         dmr_device_mock.play_mode = init_mode
         await hass.services.async_call(
             mp.DOMAIN,

@@ -28,6 +28,7 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
     DurationConverter,
@@ -126,6 +127,7 @@ QUERY_STATISTICS_SUMMARY_SUM = (
 
 
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
+    **{unit: ConductivityConverter for unit in ConductivityConverter.VALID_UNITS},
     **{unit: DataRateConverter for unit in DataRateConverter.VALID_UNITS},
     **{unit: DistanceConverter for unit in DistanceConverter.VALID_UNITS},
     **{unit: DurationConverter for unit in DurationConverter.VALID_UNITS},
@@ -146,6 +148,12 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
     **{unit: VolumeFlowRateConverter for unit in VolumeFlowRateConverter.VALID_UNITS},
 }
 
+
+UNIT_CLASSES = {
+    unit: converter.UNIT_CLASS
+    for unit, converter in STATISTIC_UNIT_TO_UNIT_CONVERTER.items()
+}
+
 DATA_SHORT_TERM_STATISTICS_RUN_CACHE = "recorder_short_term_statistics_run_cache"
 
 
@@ -154,7 +162,7 @@ def mean(values: list[float]) -> float | None:
 
     This is a very simple version that only works
     with a non-empty list of floats. The built-in
-    statistics.mean is more robust but is is almost
+    statistics.mean is more robust but is almost
     an order of magnitude slower.
     """
     return sum(values) / len(values)
@@ -207,13 +215,6 @@ class StatisticsRow(BaseStatisticsRow, total=False):
     max: float | None
     mean: float | None
     change: float | None
-
-
-def _get_unit_class(unit: str | None) -> str | None:
-    """Get corresponding unit class from from the statistics unit."""
-    if converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(unit):
-        return converter.UNIT_CLASS
-    return None
 
 
 def get_display_unit(
@@ -805,7 +806,7 @@ def _statistic_by_id_from_metadata(
             "has_sum": meta["has_sum"],
             "name": meta["name"],
             "source": meta["source"],
-            "unit_class": _get_unit_class(meta["unit_of_measurement"]),
+            "unit_class": UNIT_CLASSES.get(meta["unit_of_measurement"]),
             "unit_of_measurement": meta["unit_of_measurement"],
         }
         for _, meta in metadata.values()
@@ -879,7 +880,7 @@ def list_statistic_ids(
                     "has_sum": meta["has_sum"],
                     "name": meta["name"],
                     "source": meta["source"],
-                    "unit_class": _get_unit_class(meta["unit_of_measurement"]),
+                    "unit_class": UNIT_CLASSES.get(meta["unit_of_measurement"]),
                     "unit_of_measurement": meta["unit_of_measurement"],
                 }
 

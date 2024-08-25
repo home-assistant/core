@@ -9,7 +9,10 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
+from homeassistant.components.notify import (
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_NAME,
@@ -38,7 +41,7 @@ DEFAULT_LANGUAGE = "en-us"
 DEFAULT_VOICE = FEMALE_VOICE
 TIMEOUT = 5
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_USERNAME): cv.string,

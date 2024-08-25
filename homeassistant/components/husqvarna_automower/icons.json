@@ -32,5 +32,9 @@
         "default": "mdi:tooltip-question"
       }
     }
+  },
+  "services": {
+    "override_schedule": "mdi:debug-step-over",
+    "override_schedule_work_area": "mdi:land-fields"
   }
 }

@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 import uuid
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.rest.data import DEFAULT_TIMEOUT
 from homeassistant.components.rest.schema import DEFAULT_METHOD, DEFAULT_VERIFY_SSL

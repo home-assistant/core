@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pytedee_async.bridge import TedeeBridge
 from pytedee_async.lock import TedeeLock
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.tedee.const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_WEBHOOK_ID

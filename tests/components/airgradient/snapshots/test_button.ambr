@@ -1,0 +1,139 @@
+# serializer version: 1
+# name: test_all_entities[indoor][button.airgradient_calibrate_co2_sensor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.airgradient_calibrate_co2_sensor',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Calibrate CO2 sensor',
+    'platform': 'airgradient',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'co2_calibration',
+    'unique_id': '84fce612f5b8-co2_calibration',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[indoor][button.airgradient_calibrate_co2_sensor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Airgradient Calibrate CO2 sensor',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.airgradient_calibrate_co2_sensor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[indoor][button.airgradient_test_led_bar-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.airgradient_test_led_bar',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Test LED bar',
+    'platform': 'airgradient',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'led_bar_test',
+    'unique_id': '84fce612f5b8-led_bar_test',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[indoor][button.airgradient_test_led_bar-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Airgradient Test LED bar',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.airgradient_test_led_bar',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[outdoor][button.airgradient_calibrate_co2_sensor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.airgradient_calibrate_co2_sensor',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Calibrate CO2 sensor',
+    'platform': 'airgradient',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'co2_calibration',
+    'unique_id': '84fce612f5b8-co2_calibration',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[outdoor][button.airgradient_calibrate_co2_sensor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Airgradient Calibrate CO2 sensor',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.airgradient_calibrate_co2_sensor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

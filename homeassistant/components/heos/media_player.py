@@ -377,7 +377,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
         return self._media_position_updated_at
 
     @property
-    def media_image_url(self) -> str:
+    def media_image_url(self) -> str | None:
         """Image url of current playing media."""
         # May be an empty string, if so, return None
         image_url = self._player.now_playing_media.image_url

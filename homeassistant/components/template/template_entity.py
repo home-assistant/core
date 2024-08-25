@@ -123,7 +123,9 @@ LEGACY_FIELDS = {
 
 
 def rewrite_common_legacy_to_modern_conf(
-    entity_cfg: dict[str, Any], extra_legacy_fields: dict[str, str] | None = None
+    hass: HomeAssistant,
+    entity_cfg: dict[str, Any],
+    extra_legacy_fields: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     """Rewrite legacy config."""
     entity_cfg = {**entity_cfg}
@@ -138,11 +140,11 @@ def rewrite_common_legacy_to_modern_conf(
 
         val = entity_cfg.pop(from_key)
         if isinstance(val, str):
-            val = Template(val)
+            val = Template(val, hass)
         entity_cfg[to_key] = val
 
     if CONF_NAME in entity_cfg and isinstance(entity_cfg[CONF_NAME], str):
-        entity_cfg[CONF_NAME] = Template(entity_cfg[CONF_NAME])
+        entity_cfg[CONF_NAME] = Template(entity_cfg[CONF_NAME], hass)
 
     return entity_cfg
 
@@ -310,7 +312,6 @@ class TemplateEntity(Entity):
         # Try to render the name as it can influence the entity ID
         self._attr_name = fallback_name
         if self._friendly_name_template:
-            self._friendly_name_template.hass = hass
             with contextlib.suppress(TemplateError):
                 self._attr_name = self._friendly_name_template.async_render(
                     variables=variables, parse_result=False
@@ -319,14 +320,12 @@ class TemplateEntity(Entity):
         # Templates will not render while the entity is unavailable, try to render the
         # icon and picture templates.
         if self._entity_picture_template:
-            self._entity_picture_template.hass = hass
             with contextlib.suppress(TemplateError):
                 self._attr_entity_picture = self._entity_picture_template.async_render(
                     variables=variables, parse_result=False
                 )
 
         if self._icon_template:
-            self._icon_template.hass = hass
             with contextlib.suppress(TemplateError):
                 self._attr_icon = self._icon_template.async_render(
                     variables=variables, parse_result=False
@@ -388,8 +387,10 @@ class TemplateEntity(Entity):
             If True, the attribute will be set to None if the template errors.
 
         """
-        assert self.hass is not None, "hass cannot be None"
-        template.hass = self.hass
+        if self.hass is None:
+            raise ValueError("hass cannot be None")
+        if template.hass is None:
+            raise ValueError("template.hass cannot be None")
         template_attribute = _TemplateAttribute(
             self, attribute, template, validator, on_update, none_on_template_error
         )

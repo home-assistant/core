@@ -1,15 +1,16 @@
 """Common fixtures for the Tractive tests."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiotractive.trackable_object import TrackableObject
 from aiotractive.tracker import Tracker
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.tractive.const import DOMAIN, SERVER_UNAVAILABLE
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from tests.common import MockConfigEntry, load_json_object_fixture
@@ -76,7 +77,7 @@ def mock_tractive_client() -> Generator[AsyncMock]:
             }
         entry.runtime_data.client._send_switch_update(event)
 
-    def send_server_unavailable_event(hass):
+    def send_server_unavailable_event(hass: HomeAssistant) -> None:
         """Send server unavailable event."""
         async_dispatcher_send(hass, f"{SERVER_UNAVAILABLE}-12345")
 

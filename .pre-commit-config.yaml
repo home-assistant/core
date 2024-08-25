@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.8
+    rev: v0.6.2
     hooks:
       - id: ruff
         args:
@@ -12,7 +12,7 @@ repos:
     hooks:
       - id: codespell
         args:
-          - --ignore-words-list=astroid,checkin,currenty,hass,iif,incomfort,lookin,nam,NotIn,pres,ser,ue
+          - --ignore-words-list=astroid,checkin,currenty,hass,iif,incomfort,lookin,nam,NotIn
           - --skip="./.*,*.csv,*.json,*.ambr"
           - --quiet-level=2
         exclude_types: [csv, json, html]
@@ -69,7 +69,7 @@ repos:
         entry: script/run-in-env.sh pylint -j 0 --ignore-missing-annotations=y
         language: script
         types_or: [python, pyi]
-        files: ^homeassistant/.+\.(py|pyi)$
+        files: ^(homeassistant|tests)/.+\.(py|pyi)$
       - id: gen_requirements_all
         name: gen_requirements_all
         entry: script/run-in-env.sh python3 -m script.gen_requirements_all
@@ -83,7 +83,7 @@ repos:
         pass_filenames: false
         language: script
         types: [text]
-        files: ^(homeassistant/.+/(icons|manifest|strings)\.json|homeassistant/brands/.*\.json|\.coveragerc|homeassistant/.+/services\.yaml|script/hassfest/(?!metadata|mypy_config).+\.py|requirements_test.txt)$
+        files: ^(homeassistant/.+/(icons|manifest|strings)\.json|homeassistant/brands/.*\.json|homeassistant/.+/services\.yaml|script/hassfest/(?!metadata|mypy_config).+\.py|requirements_test.txt)$
       - id: hassfest-metadata
         name: hassfest-metadata
         entry: script/run-in-env.sh python3 -m script.hassfest -p metadata

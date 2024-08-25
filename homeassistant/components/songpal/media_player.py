@@ -140,7 +140,12 @@ class SongpalEntity(MediaPlayerEntity):
 
     async def _get_sound_modes_info(self):
         """Get available sound modes and the active one."""
-        settings = await self._dev.get_sound_settings("soundField")
+        for settings in await self._dev.get_sound_settings():
+            if settings.target == "soundField":
+                break
+        else:
+            return None, {}
+
         if isinstance(settings, Setting):
             settings = [settings]
 

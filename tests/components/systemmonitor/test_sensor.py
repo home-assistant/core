@@ -14,12 +14,9 @@ from homeassistant.components.systemmonitor.const import DOMAIN
 from homeassistant.components.systemmonitor.coordinator import VirtualMemory
 from homeassistant.components.systemmonitor.sensor import get_cpu_icon
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
-
-from .conftest import MockProcess
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -39,7 +36,6 @@ async def test_sensor(
         data={},
         options={
             "binary_sensor": {"process": ["python3", "pip"]},
-            "sensor": {"process": ["python3", "pip"]},
             "resources": [
                 "disk_use_percent_/",
                 "disk_use_percent_/home/notexist/",
@@ -62,10 +58,6 @@ async def test_sensor(
         "device_class": "data_size",
         "friendly_name": "System Monitor Memory free",
     }
-
-    process_sensor = hass.states.get("sensor.system_monitor_process_python3")
-    assert process_sensor is not None
-    assert process_sensor.state == STATE_ON
 
     for entity in er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
@@ -142,58 +134,6 @@ async def test_sensor_icon(
         assert get_cpu_icon() == "mdi:cpu-64-bit"
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensor_yaml(
-    hass: HomeAssistant,
-    mock_psutil: Mock,
-    mock_os: Mock,
-) -> None:
-    """Test the sensor imported from YAML."""
-    config = {
-        "sensor": {
-            "platform": "systemmonitor",
-            "resources": [
-                {"type": "disk_use_percent"},
-                {"type": "disk_use_percent", "arg": "/media/share"},
-                {"type": "memory_free", "arg": "/"},
-                {"type": "network_out", "arg": "eth0"},
-                {"type": "process", "arg": "python3"},
-            ],
-        }
-    }
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-    memory_sensor = hass.states.get("sensor.system_monitor_memory_free")
-    assert memory_sensor is not None
-    assert memory_sensor.state == "40.0"
-
-    process_sensor = hass.states.get("binary_sensor.system_monitor_process_python3")
-    assert process_sensor is not None
-    assert process_sensor.state == STATE_ON
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensor_yaml_fails_missing_argument(
-    caplog: pytest.LogCaptureFixture,
-    hass: HomeAssistant,
-    mock_psutil: Mock,
-    mock_os: Mock,
-) -> None:
-    """Test the sensor imported from YAML fails on missing mandatory argument."""
-    config = {
-        "sensor": {
-            "platform": "systemmonitor",
-            "resources": [
-                {"type": "network_in"},
-            ],
-        }
-    }
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-
-    assert "Mandatory 'arg' is missing for sensor type 'network_in'" in caplog.text
-
-
 async def test_sensor_updating(
     hass: HomeAssistant,
     mock_psutil: Mock,
@@ -207,7 +147,6 @@ async def test_sensor_updating(
         data={},
         options={
             "binary_sensor": {"process": ["python3", "pip"]},
-            "sensor": {"process": ["python3", "pip"]},
             "resources": [
                 "disk_use_percent_/",
                 "disk_use_percent_/home/notexist/",
@@ -224,10 +163,6 @@ async def test_sensor_updating(
     memory_sensor = hass.states.get("sensor.system_monitor_memory_free")
     assert memory_sensor is not None
     assert memory_sensor.state == "40.0"
-
-    process_sensor = hass.states.get("sensor.system_monitor_process_python3")
-    assert process_sensor is not None
-    assert process_sensor.state == STATE_ON
 
     mock_psutil.virtual_memory.side_effect = Exception("Failed to update")
     freezer.tick(timedelta(minutes=1))
@@ -253,53 +188,6 @@ async def test_sensor_updating(
     memory_sensor = hass.states.get("sensor.system_monitor_memory_free")
     assert memory_sensor is not None
     assert memory_sensor.state == "25.0"
-
-
-async def test_sensor_process_fails(
-    hass: HomeAssistant,
-    mock_psutil: Mock,
-    mock_os: Mock,
-    freezer: FrozenDateTimeFactory,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test process not exist failure."""
-    mock_config_entry = MockConfigEntry(
-        title="System Monitor",
-        domain=DOMAIN,
-        data={},
-        options={
-            "binary_sensor": {"process": ["python3", "pip"]},
-            "sensor": {"process": ["python3", "pip"]},
-            "resources": [
-                "disk_use_percent_/",
-                "disk_use_percent_/home/notexist/",
-                "memory_free_",
-                "network_out_eth0",
-                "process_python3",
-            ],
-        },
-    )
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    process_sensor = hass.states.get("sensor.system_monitor_process_python3")
-    assert process_sensor is not None
-    assert process_sensor.state == STATE_ON
-
-    _process = MockProcess("python3", True)
-
-    mock_psutil.process_iter.return_value = [_process]
-
-    freezer.tick(timedelta(minutes=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    process_sensor = hass.states.get("sensor.system_monitor_process_python3")
-    assert process_sensor is not None
-    assert process_sensor.state == STATE_OFF
-
-    assert "Failed to load process with ID: 1, old name: python3" in caplog.text
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

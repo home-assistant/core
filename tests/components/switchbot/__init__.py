@@ -36,19 +36,13 @@ def patch_async_setup_entry(return_value=True):
     )
 
 
-async def init_integration(
-    hass: HomeAssistant,
-    *,
-    data: dict = ENTRY_CONFIG,
-    skip_entry_setup: bool = False,
-) -> MockConfigEntry:
+async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the Switchbot integration in Home Assistant."""
-    entry = MockConfigEntry(domain=DOMAIN, data=data)
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_CONFIG)
     entry.add_to_hass(hass)
 
-    if not skip_entry_setup:
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     return entry
 

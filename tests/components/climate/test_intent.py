@@ -1,7 +1,8 @@
 """Test climate intents."""
 
+from collections.abc import Generator
+
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import conversation
 from homeassistant.components.climate import (

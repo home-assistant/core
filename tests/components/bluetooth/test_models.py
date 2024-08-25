@@ -107,6 +107,7 @@ async def test_wrapped_bleak_client_local_adapter_only(hass: HomeAssistant) -> N
         "00:00:00:00:00:01",
         "hci0",
     )
+    # pylint: disable-next=attribute-defined-outside-init
     scanner.connectable = True
     cancel = manager.async_register_scanner(scanner)
     inject_advertisement_with_source(

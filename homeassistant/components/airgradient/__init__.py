@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from airgradient import AirGradientClient
+from dataclasses import dataclass
+
+from airgradient import AirGradientClient, get_model_name
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
@@ -13,10 +15,28 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import DOMAIN
 from .coordinator import AirGradientConfigCoordinator, AirGradientMeasurementCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SELECT, Platform.SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.BUTTON,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.UPDATE,
+]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+@dataclass
+class AirGradientData:
+    """AirGradient data class."""
+
+    measurement: AirGradientMeasurementCoordinator
+    config: AirGradientConfigCoordinator
+
+
+type AirGradientConfigEntry = ConfigEntry[AirGradientData]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: AirGradientConfigEntry) -> bool:
     """Set up Airgradient from a config entry."""
 
     client = AirGradientClient(
@@ -34,24 +54,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, measurement_coordinator.serial_number)},
         manufacturer="AirGradient",
-        model=measurement_coordinator.data.model,
+        model=get_model_name(measurement_coordinator.data.model),
+        model_id=measurement_coordinator.data.model,
         serial_number=measurement_coordinator.data.serial_number,
         sw_version=measurement_coordinator.data.firmware_version,
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        "measurement": measurement_coordinator,
-        "config": config_coordinator,
-    }
+    entry.runtime_data = AirGradientData(
+        measurement=measurement_coordinator,
+        config=config_coordinator,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: AirGradientConfigEntry
+) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

@@ -1,10 +1,9 @@
 {
   "domain": "aladdin_connect",
   "name": "Aladdin Connect",
-  "codeowners": ["@swcloudgenie"],
-  "config_flow": true,
-  "dependencies": ["application_credentials"],
+  "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/aladdin_connect",
+  "integration_type": "system",
   "iot_class": "cloud_polling",
-  "requirements": ["genie-partner-sdk==1.0.2"]
+  "requirements": []
 }

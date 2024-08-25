@@ -15,7 +15,7 @@ import voluptuous as vol
 
 from homeassistant.components.image_processing import (
     CONF_CONFIDENCE,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as IMAGE_PROCESSING_PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
 from homeassistant.const import (
@@ -68,7 +68,7 @@ CATEGORY_SCHEMA = vol.Schema(
     {vol.Required(CONF_CATEGORY): cv.string, vol.Optional(CONF_AREA): AREA_SCHEMA}
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_FILE_OUT, default=[]): vol.All(cv.ensure_list, [cv.template]),
         vol.Required(CONF_MODEL): vol.Schema(
@@ -260,8 +260,6 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
                 area_config.get(CONF_BOTTOM),
                 area_config.get(CONF_RIGHT),
             ]
-
-        template.attach(hass, self._file_out)
 
         self._matches = {}
         self._total_matches = 0

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
@@ -145,8 +145,9 @@ class RingCam(RingEntity[RingDoorBell], Camera):
             self._attr_motion_detection_enabled = self._device.motion_detection
             self.async_write_ha_state()
 
-        if self._last_event is None:
-            return
+        if TYPE_CHECKING:
+            # _last_event is set before calling update so will never be None
+            assert self._last_event
 
         if self._last_event["recording"]["status"] != "ready":
             return
@@ -158,35 +159,36 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         if self._last_video_id != self._last_event["id"]:
             self._image = None
 
-        self._video_url = await self.hass.async_add_executor_job(self._get_video)
+        self._video_url = await self._async_get_video()
 
         self._last_video_id = self._last_event["id"]
         self._expires_at = FORCE_REFRESH_INTERVAL + utcnow
 
     @exception_wrap
-    def _get_video(self) -> str | None:
-        if self._last_event is None:
-            return None
+    async def _async_get_video(self) -> str | None:
+        if TYPE_CHECKING:
+            # _last_event is set before calling update so will never be None
+            assert self._last_event
         event_id = self._last_event.get("id")
         assert event_id and isinstance(event_id, int)
-        return self._device.recording_url(event_id)
+        return await self._device.async_recording_url(event_id)
 
     @exception_wrap
-    def _set_motion_detection_enabled(self, new_state: bool) -> None:
+    async def _async_set_motion_detection_enabled(self, new_state: bool) -> None:
         if not self._device.has_capability(MOTION_DETECTION_CAPABILITY):
             _LOGGER.error(
                 "Entity %s does not have motion detection capability", self.entity_id
             )
             return
 
-        self._device.motion_detection = new_state
+        await self._device.async_set_motion_detection(new_state)
         self._attr_motion_detection_enabled = new_state
-        self.schedule_update_ha_state(False)
+        self.async_schedule_update_ha_state(False)
 
-    def enable_motion_detection(self) -> None:
+    async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
-        self._set_motion_detection_enabled(True)
+        await self._async_set_motion_detection_enabled(True)
 
-    def disable_motion_detection(self) -> None:
+    async def async_disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
-        self._set_motion_detection_enabled(False)
+        await self._async_set_motion_detection_enabled(False)

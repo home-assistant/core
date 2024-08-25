@@ -12,7 +12,7 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
     CoverEntity,
     CoverEntityFeature,
 )
@@ -55,7 +55,7 @@ DEFAULT_NAME = "Cover Group"
 # No limit on parallel updates to enable a group calling another group
 PARALLEL_UPDATES = 0
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITIES): cv.entities_domain(DOMAIN),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

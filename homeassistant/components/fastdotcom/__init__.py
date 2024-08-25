@@ -6,23 +6,12 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.start import async_at_started
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import FastdotcomDataUpdateCoordinator
-from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
-
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Fastdotcom component."""
-    async_setup_services(hass)
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

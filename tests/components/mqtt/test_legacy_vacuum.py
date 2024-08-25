@@ -23,7 +23,7 @@ DEFAULT_CONFIG = {mqtt.DOMAIN: {vacuum.DOMAIN: {"name": "test"}}}
     [
         ({mqtt.DOMAIN: {vacuum.DOMAIN: {"name": "test", "schema": "legacy"}}}, True),
         ({mqtt.DOMAIN: {vacuum.DOMAIN: {"name": "test"}}}, False),
-        ({mqtt.DOMAIN: {vacuum.DOMAIN: {"name": "test", "schema": "state"}}}, False),
+        ({mqtt.DOMAIN: {vacuum.DOMAIN: {"name": "test", "schema": "state"}}}, True),
     ],
 )
 async def test_removed_support_yaml(
@@ -39,8 +39,8 @@ async def test_removed_support_yaml(
     if removed:
         assert entity is None
         assert (
-            "The support for the `legacy` MQTT "
-            "vacuum schema has been removed" in caplog.text
+            "The 'schema' option has been removed, "
+            "please remove it from your configuration" in caplog.text
         )
     else:
         assert entity is not None
@@ -51,7 +51,7 @@ async def test_removed_support_yaml(
     [
         ({"name": "test", "schema": "legacy"}, True),
         ({"name": "test"}, False),
-        ({"name": "test", "schema": "state"}, False),
+        ({"name": "test", "schema": "state"}, True),
     ],
 )
 async def test_removed_support_discovery(
@@ -69,12 +69,15 @@ async def test_removed_support_discovery(
     await hass.async_block_till_done()
 
     entity = hass.states.get("vacuum.test")
+    assert entity is not None
 
     if removed:
-        assert entity is None
         assert (
-            "The support for the `legacy` MQTT "
-            "vacuum schema has been removed" in caplog.text
+            "The 'schema' option has been removed, "
+            "please remove it from your configuration" in caplog.text
         )
     else:
-        assert entity is not None
+        assert (
+            "The 'schema' option has been removed, "
+            "please remove it from your configuration" not in caplog.text
+        )

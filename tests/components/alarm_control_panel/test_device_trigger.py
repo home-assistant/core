@@ -162,7 +162,7 @@ async def test_get_triggers_hidden_auxiliary(
             "entity_id": entry.id,
             "metadata": {"secondary": True},
         }
-        for trigger in ["triggered", "disarmed", "arming"]
+        for trigger in ("triggered", "disarmed", "arming")
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id

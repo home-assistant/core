@@ -3,15 +3,13 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from http import HTTPStatus
-import logging
 from typing import Any
 
-import requests
+from pyemoncms import EmoncmsClient
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
@@ -19,20 +17,23 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_ID,
+    CONF_SCAN_INTERVAL,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
     CONF_VALUE_TEMPLATE,
     STATE_UNKNOWN,
     UnitOfPower,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import template
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_EXCLUDE_FEEDID, CONF_ONLY_INCLUDE_FEEDID
+from .coordinator import EmoncmsCoordinator
 
 ATTR_FEEDID = "FeedId"
 ATTR_FEEDNAME = "FeedName"
@@ -42,17 +43,14 @@ ATTR_SIZE = "Size"
 ATTR_TAG = "Tag"
 ATTR_USERID = "UserId"
 
-CONF_EXCLUDE_FEEDID = "exclude_feed_id"
-CONF_ONLY_INCLUDE_FEEDID = "include_only_feed_id"
 CONF_SENSOR_NAMES = "sensor_names"
 
 DECIMALS = 2
 DEFAULT_UNIT = UnitOfPower.WATT
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 ONLY_INCL_EXCL_NONE = "only_include_exclude_or_none"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_URL): cv.string,
@@ -72,17 +70,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_id(
-    sensorid: str, feedtag: str, feedname: str, feedid: str, feeduserid: str
-) -> str:
-    """Return unique identifier for feed / sensor."""
-    return f"emoncms{sensorid}_{feedtag}_{feedname}_{feedid}_{feeduserid}"
-
-
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Emoncms sensor."""
@@ -94,20 +85,18 @@ def setup_platform(
     exclude_feeds = config.get(CONF_EXCLUDE_FEEDID)
     include_only_feeds = config.get(CONF_ONLY_INCLUDE_FEEDID)
     sensor_names = config.get(CONF_SENSOR_NAMES)
+    scan_interval = config.get(CONF_SCAN_INTERVAL, timedelta(seconds=30))
 
-    if value_template is not None:
-        value_template.hass = hass
-
-    data = EmonCmsData(hass, url, apikey)
-
-    data.update()
-
-    if data.data is None:
+    emoncms_client = EmoncmsClient(url, apikey, session=async_get_clientsession(hass))
+    coordinator = EmoncmsCoordinator(hass, emoncms_client, scan_interval)
+    await coordinator.async_refresh()
+    elems = coordinator.data
+    if not elems:
         return
 
-    sensors = []
+    sensors: list[EmonCmsSensor] = []
 
-    for elem in data.data:
+    for idx, elem in enumerate(elems):
         if exclude_feeds is not None and int(elem["id"]) in exclude_feeds:
             continue
 
@@ -125,47 +114,45 @@ def setup_platform(
 
         sensors.append(
             EmonCmsSensor(
-                hass,
-                data,
+                coordinator,
                 name,
                 value_template,
                 unit_of_measurement,
                 str(sensorid),
-                elem,
+                idx,
             )
         )
-    add_entities(sensors)
+    async_add_entities(sensors)
 
 
-class EmonCmsSensor(SensorEntity):
+class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
     """Implementation of an Emoncms sensor."""
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        data: EmonCmsData,
+        coordinator: EmoncmsCoordinator,
         name: str | None,
         value_template: template.Template | None,
         unit_of_measurement: str | None,
         sensorid: str,
-        elem: dict[str, Any],
+        idx: int,
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(coordinator)
+        self.idx = idx
+        elem = {}
+        if self.coordinator.data:
+            elem = self.coordinator.data[self.idx]
         if name is None:
             # Suppress ID in sensor name if it's 1, since most people won't
             # have more than one EmonCMS source and it's redundant to show the
             # ID if there's only one.
             id_for_name = "" if str(sensorid) == "1" else sensorid
             # Use the feed name assigned in EmonCMS or fall back to the feed ID
-            feed_name = elem.get("name") or f"Feed {elem['id']}"
+            feed_name = elem.get("name", f"Feed {elem.get('id')}")
             self._attr_name = f"EmonCMS{id_for_name} {feed_name}"
         else:
             self._attr_name = name
-        self._identifier = get_id(
-            sensorid, elem["tag"], elem["name"], elem["id"], elem["userid"]
-        )
-        self._hass = hass
-        self._data = data
         self._value_template = value_template
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._sensorid = sensorid
@@ -214,72 +201,17 @@ class EmonCmsSensor(SensorEntity):
         self._attr_native_value = None
         if self._value_template is not None:
             self._attr_native_value = (
-                self._value_template.render_with_possible_json_value(
+                self._value_template.async_render_with_possible_json_value(
                     elem["value"], STATE_UNKNOWN
                 )
             )
         elif elem["value"] is not None:
             self._attr_native_value = round(float(elem["value"]), DECIMALS)
 
-    def update(self) -> None:
-        """Get the latest data and updates the state."""
-        self._data.update()
-
-        if self._data.data is None:
-            return
-
-        elem = next(
-            (
-                elem
-                for elem in self._data.data
-                if get_id(
-                    self._sensorid,
-                    elem["tag"],
-                    elem["name"],
-                    elem["id"],
-                    elem["userid"],
-                )
-                == self._identifier
-            ),
-            None,
-        )
-
-        if elem is None:
-            return
-
-        self._update_attributes(elem)
-
-
-class EmonCmsData:
-    """The class for handling the data retrieval."""
-
-    def __init__(self, hass: HomeAssistant, url: str, apikey: str) -> None:
-        """Initialize the data object."""
-        self._apikey = apikey
-        self._url = f"{url}/feed/list.json"
-        self._hass = hass
-        self.data: list[dict[str, Any]] | None = None
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self) -> None:
-        """Get the latest data from Emoncms."""
-        try:
-            parameters = {"apikey": self._apikey}
-            req = requests.get(
-                self._url, params=parameters, allow_redirects=True, timeout=5
-            )
-        except requests.exceptions.RequestException as exception:
-            _LOGGER.error(exception)
-            return
-
-        if req.status_code == HTTPStatus.OK:
-            self.data = req.json()
-        else:
-            _LOGGER.error(
-                (
-                    "Please verify if the specified configuration value "
-                    "'%s' is correct! (HTTP Status_code = %d)"
-                ),
-                CONF_URL,
-                req.status_code,
-            )
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        data = self.coordinator.data
+        if data:
+            self._update_attributes(data[self.idx])
+        super()._handle_coordinator_update()

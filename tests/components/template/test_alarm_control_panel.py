@@ -103,7 +103,7 @@ TEMPLATE_ALARM_CONFIG = {
 async def test_template_state_text(hass: HomeAssistant, start_ha) -> None:
     """Test the state text of a template."""
 
-    for set_state in [
+    for set_state in (
         STATE_ALARM_ARMED_HOME,
         STATE_ALARM_ARMED_AWAY,
         STATE_ALARM_ARMED_NIGHT,
@@ -113,7 +113,7 @@ async def test_template_state_text(hass: HomeAssistant, start_ha) -> None:
         STATE_ALARM_DISARMED,
         STATE_ALARM_PENDING,
         STATE_ALARM_TRIGGERED,
-    ]:
+    ):
         hass.states.async_set(PANEL_NAME, set_state)
         await hass.async_block_till_done()
         state = hass.states.get(TEMPLATE_NAME)
@@ -144,7 +144,7 @@ async def test_optimistic_states(hass: HomeAssistant, start_ha) -> None:
     await hass.async_block_till_done()
     assert state.state == "unknown"
 
-    for service, set_state in [
+    for service, set_state in (
         ("alarm_arm_away", STATE_ALARM_ARMED_AWAY),
         ("alarm_arm_home", STATE_ALARM_ARMED_HOME),
         ("alarm_arm_night", STATE_ALARM_ARMED_NIGHT),
@@ -152,7 +152,7 @@ async def test_optimistic_states(hass: HomeAssistant, start_ha) -> None:
         ("alarm_arm_custom_bypass", STATE_ALARM_ARMED_CUSTOM_BYPASS),
         ("alarm_disarm", STATE_ALARM_DISARMED),
         ("alarm_trigger", STATE_ALARM_TRIGGERED),
-    ]:
+    ):
         await hass.services.async_call(
             ALARM_DOMAIN,
             service,
@@ -244,7 +244,7 @@ async def test_template_syntax_error(
                 "platform": "template",
                 "panels": {
                     "test_template_panel": {
-                        "name": "Template Alarm Panel",
+                        "name": '{{ "Template Alarm Panel" }}',
                         "value_template": "disarmed",
                         **OPTIMISTIC_TEMPLATE_ALARM_CONFIG,
                     }

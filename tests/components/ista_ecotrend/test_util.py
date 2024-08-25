@@ -12,7 +12,7 @@ from homeassistant.components.ista_ecotrend.util import (
     last_day_of_month,
 )
 
-from .conftest import get_raw
+from .conftest import get_consumption_data
 
 
 def test_as_number() -> None:
@@ -86,7 +86,7 @@ def test_get_values_by_type(snapshot: SnapshotAssertion) -> None:
 
 def test_get_native_value() -> None:
     """Test getting native value for sensor states."""
-    test_data = get_raw("26e93f1a-c828-11ea-87d0-0242ac130003")
+    test_data = get_consumption_data("26e93f1a-c828-11ea-87d0-0242ac130003")
 
     assert get_native_value(test_data, IstaConsumptionType.HEATING) == 35
     assert get_native_value(test_data, IstaConsumptionType.HOT_WATER) == 1.0
@@ -123,7 +123,7 @@ def test_get_native_value() -> None:
 
 def test_get_statistics(snapshot: SnapshotAssertion) -> None:
     """Test get_statistics function."""
-    test_data = get_raw("26e93f1a-c828-11ea-87d0-0242ac130003")
+    test_data = get_consumption_data("26e93f1a-c828-11ea-87d0-0242ac130003")
     for consumption_type in IstaConsumptionType:
         assert get_statistics(test_data, consumption_type) == snapshot
         assert get_statistics({"consumptions": None}, consumption_type) is None

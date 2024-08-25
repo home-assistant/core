@@ -29,7 +29,7 @@ def partial_redact(
 
 
 @overload
-def async_redact_data[_ValueT](  # type: ignore[overload-overlap]
+def async_redact_data[_ValueT](
     data: Mapping, to_redact: Iterable[Any] | Mapping[Any, Callable[[_ValueT], _ValueT]]
 ) -> dict: ...
 

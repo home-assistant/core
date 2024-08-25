@@ -38,6 +38,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow, FlowManager
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import VolDictType
 
 from . import disconnect_client
 from .addon import get_addon_manager
@@ -639,7 +640,7 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
             CONF_ADDON_LR_S2_AUTHENTICATED_KEY, self.lr_s2_authenticated_key or ""
         )
 
-        schema = {
+        schema: VolDictType = {
             vol.Optional(CONF_S0_LEGACY_KEY, default=s0_legacy_key): str,
             vol.Optional(
                 CONF_S2_ACCESS_CONTROL_KEY, default=s2_access_control_key

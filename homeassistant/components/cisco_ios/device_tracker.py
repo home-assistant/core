@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -21,7 +21,7 @@ from homeassistant.helpers.typing import ConfigType
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = vol.All(
-    PARENT_PLATFORM_SCHEMA.extend(
+    DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_HOST): cv.string,
             vol.Required(CONF_USERNAME): cv.string,
@@ -54,7 +54,7 @@ class CiscoDeviceScanner(DeviceScanner):
         self.success_init = self._update_info()
         _LOGGER.info("Initialized cisco_ios scanner")
 
-    def get_device_name(self, device):
+    async def async_get_device_name(self, device: str) -> str | None:
         """Get the firmware doesn't save the name of the wireless device."""
         return None
 

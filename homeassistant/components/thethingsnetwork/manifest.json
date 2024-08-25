@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/thethingsnetwork",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "requirements": ["ttn_client==1.0.0"]
+  "requirements": ["ttn_client==1.2.0"]
 }

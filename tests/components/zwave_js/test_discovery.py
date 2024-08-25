@@ -29,9 +29,29 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 
+async def test_aeon_smart_switch_6_state(
+    hass: HomeAssistant, client, aeon_smart_switch_6, integration
+) -> None:
+    """Test that Smart Switch 6 has a meter reset button."""
+    state = hass.states.get("button.smart_switch_6_reset_accumulated_values")
+    assert state
+
+
 async def test_iblinds_v2(hass: HomeAssistant, client, iblinds_v2, integration) -> None:
     """Test that an iBlinds v2.0 multilevel switch value is discovered as a cover."""
     node = iblinds_v2
+    assert node.device_class.specific.label == "Unused"
+
+    state = hass.states.get("light.window_blind_controller")
+    assert not state
+
+    state = hass.states.get("cover.window_blind_controller")
+    assert state
+
+
+async def test_zvidar_state(hass: HomeAssistant, client, zvidar, integration) -> None:
+    """Test that an ZVIDAR Z-CM-V01 multilevel switch value is discovered as a cover."""
+    node = zvidar
     assert node.device_class.specific.label == "Unused"
 
     state = hass.states.get("light.window_blind_controller")

@@ -26,6 +26,7 @@ class SupportedModels(StrEnum):
     MOTION = "motion"
     HUMIDIFIER = "humidifier"
     LOCK = "lock"
+    LOCK_PRO = "lock_pro"
     BLIND_TILT = "blind_tilt"
     HUB2 = "hub2"
 
@@ -39,6 +40,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.CEILING_LIGHT: SupportedModels.CEILING_LIGHT,
     SwitchbotModel.HUMIDIFIER: SupportedModels.HUMIDIFIER,
     SwitchbotModel.LOCK: SupportedModels.LOCK,
+    SwitchbotModel.LOCK_PRO: SupportedModels.LOCK_PRO,
     SwitchbotModel.BLIND_TILT: SupportedModels.BLIND_TILT,
     SwitchbotModel.HUB2: SupportedModels.HUB2,
 }
@@ -54,6 +56,7 @@ SUPPORTED_MODEL_TYPES = (
     CONNECTABLE_SUPPORTED_MODEL_TYPES | NON_CONNECTABLE_SUPPORTED_MODEL_TYPES
 )
 
+SUPPORTED_LOCK_MODELS = {SwitchbotModel.LOCK, SwitchbotModel.LOCK_PRO}
 
 HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {
     str(v): k for k, v in SUPPORTED_MODEL_TYPES.items()

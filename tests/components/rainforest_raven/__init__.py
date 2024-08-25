@@ -27,6 +27,7 @@ def create_mock_device() -> AsyncMock:
     device.get_device_info.return_value = DEVICE_INFO
     device.get_instantaneous_demand.return_value = DEMAND
     device.get_meter_list.return_value = METER_LIST
+    # pylint: disable-next=unnecessary-lambda
     device.get_meter_info.side_effect = lambda meter: METER_INFO.get(meter)
     device.get_network_info.return_value = NETWORK_INFO
 
