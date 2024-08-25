@@ -33,7 +33,6 @@ ZONE_SWITCH_TYPES: Final[tuple[AirzoneSwitchDescription, ...]] = (
         api_param=API_ON,
         device_class=SwitchDeviceClass.SWITCH,
         key=AZD_ON,
-        translation_key="on",
     ),
 )
 
@@ -104,6 +103,7 @@ class AirzoneZoneSwitch(AirzoneZoneEntity, AirzoneBaseSwitch):
         """Initialize."""
         super().__init__(coordinator, entry, system_zone_id, zone_data)
 
+        self._attr_name = None
         self._attr_unique_id = (
             f"{self._attr_unique_id}_{system_zone_id}_{description.key}"
         )

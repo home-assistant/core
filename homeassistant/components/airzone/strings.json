@@ -66,11 +66,6 @@
       "rssi": {
         "name": "RSSI"
       }
-    },
-    "switch": {
-      "on": {
-        "name": "[%key:common::state::on%]"
-      }
     }
   }
 }
