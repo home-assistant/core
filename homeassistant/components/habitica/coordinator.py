@@ -58,8 +58,9 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
             tasks_response = await self.api.tasks.user.get()
             tasks_response.extend(
                 [
-                    {**task, "id": task["_id"]}
+                    {**task, "id": task.get("id", task["_id"])}
                     for task in await self.api.tasks.user.get(type="completedTodos")
+                    if task.get("_id")
                 ]
             )
 
