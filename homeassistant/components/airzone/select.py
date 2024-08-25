@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Final
 
@@ -37,6 +38,9 @@ class AirzoneSelectDescription(SelectEntityDescription):
 
     api_param: str
     options_dict: dict[str, int]
+    options_fn: Callable[[AirzoneEntity, dict[str, int]], dict[str, int]] = (
+        lambda entity, value: value
+    )
 
 
 GRILLE_ANGLE_DICT: Final[dict[str, int]] = {
@@ -63,12 +67,19 @@ SLEEP_DICT: Final[dict[str, int]] = {
 }
 
 
+def main_zone_options(entity: AirzoneEntity, options: dict[str, int]) -> dict[str, int]:
+    """Filter available modes."""
+    modes = entity.get_airzone_value(AZD_MODES)
+    return {k: v for k, v in options.items() if v in modes}
+
+
 MAIN_ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
     AirzoneSelectDescription(
         api_param=API_MODE,
         key=AZD_MODE,
         options=list(MODE_DICT),
         options_dict=MODE_DICT,
+        options_fn=main_zone_options,
         translation_key="modes",
     ),
 )
@@ -193,17 +204,12 @@ class AirzoneZoneSelect(AirzoneZoneEntity, AirzoneBaseSelect):
         )
         self.entity_description = description
 
-        if description.key == AZD_MODE:
-            options_dict: dict[str, Any] = {}
-            modes = self.get_airzone_value(AZD_MODES)
-            options_dict = {
-                k: v for k, v in description.options_dict.items() if v in modes
-            }
-            self._attr_options = list(options_dict)
-        else:
-            options_dict = description.options_dict
+        options_dict = self.entity_description.options_fn(
+            self, description.options_dict
+        )
+        self._attr_options = list(options_dict)
 
-        self.values_dict = {v: k for k, v in options_dict.items()}
+        self.values_dict = {v: k for k, v in description.options_dict.items()}
 
         self._async_update_attrs()
 

@@ -14,8 +14,7 @@ from aioairzone.const import (
 )
 import pytest
 
-from homeassistant.components.climate import HVACMode
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
+from homeassistant.components.select import ATTR_OPTIONS, DOMAIN as SELECT_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, SERVICE_SELECT_OPTION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -34,6 +33,9 @@ async def test_airzone_create_selects(hass: HomeAssistant) -> None:
     state = hass.states.get("select.despacho_heat_angle")
     assert state.state == "90deg"
 
+    state = hass.states.get("select.despacho_mode")
+    assert state is None
+
     state = hass.states.get("select.despacho_sleep")
     assert state.state == "off"
 
@@ -42,6 +44,9 @@ async def test_airzone_create_selects(hass: HomeAssistant) -> None:
 
     state = hass.states.get("select.dorm_1_heat_angle")
     assert state.state == "90deg"
+
+    state = hass.states.get("select.dorm_1_mode")
+    assert state is None
 
     state = hass.states.get("select.dorm_1_sleep")
     assert state.state == "off"
@@ -52,6 +57,9 @@ async def test_airzone_create_selects(hass: HomeAssistant) -> None:
     state = hass.states.get("select.dorm_2_heat_angle")
     assert state.state == "90deg"
 
+    state = hass.states.get("select.dorm_2_mode")
+    assert state is None
+
     state = hass.states.get("select.dorm_2_sleep")
     assert state.state == "off"
 
@@ -60,6 +68,9 @@ async def test_airzone_create_selects(hass: HomeAssistant) -> None:
 
     state = hass.states.get("select.dorm_ppal_heat_angle")
     assert state.state == "50deg"
+
+    state = hass.states.get("select.dorm_ppal_mode")
+    assert state is None
 
     state = hass.states.get("select.dorm_ppal_sleep")
     assert state.state == "30m"
@@ -71,7 +82,14 @@ async def test_airzone_create_selects(hass: HomeAssistant) -> None:
     assert state.state == "90deg"
 
     state = hass.states.get("select.salon_mode")
-    assert state.state == HVACMode.HEAT
+    assert state.state == "heat"
+    assert state.attributes.get(ATTR_OPTIONS) == [
+        "cool",
+        "dry",
+        "fan",
+        "heat",
+        "stop",
+    ]
 
     state = hass.states.get("select.salon_sleep")
     assert state.state == "off"
@@ -156,13 +174,13 @@ async def test_airzone_select_mode(hass: HomeAssistant) -> None:
             SERVICE_SELECT_OPTION,
             {
                 ATTR_ENTITY_ID: "select.salon_mode",
-                ATTR_OPTION: HVACMode.COOL,
+                ATTR_OPTION: "cool",
             },
             blocking=True,
         )
 
     state = hass.states.get("select.salon_mode")
-    assert state.state == HVACMode.COOL
+    assert state.state == "cool"
 
 
 async def test_airzone_select_grille_angle(hass: HomeAssistant) -> None:
