@@ -179,6 +179,8 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
             self.entry.async_start_reauth(self.hass)
             return False
 
+        LOGGER.debug("Connected to Shelly Device - %s", self.name)
+
         if not self.device.firmware_supported:
             async_create_issue_unsupported_firmware(self.hass, self.entry)
             return False
