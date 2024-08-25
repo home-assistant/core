@@ -17,16 +17,17 @@ from wyoming.info import Info
 from wyoming.ping import Ping, Pong
 from wyoming.pipeline import PipelineStage, RunPipeline
 from wyoming.satellite import RunSatellite
+from wyoming.snd import Played
 from wyoming.timer import TimerCancelled, TimerFinished, TimerStarted, TimerUpdated
 from wyoming.tts import Synthesize
 from wyoming.vad import VoiceStarted, VoiceStopped
 from wyoming.wake import Detect, Detection
 
-from homeassistant.components import assist_pipeline, wyoming
+from homeassistant.components import assist_pipeline, assist_satellite, wyoming
 from homeassistant.components.wyoming.assist_satellite import WyomingSatellite
 from homeassistant.components.wyoming.devices import SatelliteDevice
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import intent as intent_helper
 from homeassistant.setup import async_setup_component
@@ -81,7 +82,7 @@ def get_device(hass: HomeAssistant, entry: ConfigEntry) -> SatelliteDevice:
 class SatelliteAsyncTcpClient(MockAsyncTcpClient):
     """Satellite AsyncTcpClient."""
 
-    def __init__(self, responses: list[Event]) -> None:
+    def __init__(self, responses: list[Event], auto_audio: bool = True) -> None:
         """Initialize client."""
         super().__init__(responses)
 
@@ -133,9 +134,16 @@ class SatelliteAsyncTcpClient(MockAsyncTcpClient):
         self.timer_finished_event = asyncio.Event()
         self.timer_finished: TimerFinished | None = None
 
+        self.run_pipeline_event = asyncio.Event()
+        self.run_pipeline_count = asyncio.Semaphore()
+        self.run_pipeline: RunPipeline | None = None
+        self.run_pipeline_list: list[RunPipeline] = []
+
         self._mic_audio_chunk = AudioChunk(
             rate=16000, width=2, channels=1, audio=b"chunk"
         ).event()
+        self._auto_audio = auto_audio
+        self._event_injected = asyncio.Event()
 
     async def connect(self) -> None:
         """Connect."""
@@ -193,17 +201,29 @@ class SatelliteAsyncTcpClient(MockAsyncTcpClient):
         elif TimerFinished.is_type(event.type):
             self.timer_finished = TimerFinished.from_event(event)
             self.timer_finished_event.set()
+        elif RunPipeline.is_type(event.type):
+            self.run_pipeline = RunPipeline.from_event(event)
+            self.run_pipeline_list.append(self.run_pipeline)
+            self.run_pipeline_event.set()
+            self.run_pipeline_count.release()
 
     async def read_event(self) -> Event | None:
         """Receive."""
-        event = await super().read_event()
+        while True:
+            event = await super().read_event()
+            if event is not None:
+                return event
 
-        # Keep sending audio chunks instead of None
-        return event or self._mic_audio_chunk
+            if self._auto_audio:
+                # Keep sending audio chunks instead of None
+                return self._mic_audio_chunk
+
+            await self._event_injected.wait()
 
     def inject_event(self, event: Event) -> None:
         """Put an event in as the next response."""
         self.responses = [event, *self.responses]
+        self._event_injected.set()
 
 
 async def test_satellite_pipeline(hass: HomeAssistant) -> None:
@@ -1390,3 +1410,129 @@ async def test_satellite_conversation_id(hass: HomeAssistant) -> None:
 
         # Should be the same conversation id
         assert pipeline_kwargs.get("conversation_id") == conversation_id
+
+
+async def test_say_text(hass: HomeAssistant) -> None:
+    """Test say text service call."""
+    assert await async_setup_component(hass, assist_pipeline.DOMAIN, {})
+    test_text = "test-text"
+
+    with (
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=SATELLITE_INFO,
+        ),
+        patch(
+            "homeassistant.components.wyoming.assist_satellite.AsyncTcpClient",
+            SatelliteAsyncTcpClient([]),
+        ) as mock_client,
+        patch("homeassistant.components.wyoming.assist_satellite._PING_SEND_DELAY", 0),
+    ):
+        entry = await setup_config_entry(hass)
+        device = get_device(hass, entry)
+        satellite_entity_id = device.get_satellite_entity_id(hass)
+
+        async with asyncio.timeout(1):
+            await mock_client.connect_event.wait()
+            await mock_client.run_satellite_event.wait()
+
+        async with asyncio.timeout(1):
+            await hass.services.async_call(
+                assist_satellite.DOMAIN,
+                assist_satellite.SERVICE_SAY_TEXT,
+                {
+                    ATTR_ENTITY_ID: satellite_entity_id,
+                    assist_satellite.ATTR_ANNOUNCE_TEXT: test_text,
+                },
+                blocking=False,
+            )
+            await mock_client.run_pipeline_event.wait()
+
+        assert mock_client.run_pipeline is not None
+        rp: RunPipeline = mock_client.run_pipeline
+        assert rp.start_stage == PipelineStage.TTS
+        assert rp.end_stage == PipelineStage.TTS
+        assert rp.announce_text == test_text
+
+
+async def test_get_command(hass: HomeAssistant) -> None:
+    """Test get command service call."""
+    assert await async_setup_component(hass, assist_pipeline.DOMAIN, {})
+    test_command = "test-command"
+    test_text = "test-text"
+
+    async def async_pipeline_from_audio_stream(
+        hass: HomeAssistant,
+        context,
+        event_callback,
+        stt_metadata,
+        stt_stream,
+        **kwargs,
+    ) -> None:
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                assist_pipeline.PipelineEventType.STT_END,
+                {"stt_output": {"text": test_command}},
+            )
+        )
+
+    with (
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=SATELLITE_INFO,
+        ),
+        patch(
+            "homeassistant.components.wyoming.assist_satellite.AsyncTcpClient",
+            SatelliteAsyncTcpClient([], auto_audio=False),
+        ) as mock_client,
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+            async_pipeline_from_audio_stream,
+        ),
+        patch("homeassistant.components.wyoming.assist_satellite._PING_SEND_DELAY", 0),
+    ):
+        entry = await setup_config_entry(hass)
+        device = get_device(hass, entry)
+        satellite_entity_id = device.get_satellite_entity_id(hass)
+
+        async with asyncio.timeout(1):
+            await mock_client.connect_event.wait()
+            await mock_client.run_satellite_event.wait()
+
+        async with asyncio.timeout(1):
+            task = asyncio.create_task(
+                hass.services.async_call(
+                    assist_satellite.DOMAIN,
+                    assist_satellite.SERVICE_GET_COMMAND,
+                    {
+                        ATTR_ENTITY_ID: satellite_entity_id,
+                        assist_satellite.ATTR_ANNOUNCE_TEXT: test_text,
+                    },
+                    blocking=True,
+                    return_response=True,
+                )
+            )
+            await mock_client.run_pipeline_event.wait()
+
+            # Announcement happens first
+            assert mock_client.run_pipeline is not None
+            rp: RunPipeline = mock_client.run_pipeline
+            assert rp.start_stage == PipelineStage.TTS
+            assert rp.end_stage == PipelineStage.TTS
+            assert rp.announce_text == test_text
+
+            mock_client.run_pipeline_event.clear()
+            mock_client.run_pipeline = None
+            mock_client.inject_event(Played().event())
+
+            # Command happens next
+            await mock_client.run_pipeline_event.wait()
+            assert mock_client.run_pipeline is not None
+            rp = mock_client.run_pipeline
+            assert rp.start_stage == PipelineStage.ASR
+            assert rp.end_stage == PipelineStage.ASR
+
+            mock_client.inject_event(rp.event())
+
+            result = await task
+            assert result == {satellite_entity_id: test_command}

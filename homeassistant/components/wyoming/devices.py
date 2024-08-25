@@ -157,3 +157,10 @@ class SatelliteDevice:
         return ent_reg.async_get_entity_id(
             "select", DOMAIN, f"{self.satellite_id}-vad_sensitivity"
         )
+
+    def get_satellite_entity_id(self, hass: HomeAssistant) -> str | None:
+        """Return entity id for satellite."""
+        ent_reg = er.async_get(hass)
+        return ent_reg.async_get_entity_id(
+            "assist_satellite", DOMAIN, f"{self.satellite_id}-assist_satellite"
+        )
