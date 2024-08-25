@@ -23,7 +23,7 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     async_add_entities(
-        NiceGOEventEntity(coordinator, device_id, device_data.name, "event")
+        NiceGOEventEntity(coordinator, device_id, device_data.name)
         for device_id, device_data in coordinator.data.items()
     )
 
