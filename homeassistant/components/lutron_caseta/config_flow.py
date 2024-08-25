@@ -6,6 +6,7 @@ import asyncio
 import logging
 import os
 import ssl
+from typing import Any
 
 from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY, async_pair
 from pylutron_caseta.smartbridge import Smartbridge
@@ -50,14 +51,16 @@ class LutronCasetaFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize a Lutron Caseta flow."""
-        self.data = {}
-        self.lutron_id = None
+        self.data: dict[str, Any] = {}
+        self.lutron_id: str | None = None
         self.tls_assets_validated = False
         self.attempted_tls_validation = False
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if user_input is not None:
             self.data[CONF_HOST] = user_input[CONF_HOST]
