@@ -16,6 +16,7 @@ from homeassistant.components.shelly.const import (
     ATTR_DEVICE,
     ATTR_GENERATION,
     CONF_BLE_SCANNER_MODE,
+    CONF_SLEEP_PERIOD,
     DOMAIN,
     ENTRY_RELOAD_COOLDOWN,
     MAX_PUSH_UPDATE_FAILURES,
@@ -974,6 +975,31 @@ async def test_rpc_sleeping_device_connection_error(
 
     assert "Sleeping device did not update" in caplog.text
     assert get_entity_state(hass, entity_id) == STATE_UNAVAILABLE
+
+
+async def test_rpc_sleeping_device_late_setup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC sleeping device creates entities if they do not exist yet."""
+    entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
+    assert entry.data[CONF_SLEEP_PERIOD] == 1000
+    register_device(device_registry, entry)
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    monkeypatch.setattr(mock_rpc_device, "initialized", True)
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    monkeypatch.setattr(mock_rpc_device, "connected", True)
+    mock_rpc_device.mock_initialized()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get("sensor.test_name_temperature") is not None
 
 
 async def test_rpc_already_connected(
