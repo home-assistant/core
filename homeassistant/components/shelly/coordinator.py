@@ -668,8 +668,9 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
 
     async def _async_setup_outbound_websocket(self) -> None:
         """Set up outbound websocket if it is not enabled."""
-        ws_config = await self.device.ws_getconfig()
-        if not ws_config["server"] and (ws_url := get_rpc_ws_url(self.hass)):
+        if not self.device.config["ws"]["server"] and (
+            ws_url := get_rpc_ws_url(self.hass)
+        ):
             await self.device.update_outbound_websocket(ws_url)
 
     async def _async_connect_ble_scanner(self) -> None:
