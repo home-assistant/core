@@ -8,9 +8,10 @@ from tesla_fleet_api.exceptions import TeslaFleetError
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, LOGGER, TeslaFleetState
+from .models import TeslaFleetVehicleData
 
 
-async def wake_up_vehicle(vehicle) -> None:
+async def wake_up_vehicle(vehicle: TeslaFleetVehicleData) -> None:
     """Wake up a vehicle."""
     async with vehicle.wakelock:
         times = 0
