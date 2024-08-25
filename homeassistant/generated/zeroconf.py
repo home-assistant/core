@@ -68,6 +68,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX B10": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX BR30": {
         "always_discover": True,
         "domain": "lifx",
@@ -157,6 +161,10 @@ HOMEKIT = {
         "domain": "lifx",
     },
     "LIFX String": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX T10": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -747,6 +755,9 @@ ZEROCONF = {
         },
     ],
     "_slzb-06._tcp.local.": [
+        {
+            "domain": "smlight",
+        },
         {
             "domain": "zha",
             "name": "slzb-06*",

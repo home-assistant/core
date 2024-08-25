@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 import copy
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import web_response
 import plexapi.exceptions
@@ -105,15 +105,15 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return PlexOptionsFlowHandler(config_entry)
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the Plex flow."""
-        self.current_login = {}
+        self.current_login: dict[str, Any] = {}
         self.available_servers = None
         self.plexauth = None
         self.token = None
         self.client_id = None
         self._manual = False
-        self._reauth_config = None
+        self._reauth_config: dict[str, Any] | None = None
 
     async def async_step_user(self, user_input=None, errors=None):
         """Handle a flow initialized by the user."""
@@ -184,7 +184,9 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="manual_setup", data_schema=data_schema, errors=errors
         )
 
-    async def async_step_server_validate(self, server_config):
+    async def async_step_server_validate(
+        self, server_config: dict[str, Any]
+    ) -> ConfigFlowResult:
         """Validate a provided configuration."""
         if self._reauth_config:
             server_config = {**self._reauth_config, **server_config}
@@ -249,6 +251,8 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
 
         entry = await self.async_set_unique_id(server_id)
         if self.context[CONF_SOURCE] == SOURCE_REAUTH:
+            if TYPE_CHECKING:
+                assert entry
             self.hass.config_entries.async_update_entry(entry, data=data)
             _LOGGER.debug("Updated config entry for %s", plex_server.friendly_name)
             await self.hass.config_entries.async_reload(entry.entry_id)
