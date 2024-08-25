@@ -38,8 +38,8 @@ class AirzoneSelectDescription(SelectEntityDescription):
 
     api_param: str
     options_dict: dict[str, int]
-    options_fn: Callable[[AirzoneEntity, dict[str, int]], dict[str, int]] = (
-        lambda entity, value: value
+    options_fn: Callable[[dict[str, Any], dict[str, int]], dict[str, int]] = (
+        lambda zone_data, value: value
     )
 
 
@@ -67,9 +67,11 @@ SLEEP_DICT: Final[dict[str, int]] = {
 }
 
 
-def main_zone_options(entity: AirzoneEntity, options: dict[str, int]) -> dict[str, int]:
+def main_zone_options(
+    zone_data: dict[str, Any], options: dict[str, int]
+) -> dict[str, int]:
     """Filter available modes."""
-    modes = entity.get_airzone_value(AZD_MODES)
+    modes = zone_data.get(AZD_MODES, {})
     return {k: v for k, v in options.items() if v in modes}
 
 
@@ -77,7 +79,6 @@ MAIN_ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
     AirzoneSelectDescription(
         api_param=API_MODE,
         key=AZD_MODE,
-        options=list(MODE_DICT),
         options_dict=MODE_DICT,
         options_fn=main_zone_options,
         translation_key="modes",
@@ -130,8 +131,7 @@ async def async_setup_entry(
         received_zones = set(zones_data)
         new_zones = received_zones - added_zones
         if new_zones:
-            entities: list[AirzoneZoneSelect] = []
-            entities += [
+            entities: list[AirzoneZoneSelect] = [
                 AirzoneZoneSelect(
                     coordinator,
                     description,
@@ -205,7 +205,7 @@ class AirzoneZoneSelect(AirzoneZoneEntity, AirzoneBaseSelect):
         self.entity_description = description
 
         options_dict = self.entity_description.options_fn(
-            self, description.options_dict
+            zone_data, description.options_dict
         )
         self._attr_options = list(options_dict)
 
