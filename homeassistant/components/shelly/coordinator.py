@@ -102,7 +102,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         self._pending_platforms: list[Platform] | None = None
         device_name = device.name if device.initialized else entry.title
         interval_td = timedelta(seconds=update_interval)
-        self._connected_once = False
+        self._came_online_once = False
         super().__init__(hass, LOGGER, name=device_name, update_interval=interval_td)
 
         self._debounced_reload: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
@@ -178,8 +178,6 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         except InvalidAuthError:
             self.entry.async_start_reauth(self.hass)
             return False
-
-        self._connected_once = True
 
         if not self.device.firmware_supported:
             async_create_issue_unsupported_firmware(self.hass, self.entry)
@@ -376,6 +374,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         """Handle device update."""
         LOGGER.debug("Shelly %s handle update, type: %s", self.name, update_type)
         if update_type is BlockUpdateType.ONLINE:
+            self._came_online_once = True
             self.entry.async_create_background_task(
                 self.hass,
                 self._async_device_connect_task(),
@@ -483,10 +482,12 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         """Handle device going online."""
         if not self.sleep_period:
             await self.async_request_refresh()
-        elif not self._connected_once:
-            # Zeroconf told us the device is online, try to setup
-            # the outbound websocket if it is not enabled if we have
-            # not connected to the device yet
+        elif not self._came_online_once:
+            # Zeroconf told us the device is online, try to poll
+            # the device and if possible, set up the outbound
+            # websocket so the device will send us updates
+            # instead of relying on polling it fast enough before
+            # it goes to sleep again
             self._async_handle_rpc_device_online()
 
     def update_sleep_period(self) -> bool:
@@ -704,6 +705,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         """Handle device update."""
         LOGGER.debug("Shelly %s handle update, type: %s", self.name, update_type)
         if update_type is RpcUpdateType.ONLINE:
+            self._came_online_once = True
             self._async_handle_rpc_device_online()
         elif update_type is RpcUpdateType.INITIALIZED:
             self.entry.async_create_background_task(
