@@ -80,18 +80,18 @@ class RingLight(RingEntity[RingStickUpCam], LightEntity):
         super()._handle_coordinator_update()
 
     @exception_wrap
-    def _set_light(self, new_state: OnOffState) -> None:
+    async def _async_set_light(self, new_state: OnOffState) -> None:
         """Update light state, and causes Home Assistant to correctly update."""
-        self._device.lights = new_state
+        await self._device.async_set_lights(new_state)
 
         self._attr_is_on = new_state == OnOffState.ON
         self._no_updates_until = dt_util.utcnow() + SKIP_UPDATES_DELAY
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on for 30 seconds."""
-        self._set_light(OnOffState.ON)
+        await self._async_set_light(OnOffState.ON)
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        self._set_light(OnOffState.OFF)
+        await self._async_set_light(OnOffState.OFF)

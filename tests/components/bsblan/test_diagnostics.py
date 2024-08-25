@@ -16,8 +16,7 @@ async def test_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
-
-    assert (
-        await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
-        == snapshot
+    diagnostics_data = await get_diagnostics_for_config_entry(
+        hass, hass_client, init_integration
     )
+    assert diagnostics_data == snapshot

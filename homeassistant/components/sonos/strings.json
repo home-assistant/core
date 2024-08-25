@@ -186,6 +186,9 @@
     },
     "invalid_content_type": {
       "message": "Sonos does not support media content type: {media_type}"
+    },
+    "announce_media_error": {
+      "message": "Announcing clip {media_id} failed {response}"
     }
   }
 }
