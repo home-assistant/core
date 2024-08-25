@@ -183,10 +183,18 @@ COP_MODES = {
     "FanOnly": HVACMode.FAN_ONLY,
 }
 
+# String to celsius
 COP_LEVELS = {
     "Low": 30,
     "Medium": 35,
     "High": 40,
+}
+
+# Celsius to IntEnum
+TEMP_LEVELS = {
+    30: CabinOverheatProtectionTemp.LOW,
+    35: CabinOverheatProtectionTemp.MEDIUM,
+    40: CabinOverheatProtectionTemp.HIGH,
 }
 
 
@@ -254,13 +262,7 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
         if not (temp := kwargs.get(ATTR_TEMPERATURE)):
             return
 
-        if temp == 30:
-            cop_mode = CabinOverheatProtectionTemp.LOW
-        elif temp == 35:
-            cop_mode = CabinOverheatProtectionTemp.MEDIUM
-        elif temp == 40:
-            cop_mode = CabinOverheatProtectionTemp.HIGH
-        else:
+        if not (cop_mode := TEMP_LEVELS.get(temp)):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_cop_temp",
