@@ -154,6 +154,7 @@ class HKDevice:
         self._pending_subscribes: set[tuple[int, int]] = set()
         self._subscribe_timer: CALLBACK_TYPE | None = None
         self._load_platforms_lock = asyncio.Lock()
+        self._full_update_requested: bool = False
 
     @property
     def entity_map(self) -> Accessories:
@@ -841,6 +842,7 @@ class HKDevice:
 
     async def async_request_update(self, now: datetime | None = None) -> None:
         """Request an debounced update from the accessory."""
+        self._full_update_requested = True
         await self._debounced_update.async_call()
 
     async def async_update(self, now: datetime | None = None) -> None:
@@ -849,7 +851,8 @@ class HKDevice:
         accessories = self.entity_map.accessories
 
         if (
-            len(accessories) == 1
+            not self._full_update_requested
+            and len(accessories) == 1
             and self.available
             and not (to_poll - self.watchable_characteristics)
             and self.pairing.is_available
@@ -878,6 +881,8 @@ class HKDevice:
             assert accessory_info is not None
             firmware_iid = accessory_info[CharacteristicsTypes.FIRMWARE_REVISION].iid
             to_poll = {(first_accessory.aid, firmware_iid)}
+
+        self._full_update_requested = False
 
         if not to_poll:
             self.async_update_available_state()
