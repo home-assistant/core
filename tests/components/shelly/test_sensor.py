@@ -193,9 +193,14 @@ async def test_block_restored_sleeping_sensor(
 ) -> None:
     """Test block restored sleeping sensor."""
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
-        hass, SENSOR_DOMAIN, "test_name_temperature", "sensor_0-temp", entry
+        hass,
+        SENSOR_DOMAIN,
+        "test_name_temperature",
+        "sensor_0-temp",
+        entry,
+        device_id=device.id,
     )
     extra_data = {"native_value": "20.4", "native_unit_of_measurement": "°C"}
 
@@ -226,9 +231,14 @@ async def test_block_restored_sleeping_sensor_no_last_state(
 ) -> None:
     """Test block restored sleeping sensor missing last state."""
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
-        hass, SENSOR_DOMAIN, "test_name_temperature", "sensor_0-temp", entry
+        hass,
+        SENSOR_DOMAIN,
+        "test_name_temperature",
+        "sensor_0-temp",
+        entry,
+        device_id=device.id,
     )
     monkeypatch.setattr(mock_block_device, "initialized", False)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -293,9 +303,14 @@ async def test_block_not_matched_restored_sleeping_sensor(
 ) -> None:
     """Test block not matched to restored sleeping sensor."""
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
-        hass, SENSOR_DOMAIN, "test_name_temperature", "sensor_0-temp", entry
+        hass,
+        SENSOR_DOMAIN,
+        "test_name_temperature",
+        "sensor_0-temp",
+        entry,
+        device_id=device.id,
     )
     extra_data = {"native_value": "20.4", "native_unit_of_measurement": "°C"}
 
@@ -489,13 +504,14 @@ async def test_rpc_restored_sleeping_sensor(
 ) -> None:
     """Test RPC restored sensor."""
     entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         SENSOR_DOMAIN,
         "test_name_temperature",
         "temperature:0-temperature_0",
         entry,
+        device_id=device.id,
     )
     extra_data = {"native_value": "21.0", "native_unit_of_measurement": "°C"}
 
@@ -527,13 +543,14 @@ async def test_rpc_restored_sleeping_sensor_no_last_state(
 ) -> None:
     """Test RPC restored sensor missing last state."""
     entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         SENSOR_DOMAIN,
         "test_name_temperature",
         "temperature:0-temperature_0",
         entry,
+        device_id=device.id,
     )
 
     monkeypatch.setattr(mock_rpc_device, "initialized", False)

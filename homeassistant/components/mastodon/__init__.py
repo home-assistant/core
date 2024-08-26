@@ -104,7 +104,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             unique_id=slugify(construct_mastodon_username(instance, account)),
         )
 
-        LOGGER.info(
+        LOGGER.debug(
             "Entry %s successfully migrated to version %s.%s",
             entry.entry_id,
             entry.version,

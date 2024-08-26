@@ -44,7 +44,7 @@ def mock_addon_store_info(
         side_effect=addon_store_info_side_effect,
     ) as addon_store_info:
         addon_store_info.return_value = {
-            "available": False,
+            "available": True,
             "installed": None,
             "state": None,
             "version": "1.0.0",
