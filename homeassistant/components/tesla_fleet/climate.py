@@ -260,7 +260,7 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
         if not (temp := kwargs.get(ATTR_TEMPERATURE)):
             return
 
-        if not (cop_mode := TEMP_LEVELS.get(temp)):
+        if (cop_mode := TEMP_LEVELS.get(temp)) is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_cop_temp",
