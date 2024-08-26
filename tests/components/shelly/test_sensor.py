@@ -47,7 +47,7 @@ from . import (
     register_entity,
 )
 
-from tests.common import mock_restore_cache_with_extra_data
+from tests.common import async_fire_time_changed, mock_restore_cache_with_extra_data
 
 RELAY_BLOCK_ID = 0
 SENSOR_BLOCK_ID = 3
@@ -193,9 +193,14 @@ async def test_block_restored_sleeping_sensor(
 ) -> None:
     """Test block restored sleeping sensor."""
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
-        hass, SENSOR_DOMAIN, "test_name_temperature", "sensor_0-temp", entry
+        hass,
+        SENSOR_DOMAIN,
+        "test_name_temperature",
+        "sensor_0-temp",
+        entry,
+        device_id=device.id,
     )
     extra_data = {"native_value": "20.4", "native_unit_of_measurement": "°C"}
 
@@ -226,9 +231,14 @@ async def test_block_restored_sleeping_sensor_no_last_state(
 ) -> None:
     """Test block restored sleeping sensor missing last state."""
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
-        hass, SENSOR_DOMAIN, "test_name_temperature", "sensor_0-temp", entry
+        hass,
+        SENSOR_DOMAIN,
+        "test_name_temperature",
+        "sensor_0-temp",
+        entry,
+        device_id=device.id,
     )
     monkeypatch.setattr(mock_block_device, "initialized", False)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -293,9 +303,14 @@ async def test_block_not_matched_restored_sleeping_sensor(
 ) -> None:
     """Test block not matched to restored sleeping sensor."""
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
-        hass, SENSOR_DOMAIN, "test_name_temperature", "sensor_0-temp", entry
+        hass,
+        SENSOR_DOMAIN,
+        "test_name_temperature",
+        "sensor_0-temp",
+        entry,
+        device_id=device.id,
     )
     extra_data = {"native_value": "20.4", "native_unit_of_measurement": "°C"}
 
@@ -489,13 +504,14 @@ async def test_rpc_restored_sleeping_sensor(
 ) -> None:
     """Test RPC restored sensor."""
     entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         SENSOR_DOMAIN,
         "test_name_temperature",
         "temperature:0-temperature_0",
         entry,
+        device_id=device.id,
     )
     extra_data = {"native_value": "21.0", "native_unit_of_measurement": "°C"}
 
@@ -527,13 +543,14 @@ async def test_rpc_restored_sleeping_sensor_no_last_state(
 ) -> None:
     """Test RPC restored sensor missing last state."""
     entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         SENSOR_DOMAIN,
         "test_name_temperature",
         "temperature:0-temperature_0",
         entry,
+        device_id=device.id,
     )
 
     monkeypatch.setattr(mock_rpc_device, "initialized", False)
@@ -1279,3 +1296,35 @@ async def test_rpc_rgbw_sensors(
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == f"123456789ABC-{light_type}:0-temperature_{light_type}"
+
+
+async def test_rpc_device_sensor_goes_unavailable_on_disconnect(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test RPC device with sensor goes unavailable on disconnect."""
+    await init_integration(hass, 2)
+    temp_sensor_state = hass.states.get("sensor.test_name_temperature")
+    assert temp_sensor_state is not None
+    assert temp_sensor_state.state != STATE_UNAVAILABLE
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+    mock_rpc_device.mock_disconnected()
+    await hass.async_block_till_done()
+    temp_sensor_state = hass.states.get("sensor.test_name_temperature")
+    assert temp_sensor_state.state == STATE_UNAVAILABLE
+
+    freezer.tick(60)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert "NotInitialized" not in caplog.text
+
+    monkeypatch.setattr(mock_rpc_device, "connected", True)
+    monkeypatch.setattr(mock_rpc_device, "initialized", True)
+    mock_rpc_device.mock_initialized()
+    await hass.async_block_till_done()
+    temp_sensor_state = hass.states.get("sensor.test_name_temperature")
+    assert temp_sensor_state.state != STATE_UNAVAILABLE

@@ -1,6 +1,6 @@
 """Base class for Ring entity."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from typing import Any, Concatenate, Generic, cast
 
 from ring_doorbell import (
@@ -29,25 +29,23 @@ _RingCoordinatorT = TypeVar(
 
 
 def exception_wrap[_RingBaseEntityT: RingBaseEntity[Any, Any], **_P, _R](
-    func: Callable[Concatenate[_RingBaseEntityT, _P], _R],
-) -> Callable[Concatenate[_RingBaseEntityT, _P], _R]:
+    async_func: Callable[Concatenate[_RingBaseEntityT, _P], Coroutine[Any, Any, _R]],
+) -> Callable[Concatenate[_RingBaseEntityT, _P], Coroutine[Any, Any, _R]]:
     """Define a wrapper to catch exceptions and raise HomeAssistant errors."""
 
-    def _wrap(self: _RingBaseEntityT, *args: _P.args, **kwargs: _P.kwargs) -> _R:
+    async def _wrap(self: _RingBaseEntityT, *args: _P.args, **kwargs: _P.kwargs) -> _R:
         try:
-            return func(self, *args, **kwargs)
+            return await async_func(self, *args, **kwargs)
         except AuthenticationError as err:
-            self.hass.loop.call_soon_threadsafe(
-                self.coordinator.config_entry.async_start_reauth, self.hass
-            )
+            self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(err) from err
         except RingTimeout as err:
             raise HomeAssistantError(
-                f"Timeout communicating with API {func}: {err}"
+                f"Timeout communicating with API {async_func}: {err}"
             ) from err
         except RingError as err:
             raise HomeAssistantError(
-                f"Error communicating with API{func}: {err}"
+                f"Error communicating with API{async_func}: {err}"
             ) from err
 
     return _wrap
