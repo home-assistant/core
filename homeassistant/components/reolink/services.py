@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import callback, HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
@@ -20,7 +20,8 @@ from .util import get_device_uid_and_ch
 ATTR_RINGTONE = "ringtone"
 
 
-async def async_setup_services(hass: HomeAssistant) -> bool:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up Reolink services."""
 
     async def async_play_chime(service_call: ServiceCall) -> None:
@@ -77,5 +78,3 @@ async def async_setup_services(hass: HomeAssistant) -> bool:
             }
         ),
     )
-
-    return True
