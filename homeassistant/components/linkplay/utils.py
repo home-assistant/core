@@ -5,10 +5,8 @@ from typing import Final
 from aiohttp import ClientSession
 from linkplay.utils import async_create_unverified_client_session
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import (
-    _async_register_default_clientsession_shutdown,
-)
+from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
+from homeassistant.core import Event, HomeAssistant, callback
 
 from .const import CONF_SESSION, DOMAIN
 
@@ -61,7 +59,13 @@ async def async_get_client_session(hass: HomeAssistant) -> ClientSession:
     hass.data.setdefault(DOMAIN, {})
     if CONF_SESSION not in hass.data[DOMAIN]:
         clientsession: ClientSession = await async_create_unverified_client_session()
-        _async_register_default_clientsession_shutdown(hass, clientsession)
+
+        @callback
+        def _async_close_websession(event: Event) -> None:
+            """Close websession."""
+            clientsession.detach()
+
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_close_websession)
         hass.data[DOMAIN][CONF_SESSION] = clientsession
         return clientsession
 
