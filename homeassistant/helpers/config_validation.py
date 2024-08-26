@@ -1091,6 +1091,11 @@ def key_dependency[_KT: Hashable, _VT](
 
 def custom_serializer(schema: Any) -> Any:
     """Serialize additional types for voluptuous_serialize."""
+    return _custom_serializer(schema, allow_section=True)
+
+
+def _custom_serializer(schema: Any, *, allow_section: bool) -> Any:
+    """Serialize additional types for voluptuous_serialize."""
     from .. import data_entry_flow  # pylint: disable=import-outside-toplevel
     from . import selector  # pylint: disable=import-outside-toplevel
 
@@ -1104,10 +1109,15 @@ def custom_serializer(schema: Any) -> Any:
         return {"type": "boolean"}
 
     if isinstance(schema, data_entry_flow.section):
+        if not allow_section:
+            raise ValueError("Nesting expandable sections is not supported")
         return {
             "type": "expandable",
             "schema": voluptuous_serialize.convert(
-                schema.schema, custom_serializer=custom_serializer
+                schema.schema,
+                custom_serializer=functools.partial(
+                    _custom_serializer, allow_section=False
+                ),
             ),
             "expanded": not schema.options["collapsed"],
         }
