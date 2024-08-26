@@ -10,6 +10,11 @@
           "url": "Server url starting with the protocol (http or https)",
           "api_key": "Your 32 bits api key"
         }
+      },
+      "choose_feeds": {
+        "data": {
+          "include_only_feed_id": "Choose feeds to include"
+        }
       }
     }
   },
@@ -17,7 +22,7 @@
     "step": {
       "init": {
         "data": {
-          "include_only_feed_id": "Choose feeds to include"
+          "include_only_feed_id": "[%key:component::emoncms::config::step::choose_feeds::data::include_only_feed_id%]"
         }
       }
     }

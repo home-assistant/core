@@ -59,6 +59,11 @@ async def get_feed_list(hass: HomeAssistant, url: str, api_key: str) -> dict[str
 class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
     """emoncms integration UI config flow."""
 
+    url: str
+    api_key: str
+    include_only_feeds: list | None = None
+    dropdown: dict = {}
+
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -86,8 +91,16 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
             if not result[CONF_SUCCESS]:
                 errors["base"] = result[CONF_MESSAGE]
             else:
-                title = sensor_name(user_input[CONF_URL])
-                return self.async_create_entry(title=title, data=user_input)
+                self.include_only_feeds = user_input.get(CONF_ONLY_INCLUDE_FEEDID)
+                self.url = user_input[CONF_URL]
+                self.api_key = user_input[CONF_API_KEY]
+                options = get_options(result[CONF_MESSAGE])
+                self.dropdown = {
+                    "options": options,
+                    "mode": "dropdown",
+                    "multiple": True,
+                }
+                return await self.async_step_choose_feeds()
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
@@ -98,6 +111,39 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
                     }
                 ),
                 user_input,
+            ),
+            errors=errors,
+        )
+
+    async def async_step_choose_feeds(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Choose feeds to import."""
+        errors: dict[str, str] = {}
+        include_only_feeds: list = []
+        if user_input or self.include_only_feeds is not None:
+            if self.include_only_feeds is not None:
+                include_only_feeds = self.include_only_feeds
+            elif user_input:
+                include_only_feeds = user_input[CONF_ONLY_INCLUDE_FEEDID]
+            return self.async_create_entry(
+                title=sensor_name(self.url),
+                data={
+                    CONF_URL: self.url,
+                    CONF_API_KEY: self.api_key,
+                    CONF_ONLY_INCLUDE_FEEDID: include_only_feeds,
+                },
+            )
+        return self.async_show_form(
+            step_id="choose_feeds",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_ONLY_INCLUDE_FEEDID,
+                        default=include_only_feeds,
+                    ): selector({"select": self.dropdown}),
+                }
             ),
             errors=errors,
         )
