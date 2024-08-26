@@ -8,8 +8,6 @@ SIGNAL_DEVICE_ADD = "switcher_device_add"
 CONF_USERNAME = "username"
 CONF_TOKEN = "token"
 
-COVER1_ID = "runner"
-
 # Services
 CONF_AUTO_OFF = "auto_off"
 CONF_TIMER_MINUTES = "timer_minutes"

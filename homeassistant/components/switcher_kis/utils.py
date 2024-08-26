@@ -7,7 +7,6 @@ import logging
 
 from aioswitcher.api.remotes import SwitcherBreezeRemoteManager
 from aioswitcher.bridge import SwitcherBase, SwitcherBridge
-from aioswitcher.device.tools import validate_token
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import singleton
@@ -17,7 +16,7 @@ from .const import DISCOVERY_TIME_SEC
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_has_devices(hass: HomeAssistant) -> bool:
+async def async_discover_devices() -> dict[str, SwitcherBase]:
     """Discover Switcher devices."""
     _LOGGER.debug("Starting discovery")
     discovered_devices = {}
@@ -36,20 +35,10 @@ async def async_has_devices(hass: HomeAssistant) -> bool:
     await bridge.stop()
 
     _LOGGER.debug("Finished discovery, discovered devices: %s", len(discovered_devices))
-    return len(discovered_devices) > 0
+    return discovered_devices
 
 
 @singleton.singleton("switcher_breeze_remote_manager")
 def get_breeze_remote_manager(hass: HomeAssistant) -> SwitcherBreezeRemoteManager:
     """Get Switcher Breeze remote manager."""
     return SwitcherBreezeRemoteManager()
-
-
-async def validate_input(username: str, token: str) -> bool:
-    """Validate token by specifying username and token."""
-    token_is_valid = await validate_token(username, token)
-    if token_is_valid:
-        _LOGGER.info("Token is valid")
-        return True
-    _LOGGER.info("Token is invalid")
-    return False

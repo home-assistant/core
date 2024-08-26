@@ -6,12 +6,14 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from aioswitcher.bridge import SwitcherBase
+from aioswitcher.device.tools import validate_token
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 
 from .const import CONF_TOKEN, CONF_USERNAME, DOMAIN
-from .utils import async_has_devices, validate_input
+from .utils import async_discover_devices
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,6 +26,7 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
     entry: ConfigEntry | None = None
     username: str | None = None
     token: str | None = None
+    discovered_devices: dict[str, SwitcherBase] | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -32,13 +35,23 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
         if self._async_current_entries(True):
             return self.async_abort(reason="single_instance_allowed")
 
+        self.discovered_devices = await self.hass.async_create_task(
+            async_discover_devices()
+        )
+
         return self.async_show_form(step_id="confirm")
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle user-confirmation of the config flow."""
+        if len(self.discovered_devices) == 0:
+            return self.async_abort(reason="no_devices_found")
 
+        for device_id, device in self.discovered_devices.items():
+            if device.token_needed:
+                _LOGGER.info("Device with ID %s requires a token", device_id)
+                return await self.async_step_credentials()
         return await self._create_entry()
 
     async def async_step_credentials(
@@ -50,7 +63,7 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
             self.username = user_input.get(CONF_USERNAME)
             self.token = user_input.get(CONF_TOKEN)
 
-            token_is_valid = await validate_input(
+            token_is_valid = await validate_token(
                 user_input[CONF_USERNAME], user_input[CONF_TOKEN]
             )
             if token_is_valid:
@@ -83,7 +96,7 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
         assert self.entry is not None
 
         if user_input is not None:
-            token_is_valid = await validate_input(
+            token_is_valid = await validate_token(
                 user_input[CONF_USERNAME], user_input[CONF_TOKEN]
             )
             if not token_is_valid:

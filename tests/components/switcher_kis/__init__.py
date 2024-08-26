@@ -14,14 +14,13 @@ async def init_integration(
     hass: HomeAssistant, username: str | None = None, token: str | None = None
 ) -> MockConfigEntry:
     """Set up the Switcher integration in Home Assistant."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_USERNAME: username,
-            CONF_TOKEN: token,
-        },
-        unique_id=DOMAIN,
-    )
+    data = {}
+    if username is not None:
+        data[CONF_USERNAME] = username
+    if token is not None:
+        data[CONF_TOKEN] = token
+
+    entry = MockConfigEntry(domain=DOMAIN, data=data, unique_id=DOMAIN)
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
