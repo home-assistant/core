@@ -30,7 +30,9 @@ CONF_ADS_VAR_OPTIONS = "adsvar_options"
 PLATFORM_SCHEMA = SELECT_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_ADS_VAR): cv.string,
-        vol.Optional(CONF_ADS_VAR_OPTIONS): cv.string,
+        vol.Optional(
+            CONF_ADS_VAR_OPTIONS, default=[]
+        ): cv.ensure_list,  # Ensure options are a list
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
@@ -42,11 +44,11 @@ def setup_platform(
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the climate platform for ADS."""
+    """Set up the select platform for ADS."""
 
     ads_hub = hass.data.get(ads.DATA_ADS)
     ads_var = config.get(CONF_ADS_VAR)
-    ads_var_options = config.get(CONF_ADS_VAR_OPTIONS)
+    ads_var_options = config.get(CONF_ADS_VAR_OPTIONS)  # Load options from config
     name = config[CONF_NAME]
 
     add_entities(
@@ -62,7 +64,7 @@ def setup_platform(
 
 
 class AdsSelect(AdsEntity, SelectEntity):
-    """Representation of ADS climate entity."""
+    """Representation of ADS select entity."""
 
     def __init__(
         self,
@@ -73,46 +75,19 @@ class AdsSelect(AdsEntity, SelectEntity):
     ):
         """Initialize AdsSelect entity."""
         super().__init__(ads_hub, name, ads_var)
-        self._ads_var_options = ads_var_options
-        self._options = []
+        self._options = ads_var_options
         self._selected_option = None
-        self._option_map = {}
+        self._option_map = {option: idx for idx, option in enumerate(ads_var_options)}
 
     async def async_added_to_hass(self) -> None:
         """Register device notification."""
         await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_STRING)
-        await self.async_update_options()
-
         self.async_schedule_update_ha_state(True)
 
     def _write_value(self, index: int) -> None:
         """Write the selected value to the PLC."""
         # Convert the value to the required format if necessary
         self._ads_hub.write_by_name(self._ads_var, index, pyads.PLCTYPE_INT)
-
-    # def _write_value(self, value: str) -> None:
-    #     """Write the selected value to the PLC."""
-    #     # Convert the value to the required format if necessary
-    #     self._ads_hub.write_by_name(self._ads_var, value, pyads.PLCTYPE_STRING)
-
-    async def async_update_options(self) -> None:
-        """Update the list of options from the PLC."""
-        enum_options = self._ads_hub.read_by_name(
-            self._ads_var_options, pyads.PLCTYPE_STRING
-        )
-        # Ensure we handle possible errors or unexpected data formats
-        options = enum_options.split(",") if enum_options else []
-        if not options:
-            options = ["First", "Second"]  # Fallback default options
-
-        self._options = options
-        self._option_map = {option: idx for idx, option in enumerate(options)}
-
-        # If the current option is not valid anymore, reset it
-        if self._selected_option not in self._options:
-            self._selected_option = None
-
-        self.async_write_ha_state()
 
     @property
     def options(self) -> list[str]:
