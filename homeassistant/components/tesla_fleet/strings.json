@@ -304,12 +304,6 @@
     "command_no_reason": {
       "message": "Command was unsuccessful but did not return a reason why."
     },
-    "command_requires_signing": {
-      "message": "Command signing is required, please see integration documentation."
-    },
-    "command_no_scope": {
-      "message": "Command requires {scope} scope, which has not been granted."
-    },
     "invalid_cop_temp": {
       "message": "Cabin overheat protection does not support that temperature."
     },
