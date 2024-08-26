@@ -107,6 +107,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "device_registry": "DeviceRegistry",
     "enable_bluetooth": "None",
     "enable_custom_integrations": "None",
+    "enable_missing_statistics": "bool",
     "enable_nightly_purge": "bool",
     "enable_statistics": "bool",
     "enable_schema_validation": "bool",

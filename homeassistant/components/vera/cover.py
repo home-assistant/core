@@ -61,10 +61,11 @@ class VeraCover(VeraDevice[veraApi.VeraCurtain], CoverEntity):
         self.schedule_update_ha_state()
 
     @property
-    def is_closed(self) -> bool:
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self.current_cover_position is not None:
             return self.current_cover_position == 0
+        return None
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""

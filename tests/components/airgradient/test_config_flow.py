@@ -3,8 +3,11 @@
 from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
-from airgradient import AirGradientConnectionError, ConfigurationControl
-from mashumaro import MissingField
+from airgradient import (
+    AirGradientConnectionError,
+    AirGradientParseError,
+    ConfigurationControl,
+)
 
 from homeassistant.components.airgradient import DOMAIN
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
@@ -141,9 +144,7 @@ async def test_flow_old_firmware_version(
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test flow with old firmware version."""
-    mock_airgradient_client.get_current_measures.side_effect = MissingField(
-        "", object, object
-    )
+    mock_airgradient_client.get_current_measures.side_effect = AirGradientParseError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -252,3 +253,32 @@ async def test_zeroconf_flow_abort_old_firmware(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_version"
+
+
+async def test_user_flow_works_discovery(
+    hass: HomeAssistant,
+    mock_new_airgradient_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test user flow can continue after discovery happened."""
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert len(hass.config_entries.flow.async_progress(DOMAIN)) == 2
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "10.0.0.131"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    # Verify the discovery flow was aborted
+    assert not hass.config_entries.flow.async_progress(DOMAIN)

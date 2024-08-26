@@ -10,7 +10,7 @@ from collections.abc import Callable, Generator, Iterable
 from contextlib import AbstractContextManager
 from contextvars import ContextVar
 from datetime import date, datetime, time, timedelta
-from functools import cache, lru_cache, partial, wraps
+from functools import cache, cached_property, lru_cache, partial, wraps
 import json
 import logging
 import math
@@ -1022,7 +1022,7 @@ class TemplateStateBase(State):
             return self.state_with_unit
         raise KeyError
 
-    @property
+    @cached_property
     def entity_id(self) -> str:  # type: ignore[override]
         """Wrap State.entity_id.
 
@@ -2844,6 +2844,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["iif"] = iif
         self.globals["bool"] = forgiving_boolean
         self.globals["version"] = version
+        self.globals["zip"] = zip
         self.tests["is_number"] = is_number
         self.tests["list"] = _is_list
         self.tests["set"] = _is_set

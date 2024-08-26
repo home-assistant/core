@@ -145,9 +145,10 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
             name=self.name,
             connections={(CONNECTION_NETWORK_MAC, self.mac)},
             manufacturer="Shelly",
-            model=MODEL_NAMES.get(self.model, self.model),
+            model=MODEL_NAMES.get(self.model),
+            model_id=self.model,
             sw_version=self.sw_version,
-            hw_version=f"gen{get_device_entry_gen(self.entry)} ({self.model})",
+            hw_version=f"gen{get_device_entry_gen(self.entry)}",
             configuration_url=f"http://{get_host(self.entry.data[CONF_HOST])}:{get_http_port(self.entry.data)}",
         )
         self.device_id = device_entry.id
@@ -668,6 +669,9 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         """Handle device update."""
         LOGGER.debug("Shelly %s handle update, type: %s", self.name, update_type)
         if update_type is RpcUpdateType.ONLINE:
+            if self.device.connected:
+                LOGGER.debug("Device %s already connected", self.name)
+                return
             self.entry.async_create_background_task(
                 self.hass,
                 self._async_device_connect_task(),
@@ -678,6 +682,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             self.entry.async_create_background_task(
                 self.hass, self._async_connected(), "rpc device init", eager_start=True
             )
+            # Make sure entities are marked available
             self.async_set_updated_data(None)
         elif update_type is RpcUpdateType.DISCONNECTED:
             self.entry.async_create_background_task(
@@ -686,6 +691,8 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                 "rpc device disconnected",
                 eager_start=True,
             )
+            # Make sure entities are marked as unavailable
+            self.async_set_updated_data(None)
         elif update_type is RpcUpdateType.STATUS:
             self.async_set_updated_data(None)
             if self.sleep_period:
@@ -707,7 +714,8 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         """Shutdown the coordinator."""
         if self.device.connected:
             try:
-                await async_stop_scanner(self.device)
+                if not self.sleep_period:
+                    await async_stop_scanner(self.device)
                 await super().shutdown()
             except InvalidAuthError:
                 self.entry.async_start_reauth(self.hass)

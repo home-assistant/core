@@ -1,27 +1,35 @@
 """UniFi Network button platform tests."""
 
+from copy import deepcopy
 from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
+from aiounifi.models.message import MessageKey
 import pytest
+from syrupy import SnapshotAssertion
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonDeviceClass
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.unifi.const import CONF_SITE_ID
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY, ConfigEntry
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
     CONF_HOST,
     CONTENT_TYPE_JSON,
     STATE_UNAVAILABLE,
-    EntityCategory,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
+from .conftest import (
+    ConfigEntryFactoryType,
+    WebsocketMessageMock,
+    WebsocketStateManager,
+)
+
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 RANDOM_TOKEN = "random_token"
@@ -119,33 +127,44 @@ WLAN_REGENERATE_PASSWORD = [
 ]
 
 
-async def _test_button_entity(
+@pytest.mark.parametrize("device_payload", [DEVICE_RESTART + DEVICE_POWER_CYCLE_POE])
+@pytest.mark.parametrize("wlan_payload", [WLAN_REGENERATE_PASSWORD])
+@pytest.mark.parametrize(
+    "site_payload",
+    [
+        [{"desc": "Site name", "name": "site_id", "role": "admin", "_id": "1"}],
+        [{"desc": "Site name", "name": "site_id", "role": "not admin", "_id": "1"}],
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_entity_and_device_data(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+    site_payload: dict[str, Any],
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Validate entity and device data with and without admin rights."""
+    with patch("homeassistant.components.unifi.PLATFORMS", [Platform.BUTTON]):
+        config_entry = await config_entry_factory()
+    if site_payload[0]["role"] == "admin":
+        await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+    else:
+        assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 0
+
+
+async def _test_button_entity(
+    hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    mock_websocket_state,
-    config_entry: ConfigEntry,
-    entity_count: int,
+    mock_websocket_state: WebsocketStateManager,
+    config_entry: MockConfigEntry,
     entity_id: str,
-    unique_id: str,
-    device_class: ButtonDeviceClass,
     request_method: str,
     request_path: str,
     request_data: dict[str, Any],
     call: dict[str, str],
 ) -> None:
     """Test button entity."""
-    assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == entity_count
-
-    ent_reg_entry = entity_registry.async_get(entity_id)
-    assert ent_reg_entry.unique_id == unique_id
-    assert ent_reg_entry.entity_category is EntityCategory.CONFIG
-
-    # Validate state object
-    button = hass.states.get(entity_id)
-    assert button is not None
-    assert button.attributes.get(ATTR_DEVICE_CLASS) == device_class
-
     # Send and validate device command
     aioclient_mock.clear_requests()
     aioclient_mock.request(
@@ -175,10 +194,7 @@ async def _test_button_entity(
 @pytest.mark.parametrize(
     (
         "device_payload",
-        "entity_count",
         "entity_id",
-        "unique_id",
-        "device_class",
         "request_method",
         "request_path",
         "call",
@@ -186,10 +202,7 @@ async def _test_button_entity(
     [
         (
             DEVICE_RESTART,
-            1,
             "button.switch_restart",
-            "device_restart-00:00:00:00:01:01",
-            ButtonDeviceClass.RESTART,
             "post",
             "/cmd/devmgr",
             {
@@ -200,10 +213,7 @@ async def _test_button_entity(
         ),
         (
             DEVICE_POWER_CYCLE_POE,
-            2,
             "button.switch_port_1_power_cycle",
-            "power_cycle-00:00:00:00:01:01_1",
-            ButtonDeviceClass.RESTART,
             "post",
             "/cmd/devmgr",
             {
@@ -216,14 +226,10 @@ async def _test_button_entity(
 )
 async def test_device_button_entities(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
-    config_entry_setup: ConfigEntry,
-    mock_websocket_state,
-    entity_count: int,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_state: WebsocketStateManager,
     entity_id: str,
-    unique_id: str,
-    device_class: ButtonDeviceClass,
     request_method: str,
     request_path: str,
     call: dict[str, str],
@@ -231,14 +237,10 @@ async def test_device_button_entities(
     """Test button entities based on device sources."""
     await _test_button_entity(
         hass,
-        entity_registry,
         aioclient_mock,
         mock_websocket_state,
         config_entry_setup,
-        entity_count,
         entity_id,
-        unique_id,
-        device_class,
         request_method,
         request_path,
         {},
@@ -249,10 +251,7 @@ async def test_device_button_entities(
 @pytest.mark.parametrize(
     (
         "wlan_payload",
-        "entity_count",
         "entity_id",
-        "unique_id",
-        "device_class",
         "request_method",
         "request_path",
         "request_data",
@@ -261,10 +260,7 @@ async def test_device_button_entities(
     [
         (
             WLAN_REGENERATE_PASSWORD,
-            1,
             "button.ssid_1_regenerate_password",
-            "regenerate_password-012345678910111213141516",
-            ButtonDeviceClass.UPDATE,
             "put",
             f"/rest/wlanconf/{WLAN_REGENERATE_PASSWORD[0]["_id"]}",
             {
@@ -279,12 +275,9 @@ async def test_wlan_button_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
-    config_entry_setup: ConfigEntry,
-    mock_websocket_state,
-    entity_count: int,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_state: WebsocketStateManager,
     entity_id: str,
-    unique_id: str,
-    device_class: ButtonDeviceClass,
     request_method: str,
     request_path: str,
     request_data: dict[str, Any],
@@ -306,16 +299,42 @@ async def test_wlan_button_entities(
 
     await _test_button_entity(
         hass,
-        entity_registry,
         aioclient_mock,
         mock_websocket_state,
         config_entry_setup,
-        entity_count,
         entity_id,
-        unique_id,
-        device_class,
         request_method,
         request_path,
         request_data,
         call,
     )
+
+
+@pytest.mark.parametrize("device_payload", [DEVICE_POWER_CYCLE_POE])
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_power_cycle_availability(
+    hass: HomeAssistant,
+    mock_websocket_message: WebsocketMessageMock,
+    device_payload: dict[str, Any],
+) -> None:
+    """Verify that disabling PoE marks entity as unavailable."""
+    entity_id = "button.switch_port_1_power_cycle"
+
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    # PoE disabled
+
+    device_1 = deepcopy(device_payload[0])
+    device_1["port_table"][0]["poe_enable"] = False
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    # PoE enabled
+    device_1 = deepcopy(device_payload[0])
+    device_1["port_table"][0]["poe_enable"] = True
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE

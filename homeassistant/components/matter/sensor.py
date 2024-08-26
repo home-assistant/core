@@ -448,4 +448,18 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSensor,
         required_attributes=(NeoCluster.Attributes.Current,),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="SwitchCurrentPosition",
+            native_unit_of_measurement=None,
+            device_class=None,
+            state_class=SensorStateClass.MEASUREMENT,
+            translation_key="switch_current_position",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.Switch.Attributes.CurrentPosition,),
+        allow_multi=True,  # also used for event entity
+    ),
 ]

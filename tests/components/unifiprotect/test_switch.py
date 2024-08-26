@@ -35,15 +35,16 @@ CAMERA_SWITCHES_BASIC = [
     for d in CAMERA_SWITCHES
     if (
         not d.name.startswith("Detections:")
-        and d.name != "SSH enabled"
-        and d.name != "Color night vision"
-        and d.name != "Tracking: person"
-        and d.name != "HDR mode"
+        and d.name
+        not in {"SSH enabled", "Color night vision", "Tracking: person", "HDR mode"}
     )
-    or d.name == "Detections: motion"
-    or d.name == "Detections: person"
-    or d.name == "Detections: vehicle"
-    or d.name == "Detections: animal"
+    or d.name
+    in {
+        "Detections: motion",
+        "Detections: person",
+        "Detections: vehicle",
+        "Detections: animal",
+    }
 ]
 CAMERA_SWITCHES_NO_EXTRA = [
     d

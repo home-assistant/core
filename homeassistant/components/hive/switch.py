@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
+from apyhiveapi import Hive
+
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
@@ -52,7 +54,12 @@ async def async_setup_entry(
 class HiveSwitch(HiveEntity, SwitchEntity):
     """Hive Active Plug."""
 
-    def __init__(self, hive, hive_device, entity_description):
+    def __init__(
+        self,
+        hive: Hive,
+        hive_device: dict[str, Any],
+        entity_description: SwitchEntityDescription,
+    ) -> None:
         """Initialise hive switch."""
         super().__init__(hive, hive_device)
         self.entity_description = entity_description

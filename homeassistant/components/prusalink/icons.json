@@ -24,6 +24,9 @@
       "filename": {
         "default": "mdi:file-image-outline"
       },
+      "nozzle_diameter": {
+        "default": "mdi:printer-3d-nozzle"
+      },
       "print_start": {
         "default": "mdi:clock-start"
       },

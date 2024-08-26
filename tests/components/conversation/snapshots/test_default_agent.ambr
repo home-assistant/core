@@ -344,37 +344,7 @@
     }),
   })
 # ---
-# name: test_intent_entity_exposed.1
-  dict({
-    'conversation_id': None,
-    'response': dict({
-      'card': dict({
-      }),
-      'data': dict({
-        'failed': list([
-        ]),
-        'success': list([
-          dict({
-            'id': 'light.kitchen',
-            'name': 'kitchen light',
-            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
-          }),
-        ]),
-        'targets': list([
-        ]),
-      }),
-      'language': 'en',
-      'response_type': 'action_done',
-      'speech': dict({
-        'plain': dict({
-          'extra_data': None,
-          'speech': 'Turned on the light',
-        }),
-      }),
-    }),
-  })
-# ---
-# name: test_intent_entity_exposed.2
+# name: test_intent_entity_fail_if_unexposed
   dict({
     'conversation_id': None,
     'response': dict({
@@ -394,7 +364,7 @@
     }),
   })
 # ---
-# name: test_intent_entity_exposed.3
+# name: test_intent_entity_remove_custom_name
   dict({
     'conversation_id': None,
     'response': dict({
@@ -408,13 +378,13 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Sorry, I am not aware of any device called my cool light',
+          'speech': 'Sorry, I am not aware of any device called kitchen light',
         }),
       }),
     }),
   })
 # ---
-# name: test_intent_entity_exposed.4
+# name: test_intent_entity_remove_custom_name.1
   dict({
     'conversation_id': None,
     'response': dict({
@@ -444,31 +414,21 @@
     }),
   })
 # ---
-# name: test_intent_entity_exposed.5
+# name: test_intent_entity_remove_custom_name.2
   dict({
     'conversation_id': None,
     'response': dict({
       'card': dict({
       }),
       'data': dict({
-        'failed': list([
-        ]),
-        'success': list([
-          dict({
-            'id': 'light.kitchen',
-            'name': 'kitchen light',
-            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
-          }),
-        ]),
-        'targets': list([
-        ]),
+        'code': 'no_valid_targets',
       }),
       'language': 'en',
-      'response_type': 'action_done',
+      'response_type': 'error',
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Turned on the light',
+          'speech': 'Sorry, I am not aware of any device called renamed light',
         }),
       }),
     }),
@@ -529,76 +489,6 @@
         'plain': dict({
           'extra_data': None,
           'speech': 'Turned on the light',
-        }),
-      }),
-    }),
-  })
-# ---
-# name: test_intent_entity_renamed.2
-  dict({
-    'conversation_id': None,
-    'response': dict({
-      'card': dict({
-      }),
-      'data': dict({
-        'code': 'no_valid_targets',
-      }),
-      'language': 'en',
-      'response_type': 'error',
-      'speech': dict({
-        'plain': dict({
-          'extra_data': None,
-          'speech': 'Sorry, I am not aware of any device called kitchen light',
-        }),
-      }),
-    }),
-  })
-# ---
-# name: test_intent_entity_renamed.3
-  dict({
-    'conversation_id': None,
-    'response': dict({
-      'card': dict({
-      }),
-      'data': dict({
-        'failed': list([
-        ]),
-        'success': list([
-          dict({
-            'id': 'light.kitchen',
-            'name': 'kitchen light',
-            'type': <IntentResponseTargetType.ENTITY: 'entity'>,
-          }),
-        ]),
-        'targets': list([
-        ]),
-      }),
-      'language': 'en',
-      'response_type': 'action_done',
-      'speech': dict({
-        'plain': dict({
-          'extra_data': None,
-          'speech': 'Turned on the light',
-        }),
-      }),
-    }),
-  })
-# ---
-# name: test_intent_entity_renamed.4
-  dict({
-    'conversation_id': None,
-    'response': dict({
-      'card': dict({
-      }),
-      'data': dict({
-        'code': 'no_valid_targets',
-      }),
-      'language': 'en',
-      'response_type': 'error',
-      'speech': dict({
-        'plain': dict({
-          'extra_data': None,
-          'speech': 'Sorry, I am not aware of any device called renamed light',
         }),
       }),
     }),

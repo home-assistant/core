@@ -144,6 +144,7 @@ def mocked_requests(*args, **kwargs):
             200,
         )
     _LOGGER.debug("UNKNOWN ROUTE")
+    return None
 
 
 @patch(
