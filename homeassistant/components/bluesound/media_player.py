@@ -9,8 +9,8 @@ from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any, NamedTuple
 
-from aiohttp.client_exceptions import ClientError
 from pyblu import Input, Player, Preset, Status, SyncStatus
+from pyblu.errors import PlayerUnreachableError
 import voluptuous as vol
 
 from homeassistant.components import media_source
@@ -306,7 +306,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         while True:
             try:
                 await self.async_update_status()
-            except (TimeoutError, ClientError):
+            except PlayerUnreachableError:
                 _LOGGER.error(
                     "Node %s:%s is offline, retrying later", self.host, self.port
                 )
@@ -316,9 +316,9 @@ class BluesoundPlayer(MediaPlayerEntity):
                     "Stopping the polling of node %s:%s", self.host, self.port
                 )
                 return
-            except Exception:
+            except:  # noqa: E722 - this loop should never stop
                 _LOGGER.exception(
-                    "Unexpected error in %s:%s, retrying later", self.host, self.port
+                    "Unexpected error for %s:%s, retrying later", self.host, self.port
                 )
                 await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT)
 
@@ -346,7 +346,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         if not self.available:
             return
 
-        with suppress(TimeoutError):
+        with suppress(PlayerUnreachableError):
             await self.async_update_sync_status()
             await self.async_update_presets()
             await self.async_update_captures()
@@ -384,11 +384,11 @@ class BluesoundPlayer(MediaPlayerEntity):
                 # the device is playing. This would solve a lot of
                 # problems. This change will be done when the
                 # communication is moved to a separate library
-                with suppress(TimeoutError):
+                with suppress(PlayerUnreachableError):
                     await self.force_update_sync_status()
 
             self.async_write_ha_state()
-        except (TimeoutError, ClientError):
+        except PlayerUnreachableError:
             self._attr_available = False
             self._last_status_update = None
             self._status = None
