@@ -9,11 +9,10 @@ from typing import Final
 from jvcprojector import JvcProjector, const
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import JvcProjectorDataUpdateCoordinator
+from . import JVCConfigEntry, JvcProjectorDataUpdateCoordinator
 from .entity import JvcProjectorEntity
 
 
@@ -40,11 +39,11 @@ SELECTS: Final[list[JvcProjectorSelectDescription]] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: JVCConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the JVC Projector platform from a config entry."""
-    coordinator: JvcProjectorDataUpdateCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
 
     async_add_entities(
         JvcProjectorSelectEntity(coordinator, description) for description in SELECTS
