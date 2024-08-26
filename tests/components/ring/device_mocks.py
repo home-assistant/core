@@ -10,7 +10,7 @@ Mocks the api calls on the devices such as history() and health().
 from copy import deepcopy
 from datetime import datetime
 from time import time
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from ring_doorbell import (
     RingCapability,
@@ -132,18 +132,18 @@ def _mocked_ring_device(device_dict, device_family, device_class, capabilities):
 
     # Configure common methods
     mock_device.has_capability.side_effect = has_capability
-    mock_device.update_health_data.side_effect = lambda: update_health_data(
+    mock_device.async_update_health_data.side_effect = lambda: update_health_data(
         DOORBOT_HEALTH if device_family != "chimes" else CHIME_HEALTH
     )
     # Configure methods based on capability
     if has_capability(RingCapability.HISTORY):
         mock_device.configure_mock(last_history=[])
-        mock_device.history.side_effect = lambda *_, **__: update_history_data(
+        mock_device.async_history.side_effect = lambda *_, **__: update_history_data(
             DOORBOT_HISTORY if device_family != "other" else INTERCOM_HISTORY
         )
 
     if has_capability(RingCapability.VIDEO):
-        mock_device.recording_url = MagicMock(return_value="http://dummy.url")
+        mock_device.async_recording_url = AsyncMock(return_value="http://dummy.url")
 
     if has_capability(RingCapability.MOTION_DETECTION):
         mock_device.configure_mock(
