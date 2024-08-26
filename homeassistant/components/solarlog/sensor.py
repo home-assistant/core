@@ -238,6 +238,23 @@ INVERTER_SENSOR_TYPES: tuple[SolarLogInverterSensorEntityDescription, ...] = (
     ),
 )
 
+INVERTER_SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
+    SolarLogSensorEntityDescription(
+        key="current_power",
+        translation_key="current_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SolarLogSensorEntityDescription(
+        key="consumption_year",
+        translation_key="consumption_year",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        value_fn=lambda value: round(value / 1000, 3),
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -245,7 +262,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add solarlog entry."""
-    coordinator: SolarLogCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
 
     # https://github.com/python/mypy/issues/14294
 
