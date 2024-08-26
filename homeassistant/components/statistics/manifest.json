@@ -2,7 +2,7 @@
   "domain": "statistics",
   "name": "Statistics",
   "after_dependencies": ["recorder"],
-  "codeowners": ["@ThomDietrich"],
+  "codeowners": ["@ThomDietrich", "@unfug-at-github"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/statistics",
   "integration_type": "helper",

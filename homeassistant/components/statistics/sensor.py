@@ -185,6 +185,7 @@ STATS_BINARY_PERCENTAGE = {
 CONF_STATE_CHARACTERISTIC = "state_characteristic"
 CONF_SAMPLES_MAX_BUFFER_SIZE = "sampling_size"
 CONF_MAX_AGE = "max_age"
+CONF_REFRESH_INTERVAL = "refresh_interval"
 CONF_KEEP_LAST_SAMPLE = "keep_last_sample"
 CONF_PRECISION = "precision"
 CONF_PERCENTILE = "percentile"
@@ -210,13 +211,25 @@ def valid_state_characteristic_configuration(config: dict[str, Any]) -> dict[str
 
 def valid_boundary_configuration(config: dict[str, Any]) -> dict[str, Any]:
     """Validate that max_age, sampling_size, or both are provided."""
+    max_buffer = config.get(CONF_SAMPLES_MAX_BUFFER_SIZE)
+    max_age = config.get(CONF_MAX_AGE)
+    state_characteristic = config.get(CONF_STATE_CHARACTERISTIC)
 
-    if (
-        config.get(CONF_SAMPLES_MAX_BUFFER_SIZE) is None
-        and config.get(CONF_MAX_AGE) is None
-    ):
+    if max_buffer is None and max_age is None:
         raise vol.RequiredFieldInvalid(
             "The sensor configuration must provide 'max_age' and/or 'sampling_size'"
+        )
+    if (
+        (max_buffer is not None)
+        and (max_age is not None)
+        and (state_characteristic in [STAT_AVERAGE_STEP, STAT_AVERAGE_LINEAR])
+    ):
+        _LOGGER.warning(
+            "%s: You have specified a buffer size as well as a buffer age for a time based function. "
+            "This may lead to some unexpected behaviour when values are constant over longer periods. "
+            "The average is only computed between the first and last change that happened during the specified time frame. "
+            "If you want a proper average over the full time frame, do not specify a buffer size",
+            config.get(CONF_NAME),
         )
     return config
 
@@ -241,6 +254,7 @@ _PLATFORM_SCHEMA_BASE = SENSOR_PLATFORM_SCHEMA.extend(
             vol.Coerce(int), vol.Range(min=1)
         ),
         vol.Optional(CONF_MAX_AGE): cv.time_period,
+        vol.Optional(CONF_REFRESH_INTERVAL): cv.time_period,
         vol.Optional(CONF_KEEP_LAST_SAMPLE, default=False): cv.boolean,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
         vol.Optional(CONF_PERCENTILE, default=50): vol.All(
@@ -277,6 +291,7 @@ async def async_setup_platform(
                 samples_max_buffer_size=config.get(CONF_SAMPLES_MAX_BUFFER_SIZE),
                 samples_max_age=config.get(CONF_MAX_AGE),
                 samples_keep_last=config[CONF_KEEP_LAST_SAMPLE],
+                refresh_interval=config.get(CONF_REFRESH_INTERVAL),
                 precision=config[CONF_PRECISION],
                 percentile=config[CONF_PERCENTILE],
             )
@@ -303,6 +318,14 @@ async def async_setup_entry(
             seconds=max_age_input["seconds"],
         )
 
+    refresh = None
+    if refresh_input := entry.options.get(CONF_REFRESH_INTERVAL):
+        refresh = timedelta(
+            hours=refresh_input["hours"],
+            minutes=refresh_input["minutes"],
+            seconds=refresh_input["seconds"],
+        )
+
     async_add_entities(
         [
             StatisticsSensor(
@@ -314,6 +337,7 @@ async def async_setup_entry(
                 samples_max_buffer_size=sampling_size,
                 samples_max_age=max_age,
                 samples_keep_last=entry.options[CONF_KEEP_LAST_SAMPLE],
+                refresh_interval=refresh,
                 precision=int(entry.options[CONF_PRECISION]),
                 percentile=int(entry.options[CONF_PERCENTILE]),
             )
@@ -338,6 +362,7 @@ class StatisticsSensor(SensorEntity):
         samples_max_buffer_size: int | None,
         samples_max_age: timedelta | None,
         samples_keep_last: bool,
+        refresh_interval: timedelta | None,
         precision: int,
         percentile: int,
     ) -> None:
@@ -356,14 +381,20 @@ class StatisticsSensor(SensorEntity):
         self._samples_max_buffer_size: int | None = samples_max_buffer_size
         self._samples_max_age: timedelta | None = samples_max_age
         self.samples_keep_last: bool = samples_keep_last
+        self._refresh_interval: timedelta | None = refresh_interval
         self._precision: int = precision
         self._percentile: int = percentile
         self._value: StateType | datetime = None
         self._unit_of_measurement: str | None = None
         self._available: bool = False
+        self._last_refreshed: datetime = dt_util.utcnow()
+        self._previous_state: float | bool | None = None
+        self._previous_age: datetime | None = None
+        self._initialized: bool = False
 
         self.states: deque[float | bool] = deque(maxlen=self._samples_max_buffer_size)
         self.ages: deque[datetime] = deque(maxlen=self._samples_max_buffer_size)
+
         self.attributes: dict[str, StateType] = {}
 
         self._state_characteristic_fn: Callable[[], StateType | datetime] = (
@@ -380,9 +411,8 @@ class StatisticsSensor(SensorEntity):
         """Handle the sensor state changes."""
         if (new_state := event.data["new_state"]) is None:
             return
-        self._add_state_to_queue(new_state)
-        self._async_purge_update_and_schedule()
-        self.async_write_ha_state()
+        self._add_state_to_queue(new_state, False)
+        self._refresh()
 
     @callback
     def _async_stats_sensor_startup(self, _: HomeAssistant) -> None:
@@ -397,6 +427,8 @@ class StatisticsSensor(SensorEntity):
         )
         if "recorder" in self.hass.config.components:
             self.hass.async_create_task(self._initialize_from_database())
+        else:
+            self._initialized = True
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -404,8 +436,14 @@ class StatisticsSensor(SensorEntity):
             async_at_start(self.hass, self._async_stats_sensor_startup)
         )
 
-    def _add_state_to_queue(self, new_state: State) -> None:
+    def _add_state_to_queue(self, new_state: State, initialize: bool) -> None:
         """Add the state to the queue."""
+        if (not self._initialized) and (not initialize):
+            # Don't start adding values before the system was initialized (loading from the database is still pending). This would break the time sorted order of the queues.
+            _LOGGER.debug(
+                "%s not adding value before initialization is completed", self.entity_id
+            )
+            return
         self._available = new_state.state != STATE_UNAVAILABLE
         if new_state.state == STATE_UNAVAILABLE:
             self.attributes[STAT_SOURCE_VALUE_VALID] = None
@@ -512,19 +550,19 @@ class StatisticsSensor(SensorEntity):
             key: value for key, value in self.attributes.items() if value is not None
         }
 
-    def _purge_old_states(self, max_age: timedelta) -> None:
+    def _purge_old_states(self) -> None:
         """Remove states which are older than a given age."""
-        now = dt_util.utcnow()
+        max_age: timedelta = cast(timedelta, self._samples_max_age)
 
         _LOGGER.debug(
-            "%s: purging records older then %s(%s)(keep_last_sample: %s)",
+            "%s: purging records older then %s(%s) (keep_last_sample: %s)",
             self.entity_id,
-            dt_util.as_local(now - max_age),
-            self._samples_max_age,
+            dt_util.as_local(self._last_refreshed - max_age),
+            max_age,
             self.samples_keep_last,
         )
 
-        while self.ages and (now - self.ages[0]) > max_age:
+        while self.ages and (self._last_refreshed - self.ages[0]) > max_age:
             if self.samples_keep_last and len(self.ages) == 1:
                 # Under normal circumstance this will not be executed, as a purge will not
                 # be scheduled for the last value if samples_keep_last is enabled.
@@ -534,7 +572,7 @@ class StatisticsSensor(SensorEntity):
                     "%s: preserving expired record with datetime %s(%s)",
                     self.entity_id,
                     dt_util.as_local(self.ages[0]),
-                    (now - self.ages[0]),
+                    (self._last_refreshed - self.ages[0]),
                 )
                 break
 
@@ -542,10 +580,11 @@ class StatisticsSensor(SensorEntity):
                 "%s: purging record with datetime %s(%s)",
                 self.entity_id,
                 dt_util.as_local(self.ages[0]),
-                (now - self.ages[0]),
+                (self._last_refreshed - self.ages[0]),
             )
-            self.ages.popleft()
-            self.states.popleft()
+            # some time-based functions need to know the last value before the defined interval, so keep it
+            self._previous_age = self.ages.popleft()
+            self._previous_state = self.states.popleft()
 
     @callback
     def _async_next_to_purge_timestamp(self) -> datetime | None:
@@ -559,7 +598,7 @@ class StatisticsSensor(SensorEntity):
                     "%s: skipping purge cycle for last record with datetime %s(%s)",
                     self.entity_id,
                     dt_util.as_local(self.ages[0]),
-                    (dt_util.utcnow() - self.ages[0]),
+                    (self._last_refreshed - self.ages[0]),
                 )
                 return None
             # Take the oldest entry from the ages list and add the configured max_age.
@@ -570,13 +609,30 @@ class StatisticsSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Get the latest data and updates the states."""
-        self._async_purge_update_and_schedule()
+        self._refresh()
 
-    def _async_purge_update_and_schedule(self) -> None:
+    def _async_get_next_refresh_timestamp(self) -> datetime | None:
+        """Find out when we need to refresh the data. This is either triggered by an element moving out of the time interval or by a specified refresh interval."""
+        purge_time = self._async_next_to_purge_timestamp()
+        if self._refresh_interval is not None:
+            refresh_time = self._last_refreshed + self._refresh_interval
+        else:
+            refresh_time = None
+        if purge_time is None:
+            return refresh_time
+        if refresh_time is None:
+            return purge_time
+        if refresh_time > purge_time:
+            return purge_time
+        return refresh_time
+
+    def _refresh(self) -> None:
         """Purge old states, update the sensor and schedule the next update."""
         _LOGGER.debug("%s: updating statistics", self.entity_id)
+
+        self._last_refreshed = dt_util.utcnow()
         if self._samples_max_age is not None:
-            self._purge_old_states(self._samples_max_age)
+            self._purge_old_states()
 
         self._update_attributes()
         self._update_value()
@@ -584,12 +640,19 @@ class StatisticsSensor(SensorEntity):
         # If max_age is set, ensure to update again after the defined interval.
         # By basing updates off the timestamps of sampled data we avoid updating
         # when none of the observed entities change.
-        if timestamp := self._async_next_to_purge_timestamp():
-            _LOGGER.debug("%s: scheduling update at %s", self.entity_id, timestamp)
+        if timestamp := self._async_get_next_refresh_timestamp():
+            _LOGGER.debug(
+                "%s: scheduling update at %s (%f s from now)",
+                self.entity_id,
+                timestamp,
+                (timestamp - self._last_refreshed).total_seconds(),
+            )
             self._async_cancel_update_listener()
             self._update_listener = async_track_point_in_utc_time(
                 self.hass, self._async_scheduled_update, timestamp
             )
+        if self.entity_id is not None:
+            self.async_write_ha_state()
 
     @callback
     def _async_cancel_update_listener(self) -> None:
@@ -603,16 +666,16 @@ class StatisticsSensor(SensorEntity):
         """Timer callback for sensor update."""
         _LOGGER.debug("%s: executing scheduled update", self.entity_id)
         self._async_cancel_update_listener()
-        self._async_purge_update_and_schedule()
-        self.async_write_ha_state()
+        self._refresh()
 
     def _fetch_states_from_database(self) -> list[State]:
-        """Fetch the states from the database."""
+        """Fetch the states from the database. In principle this should also load the last value before the time interval for the time based functions. However, this would mean loading the complete history without time or number limit, which is maybe a little too much effort."""
         _LOGGER.debug("%s: initializing values from the database", self.entity_id)
         lower_entity_id = self._source_entity_id.lower()
+        self._last_refreshed = dt_util.utcnow()
         if self._samples_max_age is not None:
             start_date = (
-                dt_util.utcnow() - self._samples_max_age - timedelta(microseconds=1)
+                self._last_refreshed - self._samples_max_age - timedelta(microseconds=1)
             )
             _LOGGER.debug(
                 "%s: retrieve records not older then %s",
@@ -645,10 +708,10 @@ class StatisticsSensor(SensorEntity):
             self._fetch_states_from_database
         ):
             for state in reversed(states):
-                self._add_state_to_queue(state)
+                self._add_state_to_queue(state, True)
 
-        self._async_purge_update_and_schedule()
-        self.async_write_ha_state()
+        self._refresh()
+        self._initialized = True
         _LOGGER.debug("%s: initializing from database completed", self.entity_id)
 
     def _update_attributes(self) -> None:
@@ -695,32 +758,122 @@ class StatisticsSensor(SensorEntity):
         )
         return function
 
+    def _compute_area(
+        self,
+        function: str,
+        binary: bool,
+        state1: float | bool,
+        state2: float | bool,
+        age1: datetime,
+        age2: datetime,
+    ) -> tuple[float, float]:
+        area: float = 0.0
+        age1_secs: float = (self._last_refreshed - age1).total_seconds()
+        age2_secs: float = (self._last_refreshed - age2).total_seconds()
+        max_age_secs: float = cast(timedelta, self._samples_max_age).total_seconds()
+        if binary:
+            state1 = 100.0 * int(bool(state1))
+            state2 = 100.0 * int(bool(state2))
+        if max_age_secs < age1_secs:
+            # the first value is outside of the time frame, we have to compute only the part of the area within the time frame
+            if function == STAT_AVERAGE_LINEAR:
+                state1 = state1 + (state2 - state1) * (age1_secs - max_age_secs) / (
+                    age1_secs - age2_secs
+                )
+            age1_secs = max_age_secs
+        width: float = age1_secs - age2_secs
+        if width < 0:
+            _LOGGER.error(
+                "Values are not sorted correcty, value will be ignored (%s (%f) / %s (%f))",
+                state1,
+                age1,
+                state2,
+                age2,
+            )
+            width = 0
+            area = 0
+        elif function == STAT_AVERAGE_STEP:
+            area = state1 * width
+        elif function == STAT_AVERAGE_LINEAR:
+            area = 0.5 * (state1 + state2) * width
+        else:
+            _LOGGER.error("Unsupported function %s used for area compuation", function)
+        # _LOGGER.debug("%s %s area computed %f %f %f %f => %f",self.entity_id,function,state1,state2,age1_secs,age2_secs,area)
+        return width, area
+
+    def _stat_time_based_average(self, function: str, binary: bool) -> StateType:
+        total_area: float = 0
+        total_width: float = 0
+        number_states = len(self.states)
+        if (self._samples_max_age is not None) and (
+            self._samples_max_buffer_size is None
+        ):
+            if number_states == 0:
+                # if the value didn't change within the specified interval, we use the previous one
+                if binary:
+                    return 100.0 * int(bool(self._previous_state))
+                return self._previous_state
+            if (
+                (
+                    self._samples_max_age - (self._last_refreshed - self.ages[0])
+                ).total_seconds()
+            ) < 0:
+                if number_states != 1:
+                    _LOGGER.error(
+                        "%s: The first value is outside of the time interval and it is not the only value, it should have been removed",
+                        self.entity_id,
+                    )
+                return self.states[0]
+            if self._previous_state is not None:
+                # this is the area under the curve before the first point within the interval
+                width, area = self._compute_area(
+                    function,
+                    binary,
+                    self._previous_state,
+                    self.states[0],
+                    cast(datetime, self._previous_age),
+                    self.ages[0],
+                )
+                total_area += area
+                total_width += width
+            # this is the area under the curve after the last point within the interval, since there is no measurement after the last point, we assume the value stays stable
+            width, area = self._compute_area(
+                function,
+                binary,
+                self.states[-1],
+                self.states[-1],
+                self.ages[-1],
+                self._last_refreshed,
+            )
+            total_area += area
+            total_width += width
+        else:
+            if number_states == 0:
+                return None
+            if number_states == 1:
+                return self.states[0]
+        if number_states >= 2:
+            for i in range(1, len(self.states)):
+                width, area = self._compute_area(
+                    function,
+                    binary,
+                    self.states[i - 1],
+                    self.states[i],
+                    self.ages[i - 1],
+                    self.ages[i],
+                )
+                total_area += area
+                total_width += width
+        # _LOGGER.debug("%s %s average step %f ",self.entity_id,function,total_area / total_width)
+        return total_area / total_width
+
     # Statistics for numeric sensor
 
     def _stat_average_linear(self) -> StateType:
-        if len(self.states) >= 2:
-            area: float = 0
-            for i in range(1, len(self.states)):
-                area += (
-                    0.5
-                    * (self.states[i] + self.states[i - 1])
-                    * (self.ages[i] - self.ages[i - 1]).total_seconds()
-                )
-            age_range_seconds = (self.ages[-1] - self.ages[0]).total_seconds()
-            return area / age_range_seconds
-        return None
+        return self._stat_time_based_average(STAT_AVERAGE_LINEAR, False)
 
     def _stat_average_step(self) -> StateType:
-        if len(self.states) >= 2:
-            area: float = 0
-            for i in range(1, len(self.states)):
-                area += (
-                    self.states[i - 1]
-                    * (self.ages[i] - self.ages[i - 1]).total_seconds()
-                )
-            age_range_seconds = (self.ages[-1] - self.ages[0]).total_seconds()
-            return area / age_range_seconds
-        return None
+        return self._stat_time_based_average(STAT_AVERAGE_STEP, False)
 
     def _stat_average_timeless(self) -> StateType:
         return self._stat_mean()
@@ -766,12 +919,12 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_distance_95_percent_of_values(self) -> StateType:
-        if len(self.states) >= 2:
+        if len(self.states) >= 1:
             return 2 * 1.96 * cast(float, self._stat_standard_deviation())
         return None
 
     def _stat_distance_99_percent_of_values(self) -> StateType:
-        if len(self.states) >= 2:
+        if len(self.states) >= 1:
             return 2 * 2.58 * cast(float, self._stat_standard_deviation())
         return None
 
@@ -798,17 +951,23 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_noisiness(self) -> StateType:
+        if len(self.states) == 1:
+            return 0.0
         if len(self.states) >= 2:
             return cast(float, self._stat_sum_differences()) / (len(self.states) - 1)
         return None
 
     def _stat_percentile(self) -> StateType:
+        if len(self.states) == 1:
+            return self.states[0]
         if len(self.states) >= 2:
             percentiles = statistics.quantiles(self.states, n=100, method="exclusive")
             return percentiles[self._percentile - 1]
         return None
 
     def _stat_standard_deviation(self) -> StateType:
+        if len(self.states) == 1:
+            return 0.0
         if len(self.states) >= 2:
             return statistics.stdev(self.states)
         return None
@@ -819,6 +978,8 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_sum_differences(self) -> StateType:
+        if len(self.states) == 1:
+            return 0.0
         if len(self.states) >= 2:
             return sum(
                 abs(j - i)
@@ -827,6 +988,8 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_sum_differences_nonnegative(self) -> StateType:
+        if len(self.states) == 1:
+            return 0.0
         if len(self.states) >= 2:
             return sum(
                 (j - i if j >= i else j - 0)
@@ -848,6 +1011,8 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_variance(self) -> StateType:
+        if len(self.states) == 1:
+            return 0.0
         if len(self.states) >= 2:
             return statistics.variance(self.states)
         return None
@@ -855,14 +1020,7 @@ class StatisticsSensor(SensorEntity):
     # Statistics for binary sensor
 
     def _stat_binary_average_step(self) -> StateType:
-        if len(self.states) >= 2:
-            on_seconds: float = 0
-            for i in range(1, len(self.states)):
-                if self.states[i - 1] is True:
-                    on_seconds += (self.ages[i] - self.ages[i - 1]).total_seconds()
-            age_range_seconds = (self.ages[-1] - self.ages[0]).total_seconds()
-            return 100 / age_range_seconds * on_seconds
-        return None
+        return self._stat_time_based_average(STAT_AVERAGE_STEP, True)
 
     def _stat_binary_average_timeless(self) -> StateType:
         return self._stat_binary_mean()
