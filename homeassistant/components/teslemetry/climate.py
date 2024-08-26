@@ -102,6 +102,10 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
         else:
             self._attr_hvac_mode = HVACMode.OFF
 
+        # If not scoped, prevent the user from changing the HVAC mode by making it the only option
+        if self._attr_hvac_mode and not self.scoped:
+            self._attr_hvac_modes = [self._attr_hvac_mode]
+
         self._attr_current_temperature = self.get("climate_state_inside_temp")
         self._attr_target_temperature = self.get(f"climate_state_{self.key}_setting")
         self._attr_preset_mode = self.get("climate_state_climate_keeper_mode")
@@ -228,6 +232,10 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryVehicleEntity, ClimateEn
             self._attr_hvac_mode = None
         else:
             self._attr_hvac_mode = COP_MODES.get(state)
+
+        # If not scoped, prevent the user from changing the HVAC mode by making it the only option
+        if self._attr_hvac_mode and not self.scoped:
+            self._attr_hvac_modes = [self._attr_hvac_mode]
 
         if (level := self.get("climate_state_cop_activation_temperature")) is None:
             self._attr_target_temperature = None
