@@ -431,11 +431,16 @@ def handle_subscribe_entities(
     # state machine containing unserializable data. This command is required
     # to succeed for the UI to show.
     try:
-        serialized_states = [
-            state.as_compressed_state_json
-            for state in states
-            if not entity_ids or state.entity_id in entity_ids
-        ]
+        if entity_ids or entity_filter:
+            serialized_states = [
+                state.as_dict_json
+                for state in states
+                if (not entity_ids or state.entity_id in entity_ids)
+                and (not entity_filter or entity_filter(state.entity_id))
+            ]
+        else:
+            # Fast path when not filtering
+            serialized_states = [state.as_compressed_state_json for state in states]
     except (ValueError, TypeError):
         pass
     else:
