@@ -1,6 +1,5 @@
 """Test the Tesla Fleet climate platform."""
 
-from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -32,7 +31,6 @@ from . import assert_entities, setup_platform
 from .const import (
     COMMAND_ERRORS,
     COMMAND_IGNORED_REASON,
-    PRODUCTS,
     VEHICLE_ASLEEP,
     VEHICLE_DATA_ALT,
     VEHICLE_ONLINE,
@@ -385,7 +383,7 @@ async def test_climate_noscope(
     await setup_platform(hass, readonly_config_entry, [Platform.CLIMATE])
     entity_id = "climate.test_climate"
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
@@ -398,28 +396,5 @@ async def test_climate_noscope(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: 20},
-            blocking=True,
-        )
-
-
-async def test_climate_command_signing(
-    hass: HomeAssistant,
-    normal_config_entry: MockConfigEntry,
-    mock_products: AsyncMock,
-) -> None:
-    """Tests when command signing is required."""
-    # Create a custom product response that requires command signing
-    products = deepcopy(PRODUCTS)
-    products["response"][0]["command_signing"] = "required"
-    mock_products.return_value = products
-
-    await setup_platform(hass, normal_config_entry, [Platform.CLIMATE])
-    entity_id = "climate.test_climate"
-
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
             blocking=True,
         )

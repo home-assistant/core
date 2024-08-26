@@ -4,7 +4,6 @@ from abc import abstractmethod
 from typing import Any
 
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
-from tesla_fleet_api.const import Scope
 
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -30,7 +29,7 @@ class TeslaFleetEntity(
     """Parent class for all TeslaFleet entities."""
 
     _attr_has_entity_name = True
-    scoped: bool
+    read_only: bool
 
     def __init__(
         self,
@@ -79,15 +78,6 @@ class TeslaFleetEntity(
     @abstractmethod
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
-
-    def raise_for_scope(self, scope: Scope):
-        """Raise an error if a scope is not available."""
-        if not self.scoped:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="command_no_scope",
-                translation_placeholders={"scope": scope},
-            )
 
 
 class TeslaFleetVehicleEntity(TeslaFleetEntity):

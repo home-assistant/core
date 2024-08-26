@@ -119,8 +119,6 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
     async def async_turn_on(self) -> None:
         """Set the climate state to on."""
 
-        self.raise_for_signing()
-        self.raise_for_scope(Scope.VEHICLE_CMDS)
         await self.wake_up_if_asleep()
         await handle_vehicle_command(self.api.auto_conditioning_start())
 
@@ -130,8 +128,6 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
     async def async_turn_off(self) -> None:
         """Set the climate state to off."""
 
-        self.raise_for_signing()
-        self.raise_for_scope(Scope.VEHICLE_CMDS)
         await self.wake_up_if_asleep()
         await handle_vehicle_command(self.api.auto_conditioning_stop())
 
@@ -262,8 +258,6 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the climate temperature."""
-        self.raise_for_signing()
-        self.raise_for_scope(Scope.VEHICLE_CMDS)
 
         if not (temp := kwargs.get(ATTR_TEMPERATURE)):
             return
@@ -285,8 +279,6 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the climate mode and state."""
-        self.raise_for_signing()
-        self.raise_for_scope(Scope.VEHICLE_CMDS)
         await self.wake_up_if_asleep()
         await self._async_set_cop(hvac_mode)
         self.async_write_ha_state()
