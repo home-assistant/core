@@ -42,7 +42,7 @@ class MammotionDataUpdateCoordinator(DataUpdateCoordinator[MowingDevice]):
     address: str
     config_entry: MammotionConfigEntry
     device_name: str
-    devices: Mammotion
+    devices: Mammotion | None = None
 
     def __init__(
         self,
@@ -65,27 +65,28 @@ class MammotionDataUpdateCoordinator(DataUpdateCoordinator[MowingDevice]):
         address = self.config_entry.data.get(CONF_ADDRESS)
         name = self.config_entry.data.get(CONF_DEVICE_NAME)
 
-        if address:
-            ble_device = bluetooth.async_ble_device_from_address(self.hass, address)
-            if not ble_device:
-                raise ConfigEntryNotReady(
-                    f"Could not find Mammotion lawn mower with address {address}"
-                )
+        if self.devices is None or self.devices.get_device_by_name(name) is None:
+            if address:
+                ble_device = bluetooth.async_ble_device_from_address(self.hass, address)
+                if not ble_device and credentials is None:
+                    raise ConfigEntryNotReady(
+                        f"Could not find Mammotion lawn mower with address {address}"
+                    )
+                if ble_device is not None:
+                    self.device_name = ble_device.name or "Unknown"
+                self.address = address
 
-            self.device_name = ble_device.name or "Unknown"
-            self.address = ble_device.address
+            account = self.config_entry.data.get(CONF_ACCOUNTNAME)
+            password = self.config_entry.data.get(CONF_PASSWORD)
+            if account and password:
+                if name:
+                    self.device_name = name
+                preference = ConnectionPreference.WIFI
+                credentials.email = account
+                credentials.password = password
 
-        account = self.config_entry.data.get(CONF_ACCOUNTNAME)
-        password = self.config_entry.data.get(CONF_PASSWORD)
-        if account and password:
-            if name:
-                self.device_name = name
-            preference = ConnectionPreference.WIFI
-            credentials.email = account
-            credentials.password = password
-
-        self.devices = await create_devices(ble_device, credentials, preference)
-        print("creating devices")
+            self.devices = await create_devices(ble_device, credentials, preference)
+            print("creating devices")
         try:
             if preference is not ConnectionPreference.WIFI:
                 await self.devices.start_sync(self.device_name, 0)
@@ -140,17 +141,23 @@ class MammotionDataUpdateCoordinator(DataUpdateCoordinator[MowingDevice]):
     async def _async_update_data(self) -> MowingDevice:
         """Get data from the device."""
         device = self.devices.get_device_by_name(self.device_name)
-        if not (
-            ble_device := bluetooth.async_ble_device_from_address(
-                self.hass, self.address
-            )
-        ):
+        ble_device = bluetooth.async_ble_device_from_address(self.hass, self.address)
+
+        if not ble_device and device.cloud() is None:
             self.update_failures += 1
             raise UpdateFailed("Could not find device")
 
-        device.ble().update_device(ble_device)
+        if ble_device and device.ble() is not None:
+            device.ble().update_device(ble_device)
+        else:
+            device.add_ble(ble_device)
+
         try:
-            if len(device.mower_state().net.toapp_devinfo_resp.resp_ids) == 0:
+            print(device.mower_state().net.toapp_wifi_iot_status.productkey)
+            if (
+                len(device.mower_state().net.toapp_devinfo_resp.resp_ids) == 0
+                or device.mower_state().net.toapp_wifi_iot_status.productkey is None
+            ):
                 await self.devices.start_sync(self.device_name, 0)
             if device.mower_state().report_data.dev.sys_status != WorkMode.MODE_WORKING:
                 await self.async_send_command("get_report_cfg")
