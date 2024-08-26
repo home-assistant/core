@@ -90,7 +90,6 @@ def _build_entities(
             device.api,
             circuit,
             device.config,
-            "heating",
         )
         for device in device_list
         for circuit in get_circuits(device.api)
@@ -136,6 +135,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
     _attr_min_temp = VICARE_TEMP_HEATING_MIN
     _attr_max_temp = VICARE_TEMP_HEATING_MAX
     _attr_target_temperature_step = PRECISION_WHOLE
+    _attr_translation_key = "heating"
     _current_action: bool | None = None
     _current_mode: str | None = None
     _enable_turn_on_off_backwards_compatibility = False
@@ -145,15 +145,12 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         api: PyViCareDevice,
         circuit: PyViCareHeatingCircuit,
         device_config: PyViCareDeviceConfig,
-        translation_key: str,
     ) -> None:
         """Initialize the climate device."""
         super().__init__(device_config, api, circuit.id)
         self._circuit = circuit
         self._attributes: dict[str, Any] = {}
         self._current_program = None
-        self._attr_translation_key = translation_key
-
         self._attributes["vicare_programs"] = self._circuit.getPrograms()
         self._attr_preset_modes = [
             preset
