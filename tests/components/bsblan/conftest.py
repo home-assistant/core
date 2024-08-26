@@ -6,11 +6,17 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from bsblan import Device, Info, State, StaticState
 import pytest
 
+from homeassistant.components.bsblan import BSBLanData
+from homeassistant.components.bsblan.climate import BSBLANClimate
 from homeassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
+from homeassistant.components.bsblan.coordinator import (
+    BSBLanCoordinatorData,
+    BSBLanUpdateCoordinator,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_fixture, mock_device_registry
 
 
 @pytest.fixture
@@ -71,3 +77,44 @@ async def init_integration(
     await hass.async_block_till_done()
 
     return mock_config_entry
+
+
+@pytest.fixture
+def climate(hass: HomeAssistant, mock_config_entry, mock_bsblan) -> BSBLANClimate:
+    """Set up the BSBLan climate entity for testing."""
+    mock_device_registry(hass)
+    coordinator = BSBLanUpdateCoordinator(hass, mock_config_entry, mock_bsblan)
+    coordinator.config_entry = mock_config_entry
+    coordinator.data = BSBLanCoordinatorData(state=mock_bsblan.state.return_value)
+    data = BSBLanData(
+        client=mock_bsblan,
+        coordinator=coordinator,
+        device=mock_bsblan.device.return_value,
+        info=mock_bsblan.info.return_value,
+        static=mock_bsblan.static_values.return_value,
+    )
+    hass.data.setdefault("bsblan", {})[mock_config_entry.entry_id] = data
+    return BSBLANClimate(data)
+
+
+@pytest.fixture
+def climate_fahrenheit(
+    hass: HomeAssistant, mock_config_entry, mock_bsblan
+) -> BSBLANClimate:
+    """Set up the BSBLan climate entity with Fahrenheit temperature unit."""
+    mock_device_registry(hass)
+    coordinator = BSBLanUpdateCoordinator(hass, mock_config_entry, mock_bsblan)
+    coordinator.config_entry = mock_config_entry
+    coordinator.data = BSBLanCoordinatorData(state=mock_bsblan.state.return_value)
+    # override min_temp unit to Fahrenheit in mock_bsblan static values
+    mock_bsblan.static_values.return_value.min_temp.unit = "°F"
+
+    data = BSBLanData(
+        client=mock_bsblan,
+        coordinator=coordinator,
+        device=mock_bsblan.device.return_value,
+        info=mock_bsblan.info.return_value,
+        static=mock_bsblan.static_values.return_value,
+    )
+    hass.data.setdefault("bsblan", {})[mock_config_entry.entry_id] = data
+    return BSBLANClimate(data)

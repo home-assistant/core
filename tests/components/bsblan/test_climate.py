@@ -1,186 +1,100 @@
-"""Tests for the BSBLAN climate component."""
+"""Tests for the BSB-Lan climate platform."""
 
-from unittest.mock import AsyncMock, MagicMock
-
-from bsblan import BSBLANError, State
+from bsblan import BSBLANError
 import pytest
 
-from homeassistant.components.bsblan.climate import BSBLANClimate
-from homeassistant.components.bsblan.coordinator import BSBLanCoordinatorData
-from homeassistant.components.climate import PRESET_ECO, PRESET_NONE, HVACMode
+from homeassistant.components.climate import (
+    ATTR_TEMPERATURE,
+    PRESET_ECO,
+    PRESET_NONE,
+    HVACMode,
+)
 from homeassistant.const import UnitOfTemperature
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 
 
-class MockStateValue:
-    """Mock class for a BSBLan State value."""
-
-    def __init__(self, value) -> None:
-        """Initialize the mock class."""
-        self.value = value
-
-
-@pytest.fixture
-def mock_state() -> MagicMock:
-    """Create a mock BSBLan State object."""
-    state = MagicMock(spec=State)
-    state.current_temperature = MockStateValue("22.5")
-    state.target_temperature = MockStateValue("21.0")
-    state.hvac_mode = MockStateValue("heat")
-    return state
+async def test_climate_init(climate) -> None:
+    """Test initialization of the climate entity."""
+    assert climate.unique_id == "00:80:41:19:69:90-climate"
+    assert climate.temperature_unit == UnitOfTemperature.CELSIUS
+    assert climate.min_temp == 8.0
+    assert climate.max_temp == 20.0
 
 
-@pytest.fixture
-def coordinator_mock(mock_state) -> MagicMock:
-    """Create a mock BSBLan coordinator."""
-    coordinator = AsyncMock()
-    coordinator.data = BSBLanCoordinatorData(state=mock_state())
-    return coordinator
+def test_temperature_unit_assignment(climate_fahrenheit) -> None:
+    """Test the temperature unit assignment based on the static data."""
+    assert climate_fahrenheit._attr_temperature_unit == UnitOfTemperature.FAHRENHEIT
 
 
-@pytest.fixture
-def mock_bsblan_data(coordinator_mock) -> MagicMock:
-    """Create a mock BSBLanData object."""
+async def test_climate_properties(climate, mock_bsblan) -> None:
+    """Test properties of the climate entity."""
+    assert climate.current_temperature == 18.6
+    assert climate.target_temperature == 18.5
+    assert climate.hvac_mode == HVACMode.HEAT
+    assert climate.preset_mode == PRESET_NONE
 
-    # Create a mock BSBLanData object
-    class MockBSBLanData:
-        coordinator = coordinator_mock
-        device = AsyncMock()
-        device.MAC = "00:11:22:33:44:55"
-        info = AsyncMock()
-        static = AsyncMock()
-        static.min_temp.value = "10.0"
-        static.max_temp.value = "30.0"
-        static.min_temp.unit = "&deg;C"
-
-    return MockBSBLanData()
-
-
-@pytest.fixture
-def climate(mock_bsblan_data) -> BSBLANClimate:
-    """Create a BSBLANClimate object."""
-    return BSBLANClimate(mock_bsblan_data)
-
-
-async def test_current_temperature_missing(climate, coordinator_mock) -> None:
-    """Test the current temperature property when the value is missing."""
-    coordinator_mock.data.state.current_temperature.value = "---"
+    mock_bsblan.state.return_value.current_temperature.value = "---"
     assert climate.current_temperature is None
 
-
-async def test_current_temperature_valid(climate, coordinator_mock) -> None:
-    """Test the current temperature property when the value is valid."""
-    coordinator_mock.data.state.current_temperature.value = "22.5"
-    assert climate.current_temperature == 22.5
-
-
-async def test_target_temperature(climate, coordinator_mock) -> None:
-    """Test the target temperature property."""
-    coordinator_mock.data.state.target_temperature.value = "21.0"
-    assert climate.target_temperature == 21.0
-
-
-async def test_hvac_mode(climate, coordinator_mock) -> None:
-    """Test the hvac mode property."""
-    coordinator_mock.data.state.hvac_mode.value = HVACMode.HEAT
-    assert climate.hvac_mode == HVACMode.HEAT
-
-    coordinator_mock.data.state.hvac_mode.value = PRESET_ECO
+    mock_bsblan.state.return_value.hvac_mode.value = PRESET_ECO
+    assert climate.preset_mode == PRESET_ECO
     assert climate.hvac_mode == HVACMode.AUTO
 
 
-async def test_preset_mode(climate, coordinator_mock) -> None:
-    """Test the preset mode property."""
-    coordinator_mock.data.state.hvac_mode.value = HVACMode.AUTO
-    assert climate.preset_mode == PRESET_NONE
-
-    coordinator_mock.data.state.hvac_mode.value = PRESET_ECO
-    assert climate.preset_mode == PRESET_ECO
-
-
-async def test_async_set_hvac_mode(climate) -> None:
-    """Test setting the hvac mode."""
-    climate.async_set_data = AsyncMock()
+async def test_climate_set_hvac_mode(climate, mock_bsblan) -> None:
+    """Test setting the HVAC mode."""
     await climate.async_set_hvac_mode(HVACMode.HEAT)
-    climate.async_set_data.assert_called_once_with(hvac_mode=HVACMode.HEAT)
+    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=HVACMode.HEAT)
 
 
-async def test_async_set_preset_mode_auto(climate, coordinator_mock) -> None:
-    """Test setting the preset mode when the hvac mode is auto."""
-    climate.async_set_data = AsyncMock()
-    coordinator_mock.data.state.hvac_mode.value = HVACMode.AUTO
-    await climate.async_set_preset_mode(PRESET_ECO)
-    climate.async_set_data.assert_called_once_with(preset_mode=PRESET_ECO)
-
-
-async def test_async_set_preset_mode_not_auto(climate, coordinator_mock) -> None:
-    """Test setting the preset mode when the hvac mode is not auto."""
-    climate.async_set_data = AsyncMock()
-    coordinator_mock.data.state.hvac_mode.value = HVACMode.HEAT
-    with pytest.raises(ServiceValidationError):
-        await climate.async_set_preset_mode(PRESET_ECO)
-
-
-async def test_async_set_temperature(climate) -> None:
-    """Test setting the temperature."""
-    climate.async_set_data = AsyncMock()
-    await climate.async_set_temperature(temperature=22.0)
-    climate.async_set_data.assert_called_once_with(temperature=22.0)
-
-
-async def test_async_set_data_temperature(climate) -> None:
-    """Test setting the temperature."""
-    climate.coordinator.client.thermostat = AsyncMock()
-    climate.coordinator.async_request_refresh = AsyncMock()
-    await climate.async_set_data(temperature=22.0)
-    climate.coordinator.client.thermostat.assert_called_once_with(
-        target_temperature=22.0
-    )
-    climate.coordinator.async_request_refresh.assert_called_once()
-
-
-async def test_async_set_data_hvac_mode(climate) -> None:
-    """Test setting the hvac mode."""
-    climate.coordinator.client.thermostat = AsyncMock()
-    climate.coordinator.async_request_refresh = AsyncMock()
-    await climate.async_set_data(hvac_mode=HVACMode.HEAT)
-    climate.coordinator.client.thermostat.assert_called_once_with(
-        hvac_mode=HVACMode.HEAT
-    )
-    climate.coordinator.async_request_refresh.assert_called_once()
-
-
-async def test_async_set_data_preset_mode(climate) -> None:
+async def test_climate_set_preset_mode(climate, mock_bsblan) -> None:
     """Test setting the preset mode."""
-    climate.coordinator.client.thermostat = AsyncMock()
-    climate.coordinator.async_request_refresh = AsyncMock()
-    await climate.async_set_data(preset_mode=PRESET_ECO)
-    climate.coordinator.client.thermostat.assert_called_once_with(hvac_mode=PRESET_ECO)
-    climate.coordinator.async_request_refresh.assert_called_once()
+    mock_bsblan.state.return_value.hvac_mode.value = HVACMode.AUTO
+    await climate.async_set_preset_mode(PRESET_NONE)
+    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=HVACMode.AUTO)
 
 
-async def test_async_set_data_preset_mode_none(climate) -> None:
-    """Test setting the preset mode to none."""
-    climate.coordinator.client.thermostat = AsyncMock()
-    climate.coordinator.async_request_refresh = AsyncMock()
-    await climate.async_set_data(preset_mode=PRESET_NONE)
-    climate.coordinator.client.thermostat.assert_called_once_with(
-        hvac_mode=HVACMode.AUTO
-    )
-    climate.coordinator.async_request_refresh.assert_called_once()
+async def test_climate_set_temperature(climate, mock_bsblan) -> None:
+    """Test setting the target temperature."""
+    await climate.async_set_temperature(**{ATTR_TEMPERATURE: 20})
+    mock_bsblan.thermostat.assert_called_once_with(target_temperature=20)
 
 
-async def test_async_set_data_error(climate) -> None:
-    """Test setting the data with an error."""
-    climate.coordinator.client.thermostat = AsyncMock(side_effect=BSBLANError)
+async def test_climate_set_data_error(climate, mock_bsblan) -> None:
+    """Test error while setting data."""
+    mock_bsblan.thermostat.side_effect = BSBLANError
     with pytest.raises(HomeAssistantError):
-        await climate.async_set_data(temperature=22.0)
+        await climate.async_set_temperature(**{ATTR_TEMPERATURE: 20})
 
 
-async def test_temperature_unit(climate, mock_bsblan_data) -> None:
-    """Test the temperature unit property."""
-    assert climate.temperature_unit == UnitOfTemperature.CELSIUS
+async def test_climate_current_temperature_none(climate, mock_bsblan) -> None:
+    """Test when the current temperature value is '---'."""
+    mock_bsblan.state.return_value.current_temperature.value = "---"
+    assert climate.current_temperature is None
 
-    mock_bsblan_data.static.min_temp.unit = "F"
-    climate = BSBLANClimate(mock_bsblan_data)
-    assert climate.temperature_unit == UnitOfTemperature.FAHRENHEIT
+
+async def test_climate_turn_on(climate, mock_bsblan) -> None:
+    """Test turning on the climate entity."""
+    await climate.async_turn_on()
+    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=HVACMode.HEAT)
+
+
+async def test_climate_turn_off(climate, mock_bsblan) -> None:
+    """Test turning off the climate entity."""
+    await climate.async_turn_off()
+    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=HVACMode.OFF)
+
+
+async def test_climate_set_preset_mode_eco(climate, mock_bsblan) -> None:
+    """Test setting the preset mode to eco."""
+    mock_bsblan.state.return_value.hvac_mode.value = HVACMode.AUTO
+    await climate.async_set_preset_mode(PRESET_ECO)
+    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=PRESET_ECO)
+    assert climate.hvac_mode == HVACMode.AUTO
+
+
+async def test_climate_set_preset_mode_error(climate, mock_bsblan) -> None:
+    """Test setting the preset mode when it fails with a BSBLANError."""
+    mock_bsblan.thermostat.side_effect = BSBLANError
+    with pytest.raises(HomeAssistantError):
+        await climate.async_set_preset_mode(PRESET_ECO)
