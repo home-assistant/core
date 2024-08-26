@@ -114,7 +114,6 @@ class YamahaConfigInfo:
             self.ctrl_url = discovery_info.get("control_url")
             self.desc_url = discovery_info.get("description_url")
             self.zone_ignore = []
-            self.zone_names = {}
             self.from_discovery = True
 
 
@@ -254,16 +253,16 @@ class YamahaDeviceZone(MediaPlayerEntity):
         zctrl: RXV,
         source_ignore: list[str] | None,
         source_names: dict[str, str] | None,
-        zone_names: dict[str, str],
+        zone_names: dict[str, str] | None,
     ) -> None:
         """Initialize the Yamaha Receiver."""
         self.zctrl = zctrl
         self._attr_is_volume_muted = False
         self._attr_volume_level = 0
         self._attr_state = MediaPlayerState.OFF
-        self._source_ignore = source_ignore
-        self._source_names = source_names
-        self._zone_names = zone_names
+        self._source_ignore = source_ignore or []
+        self._source_names = source_names or {}
+        self._zone_names = zone_names or {}
         self._playback_support = None
         self._is_playback_supported = False
         self._play_status = None
