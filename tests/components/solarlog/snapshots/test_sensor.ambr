@@ -625,7 +625,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'last_update',
-    'unique_id': 'ce5f5431554d101905d31797e1232da8_last_updated',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-last_updated',
     'unit_of_measurement': None,
   })
 # ---
@@ -640,7 +640,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2024-08-01T15:20:45+00:00',
   })
 # ---
 # name: test_all_entities[sensor.solarlog_power_ac-entry]

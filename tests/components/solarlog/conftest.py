@@ -1,6 +1,7 @@
 """Test helpers."""
 
 from collections.abc import Generator
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -54,6 +55,7 @@ def mock_solarlog_connector():
         }
     }
     data |= load_json_object_fixture("solarlog_data.json", SOLARLOG_DOMAIN)
+    data["last_updated"] = datetime.fromisoformat(data["last_updated"]).astimezone(UTC)
 
     mock_solarlog_api.update_data.return_value = data
     mock_solarlog_api.device_list.return_value = {
