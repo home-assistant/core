@@ -172,7 +172,7 @@ class ViCareBinarySensor(ViCareEntity, BinarySensorEntity):
         self,
         device_config: PyViCareDeviceConfig,
         device: PyViCareDevice,
-        component: PyViCareHeatingDeviceWithComponent,
+        component: PyViCareHeatingDeviceComponent,
         description: ViCareBinarySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
