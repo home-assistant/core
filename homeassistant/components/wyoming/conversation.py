@@ -85,8 +85,6 @@ class WyomingConversationEntity(
                     model_languages.update(handle_model.languages)
 
             self._attr_name = self._handle_service.name
-        else:
-            raise ValueError("No intent or handle service")
 
         self._supported_languages = list(model_languages)
         self._attr_unique_id = f"{config_entry.entry_id}-conversation"
