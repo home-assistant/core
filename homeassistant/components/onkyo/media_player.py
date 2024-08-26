@@ -6,7 +6,6 @@ import asyncio
 import logging
 from typing import Any, Literal
 
-import pyeiscp
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -29,6 +28,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.hass_dict import HassKey
 
+from .const import ZONES
 from .receiver import Receiver, ReceiverInfo, async_discover, async_interview
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,7 +44,6 @@ CONF_RECEIVER_MAX_VOLUME = "receiver_max_volume"
 DEFAULT_NAME = "Onkyo Receiver"
 SUPPORTED_MAX_VOLUME = 100
 DEFAULT_RECEIVER_MAX_VOLUME = 80
-ZONES = {"main": "Main", "zone2": "Zone 2", "zone3": "Zone 3", "zone4": "Zone 4"}
 
 SUPPORT_ONKYO_WO_VOLUME = (
     MediaPlayerEntityFeature.TURN_ON
@@ -196,15 +195,8 @@ async def async_setup_platform(
         all_entities.append(entities)
 
         @callback
-        def async_onkyo_update_callback(
-            message: tuple[str, str, Any], origin: str
-        ) -> None:
-            """Process new message from receiver."""
-            receiver = receivers[origin]
-            _LOGGER.debug(
-                "Received update callback from %s: %s", receiver.name, message
-            )
-
+        def update_callback(receiver: Receiver, message: tuple[str, str, Any]) -> None:
+            """Process new message from the receiver."""
             zone, _, value = message
             entity = entities.get(zone)
             if entity is not None:
@@ -213,7 +205,12 @@ async def async_setup_platform(
             elif zone in ZONES and value != "N/A":
                 # When we receive the status for a zone, and the value is not "N/A",
                 # then zone is available on the receiver, so we create the entity for it.
-                _LOGGER.debug("Discovered %s on %s", ZONES[zone], receiver.name)
+                _LOGGER.debug(
+                    "Discovered %s on %s (%s)",
+                    ZONES[zone],
+                    receiver.model_name,
+                    receiver.host,
+                )
                 zone_entity = OnkyoMediaPlayer(
                     receiver, sources, zone, max_volume, receiver_max_volume
                 )
@@ -221,43 +218,19 @@ async def async_setup_platform(
                 async_add_entities([zone_entity])
 
         @callback
-        def async_onkyo_connect_callback(origin: str) -> None:
+        def connect_callback(receiver: Receiver) -> None:
             """Receiver (re)connected."""
-            receiver = receivers[origin]
-            _LOGGER.debug(
-                "Receiver (re)connected: %s (%s)", receiver.name, receiver.conn.host
-            )
-
-            # Discover what zones are available for the receiver by querying the power.
-            # If we get a response for the specific zone, it means it is available.
-            for zone in ZONES:
-                receiver.conn.query_property(zone, "power")
-
             if not receiver.first_connect:
                 for entity in entities.values():
                     if entity.enabled:
                         entity.backfill_state()
-            else:
-                receiver.first_connect = False
 
-        _LOGGER.debug("Creating receiver: %s (%s)", info.model_name, info.host)
-        connection = await pyeiscp.Connection.create(
-            host=info.host,
-            port=info.port,
-            update_callback=async_onkyo_update_callback,
-            connect_callback=async_onkyo_connect_callback,
-            auto_connect=False,
-        )
+        receiver = await Receiver.async_create(info, discovered, name)
 
-        receiver = Receiver(
-            conn=connection,
-            model_name=info.model_name,
-            identifier=info.identifier,
-            name=name or info.model_name,
-            discovered=discovered,
-        )
+        receiver.callbacks.connect.append(connect_callback)
+        receiver.callbacks.update.append(update_callback)
 
-        receivers[connection.host] = receiver
+        receivers[receiver.host] = receiver
 
         await receiver.conn.connect()
 
