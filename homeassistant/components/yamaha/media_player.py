@@ -99,7 +99,7 @@ class YamahaConfigInfo:
         self, config: ConfigType, discovery_info: DiscoveryInfoType | None
     ) -> None:
         """Initialize the Configuration Info for Yamaha Receiver."""
-        self.name = config.get(CONF_NAME)
+        self.name = config.get(CONF_NAME) or DEFAULT_NAME
         self.host = config.get(CONF_HOST)
         self.ctrl_url: str | None = f"http://{self.host}:80/YamahaRemoteControl/ctrl"
         self.source_ignore = config.get(CONF_SOURCE_IGNORE)
@@ -109,7 +109,7 @@ class YamahaConfigInfo:
         self.from_discovery = False
         _LOGGER.debug("Discovery Info: %s", discovery_info)
         if discovery_info is not None:
-            self.name = discovery_info.get("name")
+            self.name = discovery_info.get("name") or DEFAULT_NAME
             self.model = discovery_info.get("model_name")
             self.ctrl_url = discovery_info.get("control_url")
             self.desc_url = discovery_info.get("description_url")
