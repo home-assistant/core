@@ -152,9 +152,6 @@
     },
     "wind_speed": {
       "default": "mdi:weather-windy"
-    },
-    "conductivity": {
-      "default": "mdi:lightning-bolt"
     }
   }
 }
