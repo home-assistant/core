@@ -146,7 +146,7 @@ def async_default_engine(hass: HomeAssistant) -> str | None:
         if default_entity_id is None:
             default_entity_id = entity.entity_id
 
-    return next(iter(manager.providers), None) or default_entity_id
+    return default_entity_id or next(iter(manager.providers), None)
 
 
 @callback
