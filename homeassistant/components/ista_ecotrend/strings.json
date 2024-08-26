@@ -1,0 +1,65 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "Please reenter the password for: {email}",
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "heating": {
+        "name": "Heating"
+      },
+      "heating_cost": {
+        "name": "Heating cost"
+      },
+      "heating_energy": {
+        "name": "Heating energy"
+      },
+      "hot_water": {
+        "name": "Hot water"
+      },
+      "hot_water_cost": {
+        "name": "Hot water cost"
+      },
+      "hot_water_energy": {
+        "name": "Hot water energy"
+      },
+      "water": {
+        "name": "Water"
+      },
+      "water_cost": {
+        "name": "Water cost"
+      }
+    }
+  },
+  "exceptions": {
+    "authentication_exception": {
+      "message": "Authentication failed for {email}, check your login credentials"
+    },
+    "connection_exception": {
+      "message": "Unable to connect and retrieve data from ista EcoTrend, try again later"
+    }
+  }
+}

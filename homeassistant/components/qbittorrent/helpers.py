@@ -1,17 +1,17 @@
 """Helper functions for qBittorrent."""
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, cast
 
-from qbittorrent.client import Client
+from qbittorrentapi import Client, TorrentDictionary, TorrentInfoList
 
 
 def setup_client(url: str, username: str, password: str, verify_ssl: bool) -> Client:
     """Create a qBittorrent client."""
-    client = Client(url, verify=verify_ssl)
-    client.login(username, password)
-    # Get an arbitrary attribute to test if connection succeeds
-    client.get_alternative_speed_status()
+    client = Client(
+        url, username=username, password=password, VERIFY_WEBUI_CERTIFICATE=verify_ssl
+    )
+    client.auth_log_in(username, password)
     return client
 
 
@@ -31,23 +31,24 @@ def format_unix_timestamp(timestamp) -> str:
     return dt_object.isoformat()
 
 
-def format_progress(torrent) -> str:
+def format_progress(torrent: TorrentDictionary) -> str:
     """Format the progress of a torrent."""
-    progress = torrent["progress"]
-    progress = float(progress) * 100
+    progress = cast(float, torrent["progress"]) * 100
     return f"{progress:.2f}"
 
 
-def format_torrents(torrents: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+def format_torrents(
+    torrents: TorrentInfoList,
+) -> dict[str, dict[str, Any]]:
     """Format a list of torrents."""
     value = {}
     for torrent in torrents:
-        value[torrent["name"]] = format_torrent(torrent)
+        value[str(torrent["name"])] = format_torrent(torrent)
 
     return value
 
 
-def format_torrent(torrent) -> dict[str, Any]:
+def format_torrent(torrent: TorrentDictionary) -> dict[str, Any]:
     """Format a single torrent."""
     value = {}
     value["id"] = torrent["hash"]
@@ -55,6 +56,7 @@ def format_torrent(torrent) -> dict[str, Any]:
     value["percent_done"] = format_progress(torrent)
     value["status"] = torrent["state"]
     value["eta"] = seconds_to_hhmmss(torrent["eta"])
-    value["ratio"] = "{:.2f}".format(float(torrent["ratio"]))
+    ratio = cast(float, torrent["ratio"])
+    value["ratio"] = f"{ratio:.2f}"
 
     return value

@@ -21,9 +21,11 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, State, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -374,7 +376,7 @@ async def test_creating_sensor_loads_group(hass: HomeAssistant) -> None:
     order = []
     after_dep_event = Event()
 
-    async def async_setup_group(hass, config):
+    async def async_setup_group(hass: HomeAssistant, config: ConfigType) -> bool:
         # Make sure group takes longer to load, so that it won't
         # be loaded first by chance
         await after_dep_event.wait()
@@ -383,8 +385,11 @@ async def test_creating_sensor_loads_group(hass: HomeAssistant) -> None:
         return True
 
     async def async_setup_template(
-        hass, config, async_add_entities, discovery_info=None
-    ):
+        hass: HomeAssistant,
+        config: ConfigType,
+        async_add_entities: AddEntitiesCallback,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> bool:
         order.append("sensor.template")
         return True
 
@@ -1828,9 +1833,9 @@ async def test_trigger_entity_restore_state(
 
     state = hass.states.get("sensor.test")
     assert state.state == initial_state
-    for attr in restored_attributes:
+    for attr, value in restored_attributes.items():
         if attr in initial_attributes:
-            assert state.attributes[attr] == restored_attributes[attr]
+            assert state.attributes[attr] == value
         else:
             assert attr not in state.attributes
     assert "another" not in state.attributes
@@ -1896,3 +1901,42 @@ async def test_trigger_action(
 
     assert len(events) == 1
     assert events[0].context.parent_id == context.id
+
+
+async def test_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test for device for Template."""
+
+    device_config_entry = MockConfigEntry()
+    device_config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=device_config_entry.entry_id,
+        identifiers={("sensor", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    await hass.async_block_till_done()
+    assert device_entry is not None
+    assert device_entry.id is not None
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": "My template",
+            "state": "{{10}}",
+            "template_type": "sensor",
+            "device_id": device_entry.id,
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    template_entity = entity_registry.async_get("sensor.my_template")
+    assert template_entity is not None
+    assert template_entity.device_id == device_entry.id

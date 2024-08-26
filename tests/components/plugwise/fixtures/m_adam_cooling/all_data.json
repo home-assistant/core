@@ -66,7 +66,7 @@
       "model": "ThermoTouch",
       "name": "Anna",
       "preset_modes": ["no_frost", "asleep", "vacation", "home", "away"],
-      "select_schedule": "None",
+      "select_schedule": "off",
       "sensors": {
         "setpoint": 23.5,
         "temperature": 25.8
@@ -165,6 +165,7 @@
     "heater_id": "056ee145a816487eaa69243c3280f8bf",
     "item_count": 147,
     "notifications": {},
+    "reboot": true,
     "smile_name": "Adam"
   }
 }

@@ -13,7 +13,7 @@ from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
 from homeassistant.components.device_tracker import (
     CONF_TRACK_NEW,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     SCAN_INTERVAL,
     SourceType,
 )
@@ -42,7 +42,7 @@ DATA_BLE_ADAPTER = "ADAPTER"
 BLE_PREFIX = "BLE_"
 MIN_SEEN_NEW = 5
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_TRACK_BATTERY, default=False): cv.boolean,
         vol.Optional(

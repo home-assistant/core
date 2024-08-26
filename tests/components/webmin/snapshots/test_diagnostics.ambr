@@ -111,8 +111,8 @@
         }),
       ]),
       'disk_free': 7749321486336,
-      'disk_fs': list([
-        dict({
+      'disk_fs': dict({
+        '/': dict({
           'device': '**REDACTED**',
           'dir': '**REDACTED**',
           'free': 49060442112,
@@ -125,20 +125,7 @@
           'used': 186676502528,
           'used_percent': 80,
         }),
-        dict({
-          'device': '**REDACTED**',
-          'dir': '**REDACTED**',
-          'free': 7028764823552,
-          'ifree': 362656466,
-          'itotal': 366198784,
-          'iused': 3542318,
-          'iused_percent': 1,
-          'total': 11903838912512,
-          'type': 'ext4',
-          'used': 4275077644288,
-          'used_percent': 38,
-        }),
-        dict({
+        '/media/disk1': dict({
           'device': '**REDACTED**',
           'dir': '**REDACTED**',
           'free': 671496220672,
@@ -151,7 +138,20 @@
           'used': 4981066997760,
           'used_percent': 89,
         }),
-      ]),
+        '/media/disk2': dict({
+          'device': '**REDACTED**',
+          'dir': '**REDACTED**',
+          'free': 7028764823552,
+          'ifree': 362656466,
+          'itotal': 366198784,
+          'iused': 3542318,
+          'iused_percent': 1,
+          'total': 11903838912512,
+          'type': 'ext4',
+          'used': 4275077644288,
+          'used_percent': 38,
+        }),
+      }),
       'disk_total': 18104905818112,
       'disk_used': 9442821144576,
       'drivetemps': list([

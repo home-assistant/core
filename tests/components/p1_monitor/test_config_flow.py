@@ -44,7 +44,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
 async def test_api_error(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     with patch(
-        "homeassistant.components.p1_monitor.P1Monitor.smartmeter",
+        "homeassistant.components.p1_monitor.coordinator.P1Monitor.smartmeter",
         side_effect=P1MonitorError,
     ):
         result = await hass.config_entries.flow.async_init(

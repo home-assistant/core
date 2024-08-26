@@ -59,7 +59,7 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.CALENDAR, Platform.SENSOR]
 SUBSCRIBE_DELAY = timedelta(seconds=5)
 UNSUBSCRIBE_DELAY = timedelta(seconds=1)
 CONF_CLOUDHOOK_URL = "cloudhook_url"
-WithingsConfigEntry = ConfigEntry["WithingsData"]
+type WithingsConfigEntry = ConfigEntry[WithingsData]
 
 
 @dataclass(slots=True)

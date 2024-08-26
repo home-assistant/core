@@ -51,7 +51,9 @@ from . import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_ip_changes_fallback_discovery(hass: HomeAssistant) -> None:
+async def test_ip_changes_fallback_discovery(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test Yeelight ip changes and we fallback to discovery."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_ID: ID, CONF_HOST: "5.5.5.5"}, unique_id=ID
@@ -84,7 +86,6 @@ async def test_ip_changes_fallback_discovery(hass: HomeAssistant) -> None:
     binary_sensor_entity_id = ENTITY_BINARY_SENSOR_TEMPLATE.format(
         f"yeelight_color_{SHORT_ID}"
     )
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_get(binary_sensor_entity_id) is not None
 
     # Make sure we can still reload with the new ip right after we change it
@@ -93,7 +94,6 @@ async def test_ip_changes_fallback_discovery(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_get(binary_sensor_entity_id) is not None
 
 
@@ -278,7 +278,9 @@ async def test_setup_import(hass: HomeAssistant) -> None:
     assert entry.data[CONF_ID] == "0x000000000015243f"
 
 
-async def test_unique_ids_device(hass: HomeAssistant) -> None:
+async def test_unique_ids_device(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test Yeelight unique IDs from yeelight device IDs."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -293,7 +295,6 @@ async def test_unique_ids_device(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
     assert (
         entity_registry.async_get(ENTITY_BINARY_SENSOR).unique_id
         == f"{ID}-nightlight_sensor"
@@ -303,7 +304,9 @@ async def test_unique_ids_device(hass: HomeAssistant) -> None:
     assert entity_registry.async_get(ENTITY_AMBILIGHT).unique_id == f"{ID}-ambilight"
 
 
-async def test_unique_ids_entry(hass: HomeAssistant) -> None:
+async def test_unique_ids_entry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test Yeelight unique IDs from entry IDs."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -318,7 +321,6 @@ async def test_unique_ids_entry(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
     assert (
         entity_registry.async_get(ENTITY_BINARY_SENSOR).unique_id
         == f"{config_entry.entry_id}-nightlight_sensor"

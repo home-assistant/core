@@ -14,7 +14,7 @@ from .const import LOGGER
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
-VlcConfigEntry = ConfigEntry["VlcData"]
+type VlcConfigEntry = ConfigEntry[VlcData]
 
 
 @dataclass

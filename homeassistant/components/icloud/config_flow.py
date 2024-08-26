@@ -43,7 +43,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize iCloud config flow."""
         self.api = None
         self._username = None
@@ -55,8 +55,8 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         self._trusted_device = None
         self._verification_code = None
 
-        self._existing_entry_data = None
-        self._description_placeholders = None
+        self._existing_entry_data: dict[str, Any] | None = None
+        self._description_placeholders: dict[str, str] | None = None
 
     def _show_setup_form(self, user_input=None, errors=None, step_id="user"):
         """Show the setup form to the user."""
@@ -141,7 +141,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 getattr, self.api, "devices"
             )
             if not devices:
-                raise PyiCloudNoDevicesException
+                raise PyiCloudNoDevicesException  # noqa: TRY301
         except (PyiCloudServiceNotActivatedException, PyiCloudNoDevicesException):
             _LOGGER.error("No device found in the iCloud account: %s", self._username)
             self.api = None
@@ -164,11 +164,13 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.hass.config_entries.async_reload(entry.entry_id)
         return self.async_abort(reason="reauth_successful")
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
-        errors = {}
+        errors: dict[str, str] = {}
 
-        icloud_dir = Store(self.hass, STORAGE_VERSION, STORAGE_KEY)
+        icloud_dir = Store[Any](self.hass, STORAGE_VERSION, STORAGE_KEY)
 
         if not os.path.exists(icloud_dir.path):
             await self.hass.async_add_executor_job(os.makedirs, icloud_dir.path)
@@ -264,13 +266,13 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 if not await self.hass.async_add_executor_job(
                     self.api.validate_2fa_code, self._verification_code
                 ):
-                    raise PyiCloudException("The code you entered is not valid.")
+                    raise PyiCloudException("The code you entered is not valid.")  # noqa: TRY301
             elif not await self.hass.async_add_executor_job(
                 self.api.validate_verification_code,
                 self._trusted_device,
                 self._verification_code,
             ):
-                raise PyiCloudException("The code you entered is not valid.")
+                raise PyiCloudException("The code you entered is not valid.")  # noqa: TRY301
         except PyiCloudException as error:
             # Reset to the initial 2FA state to allow the user to retry
             _LOGGER.error("Failed to verify verification code: %s", error)

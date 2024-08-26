@@ -88,7 +88,7 @@ async def test_create_lock_with_linked_keypad(
     assert entry.unique_id == "A6697750D607098BAE8D6BAA11EF8063_device_battery"
 
     state = hass.states.get("sensor.front_door_lock_keypad_battery")
-    assert state.state == "60"
+    assert state.state == "62"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
     entry = entity_registry.async_get("sensor.front_door_lock_keypad_battery")
     assert entry

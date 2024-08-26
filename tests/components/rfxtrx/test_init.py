@@ -19,7 +19,9 @@ from tests.typing import WebSocketGenerator
 SOME_PROTOCOLS = ["ac", "arc"]
 
 
-async def test_fire_event(hass: HomeAssistant, rfxtrx) -> None:
+async def test_fire_event(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, rfxtrx
+) -> None:
     """Test fire event."""
     await setup_rfx_test_cfg(
         hass,
@@ -30,8 +32,6 @@ async def test_fire_event(hass: HomeAssistant, rfxtrx) -> None:
             "0716000100900970": {},
         },
     )
-
-    device_registry: dr.DeviceRegistry = dr.async_get(hass)
 
     calls = []
 
@@ -92,7 +92,9 @@ async def test_send(hass: HomeAssistant, rfxtrx) -> None:
 
 
 async def test_ws_device_remove(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test removing a device through device registry."""
     assert await async_setup_component(hass, "config", {})
@@ -105,9 +107,9 @@ async def test_ws_device_remove(
         },
     )
 
-    device_reg = dr.async_get(hass)
-
-    device_entry = device_reg.async_get_device(identifiers={("rfxtrx", *device_id)})
+    device_entry = device_registry.async_get_device(
+        identifiers={("rfxtrx", *device_id)}
+    )
     assert device_entry
 
     # Ask to remove existing device
@@ -116,7 +118,9 @@ async def test_ws_device_remove(
     assert response["success"]
 
     # Verify device entry is removed
-    assert device_reg.async_get_device(identifiers={("rfxtrx", *device_id)}) is None
+    assert (
+        device_registry.async_get_device(identifiers={("rfxtrx", *device_id)}) is None
+    )
 
     # Verify that the config entry has removed the device
     assert mock_entry.data["devices"] == {}

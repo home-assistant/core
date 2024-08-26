@@ -60,6 +60,7 @@ AUTH_EXCEPTIONS = (
     exceptions.NoCredentialsError,
 )
 CONNECTION_TIMEOUT_EXCEPTIONS = (
+    OSError,
     asyncio.CancelledError,
     TimeoutError,
     exceptions.ConnectionLostError,
@@ -73,7 +74,7 @@ DEVICE_EXCEPTIONS = (
     exceptions.DeviceIdMissingError,
 )
 
-AppleTvConfigEntry = ConfigEntry["AppleTVManager"]
+type AppleTvConfigEntry = ConfigEntry[AppleTVManager]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AppleTvConfigEntry) -> bool:

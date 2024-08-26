@@ -17,11 +17,7 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from . import (
-    ModernFormsDataUpdateCoordinator,
-    ModernFormsDeviceEntity,
-    modernforms_exception_handler,
-)
+from . import ModernFormsDeviceEntity, modernforms_exception_handler
 from .const import (
     ATTR_SLEEP_TIME,
     CLEAR_TIMER,
@@ -31,6 +27,7 @@ from .const import (
     SERVICE_CLEAR_LIGHT_SLEEP_TIMER,
     SERVICE_SET_LIGHT_SLEEP_TIMER,
 )
+from .coordinator import ModernFormsDataUpdateCoordinator
 
 BRIGHTNESS_RANGE = (1, 255)
 
@@ -64,7 +61,7 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_CLEAR_LIGHT_SLEEP_TIMER,
-        {},
+        None,
         "async_clear_light_sleep_timer",
     )
 

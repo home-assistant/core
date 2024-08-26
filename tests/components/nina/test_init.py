@@ -22,7 +22,7 @@ ENTRY_DATA: dict[str, Any] = {
 }
 
 
-async def init_integration(hass) -> MockConfigEntry:
+async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the NINA integration in Home Assistant."""
 
     with patch(

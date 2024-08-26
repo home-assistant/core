@@ -49,7 +49,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DevoloHomeNetworkConfigEntry = ConfigEntry["DevoloHomeNetworkData"]
+type DevoloHomeNetworkConfigEntry = ConfigEntry[DevoloHomeNetworkData]
 
 
 @dataclass

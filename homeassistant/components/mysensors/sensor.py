@@ -15,12 +15,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONDUCTIVITY,
     DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
     Platform,
     UnitOfApparentPower,
+    UnitOfConductivity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -28,6 +28,7 @@ from homeassistant.const import (
     UnitOfLength,
     UnitOfMass,
     UnitOfPower,
+    UnitOfReactivePower,
     UnitOfSoundPressure,
     UnitOfTemperature,
     UnitOfVolume,
@@ -191,11 +192,11 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "V_EC": SensorEntityDescription(
         key="V_EC",
-        native_unit_of_measurement=CONDUCTIVITY,
+        native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS,
     ),
     "V_VAR": SensorEntityDescription(
         key="V_VAR",
-        native_unit_of_measurement="var",
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
     ),
     "V_VA": SensorEntityDescription(
         key="V_VA",
@@ -318,9 +319,9 @@ class MySensorsSensor(mysensors.device.MySensorsChildEntity, SensorEntity):
         entity_description = SENSORS.get(set_req(self.value_type).name)
 
         if not entity_description:
-            pres = self.gateway.const.Presentation
+            presentation = self.gateway.const.Presentation
             entity_description = SENSORS.get(
-                f"{set_req(self.value_type).name}_{pres(self.child_type).name}"
+                f"{set_req(self.value_type).name}_{presentation(self.child_type).name}"
             )
 
         return entity_description

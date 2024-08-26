@@ -15,7 +15,7 @@ from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PERCENTAGE_STEP,
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as FAN_PLATFORM_SCHEMA,
     SERVICE_OSCILLATE,
     SERVICE_SET_DIRECTION,
     SERVICE_SET_PERCENTAGE,
@@ -47,6 +47,8 @@ SUPPORTED_FLAGS = {
     FanEntityFeature.SET_SPEED,
     FanEntityFeature.DIRECTION,
     FanEntityFeature.OSCILLATE,
+    FanEntityFeature.TURN_OFF,
+    FanEntityFeature.TURN_ON,
 }
 
 DEFAULT_NAME = "Fan Group"
@@ -54,7 +56,7 @@ DEFAULT_NAME = "Fan Group"
 # No limit on parallel updates to enable a group calling another group
 PARALLEL_UPDATES = 0
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = FAN_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITIES): cv.entities_domain(DOMAIN),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -107,6 +109,7 @@ class FanGroup(GroupEntity, FanEntity):
     """Representation of a FanGroup."""
 
     _attr_available: bool = False
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
         """Initialize a FanGroup entity."""
@@ -200,11 +203,15 @@ class FanGroup(GroupEntity, FanEntity):
         if percentage is not None:
             await self.async_set_percentage(percentage)
             return
-        await self._async_call_all_entities(SERVICE_TURN_ON)
+        await self._async_call_supported_entities(
+            SERVICE_TURN_ON, FanEntityFeature.TURN_ON, {}
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fans off."""
-        await self._async_call_all_entities(SERVICE_TURN_OFF)
+        await self._async_call_supported_entities(
+            SERVICE_TURN_OFF, FanEntityFeature.TURN_OFF, {}
+        )
 
     async def _async_call_supported_entities(
         self, service: str, support_flag: int, data: dict[str, Any]

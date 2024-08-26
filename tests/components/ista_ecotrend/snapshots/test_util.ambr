@@ -1,0 +1,175 @@
+# serializer version: 1
+# name: test_get_statistics
+  list([
+    dict({
+      'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 104,
+    }),
+    dict({
+      'date': datetime.datetime(2024, 5, 31, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 35,
+    }),
+  ])
+# ---
+# name: test_get_statistics.1
+  list([
+    dict({
+      'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 113.0,
+    }),
+    dict({
+      'date': datetime.datetime(2024, 5, 31, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 38.0,
+    }),
+  ])
+# ---
+# name: test_get_statistics.2
+  list([
+    dict({
+      'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 62,
+    }),
+    dict({
+      'date': datetime.datetime(2024, 5, 31, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 21,
+    }),
+  ])
+# ---
+# name: test_get_statistics.3
+  list([
+    dict({
+      'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 1.1,
+    }),
+    dict({
+      'date': datetime.datetime(2024, 5, 31, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 1.0,
+    }),
+  ])
+# ---
+# name: test_get_statistics.4
+  list([
+    dict({
+      'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 61.1,
+    }),
+    dict({
+      'date': datetime.datetime(2024, 5, 31, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 57.0,
+    }),
+  ])
+# ---
+# name: test_get_statistics.5
+  list([
+    dict({
+      'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 7,
+    }),
+    dict({
+      'date': datetime.datetime(2024, 5, 31, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 7,
+    }),
+  ])
+# ---
+# name: test_get_statistics.6
+  list([
+    dict({
+      'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 6.8,
+    }),
+    dict({
+      'date': datetime.datetime(2024, 5, 31, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 5.0,
+    }),
+  ])
+# ---
+# name: test_get_statistics.7
+  list([
+  ])
+# ---
+# name: test_get_statistics.8
+  list([
+    dict({
+      'date': datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 2,
+    }),
+    dict({
+      'date': datetime.datetime(2024, 5, 31, 0, 0, tzinfo=datetime.timezone.utc),
+      'value': 3,
+    }),
+  ])
+# ---
+# name: test_get_values_by_type
+  dict({
+    'additionalValue': '38,0',
+    'type': 'heating',
+    'value': '35',
+  })
+# ---
+# name: test_get_values_by_type.1
+  dict({
+    'additionalValue': '57,0',
+    'type': 'warmwater',
+    'value': '1,0',
+  })
+# ---
+# name: test_get_values_by_type.2
+  dict({
+    'type': 'water',
+    'value': '5,0',
+  })
+# ---
+# name: test_get_values_by_type.3
+  dict({
+    'type': 'heating',
+    'value': 21,
+  })
+# ---
+# name: test_get_values_by_type.4
+  dict({
+    'type': 'warmwater',
+    'value': 7,
+  })
+# ---
+# name: test_get_values_by_type.5
+  dict({
+    'type': 'water',
+    'value': 3,
+  })
+# ---
+# name: test_last_day_of_month
+  datetime.datetime(2024, 1, 31, 0, 0, tzinfo=datetime.timezone.utc)
+# ---
+# name: test_last_day_of_month.1
+  datetime.datetime(2024, 2, 29, 0, 0, tzinfo=datetime.timezone.utc)
+# ---
+# name: test_last_day_of_month.10
+  datetime.datetime(2024, 11, 30, 0, 0, tzinfo=datetime.timezone.utc)
+# ---
+# name: test_last_day_of_month.11
+  datetime.datetime(2024, 12, 31, 0, 0, tzinfo=datetime.timezone.utc)
+# ---
+# name: test_last_day_of_month.2
+  datetime.datetime(2024, 3, 31, 0, 0, tzinfo=datetime.timezone.utc)
+# ---
+# name: test_last_day_of_month.3
+  datetime.datetime(2024, 4, 30, 0, 0, tzinfo=datetime.timezone.utc)
+# ---
+# name: test_last_day_of_month.4
+  datetime.datetime(2024, 5, 31, 0, 0, tzinfo=datetime.timezone.utc)
+# ---
+# name: test_last_day_of_month.5
+  datetime.datetime(2024, 6, 30, 0, 0, tzinfo=datetime.timezone.utc)
+# ---
+# name: test_last_day_of_month.6
+  datetime.datetime(2024, 7, 31, 0, 0, tzinfo=datetime.timezone.utc)
+# ---
+# name: test_last_day_of_month.7
+  datetime.datetime(2024, 8, 31, 0, 0, tzinfo=datetime.timezone.utc)
+# ---
+# name: test_last_day_of_month.8
+  datetime.datetime(2024, 9, 30, 0, 0, tzinfo=datetime.timezone.utc)
+# ---
+# name: test_last_day_of_month.9
+  datetime.datetime(2024, 10, 31, 0, 0, tzinfo=datetime.timezone.utc)
+# ---

@@ -2,36 +2,46 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
-import logging
 
-from APsystemsEZ1 import APsystemsEZ1M, ReturnOutputData
+from APsystemsEZ1 import APsystemsEZ1M, ReturnAlarmInfo, ReturnOutputData
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-_LOGGER = logging.getLogger(__name__)
-
-
-class InverterNotAvailable(Exception):
-    """Error used when Device is offline."""
+from .const import LOGGER
 
 
-class ApSystemsDataCoordinator(DataUpdateCoordinator):
+@dataclass
+class ApSystemsSensorData:
+    """Representing different Apsystems sensor data."""
+
+    output_data: ReturnOutputData
+    alarm_info: ReturnAlarmInfo
+
+
+class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
     """Coordinator used for all sensors."""
 
     def __init__(self, hass: HomeAssistant, api: APsystemsEZ1M) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass,
-            _LOGGER,
-            # Name of the data. For logging purposes.
+            LOGGER,
             name="APSystems Data",
-            # Polling interval. Will only be polled if there are subscribers.
             update_interval=timedelta(seconds=12),
         )
         self.api = api
-        self.always_update = True
 
-    async def _async_update_data(self) -> ReturnOutputData:
-        return await self.api.get_output_data()
+    async def _async_setup(self) -> None:
+        try:
+            max_power = (await self.api.get_device_info()).maxPower
+        except (ConnectionError, TimeoutError):
+            raise UpdateFailed from None
+        self.api.max_power = max_power
+
+    async def _async_update_data(self) -> ApSystemsSensorData:
+        output_data = await self.api.get_output_data()
+        alarm_info = await self.api.get_alarm_info()
+        return ApSystemsSensorData(output_data=output_data, alarm_info=alarm_info)

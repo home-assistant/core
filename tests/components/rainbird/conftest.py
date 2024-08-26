@@ -157,7 +157,7 @@ def setup_platforms(
 
 
 @pytest.fixture(autouse=True)
-def aioclient_mock(hass: HomeAssistant) -> Generator[AiohttpClientMocker, None, None]:
+def aioclient_mock(hass: HomeAssistant) -> Generator[AiohttpClientMocker]:
     """Context manager to mock aiohttp client."""
     mocker = AiohttpClientMocker()
 

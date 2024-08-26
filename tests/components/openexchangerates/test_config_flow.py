@@ -20,7 +20,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="currencies", autouse=True)
-def currencies_fixture(hass: HomeAssistant) -> Generator[AsyncMock, None, None]:
+def currencies_fixture(hass: HomeAssistant) -> Generator[AsyncMock]:
     """Mock currencies."""
     with patch(
         "homeassistant.components.openexchangerates.config_flow.Client.get_currencies",

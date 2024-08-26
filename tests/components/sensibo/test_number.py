@@ -22,9 +22,9 @@ from homeassistant.util import dt as dt_util
 from tests.common import async_fire_time_changed
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_number(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
@@ -52,9 +52,9 @@ async def test_number(
     assert state1.state == "0.2"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_number_set_value(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     get_data: SensiboData,
 ) -> None:

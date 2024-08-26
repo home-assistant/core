@@ -17,7 +17,7 @@ from .coordinator import WeatherUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-AemetConfigEntry = ConfigEntry["AemetData"]
+type AemetConfigEntry = ConfigEntry[AemetData]
 
 
 @dataclass

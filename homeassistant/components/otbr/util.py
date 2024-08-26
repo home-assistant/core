@@ -7,8 +7,9 @@ import dataclasses
 from functools import wraps
 import logging
 import random
-from typing import Any, Concatenate, ParamSpec, TypeVar, cast
+from typing import Any, Concatenate, cast
 
+import aiohttp
 import python_otbr_api
 from python_otbr_api import PENDING_DATASET_DELAY_TIMER, tlv_parser
 from python_otbr_api.pskc import compute_pskc
@@ -26,9 +27,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 
 from .const import DOMAIN
-
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +59,7 @@ def generate_random_pan_id() -> int:
     return random.randint(0, 0xFFFE)
 
 
-def _handle_otbr_error(
+def _handle_otbr_error[**_P, _R](
     func: Callable[Concatenate[OTBRData, _P], Coroutine[Any, Any, _R]],
 ) -> Callable[Concatenate[OTBRData, _P], Coroutine[Any, Any, _R]]:
     """Handle OTBR errors."""
@@ -70,7 +68,7 @@ def _handle_otbr_error(
     async def _func(self: OTBRData, *args: _P.args, **kwargs: _P.kwargs) -> _R:
         try:
             return await func(self, *args, **kwargs)
-        except python_otbr_api.OTBRError as exc:
+        except (python_otbr_api.OTBRError, aiohttp.ClientError, TimeoutError) as exc:
             raise HomeAssistantError("Failed to call OTBR API") from exc
 
     return _func

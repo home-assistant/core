@@ -17,11 +17,12 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.recorder import get_instance, history
 from homeassistant.components.sensor import (
     DEVICE_CLASS_STATE_CLASSES,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -42,6 +43,7 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
@@ -229,7 +231,7 @@ def valid_keep_last_sample(config: dict[str, Any]) -> dict[str, Any]:
     return config
 
 
-_PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend(
+_PLATFORM_SCHEMA_BASE = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -267,6 +269,7 @@ async def async_setup_platform(
     async_add_entities(
         new_entities=[
             StatisticsSensor(
+                hass=hass,
                 source_entity_id=config[CONF_ENTITY_ID],
                 name=config[CONF_NAME],
                 unique_id=config.get(CONF_UNIQUE_ID),
@@ -282,6 +285,43 @@ async def async_setup_platform(
     )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Statistics sensor entry."""
+    sampling_size = entry.options.get(CONF_SAMPLES_MAX_BUFFER_SIZE)
+    if sampling_size:
+        sampling_size = int(sampling_size)
+
+    max_age = None
+    if max_age_input := entry.options.get(CONF_MAX_AGE):
+        max_age = timedelta(
+            hours=max_age_input["hours"],
+            minutes=max_age_input["minutes"],
+            seconds=max_age_input["seconds"],
+        )
+
+    async_add_entities(
+        [
+            StatisticsSensor(
+                hass=hass,
+                source_entity_id=entry.options[CONF_ENTITY_ID],
+                name=entry.options[CONF_NAME],
+                unique_id=entry.entry_id,
+                state_characteristic=entry.options[CONF_STATE_CHARACTERISTIC],
+                samples_max_buffer_size=sampling_size,
+                samples_max_age=max_age,
+                samples_keep_last=entry.options[CONF_KEEP_LAST_SAMPLE],
+                precision=int(entry.options[CONF_PRECISION]),
+                percentile=int(entry.options[CONF_PERCENTILE]),
+            )
+        ],
+        True,
+    )
+
+
 class StatisticsSensor(SensorEntity):
     """Representation of a Statistics sensor."""
 
@@ -290,6 +330,7 @@ class StatisticsSensor(SensorEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         source_entity_id: str,
         name: str,
         unique_id: str | None,
@@ -304,6 +345,10 @@ class StatisticsSensor(SensorEntity):
         self._attr_name: str = name
         self._attr_unique_id: str | None = unique_id
         self._source_entity_id: str = source_entity_id
+        self._attr_device_info = async_device_info_to_link_from_entity(
+            hass,
+            source_entity_id,
+        )
         self.is_binary: bool = (
             split_entity_id(self._source_entity_id)[0] == BINARY_SENSOR_DOMAIN
         )

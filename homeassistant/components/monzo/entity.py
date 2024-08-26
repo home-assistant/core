@@ -6,16 +6,13 @@ from collections.abc import Callable
 from typing import Any
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .data import MonzoSensorData
+from .coordinator import MonzoCoordinator, MonzoData
 
 
-class MonzoBaseEntity(CoordinatorEntity[DataUpdateCoordinator[MonzoSensorData]]):
+class MonzoBaseEntity(CoordinatorEntity[MonzoCoordinator]):
     """Common base for Monzo entities."""
 
     _attr_attribution = "Data provided by Monzo"
@@ -23,10 +20,10 @@ class MonzoBaseEntity(CoordinatorEntity[DataUpdateCoordinator[MonzoSensorData]])
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[MonzoSensorData],
+        coordinator: MonzoCoordinator,
         index: int,
         device_model: str,
-        data_accessor: Callable[[MonzoSensorData], list[dict[str, Any]]],
+        data_accessor: Callable[[MonzoData], list[dict[str, Any]]],
     ) -> None:
         """Initialize sensor."""
         super().__init__(coordinator)

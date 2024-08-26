@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from aiohttp import ClientResponseError
 from habitipy.aio import HabitipyAsync
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_URL
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -33,12 +34,13 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
     """Validate the user input allows us to connect."""
 
     websession = async_get_clientsession(hass)
-    api = HabitipyAsync(
-        conf={
+    api = await hass.async_add_executor_job(
+        HabitipyAsync,
+        {
             "login": data[CONF_API_USER],
             "password": data[CONF_API_KEY],
             "url": data[CONF_URL] or DEFAULT_URL,
-        }
+        },
     )
     try:
         await api.user.get(session=websession)
@@ -55,7 +57,9 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
 
         errors = {}

@@ -18,4 +18,4 @@ DOMAIN = "tts"
 
 DATA_TTS_MANAGER = "tts_manager"
 
-TtsAudioType = tuple[str | None, bytes | None]
+type TtsAudioType = tuple[str | None, bytes | None]

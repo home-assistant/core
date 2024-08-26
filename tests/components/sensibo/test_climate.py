@@ -400,6 +400,10 @@ async def test_climate_temperatures(
             "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
             return_value={"result": {"status": "Success"}},
         ),
+        pytest.raises(
+            ServiceValidationError,
+            match="Provided temperature 24.0 is not valid. Accepted range is 10 to 20",
+        ),
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -410,7 +414,7 @@ async def test_climate_temperatures(
     await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
-    assert state2.attributes["temperature"] == 20
+    assert state2.attributes["temperature"] == 19
 
     with (
         patch(
@@ -832,9 +836,9 @@ async def test_climate_no_fan_no_swing(
     assert state.attributes["swing_modes"] is None
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_climate_set_timer(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
@@ -947,9 +951,9 @@ async def test_climate_set_timer(
     )
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_climate_pure_boost(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
@@ -1058,9 +1062,9 @@ async def test_climate_pure_boost(
     assert state4.state == "s"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_climate_climate_react(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
@@ -1228,9 +1232,9 @@ async def test_climate_climate_react(
     assert state4.state == "temperature"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_climate_climate_react_fahrenheit(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
@@ -1374,9 +1378,9 @@ async def test_climate_climate_react_fahrenheit(
     assert state4.state == "temperature"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_climate_full_ac_state(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,

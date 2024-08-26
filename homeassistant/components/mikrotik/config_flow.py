@@ -31,8 +31,8 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
 )
+from .coordinator import get_api
 from .errors import CannotConnect, LoginError
-from .hub import get_api
 
 
 class MikrotikFlowHandler(ConfigFlow, domain=DOMAIN):

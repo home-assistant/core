@@ -5,7 +5,7 @@
       "address": "123 Main St",
       "alerts": { "connection": "online" },
       "description": "Downstairs",
-      "device_id": "abcdef123",
+      "device_id": "abcdef123456",
       "do_not_disturb": { "seconds_left": 0 },
       "features": { "ringtones_enabled": true },
       "firmware_version": "1.2.3",
@@ -36,7 +36,7 @@
       "alerts": { "connection": "online" },
       "battery_life": 4081,
       "description": "Front Door",
-      "device_id": "aacdef123",
+      "device_id": "aacdef987654",
       "external_connection": false,
       "features": {
         "advanced_motion_enabled": false,
@@ -85,7 +85,7 @@
       "alerts": { "connection": "online" },
       "battery_life": 80,
       "description": "Front",
-      "device_id": "aacdef123",
+      "device_id": "aacdef765432",
       "external_connection": false,
       "features": {
         "advanced_motion_enabled": false,
@@ -234,7 +234,7 @@
       "alerts": { "connection": "online" },
       "battery_life": 80,
       "description": "Internal",
-      "device_id": "aacdef124",
+      "device_id": "aacdef345678",
       "external_connection": false,
       "features": {
         "advanced_motion_enabled": false,
@@ -395,7 +395,7 @@
         "last_name": "",
         "email": ""
       },
-      "device_id": "124ba1b3fe1a",
+      "device_id": "abcdef185036587",
       "time_zone": "Europe/Rome",
       "firmware_version": "Up to Date",
       "owned": true,

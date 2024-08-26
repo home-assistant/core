@@ -7,21 +7,18 @@ import socket
 from aiohttp import ClientError
 from aiosolaredge import SolarEdge
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_SITE_ID, DATA_API_CLIENT, DOMAIN, LOGGER
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+from .const import CONF_SITE_ID, LOGGER
+from .types import SolarEdgeConfigEntry, SolarEdgeData
 
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SolarEdgeConfigEntry) -> bool:
     """Set up SolarEdge from a config entry."""
     session = async_get_clientsession(hass)
     api = SolarEdge(entry.data[CONF_API_KEY], session)
@@ -40,14 +37,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER.error("SolarEdge site is not active")
         return False
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {DATA_API_CLIENT: api}
+    entry.runtime_data = SolarEdgeData(api_client=api)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SolarEdgeConfigEntry) -> bool:
     """Unload SolarEdge config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        del hass.data[DOMAIN][entry.entry_id]
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

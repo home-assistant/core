@@ -19,24 +19,9 @@ class HassEnforceCoordinatorModule(BaseChecker):
             "Used when derived data update coordinator should be placed in its own module.",
         ),
     }
-    options = (
-        (
-            "ignore-wrong-coordinator-module",
-            {
-                "default": False,
-                "type": "yn",
-                "metavar": "<y or n>",
-                "help": "Set to ``no`` if you wish to check if derived data update coordinator "
-                "is placed in its own module.",
-            },
-        ),
-    )
 
     def visit_classdef(self, node: nodes.ClassDef) -> None:
         """Check if derived data update coordinator is placed in its own module."""
-        if self.linter.config.ignore_wrong_coordinator_module:
-            return
-
         root_name = node.root().name
 
         # we only want to check component update coordinators

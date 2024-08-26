@@ -362,10 +362,33 @@ class USBDiscovery:
 
     async def _async_process_ports(self, ports: list[ListPortInfo]) -> None:
         """Process each discovered port."""
-        for port in ports:
-            if port.vid is None and port.pid is None:
-                continue
-            await self._async_process_discovered_usb_device(usb_device_from_port(port))
+        usb_devices = [
+            usb_device_from_port(port)
+            for port in ports
+            if port.vid is not None or port.pid is not None
+        ]
+
+        # CP2102N chips create *two* serial ports on macOS: `/dev/cu.usbserial-` and
+        # `/dev/cu.SLAB_USBtoUART*`. The former does not work and we should ignore them.
+        if sys.platform == "darwin":
+            silabs_serials = {
+                dev.serial_number
+                for dev in usb_devices
+                if dev.device.startswith("/dev/cu.SLAB_USBtoUART")
+            }
+
+            usb_devices = [
+                dev
+                for dev in usb_devices
+                if dev.serial_number not in silabs_serials
+                or (
+                    dev.serial_number in silabs_serials
+                    and dev.device.startswith("/dev/cu.SLAB_USBtoUART")
+                )
+            ]
+
+        for usb_device in usb_devices:
+            await self._async_process_discovered_usb_device(usb_device)
 
     async def _async_scan_serial(self) -> None:
         """Scan serial ports."""

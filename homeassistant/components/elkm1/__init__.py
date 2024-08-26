@@ -69,7 +69,7 @@ from .discovery import (
 )
 from .models import ELKM1Data
 
-ElkM1ConfigEntry = ConfigEntry[ELKM1Data]
+type ElkM1ConfigEntry = ConfigEntry[ELKM1Data]
 
 SYNC_TIMEOUT = 120
 
@@ -171,8 +171,8 @@ DEVICE_SCHEMA = vol.All(
             vol.Optional(CONF_THERMOSTAT, default={}): DEVICE_SCHEMA_SUBDOMAIN,
             vol.Optional(CONF_ZONE, default={}): DEVICE_SCHEMA_SUBDOMAIN,
         },
-        _host_validator,
     ),
+    _host_validator,
 )
 
 CONFIG_SCHEMA = vol.Schema(

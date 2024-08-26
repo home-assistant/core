@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from functools import cached_property
 import re
-from typing import Generic, TypeVar
 
 from haffmpeg.core import HAFFmpeg
 from haffmpeg.tools import IMAGE_JPEG, FFVersion, ImageFrame
@@ -28,8 +27,6 @@ from homeassistant.helpers.system_info import is_official_image
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.signal_type import SignalType
-
-_HAFFmpegT = TypeVar("_HAFFmpegT", bound=HAFFmpeg)
 
 DOMAIN = "ffmpeg"
 
@@ -179,7 +176,7 @@ class FFmpegManager:
         return CONTENT_TYPE_MULTIPART.format("ffserver")
 
 
-class FFmpegBase(Entity, Generic[_HAFFmpegT]):
+class FFmpegBase[_HAFFmpegT: HAFFmpeg](Entity):
     """Interface object for FFmpeg."""
 
     _attr_should_poll = False

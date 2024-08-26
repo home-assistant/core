@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from datetime import datetime
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
@@ -30,7 +31,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.whois.async_setup_entry", return_value=True
@@ -39,7 +40,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_whois() -> Generator[MagicMock, None, None]:
+def mock_whois() -> Generator[MagicMock]:
     """Return a mocked query."""
     with (
         patch(
@@ -68,13 +69,13 @@ def mock_whois() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
-def mock_whois_missing_some_attrs() -> Generator[Mock, None, None]:
+def mock_whois_missing_some_attrs() -> Generator[Mock]:
     """Return a mocked query that only sets admin."""
 
     class LimitedWhoisMock:
         """A limited mock of whois_query."""
 
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             """Mock only attributes the library always sets being available."""
             self.creation_date = datetime(2019, 1, 1, 0, 0, 0)
             self.dnssec = True

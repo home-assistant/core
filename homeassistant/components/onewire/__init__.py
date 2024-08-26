@@ -13,7 +13,7 @@ from .const import DOMAIN, PLATFORMS
 from .onewirehub import CannotConnect, OneWireHub
 
 _LOGGER = logging.getLogger(__name__)
-OneWireConfigEntry = ConfigEntry[OneWireHub]
+type OneWireConfigEntry = ConfigEntry[OneWireHub]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OneWireConfigEntry) -> bool:

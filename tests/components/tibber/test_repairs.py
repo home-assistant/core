@@ -36,13 +36,13 @@ async def test_repair_flow(
     # Assert the issue is present
     assert issue_registry.async_get_issue(
         domain="notify",
-        issue_id="migrate_notify_tibber",
+        issue_id=f"migrate_notify_tibber_{service}",
     )
     assert len(issue_registry.issues) == 1
 
     url = RepairsFlowIndexView.url
     resp = await http_client.post(
-        url, json={"handler": "notify", "issue_id": "migrate_notify_tibber"}
+        url, json={"handler": "notify", "issue_id": f"migrate_notify_tibber_{service}"}
     )
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -61,6 +61,6 @@ async def test_repair_flow(
     # Assert the issue is no longer present
     assert not issue_registry.async_get_issue(
         domain="notify",
-        issue_id="migrate_notify_tibber",
+        issue_id=f"migrate_notify_tibber_{service}",
     )
     assert len(issue_registry.issues) == 0

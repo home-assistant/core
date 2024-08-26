@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Iterable
+from collections.abc import Awaitable, Callable, Coroutine, Iterable
 import dataclasses
 from enum import Enum
 from functools import cache, partial
 import logging
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, TypedDict, TypeGuard, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypedDict, TypeGuard, cast
 
 import voluptuous as vol
 
@@ -20,8 +20,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
+    CONF_ACTION,
     CONF_ENTITY_ID,
-    CONF_SERVICE,
     CONF_SERVICE_DATA,
     CONF_SERVICE_DATA_TEMPLATE,
     CONF_SERVICE_TEMPLATE,
@@ -33,6 +33,7 @@ from homeassistant.core import (
     Context,
     EntityServiceResponse,
     HassJob,
+    HassJobType,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -63,13 +64,10 @@ from . import (
 )
 from .group import expand_entity_ids
 from .selector import TargetSelector
-from .typing import ConfigType, TemplateVarsType
+from .typing import ConfigType, TemplateVarsType, VolDictType, VolSchemaType
 
 if TYPE_CHECKING:
     from .entity import Entity
-
-    _EntityT = TypeVar("_EntityT", bound=Entity)
-
 
 CONF_SERVICE_ENTITY_ID = "entity_id"
 
@@ -81,8 +79,6 @@ SERVICE_DESCRIPTION_CACHE: HassKey[dict[tuple[str, str], dict[str, Any] | None]]
 ALL_SERVICE_DESCRIPTIONS_CACHE: HassKey[
     tuple[set[tuple[str, str]], dict[str, dict[str, Any]]]
 ] = HassKey("all_service_descriptions_cache")
-
-_T = TypeVar("_T")
 
 
 @cache
@@ -184,15 +180,37 @@ _FIELD_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-_SERVICE_SCHEMA = vol.Schema(
+_SECTION_SCHEMA = vol.Schema(
     {
-        vol.Optional("target"): vol.Any(TargetSelector.CONFIG_SCHEMA, None),
-        vol.Optional("fields"): vol.Schema({str: _FIELD_SCHEMA}),
+        vol.Required("fields"): vol.Schema({str: _FIELD_SCHEMA}),
     },
     extra=vol.ALLOW_EXTRA,
 )
 
-_SERVICES_SCHEMA = vol.Schema({cv.slug: vol.Any(None, _SERVICE_SCHEMA)})
+_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Optional("target"): vol.Any(TargetSelector.CONFIG_SCHEMA, None),
+        vol.Optional("fields"): vol.Schema(
+            {str: vol.Any(_SECTION_SCHEMA, _FIELD_SCHEMA)}
+        ),
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+
+def starts_with_dot(key: str) -> str:
+    """Check if key starts with dot."""
+    if not key.startswith("."):
+        raise vol.Invalid("Key does not start with .")
+    return key
+
+
+_SERVICES_SCHEMA = vol.Schema(
+    {
+        vol.Remove(vol.All(str, starts_with_dot)): object,
+        cv.slug: vol.Any(None, _SERVICE_SCHEMA),
+    }
+)
 
 
 class ServiceParams(TypedDict):
@@ -341,14 +359,13 @@ def async_prepare_call_from_config(
                 f"Invalid config for calling service: {ex}"
             ) from ex
 
-    if CONF_SERVICE in config:
-        domain_service = config[CONF_SERVICE]
+    if CONF_ACTION in config:
+        domain_service = config[CONF_ACTION]
     else:
         domain_service = config[CONF_SERVICE_TEMPLATE]
 
     if isinstance(domain_service, template.Template):
         try:
-            domain_service.hass = hass
             domain_service = domain_service.async_render(variables)
             domain_service = cv.service(domain_service)
         except TemplateError as ex:
@@ -367,10 +384,8 @@ def async_prepare_call_from_config(
         conf = config[CONF_TARGET]
         try:
             if isinstance(conf, template.Template):
-                conf.hass = hass
                 target.update(conf.async_render(variables))
             else:
-                template.attach(hass, conf)
                 target.update(template.render_complex(conf, variables))
 
             if CONF_ENTITY_ID in target:
@@ -396,7 +411,6 @@ def async_prepare_call_from_config(
         if conf not in config:
             continue
         try:
-            template.attach(hass, config[conf])
             render = template.render_complex(config[conf], variables)
             if not isinstance(render, dict):
                 raise HomeAssistantError(
@@ -434,7 +448,7 @@ def extract_entity_ids(
 
 
 @bind_hass
-async def async_extract_entities(
+async def async_extract_entities[_EntityT: Entity](
     hass: HomeAssistant,
     entities: Iterable[_EntityT],
     service_call: ServiceCall,
@@ -660,6 +674,14 @@ def _load_services_files(
     return [_load_services_file(hass, integration) for integration in integrations]
 
 
+@callback
+def async_get_cached_service_description(
+    hass: HomeAssistant, domain: str, service: str
+) -> dict[str, Any] | None:
+    """Return the cached description for a service."""
+    return hass.data.get(SERVICE_DESCRIPTION_CACHE, {}).get((domain, service))
+
+
 @bind_hass
 async def async_get_all_descriptions(
     hass: HomeAssistant,
@@ -674,15 +696,11 @@ async def async_get_all_descriptions(
 
     # See if there are new services not seen before.
     # Any service that we saw before already has an entry in description_cache.
-    domains_with_missing_services: set[str] = set()
-    all_services: set[tuple[str, str]] = set()
-    for domain, services_by_domain in services.items():
-        for service_name in services_by_domain:
-            cache_key = (domain, service_name)
-            all_services.add(cache_key)
-            if cache_key not in descriptions_cache:
-                domains_with_missing_services.add(domain)
-
+    all_services = {
+        (domain, service_name)
+        for domain, services_by_domain in services.items()
+        for service_name in services_by_domain
+    }
     # If we have a complete cache, check if it is still valid
     all_cache: tuple[set[tuple[str, str]], dict[str, dict[str, Any]]] | None
     if all_cache := hass.data.get(ALL_SERVICE_DESCRIPTIONS_CACHE):
@@ -699,7 +717,9 @@ async def async_get_all_descriptions(
     # add the new ones to the cache without their descriptions
     services = {domain: service.copy() for domain, service in services.items()}
 
-    if domains_with_missing_services:
+    if domains_with_missing_services := {
+        domain for domain, _ in all_services.difference(descriptions_cache)
+    }:
         ints_or_excs = await async_get_integrations(hass, domains_with_missing_services)
         integrations: list[Integration] = []
         for domain, int_or_exc in ints_or_excs.items():
@@ -840,7 +860,7 @@ def async_set_service_schema(
 def _get_permissible_entity_candidates(
     call: ServiceCall,
     entities: dict[str, Entity],
-    entity_perms: None | (Callable[[str, str], bool]),
+    entity_perms: Callable[[str, str], bool] | None,
     target_all_entities: bool,
     all_referenced: set[str] | None,
 ) -> list[Entity]:
@@ -896,7 +916,7 @@ async def entity_service_call(
 
     Calls all platforms simultaneously.
     """
-    entity_perms: None | (Callable[[str, str], bool]) = None
+    entity_perms: Callable[[str, str], bool] | None = None
     return_response = call.return_response
 
     if call.context.user_id:
@@ -1048,7 +1068,7 @@ async def _handle_entity_call(
         result = await task
 
     if asyncio.iscoroutine(result):
-        _LOGGER.error(
+        _LOGGER.error(  # type: ignore[unreachable]
             (
                 "Service %s for %s incorrectly returns a coroutine object. Await result"
                 " instead in service handler. Report bug to integration author"
@@ -1086,7 +1106,7 @@ def async_register_admin_service(
     domain: str,
     service: str,
     service_func: Callable[[ServiceCall], Awaitable[None] | None],
-    schema: vol.Schema = vol.Schema({}, extra=vol.PREVENT_EXTRA),
+    schema: VolSchemaType = vol.Schema({}, extra=vol.PREVENT_EXTRA),
 ) -> None:
     """Register a service that requires admin access."""
     hass.services.async_register(
@@ -1156,7 +1176,7 @@ def verify_domain_control(
     return decorator
 
 
-class ReloadServiceHelper:
+class ReloadServiceHelper[_T]:
     """Helper for reload services.
 
     The helper has the following purposes:
@@ -1166,7 +1186,7 @@ class ReloadServiceHelper:
 
     def __init__(
         self,
-        service_func: Callable[[ServiceCall], Awaitable],
+        service_func: Callable[[ServiceCall], Coroutine[Any, Any, Any]],
         reload_targets_func: Callable[[ServiceCall], set[_T]],
     ) -> None:
         """Initialize ReloadServiceHelper."""
@@ -1221,3 +1241,58 @@ class ReloadServiceHelper:
                 self._service_running = False
                 self._pending_reload_targets -= reload_targets
                 self._service_condition.notify_all()
+
+
+@callback
+def async_register_entity_service(
+    hass: HomeAssistant,
+    domain: str,
+    name: str,
+    *,
+    entities: dict[str, Entity],
+    func: str | Callable[..., Any],
+    job_type: HassJobType | None,
+    required_features: Iterable[int] | None = None,
+    schema: VolDictType | VolSchemaType | None,
+    supports_response: SupportsResponse = SupportsResponse.NONE,
+) -> None:
+    """Help registering an entity service.
+
+    This is called by EntityComponent.async_register_entity_service and
+    EntityPlatform.async_register_entity_service and should not be called
+    directly by integrations.
+    """
+    if schema is None or isinstance(schema, dict):
+        schema = cv.make_entity_service_schema(schema)
+    # Do a sanity check to check this is a valid entity service schema,
+    # the check could be extended to require All/Any to have sub schema(s)
+    # with all entity service fields
+    elif (
+        # Don't check All/Any
+        not isinstance(schema, (vol.All, vol.Any))
+        # Don't check All/Any wrapped in schema
+        and not isinstance(schema.schema, (vol.All, vol.Any))
+        and any(key not in schema.schema for key in cv.ENTITY_SERVICE_FIELDS)
+    ):
+        raise HomeAssistantError(
+            "The schema does not include all required keys: "
+            f"{", ".join(str(key) for key in cv.ENTITY_SERVICE_FIELDS)}"
+        )
+
+    service_func: str | HassJob[..., Any]
+    service_func = func if isinstance(func, str) else HassJob(func)
+
+    hass.services.async_register(
+        domain,
+        name,
+        partial(
+            entity_service_call,
+            hass,
+            entities,
+            service_func,
+            required_features=required_features,
+        ),
+        schema,
+        supports_response,
+        job_type=job_type,
+    )

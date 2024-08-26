@@ -26,8 +26,8 @@ current_connection = ContextVar["ActiveConnection | None"](
     "current_connection", default=None
 )
 
-MessageHandler = Callable[[HomeAssistant, "ActiveConnection", dict[str, Any]], None]
-BinaryHandler = Callable[[HomeAssistant, "ActiveConnection", bytes], None]
+type MessageHandler = Callable[[HomeAssistant, ActiveConnection, dict[str, Any]], None]
+type BinaryHandler = Callable[[HomeAssistant, ActiveConnection, bytes], None]
 
 
 class ActiveConnection:
@@ -223,7 +223,7 @@ class ActiveConnection:
         try:
             if schema is False:
                 if len(msg) > 2:
-                    raise vol.Invalid("extra keys not allowed")
+                    raise vol.Invalid("extra keys not allowed")  # noqa: TRY301
                 handler(self.hass, self, msg)
             else:
                 handler(self.hass, self, schema(msg))

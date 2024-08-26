@@ -6,7 +6,7 @@ import asyncio
 from copy import deepcopy
 from itertools import chain
 import re
-from typing import TypeAlias, cast
+from typing import cast
 
 import pypck
 import voluptuous as vol
@@ -60,12 +60,10 @@ from .const import (
 )
 
 # typing
-AddressType = tuple[int, int, bool]
-DeviceConnectionType: TypeAlias = (
-    pypck.module.ModuleConnection | pypck.module.GroupConnection
-)
+type AddressType = tuple[int, int, bool]
+type DeviceConnectionType = pypck.module.ModuleConnection | pypck.module.GroupConnection
 
-InputType = type[pypck.inputs.Input]
+type InputType = type[pypck.inputs.Input]
 
 # Regex for address validation
 PATTERN_ADDRESS = re.compile(
@@ -423,6 +421,16 @@ async def async_update_config_entry(
 
     # schedule config_entry for save
     hass.config_entries.async_update_entry(config_entry, data=new_data)
+
+
+def get_device_config(
+    address: AddressType, config_entry: ConfigEntry
+) -> ConfigType | None:
+    """Return the device configuration for given address and ConfigEntry."""
+    for device_config in config_entry.data[CONF_DEVICES]:
+        if tuple(device_config[CONF_ADDRESS]) == address:
+            return cast(ConfigType, device_config)
+    return None
 
 
 def has_unique_host_names(hosts: list[ConfigType]) -> list[ConfigType]:

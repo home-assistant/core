@@ -2,6 +2,7 @@
 
 from contextlib import suppress
 import logging
+from typing import Any
 
 from pyforked_daapd import ForkedDaapdAPI
 import voluptuous as vol
@@ -111,7 +112,7 @@ class ForkedDaapdFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize."""
-        self.discovery_schema = None
+        self.discovery_schema: vol.Schema | None = None
 
     @staticmethod
     @callback
@@ -135,7 +136,9 @@ class ForkedDaapdFlowHandler(ConfigFlow, domain=DOMAIN):
         )
         return validate_result
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a forked-daapd config flow start.
 
         Manage device specific parameters.

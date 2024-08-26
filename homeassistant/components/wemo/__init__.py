@@ -44,8 +44,8 @@ WEMO_MODEL_DISPATCH = {
 
 _LOGGER = logging.getLogger(__name__)
 
-DispatchCallback = Callable[[DeviceCoordinator], Coroutine[Any, Any, None]]
-HostPortTuple = tuple[str, int | None]
+type DispatchCallback = Callable[[DeviceCoordinator], Coroutine[Any, Any, None]]
+type HostPortTuple = tuple[str, int | None]
 
 
 def coerce_host_port(value: str) -> HostPortTuple:

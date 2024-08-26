@@ -21,7 +21,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import color_hsv_to_RGB, color_RGB_to_hsv
 
-from . import PhilipsTVConfigEntry, PhilipsTVDataUpdateCoordinator
+from . import PhilipsTVConfigEntry
+from .coordinator import PhilipsTVDataUpdateCoordinator
 from .entity import PhilipsJsEntity
 
 EFFECT_PARTITION = ": "
@@ -378,3 +379,12 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
 
         self._update_from_coordinator()
         self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Return true if entity is available."""
+        if not super().available:
+            return False
+        if not self._tv.on:
+            return False
+        return True

@@ -4,16 +4,16 @@
   "after_dependencies": ["panel_custom"],
   "codeowners": ["@Julius2342", "@farmio", "@marvin-w"],
   "config_flow": true,
-  "dependencies": ["file_upload", "websocket_api"],
+  "dependencies": ["file_upload", "http", "websocket_api"],
   "documentation": "https://www.home-assistant.io/integrations/knx",
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["xknx", "xknxproject"],
   "quality_scale": "platinum",
   "requirements": [
-    "xknx==2.12.2",
+    "xknx==3.1.1",
     "xknxproject==3.7.1",
-    "knx-frontend==2024.1.20.105944"
+    "knx-frontend==2024.8.9.225351"
   ],
   "single_config_entry": true
 }

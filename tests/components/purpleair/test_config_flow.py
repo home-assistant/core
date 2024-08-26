@@ -275,7 +275,10 @@ async def test_options_add_sensor_duplicate(
 
 
 async def test_options_remove_sensor(
-    hass: HomeAssistant, config_entry, setup_config_entry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry,
+    setup_config_entry,
 ) -> None:
     """Test removing a sensor via the options flow."""
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -288,7 +291,6 @@ async def test_options_remove_sensor(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "remove_sensor"
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, str(TEST_SENSOR_INDEX1))}
     )

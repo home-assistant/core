@@ -239,7 +239,7 @@ class GrowattData:
                 date_now = dt_util.now().date()
                 last_updated_time = dt_util.parse_time(str(sorted_keys[-1]))
                 mix_detail["lastdataupdate"] = datetime.datetime.combine(
-                    date_now, last_updated_time, dt_util.DEFAULT_TIME_ZONE
+                    date_now, last_updated_time, dt_util.get_default_time_zone()
                 )
 
                 # Dashboard data is largely inaccurate for mix system but it is the only

@@ -17,6 +17,14 @@ SUPPORTED_LIFESPANS = (
     LifeSpan.FILTER,
     LifeSpan.LENS_BRUSH,
     LifeSpan.SIDE_BRUSH,
+    LifeSpan.UNIT_CARE,
+    LifeSpan.ROUND_MOP,
+)
+
+LEGACY_SUPPORTED_LIFESPANS = (
+    "main_brush",
+    "side_brush",
+    "filter",
 )
 
 

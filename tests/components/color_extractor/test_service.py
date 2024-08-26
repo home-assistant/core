@@ -111,7 +111,6 @@ async def test_missing_url_and_path(hass: HomeAssistant, setup_integration) -> N
         await hass.services.async_call(
             DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
         )
-        await hass.async_block_till_done()
 
     # check light is still off, unchanged due to bad parameters on service call
     state = hass.states.get(LIGHT_ENTITY)
@@ -244,7 +243,7 @@ def _get_file_mock(file_path):
     """Convert file to BytesIO for testing due to PIL UnidentifiedImageError."""
     _file = None
 
-    with open(file_path) as file_handler:
+    with open(file_path, encoding="utf8") as file_handler:
         _file = io.BytesIO(file_handler.read())
 
     _file.name = "color_extractor.jpg"

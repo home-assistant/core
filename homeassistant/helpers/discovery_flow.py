@@ -38,7 +38,7 @@ def async_create_flow(
             )
         return
 
-    return dispatcher.async_create(domain, context, data)
+    dispatcher.async_create(domain, context, data)
 
 
 @callback

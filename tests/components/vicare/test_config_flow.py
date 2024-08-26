@@ -81,7 +81,7 @@ async def test_user_create_entry(
     with patch(
         f"{MODULE}.config_flow.vicare_login",
         return_value=None,
-    ) as mock_setup_entry:
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             VALID_CONFIG,

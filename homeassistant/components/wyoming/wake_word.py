@@ -89,6 +89,7 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
             """Get the next chunk from audio stream."""
             async for chunk_bytes in stream:
                 return chunk_bytes
+            return None
 
         try:
             async with AsyncTcpClient(self.service.host, self.service.port) as client:

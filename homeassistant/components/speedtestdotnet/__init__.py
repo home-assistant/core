@@ -16,7 +16,7 @@ from .coordinator import SpeedTestDataCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
-SpeedTestConfigEntry = ConfigEntry[SpeedTestDataCoordinator]
+type SpeedTestConfigEntry = ConfigEntry[SpeedTestDataCoordinator]
 
 
 async def async_setup_entry(

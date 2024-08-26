@@ -4,11 +4,19 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import fnmatch
+from functools import lru_cache, partial
+import operator
 import re
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
+from homeassistant.const import (
+    CONF_DOMAINS,
+    CONF_ENTITIES,
+    CONF_EXCLUDE,
+    CONF_INCLUDE,
+    MAX_EXPECTED_ENTITY_IDS,
+)
 from homeassistant.core import split_entity_id
 
 from . import config_validation as cv
@@ -188,7 +196,7 @@ def _generate_filter_from_sets_and_pattern_lists(
     # Case 1 - No filter
     # - All entities included
     if not have_include and not have_exclude:
-        return lambda entity_id: True
+        return bool
 
     # Case 2 - Only includes
     # - Entity listed in entities include: include
@@ -197,6 +205,7 @@ def _generate_filter_from_sets_and_pattern_lists(
     # - Otherwise: exclude
     if have_include and not have_exclude:
 
+        @lru_cache(maxsize=MAX_EXPECTED_ENTITY_IDS)
         def entity_included(entity_id: str) -> bool:
             """Return true if entity matches inclusion filters."""
             return (
@@ -215,6 +224,7 @@ def _generate_filter_from_sets_and_pattern_lists(
     # - Otherwise: include
     if not have_include and have_exclude:
 
+        @lru_cache(maxsize=MAX_EXPECTED_ENTITY_IDS)
         def entity_not_excluded(entity_id: str) -> bool:
             """Return true if entity matches exclusion filters."""
             return not (
@@ -234,6 +244,7 @@ def _generate_filter_from_sets_and_pattern_lists(
     # - Otherwise: exclude
     if include_d or include_eg:
 
+        @lru_cache(maxsize=MAX_EXPECTED_ENTITY_IDS)
         def entity_filter_4a(entity_id: str) -> bool:
             """Return filter function for case 4a."""
             return entity_id in include_e or (
@@ -257,6 +268,7 @@ def _generate_filter_from_sets_and_pattern_lists(
     # - Otherwise: include
     if exclude_d or exclude_eg:
 
+        @lru_cache(maxsize=MAX_EXPECTED_ENTITY_IDS)
         def entity_filter_4b(entity_id: str) -> bool:
             """Return filter function for case 4b."""
             domain = split_entity_id(entity_id)[0]
@@ -269,4 +281,4 @@ def _generate_filter_from_sets_and_pattern_lists(
     # Case 6 - No Domain and/or glob includes or excludes
     # - Entity listed in entities include: include
     # - Otherwise: exclude
-    return lambda entity_id: entity_id in include_e
+    return partial(operator.contains, include_e)

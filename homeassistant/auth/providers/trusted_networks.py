@@ -28,8 +28,8 @@ from .. import InvalidAuthError
 from ..models import AuthFlowResult, Credentials, RefreshToken, UserMeta
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 
-IPAddress = IPv4Address | IPv6Address
-IPNetwork = IPv4Network | IPv6Network
+type IPAddress = IPv4Address | IPv6Address
+type IPNetwork = IPv4Network | IPv6Network
 
 CONF_TRUSTED_NETWORKS = "trusted_networks"
 CONF_TRUSTED_USERS = "trusted_users"

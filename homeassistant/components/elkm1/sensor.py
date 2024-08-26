@@ -20,6 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 
 from . import ElkAttachedEntity, ElkEntity, ElkM1ConfigEntry, create_elk_entities
 from .const import ATTR_VALUE, ELK_USER_CODE_SERVICE_SCHEMA
@@ -30,7 +31,7 @@ SERVICE_SENSOR_ZONE_BYPASS = "sensor_zone_bypass"
 SERVICE_SENSOR_ZONE_TRIGGER = "sensor_zone_trigger"
 UNDEFINED_TEMPERATURE = -40
 
-ELK_SET_COUNTER_SERVICE_SCHEMA = {
+ELK_SET_COUNTER_SERVICE_SCHEMA: VolDictType = {
     vol.Required(ATTR_VALUE): vol.All(vol.Coerce(int), vol.Range(0, 65535))
 }
 
@@ -55,7 +56,7 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_SENSOR_COUNTER_REFRESH,
-        {},
+        None,
         "async_counter_refresh",
     )
     platform.async_register_entity_service(
@@ -70,7 +71,7 @@ async def async_setup_entry(
     )
     platform.async_register_entity_service(
         SERVICE_SENSOR_ZONE_TRIGGER,
-        {},
+        None,
         "async_zone_trigger",
     )
 
