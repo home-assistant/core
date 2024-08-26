@@ -341,6 +341,7 @@ homeassistant.components.nut.*
 homeassistant.components.onboarding.*
 homeassistant.components.oncue.*
 homeassistant.components.onewire.*
+homeassistant.components.onkyo.*
 homeassistant.components.open_meteo.*
 homeassistant.components.openexchangerates.*
 homeassistant.components.opensky.*
