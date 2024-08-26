@@ -320,14 +320,11 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         name = receiver.name
         identifier = receiver.identifier
         self._attr_name = f"{name}{' ' + ZONES[zone] if zone != 'main' else ''}"
-        if receiver.discovered:
-            if zone == "main":
-                # keep legacy unique_id
-                self._attr_unique_id = f"{name}_{identifier}"
-            else:
-                self._attr_unique_id = f"{identifier}_{zone}"
+        if receiver.discovered and zone == "main":
+            # keep legacy unique_id
+            self._attr_unique_id = f"{name}_{identifier}"
         else:
-            self._attr_unique_id = None
+            self._attr_unique_id = f"{identifier}_{zone}"
 
         self._zone = zone
         self._source_mapping = sources

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from smarttub import LoginFailed
 import voluptuous as vol
@@ -30,7 +30,9 @@ class SmartTubConfigFlow(ConfigFlow, domain=DOMAIN):
         self._reauth_input: Mapping[str, Any] | None = None
         self._reauth_entry: ConfigEntry | None = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
@@ -53,6 +55,8 @@ class SmartTubConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
 
                 # this is a reauth attempt
+                if TYPE_CHECKING:
+                    assert self._reauth_entry
                 if self._reauth_entry.unique_id != self.unique_id:
                     # there is a config entry matching this account,
                     # but it is not the one we were trying to reauth
