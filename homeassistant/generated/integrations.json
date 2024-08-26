@@ -5498,7 +5498,7 @@
     "sky_remote": {
       "name": "Sky Remote Control",
       "integration_type": "device",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "assumed_state"
     },
     "skybeacon": {

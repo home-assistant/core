@@ -1,0 +1,35 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add Sky Remote",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "name": "Name",
+          "legacy_port": "Legacy Port"
+        },
+        "data_description": {
+          "host": "IP address or hostname of your Sky device",
+          "name": "Name of the remote entity that wil be created",
+          "legacy_port": "Only enable if running SkyQ firmware < 060"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Sky Remote",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "name": "[%key:component::sky_remote::config::step::user::data::name%]",
+          "legacy_port": "[%key:component::sky_remote::config::step::user::data::legacy_port%]"
+        },
+        "data_description": {
+          "host": "[%key:component::sky_remote::config::step::user::data_description::host%]",
+          "name": "[%key:component::sky_remote::config::step::user::data_description::name%]",
+          "legacy_port": "[%key:component::sky_remote::config::step::user::data_description::legacy_port%]"
+        }
+      }
+    },
+    "abort": {
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  }
+}
