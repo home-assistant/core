@@ -94,7 +94,9 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.data[CONF_HOST] = user_input[CONF_HOST]
                 self.data[CONF_MODEL] = bridge.device.name
 
-                await self.async_set_unique_id(bridge.device.uuid)
+                await self.async_set_unique_id(
+                    bridge.device.uuid, raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured(
                     updates={CONF_HOST: self.data[CONF_HOST]}
                 )

@@ -62,6 +62,7 @@ async def async_get_client_session(hass: HomeAssistant) -> ClientSession:
     if CONF_SESSION not in hass.data[DOMAIN]:
         clientsession: ClientSession = await async_create_unverified_client_session()
         _async_register_default_clientsession_shutdown(hass, clientsession)
+        hass.data[DOMAIN][CONF_SESSION] = clientsession
         return clientsession
 
     session: ClientSession = hass.data[DOMAIN][CONF_SESSION]

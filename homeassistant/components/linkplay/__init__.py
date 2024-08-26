@@ -1,5 +1,7 @@
 """Support for LinkPlay devices."""
 
+from dataclasses import dataclass
+
 from aiohttp import ClientSession
 from linkplay.bridge import LinkPlayBridge
 from linkplay.discovery import linkplay_factory_httpapi_bridge
@@ -14,6 +16,7 @@ from .const import PLATFORMS
 from .utils import async_get_client_session
 
 
+@dataclass
 class LinkPlayData:
     """Data for LinkPlay."""
 
@@ -36,8 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) -> 
             f"Failed to connect to LinkPlay device at {entry.data[CONF_HOST]}"
         ) from exception
 
-    entry.runtime_data = LinkPlayData()
-    entry.runtime_data.bridge = bridge
+    entry.runtime_data = LinkPlayData(bridge=bridge)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
