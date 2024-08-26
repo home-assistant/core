@@ -116,6 +116,7 @@ OSI_APPROVED_LICENSES = {
     "Unlicense",
     "Apache-2",
     "GPLv2",
+    "Python-2.0.1",
 }
 
 EXCEPTIONS = {
@@ -138,7 +139,6 @@ EXCEPTIONS = {
     "crownstone-core",  # https://github.com/crownstone/crownstone-lib-python-core/pull/6
     "crownstone-sse",  # https://github.com/crownstone/crownstone-lib-python-sse/pull/2
     "crownstone-uart",  # https://github.com/crownstone/crownstone-lib-python-uart/pull/12
-    "dio-chacon-wifi-api",
     "eliqonline",  # https://github.com/molobrakos/eliqonline/pull/17
     "enocean",  # https://github.com/kipe/enocean/pull/142
     "gardena-bluetooth",  # https://github.com/elupus/gardena-bluetooth/pull/11
@@ -154,12 +154,10 @@ EXCEPTIONS = {
     "neurio",  # https://github.com/jordanh/neurio-python/pull/13
     "nsw-fuel-api-client",  # https://github.com/nickw444/nsw-fuel-api-client/pull/14
     "pigpio",  # https://github.com/joan2937/pigpio/pull/608
-    "pyEmby",  # https://github.com/mezz64/pyEmby/pull/12
     "pymitv",  # MIT
     "pyTibber",  # https://github.com/Danielhiversen/pyTibber/pull/294
     "pybbox",  # https://github.com/HydrelioxGitHub/pybbox/pull/5
     "pyeconet",  # https://github.com/w1ll1am23/pyeconet/pull/41
-    "pylutron-caseta",  # https://github.com/gurumitts/pylutron-caseta/pull/168
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
     "pyvera",  # https://github.com/maximvelichko/pyvera/pull/164
     "pyxeoma",  # https://github.com/jeradM/pyxeoma/pull/11
@@ -179,7 +177,6 @@ TODO = {
     "aiocache": AwesomeVersion(
         "0.12.2"
     ),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
-    "pyflic": AwesomeVersion("2.0.3"),  # No OSI approved license CC0-1.0 Universal)
 }
 
 
