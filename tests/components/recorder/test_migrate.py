@@ -1028,9 +1028,7 @@ def test_drop_restore_foreign_key_constraints(recorder_db_url: str) -> None:
     engine.dispose()
 
 
-pytest.mark.skip_on_db_engine(["sqlite"])
-
-
+@pytest.mark.skip_on_db_engine(["sqlite"])
 @pytest.mark.usefixtures("skip_by_db_engine")
 def test_restore_foreign_key_constraints_twice(recorder_db_url: str) -> None:
     """Test we can drop and then restore foreign keys.
@@ -1164,9 +1162,7 @@ def test_restore_foreign_key_constraints_twice(recorder_db_url: str) -> None:
     engine.dispose()
 
 
-pytest.mark.skip_on_db_engine(["sqlite"])
-
-
+@pytest.mark.skip_on_db_engine(["sqlite"])
 @pytest.mark.usefixtures("skip_by_db_engine")
 def test_drop_duplicated_foreign_key_constraints(recorder_db_url: str) -> None:
     """Test we can drop and then restore foreign keys.
