@@ -1852,8 +1852,8 @@ async def test_default_engine_prefer_entity(
     await mock_config_entry_setup(hass, mock_tts_entity)
     await hass.async_block_till_done()
 
-    entity_engine = tts.async_resolve_engine(hass, "tts.test")
-    assert entity_engine == "tts.test"
+    entity_engine = tts.async_resolve_engine(hass, "tts.new_test")
+    assert entity_engine == "tts.new_test"
     provider_engine = tts.async_resolve_engine(hass, "test")
     assert provider_engine == "test"
-    assert tts.async_default_engine(hass) == "tts.test"
+    assert tts.async_default_engine(hass) == "tts.new_test"
