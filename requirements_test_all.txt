@@ -1782,6 +1782,9 @@ pysoma==0.0.12
 # homeassistant.components.spc
 pyspcwebgw==0.7.0
 
+# homeassistant.components.assist_pipeline
+pyspeex-noise==1.0.0
+
 # homeassistant.components.squeezebox
 pysqueezebox==0.7.1
 
