@@ -83,14 +83,16 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
         scopes: Scope,
     ) -> None:
         """Initialize the climate."""
+
         self.read_only = Scope.VEHICLE_CMDS not in scopes or data.signing
-        if self.read_only:
-            self._attr_supported_features = ClimateEntityFeature(0)
 
         super().__init__(
             data,
             side,
         )
+
+        if self.read_only:
+            self._attr_supported_features = ClimateEntityFeature(0)
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
@@ -213,21 +215,22 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
         data: TeslaFleetVehicleData,
         scopes: Scope,
     ) -> None:
-        """Initialize the climate."""
+        """Initialize the cabin overheat climate entity."""
+
+        # Scopes
+        self.read_only = Scope.VEHICLE_CMDS not in scopes or data.signing
 
         super().__init__(data, "climate_state_cabin_overheat_protection")
 
         # Supported Features
-        self._attr_supported_features = (
-            ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
-        )
-        if self.get("vehicle_config_cop_user_set_temp_supported"):
-            self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
-
-        # Scopes
-        self.read_only = Scope.VEHICLE_CMDS not in scopes or data.signing
         if self.read_only:
             self._attr_supported_features = ClimateEntityFeature(0)
+        else:
+            self._attr_supported_features = (
+                ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+            )
+            if self.get("vehicle_config_cop_user_set_temp_supported"):
+                self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
