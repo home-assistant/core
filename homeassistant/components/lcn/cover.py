@@ -1,7 +1,7 @@
 """Support for LCN covers."""
 
-from __future__ import annotations
-
+from collections.abc import Iterable
+from functools import partial
 from typing import Any
 
 import pypck
@@ -26,18 +26,29 @@ from .helpers import DeviceConnectionType, InputType, get_device_connection
 PARALLEL_UPDATES = 0
 
 
-def create_lcn_cover_entity(
-    hass: HomeAssistant, entity_config: ConfigType, config_entry: ConfigEntry
-) -> LcnEntity:
-    """Set up an entity for this domain."""
-    device_connection = get_device_connection(
-        hass, entity_config[CONF_ADDRESS], config_entry
-    )
+def add_lcn_entities(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+    entity_configs: Iterable[ConfigType],
+) -> None:
+    """Add entities for this domain."""
+    entities: list[LcnOutputsCover | LcnRelayCover] = []
+    for entity_config in entity_configs:
+        device_connection = get_device_connection(
+            hass, entity_config[CONF_ADDRESS], config_entry
+        )
 
-    if entity_config[CONF_DOMAIN_DATA][CONF_MOTOR] in "OUTPUTS":
-        return LcnOutputsCover(entity_config, config_entry.entry_id, device_connection)
-    # in RELAYS
-    return LcnRelayCover(entity_config, config_entry.entry_id, device_connection)
+        if entity_config[CONF_DOMAIN_DATA][CONF_MOTOR] in "OUTPUTS":
+            entities.append(
+                LcnOutputsCover(entity_config, config_entry.entry_id, device_connection)
+            )
+        else:  # in RELAYS
+            entities.append(
+                LcnRelayCover(entity_config, config_entry.entry_id, device_connection)
+            )
+
+    async_add_entities(entities)
 
 
 async def async_setup_entry(
@@ -46,14 +57,23 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LCN cover entities from a config entry."""
-    hass.data[DOMAIN][config_entry.entry_id][ADD_ENTITIES_CALLBACKS].update(
-        {DOMAIN_COVER: (async_add_entities, create_lcn_cover_entity)}
+    add_entities = partial(
+        add_lcn_entities,
+        hass,
+        config_entry,
+        async_add_entities,
     )
 
-    async_add_entities(
-        create_lcn_cover_entity(hass, entity_config, config_entry)
-        for entity_config in config_entry.data[CONF_ENTITIES]
-        if entity_config[CONF_DOMAIN] == DOMAIN_COVER
+    hass.data[DOMAIN][config_entry.entry_id][ADD_ENTITIES_CALLBACKS].update(
+        {DOMAIN_COVER: add_entities}
+    )
+
+    add_entities(
+        (
+            entity_config
+            for entity_config in config_entry.data[CONF_ENTITIES]
+            if entity_config[CONF_DOMAIN] == DOMAIN_COVER
+        ),
     )
 
 
