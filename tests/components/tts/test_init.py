@@ -1838,3 +1838,22 @@ async def test_ttsentity_subclass_properties(
             if record.exc_info is not None
         ]
     )
+
+
+async def test_default_engine_prefer_entity(
+    hass: HomeAssistant,
+    mock_tts_entity: MockTTSEntity,
+    mock_provider: MockProvider,
+) -> None:
+    """Test async_default_engine."""
+    mock_tts_entity._attr_name = "New test"
+
+    await mock_setup(hass, mock_provider)
+    await mock_config_entry_setup(hass, mock_tts_entity)
+    await hass.async_block_till_done()
+
+    entity_engine = tts.async_resolve_engine(hass, "tts.new_test")
+    assert entity_engine == "tts.new_test"
+    provider_engine = tts.async_resolve_engine(hass, "test")
+    assert provider_engine == "test"
+    assert tts.async_default_engine(hass) == "tts.new_test"

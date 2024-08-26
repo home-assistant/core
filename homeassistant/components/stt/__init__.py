@@ -72,9 +72,9 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 @callback
 def async_default_engine(hass: HomeAssistant) -> str | None:
     """Return the domain or entity id of the default engine."""
-    return async_default_provider(hass) or next(
+    return next(
         iter(hass.states.async_entity_ids(DOMAIN)), None
-    )
+    ) or async_default_provider(hass)
 
 
 @callback
