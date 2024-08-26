@@ -413,8 +413,9 @@ def handle_subscribe_entities(
     # state changed events or we will introduce a race condition
     # where some states are missed
     states = _async_get_allowed_states(hass, connection)
-    message_id_as_bytes = str(msg["id"]).encode()
-    connection.subscriptions[msg["id"]] = hass.bus.async_listen(
+    msg_id = msg["id"]
+    message_id_as_bytes = str(msg_id).encode()
+    connection.subscriptions[msg_id] = hass.bus.async_listen(
         EVENT_STATE_CHANGED,
         partial(
             _forward_entity_changes,
@@ -425,7 +426,7 @@ def handle_subscribe_entities(
             message_id_as_bytes,
         ),
     )
-    connection.send_result(msg["id"])
+    connection.send_result(msg_id)
 
     # JSON serialize here so we can recover if it blows up due to the
     # state machine containing unserializable data. This command is required
@@ -433,7 +434,7 @@ def handle_subscribe_entities(
     try:
         if entity_ids or entity_filter:
             serialized_states = [
-                state.as_dict_json
+                state.as_compressed_state_json
                 for state in states
                 if (not entity_ids or state.entity_id in entity_ids)
                 and (not entity_filter or entity_filter(state.entity_id))
@@ -444,7 +445,9 @@ def handle_subscribe_entities(
     except (ValueError, TypeError):
         pass
     else:
-        _send_handle_entities_init_response(connection, msg["id"], serialized_states)
+        _send_handle_entities_init_response(
+            connection, message_id_as_bytes, serialized_states
+        )
         return
 
     serialized_states = []
@@ -459,18 +462,22 @@ def handle_subscribe_entities(
                 ),
             )
 
-    _send_handle_entities_init_response(connection, msg["id"], serialized_states)
+    _send_handle_entities_init_response(
+        connection, message_id_as_bytes, serialized_states
+    )
 
 
 def _send_handle_entities_init_response(
-    connection: ActiveConnection, msg_id: int, serialized_states: list[bytes]
+    connection: ActiveConnection,
+    message_id_as_bytes: bytes,
+    serialized_states: list[bytes],
 ) -> None:
     """Send handle entities init response."""
     connection.send_message(
         b"".join(
             (
                 b'{"id":',
-                str(msg_id).encode(),
+                message_id_as_bytes,
                 b',"type":"event","event":{"a":{',
                 b",".join(serialized_states),
                 b"}}}",
