@@ -1,10 +1,10 @@
 """Tests for Lovelace system health."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.lovelace import dashboard
 from homeassistant.core import HomeAssistant

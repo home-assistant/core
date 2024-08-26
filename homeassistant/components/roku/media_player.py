@@ -149,8 +149,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
             return None
 
         if (
-            self.coordinator.data.app.name == "Power Saver"
-            or self.coordinator.data.app.name == "Roku"
+            self.coordinator.data.app.name in {"Power Saver", "Roku"}
             or self.coordinator.data.app.screensaver
         ):
             return MediaPlayerState.IDLE

@@ -23,4 +23,4 @@ async def test_diagnostics(
     """Test diagnostics."""
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, mock_added_config_entry
-    ) == snapshot(exclude=props("last_update", "entry_id"))
+    ) == snapshot(exclude=props("last_update", "entry_id", "created_at", "modified_at"))

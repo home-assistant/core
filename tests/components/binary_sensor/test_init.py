@@ -1,9 +1,9 @@
 """The tests for the Binary sensor component."""
 
+from collections.abc import Generator
 from unittest import mock
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import binary_sensor
 from homeassistant.config_entries import ConfigEntry, ConfigFlow

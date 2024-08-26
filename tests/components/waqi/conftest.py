@@ -1,9 +1,9 @@
 """Common fixtures for the World Air Quality Index (WAQI) tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.waqi.const import CONF_STATION_NUMBER, DOMAIN
 from homeassistant.const import CONF_API_KEY

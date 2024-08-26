@@ -1,9 +1,9 @@
 """The tests for the demo light component."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.demo import DOMAIN
 from homeassistant.components.light import (

@@ -1,10 +1,11 @@
 """Test the UPB Control config flow."""
 
 from asyncio import TimeoutError
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.upb.const import DOMAIN
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -15,17 +16,20 @@ def mocked_upb(sync_complete=True, config_ok=True):
     def _upb_lib_connect(callback):
         callback()
 
-    upb_mock = MagicMock()
+    upb_mock = AsyncMock()
     type(upb_mock).network_id = PropertyMock(return_value="42")
     type(upb_mock).config_ok = PropertyMock(return_value=config_ok)
+    type(upb_mock).disconnect = MagicMock()
     if sync_complete:
-        upb_mock.connect.side_effect = _upb_lib_connect
+        upb_mock.async_connect.side_effect = _upb_lib_connect
     return patch(
         "homeassistant.components.upb.config_flow.upb_lib.UpbPim", return_value=upb_mock
     )
 
 
-async def valid_tcp_flow(hass, sync_complete=True, config_ok=True):
+async def valid_tcp_flow(
+    hass: HomeAssistant, sync_complete: bool = True, config_ok: bool = True
+) -> ConfigFlowResult:
     """Get result dict that are standard for most tests."""
 
     with (

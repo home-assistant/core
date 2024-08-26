@@ -3,8 +3,6 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant.components import media_source, spotify
 from homeassistant.components.forked_daapd.browse_media import (
     MediaContent,
@@ -19,13 +17,16 @@ from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TEST_MASTER_ENTITY_NAME = "media_player.owntone_server"
 
 
 async def test_async_browse_media(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, config_entry
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test browse media."""
 
@@ -203,7 +204,9 @@ async def test_async_browse_media(
 
 
 async def test_async_browse_media_not_found(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, config_entry
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test browse media not found."""
 
@@ -261,7 +264,9 @@ async def test_async_browse_media_not_found(
 
 
 async def test_async_browse_spotify(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, config_entry
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test browsing spotify."""
 
@@ -313,7 +318,9 @@ async def test_async_browse_spotify(
 
 
 async def test_async_browse_media_source(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, config_entry
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test browsing media_source."""
 
@@ -361,7 +368,9 @@ async def test_async_browse_media_source(
 
 
 async def test_async_browse_image(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, config_entry
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test browse media images."""
 
@@ -416,8 +425,7 @@ async def test_async_browse_image(
 async def test_async_browse_image_missing(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    config_entry,
-    caplog: pytest.LogCaptureFixture,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test browse media images with no image available."""
 

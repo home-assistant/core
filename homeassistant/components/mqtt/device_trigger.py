@@ -317,7 +317,7 @@ async def async_setup_trigger(
         )
         send_discovery_done(hass, discovery_data)
         clear_discovery_hash(hass, discovery_data[ATTR_DISCOVERY_HASH])
-        return None
+        return
 
     if TYPE_CHECKING:
         assert isinstance(device_id, str)

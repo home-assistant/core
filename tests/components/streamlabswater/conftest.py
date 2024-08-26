@@ -1,10 +1,10 @@
 """Common fixtures for the StreamLabs tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from streamlabswater.streamlabswater import StreamlabsClient
-from typing_extensions import Generator
 
 from homeassistant.components.streamlabswater import DOMAIN
 from homeassistant.const import CONF_API_KEY

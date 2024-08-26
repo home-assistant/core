@@ -1,0 +1,33 @@
+{
+  "entity": {
+    "todo": {
+      "shopping_list": {
+        "default": "mdi:basket"
+      }
+    },
+    "sensor": {
+      "recipes": {
+        "default": "mdi:food"
+      },
+      "users": {
+        "default": "mdi:account-multiple"
+      },
+      "categories": {
+        "default": "mdi:shape"
+      },
+      "tags": {
+        "default": "mdi:tag-multiple"
+      },
+      "tools": {
+        "default": "mdi:tools"
+      }
+    }
+  },
+  "services": {
+    "get_mealplan": "mdi:food",
+    "get_recipe": "mdi:map",
+    "import_recipe": "mdi:map-search",
+    "set_random_mealplan": "mdi:dice-multiple",
+    "set_mealplan": "mdi:food"
+  }
+}

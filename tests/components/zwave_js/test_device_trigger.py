@@ -28,13 +28,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_get_device_automations, async_mock_service
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
+from tests.common import async_get_device_automations
 
 
 async def test_no_controller_triggers(
@@ -85,7 +79,7 @@ async def test_if_notification_notification_fires(
     client,
     lock_schlage_be469,
     integration,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for event.notification.notification trigger firing."""
     node: Node = lock_schlage_be469
@@ -168,13 +162,13 @@ async def test_if_notification_notification_fires(
     )
     node.receive_event(event)
     await hass.async_block_till_done()
-    assert len(calls) == 2
+    assert len(service_calls) == 2
     assert (
-        calls[0].data["some"]
+        service_calls[0].data["some"]
         == f"event.notification.notification - device - zwave_js_notification - {CommandClass.NOTIFICATION}"
     )
     assert (
-        calls[1].data["some"]
+        service_calls[1].data["some"]
         == f"event.notification.notification2 - device - zwave_js_notification - {CommandClass.NOTIFICATION}"
     )
 
@@ -221,7 +215,7 @@ async def test_if_entry_control_notification_fires(
     client,
     lock_schlage_be469,
     integration,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for notification.entry_control trigger firing."""
     node: Node = lock_schlage_be469
@@ -303,13 +297,13 @@ async def test_if_entry_control_notification_fires(
     )
     node.receive_event(event)
     await hass.async_block_till_done()
-    assert len(calls) == 2
+    assert len(service_calls) == 2
     assert (
-        calls[0].data["some"]
+        service_calls[0].data["some"]
         == f"event.notification.notification - device - zwave_js_notification - {CommandClass.ENTRY_CONTROL}"
     )
     assert (
-        calls[1].data["some"]
+        service_calls[1].data["some"]
         == f"event.notification.notification2 - device - zwave_js_notification - {CommandClass.ENTRY_CONTROL}"
     )
 
@@ -389,7 +383,7 @@ async def test_if_node_status_change_fires(
     client,
     lock_schlage_be469,
     integration,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for node_status trigger firing."""
     node: Node = lock_schlage_be469
@@ -460,9 +454,9 @@ async def test_if_node_status_change_fires(
     )
     node.receive_event(event)
     await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert calls[0].data["some"] == "state.node_status - device - alive"
-    assert calls[1].data["some"] == "state.node_status2 - device - alive"
+    assert len(service_calls) == 2
+    assert service_calls[0].data["some"] == "state.node_status - device - alive"
+    assert service_calls[1].data["some"] == "state.node_status2 - device - alive"
 
 
 async def test_if_node_status_change_fires_legacy(
@@ -472,7 +466,7 @@ async def test_if_node_status_change_fires_legacy(
     client,
     lock_schlage_be469,
     integration,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for node_status trigger firing."""
     node: Node = lock_schlage_be469
@@ -543,9 +537,9 @@ async def test_if_node_status_change_fires_legacy(
     )
     node.receive_event(event)
     await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert calls[0].data["some"] == "state.node_status - device - alive"
-    assert calls[1].data["some"] == "state.node_status2 - device - alive"
+    assert len(service_calls) == 2
+    assert service_calls[0].data["some"] == "state.node_status - device - alive"
+    assert service_calls[1].data["some"] == "state.node_status2 - device - alive"
 
 
 async def test_get_trigger_capabilities_node_status(
@@ -645,7 +639,7 @@ async def test_if_basic_value_notification_fires(
     client,
     ge_in_wall_dimmer_switch,
     integration,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for event.value_notification.basic trigger firing."""
     node: Node = ge_in_wall_dimmer_switch
@@ -742,13 +736,13 @@ async def test_if_basic_value_notification_fires(
     )
     node.receive_event(event)
     await hass.async_block_till_done()
-    assert len(calls) == 2
+    assert len(service_calls) == 2
     assert (
-        calls[0].data["some"]
+        service_calls[0].data["some"]
         == f"event.value_notification.basic - device - zwave_js_value_notification - {CommandClass.BASIC}"
     )
     assert (
-        calls[1].data["some"]
+        service_calls[1].data["some"]
         == f"event.value_notification.basic2 - device - zwave_js_value_notification - {CommandClass.BASIC}"
     )
 
@@ -830,7 +824,7 @@ async def test_if_central_scene_value_notification_fires(
     client,
     wallmote_central_scene,
     integration,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for event.value_notification.central_scene trigger firing."""
     node: Node = wallmote_central_scene
@@ -933,13 +927,13 @@ async def test_if_central_scene_value_notification_fires(
     )
     node.receive_event(event)
     await hass.async_block_till_done()
-    assert len(calls) == 2
+    assert len(service_calls) == 2
     assert (
-        calls[0].data["some"]
+        service_calls[0].data["some"]
         == f"event.value_notification.central_scene - device - zwave_js_value_notification - {CommandClass.CENTRAL_SCENE}"
     )
     assert (
-        calls[1].data["some"]
+        service_calls[1].data["some"]
         == f"event.value_notification.central_scene2 - device - zwave_js_value_notification - {CommandClass.CENTRAL_SCENE}"
     )
 
@@ -1020,7 +1014,7 @@ async def test_if_scene_activation_value_notification_fires(
     client,
     hank_binary_switch,
     integration,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for event.value_notification.scene_activation trigger firing."""
     node: Node = hank_binary_switch
@@ -1117,13 +1111,13 @@ async def test_if_scene_activation_value_notification_fires(
     )
     node.receive_event(event)
     await hass.async_block_till_done()
-    assert len(calls) == 2
+    assert len(service_calls) == 2
     assert (
-        calls[0].data["some"]
+        service_calls[0].data["some"]
         == f"event.value_notification.scene_activation - device - zwave_js_value_notification - {CommandClass.SCENE_ACTIVATION}"
     )
     assert (
-        calls[1].data["some"]
+        service_calls[1].data["some"]
         == f"event.value_notification.scene_activation2 - device - zwave_js_value_notification - {CommandClass.SCENE_ACTIVATION}"
     )
 
@@ -1200,7 +1194,7 @@ async def test_if_value_updated_value_fires(
     client,
     lock_schlage_be469,
     integration,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for zwave_js.value_updated.value trigger firing."""
     node: Node = lock_schlage_be469
@@ -1261,7 +1255,7 @@ async def test_if_value_updated_value_fires(
     )
     node.receive_event(event)
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     # Publish fake value update that should trigger
     event = Event(
@@ -1283,9 +1277,9 @@ async def test_if_value_updated_value_fires(
     )
     node.receive_event(event)
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
     assert (
-        calls[0].data["some"]
+        service_calls[0].data["some"]
         == "zwave_js.value_updated.value - zwave_js.value_updated - open"
     )
 
@@ -1296,7 +1290,7 @@ async def test_value_updated_value_no_driver(
     client,
     lock_schlage_be469,
     integration,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test zwave_js.value_updated.value trigger with missing driver."""
     node: Node = lock_schlage_be469
@@ -1362,7 +1356,7 @@ async def test_value_updated_value_no_driver(
     )
     node.receive_event(event)
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
 
 async def test_get_trigger_capabilities_value_updated_value(
@@ -1455,7 +1449,7 @@ async def test_if_value_updated_config_parameter_fires(
     client,
     lock_schlage_be469,
     integration,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for zwave_js.value_updated.config_parameter trigger firing."""
     node: Node = lock_schlage_be469
@@ -1517,9 +1511,9 @@ async def test_if_value_updated_config_parameter_fires(
     )
     node.receive_event(event)
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
     assert (
-        calls[0].data["some"]
+        service_calls[0].data["some"]
         == "zwave_js.value_updated.config_parameter - zwave_js.value_updated - 255"
     )
 

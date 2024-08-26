@@ -21,7 +21,7 @@ from homeassistant.const import (
     CONF_PATH,
     __version__,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import yaml
 
@@ -99,8 +99,7 @@ class Blueprint:
         inputs = {}
         for key, value in self.data[CONF_BLUEPRINT][CONF_INPUT].items():
             if value and CONF_INPUT in value:
-                for key, value in value[CONF_INPUT].items():
-                    inputs[key] = value
+                inputs.update(dict(value[CONF_INPUT]))
             else:
                 inputs[key] = value
         return inputs
@@ -373,7 +372,7 @@ class DomainBlueprints:
 
             shutil.copytree(
                 integration.file_path / BLUEPRINT_FOLDER,
-                self.blueprint_folder / HA_DOMAIN,
+                self.blueprint_folder / HOMEASSISTANT_DOMAIN,
             )
 
         await self.hass.async_add_executor_job(populate)

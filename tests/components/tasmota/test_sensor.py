@@ -50,6 +50,17 @@ BAD_LIST_SENSOR_CONFIG_3 = {
     }
 }
 
+# This configuration has sensors which type we can't guess
+DEFAULT_SENSOR_CONFIG_UNKNOWN = {
+    "sn": {
+        "Time": "2020-09-25T12:47:15",
+        "SENSOR1": {"Unknown": None},
+        "SENSOR2": {"Unknown": "123"},
+        "SENSOR3": {"Unknown": 123},
+        "SENSOR4": {"Unknown": 123.0},
+    }
+}
+
 # This configuration has some sensors where values are lists
 # Home Assistant maps this to one sensor for each list item
 LIST_SENSOR_CONFIG = {
@@ -198,10 +209,12 @@ TEMPERATURE_SENSOR_CONFIG = {
             [
                 "sensor.tasmota_energy_totaltariff_0",
                 "sensor.tasmota_energy_totaltariff_1",
+                "sensor.tasmota_energy_exporttariff_0",
+                "sensor.tasmota_energy_exporttariff_1",
             ],
             (
-                '{"ENERGY":{"TotalTariff":[1.2,3.4]}}',
-                '{"StatusSNS":{"ENERGY":{"TotalTariff":[5.6,7.8]}}}',
+                '{"ENERGY":{"ExportTariff":[5.6,7.8],"TotalTariff":[1.2,3.4]}}',
+                '{"StatusSNS":{"ENERGY":{"ExportTariff":[1.2,3.4],"TotalTariff":[5.6,7.8]}}}',
             ),
         ),
         (
@@ -277,6 +290,20 @@ TEMPERATURE_SENSOR_CONFIG = {
                     '{"StatusSNS":{"ANALOG":{"CTEnergy1":'
                     '{"Energy":1.0,"Power":1150,"Voltage":230,"Current":5}}}}'
                 ),
+            ),
+        ),
+        # Test we automatically set state class to measurement on unknown numerical sensors
+        (
+            DEFAULT_SENSOR_CONFIG_UNKNOWN,
+            [
+                "sensor.tasmota_sensor1_unknown",
+                "sensor.tasmota_sensor2_unknown",
+                "sensor.tasmota_sensor3_unknown",
+                "sensor.tasmota_sensor4_unknown",
+            ],
+            (
+                '{"SENSOR1":{"Unknown":20.5},"SENSOR2":{"Unknown":20.5},"SENSOR3":{"Unknown":20.5},"SENSOR4":{"Unknown":20.5}}',
+                '{"StatusSNS":{"SENSOR1":{"Unknown":20},"SENSOR2":{"Unknown":20},"SENSOR3":{"Unknown":20},"SENSOR4":{"Unknown":20}}}',
             ),
         ),
     ],

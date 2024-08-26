@@ -105,14 +105,18 @@ class AuthStore:
             "perm_lookup": self._perm_lookup,
         }
 
-        for attr_name, value in (
-            ("is_owner", is_owner),
-            ("is_active", is_active),
-            ("local_only", local_only),
-            ("system_generated", system_generated),
-        ):
-            if value is not None:
-                kwargs[attr_name] = value
+        kwargs.update(
+            {
+                attr_name: value
+                for attr_name, value in (
+                    ("is_owner", is_owner),
+                    ("is_active", is_active),
+                    ("local_only", local_only),
+                    ("system_generated", system_generated),
+                )
+                if value is not None
+            }
+        )
 
         new_user = models.User(**kwargs)
 

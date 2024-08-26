@@ -33,9 +33,9 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import (
-    CREATE_ENTRY_DATA_AUTH,
+    CREATE_ENTRY_DATA_KLAP,
     CREATE_ENTRY_DATA_LEGACY,
-    DEVICE_CONFIG_AUTH,
+    DEVICE_CONFIG_KLAP,
     DEVICE_ID,
     DEVICE_ID_MAC,
     IP_ADDRESS,
@@ -107,7 +107,7 @@ async def test_config_entry_retry(hass: HomeAssistant) -> None:
 
 
 async def test_dimmer_switch_unique_id_fix_original_entity_still_exists(
-    hass: HomeAssistant, entity_reg: er.EntityRegistry
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test no migration happens if the original entity id still exists."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=MAC_ADDRESS)
@@ -115,14 +115,14 @@ async def test_dimmer_switch_unique_id_fix_original_entity_still_exists(
     dimmer = _mocked_device(alias="My dimmer", modules=[Module.Light])
     rollout_unique_id = MAC_ADDRESS.replace(":", "").upper()
     original_unique_id = tplink.legacy_device_id(dimmer)
-    original_dimmer_entity_reg = entity_reg.async_get_or_create(
+    original_dimmer_entity_reg = entity_registry.async_get_or_create(
         config_entry=config_entry,
         platform=DOMAIN,
         domain="light",
         unique_id=original_unique_id,
         original_name="Original dimmer",
     )
-    rollout_dimmer_entity_reg = entity_reg.async_get_or_create(
+    rollout_dimmer_entity_reg = entity_registry.async_get_or_create(
         config_entry=config_entry,
         platform=DOMAIN,
         domain="light",
@@ -138,7 +138,7 @@ async def test_dimmer_switch_unique_id_fix_original_entity_still_exists(
         await setup.async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    migrated_dimmer_entity_reg = entity_reg.async_get_or_create(
+    migrated_dimmer_entity_reg = entity_registry.async_get_or_create(
         config_entry=config_entry,
         platform=DOMAIN,
         domain="light",
@@ -178,7 +178,7 @@ async def test_config_entry_device_config(
     mock_config_entry = MockConfigEntry(
         title="TPLink",
         domain=DOMAIN,
-        data={**CREATE_ENTRY_DATA_AUTH},
+        data={**CREATE_ENTRY_DATA_KLAP},
         unique_id=MAC_ADDRESS,
     )
     mock_config_entry.add_to_hass(hass)
@@ -197,7 +197,7 @@ async def test_config_entry_with_stored_credentials(
     mock_config_entry = MockConfigEntry(
         title="TPLink",
         domain=DOMAIN,
-        data={**CREATE_ENTRY_DATA_AUTH},
+        data={**CREATE_ENTRY_DATA_KLAP},
         unique_id=MAC_ADDRESS,
     )
     auth = {
@@ -210,7 +210,7 @@ async def test_config_entry_with_stored_credentials(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    config = DEVICE_CONFIG_AUTH
+    config = DEVICE_CONFIG_KLAP
     assert config.credentials != stored_credentials
     config.credentials = stored_credentials
     mock_connect["connect"].assert_called_once_with(config=config)
@@ -223,7 +223,7 @@ async def test_config_entry_device_config_invalid(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that an invalid device config logs an error and loads the config entry."""
-    entry_data = copy.deepcopy(CREATE_ENTRY_DATA_AUTH)
+    entry_data = copy.deepcopy(CREATE_ENTRY_DATA_KLAP)
     entry_data[CONF_DEVICE_CONFIG] = {"foo": "bar"}
     mock_config_entry = MockConfigEntry(
         title="TPLink",
@@ -263,7 +263,7 @@ async def test_config_entry_errors(
     mock_config_entry = MockConfigEntry(
         title="TPLink",
         domain=DOMAIN,
-        data={**CREATE_ENTRY_DATA_AUTH},
+        data={**CREATE_ENTRY_DATA_KLAP},
         unique_id=MAC_ADDRESS,
     )
     mock_config_entry.add_to_hass(hass)
@@ -520,11 +520,11 @@ async def test_move_credentials_hash(
     from the device.
     """
     device_config = {
-        **DEVICE_CONFIG_AUTH.to_dict(
+        **DEVICE_CONFIG_KLAP.to_dict(
             exclude_credentials=True, credentials_hash="theHash"
         )
     }
-    entry_data = {**CREATE_ENTRY_DATA_AUTH, CONF_DEVICE_CONFIG: device_config}
+    entry_data = {**CREATE_ENTRY_DATA_KLAP, CONF_DEVICE_CONFIG: device_config}
 
     entry = MockConfigEntry(
         title="TPLink",
@@ -567,11 +567,11 @@ async def test_move_credentials_hash_auth_error(
     in async_setup_entry.
     """
     device_config = {
-        **DEVICE_CONFIG_AUTH.to_dict(
+        **DEVICE_CONFIG_KLAP.to_dict(
             exclude_credentials=True, credentials_hash="theHash"
         )
     }
-    entry_data = {**CREATE_ENTRY_DATA_AUTH, CONF_DEVICE_CONFIG: device_config}
+    entry_data = {**CREATE_ENTRY_DATA_KLAP, CONF_DEVICE_CONFIG: device_config}
 
     entry = MockConfigEntry(
         title="TPLink",
@@ -610,11 +610,11 @@ async def test_move_credentials_hash_other_error(
     at the end of the test.
     """
     device_config = {
-        **DEVICE_CONFIG_AUTH.to_dict(
+        **DEVICE_CONFIG_KLAP.to_dict(
             exclude_credentials=True, credentials_hash="theHash"
         )
     }
-    entry_data = {**CREATE_ENTRY_DATA_AUTH, CONF_DEVICE_CONFIG: device_config}
+    entry_data = {**CREATE_ENTRY_DATA_KLAP, CONF_DEVICE_CONFIG: device_config}
 
     entry = MockConfigEntry(
         title="TPLink",
@@ -647,9 +647,9 @@ async def test_credentials_hash(
     hass: HomeAssistant,
 ) -> None:
     """Test credentials_hash used to call connect."""
-    device_config = {**DEVICE_CONFIG_AUTH.to_dict(exclude_credentials=True)}
+    device_config = {**DEVICE_CONFIG_KLAP.to_dict(exclude_credentials=True)}
     entry_data = {
-        **CREATE_ENTRY_DATA_AUTH,
+        **CREATE_ENTRY_DATA_KLAP,
         CONF_DEVICE_CONFIG: device_config,
         CONF_CREDENTIALS_HASH: "theHash",
     }
@@ -684,9 +684,9 @@ async def test_credentials_hash_auth_error(
     hass: HomeAssistant,
 ) -> None:
     """Test credentials_hash is deleted after an auth failure."""
-    device_config = {**DEVICE_CONFIG_AUTH.to_dict(exclude_credentials=True)}
+    device_config = {**DEVICE_CONFIG_KLAP.to_dict(exclude_credentials=True)}
     entry_data = {
-        **CREATE_ENTRY_DATA_AUTH,
+        **CREATE_ENTRY_DATA_KLAP,
         CONF_DEVICE_CONFIG: device_config,
         CONF_CREDENTIALS_HASH: "theHash",
     }
@@ -710,7 +710,7 @@ async def test_credentials_hash_auth_error(
         await hass.async_block_till_done()
 
     expected_config = DeviceConfig.from_dict(
-        DEVICE_CONFIG_AUTH.to_dict(exclude_credentials=True, credentials_hash="theHash")
+        DEVICE_CONFIG_KLAP.to_dict(exclude_credentials=True, credentials_hash="theHash")
     )
     connect_mock.assert_called_with(config=expected_config)
     assert entry.state is ConfigEntryState.SETUP_ERROR

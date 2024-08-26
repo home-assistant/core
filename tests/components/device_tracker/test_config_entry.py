@@ -1,9 +1,9 @@
 """Test Device Tracker config entry things."""
 
+from collections.abc import Generator
 from typing import Any
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.device_tracker import (
     ATTR_HOST_NAME,

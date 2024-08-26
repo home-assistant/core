@@ -68,8 +68,9 @@ CONFIG_SCHEMA = vol.Schema(
 async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     """Get the options schema."""
     entry = cast(SchemaOptionsFlowHandler, handler.parent_handler).config_entry
-    device: OpenWebIfDevice = entry.runtime_data
-    bouquets = [b[1] for b in (await device.get_all_bouquets())["bouquets"]]
+    bouquets = [
+        b[1] for b in (await entry.runtime_data.device.get_all_bouquets())["bouquets"]
+    ]
 
     return vol.Schema(
         {

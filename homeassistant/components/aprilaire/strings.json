@@ -24,6 +24,14 @@
         "name": "Thermostat"
       }
     },
+    "humidifier": {
+      "humidifier": {
+        "name": "[%key:component::humidifier::title%]"
+      },
+      "dehumidifier": {
+        "name": "[%key:component::humidifier::entity_component::dehumidifier::name%]"
+      }
+    },
     "select": {
       "air_cleaning_event": {
         "name": "Air cleaning event",

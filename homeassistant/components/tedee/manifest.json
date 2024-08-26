@@ -8,5 +8,5 @@
   "iot_class": "local_push",
   "loggers": ["pytedee_async"],
   "quality_scale": "platinum",
-  "requirements": ["pytedee-async==0.2.17"]
+  "requirements": ["pytedee-async==0.2.20"]
 }

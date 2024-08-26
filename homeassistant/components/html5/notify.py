@@ -426,10 +426,7 @@ class HTML5NotificationService(BaseNotificationService):
     @property
     def targets(self):
         """Return a dictionary of registered targets."""
-        targets = {}
-        for registration in self.registrations:
-            targets[registration] = registration
-        return targets
+        return {registration: registration for registration in self.registrations}
 
     def dismiss(self, **kwargs):
         """Dismisses a notification."""
@@ -536,7 +533,7 @@ class HTML5NotificationService(BaseNotificationService):
             elif response.status_code > 399:
                 _LOGGER.error(
                     "There was an issue sending the notification %s: %s",
-                    response.status,
+                    response.status_code,
                     response.text,
                 )
 

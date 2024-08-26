@@ -109,7 +109,7 @@ def _time_weighted_average(
     for fstate, state in fstates:
         # The recorder will give us the last known state, which may be well
         # before the requested start time for the statistics
-        start_time = start if state.last_updated < start else state.last_updated
+        start_time = max(state.last_updated, start)
         if old_start_time is None:
             # Adjust start time, if there was no last known state
             start = start_time
@@ -640,32 +640,31 @@ def list_statistic_ids(
     result: dict[str, StatisticMetaData] = {}
 
     for state in entities:
-        state_class = state.attributes[ATTR_STATE_CLASS]
-        state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        entity_id = state.entity_id
+        if statistic_ids is not None and entity_id not in statistic_ids:
+            continue
 
+        attributes = state.attributes
+        state_class = attributes[ATTR_STATE_CLASS]
         provided_statistics = DEFAULT_STATISTICS[state_class]
         if statistic_type is not None and statistic_type not in provided_statistics:
             continue
 
-        if statistic_ids is not None and state.entity_id not in statistic_ids:
-            continue
-
         if (
-            "sum" in provided_statistics
-            and ATTR_LAST_RESET not in state.attributes
-            and state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+            (has_sum := "sum" in provided_statistics)
+            and ATTR_LAST_RESET not in attributes
+            and state_class == SensorStateClass.MEASUREMENT
         ):
             continue
 
-        result[state.entity_id] = {
+        result[entity_id] = {
             "has_mean": "mean" in provided_statistics,
-            "has_sum": "sum" in provided_statistics,
+            "has_sum": has_sum,
             "name": None,
             "source": RECORDER_DOMAIN,
-            "statistic_id": state.entity_id,
-            "unit_of_measurement": state_unit,
+            "statistic_id": entity_id,
+            "unit_of_measurement": attributes.get(ATTR_UNIT_OF_MEASUREMENT),
         }
-        continue
 
     return result
 

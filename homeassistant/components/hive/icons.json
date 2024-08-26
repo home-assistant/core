@@ -1,4 +1,22 @@
 {
+  "entity": {
+    "binary_sensor": {
+      "heating": {
+        "default": "mdi:radiator"
+      },
+      "hot_water": {
+        "default": "mdi:hand-water"
+      }
+    },
+    "sensor": {
+      "heating": {
+        "default": "mdi:radiator"
+      },
+      "hot_water": {
+        "default": "mdi:hand-water"
+      }
+    }
+  },
   "services": {
     "boost_heating_on": "mdi:radiator",
     "boost_heating_off": "mdi:radiator-off",

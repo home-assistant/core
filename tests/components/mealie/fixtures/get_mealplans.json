@@ -605,6 +605,17 @@
         "updateAt": "2024-01-02T06:35:05.209189",
         "lastMade": "2024-01-02T22:59:59"
       }
+    },
+    {
+      "date": "2024-01-21",
+      "entryType": "dinner",
+      "title": "Aquavite",
+      "text": "Dineren met de boys",
+      "recipeId": null,
+      "id": 1,
+      "groupId": "3931df86-0679-4579-8c63-4bedc9ca9a85",
+      "userId": "6caa6e4d-521f-4ef4-9ed7-388bdd63f47d",
+      "recipe": null
     }
   ],
   "next": null,

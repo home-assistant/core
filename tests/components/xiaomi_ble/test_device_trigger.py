@@ -18,7 +18,6 @@ from tests.common import (
     MockConfigEntry,
     async_capture_events,
     async_get_device_automations,
-    async_mock_service,
 )
 from tests.components.bluetooth import inject_bluetooth_service_info_bleak
 
@@ -27,12 +26,6 @@ from tests.components.bluetooth import inject_bluetooth_service_info_bleak
 def get_device_id(mac: str) -> tuple[str, str]:
     """Get device registry identifier for xiaomi_ble."""
     return (BLUETOOTH_DOMAIN, mac)
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 async def _async_setup_xiaomi_device(
@@ -399,7 +392,9 @@ async def test_get_triggers_for_invalid_device_id(
 
 
 async def test_if_fires_on_button_press(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry, calls: list[ServiceCall]
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for button press event trigger firing."""
     mac = "54:EF:44:E3:9C:BC"
@@ -452,15 +447,17 @@ async def test_if_fires_on_button_press(
     )
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "test_trigger_button_press"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "test_trigger_button_press"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
 
 async def test_if_fires_on_double_button_long_press(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry, calls: list[ServiceCall]
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for button press event trigger firing."""
     mac = "DC:ED:83:87:12:73"
@@ -513,15 +510,17 @@ async def test_if_fires_on_double_button_long_press(
     )
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "test_trigger_right_button_press"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "test_trigger_right_button_press"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
 
 async def test_if_fires_on_motion_detected(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry, calls: list[ServiceCall]
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for motion event trigger firing."""
     mac = "DE:70:E8:B2:39:0C"
@@ -567,8 +566,8 @@ async def test_if_fires_on_motion_detected(
     )
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "test_trigger_motion_detected"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "test_trigger_motion_detected"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -676,7 +675,9 @@ async def test_automation_with_invalid_trigger_event_property(
 
 
 async def test_triggers_for_invalid__model(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry, calls: list[ServiceCall]
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test invalid model doesn't return triggers."""
     mac = "DE:70:E8:B2:39:0C"

@@ -147,6 +147,20 @@
       'summary': 'Mousse de saumon',
       'uid': None,
     }),
+    dict({
+      'description': 'Dineren met de boys',
+      'end': dict({
+        'date': '2024-01-22',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'date': '2024-01-21',
+      }),
+      'summary': 'Aquavite',
+      'uid': None,
+    }),
   ])
 # ---
 # name: test_entities[calendar.mealie_breakfast-entry]
@@ -178,7 +192,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'breakfast',
-    'unique_id': '01J0BC4QM2YBRP6H5G933CETT7_breakfast',
+    'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_breakfast',
     'unit_of_measurement': None,
   })
 # ---
@@ -230,7 +244,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'dinner',
-    'unique_id': '01J0BC4QM2YBRP6H5G933CETT7_dinner',
+    'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_dinner',
     'unit_of_measurement': None,
   })
 # ---
@@ -238,12 +252,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'all_day': True,
-      'description': "Een traybake is eigenlijk altijd een goed idee. Deze zoete aardappel curry traybake dus ook. Waarom? Omdat je alleen maar wat groenten - en in dit geval kip - op een bakplaat (traybake dus) legt, hier wat kruiden aan toevoegt en deze in de oven schuift. Ideaal dus als je geen zin hebt om lang in de keuken te staan. Maar gewoon lekker op de bank wil ploffen om te wachten tot de oven klaar is. Joe! That\\'s what we like. Deze zoete aardappel curry traybake bevat behalve zoete aardappel en curry ook kikkererwten, kippendijfilet en bloemkoolroosjes. Je gebruikt yoghurt en limoen als een soort dressing. En je serveert deze heerlijke traybake met naanbrood. Je kunt natuurljk ook voor deze traybake met chipolataworstjes gaan. Wil je graag meer ovengerechten? Dan moet je eigenlijk even kijken naar onze Ovenbijbel. Onmisbaar in je keuken! We willen je deze zoete aardappelstamppot met prei ook niet onthouden. Megalekker bordje comfortfood als je \\'t ons vraagt.",
-      'end_time': '2024-01-23 00:00:00',
+      'description': 'Dineren met de boys',
+      'end_time': '2024-01-22 00:00:00',
       'friendly_name': 'Mealie Dinner',
       'location': '',
-      'message': 'Zoete aardappel curry traybake',
-      'start_time': '2024-01-22 00:00:00',
+      'message': 'Aquavite',
+      'start_time': '2024-01-21 00:00:00',
     }),
     'context': <ANY>,
     'entity_id': 'calendar.mealie_dinner',
@@ -282,7 +296,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'lunch',
-    'unique_id': '01J0BC4QM2YBRP6H5G933CETT7_lunch',
+    'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_lunch',
     'unit_of_measurement': None,
   })
 # ---
@@ -290,12 +304,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'all_day': True,
-      'description': 'Te explicamos paso a paso, de manera sencilla, la elaboración de la receta de pollo al curry con leche de coco en 10 minutos. Ingredientes, tiempo de...',
-      'end_time': '2024-01-24 00:00:00',
+      'description': 'This All-American beef stew recipe includes tender beef coated in a rich, intense sauce and vegetables that bring complementary texture and flavor.',
+      'end_time': '2024-01-23 00:00:00',
       'friendly_name': 'Mealie Lunch',
       'location': '',
-      'message': 'Receta de pollo al curry en 10 minutos (con vídeo incluido)',
-      'start_time': '2024-01-23 00:00:00',
+      'message': 'All-American Beef Stew Recipe',
+      'start_time': '2024-01-22 00:00:00',
     }),
     'context': <ANY>,
     'entity_id': 'calendar.mealie_lunch',
@@ -334,7 +348,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'side',
-    'unique_id': '01J0BC4QM2YBRP6H5G933CETT7_side',
+    'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_side',
     'unit_of_measurement': None,
   })
 # ---

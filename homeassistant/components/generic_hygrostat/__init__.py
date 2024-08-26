@@ -7,6 +7,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.device import (
+    async_remove_stale_devices_links_keep_entity_device,
+)
 from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "generic_hygrostat"
@@ -78,6 +81,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
+
+    async_remove_stale_devices_links_keep_entity_device(
+        hass,
+        entry.entry_id,
+        entry.options[CONF_HUMIDIFIER],
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, (Platform.HUMIDIFIER,))
     entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
     return True
