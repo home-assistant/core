@@ -3,7 +3,6 @@
 from typing import Any
 
 from pytouchlinesl import Zone
-from pytouchlinesl.client.models import GlobalScheduleModel
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -12,10 +11,12 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import TouchlineSLConfigEntry
+from .const import DOMAIN
 from .coordinator import TouchlineSLModuleCoordinator
 
 
@@ -25,26 +26,21 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Touchline devices."""
-    account = entry.runtime_data
-
-    for module in await account.modules():
-        coordinator = TouchlineSLModuleCoordinator(hass, module=module)
-        await coordinator.async_config_entry_first_refresh()
+    coordinators = entry.runtime_data
+    for module_id in coordinators:
         async_add_entities(
-            (
-                TouchlineSLZone(coordinator=coordinator, zone_id=z)
-                for z in coordinator.data["zones"]
-            ),
-            True,
+            TouchlineSLZone(coordinator=coordinators[module_id], zone_id=z)
+            for z in coordinators[module_id].data.zones
         )
 
 
 CONST_TEMP_PRESET_NAME = "Constant Temperature"
 
 
-class TouchlineSLZone(CoordinatorEntity, ClimateEntity):
+class TouchlineSLZone(CoordinatorEntity[TouchlineSLModuleCoordinator], ClimateEntity):
     """Roth Touchline SL Zone."""
 
+    _attr_has_entity_name = True
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_mode = HVACMode.HEAT
     _attr_hvac_modes = [HVACMode.HEAT]
@@ -52,48 +48,43 @@ class TouchlineSLZone(CoordinatorEntity, ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
 
-    def __init__(self, *, coordinator, zone_id: int) -> None:
+    def __init__(self, coordinator: TouchlineSLModuleCoordinator, zone_id: int) -> None:
         """Construct a Touchline SL climate zone."""
         super().__init__(coordinator, context=zone_id)
-        self.id: int = zone_id
-        self._attr_unique_id = f"touchlinesl-zone-{self.id}"
+        self.zone_id: int = zone_id
+
+        self._attr_name = None
+        self._attr_unique_id = f"{self.zone_id}"
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(coordinator.data.zones[zone_id].id))},
+            name=coordinator.data.zones[zone_id].name,
+            manufacturer="Roth",
+            via_device=(DOMAIN, coordinator.data.module.id),
+            model="zone",
+        )
+
         # Call this in __init__ so data is populated right away, since it's
         # already available in the coordinator data.
-        self._update_fields_from_coordinator()
+        self.set_attr()
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._update_fields_from_coordinator()
-        self.async_write_ha_state()
+        self.set_attr()
+        super()._handle_coordinator_update()
 
-    def _update_fields_from_coordinator(self):
-        """Populate attributes with data from the coordinator."""
-        zone: Zone = self.coordinator.data["zones"][self.id]
-        schedule_names = self.coordinator.data["schedules"].keys()
-
-        self._zone = zone
-        self._attr_name = self._zone.name
-        self._attr_current_temperature = self._zone.temperature
-        self._attr_target_temperature = self._zone.target_temperature
-        self._attr_current_humidity = int(self._zone.humidity)
-        self._attr_preset_modes = [*schedule_names, CONST_TEMP_PRESET_NAME]
-
-        if self._zone.mode == "constantTemp":
-            self._attr_preset_mode = CONST_TEMP_PRESET_NAME
-        elif self._zone.mode == "globalSchedule":
-            schedule = self._zone.schedule
-            assert isinstance(schedule, GlobalScheduleModel)
-            self._attr_preset_mode = schedule.name
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return super().available and self.zone_id in self.coordinator.data.zones
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if kwargs.get(ATTR_TEMPERATURE, None):
-            self._attr_target_temperature = kwargs.get(ATTR_TEMPERATURE)
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+            return
 
-        if self._zone and self._attr_target_temperature:
-            await self._zone.set_temperature(self._attr_target_temperature)
-
+        await self._zone.set_temperature(temperature)
         await self.coordinator.async_request_refresh()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -106,6 +97,23 @@ class TouchlineSLZone(CoordinatorEntity, ClimateEntity):
             await self.coordinator.async_request_refresh()
             return
 
-        if schedule := self.coordinator.data["schedules"][preset_mode]:
+        if schedule := self.coordinator.data.schedules[preset_mode]:
             await self._zone.set_schedule(schedule_id=schedule.id)
             await self.coordinator.async_request_refresh()
+
+    def set_attr(self) -> None:
+        """Populate attributes with data from the coordinator."""
+        zone: Zone = self.coordinator.data.zones[self.zone_id]
+        schedule_names = self.coordinator.data.schedules.keys()
+
+        self._zone = zone
+        self._attr_current_temperature = self._zone.temperature
+        self._attr_target_temperature = self._zone.target_temperature
+        self._attr_current_humidity = int(self._zone.humidity)
+        self._attr_preset_modes = [*schedule_names, CONST_TEMP_PRESET_NAME]
+
+        if self._zone.mode == "constantTemp":
+            self._attr_preset_mode = CONST_TEMP_PRESET_NAME
+        elif self._zone.mode == "globalSchedule":
+            schedule = self._zone.schedule
+            self._attr_preset_mode = schedule.name

@@ -5,14 +5,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pytouchlinesl import Module, TouchlineSL
+from pytouchlinesl import TouchlineSL
 from pytouchlinesl.client import RothAPIError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import CONFIG_ENTRY_VERSION, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,13 +27,10 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class TouchlineSLConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Roth Touchline SL."""
 
-    VERSION = CONFIG_ENTRY_VERSION
-
     def __init__(self) -> None:
         """Construct a new ConfigFlow for the Roth Touchline SL module."""
         self.account = None
         self.data: dict[str, str] = {}
-        self.modules: list[Module] = []
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -43,13 +40,11 @@ class TouchlineSLConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                username: str = user_input.get(CONF_USERNAME, "")
-                password: str = user_input.get(CONF_PASSWORD, "")
-                account = TouchlineSL(username=username, password=password)
+                account = TouchlineSL(
+                    username=user_input[CONF_USERNAME],
+                    password=user_input[CONF_PASSWORD],
+                )
                 await account.modules()
-
-                self.data.update(user_input)
-                return self.async_create_entry(title=username, data=self.data)
             except RothAPIError as e:
                 if e.status == 401:
                     errors["base"] = "invalid_auth"
@@ -58,6 +53,15 @@ class TouchlineSLConfigFlow(ConfigFlow, domain=DOMAIN):
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                self.data.update(user_input)
+
+                await self.async_set_unique_id(user_input[CONF_USERNAME])
+                self._abort_if_unique_id_configured()
+
+                return self.async_create_entry(
+                    title=user_input[CONF_USERNAME], data=self.data
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

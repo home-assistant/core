@@ -12,13 +12,6 @@
           "portal_username": "Your Roth Touchline SL username",
           "portal_password": "Your Roth Touchline SL password"
         }
-      },
-      "module": {
-        "title": "Select a module",
-        "description": "Select a Roth Touchline SL module",
-        "data": {
-          "module_id": "The Roth Touchline SL module to control"
-        }
       }
     },
 

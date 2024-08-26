@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -16,7 +17,16 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 _LOGGER = logging.getLogger(__name__)
 
 
-class TouchlineSLModuleCoordinator(DataUpdateCoordinator):
+@dataclass
+class TouchlineSLModuleData:
+    """Provide type safe way of accessing module data from the coordinator."""
+
+    module: Module
+    zones: dict[int, Zone]
+    schedules: dict[str, GlobalScheduleModel]
+
+
+class TouchlineSLModuleCoordinator(DataUpdateCoordinator[TouchlineSLModuleData]):
     """A coordinator to manage the fetching of Touchline SL data."""
 
     def __init__(self, hass: HomeAssistant, module: Module) -> None:
@@ -29,29 +39,21 @@ class TouchlineSLModuleCoordinator(DataUpdateCoordinator):
         )
 
         self.module = module
-        self._zones: list[Zone] = []
-        self._schedules: list[GlobalScheduleModel] = []
 
-    async def _async_setup(self):
-        """Set up the coordinator."""
-        self._zones = await self.module.zones()
-        self._schedules = await self.module.schedules()
-
-    async def _async_update_data(
-        self,
-    ) -> dict[str, dict[int, Zone] | dict[str, GlobalScheduleModel]]:
+    async def _async_update_data(self) -> TouchlineSLModuleData:
         """Fetch data from the upstream API and pre-process into the right format."""
         try:
-            self._zones = await self.module.zones()
-            self._schedules = await self.module.schedules()
-
-            return {
-                "zones": {z.id: z for z in self._zones},
-                "schedules": {s.name: s for s in self._schedules},
-            }
+            zones = await self.module.zones()
+            schedules = await self.module.schedules()
         except RothAPIError as error:
             if error.status == 401:
                 # Trigger a reauthentication if the data update fails due to
                 # bad authentication.
                 raise ConfigEntryAuthFailed from error
             raise UpdateFailed(error) from error
+
+        return TouchlineSLModuleData(
+            module=self.module,
+            zones={z.id: z for z in zones},
+            schedules={s.name: s for s in schedules},
+        )
