@@ -337,7 +337,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
                 ) from err
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Show Device Attributes."""
         return self._attributes
 
