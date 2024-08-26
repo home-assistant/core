@@ -1856,4 +1856,4 @@ async def test_default_engine_prefer_entity(
     assert entity_engine == "tts.new_test"
     provider_engine = tts.async_resolve_engine(hass, "test")
     assert provider_engine == "test"
-    assert tts.async_default_engine(hass) == "tts.test"
+    assert tts.async_default_engine(hass) == "tts.new_test"
