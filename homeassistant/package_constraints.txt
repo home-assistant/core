@@ -18,13 +18,13 @@ bleak-retry-connector==3.5.0
 bleak==0.22.2
 bluetooth-adapters==0.19.4
 bluetooth-auto-recovery==1.4.2
-bluetooth-data-tools==1.19.4
-cached_ipaddress==0.3.0
+bluetooth-data-tools==1.20.0
+cached-ipaddress==0.5.0
 certifi>=2021.5.30
 ciso8601==2.3.1
 cryptography==43.0.0
 dbus-fast==2.23.0
-fnv-hash-fast==0.5.0
+fnv-hash-fast==1.0.2
 ha-av==10.1.1
 ha-ffmpeg==3.2.0
 habluetooth==3.3.2
@@ -49,6 +49,7 @@ pymicro-vad==1.0.1
 PyNaCl==1.5.0
 pyOpenSSL==24.2.1
 pyserial==3.5
+pyspeex-noise==1.0.0
 python-slugify==8.0.4
 PyTurboJPEG==1.7.1
 pyudev==0.24.1
@@ -56,7 +57,7 @@ PyYAML==6.0.2
 requests==2.32.3
 SQLAlchemy==2.0.31
 typing-extensions>=4.12.2,<5.0
-ulid-transform==0.13.1
+ulid-transform==1.0.2
 urllib3>=1.26.5,<2
 voluptuous-openapi==0.0.5
 voluptuous-serialize==2.6.0

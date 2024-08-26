@@ -471,7 +471,7 @@ async def test_dhcp_ip_update(
 
     if not last_update_success:
         # ensure the last_update_succes is False for the device_coordinator.
-        reolink_connect.get_states = AsyncMock(side_effect=ReolinkError("Test error"))
+        reolink_connect.get_states.side_effect = ReolinkError("Test error")
         freezer.tick(DEVICE_UPDATE_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
