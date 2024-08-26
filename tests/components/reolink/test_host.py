@@ -59,9 +59,7 @@ async def test_webhook_callback(
 
     # test webhook callback single channel with error in event callback
     signal_ch.reset_mock()
-    reolink_connect.ONVIF_event_callback = AsyncMock(
-        side_effect=Exception("Test error")
-    )
+    reolink_connect.ONVIF_event_callback.side_effect = Exception("Test error")
     await client.post(f"/api/webhook/{webhook_id}", data="test_data")
     signal_ch.assert_not_called()
 

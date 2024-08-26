@@ -81,18 +81,18 @@ class SirenSwitch(BaseRingSwitch):
         super()._handle_coordinator_update()
 
     @exception_wrap
-    def _set_switch(self, new_state: int) -> None:
+    async def _async_set_switch(self, new_state: int) -> None:
         """Update switch state, and causes Home Assistant to correctly update."""
-        self._device.siren = new_state
+        await self._device.async_set_siren(new_state)
 
         self._attr_is_on = new_state > 0
         self._no_updates_until = dt_util.utcnow() + SKIP_UPDATES_DELAY
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on for 30 seconds."""
-        self._set_switch(1)
+        await self._async_set_switch(1)
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the siren off."""
-        self._set_switch(0)
+        await self._async_set_switch(0)

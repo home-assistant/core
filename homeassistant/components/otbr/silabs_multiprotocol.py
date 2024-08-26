@@ -18,7 +18,7 @@ from homeassistant.components.thread import async_add_dataset
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import DOMAIN
+from .const import DATA_OTBR, DOMAIN
 from .util import OTBRData
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,10 +45,10 @@ def async_get_otbr_data[**_P, _R, _R_Def](
             hass: HomeAssistant, *args: _P.args, **kwargs: _P.kwargs
         ) -> _R | _R_Def:
             """Fetch OTBR data and pass to orig_func."""
-            if DOMAIN not in hass.data:
+            if DATA_OTBR not in hass.data:
                 return retval
 
-            data: OTBRData = hass.data[DOMAIN]
+            data = hass.data[DATA_OTBR]
 
             if not is_multiprotocol_url(data.url):
                 return retval

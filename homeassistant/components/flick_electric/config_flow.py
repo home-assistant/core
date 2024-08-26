@@ -2,12 +2,13 @@
 
 import asyncio
 import logging
+from typing import Any
 
 from pyflick.authentication import AuthException, SimpleFlickAuth
 from pyflick.const import DEFAULT_CLIENT_ID, DEFAULT_CLIENT_SECRET
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
@@ -55,7 +56,9 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return token is not None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle gathering login info."""
         errors = {}
         if user_input is not None:
