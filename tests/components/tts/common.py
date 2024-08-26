@@ -175,10 +175,7 @@ class MockProvider(BaseProvider, Provider):
 class MockTTSEntity(BaseProvider, TextToSpeechEntity):
     """Test speech API provider."""
 
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return "Test"
+    _attr_name = "Test"
 
 
 class MockTTS(MockPlatform):
