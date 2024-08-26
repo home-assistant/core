@@ -38,7 +38,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         translation_key="paper",
     ),
     SensorEntityDescription(
-        key="pmd",
+        key="pmdzak",
         translation_key="plastic",
     ),
     SensorEntityDescription(
