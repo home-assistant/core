@@ -497,7 +497,7 @@ async def test_default_engine_entity(
 
 
 @pytest.mark.parametrize("config_flow_test_domain", ["new_test"])
-async def test_default_engine_prefer_provider(
+async def test_default_engine_prefer_entity(
     hass: HomeAssistant,
     tmp_path: Path,
     mock_provider_entity: MockProviderEntity,
@@ -520,7 +520,7 @@ async def test_default_engine_prefer_provider(
     provider_engine = async_get_speech_to_text_engine(hass, "test")
     assert provider_engine is not None
     assert provider_engine.name == "test"
-    assert async_default_engine(hass) == "test"
+    assert async_default_engine(hass) == "stt.new_test"
 
 
 async def test_get_engine_legacy(
