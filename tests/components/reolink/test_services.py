@@ -26,7 +26,7 @@ async def test_play_chime_service_entity(
 ) -> None:
     """Test chime play service."""
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SELECT]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
@@ -74,6 +74,39 @@ async def test_play_chime_service_entity(
         )
 
     reolink_connect.chime.return_value = None
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            REOLINK_DOMAIN,
+            "play_chime",
+            {ATTR_DEVICE_ID: [device_id], ATTR_RINGTONE: "attraction"},
+            blocking=True,
+        )
+
+
+async def test_play_chime_service_unloaded(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+    test_chime: Chime,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test chime play service when config entry is unloaded."""
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SELECT]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_id = f"{Platform.SELECT}.test_chime_visitor_ringtone"
+    entity = entity_registry.async_get(entity_id)
+    assert entity is not None
+    device_id = entity.device_id
+
+    # Unload the config entry
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+    # Test chime play service
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             REOLINK_DOMAIN,
