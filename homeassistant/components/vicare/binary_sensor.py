@@ -139,8 +139,8 @@ def _build_entities_for_device(
 
     return [
         ViCareBinarySensor(
-            device,
             device_config,
+            device,
             description,
         )
         for description in GLOBAL_SENSORS
@@ -157,8 +157,8 @@ def _build_entities_for_component(
 
     return [
         ViCareBinarySensor(
-            component,
             device_config,
+            component,
             description,
         )
         for component in components
@@ -190,8 +190,8 @@ class ViCareBinarySensor(ViCareEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        api: PyViCareDevice,
         device_config: PyViCareDeviceConfig,
+        api: PyViCareDevice | PyViCareHeatingDeviceComponent,
         description: ViCareBinarySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""

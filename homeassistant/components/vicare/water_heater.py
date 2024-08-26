@@ -69,9 +69,9 @@ def _build_entities(
 
     return [
         ViCareWater(
+            device.config,
             device.api,
             circuit,
-            device.config,
         )
         for device in device_list
         for circuit in get_circuits(device.api)
@@ -107,12 +107,12 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
 
     def __init__(
         self,
-        api: PyViCareDevice,
-        circuit: PyViCareHeatingCircuit,
         device_config: PyViCareDeviceConfig,
+        device: PyViCareDevice,
+        circuit: PyViCareHeatingCircuit,
     ) -> None:
         """Initialize the DHW water_heater device."""
-        super().__init__(device_config, api, circuit.id)
+        super().__init__(device_config, device, circuit.id)
         self._circuit = circuit
         self._attributes: dict[str, Any] = {}
         self._current_mode = None
