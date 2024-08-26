@@ -186,6 +186,7 @@ MOCK_CONFIG = {
         "device": {"name": "Test name"},
     },
     "wifi": {"sta": {"enable": True}, "sta1": {"enable": False}},
+    "ws": {"enable": False, "server": None},
 }
 
 MOCK_SHELLY_COAP = {
