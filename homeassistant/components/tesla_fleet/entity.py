@@ -5,7 +5,6 @@ from typing import Any
 
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
 
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -106,15 +105,6 @@ class TeslaFleetVehicleEntity(TeslaFleetEntity):
     async def wake_up_if_asleep(self) -> None:
         """Wake up the vehicle if its asleep."""
         await wake_up_vehicle(self.vehicle)
-
-    def raise_for_signing(self):
-        """Raise an error if signing is required."""
-        # This is required until command signing is implemented upstream
-        if self.vehicle.signing:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="command_requires_signing",
-            )
 
 
 class TeslaFleetEnergyLiveEntity(TeslaFleetEntity):
