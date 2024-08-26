@@ -29,7 +29,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.hass_dict import HassKey
 
-from .receiver import Receiver, ReceiverInfo
+from .receiver import Receiver, ReceiverInfo, async_discover, async_interview
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -268,34 +268,18 @@ async def async_setup_platform(
 
         _LOGGER.debug("Manually creating receiver: %s (%s)", name, host)
 
-        @callback
-        async def async_onkyo_interview_callback(conn: pyeiscp.Connection) -> None:
-            """Receiver interviewed, connection not yet active."""
-            info = ReceiverInfo(conn.host, conn.port, conn.name, conn.identifier)
-            _LOGGER.debug("Receiver interviewed: %s (%s)", info.model_name, info.host)
-            if info.host not in KNOWN_HOSTS:
-                KNOWN_HOSTS.append(info.host)
-                await async_setup_receiver(info, False, name)
+        info = await async_interview(host)
 
-        await pyeiscp.Connection.discover(
-            host=host,
-            discovery_callback=async_onkyo_interview_callback,
-        )
+        if info is not None and info.host not in KNOWN_HOSTS:
+            KNOWN_HOSTS.append(info.host)
+            await async_setup_receiver(info, False, name)
     else:
-        _LOGGER.debug("Discovering receivers")
+        infos = await async_discover()
 
-        @callback
-        async def async_onkyo_discovery_callback(conn: pyeiscp.Connection) -> None:
-            """Receiver discovered, connection not yet active."""
-            info = ReceiverInfo(conn.host, conn.port, conn.name, conn.identifier)
-            _LOGGER.debug("Receiver discovered: %s (%s)", info.model_name, info.host)
+        for info in infos:
             if info.host not in KNOWN_HOSTS:
                 KNOWN_HOSTS.append(info.host)
                 await async_setup_receiver(info, True, None)
-
-        await pyeiscp.Connection.discover(
-            discovery_callback=async_onkyo_discovery_callback,
-        )
 
     @callback
     def close_receiver(_event: Event) -> None:
