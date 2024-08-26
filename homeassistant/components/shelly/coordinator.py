@@ -673,7 +673,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         config = self.device.config
         if (
             (ws_config := config.get("ws"))
-            and not ws_config["server"]
+            and (not ws_config["server"] or not ws_config["enable"])
             and (ws_url := get_rpc_ws_url(self.hass))
         ):
             LOGGER.debug(
