@@ -26,7 +26,7 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
     entry: ConfigEntry | None = None
     username: str | None = None
     token: str | None = None
-    discovered_devices: dict[str, SwitcherBase] | None = None
+    discovered_devices: dict[str, SwitcherBase] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

@@ -54,11 +54,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> 
             device.token_needed,
         )
 
-        if device.token_needed:
-            _LOGGER.info("Found a Switcher device that needs a token")
-            if not entry.data.get(CONF_TOKEN):
-                entry.async_start_reauth(hass)
-                return
+        if device.token_needed and not entry.data.get(CONF_TOKEN):
+            entry.async_start_reauth(hass)
+            return
 
         coordinator = SwitcherDataUpdateCoordinator(hass, entry, device)
         coordinator.async_setup()
