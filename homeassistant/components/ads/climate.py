@@ -114,14 +114,13 @@ class AdsClimate(AdsEntity, ClimateEntity):
         self._ads_var_actual_temp = ads_var_actual_temp
         self._hvac_mode = ads_var_mode
         self._name = name
-        self._attr_target_temperature = 30.0
+        self._attr_target_temperature = 24.0
         self._attr_current_temperature = 24.0
-        self._attr_hvac_mode = HVACMode.OFF
-        self._attr_hvac_action = HVACAction.IDLE
+        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+        self._attr_hvac_mode = HVACMode.AUTO
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
         )
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_preset_mode = self.PRESET_NONE
 
     async def async_added_to_hass(self) -> None:
@@ -176,7 +175,12 @@ class AdsClimate(AdsEntity, ClimateEntity):
     @property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available HVAC modes."""
-        return [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF]
+        return [
+            HVACMode.OFF,
+            HVACMode.HEAT,
+            HVACMode.COOL,
+            HVACMode.AUTO,
+        ]
 
     @property
     def hvac_action(self) -> HVACAction | None:
@@ -230,9 +234,10 @@ class AdsClimate(AdsEntity, ClimateEntity):
         """Set new HVAC mode."""
 
         mode = {
+            HVACMode.OFF: 0,
             HVACMode.HEAT: 1,
             HVACMode.COOL: 2,
-            HVACMode.OFF: 0,
+            HVACMode.AUTO: 4,
         }.get(hvac_mode, 0)
         self._ads_hub.write_by_name(self._ads_var_mode, mode, pyads.PLCTYPE_INT)
         self._hvac_mode = hvac_mode
@@ -242,19 +247,15 @@ class AdsClimate(AdsEntity, ClimateEntity):
         """Set new target temperature."""
         if ATTR_TEMPERATURE in kwargs:
             new_temp = kwargs[ATTR_TEMPERATURE]
-            # Ensure that the temperature is written to the ADS system
             self._attr_target_temperature = new_temp
             self._ads_hub.write_by_name(
-                self._ads_var_set_temp,
-                new_temp,
-                pyads.PLCTYPE_LREAL,
+                self._ads_var_set_temp, new_temp, pyads.PLCTYPE_LREAL
             )
             self.async_write_ha_state()
 
     async def async_update(self) -> None:
         """Retrieve the latest state from the ADS device."""
         # Read the actual temperature value from the ADS device
-
         self._attr_current_temperature = self._ads_hub.read_by_name(
             self._ads_var_actual_temp, pyads.PLCTYPE_LREAL
         )
@@ -268,6 +269,7 @@ class AdsClimate(AdsEntity, ClimateEntity):
             0: HVACMode.OFF,
             1: HVACMode.HEAT,
             2: HVACMode.COOL,
+            4: HVACMode.AUTO,
         }.get(mode, HVACMode.OFF)
 
         preset_value = self._ads_hub.read_by_name(
