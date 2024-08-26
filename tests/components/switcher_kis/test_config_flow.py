@@ -121,7 +121,7 @@ async def test_reauth_successful(
 
     with (
         patch(
-            "homeassistant.components.switcher_kis.utils.validate_input",
+            "aioswitcher.device.tools.validate_token",
             return_value=True,
         ),
         patch(

@@ -35,9 +35,7 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
         if self._async_current_entries(True):
             return self.async_abort(reason="single_instance_allowed")
 
-        self.discovered_devices = await self.hass.async_create_task(
-            async_discover_devices()
-        )
+        self.discovered_devices = await async_discover_devices()
 
         return self.async_show_form(step_id="confirm")
 
@@ -99,12 +97,11 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
             token_is_valid = await validate_token(
                 user_input[CONF_USERNAME], user_input[CONF_TOKEN]
             )
-            if not token_is_valid:
-                return self.async_abort(reason="reauth_unsuccessful")
-
-            return self.async_update_reload_and_abort(
-                self.entry, data={**self.entry.data, **user_input}
-            )
+            if token_is_valid:
+                return self.async_update_reload_and_abort(
+                    self.entry, data={**self.entry.data, **user_input}
+                )
+            errors["base"] = "invalid_auth"
 
         schema = {
             vol.Required(CONF_USERNAME): str,
