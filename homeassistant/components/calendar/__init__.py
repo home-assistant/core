@@ -500,14 +500,19 @@ class CalendarEntity(Entity):
         if (event := self.event) is None:
             return None
 
-        return {
-            "message": event.summary,
-            "all_day": event.all_day,
-            "start_time": event.start_datetime_local.strftime(DATE_STR_FORMAT),
-            "end_time": event.end_datetime_local.strftime(DATE_STR_FORMAT),
-            "location": event.location if event.location else "",
-            "description": event.description if event.description else "",
-        }
+        now = dt_util.now()
+
+        if event.start_datetime_local <= now < event.end_datetime_local:
+            return {
+                "message": event.summary,
+                "all_day": event.all_day,
+                "start_time": event.start_datetime_local.strftime(DATE_STR_FORMAT),
+                "end_time": event.end_datetime_local.strftime(DATE_STR_FORMAT),
+                "location": event.location if event.location else "",
+                "description": event.description if event.description else "",
+            }
+
+        return None
 
     @final
     @property
