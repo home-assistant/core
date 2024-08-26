@@ -36,6 +36,10 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import config_validation as cv, entity, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entityfilter import (
+    INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
+    convert_include_exclude_filter,
+)
 from homeassistant.helpers.event import (
     TrackTemplate,
     TrackTemplateResult,
@@ -366,14 +370,17 @@ def _send_handle_get_states_response(
 @callback
 def _forward_entity_changes(
     send_message: Callable[[str | bytes | dict[str, Any]], None],
-    entity_ids: set[str],
+    entity_ids: set[str] | None,
+    entity_filter: Callable[[str], bool] | None,
     user: User,
     message_id_as_bytes: bytes,
     event: Event[EventStateChangedData],
 ) -> None:
     """Forward entity state changed events to websocket."""
     entity_id = event.data["entity_id"]
-    if entity_ids and entity_id not in entity_ids:
+    if (entity_ids and entity_id not in entity_ids) or (
+        entity_filter and not entity_filter(entity_id)
+    ):
         return
     # We have to lookup the permissions again because the user might have
     # changed since the subscription was created.
@@ -381,7 +388,7 @@ def _forward_entity_changes(
     if (
         not user.is_admin
         and not permissions.access_all_entities(POLICY_READ)
-        and not permissions.check_entity(event.data["entity_id"], POLICY_READ)
+        and not permissions.check_entity(entity_id, POLICY_READ)
     ):
         return
     send_message(messages.cached_state_diff_message(message_id_as_bytes, event))
@@ -392,13 +399,16 @@ def _forward_entity_changes(
     {
         vol.Required("type"): "subscribe_entities",
         vol.Optional("entity_ids"): cv.entity_ids,
+        **INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.schema,
     }
 )
 def handle_subscribe_entities(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle subscribe entities command."""
-    entity_ids = set(msg.get("entity_ids", []))
+    entity_ids = set(msg.get("entity_ids", [])) or None
+    _filter = convert_include_exclude_filter(msg)
+    entity_filter = None if _filter.empty_filter else _filter.get_filter()
     # We must never await between sending the states and listening for
     # state changed events or we will introduce a race condition
     # where some states are missed
@@ -410,6 +420,7 @@ def handle_subscribe_entities(
             _forward_entity_changes,
             connection.send_message,
             entity_ids,
+            entity_filter,
             connection.user,
             message_id_as_bytes,
         ),
