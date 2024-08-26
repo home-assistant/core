@@ -10,7 +10,7 @@ import logging
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import (
-    HeatingDeviceWithComponent as PyViCareHeatingDeviceWithComponent,
+    HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidDataError,
@@ -925,7 +925,7 @@ class ViCareSensor(ViCareEntity, SensorEntity):
         self,
         device_config: PyViCareDeviceConfig,
         device: PyViCareDevice,
-        component: PyViCareHeatingDeviceWithComponent | None,
+        component: PyViCareHeatingDeviceComponent | None,
         description: ViCareSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""

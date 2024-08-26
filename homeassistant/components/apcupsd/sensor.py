@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
-    STATE_UNKNOWN,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -484,7 +483,7 @@ class APCUPSdSensor(CoordinatorEntity[APCUPSdCoordinator], SensorEntity):
         # performed) and may disappear again after certain event. So we mark the state as "unknown"
         # when it becomes unknown after such events.
         if key not in self.coordinator.data:
-            self._attr_native_value = STATE_UNKNOWN
+            self._attr_native_value = None
             return
 
         self._attr_native_value, inferred_unit = infer_unit(self.coordinator.data[key])

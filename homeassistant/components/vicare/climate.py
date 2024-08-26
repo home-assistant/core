@@ -139,7 +139,6 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
     _current_action: bool | None = None
     _current_mode: str | None = None
     _current_program: str | None = None
-    _attributes: dict[str, Any] = {}
     _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
@@ -151,7 +150,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         """Initialize the climate device."""
         super().__init__(device_config, device, circuit, self._attr_translation_key)
         self._device = device
-
+        self._attributes: dict[str, Any] = {}
         self._attributes["vicare_programs"] = self._api.getPrograms()
         self._attr_preset_modes = [
             preset
