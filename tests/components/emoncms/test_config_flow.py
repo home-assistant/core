@@ -42,6 +42,7 @@ async def test_flow_import_failure(
         data=YAML,
     )
     assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == EMONCMS_FAILURE["message"]
 
 
 async def test_flow_import_already_configured(
