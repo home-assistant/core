@@ -126,6 +126,14 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
             lambda state: state in (OverkizCommandParam.ON, OverkizCommandParam.PROG)
         ),
     ),
+    OverkizBinarySensorDescription(
+        key=OverkizState.MODBUSLINK_DHW_MODE,
+        name="Manual mode",
+        value_fn=(
+            lambda state: state
+            in (OverkizCommandParam.MANUAL, OverkizCommandParam.MANUAL_ECO_INACTIVE)
+        ),
+    ),
 ]
 
 SUPPORTED_STATES = {
