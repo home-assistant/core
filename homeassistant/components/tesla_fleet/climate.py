@@ -201,8 +201,8 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
 
     _attr_precision = PRECISION_WHOLE
     _attr_target_temperature_step = 5
-    _attr_min_temp = 30
-    _attr_max_temp = 40
+    _attr_min_temp = COP_LEVELS["Low"]
+    _attr_max_temp = COP_LEVELS["High"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = list(COP_MODES.values())
     _enable_turn_on_off_backwards_compatibility = False
