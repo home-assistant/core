@@ -14,7 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TouchlineSLConfigEntry
-from .const import CONF_MODULE
 
 
 async def async_setup_entry(
@@ -23,13 +22,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Touchline devices."""
-    runtime_data = entry.runtime_data
+    account = entry.runtime_data
 
-    if module := await runtime_data.module(module_id=entry.data[CONF_MODULE]):
+    for module in await account.modules():
         zones = await module.zones()
         async_add_entities(
-            (TouchlineSLZone(zone=z, module=module) for z in zones),
-            True,
+            (TouchlineSLZone(zone=z, module=module) for z in zones), True
         )
 
 
