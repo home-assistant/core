@@ -257,7 +257,7 @@ async def test_invalid_error(
             blocking=True,
         )
     mock_on.assert_called_once()
-    assert str(error.value) == "Command failed. The data request or command is unknown."
+    assert str(error.value) == "Command failed: The data request or command is unknown."
 
 
 @pytest.mark.parametrize("response", COMMAND_ERRORS)
@@ -383,11 +383,11 @@ async def test_climate_noscope(
     await setup_platform(hass, readonly_config_entry, [Platform.CLIMATE])
     entity_id = "climate.test_climate"
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+            {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.OFF},
             blocking=True,
         )
 
