@@ -49,6 +49,9 @@
       "internet": {
         "name": "Internet"
       },
+      "vpn": {
+        "name": "VPN"
+      },
       "wifi": {
         "name": "Wi-Fi"
       }
