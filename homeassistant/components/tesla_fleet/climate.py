@@ -83,8 +83,8 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
         scopes: Scope,
     ) -> None:
         """Initialize the climate."""
-        self.scoped = Scope.VEHICLE_CMDS in scopes
-        if not self.scoped or data.signing:
+        self.read_only = Scope.VEHICLE_CMDS not in scopes or data.signing
+        if self.read_only:
             self._attr_supported_features = ClimateEntityFeature(0)
 
         super().__init__(
@@ -101,6 +101,10 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
             self._attr_hvac_mode = HVACMode.HEAT_COOL
         else:
             self._attr_hvac_mode = HVACMode.OFF
+
+        # If not scoped, prevent the user from changing the HVAC mode by making it the only option
+        if self._attr_hvac_mode and self.read_only:
+            self._attr_hvac_modes = [self._attr_hvac_mode]
 
         self._attr_current_temperature = self.get("climate_state_inside_temp")
         self._attr_target_temperature = self.get(f"climate_state_{self.key}_setting")
@@ -225,8 +229,8 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
 
         # Scopes
-        self.scoped = Scope.VEHICLE_CMDS in scopes
-        if not self.scoped or data.signing:
+        self.read_only = Scope.VEHICLE_CMDS not in scopes or data.signing
+        if self.read_only:
             self._attr_supported_features = ClimateEntityFeature(0)
 
     def _async_update_attrs(self) -> None:
@@ -236,6 +240,10 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
             self._attr_hvac_mode = None
         else:
             self._attr_hvac_mode = COP_MODES.get(state)
+
+        # If not scoped, prevent the user from changing the HVAC mode by making it the only option
+        if self._attr_hvac_mode and self.read_only:
+            self._attr_hvac_modes = [self._attr_hvac_mode]
 
         if (level := self.get("climate_state_cop_activation_temperature")) is None:
             self._attr_target_temperature = None
