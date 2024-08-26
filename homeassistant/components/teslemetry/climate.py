@@ -84,13 +84,14 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
     ) -> None:
         """Initialize the climate."""
         self.scoped = Scope.VEHICLE_CMDS in scopes
-        if not self.scoped:
-            self._attr_supported_features = ClimateEntityFeature(0)
 
         super().__init__(
             data,
             side,
         )
+
+        if not self.scoped:
+            self._attr_supported_features = ClimateEntityFeature(0)
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
@@ -211,18 +212,17 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryVehicleEntity, ClimateEn
     ) -> None:
         """Initialize the climate."""
 
+        self.scoped = Scope.VEHICLE_CMDS in scopes
         super().__init__(data, "climate_state_cabin_overheat_protection")
 
         # Supported Features
-        self._attr_supported_features = (
-            ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
-        )
-        if self.get("vehicle_config_cop_user_set_temp_supported"):
-            self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
-
-        # Scopes
-        self.scoped = Scope.VEHICLE_CMDS in scopes
-        if not self.scoped:
+        if self.scoped:
+            self._attr_supported_features = (
+                ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+            )
+            if self.get("vehicle_config_cop_user_set_temp_supported"):
+                self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
+        else:
             self._attr_supported_features = ClimateEntityFeature(0)
 
     def _async_update_attrs(self) -> None:
