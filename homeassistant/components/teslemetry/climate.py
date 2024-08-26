@@ -138,7 +138,6 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the climate temperature."""
-        self.raise_for_scope()
         if temp := kwargs.get(ATTR_TEMPERATURE):
             await self.wake_up_if_asleep()
             await handle_vehicle_command(
@@ -164,7 +163,6 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the climate preset mode."""
-        self.raise_for_scope()
         await self.wake_up_if_asleep()
         await handle_vehicle_command(
             self.api.set_climate_keeper_mode(
@@ -253,8 +251,6 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryVehicleEntity, ClimateEn
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the climate temperature."""
-        self.raise_for_scope()
-
         if not (temp := kwargs.get(ATTR_TEMPERATURE)):
             return
 
