@@ -147,6 +147,8 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
             await self.executor.async_execute_command(
                 OverkizCommand.SET_DHW_MODE, OverkizCommandParam.MANUAL_ECO_INACTIVE
             )
+        elif operation_mode == STATE_OFF:
+            await self.async_turn_away_mode_on()
 
     async def async_turn_away_mode_on(self) -> None:
         """Turn away mode on."""
