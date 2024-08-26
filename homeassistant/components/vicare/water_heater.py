@@ -104,7 +104,6 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
     _attr_max_temp = VICARE_TEMP_WATER_MAX
     _attr_operation_list = list(HA_TO_VICARE_HVAC_DHW)
     _attr_translation_key = "domestic_hot_water"
-    _attributes: dict[str, Any] = {}
     _current_mode: str | None = None
 
     def __init__(
@@ -116,6 +115,7 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
         """Initialize the DHW water_heater device."""
         super().__init__(device_config, device, circuit.id)
         self._circuit = circuit
+        self._attributes: dict[str, Any] = {}
 
     def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
