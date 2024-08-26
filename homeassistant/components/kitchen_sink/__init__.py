@@ -18,7 +18,7 @@ from homeassistant.components.recorder.statistics import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import Platform, UnitOfEnergy, UnitOfTemperature, UnitOfVolume
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
@@ -48,6 +48,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             DOMAIN, context={"source": SOURCE_IMPORT}, data={}
         )
     )
+
+    @callback
+    def service_handler(call: ServiceCall | None = None) -> None:
+        """Do nothing."""
+
+    hass.services.async_register(DOMAIN, "test_service_1", service_handler)
+
     return True
 
 
