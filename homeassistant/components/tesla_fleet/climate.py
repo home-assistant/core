@@ -170,9 +170,7 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
             )
         )
         self._attr_preset_mode = preset_mode
-        if preset_mode == self._attr_preset_modes[0]:
-            self._attr_hvac_mode = HVACMode.OFF
-        else:
+        if preset_mode != self._attr_preset_modes[0]:
             self._attr_hvac_mode = HVACMode.HEAT_COOL
         self.async_write_ha_state()
 
