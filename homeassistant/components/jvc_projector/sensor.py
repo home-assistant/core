@@ -15,7 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import JvcProjectorDataUpdateCoordinator
-from .const import DOMAIN
 from .entity import JvcProjectorEntity
 
 JVC_SENSORS = (
@@ -39,7 +38,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the JVC Projector platform from a config entry."""
-    coordinator: JvcProjectorDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: JvcProjectorDataUpdateCoordinator = entry.runtime_data
 
     async_add_entities(
         JvcSensor(coordinator, description) for description in JVC_SENSORS
