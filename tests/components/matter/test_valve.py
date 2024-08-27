@@ -44,7 +44,7 @@ async def test_valve(
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
         node_id=valve.node_id,
-        endpoint_id=1,
+        endpoint_id=2,
         command=clusters.ValveConfigurationAndControl.Commands.Close(),
     )
     matter_client.send_device_command.reset_mock()
@@ -61,7 +61,7 @@ async def test_valve(
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
         node_id=valve.node_id,
-        endpoint_id=1,
+        endpoint_id=2,
         command=clusters.ValveConfigurationAndControl.Commands.UOpen(),
     )
     matter_client.send_device_command.reset_mock()
