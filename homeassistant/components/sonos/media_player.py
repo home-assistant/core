@@ -33,6 +33,7 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
     async_process_play_media_url,
+    ATTR_MEDIA_ALBUM_NAME, ATTR_MEDIA_ARTIST, ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_TITLE
 )
 from homeassistant.components.plex import PLEX_URI_SCHEME
 from homeassistant.components.plex.services import process_plex_payload
@@ -756,10 +757,10 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         retval: list[dict] = []
         for track in queue:
             track_item = {
-                "media_title": track.title,
-                "media_album_name": track.album,
-                "media_artist": track.creator,
-                "media_content_id": track.get_uri(),
+                ATTR_MEDIA_TITLE: track.title,
+                ATTR_MEDIA_ALBUM_NAME: track.album,
+                ATTR_MEDIA_ARTIST: track.creator,
+                ATTR_MEDIA_CONTENT_ID: track.get_uri(),
             }
             retval.append(track_item)
         return retval
