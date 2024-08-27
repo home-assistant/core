@@ -21,6 +21,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
+    entity_registry as er,
     issue_registry as ir,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -192,8 +193,15 @@ async def _async_setup_block_entry(
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms
         )
-    elif sleep_period is None or device_entry is None:
+    elif (
+        sleep_period is None
+        or device_entry is None
+        or not er.async_entries_for_device(er.async_get(hass), device_entry.id)
+    ):
         # Need to get sleep info or first time sleeping device setup, wait for device
+        # If there are no entities for the device, it means we added the device, but
+        # Home Assistant was restarted before the device was online. In this case we
+        # cannot restore the entities, so we need to wait for the device to be online.
         LOGGER.debug(
             "Setup for device %s will resume when device is online", entry.title
         )
@@ -268,8 +276,15 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms
         )
-    elif sleep_period is None or device_entry is None:
+    elif (
+        sleep_period is None
+        or device_entry is None
+        or not er.async_entries_for_device(er.async_get(hass), device_entry.id)
+    ):
         # Need to get sleep info or first time sleeping device setup, wait for device
+        # If there are no entities for the device, it means we added the device, but
+        # Home Assistant was restarted before the device was online. In this case we
+        # cannot restore the entities, so we need to wait for the device to be online.
         LOGGER.debug(
             "Setup for device %s will resume when device is online", entry.title
         )

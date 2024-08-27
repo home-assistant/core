@@ -166,8 +166,20 @@ MOCK_BLOCKS = [
 
 MOCK_CONFIG = {
     "input:0": {"id": 0, "name": "Test name input 0", "type": "button"},
-    "input:1": {"id": 1, "type": "analog", "enable": True},
-    "input:2": {"id": 2, "name": "Gas", "type": "count", "enable": True},
+    "input:1": {
+        "id": 1,
+        "type": "analog",
+        "enable": True,
+        "xpercent": {"expr": None, "unit": None},
+    },
+    "input:2": {
+        "id": 2,
+        "name": "Gas",
+        "type": "count",
+        "enable": True,
+        "xcounts": {"expr": None, "unit": None},
+        "xfreq": {"expr": None, "unit": None},
+    },
     "light:0": {"name": "test light_0"},
     "light:1": {"name": "test light_1"},
     "light:2": {"name": "test light_2"},
@@ -186,6 +198,7 @@ MOCK_CONFIG = {
         "device": {"name": "Test name"},
     },
     "wifi": {"sta": {"enable": True}, "sta1": {"enable": False}},
+    "ws": {"enable": False, "server": None},
 }
 
 MOCK_SHELLY_COAP = {

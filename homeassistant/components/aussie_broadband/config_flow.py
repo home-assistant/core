@@ -22,11 +22,11 @@ class AussieBroadbandConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the config flow."""
         self.data: dict = {}
         self.options: dict = {CONF_SERVICES: []}
-        self.services: list[dict[str]] = []
+        self.services: list[dict[str, Any]] = []
         self.client: AussieBB | None = None
         self._reauth_username: str | None = None
 
