@@ -1707,7 +1707,7 @@ def _base_trigger_validator(value: Any) -> Any:
 
 
 TRIGGER_SCHEMA = vol.All(
-    ensure_list, [_base_trigger_validator, _backward_compat_trigger_schema]
+    ensure_list, [vol.All(_base_trigger_validator, _backward_compat_trigger_schema)]
 )
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema(
