@@ -22,7 +22,6 @@ class IskraDevice(Entity):
         self._remove_unavailability_tracker = None
         self._device = device
         self.gateway = gateway
-        self._gateway_id = config_entry.unique_id
 
         self._is_gateway = self._device.is_gateway
         self._device_id = self._serial
@@ -53,7 +52,7 @@ class IskraDevice(Entity):
                 name=self._device_name,
                 sw_version=self._fw_version,
                 serial_number=self._serial,
-                via_device=(DOMAIN, self._gateway_id),
+                via_device=(DOMAIN, self.gateway.serial),
             )
 
         return device_info

@@ -2888,14 +2888,14 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
-    "iskra": {
-      "name": "iskra",
+    "iron_os": {
+      "name": "IronOS",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "iron_os": {
-      "name": "IronOS",
+    "iskra": {
+      "name": "iskra",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"

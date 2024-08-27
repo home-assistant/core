@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from pyiskra import CounterType
 from pyiskra.devices import Device
 
 from homeassistant.components.sensor import (
@@ -18,13 +17,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    POWER_VOLT_AMPERE_REACTIVE,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
-    UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfReactivePower,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -81,7 +79,7 @@ SENSOR_TYPES: tuple[IskraSensorEntityDescription, ...] = (
         translation_key="total_reactive_power",
         device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
         value_func=lambda device: device.measurements.total.reactive_power.value,
     ),
     IskraSensorEntityDescription(
@@ -184,7 +182,7 @@ async def async_setup_entry(
     """Set up Iskra sensors based on config_entry."""
 
     # Device that uses the config entry.
-    root_device = entry.runtime_data.get("root_device")
+    base_device = entry.runtime_data.get("base_device")
     coordinators = entry.runtime_data.get("coordinators")
 
     # Add sensors for each device.
@@ -213,83 +211,10 @@ async def async_setup_entry(
                 sensors.append(ATTR_PHASE3_CURRENT)
 
         entities = [
-            IskraSensor(coordinator, root_device, entry, description)
+            IskraSensor(coordinator, base_device, entry, description)
             for description in SENSOR_TYPES
             if description.key in sensors
         ]
-
-        # Add resettable and non-resettable counters.
-        if device.supports_counters:
-            # Add Non-resettable counters.
-            for index, counter in enumerate(device.counters.non_resettable):
-
-                def non_resettable_value_func(device, counter_index):
-                    return lambda device: round(
-                        device.counters.non_resettable[counter_index].value, 2
-                    )
-
-                sensor_entity_description = IskraSensorEntityDescription(
-                    key=f"nresettable_counter{index+1}",
-                    translation_key=f"nresettable_counter{index+1}",
-                    state_class=SensorStateClass.TOTAL_INCREASING,
-                    # If counter is for active energy mark it as energy sensor otherwise dont set device clas.
-                    # This is due to the fact that HA does not support reactive energy sensors.
-                    device_class=(
-                        SensorDeviceClass.ENERGY
-                        if counter.counter_type
-                        in [CounterType.ACTIVE_IMPORT, CounterType.ACTIVE_EXPORT]
-                        else None
-                    ),
-                    # Use HA energy unit for active energy counters otherwise use units from API.
-                    native_unit_of_measurement=(
-                        UnitOfEnergy.WATT_HOUR
-                        if counter.counter_type
-                        in [CounterType.ACTIVE_IMPORT, CounterType.ACTIVE_EXPORT]
-                        else counter.units
-                    ),
-                    value_func=non_resettable_value_func(device, index),
-                )
-                entities.append(
-                    IskraSensor(
-                        coordinator, root_device, entry, sensor_entity_description
-                    )
-                )
-
-            # Add resettable counters.
-            for index, counter in enumerate(device.counters.resettable):
-
-                def resettable_value_func(device, counter_index):
-                    return lambda device: round(
-                        device.counters.resettable[counter_index].value, 2
-                    )
-
-                sensor_entity_description = IskraSensorEntityDescription(
-                    key=f"resettable_counter{index+1}",
-                    translation_key=f"resettable_counter{index+1}",
-                    state_class=SensorStateClass.TOTAL_INCREASING,
-                    # If counter is for active energy mark it as energy sensor otherwise dont set device clas.
-                    # This is due to the fact that HA does not support reactive energy sensors.
-                    device_class=(
-                        SensorDeviceClass.ENERGY
-                        if counter.counter_type
-                        in [CounterType.ACTIVE_IMPORT, CounterType.ACTIVE_EXPORT]
-                        else None
-                    ),
-                    # Use HA energy unit for active energy counters otherwise use units from API.
-                    native_unit_of_measurement=(
-                        UnitOfEnergy.WATT_HOUR
-                        if counter.counter_type
-                        in [CounterType.ACTIVE_IMPORT, CounterType.ACTIVE_EXPORT]
-                        else counter.units
-                    ),
-                    value_func=resettable_value_func(device, index),
-                )
-
-                entities.append(
-                    IskraSensor(
-                        coordinator, root_device, entry, sensor_entity_description
-                    )
-                )
 
         async_add_entities(entities)
 

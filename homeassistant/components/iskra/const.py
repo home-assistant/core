@@ -24,7 +24,4 @@ ATTR_PHASE3_CURRENT = "phase3_current"
 # Frequency
 ATTR_FREQUENCY = "frequency"
 
-ATTR_CONNECTED_DEVICES = "connected_devices"
-
-
 TIMEOUT = 60

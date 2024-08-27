@@ -20,7 +20,9 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
+from .const import DOMAIN, MANUFACTURER
 from .coordinator import IskraDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -55,6 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> boo
             }
         adapter = RestAPI(ip_address=conf[CONF_HOST], authentication=authentication)
 
+    # Try connecting to the device and create pyiskra device object
     try:
         root_device = await Device.create_device(adapter)
     except DeviceConnectionError as e:
@@ -67,10 +70,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> boo
         _LOGGER.error("Device not supported: %s", e)
         return False
 
+    # Initialize the device
     await root_device.init()
 
     # if the device is a gateway, add all child devices, otherwise add the device itself.
     if root_device.is_gateway:
+        device_registry = dr.async_get(hass)
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, root_device.serial)},
+            manufacturer=MANUFACTURER,
+            name=f"{root_device.serial}",
+            model=root_device.model,
+            sw_version=root_device.fw_version,
+        )
+
         coordinators = [
             IskraDataUpdateCoordinator(hass, child_device)
             for child_device in root_device.get_child_devices()
@@ -78,7 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> boo
     else:
         coordinators = [IskraDataUpdateCoordinator(hass, root_device)]
 
-    entry.runtime_data = {"base_evice": root_device, "coordinators": coordinators}
+    entry.runtime_data = {"base_device": root_device, "coordinators": coordinators}
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
