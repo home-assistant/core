@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, LASTSTEST
+from .const import DOMAIN, LAST_S_TEST
 from .coordinator import APCUPSdCoordinator
 
 PARALLEL_UPDATES = 0
@@ -156,8 +156,8 @@ SENSORS: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    LASTSTEST: SensorEntityDescription(
-        key=LASTSTEST,
+    LAST_S_TEST: SensorEntityDescription(
+        key=LAST_S_TEST,
         translation_key="last_self_test",
     ),
     "lastxfer": SensorEntityDescription(
@@ -422,7 +422,7 @@ async def async_setup_entry(
     # periodical (or manual) self test since last daemon restart. It might not be available
     # when we set up the integration, and we do not know if it would ever be available. Here we
     # add it anyway and mark it as unknown initially.
-    for resource in available_resources | {LASTSTEST}:
+    for resource in available_resources | {LAST_S_TEST}:
         if resource not in SENSORS:
             _LOGGER.warning("Invalid resource from APCUPSd: %s", resource.upper())
             continue
