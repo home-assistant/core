@@ -1086,6 +1086,7 @@ def websocket_list_engines(
     language = msg.get("language")
     providers = []
     provider_info: dict[str, Any]
+    entity_domains: set[str] = set()
 
     for entity in component.entities:
         provider_info = {
@@ -1097,6 +1098,8 @@ def websocket_list_engines(
                 language, entity.supported_languages, country
             )
         providers.append(provider_info)
+        if entity.platform:
+            entity_domains.add(entity.platform.platform_name)
     for engine_id, provider in manager.providers.items():
         provider_info = {
             "engine_id": engine_id,
@@ -1106,6 +1109,8 @@ def websocket_list_engines(
             provider_info["supported_languages"] = language_util.matches(
                 language, provider.supported_languages, country
             )
+        if engine_id in entity_domains:
+            provider_info["deprecated"] = True
         providers.append(provider_info)
 
     connection.send_message(
