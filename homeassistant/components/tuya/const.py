@@ -15,7 +15,6 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
-    POTENTIAL_OF_HYDROGEN,
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     Platform,
@@ -457,7 +456,7 @@ UNITS = (
         device_classes={
             SensorDeviceClass.CO,
             SensorDeviceClass.CO2,
-            SensorDeviceClass.TOTAL_DISSOLVED_SOLIDS,
+            SensorDeviceClass.CONCENTRATION,
         },
     ),
     UnitOfMeasurement(
@@ -606,10 +605,6 @@ UNITS = (
         device_classes={SensorDeviceClass.VOLTAGE},
         conversion_unit=UnitOfElectricPotential.VOLT,
         conversion_fn=lambda x: x / 1000,
-    ),
-    UnitOfMeasurement(
-        unit=POTENTIAL_OF_HYDROGEN,
-        device_classes={SensorDeviceClass.PH},
     ),
     UnitOfMeasurement(
         unit=UnitOfConductivity.MICROSIEMENS,

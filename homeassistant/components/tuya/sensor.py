@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONCENTRATION_GRAMS_PER_LITER,
+    CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     EntityCategory,
     UnitOfElectricCurrent,
@@ -171,7 +172,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.TDS_CURRENT,
             translation_key="total_dissolved_solids",
-            device_class=SensorDeviceClass.TOTAL_DISSOLVED_SOLIDS,
+            device_class=SensorDeviceClass.CONCENTRATION,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
@@ -1243,7 +1244,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.SG_CURRENT,
             translation_key="specific_gravity",
-            device_class=NumberDeviceClass.CONCENTRATION,
+            device_class=SensorDeviceClass.CONCENTRATION,
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
             entity_category=EntityCategory.CONFIG,
             max_value=199999,

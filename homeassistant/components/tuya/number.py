@@ -76,7 +76,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.TDS_WARN_MAX,
             translation_key="tds_warning_max",
-            device_class=NumberDeviceClass.TOTAL_DISSOLVED_SOLIDS,
+            device_class=NumberDeviceClass.CONCENTRATION,
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
             entity_category=EntityCategory.CONFIG,
             max_value=199999,
@@ -85,7 +85,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.TDS_WARN_MIN,
             translation_key="tds_warning_min",
-            device_class=NumberDeviceClass.TOTAL_DISSOLVED_SOLIDS,
+            device_class=NumberDeviceClass.CONCENTRATION,
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
             entity_category=EntityCategory.CONFIG,
             max_value=199999,
@@ -101,7 +101,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.TDS_WARN_MIN,
             translation_key="ec_warning_min",
-            device_class=NumberDeviceClass.TOTAL_DISSOLVED_SOLIDS,
+            device_class=NumberDeviceClass.CONDUCTIVITY,
             native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS,
             entity_category=EntityCategory.CONFIG,
         ),
