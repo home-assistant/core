@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import discovery_flow
 
-from .const import RADIO_DEVICE, ZHA_HW_DISCOVERY_DATA
+from .const import FIRMWARE, RADIO_DEVICE, ZHA_HW_DISCOVERY_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,15 +38,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
         return False
 
-    firmware = ApplicationType(entry.data["firmware"])
+    firmware = ApplicationType(entry.data[FIRMWARE])
 
-    if firmware == ApplicationType.CPC:
+    if firmware is ApplicationType.CPC:
         try:
             await check_multi_pan_addon(hass)
         except HomeAssistantError as err:
             raise ConfigEntryNotReady from err
 
-    if firmware == ApplicationType.EZSP:
+    if firmware is ApplicationType.EZSP:
         discovery_flow.async_create_flow(
             hass,
             "zha",
@@ -77,7 +77,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             firmware_guess = await guess_firmware_type(hass, RADIO_DEVICE)
 
             new_data = {**config_entry.data}
-            new_data["firmware"] = firmware_guess.firmware_type.value
+            new_data[FIRMWARE] = firmware_guess.firmware_type.value
 
             hass.config_entries.async_update_entry(
                 config_entry,

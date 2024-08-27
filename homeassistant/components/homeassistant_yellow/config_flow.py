@@ -17,9 +17,13 @@ from homeassistant.components.hassio import (
     async_reboot_host,
     async_set_yellow_settings,
 )
-from homeassistant.components.homeassistant_hardware import (
-    firmware_config_flow,
-    silabs_multiprotocol_addon,
+from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
+    BaseFirmwareConfigFlow,
+    BaseFirmwareOptionsFlow,
+)
+from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
+    OptionsFlowHandler as MultiprotocolOptionsFlowHandler,
+    SerialPortSettings as MultiprotocolSerialPortSettings,
 )
 from homeassistant.config_entries import (
     SOURCE_HARDWARE,
@@ -30,7 +34,7 @@ from homeassistant.config_entries import (
 from homeassistant.core import callback
 from homeassistant.helpers import discovery_flow, selector
 
-from .const import DOMAIN, RADIO_DEVICE, ZHA_HW_DISCOVERY_DATA
+from .const import DOMAIN, FIRMWARE, RADIO_DEVICE, ZHA_DOMAIN, ZHA_HW_DISCOVERY_DATA
 from .hardware import BOARD_NAME
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,9 +48,7 @@ STEP_HW_SETTINGS_SCHEMA = vol.Schema(
 )
 
 
-class HomeAssistantYellowConfigFlow(
-    firmware_config_flow.BaseFirmwareConfigFlow, domain=DOMAIN
-):
+class HomeAssistantYellowConfigFlow(BaseFirmwareConfigFlow, domain=DOMAIN):
     """Handle a config flow for Home Assistant Yellow."""
 
     VERSION = 1
@@ -64,7 +66,7 @@ class HomeAssistantYellowConfigFlow(
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
         """Return the options flow."""
-        firmware_type = ApplicationType(config_entry.data["firmware"])
+        firmware_type = ApplicationType(config_entry.data[FIRMWARE])
 
         if firmware_type is ApplicationType.CPC:
             return HomeAssistantYellowMultiPanOptionsFlowHandler(config_entry)
@@ -82,10 +84,10 @@ class HomeAssistantYellowConfigFlow(
         await self._probe_firmware_type()
 
         # Kick off ZHA hardware discovery automatically if Zigbee firmware is running
-        if self._probed_firmware_type == ApplicationType.EZSP:
+        if self._probed_firmware_type is ApplicationType.EZSP:
             discovery_flow.async_create_flow(
                 self.hass,
-                "zha",
+                ZHA_DOMAIN,
                 context={"source": SOURCE_HARDWARE},
                 data=ZHA_HW_DISCOVERY_DATA,
             )
@@ -100,7 +102,7 @@ class HomeAssistantYellowConfigFlow(
             title=BOARD_NAME,
             data={
                 # Assume the firmware type is EZSP if we cannot probe it
-                "firmware": (self._probed_firmware_type or ApplicationType.EZSP).value,
+                FIRMWARE: (self._probed_firmware_type or ApplicationType.EZSP).value,
             },
         )
 
@@ -186,7 +188,7 @@ class BaseHomeAssistantYellowOptionsFlow(OptionsFlow, ABC):
 
 
 class HomeAssistantYellowMultiPanOptionsFlowHandler(
-    BaseHomeAssistantYellowOptionsFlow, silabs_multiprotocol_addon.OptionsFlowHandler
+    BaseHomeAssistantYellowOptionsFlow, MultiprotocolOptionsFlowHandler
 ):
     """Handle a multi-PAN options flow for Home Assistant Yellow."""
 
@@ -204,15 +206,15 @@ class HomeAssistantYellowMultiPanOptionsFlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle multipan settings."""
-        return await silabs_multiprotocol_addon.OptionsFlowHandler.async_step_on_supervisor(
+        return await MultiprotocolOptionsFlowHandler.async_step_on_supervisor(
             self, user_input
         )
 
     async def _async_serial_port_settings(
         self,
-    ) -> silabs_multiprotocol_addon.SerialPortSettings:
+    ) -> MultiprotocolSerialPortSettings:
         """Return the radio serial port settings."""
-        return silabs_multiprotocol_addon.SerialPortSettings(
+        return MultiprotocolSerialPortSettings(
             device=RADIO_DEVICE,
             baudrate="115200",
             flow_control=True,
@@ -242,16 +244,15 @@ class HomeAssistantYellowMultiPanOptionsFlowHandler(
             entry=self.config_entry,
             data={
                 **self.config_entry.data,
-                "firmware": ApplicationType.EZSP.value,
+                FIRMWARE: ApplicationType.EZSP.value,
             },
-            options=self.config_entry.options,
         )
 
         return await super().async_step_flashing_complete(user_input)
 
 
 class HomeAssistantYellowOptionsFlowHandler(
-    BaseHomeAssistantYellowOptionsFlow, firmware_config_flow.BaseFirmwareOptionsFlow
+    BaseHomeAssistantYellowOptionsFlow, BaseFirmwareOptionsFlow
 ):
     """Handle a firmware options flow for Home Assistant Yellow."""
 
@@ -289,9 +290,8 @@ class HomeAssistantYellowOptionsFlowHandler(
             entry=self.config_entry,
             data={
                 **self.config_entry.data,
-                "firmware": self._probed_firmware_type.value,
+                FIRMWARE: self._probed_firmware_type.value,
             },
-            options=self.config_entry.options,
         )
 
         return self.async_create_entry(title="", data={})
