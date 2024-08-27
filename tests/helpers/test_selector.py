@@ -1115,6 +1115,13 @@ def test_condition_selector_schema(
                         "below": 20,
                     }
                 ],
+                [
+                    {
+                        "trigger": "numeric_state",
+                        "entity_id": ["sensor.temperature"],
+                        "below": 20,
+                    }
+                ],
                 [],
             ),
             ("abc"),
