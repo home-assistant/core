@@ -77,10 +77,6 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def _get_border_agent_id(self, api: python_otbr_api.OTBR) -> bytes:
-        """Get the border agent id from a router."""
-        return await api.get_border_agent_id()
-
     async def _set_dataset(self, api: python_otbr_api.OTBR, otbr_url: str) -> None:
         """Connect to the OTBR and create or apply a dataset if it doesn't have one."""
         if await api.get_active_dataset_tlvs() is None:
@@ -141,7 +137,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         Returns the router's border agent id.
         """
         api = python_otbr_api.OTBR(otbr_url, async_get_clientsession(self.hass), 10)
-        border_agent_id = await self._get_border_agent_id(api)
+        border_agent_id = await api.get_border_agent_id()
         _LOGGER.debug("border agent id for url %s: %s", otbr_url, border_agent_id.hex())
 
         if await self._is_border_agent_id_configured(border_agent_id):
