@@ -4,31 +4,21 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Collection
-from dataclasses import dataclass, field
 import logging
-import uuid
 
-from thinqconnect.thinq_api import ThinQApi
+from thinqconnect import ThinQApi, ThinQAPIException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_COUNTRY, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CLIENT_PREFIX, CONF_CONNECT_CLIENT_ID, DEFAULT_COUNTRY
+from .const import CONF_CONNECT_CLIENT_ID, DEFAULT_COUNTRY
 from .device import LGDevice, async_setup_lg_device
 
-type ThinqConfigEntry = ConfigEntry[ThinqData]
-
-
-@dataclass(kw_only=True)
-class ThinqData:
-    """A class that holds runtime data."""
-
-    device_map: dict[str, LGDevice] = field(default_factory=dict)
-
+type ThinqConfigEntry = ConfigEntry[dict]
 
 PLATFORMS = [Platform.SWITCH]
 
@@ -38,16 +28,12 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> bool:
     """Set up an entry."""
 
-    # Validate entry data.
     client_id = entry.data.get(CONF_CONNECT_CLIENT_ID)
-    if not isinstance(client_id, str):
-        client_id = f"{CLIENT_PREFIX}-{uuid.uuid4()!s}"
     access_token = entry.data.get(CONF_ACCESS_TOKEN)
-    if not isinstance(access_token, str):
-        raise ConfigEntryAuthFailed(f"Invalid PAT: {access_token}")
 
     # Initialize runtime data.
-    entry.runtime_data = ThinqData()
+    device_map: dict[str, LGDevice] = {}
+    entry.runtime_data = device_map
 
     thinq_api = ThinQApi(
         session=async_get_clientsession(hass),
@@ -63,9 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> boo
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Clean up devices they are no longer in use.
-    async_cleanup_device_registry(
-        hass, entry.runtime_data.device_map.values(), entry.entry_id
-    )
+    async_cleanup_device_registry(hass, entry.runtime_data.values(), entry.entry_id)
 
     return True
 
@@ -76,16 +60,16 @@ async def async_setup_devices(
     entry: ThinqConfigEntry,
 ) -> None:
     """Set up and register devices."""
-    entry.runtime_data.device_map.clear()
+    entry.runtime_data.clear()
 
     # Get a device list from the server.
-    response = await thinq_api.async_get_device_list()
-    if response.error_message:
+    try:
+        device_list = await thinq_api.async_get_device_list()
+    except ThinQAPIException as exc:
         raise ConfigEntryError(
-            response.error_message,
-        )
+            exc.message,
+        ) from exc
 
-    device_list = response.body
     if not device_list or not isinstance(device_list, Collection):
         return
 
@@ -120,10 +104,10 @@ def async_register_devices(
         )
         _LOGGER.debug(
             "Register device: device_id=%s, device_entry_id=%s",
-            lg_device.id,
+            lg_device.api.device_id,
             device_entry.id,
         )
-        entry.runtime_data.device_map[device_entry.id] = lg_device
+        entry.runtime_data[device_entry.id] = lg_device
 
 
 @callback

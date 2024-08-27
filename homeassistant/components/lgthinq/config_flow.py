@@ -7,7 +7,7 @@ from typing import Any
 import uuid
 
 import pycountry
-from thinqconnect import ThinQApi
+from thinqconnect import ThinQApi, ThinQAPIException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -57,19 +57,16 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Create an entry for the flow."""
         connect_client_id = f"{CLIENT_PREFIX}-{uuid.uuid4()!s}"
-
-        # To verify PAT, create an api to retrieve the device list.
-        thinq_api = ThinQApi(
-            session=async_get_clientsession(self.hass),
-            access_token=access_token,
-            country_code=country_code,
-            client_id=connect_client_id,
-        )
-        response = await thinq_api.async_get_device_list()
-        _LOGGER.debug("validate_and_create_entry: %s", response)
-
-        if response.error_message:
-            return self.async_abort(reason=response.error_message)
+        try:
+            # To verify PAT, create an api to retrieve the device list.
+            await ThinQApi(
+                session=async_get_clientsession(self.hass),
+                access_token=access_token,
+                country_code=country_code,
+                client_id=connect_client_id,
+            ).async_get_device_list()
+        except ThinQAPIException as exc:
+            return self.async_abort(reason=exc.message)
 
         # If verification is success, create entry.
         return self.async_create_entry(

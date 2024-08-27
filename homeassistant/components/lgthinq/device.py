@@ -5,11 +5,15 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from thinqconnect import PROPERTY_READABLE, DeviceType, ThinQApi
-from thinqconnect.devices.connect_device import ConnectBaseDevice, ConnectDeviceProfile
+from thinqconnect import (
+    ConnectBaseDevice,
+    DeviceType,
+    ThinQApi,
+    ThinQAPIErrorCodes,
+    ThinQAPIException,
+)
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -25,23 +29,19 @@ class LGDevice:
         self,
         hass: HomeAssistant,
         thinq_api: ThinQApi,
-        api: ConnectBaseDevice,
+        device_api: ConnectBaseDevice,
         sub_id: str | None = None,
     ) -> None:
         """Initialize device."""
         self._hass = hass
         self._thinq_api = thinq_api
-        self._type: str = api.device_type
-        self._id: str = api.device_id
-        self._model: str = api.model_name
-        self._is_on: bool = False
         self._is_connected: bool = True
 
         # Create a data update coordinator.
         self._coordinator = DataUpdateCoordinator(
             hass,
             _LOGGER,
-            name=f"{DOMAIN}_{self.id}",
+            name=f"{DOMAIN}_{device_api.device_id}",
             update_method=self.async_update_status,
         )
 
@@ -51,26 +51,23 @@ class LGDevice:
         # The device name is usually set to 'alias'.
         # But, if the sub_id exists, it will be set to 'alias {sub_id}'.
         # e.g. alias='MyWashTower', sub_id='dryer' then 'MyWashTower dryer'.
-        self._name = f"{api.alias} {self._sub_id}" if self._sub_id else api.alias
+        self._name = (
+            f"{device_api.alias} {self._sub_id}" if self._sub_id else device_api.alias
+        )
 
         # The unique id is usually set to 'device_id'.
         # But, if the sub_id exists, it will be set to 'device_id_{sub_id}'.
         # e.g. device_id='TQSXXXX', sub_id='dryer' then 'TQSXXXX_dryer'.
         self._unique_id: str = (
-            f"{api.device_id}_{self._sub_id}" if self._sub_id else api.device_id
+            f"{device_api.device_id}_{self._sub_id}"
+            if self._sub_id
+            else device_api.device_id
         )
 
         # Get the api instance.
-        self._api: ConnectBaseDevice = api.get_sub_device(self._sub_id) or api
-
-        # Create property map form the given api instance.
-        self._property_map: dict[str, dict[str, dict[str, Any]]] = (
-            self._retrieve_profiles(self.api.profiles)
+        self._api: ConnectBaseDevice = (
+            device_api.get_sub_device(self._sub_id) or device_api
         )
-
-        # A notification message is stored in this device instance instead of
-        # the api instance.
-        self._noti_message: str | None = None
 
     @property
     def hass(self) -> HomeAssistant:
@@ -88,16 +85,6 @@ class LGDevice:
         return self._name
 
     @property
-    def model(self) -> str:
-        """Returns the model."""
-        return self._model
-
-    @property
-    def id(self) -> str:
-        """Returns the device id."""
-        return self._id
-
-    @property
     def sub_id(self) -> str | None:
         """Returns the device sub id."""
         return self._sub_id
@@ -108,19 +95,13 @@ class LGDevice:
         return self._unique_id
 
     @property
-    def type(self) -> str:
-        """Returns the type of device."""
-        return self._type
-
-    @property
-    def is_on(self) -> bool:
-        """Check whether the device is on state or not."""
-        return self._is_on
-
-    @property
     def is_connected(self) -> bool:
         """Check whether the device is connected or not."""
         return self._is_connected
+
+    @is_connected.setter
+    def is_connected(self, connected: bool) -> None:
+        self._is_connected = connected
 
     @property
     def coordinator(self) -> DataUpdateCoordinator[dict[str, Any]]:
@@ -133,15 +114,9 @@ class LGDevice:
         return dr.DeviceInfo(
             identifiers={(DOMAIN, self._unique_id)},
             manufacturer="LGE",
-            model=self.model,
+            model=self._api.model_name,
             name=self.name,
-            sw_version="0.9",
         )
-
-    @property
-    def property_map(self) -> dict[str, dict[str, dict[str, Any]]]:
-        """Returns the profile map."""
-        return self._property_map
 
     @property
     def noti_message(self) -> str | None:
@@ -149,7 +124,7 @@ class LGDevice:
         return self._noti_message
 
     @noti_message.setter
-    def noti_message(self, message) -> None:
+    def noti_message(self, message: str) -> None:
         self._noti_message = message
 
     @property
@@ -157,159 +132,17 @@ class LGDevice:
         """Returns the tag string."""
         return f"[{self.name}]"
 
-    def _fill_property_map_with_none_key(
-        self,
-        profiles: ConnectDeviceProfile,
-        property_map: dict[str, dict[str, dict[str, Any]]],
-    ) -> None:
-        if profiles.properties:
-            for property_list in profiles.properties.values():
-                for prop in property_list:
-                    try:
-                        property_map[NONE_KEY][prop] = profiles.get_property(prop)
-                    except AttributeError as e:
-                        _LOGGER.error("%s Failed to get property. %s", self.tag, e)
-                        continue
-
-    def _fill_property_map_from_sub_profile(
-        self,
-        location: str,
-        properties: dict[str, list],
-        sub_profile: ConnectDeviceProfile,
-        property_map: dict[str, dict[str, dict[str, Any]]],
-    ) -> None:
-        for property_list in properties.values():
-            for prop in property_list:
-                try:
-                    if location in property_map:
-                        property_map[location][prop] = sub_profile.get_property(prop)
-                    else:
-                        property_map[location] = {prop: sub_profile.get_property(prop)}
-
-                except AttributeError as e:
-                    _LOGGER.error("%s Failed to get property. %s", self.tag, e)
-                    continue
-
-    def _fill_property_map_with_location(
-        self,
-        profiles: ConnectDeviceProfile,
-        property_map: dict[str, dict[str, dict[str, Any]]],
-    ) -> None:
-        if profiles.location_properties:
-            for location, properties in profiles.location_properties.items():
-                sub_profile = profiles.get_sub_profile(location)
-                self._fill_property_map_from_sub_profile(
-                    location, properties, sub_profile, property_map
-                )
-
-                # Errors for sub profile.
-                if isinstance(sub_profile.errors, list):
-                    property_map[location]["error"] = {
-                        "type": "enum",
-                        PROPERTY_READABLE: sub_profile.errors,
-                    }
-
-    def _retrieve_profiles(
-        self, profiles: ConnectDeviceProfile
-    ) -> dict[str, dict[str, dict[str, Any]]]:
-        """Create profile map form the given api instance."""
-        # The structure of the profile map is as follows:
-        #
-        #   profile_map: {
-        #     "_": {
-        #       "property_name1": Profile1,
-        #     }
-        #     "location_name_1": {
-        #       "property_name1": Profile2,
-        #       "property_name2": Profile3,
-        #     },
-        #   }
-        #
-        # Note that "None" key means that profile has not any location info.
-        property_map: dict[str, dict[str, dict[str, Any]]] = {NONE_KEY: {}}
-
-        # Get properties that do not have location information.
-        self._fill_property_map_with_none_key(profiles, property_map)
-
-        # Get properties that have location information.
-        self._fill_property_map_with_location(profiles, property_map)
-
-        # Errors
-        if isinstance(profiles.errors, list):
-            property_map[NONE_KEY]["error"] = {
-                "type": "enum",
-                PROPERTY_READABLE: profiles.errors,
-            }
-
-        # Notification.
-        if isinstance(profiles.notification, dict):
-            property_map[NONE_KEY]["notification"] = {
-                "type": "enum",
-                PROPERTY_READABLE: profiles.notification.get("push"),
-            }
-
-        return property_map
-
-    def get_profile(self, location: str, name: str) -> dict[str, Any] | None:
-        """Return the profile for the given location and name."""
-        profile_map = self.property_map.get(location)
-        return profile_map.get(name) if profile_map else None
-
-    def get_profiles(self, name: str) -> dict[str, dict[str, Any] | None]:
-        """Return the profile map with location as key for the given name."""
-        return {
-            location: profile_map.get(name)
-            for location, profile_map in self.property_map.items()
-            if name in profile_map
-        }
-
-    async def async_get_device_status(self) -> dict[str, Any] | None:
-        """Get the device status from the server."""
-        result = await self._thinq_api.async_get_device_status(self.id)
-        return self.handle_api_response(result)
-
-    def handle_api_response(
-        self, result, *, handle_error: bool = False
-    ) -> dict[str, Any] | None:
-        """Handle an api response."""
-        _LOGGER.debug("%s API result: %s", self.tag, result)
-
-        if not result.error_message:
-            return result.body
-
-        # Disable entity when "Not connected device" (error_code 1222)
-        self._is_connected = result.error_code != "1222"
-
-        # Raise service validation error to show error popup on frontend.
-        if handle_error:
-            self.handle_error(result.error_message, result.error_code)
-
-        return None
-
-    def handle_error(
-        self,
-        message: str,
-        translation_key: str | None = None,
-    ) -> None:
-        """Hanlde an error."""
-        # Rollback status data.
-        self._coordinator.async_set_updated_data({})
-
-        # Raise an exception to show error popup on frontend.
-        raise ServiceValidationError(
-            message,
-            translation_domain=DOMAIN,
-            translation_key=translation_key,
-        )
-
     async def async_init_coordinator(self) -> None:
         """Initialize and start coordinator."""
         await self._coordinator.async_refresh()
 
     async def async_update_status(self) -> dict[str, Any]:
         """Request to the server to update the status from full response data."""
-        result = await self.async_get_device_status()
-        if result is None:
+        try:
+            result = await self._thinq_api.async_get_device_status(self.api.device_id)
+        except ThinQAPIException as exc:
+            if exc.code == ThinQAPIErrorCodes.NOT_CONNECTED_DEVICE:
+                self._is_connected = False
             return {}
 
         # Full response into the device api.
@@ -356,7 +189,7 @@ class LGDevice:
 
     def __str__(self) -> str:
         """Return a string expression."""
-        return f"LGDevice:{self.name}(type={self.type}, id={self.id})"
+        return f"LGDevice:{self.name}(type={self.api.device_type}, id={self.api.device_id})"
 
 
 async def async_setup_lg_device(
@@ -385,15 +218,16 @@ async def async_setup_lg_device(
         return None
 
     # Get a device profile from the server.
-    response = await thinq_api.async_get_device_profile(device_id)
-    if response.error_message:
+    try:
+        profile = await thinq_api.async_get_device_profile(device_id)
+    except ThinQAPIException:
         _LOGGER.warning("Failed to setup device(%s): no profile", device_id)
         return None
+
     device_group_id: str = device_info.get("groupId")
-    profile = response.body
 
     # Create new device api instance.
-    api: ConnectBaseDevice = (
+    device_api: ConnectBaseDevice = (
         constructor(
             thinq_api=thinq_api,
             device_id=device_id,
@@ -429,7 +263,7 @@ async def async_setup_lg_device(
     # Create new lg device instances.
     lg_device_list: list[LGDevice] = []
     for sub_id in device_sub_ids:
-        lg_device = LGDevice(hass, thinq_api, api, sub_id=sub_id)
+        lg_device = LGDevice(hass, thinq_api, device_api, sub_id=sub_id)
         await lg_device.async_init_coordinator()
 
         # Finally add a lg device into the result list.

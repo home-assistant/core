@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import ThinqConfigEntry
 from .const import THINQ_DEVICE_ADDED
 from .device import LGDevice
-from .entity_helpers import ThinQEntity, ThinQSwitchEntityDescription
+from .entity_helpers import ThinQEntity, ThinQEntityDescription, get_property_list
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,20 +30,27 @@ async def async_setup_entry(
     @callback
     def async_add_devices(devices: Collection[LGDevice]) -> None:
         """Add switch entities."""
-        async_add_entities(ThinQSwitchEntity.create_entities(devices))
+        for device in devices:
+            prop_list = get_property_list(device, Platform.SWITCH)
+            if prop_list is None:
+                continue
 
-    async_add_devices(entry.runtime_data.device_map.values())
+            async_add_entities(
+                ThinQSwitchEntity(device, prop, desc)
+                for (prop, desc) in prop_list.items()
+            )
+
+    async_add_devices(entry.runtime_data.values())
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, THINQ_DEVICE_ADDED, async_add_devices)
     )
 
 
-class ThinQSwitchEntity(ThinQEntity[ThinQSwitchEntityDescription], SwitchEntity):
+class ThinQSwitchEntity(ThinQEntity, SwitchEntity):
     """Represent a thinq switch platform."""
 
-    entity_description: ThinQSwitchEntityDescription
-    target_platform = Platform.SWITCH
+    entity_description: ThinQEntityDescription
     attr_device_class = SwitchDeviceClass.SWITCH
 
     def _update_status(self) -> None:

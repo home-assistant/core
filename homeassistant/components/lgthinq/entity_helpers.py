@@ -2,117 +2,194 @@
 
 from __future__ import annotations
 
-from collections.abc import Collection
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from enum import StrEnum, unique
+from enum import Enum, auto
 import logging
-from typing import Any, Generic, TypeVar
+from typing import Any
 
-from thinqconnect import DeviceType
+from thinqconnect import (
+    PROPERTY_READABLE,
+    PROPERTY_WRITABLE,
+    DeviceType,
+    ThinQAPIErrorCodes,
+    ThinQAPIException,
+)
+from thinqconnect.devices.const import Location, Property as propertyc
+from thinqconnect.property import Property, PropertyMode, Range, create_properties
 
 from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import callback
-from homeassistant.helpers.entity import EntityDescription
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import POWER_OFF, POWER_ON
+from .const import DOMAIN, POWER_OFF, POWER_ON
 from .device import LGDevice
-from .property import Property, PropertyFeature, PropertyInfo, Range, create_properties
-from .switch import ThinQSwitchEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass(kw_only=True)
+class PropertyInfo:
+    """A data class contains an information for creating property."""
+
+    # The property key for use in SDK must be snake_case string.
+    key: str
+
+    # The property control mode.
+    mode: PropertyMode = PropertyMode.DEFAULT
+
+    # Optional, an information of the property that provide unit.
+    # It operates only in DEFAULT mode and is ignored even if other
+    # modes are set.
+    unit_info: PropertyInfo | None = None
+
+    # Optional, if true then validate property value itself.
+    self_validation: bool = False
+
+    # Optional, if the value should be converted before calling api.
+    value_converter: Callable[[Any], Any] | None = None
+
+    # Optional, if the value received as a result of the api call is
+    # needed to be converted in a specific format.
+    value_formatter: Callable[[Any], Any] | None = None
+
+    # Optional, if an alternative options is needed. The arguments of
+    # of this method must be profile of the proerty.
+    alt_options_provider: Callable[[dict[str, Any]], list[str]] | None = None
+
+    # Optional, if an alternative get method is needed. The arguments
+    # of this method must be property itself.
+    alt_get_method: Callable[[Property], Any] | None = None
+
+    # Optional, for UNSET washer's relative timer.
+    # It's min is 3, but for cancel the timer we need 0
+    modify_minimum_range: bool = False
+
+    # Optional, for absolute timer hint. ex) "Input 24-hour clock"
+    alt_text_hint: str | None = None
+
+    # Optional, for targetTemperature is not range"
+    alt_range: dict | None = None
+
+    # Optional, if an alternative post method is needed. The arguments
+    # of this method must be property itself and value.
+    alt_post_method: Callable[[Property, Any], Awaitable[dict | None]] | None = None
+
+    # Optional, if an alternative validate creation method is needed.
+    # The arguments of this method must be readable and writable flags
+    # from the peoperty profile.
+    alt_validate_creation: Callable[[bool, bool], bool] | None = None
+
+    children: list | None = None
+
+
+class PropertyFeature(Enum):
+    """Features of properties for property group."""
+
+    POWER = auto()
+    STATE = auto()
+    BATTERY = auto()
+    CURRENT_TEMP = auto()
+    TARGET_TEMP = auto()
+    HEAT_TARGET_TEMP = auto()
+    COOL_TARGET_TEMP = auto()
+    TWO_SET_CURRENT_TEMP = auto()
+    TWO_SET_HEAT_TARGET_TEMP = auto()
+    TWO_SET_COOL_TARGET_TEMP = auto()
+    CURRENT_HUMIDITY = auto()
+    TARGET_HUMIDITY = auto()
+    OP_MODE = auto()
+    HVAC_MODE = auto()
+    FAN_MODE = auto()
+
+
+# Functions for entity operations.
 def value_to_power_state_converter(value: Any) -> str:
     """Convert the value to string that represents power state."""
     return POWER_ON if bool(value) else POWER_OFF
 
 
-# Type hints for lg thinq entity.
-ThinQEntityT = TypeVar("ThinQEntityT", bound="ThinQEntity")
-ThinQEntityDescriptionT = TypeVar(
-    "ThinQEntityDescriptionT", bound="ThinQEntityDescription"
-)
-
-
 @dataclass(kw_only=True, frozen=True)
-class ThinQEntityDescription(EntityDescription):
+class ThinQEntityDescription(SwitchEntityDescription):
     """The base thinq entity description."""
 
     has_entity_name = True
     property_info: PropertyInfo
 
 
-@dataclass(kw_only=True, frozen=True)
-class ThinQSwitchEntityDescription(ThinQEntityDescription, SwitchEntityDescription):
-    """The entity description for switch."""
-
-
-@unique
-class Operation(StrEnum):
-    """Properties in 'operation' module."""
-
-    AIR_FAN_OPERATION_MODE = "air_fan_operation_mode"
-    AIR_PURIFIER_OPERATION_MODE = "air_purifier_operation_mode"
-    DEHUMIDIFIER_OPERATION_MODE = "dehumidifier_operation_mode"
-    HUMIDIFIER_OPERATION_MODE = "humidifier_operation_mode"
-
-
-OPERATION_SWITCH_DESC: dict[Operation, ThinQSwitchEntityDescription] = {
-    Operation.AIR_FAN_OPERATION_MODE: ThinQSwitchEntityDescription(
-        key=Operation.AIR_FAN_OPERATION_MODE,
+OPERATION_SWITCH_DESC: dict[propertyc, ThinQEntityDescription] = {
+    propertyc.AIR_FAN_OPERATION_MODE: ThinQEntityDescription(
+        key=propertyc.AIR_FAN_OPERATION_MODE,
         icon="mdi:power",
         name="Power",
         translation_key="operation_power",
         property_info=PropertyInfo(
-            key=Operation.AIR_FAN_OPERATION_MODE,
+            key=propertyc.AIR_FAN_OPERATION_MODE,
             value_converter=value_to_power_state_converter,
         ),
     ),
-    Operation.AIR_PURIFIER_OPERATION_MODE: ThinQSwitchEntityDescription(
-        key=Operation.AIR_PURIFIER_OPERATION_MODE,
+    propertyc.AIR_PURIFIER_OPERATION_MODE: ThinQEntityDescription(
+        key=propertyc.AIR_PURIFIER_OPERATION_MODE,
         icon="mdi:power",
         name="Power",
         translation_key="operation_power",
         property_info=PropertyInfo(
-            key=Operation.AIR_PURIFIER_OPERATION_MODE,
+            key=propertyc.AIR_PURIFIER_OPERATION_MODE,
             value_converter=value_to_power_state_converter,
         ),
     ),
-    Operation.DEHUMIDIFIER_OPERATION_MODE: ThinQSwitchEntityDescription(
-        key=Operation.DEHUMIDIFIER_OPERATION_MODE,
+    propertyc.BOILER_OPERATION_MODE: ThinQEntityDescription(
+        key=propertyc.BOILER_OPERATION_MODE,
         icon="mdi:power",
         name="Power",
         translation_key="operation_power",
         property_info=PropertyInfo(
-            key=Operation.DEHUMIDIFIER_OPERATION_MODE,
+            key=propertyc.BOILER_OPERATION_MODE,
             value_converter=value_to_power_state_converter,
         ),
     ),
-    Operation.HUMIDIFIER_OPERATION_MODE: ThinQSwitchEntityDescription(
-        key=Operation.HUMIDIFIER_OPERATION_MODE,
+    propertyc.DEHUMIDIFIER_OPERATION_MODE: ThinQEntityDescription(
+        key=propertyc.DEHUMIDIFIER_OPERATION_MODE,
         icon="mdi:power",
         name="Power",
         translation_key="operation_power",
         property_info=PropertyInfo(
-            key=Operation.HUMIDIFIER_OPERATION_MODE,
+            key=propertyc.DEHUMIDIFIER_OPERATION_MODE,
+            value_converter=value_to_power_state_converter,
+        ),
+    ),
+    propertyc.HUMIDIFIER_OPERATION_MODE: ThinQEntityDescription(
+        key=propertyc.HUMIDIFIER_OPERATION_MODE,
+        icon="mdi:power",
+        name="Power",
+        translation_key="operation_power",
+        property_info=PropertyInfo(
+            key=propertyc.HUMIDIFIER_OPERATION_MODE,
             value_converter=value_to_power_state_converter,
         ),
     ),
 }
-
-AIR_PURIFIER_FAN_SWITCH: tuple[ThinQSwitchEntityDescription, ...] = (
-    OPERATION_SWITCH_DESC[Operation.AIR_FAN_OPERATION_MODE],
+# AIR_PURIFIER_FAN Description
+AIR_PURIFIER_FAN_SWITCH: tuple[ThinQEntityDescription, ...] = (
+    OPERATION_SWITCH_DESC[propertyc.AIR_FAN_OPERATION_MODE],
 )
-AIRPURIFIER_SWITCH: tuple[ThinQSwitchEntityDescription, ...] = (
-    OPERATION_SWITCH_DESC[Operation.AIR_PURIFIER_OPERATION_MODE],
+# AIRPURIFIER Description
+AIRPURIFIER_SWITCH: tuple[ThinQEntityDescription, ...] = (
+    OPERATION_SWITCH_DESC[propertyc.AIR_PURIFIER_OPERATION_MODE],
 )
-DEHUMIDIFIER_SWITCH: tuple[ThinQSwitchEntityDescription, ...] = (
-    OPERATION_SWITCH_DESC[Operation.DEHUMIDIFIER_OPERATION_MODE],
+# DEHUMIDIFIER Description
+DEHUMIDIFIER_SWITCH: tuple[ThinQEntityDescription, ...] = (
+    OPERATION_SWITCH_DESC[propertyc.DEHUMIDIFIER_OPERATION_MODE],
 )
-HUMIDIFIER_SWITCH: tuple[ThinQSwitchEntityDescription, ...] = (
-    OPERATION_SWITCH_DESC[Operation.HUMIDIFIER_OPERATION_MODE],
+# HUMIDIFIER Description
+HUMIDIFIER_SWITCH: tuple[ThinQEntityDescription, ...] = (
+    OPERATION_SWITCH_DESC[propertyc.HUMIDIFIER_OPERATION_MODE],
+)
+# SYSTEM_BOILER Description
+SYSTEM_BOILER_SWITCH: tuple[ThinQEntityDescription, ...] = (
+    OPERATION_SWITCH_DESC[propertyc.BOILER_OPERATION_MODE],
 )
 
 
@@ -129,18 +206,65 @@ UNIT_CONVERSION_MAP: dict[str, str] = {
     "C": UnitOfTemperature.CELSIUS,
 }
 
+READ_WRITE_TYPE: dict[str, str] = {
+    Platform.BINARY_SENSOR: PROPERTY_READABLE,
+    Platform.EVENT: PROPERTY_READABLE,
+    Platform.NUMBER: PROPERTY_WRITABLE,
+    Platform.SELECT: PROPERTY_WRITABLE,
+    Platform.SENSOR: PROPERTY_READABLE,
+    Platform.SWITCH: PROPERTY_WRITABLE,
+}
 
-class ThinQEntity(CoordinatorEntity, Generic[ThinQEntityDescriptionT]):
+
+def get_property_list(
+    device: LGDevice, target_platform: Platform
+) -> dict[Property, ThinQEntityDescription] | None:
+    """Get property list with description."""
+    desc_map = ENTITY_MAP.get(device.api.device_type)
+    if not isinstance(desc_map, dict):
+        return None
+
+    desc_list = desc_map.get(target_platform)
+    if not isinstance(desc_list, (list, tuple)):
+        return None
+
+    # Get entitiy descriptions for the target platform.
+    prop_list: dict[Property, ThinQEntityDescription] = {}
+    for desc in desc_list:
+        properties = create_properties(
+            device_api=device.api,
+            key=desc.key,
+            children_keys=desc.property_info.children,
+            mode=desc.property_info.mode,
+            rw_type=READ_WRITE_TYPE.get(target_platform),
+        )
+
+        if not properties:
+            continue
+
+        for prop in properties:
+            prop_list[prop] = desc
+
+            _LOGGER.debug(
+                "[%s] Add %s entity for [%s]",
+                device.name,
+                target_platform,
+                desc.key,
+            )
+
+    return prop_list
+
+
+class ThinQEntity(CoordinatorEntity):
     """The base implementation of all lg thinq entities."""
 
-    target_platform: Platform | None
-    entity_description: ThinQEntityDescriptionT
+    entity_description: ThinQEntityDescription
 
     def __init__(
         self,
         device: LGDevice,
         property: Property,
-        entity_description: ThinQEntityDescriptionT,
+        entity_description: ThinQEntityDescription,
     ) -> None:
         """Initialize an entity."""
         super().__init__(device.coordinator)
@@ -152,12 +276,14 @@ class ThinQEntity(CoordinatorEntity, Generic[ThinQEntityDescriptionT]):
 
         # If there exist a location, add the prefix location name.
         location = self.property.location
-        location_str = (
-            ""
-            if location is None or location in ("main", "oven", device.sub_id)
-            else f"{location} "
-        )
-        self._attr_translation_placeholders = {"location": location_str}
+        self._attr_translation_placeholders = {
+            "location": (
+                ""
+                if location is None
+                or location in (Location.MAIN, Location.OVEN, device.sub_id)
+                else f"{location} "
+            )
+        }
 
         # Set the unique key.
         unique_key = (
@@ -166,6 +292,9 @@ class ThinQEntity(CoordinatorEntity, Generic[ThinQEntityDescriptionT]):
             else f"{location}_{entity_description.key}"
         )
         self._attr_unique_id = f"{device.unique_id}_{unique_key}"
+
+        self._property_info = self.entity_description.property_info
+        self._featured_map: dict[PropertyFeature, Property] = {}
 
     @property
     def available(self) -> bool:
@@ -187,7 +316,7 @@ class ThinQEntity(CoordinatorEntity, Generic[ThinQEntityDescriptionT]):
         if feature is None:
             return self.property
 
-        return self.property.get_featured_property(feature)
+        return self._featured_map.get(feature)
 
     def get_options(self, feature: PropertyFeature | None = None) -> list[str] | None:
         """Return the property options of entity."""
@@ -219,8 +348,21 @@ class ThinQEntity(CoordinatorEntity, Generic[ThinQEntityDescriptionT]):
     ) -> None:
         """Post the value of entity to server."""
         prop = self.get_property(feature)
-        if prop is not None:
+        if prop is None:
+            return
+        try:
             await prop.async_post_value(value)
+        except ThinQAPIException as exc:
+            if exc.code == ThinQAPIErrorCodes.NOT_CONNECTED_DEVICE:
+                self.device.is_connected = False
+            # Rollback status data.
+            self.device.coordinator.async_set_updated_data({})
+
+            raise ServiceValidationError(
+                exc.message,
+                translation_domain=DOMAIN,
+                translation_key=exc.code,
+            ) from exc
 
     def _get_unit_of_measurement(
         self, unit: str | None, fallback: str | None
@@ -247,66 +389,3 @@ class ThinQEntity(CoordinatorEntity, Generic[ThinQEntityDescriptionT]):
         """Call when entity is added to hass."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
-
-    @classmethod
-    def create_entities(cls, devices: Collection[LGDevice]) -> list[ThinQEntity]:
-        """Create entities with descriptions from the entity map."""
-        if not devices or cls.target_platform is None:
-            return []
-
-        _LOGGER.debug(
-            "async_create_entities. cls=%s, target_platform=%s",
-            cls.__name__,
-            cls.target_platform,
-        )
-
-        entities: list[ThinQEntity] = []
-        for device in devices:
-            entities_for_device = cls.create_entities_for_device(device)
-            if entities_for_device:
-                entities.extend(entities_for_device)
-
-        return entities
-
-    @classmethod
-    def create_entities_for_device(cls, device: LGDevice) -> list[ThinQEntity] | None:
-        """Create entities for the device."""
-        if cls.target_platform is None:
-            return None
-
-        # Get the entitiy description map for the device type.
-        desc_map = ENTITY_MAP.get(device.type)
-        if not isinstance(desc_map, dict):
-            return None
-
-        # Get entitiy descriptions for the target platform.
-        desc_list = desc_map.get(cls.target_platform)
-        if not isinstance(desc_list, (list, tuple)):
-            return None
-
-        if not desc_list:
-            return None
-
-        entities: list[ThinQEntity] = []
-        # Try to create entities for all entity descriptions.
-        for desc in desc_list:
-            properties = create_properties(
-                device, desc.property_info, cls.target_platform
-            )
-            if not properties:
-                continue
-
-            for prop in properties:
-                if cls != ThinQSwitchEntity:
-                    continue
-
-                entities.append(ThinQSwitchEntity(device, prop, desc))
-
-                _LOGGER.debug(
-                    "[%s] Add %s entity for [%s]",
-                    device.name,
-                    cls.target_platform,
-                    desc.key,
-                )
-
-        return entities
