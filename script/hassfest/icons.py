@@ -51,7 +51,7 @@ DATA_ENTRY_ICONS_SCHEMA = vol.Schema(
     {
         "step": {
             str: {
-                "section": {
+                "sections": {
                     str: icon_value_validator,
                 }
             }

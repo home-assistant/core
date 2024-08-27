@@ -137,15 +137,16 @@ def async_default_engine(hass: HomeAssistant) -> str | None:
     component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
     manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
 
-    if "cloud" in manager.providers:
-        return "cloud"
+    default_entity_id: str | None = None
 
-    entity = next(iter(component.entities), None)
+    for entity in component.entities:
+        if entity.platform and entity.platform.platform_name == "cloud":
+            return entity.entity_id
 
-    if entity is not None:
-        return entity.entity_id
+        if default_entity_id is None:
+            default_entity_id = entity.entity_id
 
-    return next(iter(manager.providers), None)
+    return default_entity_id or next(iter(manager.providers), None)
 
 
 @callback
