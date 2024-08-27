@@ -154,10 +154,9 @@ async def queue_to_iterable(
         while (item := await queue.get()) is not None:
             yield item
     else:
-        async with async_timeout(timeout):
-            item = await queue.get()
-
-        while item is not None:
-            yield item
+        while True:
             async with async_timeout(timeout):
                 item = await queue.get()
+            if item is None:
+                break
+            yield item
