@@ -1825,7 +1825,7 @@ async def test_register_entity_service_non_entity_service_schema(
     ):
         with pytest.raises(
             HomeAssistantError,
-            match=("The schema is not an entity service schema"),
+            match="The schema is not an entity service schema",
         ):
             entity_platform.async_register_entity_service("hello", schema, Mock())
 
