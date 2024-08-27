@@ -57,25 +57,31 @@ class AssistSatelliteEntity(entity.Entity):
         pipeline_id: str | None = None
         vad_sensitivity = vad.VadSensitivity.DEFAULT
 
-        if pipeline_entity_id:
+        if (
+            pipeline_entity_id
+            and (
+                (pipeline_entity_state := self.hass.states.get(pipeline_entity_id))
+                is not None
+            )
+            and (pipeline_entity_state.state != OPTION_PREFERRED)
+        ):
             # Resolve pipeline by name
-            pipeline_entity_state = self.hass.states.get(pipeline_entity_id)
-            if (pipeline_entity_state is not None) and (
-                pipeline_entity_state.state != OPTION_PREFERRED
-            ):
-                for pipeline in async_get_pipelines(self.hass):
-                    if pipeline.name == pipeline_entity_state.state:
-                        pipeline_id = pipeline.id
-                        break
+            for pipeline in async_get_pipelines(self.hass):
+                if pipeline.name == pipeline_entity_state.state:
+                    pipeline_id = pipeline.id
+                    break
 
-        if vad_sensitivity_entity_id:
-            vad_sensitivity_state = self.hass.states.get(vad_sensitivity_entity_id)
-            if vad_sensitivity_state is not None:
-                vad_sensitivity = vad.VadSensitivity(vad_sensitivity_state.state)
+        if (
+            vad_sensitivity_entity_id
+            and (
+                vad_sensitivity_state := self.hass.states.get(vad_sensitivity_entity_id)
+            )
+            is not None
+        ):
+            vad_sensitivity = vad.VadSensitivity(vad_sensitivity_state.state)
 
-        device_id: str | None = None
-        if self.registry_entry is not None:
-            device_id = self.registry_entry.device_id
+        assert self.registry_entry is not None
+        device_id = self.registry_entry.device_id
 
         # Refresh context if necessary
         if (
@@ -123,21 +129,23 @@ class AssistSatelliteEntity(entity.Entity):
             audio_settings=AudioSettings(
                 silence_seconds=vad.VadSensitivity.to_seconds(vad_sensitivity)
             ),
+            start_stage=start_stage,
+            end_stage=end_stage,
         )
 
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Set state based on pipeline stage."""
-        if event.type == PipelineEventType.WAKE_WORD_START:
+        if event.type is PipelineEventType.WAKE_WORD_START:
             self._set_state(AssistSatelliteState.LISTENING_WAKE_WORD)
-        elif event.type == PipelineEventType.STT_START:
+        elif event.type is PipelineEventType.STT_START:
             self._set_state(AssistSatelliteState.LISTENING_COMMAND)
-        elif event.type == PipelineEventType.INTENT_START:
+        elif event.type is PipelineEventType.INTENT_START:
             self._set_state(AssistSatelliteState.PROCESSING)
-        elif event.type == PipelineEventType.TTS_START:
+        elif event.type is PipelineEventType.TTS_START:
             # Wait until tts_response_finished is called to return to waiting state
             self._run_has_tts = True
             self._set_state(AssistSatelliteState.RESPONDING)
-        elif event.type == PipelineEventType.RUN_END:
+        elif event.type is PipelineEventType.RUN_END:
             if not self._run_has_tts:
                 self._set_state(AssistSatelliteState.LISTENING_WAKE_WORD)
 
