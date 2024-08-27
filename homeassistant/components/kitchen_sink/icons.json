@@ -12,7 +12,7 @@
     "test_service_1": {
       "service": "mdi:flask",
       "sections": {
-        "section_1": "mdi:test-tube"
+        "advanced_fields": "mdi:test-tube"
       }
     }
   }

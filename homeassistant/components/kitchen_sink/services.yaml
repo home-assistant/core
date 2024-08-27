@@ -1,12 +1,14 @@
 test_service_1:
   fields:
     field_1:
+      required: true
       selector:
         number:
           min: 0
           max: 60
           unit_of_measurement: seconds
     field_2:
+      required: true
       selector:
         select:
           options:
