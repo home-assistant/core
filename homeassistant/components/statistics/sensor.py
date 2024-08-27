@@ -775,7 +775,7 @@ class StatisticsSensor(SensorEntity):
             state1 = 100.0 * int(bool(state1))
             state2 = 100.0 * int(bool(state2))
         if max_age_secs < age1_secs:
-            # the first value is outside of the time frame, we have to te only the part of the area within the time frame
+            # the first value is outside of the time frame, we have to compute only the part of the area within the time frame
             if function == STAT_AVERAGE_LINEAR:
                 state1 = state1 + (state2 - state1) * (age1_secs - max_age_secs) / (
                     age1_secs - age2_secs
