@@ -49,6 +49,10 @@ INSECURE_PASSPHRASES = (
 )
 
 
+class GetBorderAgentIdNotSupported(HomeAssistantError):
+    """Raised from python_otbr_api.GetBorderAgentIdNotSupportedError."""
+
+
 def compose_default_network_name(pan_id: int) -> str:
     """Generate a default network name."""
     return f"ha-thread-{pan_id:04x}"
@@ -96,16 +100,16 @@ class OTBRData:
         await update_unique_id(
             hass,
             hass.config_entries.async_get_entry(self.entry_id),
-            await self.get_extended_address(),
+            await self.get_border_agent_id(),
         )
 
     @_handle_otbr_error
-    async def get_border_agent_id(self) -> bytes | None:
+    async def get_border_agent_id(self) -> bytes:
         """Get the border agent ID or None if not supported by the router."""
         try:
             return await self.api.get_border_agent_id()
-        except python_otbr_api.GetBorderAgentIdNotSupportedError:
-            return None
+        except python_otbr_api.GetBorderAgentIdNotSupportedError as exc:
+            raise GetBorderAgentIdNotSupported from exc
 
     @_handle_otbr_error
     async def set_enabled(self, enabled: bool) -> None:
@@ -267,19 +271,15 @@ async def update_issues(
 
 
 async def update_unique_id(
-    hass: HomeAssistant, entry: ConfigEntry | None, extended_address: bytes
+    hass: HomeAssistant, entry: ConfigEntry | None, border_agent_id: bytes
 ) -> None:
     """Update the config entry's unique_id if not matching."""
-    extended_address_hex = extended_address.hex()
-    if (
-        entry
-        and entry.source == SOURCE_USER
-        and entry.unique_id != extended_address_hex
-    ):
+    border_agent_id_hex = border_agent_id.hex()
+    if entry and entry.source == SOURCE_USER and entry.unique_id != border_agent_id_hex:
         _LOGGER.debug(
             "Updating unique_id of entry %s from %s to %s",
             entry.entry_id,
             entry.unique_id,
-            extended_address_hex,
+            border_agent_id_hex,
         )
-        hass.config_entries.async_update_entry(entry, unique_id=extended_address_hex)
+        hass.config_entries.async_update_entry(entry, unique_id=border_agent_id_hex)

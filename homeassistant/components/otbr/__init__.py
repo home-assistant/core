@@ -17,7 +17,12 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import websocket_api
 from .const import DATA_OTBR, DOMAIN
-from .util import OTBRData, update_issues, update_unique_id
+from .util import (
+    GetBorderAgentIdNotSupported,
+    OTBRData,
+    update_issues,
+    update_unique_id,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,14 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         border_agent_id = await otbrdata.get_border_agent_id()
         dataset_tlvs = await otbrdata.get_active_dataset_tlvs()
         extended_address = await otbrdata.get_extended_address()
-    except (
-        HomeAssistantError,
-        aiohttp.ClientError,
-        TimeoutError,
-    ) as err:
-        raise ConfigEntryNotReady("Unable to connect") from err
-    await update_unique_id(hass, entry, extended_address)
-    if border_agent_id is None:
+    except GetBorderAgentIdNotSupported:
         ir.async_create_issue(
             hass,
             DOMAIN,
@@ -57,6 +55,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             translation_key="get_get_border_agent_id_unsupported",
         )
         return False
+    except (
+        HomeAssistantError,
+        aiohttp.ClientError,
+        TimeoutError,
+    ) as err:
+        raise ConfigEntryNotReady("Unable to connect") from err
+    await update_unique_id(hass, entry, border_agent_id)
     if dataset_tlvs:
         await update_issues(hass, otbrdata, dataset_tlvs)
         await async_add_dataset(

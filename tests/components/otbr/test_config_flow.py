@@ -13,12 +13,7 @@ from homeassistant.components import hassio, otbr
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import (
-    DATASET_CH15,
-    DATASET_CH16,
-    TEST_BORDER_AGENT_EXTENDED_ADDRESS,
-    TEST_BORDER_AGENT_EXTENDED_ADDRESS_2,
-)
+from . import DATASET_CH15, DATASET_CH16, TEST_BORDER_AGENT_ID, TEST_BORDER_AGENT_ID_2
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -62,7 +57,10 @@ def addon_info_fixture():
         "http://custom_url:1234//",
     ],
 )
-@pytest.mark.usefixtures("get_active_dataset_tlvs", "get_extended_address")
+@pytest.mark.usefixtures(
+    "get_active_dataset_tlvs",
+    "get_border_agent_id",
+)
 async def test_user_flow(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, url: str
 ) -> None:
@@ -72,7 +70,7 @@ async def test_user_flow(
 
 @pytest.mark.usefixtures(
     "get_active_dataset_tlvs",
-    "get_border_agent_id",
+    "get_extended_address",
 )
 async def test_user_flow_additional_entry(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
@@ -80,12 +78,8 @@ async def test_user_flow_additional_entry(
     """Test more than a single entry is allowed."""
     url1 = "http://custom_url:1234"
     url2 = "http://custom_url_2:1234"
-    aioclient_mock.get(
-        f"{url1}/node/ext-address", json=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex()
-    )
-    aioclient_mock.get(
-        f"{url2}/node/ext-address", json=TEST_BORDER_AGENT_EXTENDED_ADDRESS_2.hex()
-    )
+    aioclient_mock.get(f"{url1}/node/ba-id", json=TEST_BORDER_AGENT_ID.hex())
+    aioclient_mock.get(f"{url2}/node/ba-id", json=TEST_BORDER_AGENT_ID_2.hex())
 
     mock_integration(hass, MockModule("hassio"))
 
@@ -95,7 +89,7 @@ async def test_user_flow_additional_entry(
         domain=otbr.DOMAIN,
         options={},
         title="Open Thread Border Router",
-        unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS_2.hex(),
+        unique_id=TEST_BORDER_AGENT_ID_2.hex(),
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -106,7 +100,7 @@ async def test_user_flow_additional_entry(
 
 @pytest.mark.usefixtures(
     "get_active_dataset_tlvs",
-    "get_border_agent_id",
+    "get_extended_address",
 )
 async def test_user_flow_additional_entry_fail_get_address(
     hass: HomeAssistant,
@@ -120,9 +114,7 @@ async def test_user_flow_additional_entry_fail_get_address(
     """
     url1 = "http://custom_url:1234"
     url2 = "http://custom_url_2:1234"
-    aioclient_mock.get(
-        f"{url2}/node/ext-address", json=TEST_BORDER_AGENT_EXTENDED_ADDRESS_2.hex()
-    )
+    aioclient_mock.get(f"{url2}/node/ba-id", json=TEST_BORDER_AGENT_ID_2.hex())
 
     mock_integration(hass, MockModule("hassio"))
 
@@ -132,19 +124,17 @@ async def test_user_flow_additional_entry_fail_get_address(
         domain=otbr.DOMAIN,
         options={},
         title="Open Thread Border Router",
-        unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS_2.hex(),
+        unique_id=TEST_BORDER_AGENT_ID_2.hex(),
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
 
     # Do a user flow
     aioclient_mock.clear_requests()
-    aioclient_mock.get(
-        f"{url1}/node/ext-address", json=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex()
-    )
-    aioclient_mock.get(f"{url2}/node/ext-address", status=HTTPStatus.NOT_FOUND)
+    aioclient_mock.get(f"{url1}/node/ba-id", json=TEST_BORDER_AGENT_ID.hex())
+    aioclient_mock.get(f"{url2}/node/ba-id", status=HTTPStatus.NOT_FOUND)
     await _finish_user_flow(hass)
-    assert f"Could not read extended address from {url2}" in caplog.text
+    assert f"Could not read border agent id from {url2}" in caplog.text
 
 
 async def _finish_user_flow(
@@ -181,7 +171,7 @@ async def _finish_user_flow(
     assert config_entry.data == expected_data
     assert config_entry.options == {}
     assert config_entry.title == "Open Thread Border Router"
-    assert config_entry.unique_id == TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex()
+    assert config_entry.unique_id == TEST_BORDER_AGENT_ID.hex()
 
 
 @pytest.mark.usefixtures(
@@ -201,7 +191,7 @@ async def test_user_flow_additional_entry_same_address(
         domain=otbr.DOMAIN,
         options={},
         title="Open Thread Border Router",
-        unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+        unique_id=TEST_BORDER_AGENT_ID.hex(),
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -226,7 +216,7 @@ async def test_user_flow_additional_entry_same_address(
     assert result["errors"] == {"base": "already_configured"}
 
 
-@pytest.mark.usefixtures("get_extended_address")
+@pytest.mark.usefixtures("get_border_agent_id")
 async def test_user_flow_router_not_setup(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -290,10 +280,10 @@ async def test_user_flow_router_not_setup(
     assert config_entry.data == expected_data
     assert config_entry.options == {}
     assert config_entry.title == "Open Thread Border Router"
-    assert config_entry.unique_id == TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex()
+    assert config_entry.unique_id == TEST_BORDER_AGENT_ID.hex()
 
 
-@pytest.mark.usefixtures("get_extended_address")
+@pytest.mark.usefixtures("get_border_agent_id")
 async def test_user_flow_get_dataset_404(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -325,12 +315,14 @@ async def test_user_flow_get_dataset_404(
         aiohttp.ClientError,
     ],
 )
-async def test_user_flow_get_ext_addr_connect_error(hass: HomeAssistant, error) -> None:
+async def test_user_flow_get_ba_id_connect_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, error
+) -> None:
     """Test the user flow."""
-    await _test_user_flow_connect_error(hass, "get_extended_address", error)
+    await _test_user_flow_connect_error(hass, "get_border_agent_id", error)
 
 
-@pytest.mark.usefixtures("get_extended_address")
+@pytest.mark.usefixtures("get_border_agent_id")
 @pytest.mark.parametrize(
     "error",
     [
@@ -339,7 +331,9 @@ async def test_user_flow_get_ext_addr_connect_error(hass: HomeAssistant, error) 
         aiohttp.ClientError,
     ],
 )
-async def test_user_flow_get_dataset_connect_error(hass: HomeAssistant, error) -> None:
+async def test_user_flow_get_dataset_connect_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, error
+) -> None:
     """Test the user flow."""
     await _test_user_flow_connect_error(hass, "get_active_dataset_tlvs", error)
 
@@ -364,7 +358,7 @@ async def _test_user_flow_connect_error(hass: HomeAssistant, func, error) -> Non
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-@pytest.mark.usefixtures("get_extended_address")
+@pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
 ) -> None:
@@ -397,7 +391,7 @@ async def test_hassio_discovery_flow(
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
-@pytest.mark.usefixtures("get_extended_address")
+@pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_yellow(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
 ) -> None:
@@ -455,7 +449,7 @@ async def test_hassio_discovery_flow_yellow(
         ),
     ],
 )
-@pytest.mark.usefixtures("get_extended_address")
+@pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_sky_connect(
     device: str,
     title: str,
@@ -501,7 +495,7 @@ async def test_hassio_discovery_flow_sky_connect(
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
-@pytest.mark.usefixtures("get_active_dataset_tlvs", "get_border_agent_id")
+@pytest.mark.usefixtures("get_active_dataset_tlvs", "get_extended_address")
 async def test_hassio_discovery_flow_2x_addons(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
 ) -> None:
@@ -510,12 +504,8 @@ async def test_hassio_discovery_flow_2x_addons(
     url2 = "http://core-silabs-multiprotocol_2:8081"
     aioclient_mock.get(f"{url1}/node/dataset/active", text="aa")
     aioclient_mock.get(f"{url2}/node/dataset/active", text="bb")
-    aioclient_mock.get(
-        f"{url1}/node/ext-address", json=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex()
-    )
-    aioclient_mock.get(
-        f"{url2}/node/ext-address", json=TEST_BORDER_AGENT_EXTENDED_ADDRESS_2.hex()
-    )
+    aioclient_mock.get(f"{url1}/node/ba-id", json=TEST_BORDER_AGENT_ID.hex())
+    aioclient_mock.get(f"{url2}/node/ba-id", json=TEST_BORDER_AGENT_ID_2.hex())
 
     async def _addon_info(hass: HomeAssistant, slug: str) -> dict[str, Any]:
         await asyncio.sleep(0)
@@ -598,7 +588,7 @@ async def test_hassio_discovery_flow_2x_addons(
     assert config_entry.unique_id == HASSIO_DATA_2.uuid
 
 
-@pytest.mark.usefixtures("get_active_dataset_tlvs", "get_border_agent_id")
+@pytest.mark.usefixtures("get_active_dataset_tlvs", "get_extended_address")
 async def test_hassio_discovery_flow_2x_addons_same_ext_address(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
 ) -> None:
@@ -607,12 +597,8 @@ async def test_hassio_discovery_flow_2x_addons_same_ext_address(
     url2 = "http://core-silabs-multiprotocol_2:8081"
     aioclient_mock.get(f"{url1}/node/dataset/active", text="aa")
     aioclient_mock.get(f"{url2}/node/dataset/active", text="bb")
-    aioclient_mock.get(
-        f"{url1}/node/ext-address", json=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex()
-    )
-    aioclient_mock.get(
-        f"{url2}/node/ext-address", json=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex()
-    )
+    aioclient_mock.get(f"{url1}/node/ba-id", json=TEST_BORDER_AGENT_ID.hex())
+    aioclient_mock.get(f"{url2}/node/ba-id", json=TEST_BORDER_AGENT_ID.hex())
 
     async def _addon_info(hass: HomeAssistant, slug: str) -> dict[str, Any]:
         await asyncio.sleep(0)
@@ -678,7 +664,7 @@ async def test_hassio_discovery_flow_2x_addons_same_ext_address(
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
-@pytest.mark.usefixtures("get_extended_address")
+@pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_router_not_setup(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
 ) -> None:
@@ -736,7 +722,7 @@ async def test_hassio_discovery_flow_router_not_setup(
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
-@pytest.mark.usefixtures("get_extended_address")
+@pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_router_not_setup_has_preferred(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
 ) -> None:
@@ -789,7 +775,7 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred(
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
-@pytest.mark.usefixtures("get_extended_address")
+@pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -853,7 +839,7 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
-@pytest.mark.usefixtures("get_extended_address")
+@pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_404(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -868,7 +854,7 @@ async def test_hassio_discovery_flow_404(
     assert result["reason"] == "unknown"
 
 
-@pytest.mark.usefixtures("get_extended_address")
+@pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_new_port_missing_unique_id(
     hass: HomeAssistant,
 ) -> None:
@@ -901,7 +887,7 @@ async def test_hassio_discovery_flow_new_port_missing_unique_id(
     assert config_entry.data == expected_data
 
 
-@pytest.mark.usefixtures("get_extended_address")
+@pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_new_port(hass: HomeAssistant) -> None:
     """Test the port can be updated."""
     mock_integration(hass, MockModule("hassio"))

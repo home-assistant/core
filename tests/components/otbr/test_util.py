@@ -34,13 +34,13 @@ async def test_get_allowed_channel(
 async def test_factory_reset(
     hass: HomeAssistant,
     otbr_config_entry_multipan: str,
-    get_extended_address: AsyncMock,
+    get_border_agent_id: AsyncMock,
 ) -> None:
     """Test factory_reset."""
-    new_xa = b"new_xa"
-    get_extended_address.return_value = new_xa
+    new_ba_id = b"new_ba_id"
+    get_border_agent_id.return_value = new_ba_id
     config_entry = hass.config_entries.async_get_entry(otbr_config_entry_multipan)
-    assert config_entry.unique_id != new_xa.hex()
+    assert config_entry.unique_id != new_ba_id.hex()
     with (
         patch("python_otbr_api.OTBR.factory_reset") as factory_reset_mock,
         patch(
@@ -54,7 +54,7 @@ async def test_factory_reset(
 
     # Check the unique_id is updated
     config_entry = hass.config_entries.async_get_entry(otbr_config_entry_multipan)
-    assert config_entry.unique_id == new_xa.hex()
+    assert config_entry.unique_id == new_ba_id.hex()
 
 
 async def test_factory_reset_not_supported(

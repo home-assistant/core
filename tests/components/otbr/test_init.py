@@ -326,8 +326,8 @@ async def test_remove_entry(
     [
         (SOURCE_HASSIO, None, None),
         (SOURCE_HASSIO, "abcd", "abcd"),
-        (SOURCE_USER, None, TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex()),
-        (SOURCE_USER, "abcd", TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex()),
+        (SOURCE_USER, None, TEST_BORDER_AGENT_ID.hex()),
+        (SOURCE_USER, "abcd", TEST_BORDER_AGENT_ID.hex()),
     ],
 )
 async def test_update_unique_id(

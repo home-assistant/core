@@ -74,9 +74,9 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def _get_extended_address(self, api: python_otbr_api.OTBR) -> bytes:
-        """Get the extended address from the dataset."""
-        return await api.get_extended_address()
+    async def _get_border_agent_id(self, api: python_otbr_api.OTBR) -> bytes:
+        """Get the border agent id from a router."""
+        return await api.get_border_agent_id()
 
     async def _set_dataset(self, api: python_otbr_api.OTBR, otbr_url: str) -> None:
         """Connect to the OTBR and create or apply a dataset if it doesn't have one."""
@@ -110,46 +110,44 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             await api.set_enabled(True)
 
-    async def _is_extended_address_configured(self, extended_address: bytes) -> bool:
-        """Return True if another config entry's OTBR has the same extended address."""
+    async def _is_border_agent_id_configured(self, border_agent_id: bytes) -> bool:
+        """Return True if another config entry's OTBR has the same border agent id."""
         if DATA_OTBR not in self.hass.data:
             _LOGGER.debug("No OTBR")
             return False
         for data in self.hass.data[DATA_OTBR].values():
             try:
-                other_extended_address = await data.get_extended_address()
+                other_border_agent_id = await data.get_border_agent_id()
             except HomeAssistantError:
                 _LOGGER.debug(
-                    "Could not read extended address from %s", data.url, exc_info=True
+                    "Could not read border agent id from %s", data.url, exc_info=True
                 )
                 continue
             _LOGGER.debug(
-                "extended address for existing url %s: %s",
+                "border agent id for existing url %s: %s",
                 data.url,
-                other_extended_address.hex(),
+                other_border_agent_id.hex(),
             )
-            if extended_address == other_extended_address:
+            if border_agent_id == other_border_agent_id:
                 return True
         return False
 
     async def _connect_and_configure_router(self, otbr_url: str) -> bytes:
         """Connect to the router and configure it if needed.
 
-        Will raise if the router's extended address is in use by another config entry.
-        Returns the router's extended address.
+        Will raise if the router's border agent id is in use by another config entry.
+        Returns the router's border agent id.
         """
         api = python_otbr_api.OTBR(otbr_url, async_get_clientsession(self.hass), 10)
-        extended_address = await self._get_extended_address(api)
-        _LOGGER.debug(
-            "extended address for url %s: %s", otbr_url, extended_address.hex()
-        )
+        border_agent_id = await self._get_border_agent_id(api)
+        _LOGGER.debug("border agent id for url %s: %s", otbr_url, border_agent_id.hex())
 
-        if await self._is_extended_address_configured(extended_address):
+        if await self._is_border_agent_id_configured(border_agent_id):
             raise AlreadyConfigured
 
         await self._set_dataset(api, otbr_url)
 
-        return extended_address
+        return border_agent_id
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
@@ -160,7 +158,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             url = user_input[CONF_URL].rstrip("/")
             try:
-                extended_address = await self._connect_and_configure_router(url)
+                border_agent_id = await self._connect_and_configure_router(url)
             except AlreadyConfigured:
                 errors["base"] = "already_configured"
             except (
@@ -171,7 +169,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.debug("Failed to communicate with OTBR@%s: %s", url, exc)
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(extended_address.hex())
+                await self.async_set_unique_id(border_agent_id.hex())
                 return self.async_create_entry(
                     title="Open Thread Border Router",
                     data={CONF_URL: url},
