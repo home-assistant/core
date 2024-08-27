@@ -174,10 +174,7 @@ class ReolinkVODMediaSource(MediaSource):
                 if len(ch_id) > 3:
                     ch = host.api.channel_for_uid(ch_id)
 
-                if (
-                    not host.api.supported(int(ch), "replay")
-                    or not host.api.hdd_info
-                ):
+                if not host.api.supported(int(ch), "replay") or not host.api.hdd_info:
                     # playback stream not supported by this camera or no storage installed
                     continue
 
@@ -396,7 +393,9 @@ class ReolinkVODMediaSource(MediaSource):
                 )
             )
 
-        title = f"{host.api.camera_name(channel)} {res_name(stream)} {year}/{month}/{day}"
+        title = (
+            f"{host.api.camera_name(channel)} {res_name(stream)} {year}/{month}/{day}"
+        )
         if host.api.model in DUAL_LENS_MODELS:
             title = f"{host.api.camera_name(channel)} lens {channel} {res_name(stream)} {year}/{month}/{day}"
 
