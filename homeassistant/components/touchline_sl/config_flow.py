@@ -30,7 +30,6 @@ class TouchlineSLConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Construct a new ConfigFlow for the Roth Touchline SL module."""
         self.account = None
-        self.data: dict[str, str] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -44,7 +43,7 @@ class TouchlineSLConfigFlow(ConfigFlow, domain=DOMAIN):
                     username=user_input[CONF_USERNAME],
                     password=user_input[CONF_PASSWORD],
                 )
-                await account.modules()
+                await account.user_id()
             except RothAPIError as e:
                 if e.status == 401:
                     errors["base"] = "invalid_auth"
@@ -54,13 +53,12 @@ class TouchlineSLConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                self.data.update(user_input)
-
-                await self.async_set_unique_id(user_input[CONF_USERNAME])
+                unique_account_id = await account.user_id()
+                await self.async_set_unique_id(str(unique_account_id))
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=user_input[CONF_USERNAME], data=self.data
+                    title=user_input[CONF_USERNAME], data=user_input
                 )
 
         return self.async_show_form(

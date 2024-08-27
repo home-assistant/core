@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 from pytouchlinesl.client import RothAPIError
 
 from homeassistant import config_entries
-from homeassistant.components.touchlinesl.const import DOMAIN
+from homeassistant.components.touchline_sl.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -31,7 +31,10 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result1["step_id"] == "user"
     assert result1["errors"] == {}
 
-    with patch("pytouchlinesl.TouchlineSL.modules", return_value=FAKE_MODULES):
+    with (
+        patch("pytouchlinesl.TouchlineSL.modules", return_value=FAKE_MODULES),
+        patch("pytouchlinesl.TouchlineSL.user_id", return_value=12345),
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result1["flow_id"],
             {
@@ -58,7 +61,7 @@ async def test_form_invalid_auth(
     assert result1["errors"] == {}
 
     with patch(
-        "pytouchlinesl.TouchlineSL.modules", side_effect=RothAPIError(status=401)
+        "pytouchlinesl.TouchlineSL.user_id", side_effect=RothAPIError(status=401)
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result1["flow_id"],
@@ -72,7 +75,10 @@ async def test_form_invalid_auth(
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
-    with patch("pytouchlinesl.TouchlineSL.modules", return_value=FAKE_MODULES):
+    with (
+        patch("pytouchlinesl.TouchlineSL.modules", return_value=FAKE_MODULES),
+        patch("pytouchlinesl.TouchlineSL.user_id", return_value=12345),
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result1["flow_id"],
             {
@@ -99,7 +105,7 @@ async def test_form_cannot_connect(
     assert result1["errors"] == {}
 
     with patch(
-        "pytouchlinesl.TouchlineSL.modules", side_effect=RothAPIError(status=502)
+        "pytouchlinesl.TouchlineSL.user_id", side_effect=RothAPIError(status=502)
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result1["flow_id"],
@@ -113,7 +119,10 @@ async def test_form_cannot_connect(
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
-    with patch("pytouchlinesl.TouchlineSL.modules", return_value=FAKE_MODULES):
+    with (
+        patch("pytouchlinesl.TouchlineSL.modules", return_value=FAKE_MODULES),
+        patch("pytouchlinesl.TouchlineSL.user_id", return_value=12345),
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result1["flow_id"],
             {

@@ -1,3 +1,3 @@
 """Constants for the Roth Touchline SL integration."""
 
-DOMAIN = "touchlinesl"
+DOMAIN = "touchline_sl"

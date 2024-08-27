@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from pytouchlinesl import TouchlineSL
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,7 +16,7 @@ from .coordinator import TouchlineSLModuleCoordinator
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
-type TouchlineSLConfigEntry = ConfigEntry[dict[str, TouchlineSLModuleCoordinator]]
+type TouchlineSLConfigEntry = ConfigEntry[list[TouchlineSLModuleCoordinator]]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TouchlineSLConfigEntry) -> bool:
@@ -23,26 +25,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: TouchlineSLConfigEntry) 
         username=entry.data[CONF_USERNAME], password=entry.data[CONF_PASSWORD]
     )
 
-    coordinators: dict[str, TouchlineSLModuleCoordinator] = {}
+    # Create a coordinator for each TouchlineSL module in the account
+    coordinators: list[TouchlineSLModuleCoordinator] = []
+    coordinator_tasks = []
     modules = await account.modules()
 
-    device_registry = dr.async_get(hass)
     for module in modules:
         coordinator = TouchlineSLModuleCoordinator(hass, module=module)
-        coordinators[module.id] = coordinator
-        await coordinator.async_config_entry_first_refresh()
+        coordinators.append(coordinator)
+        coordinator_tasks.append(coordinator.async_config_entry_first_refresh())
 
+    # Perform a parallel refresh on all the cooordinators
+    await asyncio.gather(*coordinator_tasks)
+
+    # Create a new Device for each coorodinator to represent each module
+    for c in coordinators:
+        module = c.data.module
+        device_registry = dr.async_get(hass)
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, coordinator.data.module.id)},
-            name=coordinator.data.module.name,
+            identifiers={(DOMAIN, module.id)},
+            name=module.name,
             manufacturer="Roth",
-            model=coordinator.data.module.type,
-            sw_version=coordinator.data.module.version,
+            model=module.type,
+            sw_version=module.version,
         )
 
     entry.runtime_data = coordinators
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
