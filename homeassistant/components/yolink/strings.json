@@ -52,10 +52,10 @@
     },
     "sensor": {
       "current_power": {
-        "name": "Current Power"
+        "name": "Current power"
       },
       "power_consumption": {
-        "name": "Power Consumption"
+        "name": "Power consumption"
       },
       "power_failure_alarm": {
         "name": "Power failure alarm",
