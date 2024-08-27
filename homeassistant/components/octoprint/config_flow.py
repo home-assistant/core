@@ -160,9 +160,9 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle api fetch failure."""
         return self.async_abort(reason="auth_failed")
 
-    async def async_step_import(self, user_input):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import."""
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(import_data)
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo

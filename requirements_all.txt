@@ -237,7 +237,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==25.2.0
+aioesphomeapi==25.2.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -416,7 +416,7 @@ airgradient==0.8.0
 airly==1.1.0
 
 # homeassistant.components.airthings_ble
-airthings-ble==0.9.0
+airthings-ble==0.9.1
 
 # homeassistant.components.airthings
 airthings-cloud==0.2.0
@@ -559,7 +559,7 @@ beautifulsoup4==4.12.3
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.bmw_connected_drive
-bimmer-connected[china]==0.16.1
+bimmer-connected[china]==0.16.2
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -1429,7 +1429,7 @@ nextdns==3.2.0
 nibe==2.11.0
 
 # homeassistant.components.nice_go
-nice-go==0.3.0
+nice-go==0.3.5
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
@@ -1707,7 +1707,7 @@ pyRFXtrx==0.31.1
 pySDCP==1
 
 # homeassistant.components.tibber
-pyTibber==0.28.2
+pyTibber==0.30.1
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -2385,6 +2385,9 @@ pytomorrowio==0.3.6
 # homeassistant.components.touchline
 pytouchline==0.7
 
+# homeassistant.components.touchline_sl
+pytouchlinesl==0.1.5
+
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
 pytraccar==2.1.1
@@ -2998,7 +3001,7 @@ zamg==0.3.6
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.132.2
+zeroconf==0.133.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
