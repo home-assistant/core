@@ -1,3 +1,5 @@
+#subscribe
+
 # Defines a list of files that are part of main core of Home Assistant.
 # Changes to these files/filters define how our CI test suite is ran.
 core: &core
