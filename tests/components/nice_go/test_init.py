@@ -213,7 +213,7 @@ async def test_on_data_none_parsed(
 
     await setup_integration(hass, mock_config_entry, [Platform.COVER])
 
-    await mock_nice_go.listen.call_args[0][1](
+    await mock_nice_go.listen.call_args_list[1][0][1](
         {
             "data": {
                 "devicesStatesUpdateFeed": {
@@ -247,12 +247,30 @@ async def test_on_connected(
 
     await setup_integration(hass, mock_config_entry, [Platform.COVER])
 
-    assert mock_nice_go.listen.call_count == 2
+    assert mock_nice_go.listen.call_count == 3
 
     mock_nice_go.subscribe = AsyncMock()
     await mock_nice_go.listen.call_args_list[0][0][1]()
 
     assert mock_nice_go.subscribe.call_count == 1
+
+
+async def test_on_connection_lost(
+    hass: HomeAssistant,
+    mock_nice_go: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test on connection lost."""
+
+    mock_nice_go.listen = MagicMock()
+
+    await setup_integration(hass, mock_config_entry, [Platform.COVER])
+
+    assert mock_nice_go.listen.call_count == 3
+
+    await mock_nice_go.listen.call_args_list[2][0][1]({"exception": ValueError("test")})
+
+    assert hass.states.get("cover.test_garage_1").state == "unavailable"
 
 
 async def test_no_connection_state(
@@ -266,9 +284,9 @@ async def test_no_connection_state(
 
     await setup_integration(hass, mock_config_entry, [Platform.COVER])
 
-    assert mock_nice_go.listen.call_count == 2
+    assert mock_nice_go.listen.call_count == 3
 
-    await mock_nice_go.listen.call_args[0][1](
+    await mock_nice_go.listen.call_args_list[1][0][1](
         {
             "data": {
                 "devicesStatesUpdateFeed": {
