@@ -72,5 +72,31 @@
       "title": "Legacy Works With Nest has been removed",
       "description": "Legacy Works With Nest has been removed from Home Assistant, and the API shuts down as of September 2023.\n\nYou must take action to use the SDM API. Remove all `nest` configuration from `configuration.yaml` and restart Home Assistant, then see the Nest [integration instructions]({documentation_url}) for set up instructions and supported devices."
     }
+  },
+  "entity": {
+    "event": {
+      "chime": {
+        "name": "Chime",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "doorbell_chime": "[%key:component::nest::entity::event::chime::name%]"
+            }
+          }
+        }
+      },
+      "motion": {
+        "name": "[%key:component::event::entity_component::motion::name%]",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "camera_motion": "[%key:component::event::entity_component::motion::name%]",
+              "camera_person": "Person",
+              "camera_sound": "Sound"
+            }
+          }
+        }
+      }
+    }
   }
 }

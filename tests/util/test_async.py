@@ -22,18 +22,18 @@ def test_run_callback_threadsafe_from_inside_event_loop(
 
     loop = Mock(spec=["call_soon_threadsafe"])
 
-    loop._thread_ident = None
+    loop._thread_id = None
     mock_ident.return_value = 5
     hasync.run_callback_threadsafe(loop, callback)
     assert len(loop.call_soon_threadsafe.mock_calls) == 1
 
-    loop._thread_ident = 5
+    loop._thread_id = 5
     mock_ident.return_value = 5
     with pytest.raises(RuntimeError):
         hasync.run_callback_threadsafe(loop, callback)
     assert len(loop.call_soon_threadsafe.mock_calls) == 1
 
-    loop._thread_ident = 1
+    loop._thread_id = 1
     mock_ident.return_value = 5
     hasync.run_callback_threadsafe(loop, callback)
     assert len(loop.call_soon_threadsafe.mock_calls) == 2
@@ -78,7 +78,7 @@ async def test_run_callback_threadsafe(hass: HomeAssistant) -> None:
         nonlocal it_ran
         it_ran = True
 
-    with patch.dict(hass.loop.__dict__, {"_thread_ident": -1}):
+    with patch.dict(hass.loop.__dict__, {"_thread_id": -1}):
         assert hasync.run_callback_threadsafe(hass.loop, callback)
     assert it_ran is False
 
@@ -98,7 +98,7 @@ async def test_callback_is_always_scheduled(hass: HomeAssistant) -> None:
     hasync.shutdown_run_callback_threadsafe(hass.loop)
 
     with (
-        patch.dict(hass.loop.__dict__, {"_thread_ident": -1}),
+        patch.dict(hass.loop.__dict__, {"_thread_id": -1}),
         patch.object(hass.loop, "call_soon_threadsafe") as mock_call_soon_threadsafe,
         pytest.raises(RuntimeError),
     ):

@@ -1,0 +1,14 @@
+{
+  "lists": [
+    {
+      "listUuid": "e542eef6-dba7-4c31-a52c-29e6ab9d83a5",
+      "name": "Einkauf",
+      "theme": "ch.publisheria.bring.theme.home"
+    },
+    {
+      "listUuid": "b4776778-7f6c-496e-951b-92a35d3db0dd",
+      "name": "Baumarkt",
+      "theme": "ch.publisheria.bring.theme.home"
+    }
+  ]
+}
