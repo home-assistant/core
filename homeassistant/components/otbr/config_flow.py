@@ -96,7 +96,9 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                 await api.set_active_dataset_tlvs(bytes.fromhex(thread_dataset_tlv))
             else:
                 _LOGGER.debug(
-                    "not importing TLV with channel %s", thread_dataset_channel
+                    "not importing TLV with channel %s for %s",
+                    thread_dataset_channel,
+                    otbr_url,
                 )
                 pan_id = generate_random_pan_id()
                 await api.create_active_dataset(
@@ -122,7 +124,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 continue
             _LOGGER.debug(
-                "extended address for url %s: %s",
+                "extended address for existing url %s: %s",
                 data.url,
                 other_extended_address.hex(),
             )
@@ -133,12 +135,14 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _connect_and_configure_router(self, otbr_url: str) -> bytes:
         """Connect to the router and configure it if needed.
 
-        Will raise if the router's extended address is in use by another confi entry.
+        Will raise if the router's extended address is in use by another config entry.
         Returns the router's extended address.
         """
         api = python_otbr_api.OTBR(otbr_url, async_get_clientsession(self.hass), 10)
         extended_address = await self._get_extended_address(api)
-        _LOGGER.debug("extended_address: %s", extended_address.hex())
+        _LOGGER.debug(
+            "extended address for url %s: %s", otbr_url, extended_address.hex()
+        )
 
         if await self._is_extended_address_configured(extended_address):
             raise AlreadyConfigured
