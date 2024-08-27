@@ -1131,17 +1131,24 @@ def test_condition_selector_schema(
 def test_trigger_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test trigger sequence selector."""
 
-    def custom_trigger_serializer(
+    def _custom_trigger_serializer(
         triggers: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
-        return [{**trigger, "trigger": trigger["platform"]} for trigger in triggers]
+        res = []
+        for trigger in triggers:
+            if "trigger" in trigger:
+                trigger["platform"] = trigger["trigger"]
+            elif "platform" in trigger:
+                trigger["trigger"] = trigger["platform"]
+            res.append(trigger)
+        return res
 
     _test_selector(
         "trigger",
         schema,
         valid_selections,
         invalid_selections,
-        custom_trigger_serializer,
+        _custom_trigger_serializer,
     )
 
 
