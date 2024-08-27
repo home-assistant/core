@@ -22,8 +22,12 @@ import voluptuous as vol
 from homeassistant.components import media_source, spotify
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_ANNOUNCE,
+    ATTR_MEDIA_ARTIST,
+    ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_ENQUEUE,
+    ATTR_MEDIA_TITLE,
     BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEnqueue,
@@ -33,7 +37,6 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
     async_process_play_media_url,
-    ATTR_MEDIA_ALBUM_NAME, ATTR_MEDIA_ARTIST, ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_TITLE
 )
 from homeassistant.components.plex import PLEX_URI_SCHEME
 from homeassistant.components.plex.services import process_plex_payload
