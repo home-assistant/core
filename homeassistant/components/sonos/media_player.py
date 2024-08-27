@@ -14,7 +14,7 @@ from soco.core import (
     PLAY_MODE_BY_MEANING,
     PLAY_MODES,
 )
-from soco.data_structures import DidlFavorite
+from soco.data_structures import DidlFavorite, DidlMusicTrack
 from soco.ms_data_structures import MusicServiceItem
 from sonos_websocket.exception import SonosWebsocketError
 import voluptuous as vol
@@ -38,7 +38,7 @@ from homeassistant.components.plex import PLEX_URI_SCHEME
 from homeassistant.components.plex.services import process_plex_payload
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TIME
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -88,6 +88,7 @@ SERVICE_CLEAR_TIMER = "clear_sleep_timer"
 SERVICE_UPDATE_ALARM = "update_alarm"
 SERVICE_PLAY_QUEUE = "play_queue"
 SERVICE_REMOVE_FROM_QUEUE = "remove_from_queue"
+SERVICE_GET_QUEUE = "get_queue"
 
 ATTR_SLEEP_TIME = "sleep_time"
 ATTR_ALARM_ID = "alarm_id"
@@ -188,6 +189,13 @@ async def async_setup_entry(
         SERVICE_REMOVE_FROM_QUEUE,
         {vol.Optional(ATTR_QUEUE_POSITION): cv.positive_int},
         "remove_from_queue",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_GET_QUEUE,
+        None,
+        "get_queue",
+        supports_response=SupportsResponse.ONLY,
     )
 
 
@@ -740,6 +748,21 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     def remove_from_queue(self, queue_position: int = 0) -> None:
         """Remove item from the queue."""
         self.coordinator.soco.remove_from_queue(queue_position)
+
+    @soco_error()
+    def get_queue(self) -> dict:
+        """Get the queue."""
+        queue: list[DidlMusicTrack] = self.coordinator.soco.get_queue(max_items=0)
+        retval: list[dict] = []
+        for track in queue:
+            track_item = {
+                "media_title": track.title,
+                "media_album_name": track.album,
+                "media_artist": track.creator,
+                "media_content_id": track.get_uri(),
+            }
+            retval.append(track_item)
+        return retval
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
