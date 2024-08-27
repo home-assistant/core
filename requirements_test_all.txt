@@ -225,7 +225,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==25.1.0
+aioesphomeapi==25.2.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -398,7 +398,7 @@ airgradient==0.8.0
 airly==1.1.0
 
 # homeassistant.components.airthings_ble
-airthings-ble==0.9.0
+airthings-ble==0.9.1
 
 # homeassistant.components.airthings
 airthings-cloud==0.2.0
@@ -493,7 +493,7 @@ base36==0.1.1
 beautifulsoup4==4.12.3
 
 # homeassistant.components.bmw_connected_drive
-bimmer-connected[china]==0.16.1
+bimmer-connected[china]==0.16.2
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
@@ -560,7 +560,7 @@ bthome-ble==3.9.1
 buienradar==1.0.6
 
 # homeassistant.components.dhcp
-cached_ipaddress==0.3.0
+cached-ipaddress==0.5.0
 
 # homeassistant.components.caldav
 caldav==1.3.9
@@ -1180,7 +1180,7 @@ nextcloudmonitor==1.5.1
 nextcord==2.6.0
 
 # homeassistant.components.nextdns
-nextdns==3.1.0
+nextdns==3.2.0
 
 # homeassistant.components.nibe_heatpump
 nibe==2.11.0
@@ -1781,6 +1781,9 @@ pysoma==0.0.12
 
 # homeassistant.components.spc
 pyspcwebgw==0.7.0
+
+# homeassistant.components.assist_pipeline
+pyspeex-noise==1.0.0
 
 # homeassistant.components.squeezebox
 pysqueezebox==0.7.1

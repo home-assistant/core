@@ -175,10 +175,7 @@ class MockProvider(BaseProvider, Provider):
 class MockTTSEntity(BaseProvider, TextToSpeechEntity):
     """Test speech API provider."""
 
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return "Test"
+    _attr_name = "Test"
 
 
 class MockTTS(MockPlatform):
@@ -218,7 +215,9 @@ async def mock_setup(
 
 
 async def mock_config_entry_setup(
-    hass: HomeAssistant, tts_entity: MockTTSEntity
+    hass: HomeAssistant,
+    tts_entity: MockTTSEntity,
+    test_domain: str = TEST_DOMAIN,
 ) -> MockConfigEntry:
     """Set up a test tts platform via config entry."""
 
@@ -239,7 +238,7 @@ async def mock_config_entry_setup(
     mock_integration(
         hass,
         MockModule(
-            TEST_DOMAIN,
+            test_domain,
             async_setup_entry=async_setup_entry_init,
             async_unload_entry=async_unload_entry_init,
         ),
@@ -254,9 +253,9 @@ async def mock_config_entry_setup(
         async_add_entities([tts_entity])
 
     loaded_platform = MockPlatform(async_setup_entry=async_setup_entry_platform)
-    mock_platform(hass, f"{TEST_DOMAIN}.{TTS_DOMAIN}", loaded_platform)
+    mock_platform(hass, f"{test_domain}.{TTS_DOMAIN}", loaded_platform)
 
-    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry = MockConfigEntry(domain=test_domain)
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
