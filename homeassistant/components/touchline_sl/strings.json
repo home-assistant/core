@@ -19,5 +19,18 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "climate": {
+      "zone": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "constant_temp": "Constant Temperature"
+            }
+          }
+        }
+      }
+    }
   }
 }
