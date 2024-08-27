@@ -34,6 +34,9 @@ async def async_setup_entry(
     )
 
 
+CONSTANT_TEMPERATURE = "constant_temperature"
+
+
 class TouchlineSLZone(CoordinatorEntity[TouchlineSLModuleCoordinator], ClimateEntity):
     """Roth Touchline SL Zone."""
 
@@ -99,7 +102,7 @@ class TouchlineSLZone(CoordinatorEntity[TouchlineSLModuleCoordinator], ClimateEn
         if not self.zone:
             return
 
-        if preset_mode == "constant_temp" and self._attr_target_temperature:
+        if preset_mode == CONSTANT_TEMPERATURE and self._attr_target_temperature:
             await self.zone.set_temperature(temperature=self._attr_target_temperature)
             await self.coordinator.async_request_refresh()
             return
@@ -115,10 +118,10 @@ class TouchlineSLZone(CoordinatorEntity[TouchlineSLModuleCoordinator], ClimateEn
         self._attr_current_temperature = self.zone.temperature
         self._attr_target_temperature = self.zone.target_temperature
         self._attr_current_humidity = int(self.zone.humidity)
-        self._attr_preset_modes = [*schedule_names, "constant_temp"]
+        self._attr_preset_modes = [*schedule_names, CONSTANT_TEMPERATURE]
 
         if self.zone.mode == "constantTemp":
-            self._attr_preset_mode = "constant_temp"
+            self._attr_preset_mode = CONSTANT_TEMPERATURE
         elif self.zone.mode == "globalSchedule":
             schedule = self.zone.schedule
             self._attr_preset_mode = schedule.name

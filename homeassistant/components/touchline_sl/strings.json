@@ -26,7 +26,7 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "constant_temp": "Constant Temperature"
+              "constant_temperature": "Constant temperature"
             }
           }
         }

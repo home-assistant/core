@@ -11,6 +11,17 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
+RESULT_DATA = {"password": "test-password", "username": "test-username"}
+
+RESULT_UNIQUE_ID = "12345"
+
+CONFIG_DATA = {
+    CONF_USERNAME: "test-username",
+    CONF_PASSWORD: "test-password",
+}
+
 
 async def test_config_flow_success(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_touchlinesl_client: AsyncMock
@@ -19,71 +30,63 @@ async def test_config_flow_success(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-        },
+        result["flow_id"], CONFIG_DATA
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-username"
-    assert result["data"] == {"password": "test-password", "username": "test-username"}
-    assert result["result"].unique_id == "12345"
+    assert result["data"] == RESULT_DATA
+    assert result["result"].unique_id == RESULT_UNIQUE_ID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
-    ("status_code", "error_base"), [(401, "invalid_auth"), (502, "cannot_connect")]
+    ("exception", "error_base"),
+    [
+        (RothAPIError(status=401), "invalid_auth"),
+        (RothAPIError(status=502), "cannot_connect"),
+    ],
 )
 async def test_config_flow_failure_api_exceptions(
     hass: HomeAssistant,
-    status_code: int,
+    exception: int,
     error_base: str,
     mock_setup_entry: AsyncMock,
     mock_touchlinesl_client: AsyncMock,
 ) -> None:
     """Test for invalid credentials or API connection errors, and that the form can recover."""
-    mock_touchlinesl_client.user_id.side_effect = RothAPIError(status=status_code)
+    mock_touchlinesl_client.user_id.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-        },
+        result["flow_id"], CONFIG_DATA
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error_base}
 
     # "Fix" the problem, and try again.
     mock_touchlinesl_client.user_id.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-        },
+        result["flow_id"], CONFIG_DATA
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-username"
-    assert result["data"] == {"password": "test-password", "username": "test-username"}
-    assert result["result"].unique_id == "12345"
+    assert result["data"] == RESULT_DATA
+    assert result["result"].unique_id == RESULT_UNIQUE_ID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -91,45 +94,21 @@ async def test_config_flow_failure_adding_non_unique_account(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_touchlinesl_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that the config flow fails when user tries to add duplicate accounts."""
-    # Add the first account
+    mock_config_entry.add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-        },
+        result["flow_id"], CONFIG_DATA
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test-username"
-    assert result["data"] == {"password": "test-password", "username": "test-username"}
-    assert result["result"].unique_id == "12345"
-    assert len(mock_setup_entry.mock_calls) == 1
-
-    # Try re-adding the account
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-        },
-    )
-
-    assert result["type"] == FlowResultType.ABORT
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
