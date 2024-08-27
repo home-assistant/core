@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from functools import wraps
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import python_otbr_api
 from python_otbr_api import PENDING_DATASET_DELAY_TIMER, tlv_parser
@@ -17,7 +17,7 @@ from homeassistant.components.thread import async_add_dataset, async_get_dataset
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DATA_OTBR, DEFAULT_CHANNEL, DOMAIN
+from .const import DEFAULT_CHANNEL, DOMAIN
 from .util import (
     OTBRData,
     compose_default_network_name,
@@ -25,6 +25,9 @@ from .util import (
     get_allowed_channel,
     update_issues,
 )
+
+if TYPE_CHECKING:
+    from . import OTBRConfigEntry
 
 
 @callback
@@ -47,13 +50,17 @@ async def websocket_info(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Get OTBR info."""
-    if DATA_OTBR not in hass.data:
+    config_entries: list[OTBRConfigEntry]
+    config_entries = hass.config_entries.async_loaded_entries(DOMAIN)
+
+    if not config_entries:
         connection.send_error(msg["id"], "not_loaded", "No OTBR API loaded")
         return
 
     response: dict[str, dict[str, Any]] = {}
 
-    for data in hass.data[DATA_OTBR].values():
+    for config_entry in config_entries:
+        data = config_entry.runtime_data
         try:
             border_agent_id = await data.get_border_agent_id()
             dataset = await data.get_active_dataset()
@@ -99,11 +106,15 @@ def async_get_otbr_data(
         hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
         """Fetch OTBR data and pass to orig_func."""
-        if DATA_OTBR not in hass.data:
+        config_entries: list[OTBRConfigEntry]
+        config_entries = hass.config_entries.async_loaded_entries(DOMAIN)
+
+        if not config_entries:
             connection.send_error(msg["id"], "not_loaded", "No OTBR API loaded")
             return
 
-        for data in hass.data[DATA_OTBR].values():
+        for config_entry in config_entries:
+            data = config_entry.runtime_data
             try:
                 extended_address = await data.get_extended_address()
             except HomeAssistantError as exc:

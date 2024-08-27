@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from contextlib import suppress
 import logging
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import aiohttp
 import python_otbr_api
@@ -26,12 +26,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DATA_OTBR, DEFAULT_CHANNEL, DOMAIN
+from .const import DEFAULT_CHANNEL, DOMAIN
 from .util import (
     compose_default_network_name,
     generate_random_pan_id,
     get_allowed_channel,
 )
+
+if TYPE_CHECKING:
+    from . import OTBRConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,10 +115,9 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _is_border_agent_id_configured(self, border_agent_id: bytes) -> bool:
         """Return True if another config entry's OTBR has the same border agent id."""
-        if DATA_OTBR not in self.hass.data:
-            _LOGGER.debug("No OTBR")
-            return False
-        for data in self.hass.data[DATA_OTBR].values():
+        config_entry: OTBRConfigEntry
+        for config_entry in self.hass.config_entries.async_loaded_entries(DOMAIN):
+            data = config_entry.runtime_data
             try:
                 other_border_agent_id = await data.get_border_agent_id()
             except HomeAssistantError:

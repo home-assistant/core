@@ -7,7 +7,7 @@ import dataclasses
 from functools import wraps
 import logging
 import random
-from typing import Any, Concatenate, cast
+from typing import TYPE_CHECKING, Any, Concatenate, cast
 
 import aiohttp
 import python_otbr_api
@@ -22,12 +22,15 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
     multi_pan_addon_using_device,
 )
 from homeassistant.components.homeassistant_yellow import RADIO_DEVICE as YELLOW_RADIO
-from homeassistant.config_entries import SOURCE_USER, ConfigEntry
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from . import OTBRConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -271,7 +274,7 @@ async def update_issues(
 
 
 async def update_unique_id(
-    hass: HomeAssistant, entry: ConfigEntry | None, border_agent_id: bytes
+    hass: HomeAssistant, entry: OTBRConfigEntry | None, border_agent_id: bytes
 ) -> None:
     """Update the config entry's unique_id if not matching."""
     border_agent_id_hex = border_agent_id.hex()

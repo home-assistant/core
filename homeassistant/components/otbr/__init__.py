@@ -16,7 +16,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from . import websocket_api
-from .const import DATA_OTBR, DOMAIN
+from .const import DOMAIN
 from .util import (
     GetBorderAgentIdNotSupported,
     OTBRData,
@@ -28,6 +28,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
+type OTBRConfigEntry = ConfigEntry[OTBRData]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Open Thread Border Router component."""
@@ -35,7 +37,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool:
     """Set up an Open Thread Border Router config entry."""
     api = python_otbr_api.OTBR(entry.data["url"], async_get_clientsession(hass), 10)
 
@@ -73,19 +75,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
-
-    hass.data.setdefault(DATA_OTBR, {})
-    hass.data[DATA_OTBR][entry.entry_id] = otbrdata
+    entry.runtime_data = otbrdata
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.data[DATA_OTBR].pop(entry.entry_id)
     return True
 
 
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_reload_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> None:
     """Handle an options update."""
     await hass.config_entries.async_reload(entry.entry_id)

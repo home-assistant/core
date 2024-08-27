@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from functools import wraps
 import logging
-from typing import Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate
 
 import aiohttp
 from python_otbr_api import tlv_parser
@@ -18,8 +18,11 @@ from homeassistant.components.thread import async_add_dataset
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DATA_OTBR, DOMAIN
+from .const import DOMAIN
 from .util import OTBRData
+
+if TYPE_CHECKING:
+    from . import OTBRConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,10 +48,9 @@ def async_get_otbr_data[**_P, _R, _R_Def](
             hass: HomeAssistant, *args: _P.args, **kwargs: _P.kwargs
         ) -> _R | _R_Def:
             """Fetch OTBR data and pass to orig_func."""
-            if DATA_OTBR not in hass.data:
-                return retval
-
-            for data in hass.data[DATA_OTBR].values():
+            config_entry: OTBRConfigEntry
+            for config_entry in hass.config_entries.async_loaded_entries(DOMAIN):
+                data = config_entry.runtime_data
                 if is_multiprotocol_url(data.url):
                     return await orig_func(hass, data, *args, **kwargs)
 
