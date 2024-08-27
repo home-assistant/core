@@ -24,24 +24,6 @@ ATTR_PHASE3_CURRENT = "phase3_current"
 # Frequency
 ATTR_FREQUENCY = "frequency"
 
-# Energy
-ATTR_TOTAL_ACTIVE_IMPORT = "total_active_import"
-ATTR_TOTAL_ACTIVE_EXPORT = "total_active_export"
-ATTR_TOTAL_REACTIVE_IMPORT = "total_reactive_import"
-ATTR_TOTAL_REACTIVE_EXPORT = "total_reactive_export"
-ATTR_TOTAL_APPARENT_ENERGY_IMPORT = "total_apparent_energy_import"
-ATTR_TOTAL_APPARENT_ENERGY_EXPORT = "total_apparent_energy_export"
-
-# Non-resettable counters
-ATTR_NON_RESETTABLE_COUNTER_NAME = {
-    "active_import": ATTR_TOTAL_ACTIVE_IMPORT,
-    "active_export": ATTR_TOTAL_ACTIVE_EXPORT,
-    "reactive_import": ATTR_TOTAL_REACTIVE_IMPORT,
-    "reactive_export": ATTR_TOTAL_REACTIVE_EXPORT,
-    "apparent_import": ATTR_TOTAL_APPARENT_ENERGY_IMPORT,
-    "apparent_export": ATTR_TOTAL_APPARENT_ENERGY_EXPORT,
-}
-
 ATTR_CONNECTED_DEVICES = "connected_devices"
 
 

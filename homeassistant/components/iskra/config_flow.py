@@ -35,9 +35,9 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PROTOCOL, default="Rest API"): selector.SelectSelector(
+        vol.Required(CONF_PROTOCOL, default="rest_api"): selector.SelectSelector(
             selector.SelectSelectorConfig(
-                options=["Rest API", "Modbus TCP"],
+                options=["rest_api", "modbus_tcp"],
                 mode=selector.SelectSelectorMode.LIST,
             ),
         ),
@@ -103,7 +103,7 @@ async def test_modbus_connection(host: str, port: int, address: int) -> BasicInf
     return basic_info
 
 
-class FlowHandler(ConfigFlow, domain=DOMAIN):
+class IskraConfigFlowFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for iskra."""
 
     VERSION = 1
@@ -118,7 +118,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.host = user_input[CONF_HOST]
             self.protocol = user_input[CONF_PROTOCOL]
-            if self.protocol == "Rest API":
+            if self.protocol == "rest_api":
                 # Check if authentication is required.
                 try:
                     device_info = await test_rest_api_connection(self.host)
@@ -143,7 +143,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                         authentication=None,
                     )
 
-            if self.protocol == "Modbus TCP":
+            if self.protocol == "modbus_tcp":
                 # Proceed to modbus step.
                 return await self.async_step_modbus_tcp()
 

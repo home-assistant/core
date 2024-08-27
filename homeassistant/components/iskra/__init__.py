@@ -20,10 +20,8 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, MANUFACTURER
+from .coordinator import IskraDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -41,14 +39,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> boo
     conf = entry.data
     adapter = None
 
-    if conf[CONF_PROTOCOL] == "Modbus TCP":
+    if conf[CONF_PROTOCOL] == "modbus_tcp":
         adapter = Modbus(
             ip_address=conf[CONF_HOST],
             protocol="tcp",
             port=conf[CONF_PORT],
             modbus_address=conf[CONF_ADDRESS],
         )
-    elif conf[CONF_PROTOCOL] == "Rest API":
+    elif conf[CONF_PROTOCOL] == "rest_api":
         authentication = None
         if conf.get(CONF_USERNAME) or conf.get(CONF_PASSWORD):
             authentication = {
@@ -56,14 +54,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> boo
                 "password": conf[CONF_PASSWORD],
             }
         adapter = RestAPI(ip_address=conf[CONF_HOST], authentication=authentication)
-    else:
-        _LOGGER.error(
-            "Invalid protocol. Supported protocols are 'Modbus TCP' and 'Rest API'"
-        )
-        return False
 
     try:
-        device = await Device.create_device(adapter)
+        root_device = await Device.create_device(adapter)
     except DeviceConnectionError as e:
         _LOGGER.error("Cannot connect to the device: %s", e)
         return False
@@ -74,9 +67,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> boo
         _LOGGER.error("Device not supported: %s", e)
         return False
 
-    await device.init()
+    await root_device.init()
 
-    entry.runtime_data = device
+    # if the device is a gateway, add all child devices, otherwise add the device itself.
+    if root_device.is_gateway:
+        coordinators = [
+            IskraDataUpdateCoordinator(hass, child_device)
+            for child_device in root_device.get_child_devices()
+        ]
+    else:
+        coordinators = [IskraDataUpdateCoordinator(hass, root_device)]
+
+    entry.runtime_data = {"base_evice": root_device, "coordinators": coordinators}
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -86,61 +88,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> boo
 async def async_unload_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-class IskraDevice(Entity):
-    """Representation a base Iskra device."""
-
-    _attr_should_poll = True
-
-    def __init__(self, device, gateway, config_entry):
-        """Initialize the Iskra device."""
-        self._state = None
-        self._is_available = True
-        self._serial = device.serial
-        self._model = device.model
-        self._fw_version = device.fw_version
-        self._device_name = f"{self._serial}"
-        self._remove_unavailability_tracker = None
-        self._device = device
-        self.gateway = gateway
-        self._gateway_id = config_entry.unique_id
-
-        self._is_gateway = self._device.is_gateway
-        self._device_id = self._serial
-
-    @property
-    def device_id(self):
-        """Return the device id of the Iskra device."""
-        return self._device_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info of the Iskra Aqara device."""
-        if self._is_gateway:
-            device_info = DeviceInfo(
-                identifiers={(DOMAIN, self._device_id)},
-                manufacturer=MANUFACTURER,
-                model=self._model,
-                name=self._device_name,
-                sw_version=self._fw_version,
-                serial_number=self._serial,
-            )
-        else:
-            device_info = DeviceInfo(
-                connections={("IP", self._device_id)},
-                identifiers={(DOMAIN, self._device_id)},
-                manufacturer=MANUFACTURER,
-                model=self._model,
-                name=self._device_name,
-                sw_version=self._fw_version,
-                serial_number=self._serial,
-                via_device=(DOMAIN, self._gateway_id),
-            )
-
-        return device_info
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self.coordinator.available

@@ -30,9 +30,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import IskraDevice
 from .const import (
-    ATTR_CONNECTED_DEVICES,
     ATTR_FREQUENCY,
     ATTR_PHASE1_CURRENT,
     ATTR_PHASE1_POWER,
@@ -48,6 +46,7 @@ from .const import (
     ATTR_TOTAL_REACTIVE_POWER,
 )
 from .coordinator import IskraDataUpdateCoordinator
+from .entity import IskraDevice
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
@@ -176,11 +175,6 @@ SENSOR_TYPES: tuple[IskraSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         value_func=lambda device: device.measurements.frequency.value,
     ),
-    IskraSensorEntityDescription(
-        key=ATTR_CONNECTED_DEVICES,
-        translation_key="connected_devices",
-        value_func=lambda device: len(device.child_devices),
-    ),
 )
 
 
@@ -190,23 +184,14 @@ async def async_setup_entry(
     """Set up Iskra sensors based on config_entry."""
 
     # Device that uses the config entry.
-    root_device = entry.runtime_data
-
-    devices = [root_device]
-
-    # Add child devices if the root device is a gateway.
-    if root_device.is_gateway:
-        devices += root_device.get_child_devices()
+    root_device = entry.runtime_data.get("root_device")
+    coordinators = entry.runtime_data.get("coordinators")
 
     # Add sensors for each device.
-    for device in devices:
-        sensors = []
-        coordinator = IskraDataUpdateCoordinator(hass, device)
+    for coordinator in coordinators:
+        device = coordinator.device
         await coordinator.async_config_entry_first_refresh()
-
-        # Add connected devices sensor for gateways
-        if device.is_gateway:
-            sensors.append(ATTR_CONNECTED_DEVICES)
+        sensors = []
 
         # Add measurement sensors.
         if device.supports_measurements:
