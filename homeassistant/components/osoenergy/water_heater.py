@@ -165,7 +165,9 @@ class OSOEnergyWaterHeater(
     """OSO Energy Water Heater Device."""
 
     _attr_name = None
-    _attr_supported_features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        WaterHeaterEntityFeature.TARGET_TEMPERATURE | WaterHeaterEntityFeature.ON_OFF
+    )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
