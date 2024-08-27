@@ -1,13 +1,11 @@
 """The lock tests for the yale platform."""
 
 import datetime
-from unittest.mock import Mock
 
 from aiohttp import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from yalexs.manager.activity import INITIAL_LOCK_RESYNC_TIME
-from yalexs.pubnub_async import AugustPubNub
 
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
@@ -176,18 +174,17 @@ async def test_open_lock_operation(hass: HomeAssistant) -> None:
     assert lock_online_with_unlatch_name.state == STATE_UNLOCKED
 
 
-async def test_open_lock_operation_pubnub_connected(
+async def test_open_lock_operation_socketio_connected(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test open lock operation using the open service when pubnub is connected."""
+    """Test open lock operation using the open service when socketio is connected."""
     lock_with_unlatch = await _mock_lock_with_unlatch(hass)
     assert lock_with_unlatch.pubsub_channel == "pubsub"
 
-    pubnub = AugustPubNub()
-    await _create_yale_with_devices(hass, [lock_with_unlatch], pubnub=pubnub)
-    pubnub.connected = True
+    _, socketio = await _create_yale_with_devices(hass, [lock_with_unlatch])
+    socketio.connected = True
 
     lock_online_with_unlatch_name = hass.states.get("lock.online_with_unlatch_name")
     assert lock_online_with_unlatch_name.state == STATE_LOCKED
@@ -196,16 +193,15 @@ async def test_open_lock_operation_pubnub_connected(
     await hass.services.async_call(LOCK_DOMAIN, SERVICE_OPEN, data, blocking=True)
     await hass.async_block_till_done()
 
-    pubnub.message(
-        pubnub,
-        Mock(
-            channel=lock_with_unlatch.pubsub_channel,
-            timetoken=(dt_util.utcnow().timestamp() + 2) * 10000000,
-            message={
-                "status": "kAugLockState_Unlocked",
-            },
-        ),
+    listener = list(socketio._listeners)[0]
+    listener(
+        lock_with_unlatch.device_id,
+        dt_util.utcnow() + datetime.timedelta(seconds=2),
+        {
+            "status": "kAugLockState_Unlocked",
+        },
     )
+
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
@@ -214,18 +210,17 @@ async def test_open_lock_operation_pubnub_connected(
     await hass.async_block_till_done()
 
 
-async def test_one_lock_operation_pubnub_connected(
+async def test_one_lock_operation_socketio_connected(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test lock and unlock operations are async when pubnub is connected."""
+    """Test lock and unlock operations are async when socketio is connected."""
     lock_one = await _mock_doorsense_enabled_yale_lock_detail(hass)
     assert lock_one.pubsub_channel == "pubsub"
 
-    pubnub = AugustPubNub()
-    await _create_yale_with_devices(hass, [lock_one], pubnub=pubnub)
-    pubnub.connected = True
+    _, socketio = await _create_yale_with_devices(hass, [lock_one])
+    socketio.connected = True
 
     lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
 
@@ -241,16 +236,15 @@ async def test_one_lock_operation_pubnub_connected(
     await hass.services.async_call(LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True)
     await hass.async_block_till_done()
 
-    pubnub.message(
-        pubnub,
-        Mock(
-            channel=lock_one.pubsub_channel,
-            timetoken=(dt_util.utcnow().timestamp() + 1) * 10000000,
-            message={
-                "status": "kAugLockState_Unlocked",
-            },
-        ),
+    listener = list(socketio._listeners)[0]
+    listener(
+        lock_one.device_id,
+        dt_util.utcnow() + datetime.timedelta(seconds=1),
+        {
+            "status": "kAugLockState_Unlocked",
+        },
     )
+
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
@@ -266,16 +260,14 @@ async def test_one_lock_operation_pubnub_connected(
     await hass.services.async_call(LOCK_DOMAIN, SERVICE_LOCK, data, blocking=True)
     await hass.async_block_till_done()
 
-    pubnub.message(
-        pubnub,
-        Mock(
-            channel=lock_one.pubsub_channel,
-            timetoken=(dt_util.utcnow().timestamp() + 2) * 10000000,
-            message={
-                "status": "kAugLockState_Locked",
-            },
-        ),
+    listener(
+        lock_one.device_id,
+        dt_util.utcnow() + datetime.timedelta(seconds=2),
+        {
+            "status": "kAugLockState_Locked",
+        },
     )
+
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
@@ -294,16 +286,14 @@ async def test_one_lock_operation_pubnub_connected(
 
     freezer.tick(INITIAL_LOCK_RESYNC_TIME)
 
-    pubnub.message(
-        pubnub,
-        Mock(
-            channel=lock_one.pubsub_channel,
-            timetoken=(dt_util.utcnow().timestamp() + 2) * 10000000,
-            message={
-                "status": "kAugLockState_Unlocked",
-            },
-        ),
+    listener(
+        lock_one.device_id,
+        dt_util.utcnow() + datetime.timedelta(seconds=2),
+        {
+            "status": "kAugLockState_Unlocked",
+        },
     )
+
     await hass.async_block_till_done()
 
     lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
@@ -416,31 +406,28 @@ async def test_lock_bridge_online(hass: HomeAssistant) -> None:
     assert lock_online_with_doorsense_name.state == STATE_LOCKED
 
 
-async def test_lock_update_via_pubnub(hass: HomeAssistant) -> None:
+async def test_lock_update_via_socketio(hass: HomeAssistant) -> None:
     """Test creation of a lock with doorsense and bridge."""
     lock_one = await _mock_doorsense_enabled_yale_lock_detail(hass)
     assert lock_one.pubsub_channel == "pubsub"
-    pubnub = AugustPubNub()
 
     activities = await _mock_activities_from_fixture(hass, "get_activity.lock.json")
-    config_entry = await _create_yale_with_devices(
-        hass, [lock_one], activities=activities, pubnub=pubnub
+    config_entry, socketio = await _create_yale_with_devices(
+        hass, [lock_one], activities=activities
     )
-    pubnub.connected = True
+    socketio.connected = True
 
     lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
 
     assert lock_online_with_doorsense_name.state == STATE_LOCKED
 
-    pubnub.message(
-        pubnub,
-        Mock(
-            channel=lock_one.pubsub_channel,
-            timetoken=dt_util.utcnow().timestamp() * 10000000,
-            message={
-                "status": "kAugLockState_Unlocking",
-            },
-        ),
+    listener = list(socketio._listeners)[0]
+    listener(
+        lock_one.device_id,
+        dt_util.utcnow(),
+        {
+            "status": "kAugLockState_Unlocking",
+        },
     )
 
     await hass.async_block_till_done()
@@ -449,15 +436,12 @@ async def test_lock_update_via_pubnub(hass: HomeAssistant) -> None:
     lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
     assert lock_online_with_doorsense_name.state == STATE_UNLOCKING
 
-    pubnub.message(
-        pubnub,
-        Mock(
-            channel=lock_one.pubsub_channel,
-            timetoken=(dt_util.utcnow().timestamp() + 1) * 10000000,
-            message={
-                "status": "kAugLockState_Locking",
-            },
-        ),
+    listener(
+        lock_one.device_id,
+        dt_util.utcnow(),
+        {
+            "status": "kAugLockState_Locking",
+        },
     )
 
     await hass.async_block_till_done()
@@ -471,28 +455,26 @@ async def test_lock_update_via_pubnub(hass: HomeAssistant) -> None:
     lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
     assert lock_online_with_doorsense_name.state == STATE_LOCKING
 
-    pubnub.connected = True
+    socketio.connected = True
     async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(seconds=30))
     await hass.async_block_till_done()
     lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
     assert lock_online_with_doorsense_name.state == STATE_LOCKING
 
-    # Ensure pubnub status is always preserved
+    # Ensure socketio status is always preserved
     async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=2))
     await hass.async_block_till_done()
     lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
     assert lock_online_with_doorsense_name.state == STATE_LOCKING
 
-    pubnub.message(
-        pubnub,
-        Mock(
-            channel=lock_one.pubsub_channel,
-            timetoken=(dt_util.utcnow().timestamp() + 2) * 10000000,
-            message={
-                "status": "kAugLockState_Unlocking",
-            },
-        ),
+    listener(
+        lock_one.device_id,
+        dt_util.utcnow() + datetime.timedelta(seconds=2),
+        {
+            "status": "kAugLockState_Unlocking",
+        },
     )
+
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
