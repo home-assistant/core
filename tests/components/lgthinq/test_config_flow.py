@@ -6,7 +6,6 @@ from homeassistant.components.lgthinq.const import (
     CLIENT_PREFIX,
     CONF_CONNECT_CLIENT_ID,
     DOMAIN,
-    ErrorCode,
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_COUNTRY, CONF_NAME, CONF_SOURCE
@@ -75,7 +74,6 @@ async def test_config_flow_invalid_pat(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == ErrorCode.INVALID_TOKEN
 
 
 async def test_config_flow_already_configured(

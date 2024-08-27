@@ -3,7 +3,7 @@
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
-from homeassistant.components.lgthinq import DOMAIN, ThinqData
+from homeassistant.components.lgthinq.const import DOMAIN
 from homeassistant.components.lgthinq.device import LGDevice, async_setup_lg_device
 from homeassistant.core import HomeAssistant
 from homeassistant.util.json import json_loads
@@ -95,9 +95,7 @@ def get_mock_lg_device_for_type(
     config_entry: MockConfigEntry, device_type: str
 ) -> LGDevice:
     """Return a mock lg device for the given type."""
-    assert isinstance(config_entry.runtime_data, ThinqData)
-
-    devices = config_entry.runtime_data.device_map.values()
+    devices = config_entry.runtime_data.values()
     lg_device = next((device for device in devices if device.type == device_type), None)
     assert lg_device
 
