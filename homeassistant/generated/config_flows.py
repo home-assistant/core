@@ -280,6 +280,7 @@ FLOWS = {
         "ipp",
         "iqvia",
         "iron_os",
+        "iskra",
         "islamic_prayer_times",
         "israel_rail",
         "iss",
