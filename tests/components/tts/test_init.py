@@ -31,6 +31,7 @@ from .common import (
     SUPPORT_LANGUAGES,
     TEST_DOMAIN,
     MockProvider,
+    MockTTS,
     MockTTSEntity,
     get_media_source_url,
     mock_config_entry_setup,
@@ -38,7 +39,13 @@ from .common import (
     retrieve_media,
 )
 
-from tests.common import async_mock_service, mock_restore_cache
+from tests.common import (
+    MockModule,
+    async_mock_service,
+    mock_integration,
+    mock_platform,
+    mock_restore_cache,
+)
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 ORIG_WRITE_TAGS = tts.SpeechManager.write_tags
@@ -1389,9 +1396,6 @@ def test_resolve_engine(hass: HomeAssistant, setup: str, engine_id: str) -> None
     ):
         assert tts.async_resolve_engine(hass, None) is None
 
-    with patch.dict(hass.data[tts.DATA_TTS_MANAGER].providers, {"cloud": object()}):
-        assert tts.async_resolve_engine(hass, None) == "cloud"
-
 
 @pytest.mark.parametrize(
     ("setup", "engine_id"),
@@ -1561,15 +1565,19 @@ async def test_fetching_in_async(
 
 
 @pytest.mark.parametrize(
-    ("setup", "engine_id"),
+    ("setup", "engine_id", "extra_data"),
     [
-        ("mock_setup", "test"),
-        ("mock_config_entry_setup", "tts.test"),
+        ("mock_setup", "test", {"name": "Test"}),
+        ("mock_config_entry_setup", "tts.test", {}),
     ],
     indirect=["setup"],
 )
 async def test_ws_list_engines(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup: str, engine_id: str
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    setup: str,
+    engine_id: str,
+    extra_data: dict[str, str],
 ) -> None:
     """Test listing tts engines and supported languages."""
     client = await hass_ws_client()
@@ -1584,6 +1592,7 @@ async def test_ws_list_engines(
                 "engine_id": engine_id,
                 "supported_languages": ["de_CH", "de_DE", "en_GB", "en_US"],
             }
+            | extra_data
         ]
     }
 
@@ -1592,7 +1601,7 @@ async def test_ws_list_engines(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": engine_id, "supported_languages": []}]
+        "providers": [{"engine_id": engine_id, "supported_languages": []} | extra_data]
     }
 
     await client.send_json_auto_id({"type": "tts/engine/list", "language": "en"})
@@ -1602,6 +1611,7 @@ async def test_ws_list_engines(
     assert msg["result"] == {
         "providers": [
             {"engine_id": engine_id, "supported_languages": ["en_US", "en_GB"]}
+            | extra_data
         ]
     }
 
@@ -1612,6 +1622,7 @@ async def test_ws_list_engines(
     assert msg["result"] == {
         "providers": [
             {"engine_id": engine_id, "supported_languages": ["en_GB", "en_US"]}
+            | extra_data
         ]
     }
 
@@ -1622,6 +1633,7 @@ async def test_ws_list_engines(
     assert msg["result"] == {
         "providers": [
             {"engine_id": engine_id, "supported_languages": ["de_DE", "de_CH"]}
+            | extra_data
         ]
     }
 
@@ -1634,20 +1646,74 @@ async def test_ws_list_engines(
     assert msg["result"] == {
         "providers": [
             {"engine_id": engine_id, "supported_languages": ["de_CH", "de_DE"]}
+            | extra_data
+        ]
+    }
+
+
+async def test_ws_list_engines_deprecated(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_tts_entity: MockTTSEntity,
+) -> None:
+    """Test listing tts engines.
+
+    This test asserts the deprecated flag is set on a legacy engine whose integration
+    also provides tts entities.
+    """
+
+    mock_provider = MockProvider(DEFAULT_LANG)
+    mock_provider_2 = MockProvider(DEFAULT_LANG)
+    mock_integration(hass, MockModule(domain="test"))
+    mock_platform(hass, "test.tts", MockTTS(mock_provider))
+    mock_integration(hass, MockModule(domain="test_2"))
+    mock_platform(hass, "test_2.tts", MockTTS(mock_provider_2))
+    await async_setup_component(
+        hass, "tts", {"tts": [{"platform": "test"}, {"platform": "test_2"}]}
+    )
+    await mock_config_entry_setup(hass, mock_tts_entity)
+
+    client = await hass_ws_client()
+
+    await client.send_json_auto_id({"type": "tts/engine/list"})
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "providers": [
+            {
+                "engine_id": "tts.test",
+                "supported_languages": ["de_CH", "de_DE", "en_GB", "en_US"],
+            },
+            {
+                "deprecated": True,
+                "engine_id": "test",
+                "name": "Test",
+                "supported_languages": ["de_CH", "de_DE", "en_GB", "en_US"],
+            },
+            {
+                "engine_id": "test_2",
+                "name": "Test",
+                "supported_languages": ["de_CH", "de_DE", "en_GB", "en_US"],
+            },
         ]
     }
 
 
 @pytest.mark.parametrize(
-    ("setup", "engine_id"),
+    ("setup", "engine_id", "extra_data"),
     [
-        ("mock_setup", "test"),
-        ("mock_config_entry_setup", "tts.test"),
+        ("mock_setup", "test", {"name": "Test"}),
+        ("mock_config_entry_setup", "tts.test", {}),
     ],
     indirect=["setup"],
 )
 async def test_ws_get_engine(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup: str, engine_id: str
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    setup: str,
+    engine_id: str,
+    extra_data: dict[str, str],
 ) -> None:
     """Test getting an tts engine."""
     client = await hass_ws_client()
@@ -1661,6 +1727,7 @@ async def test_ws_get_engine(
             "engine_id": engine_id,
             "supported_languages": ["de_CH", "de_DE", "en_GB", "en_US"],
         }
+        | extra_data
     }
 
 
@@ -1838,3 +1905,61 @@ async def test_ttsentity_subclass_properties(
             if record.exc_info is not None
         ]
     )
+
+
+async def test_default_engine_prefer_entity(
+    hass: HomeAssistant,
+    mock_tts_entity: MockTTSEntity,
+    mock_provider: MockProvider,
+) -> None:
+    """Test async_default_engine.
+
+    In this tests there's an entity and a legacy provider.
+    The test asserts async_default_engine returns the entity.
+    """
+    mock_tts_entity._attr_name = "New test"
+
+    await mock_setup(hass, mock_provider)
+    await mock_config_entry_setup(hass, mock_tts_entity)
+    await hass.async_block_till_done()
+
+    entity_engine = tts.async_resolve_engine(hass, "tts.new_test")
+    assert entity_engine == "tts.new_test"
+    provider_engine = tts.async_resolve_engine(hass, "test")
+    assert provider_engine == "test"
+    assert tts.async_default_engine(hass) == "tts.new_test"
+
+
+@pytest.mark.parametrize(
+    "config_flow_test_domains",
+    [
+        # Test different setup order to ensure the default is not influenced
+        # by setup order.
+        ("cloud", "new_test"),
+        ("new_test", "cloud"),
+    ],
+)
+async def test_default_engine_prefer_cloud_entity(
+    hass: HomeAssistant,
+    mock_provider: MockProvider,
+    config_flow_test_domains: str,
+) -> None:
+    """Test async_default_engine.
+
+    In this tests there's an entity from domain cloud, an entity from domain new_test
+    and a legacy provider.
+    The test asserts async_default_engine returns the entity from domain cloud.
+    """
+    await mock_setup(hass, mock_provider)
+    for domain in config_flow_test_domains:
+        entity = MockTTSEntity(DEFAULT_LANG)
+        entity._attr_name = f"{domain} TTS entity"
+        await mock_config_entry_setup(hass, entity, test_domain=domain)
+    await hass.async_block_till_done()
+
+    for domain in config_flow_test_domains:
+        entity_engine = tts.async_resolve_engine(hass, f"tts.{domain}_tts_entity")
+        assert entity_engine == f"tts.{domain}_tts_entity"
+    provider_engine = tts.async_resolve_engine(hass, "test")
+    assert provider_engine == "test"
+    assert tts.async_default_engine(hass) == "tts.cloud_tts_entity"

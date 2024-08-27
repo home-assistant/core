@@ -2,7 +2,7 @@
   "options": {
     "step": {
       "options_1": {
-        "section": {
+        "sections": {
           "section_1": "mdi:robot"
         }
       }

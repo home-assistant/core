@@ -258,7 +258,7 @@ async def test_reload_sensors_that_reference_other_template_sensors(
     assert hass.states.get("sensor.test3").state == "2"
 
 
-async def async_yaml_patch_helper(hass, filename):
+async def async_yaml_patch_helper(hass: HomeAssistant, filename: str) -> None:
     """Help update configuration.yaml."""
     yaml_path = get_fixture_path(filename, "template")
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
