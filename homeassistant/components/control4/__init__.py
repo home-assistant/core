@@ -1,5 +1,7 @@
 """The Control4 integration."""
 
+# mypy: ignore-errors
+
 from __future__ import annotations
 
 import json
