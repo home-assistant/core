@@ -29,5 +29,18 @@
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "power_output": {
+        "name": "Output power"
+      },
+      "power_input": {
+        "name": "Input power"
+      },
+      "cop": {
+        "name": "COP"
+      }
+    }
   }
 }

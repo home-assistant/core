@@ -1,6 +1,6 @@
 """Test the Weheat config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -63,9 +63,10 @@ async def test_full_flow(
             "homeassistant.components.weheat.config_flow.HeatPumpDiscovery"
         ) as mock_weheat,
     ):
-        mock_weheat.discover.return_value = SINGLE_PUMP_FOUND
+        mock_weheat.discover_active = AsyncMock(return_value=SINGLE_PUMP_FOUND)
         await hass.config_entries.flow.async_configure(result["flow_id"])
 
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_weheat.mock_calls) == 1
@@ -93,7 +94,7 @@ async def test_no_devices_available(
             "homeassistant.components.weheat.config_flow.HeatPumpDiscovery"
         ) as mock_weheat,
     ):
-        mock_weheat.discover.return_value = NO_PUMP_FOUND
+        mock_weheat.discover_active = AsyncMock(return_value=NO_PUMP_FOUND)
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
@@ -142,7 +143,7 @@ async def test_two_or_more_devices_correct_selection(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == TWO_PUMPS_FOUND[selected_pump].uuid
-    assert result["result"].data["heat_pump_info"] == TWO_PUMPS_FOUND[selected_pump]
+    assert result["result"].data[HEAT_PUMP_INFO] == TWO_PUMPS_FOUND[selected_pump]
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -199,7 +200,7 @@ async def authenticate_and_provide_two_pumps(hass, hass_client_no_auth, aioclien
             "homeassistant.components.weheat.config_flow.HeatPumpDiscovery"
         ) as mock_weheat,
     ):
-        mock_weheat.discover.return_value = TWO_PUMPS_FOUND
+        mock_weheat.discover_active = AsyncMock(return_value=TWO_PUMPS_FOUND)
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert len(mock_setup.mock_calls) == 0
     assert len(mock_weheat.mock_calls) == 1

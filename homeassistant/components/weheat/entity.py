@@ -12,16 +12,16 @@ class WeheatEntity(CoordinatorEntity[WeheatDataUpdateCoordinator]):
 
     _attr_has_entity_name = True
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self.coordinator.heatpump_id)
-            },
+    def __init__(
+        self,
+        coordinator: WeheatDataUpdateCoordinator,
+    ) -> None:
+        """Initialize the Weheat entity."""
+        super().__init__(coordinator)
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.heatpump_id)},
             name=self.coordinator.readable_name,
             manufacturer="Weheat",
             model=self.coordinator.model,
-            sw_version="",
         )

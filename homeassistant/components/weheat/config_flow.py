@@ -8,21 +8,23 @@ import voluptuous as vol
 from weheat.abstractions import HeatPumpDiscovery
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
 from .const import API_URL, DOMAIN, HEAT_PUMP_INFO
 
 
-class OAuth2FlowHandler(
-    config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
-):
+class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Config flow to handle Weheat OAuth2 authentication."""
 
     DOMAIN = DOMAIN
 
-    reauth_entry: ConfigEntry | None = None
-    _auth_data: dict = {}
-    _discovered_pumps: list[HeatPumpDiscovery.HeatPumpInfo] = []
+    def __init__(self):
+        """Initialize the Weheat OAuth2 flow."""
+        super().__init__()
+
+        self.reauth_entry: ConfigEntry | None = None
+        self._auth_data: dict = {}
+        self._discovered_pumps: list[HeatPumpDiscovery.HeatPumpInfo] = []
 
     @property
     def logger(self) -> logging.Logger:
@@ -50,17 +52,18 @@ class OAuth2FlowHandler(
 
         return await self.async_step_find_devices()
 
-    async def async_step_find_devices(self, info=None) -> ConfigFlowResult:
+    async def async_step_find_devices(
+        self, info: dict | None = None
+    ) -> ConfigFlowResult:
         """Select the heat pump to control.
 
         Will skip selection if only one heat pump is found.
         """
         if info is None or "uuid" not in info:
             # nothing select, construct list of devices
-            self._discovered_pumps = await self.hass.async_add_executor_job(
-                HeatPumpDiscovery.discover,
-                API_URL,
-                self._auth_data["token"]["access_token"],
+
+            self._discovered_pumps = await HeatPumpDiscovery.discover_active(
+                API_URL, self._auth_data["token"]["access_token"]
             )
 
             if len(self._discovered_pumps) == 0:

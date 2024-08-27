@@ -2,18 +2,29 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
+from weheat.abstractions.discovery import HeatPumpDiscovery
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow
 
-from . import api
-from .const import DOMAIN
+from .const import HEAT_PUMP_INFO
 from .coordinator import WeheatDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-type WeheatConfigEntry = ConfigEntry[AsyncConfigEntryAuth]
+
+@dataclass
+class WeheatData:
+    """Data for Weheat integration."""
+
+    coordinator: WeheatDataUpdateCoordinator
+
+
+type WeheatConfigEntry = ConfigEntry[WeheatData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bool:
@@ -26,18 +37,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bo
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
-    entry.runtime_data = api.AsyncConfigEntryAuth(
-        async_get_clientsession(hass), session
-    )
+    # Unpack the heat pump info from a dict if it is not already HeatPumpInfo
+    heat_pump_info = entry.data[HEAT_PUMP_INFO]
 
-    hass.data.setdefault(DOMAIN, {})
+    if isinstance(heat_pump_info, dict):
+        heat_pump_info = HeatPumpDiscovery.HeatPumpInfo(**heat_pump_info)
 
     coordinator = WeheatDataUpdateCoordinator(
         hass=hass,
         session=session,
-        heat_pump=entry.data["heat_pump_info"],
+        heat_pump=heat_pump_info,
     )
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+
+    entry.runtime_data = WeheatData(coordinator=coordinator)
 
     await coordinator.async_config_entry_first_refresh()
 

@@ -8,8 +8,11 @@ from aiohttp import ClientError
 from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    AbstractOAuth2Implementation,
+    LocalOAuth2Implementation,
+)
 
 from .const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
@@ -45,7 +48,7 @@ class WeheatOAuth2Implementation(LocalOAuth2Implementation):
 
 async def async_get_auth_implementation(
     hass: HomeAssistant, auth_domain: str, credential: ClientCredential
-) -> config_entry_oauth2_flow.AbstractOAuth2Implementation:
+) -> AbstractOAuth2Implementation:
     """Return a custom auth implementation."""
     return WeheatOAuth2Implementation(
         hass,

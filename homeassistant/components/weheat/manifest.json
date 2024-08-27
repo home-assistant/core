@@ -5,9 +5,6 @@
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/weheat",
-  "homekit": {},
   "iot_class": "cloud_polling",
-  "requirements": ["weheat==2024.7.8rc1"],
-  "ssdp": [],
-  "zeroconf": []
+  "requirements": ["weheat==2024.8.30"]
 }

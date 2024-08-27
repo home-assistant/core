@@ -21,14 +21,14 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import API_URL, DOMAIN, LOGGER, UPDATE_INTERVAL
 
 
-class WeheatDataUpdateCoordinator(DataUpdateCoordinator[..]):
+class WeheatDataUpdateCoordinator(DataUpdateCoordinator[HeatPump]):
     """A custom coordinator for the Weheat heatpump integration."""
 
     def __init__(
         self,
         hass: HomeAssistant,
         session: OAuth2Session,
-        heat_pump: HeatPumpDiscovery.HeatPumpInfo | dict,
+        heat_pump: HeatPumpDiscovery.HeatPumpInfo,
     ) -> None:
         """Initialize the data coordinator."""
         super().__init__(
@@ -39,28 +39,24 @@ class WeheatDataUpdateCoordinator(DataUpdateCoordinator[..]):
         )
         self._heat_pump = heat_pump
 
-        # Unpack the heat pump info from a dict if it is not already HeatPumpInfo
-        if isinstance(self._heat_pump, dict):
-            self._heat_pump = HeatPumpDiscovery.HeatPumpInfo(**self._heat_pump)
-
         self.session = session
 
     @property
-    def heatpump_id(self):
+    def heatpump_id(self) -> str:
         """Return the heat pump id."""
         return self._heat_pump.uuid
 
     @property
-    def readable_name(self):
+    def readable_name(self) -> str | None:
         """Return the readable name of the heat pump."""
         return self._heat_pump.name
 
     @property
-    def model(self):
+    def model(self) -> str:
         """Return the model of the heat pump."""
         return self._heat_pump.model
 
-    def fetch_data(self):
+    def fetch_data(self) -> HeatPump:
         """Get the data from the API."""
         token = self.session.token["access_token"]
 
@@ -86,7 +82,7 @@ class WeheatDataUpdateCoordinator(DataUpdateCoordinator[..]):
             LOGGER.error(f"Unspecified error ocured: {e}")
         return hp
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> HeatPump:
         """Fetch data from the API."""
         await self.session.async_ensure_token_valid()
 
