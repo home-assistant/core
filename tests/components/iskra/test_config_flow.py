@@ -82,7 +82,7 @@ async def test_user_rest_no_auth(hass: HomeAssistant, mock_pyiskra_rest) -> None
     result = await hass.config_entries.flow.async_init(
         "iskra",
         context={"source": SOURCE_USER},
-        data={CONF_HOST: HOST, CONF_PROTOCOL: "Rest API"},
+        data={CONF_HOST: HOST, CONF_PROTOCOL: "rest_api"},
     )
 
     # Test successful Rest API configuration
@@ -99,7 +99,7 @@ async def test_user_rest_auth(hass: HomeAssistant, mock_pyiskra_rest) -> None:
     result = await hass.config_entries.flow.async_init(
         "iskra",
         context={"source": SOURCE_USER},
-        data={CONF_HOST: HOST, CONF_PROTOCOL: "Rest API"},
+        data={CONF_HOST: HOST, CONF_PROTOCOL: "rest_api"},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "authentication"
@@ -141,7 +141,7 @@ async def test_user_modbus(hass: HomeAssistant, mock_pyiskra_modbus) -> None:
     result = await hass.config_entries.flow.async_init(
         "iskra",
         context={"source": SOURCE_USER},
-        data={CONF_HOST: HOST, CONF_PROTOCOL: "Modbus TCP"},
+        data={CONF_HOST: HOST, CONF_PROTOCOL: "modbus_tcp"},
     )
 
     # Test if propmpted to enter port and address
@@ -169,7 +169,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant, mock_pyiskra_rest) ->
     result = await hass.config_entries.flow.async_init(
         "iskra",
         context={"source": SOURCE_USER},
-        data={CONF_HOST: HOST, CONF_PROTOCOL: "Rest API"},
+        data={CONF_HOST: HOST, CONF_PROTOCOL: "rest_api"},
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -194,7 +194,7 @@ async def test_device_abort_rest(
     result = await hass.config_entries.flow.async_init(
         "iskra",
         context={"source": SOURCE_USER},
-        data={CONF_HOST: HOST, CONF_PROTOCOL: "Rest API"},
+        data={CONF_HOST: HOST, CONF_PROTOCOL: "rest_api"},
     )
 
     # Test if aborted
@@ -221,7 +221,7 @@ async def test_device_abort_modbus(
     result = await hass.config_entries.flow.async_init(
         "iskra",
         context={"source": SOURCE_USER},
-        data={CONF_HOST: HOST, CONF_PROTOCOL: "Modbus TCP"},
+        data={CONF_HOST: HOST, CONF_PROTOCOL: "modbus_tcp"},
     )
 
     assert result["type"] is FlowResultType.FORM
