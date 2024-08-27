@@ -1,4 +1,8 @@
 {
+  "common": {
+    "state_not_supported": "Not supported",
+    "state_supported": "Supported"
+  },
   "config": {
     "step": {
       "init": {
@@ -25,6 +29,134 @@
     },
     "thermostat_device": {
       "name": "OpenTherm Thermostat"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "fault_indication": {
+        "name": "Fault indication"
+      },
+      "central_heating_n": {
+        "name": "Central heating {circuit_number}"
+      },
+      "hot_water": {
+        "name": "Cooling"
+      },
+      "flame": {
+        "name": "Flame"
+      },
+      "cooling": {
+        "name": "Hot water"
+      },
+      "diagnostic_indication": {
+        "name": "Diagnostic indication"
+      },
+      "supports_hot_water": {
+        "name": "Hot water support",
+        "state": {
+          "off": "[%key:component::opentherm_gw::common::state_not_supported%]",
+          "on": "[%key:component::opentherm_gw::common::state_supported%]"
+        }
+      },
+      "control_type": {
+        "name": "Control type"
+      },
+      "supports_cooling": {
+        "name": "Cooling support",
+        "state": {
+          "off": "[%key:component::opentherm_gw::common::state_not_supported%]",
+          "on": "[%key:component::opentherm_gw::common::state_supported%]"
+        }
+      },
+      "hot_water_config": {
+        "name": "Hot water system type",
+        "state": {
+          "off": "Instantaneous or unspecified",
+          "on": "Storage tank"
+        }
+      },
+      "supports_pump_control": {
+        "name": "Pump control support",
+        "state": {
+          "off": "[%key:component::opentherm_gw::common::state_not_supported%]",
+          "on": "[%key:component::opentherm_gw::common::state_supported%]"
+        }
+      },
+      "supports_ch_2": {
+        "name": "Central heating 2 support",
+        "state": {
+          "off": "[%key:component::opentherm_gw::common::state_not_supported%]",
+          "on": "[%key:component::opentherm_gw::common::state_supported%]"
+        }
+      },
+      "service_required": {
+        "name": "Service required"
+      },
+      "supports_remote_reset": {
+        "name": "Remote reset support",
+        "state": {
+          "off": "[%key:component::opentherm_gw::common::state_not_supported%]",
+          "on": "[%key:component::opentherm_gw::common::state_supported%]"
+        }
+      },
+      "low_water_pressure": {
+        "name": "Low water pressure"
+      },
+      "gas_fault": {
+        "name": "Gas fault"
+      },
+      "air_pressure_fault": {
+        "name": "Air pressure fault"
+      },
+      "water_overtemperature": {
+        "name": "Water overtemperature"
+      },
+      "supports_central_heating_setpoint_transfer": {
+        "name": "Central heating setpoint transfer support",
+        "state": {
+          "off": "[%key:component::opentherm_gw::common::state_not_supported%]",
+          "on": "[%key:component::opentherm_gw::common::state_supported%]"
+        }
+      },
+      "supports_central_heating_setpoint_writing": {
+        "name": "Central heating setpoint write support",
+        "state": {
+          "off": "[%key:component::opentherm_gw::common::state_not_supported%]",
+          "on": "[%key:component::opentherm_gw::common::state_supported%]"
+        }
+      },
+      "supports_hot_water_setpoint_transfer": {
+        "name": "Hot water setpoint transfer support",
+        "state": {
+          "off": "[%key:component::opentherm_gw::common::state_not_supported%]",
+          "on": "[%key:component::opentherm_gw::common::state_supported%]"
+        }
+      },
+      "supports_hot_water_setpoint_writing": {
+        "name": "Hot water setpoint write support",
+        "state": {
+          "off": "[%key:component::opentherm_gw::common::state_not_supported%]",
+          "on": "[%key:component::opentherm_gw::common::state_supported%]"
+        }
+      },
+      "gpio_n": {
+        "name": "GPIO {id}"
+      },
+      "ignore_transitions": {
+        "name": "Ignore transitions"
+      },
+      "override_high_byte": {
+        "name": "Override high byte"
+      },
+      "outside_temp_correction": {
+        "name": "Outside temperature correction"
+      },
+      "override_manual_change_prio": {
+        "name": "Manual change has priority over override"
+      },
+      "override_program_change_prio": {
+        "name": "Programmed change has priority over override"
+      }
     }
   },
   "options": {

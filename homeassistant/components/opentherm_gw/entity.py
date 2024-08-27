@@ -30,8 +30,6 @@ TRANSLATE_SOURCE = {
 class OpenThermEntityDescription(EntityDescription):
     """Describe common opentherm_gw entity properties."""
 
-    data_source: OpenThermDataSource
-
 
 class OpenThermBaseEntity(Entity):
     """Represent an OpenTherm entity."""
