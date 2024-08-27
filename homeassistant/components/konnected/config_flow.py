@@ -202,24 +202,24 @@ class KonnectedFlowHandler(ConfigFlow, domain=DOMAIN):
             random.choices(f"{string.ascii_uppercase}{string.digits}", k=20)
         )
 
-    async def async_step_import(self, device_config):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a configuration.yaml config.
 
         This flow is triggered by `async_setup` for configured panels.
         """
-        _LOGGER.debug(device_config)
+        _LOGGER.debug(import_data)
 
         # save the data and confirm connection via user step
-        await self.async_set_unique_id(device_config["id"])
-        self.options = device_config[CONF_DEFAULT_OPTIONS]
+        await self.async_set_unique_id(import_data["id"])
+        self.options = import_data[CONF_DEFAULT_OPTIONS]
 
         # config schema ensures we have port if we have host
-        if device_config.get(CONF_HOST):
+        if import_data.get(CONF_HOST):
             # automatically connect if we have host info
             return await self.async_step_user(
                 user_input={
-                    CONF_HOST: device_config[CONF_HOST],
-                    CONF_PORT: device_config[CONF_PORT],
+                    CONF_HOST: import_data[CONF_HOST],
+                    CONF_PORT: import_data[CONF_PORT],
                 }
             )
 
