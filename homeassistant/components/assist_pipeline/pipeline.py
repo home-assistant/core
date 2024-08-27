@@ -1014,7 +1014,7 @@ class PipelineRun:
         intent_input: str,
         conversation_id: str | None,
         device_id: str | None,
-        conversation_extra_prompt: str | None,
+        conversation_extra_system_prompt: str | None,
     ) -> str:
         """Run intent recognition portion of pipeline. Returns text to speak."""
         if self.intent_agent is None:
@@ -1049,7 +1049,7 @@ class PipelineRun:
                 device_id=device_id,
                 language=input_language,
                 agent_id=self.intent_agent,
-                extra_prompt=conversation_extra_prompt,
+                extra_system_prompt=conversation_extra_system_prompt,
             )
             processed_locally = self.intent_agent == conversation.HOME_ASSISTANT_AGENT
 
@@ -1399,7 +1399,7 @@ class PipelineInput:
     conversation_id: str | None = None
     """Identifier for the conversation."""
 
-    conversation_extra_prompt: str | None = None
+    conversation_extra_system_prompt: str | None = None
     """Extra prompt information for the conversation agent."""
 
     device_id: str | None = None
@@ -1493,7 +1493,7 @@ class PipelineInput:
                         intent_input,
                         self.conversation_id,
                         self.device_id,
-                        self.conversation_extra_prompt,
+                        self.conversation_extra_system_prompt,
                     )
                     if tts_input.strip():
                         current_stage = PipelineStage.TTS

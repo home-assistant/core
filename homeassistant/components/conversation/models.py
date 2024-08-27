@@ -40,7 +40,7 @@ class ConversationInput:
     agent_id: str | None = None
     """Agent to use for processing."""
 
-    extra_prompt: str | None = None
+    extra_system_prompt: str | None = None
     """Extra prompt to provide extra info to LLMs how to understand the command."""
 
     def as_dict(self) -> dict[str, Any]:
