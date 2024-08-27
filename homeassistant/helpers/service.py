@@ -1267,17 +1267,8 @@ def async_register_entity_service(
     # Do a sanity check to check this is a valid entity service schema,
     # the check could be extended to require All/Any to have sub schema(s)
     # with all entity service fields
-    elif (
-        # Don't check All/Any
-        not isinstance(schema, (vol.All, vol.Any))
-        # Don't check All/Any wrapped in schema
-        and not isinstance(schema.schema, (vol.All, vol.Any))
-        and any(key not in schema.schema for key in cv.ENTITY_SERVICE_FIELDS)
-    ):
-        raise HomeAssistantError(
-            "The schema does not include all required keys: "
-            f"{", ".join(str(key) for key in cv.ENTITY_SERVICE_FIELDS)}"
-        )
+    elif not cv.is_entity_service_schema(schema):
+        raise HomeAssistantError("The schema is not an entity service schema")
 
     service_func: str | HassJob[..., Any]
     service_func = func if isinstance(func, str) else HassJob(func)
