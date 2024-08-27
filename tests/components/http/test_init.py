@@ -9,6 +9,7 @@ import logging
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+from hass_nabucasa import remote
 import pytest
 
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
@@ -574,7 +575,44 @@ async def test_ssl_issue_if_no_urls_configured(
         await hass.async_start()
         await hass.async_block_till_done()
 
+    assert hass.config.external_url is None
+    assert hass.config.internal_url is None
+
     assert len(issue_registry.issues) == 1
+
+
+async def test_ssl_issue_if_using_cloud(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test raising no SSL issue if not right configured but using cloud."""
+
+    hass.config.components.add("cloud")
+    remote.is_cloud_request.set(True)
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+
+    with (
+        patch("ssl.SSLContext.load_cert_chain"),
+        patch(
+            "homeassistant.util.ssl.server_context_modern",
+            side_effect=server_context_modern,
+        ),
+    ):
+        assert await async_setup_component(
+            hass,
+            "http",
+            {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}},
+        )
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert hass.config.external_url is None
+    assert hass.config.internal_url is None
+
+    assert len(issue_registry.issues) == 0
 
 
 async def test_ssl_issue_urls_configured(
