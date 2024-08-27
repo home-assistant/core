@@ -366,7 +366,7 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
         """Return the options flow."""
         return OptionsFlowHandler(config_entry)
 
-    async def async_step_import(self, data: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle imported data.
 
         This step will be used when importing data
@@ -374,8 +374,8 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
         """
         # Note that the data comes from the zwave integration.
         # So we don't use our constants here.
-        self.s0_legacy_key = data.get("network_key")
-        self.usb_path = data.get("usb_path")
+        self.s0_legacy_key = import_data.get("network_key")
+        self.usb_path = import_data.get("usb_path")
         return await self.async_step_user()
 
     async def async_step_user(

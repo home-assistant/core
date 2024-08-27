@@ -1381,7 +1381,7 @@ pyElectra==1.2.4
 pyRFXtrx==0.31.1
 
 # homeassistant.components.tibber
-pyTibber==0.28.2
+pyTibber==0.30.1
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1888,6 +1888,9 @@ pytile==2023.12.0
 # homeassistant.components.tomorrowio
 pytomorrowio==0.3.6
 
+# homeassistant.components.touchline_sl
+pytouchlinesl==0.1.5
+
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
 pytraccar==2.1.1
@@ -2372,7 +2375,7 @@ yt-dlp==2024.08.06
 zamg==0.3.6
 
 # homeassistant.components.zeroconf
-zeroconf==0.132.2
+zeroconf==0.133.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
