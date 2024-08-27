@@ -237,6 +237,7 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
         # Supported Features
         if self.read_only:
             self._attr_supported_features = ClimateEntityFeature(0)
+            self._attr_hvac_modes = []
         else:
             self._attr_supported_features = (
                 ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
