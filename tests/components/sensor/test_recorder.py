@@ -5104,7 +5104,9 @@ async def async_record_meter_state(
     return states
 
 
-async def async_record_states_partially_unavailable(hass, zero, entity_id, attributes):
+async def async_record_states_partially_unavailable(
+    hass: HomeAssistant, zero: datetime, entity_id: str, attributes: dict[str, Any]
+) -> tuple[datetime, dict[str, list[State]]]:
     """Record some test states.
 
     We inject a bunch of state updates temperature sensors.

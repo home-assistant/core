@@ -94,7 +94,7 @@ class OAuth2FlowHandler(
             "prompt": "consent",
         }
 
-    async def async_step_import(self, info: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import existing auth into a new config entry."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -103,8 +103,8 @@ class OAuth2FlowHandler(
         )
         assert len(implementations) == 1
         self.flow_impl = list(implementations.values())[0]
-        self.external_data = info
-        return await super().async_step_creation(info)
+        self.external_data = import_data
+        return await super().async_step_creation(import_data)
 
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None

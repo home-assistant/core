@@ -10,12 +10,11 @@ from typing import Any
 from jvcprojector import const
 
 from homeassistant.components.remote import RemoteEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import JVCConfigEntry
 from .entity import JvcProjectorEntity
 
 COMMANDS = {
@@ -55,10 +54,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: JVCConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the JVC Projector platform from a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities([JvcProjectorRemote(coordinator)], True)
 
 

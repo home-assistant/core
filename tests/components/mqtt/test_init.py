@@ -2458,7 +2458,6 @@ async def test_multi_platform_discovery(
         "PayloadSentinel",
         "PublishPayloadType",
         "ReceiveMessage",
-        "ReceivePayloadType",
         "async_prepare_subscribe_topics",
         "async_publish",
         "async_subscribe",

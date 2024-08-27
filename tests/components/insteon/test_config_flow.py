@@ -1,6 +1,8 @@
 """Test the config flow for the Insteon integration."""
 
-from unittest.mock import patch
+from collections.abc import Callable
+from typing import Any
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from voluptuous_serialize import convert
@@ -14,7 +16,7 @@ from homeassistant.components.insteon.config_flow import (
     STEP_PLM_MANUALLY,
 )
 from homeassistant.components.insteon.const import CONF_HUB_VERSION, DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -60,7 +62,7 @@ async def mock_failed_connection(*args, **kwargs):
     raise ConnectionError("Connection failed")
 
 
-async def _init_form(hass, modem_type):
+async def _init_form(hass: HomeAssistant, modem_type: str) -> ConfigFlowResult:
     """Run the user form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -73,7 +75,12 @@ async def _init_form(hass, modem_type):
     )
 
 
-async def _device_form(hass, flow_id, connection, user_input):
+async def _device_form(
+    hass: HomeAssistant,
+    flow_id: str,
+    connection: Callable[..., Any],
+    user_input: dict[str, Any] | None,
+) -> tuple[ConfigFlowResult, AsyncMock]:
     """Test the PLM, Hub v1 or Hub v2 form."""
     with (
         patch(
