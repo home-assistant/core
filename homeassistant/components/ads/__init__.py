@@ -4,6 +4,7 @@ import asyncio
 from asyncio import timeout
 from collections import namedtuple
 import ctypes
+import datetime
 from datetime import timedelta
 import logging
 import struct
@@ -42,6 +43,7 @@ ADSTYPE_LREAL = "lreal"
 ADSTYPE_REAL = "real"
 ADSTYPE_STRING = "string"
 ADSTYPE_TIME = "time"
+ADSTYPE_DATE_AND_TIME = "datetime"
 
 ADS_TYPEMAP = {
     ADSTYPE_BOOL: pyads.PLCTYPE_BOOL,
@@ -58,6 +60,7 @@ ADS_TYPEMAP = {
     ADSTYPE_LREAL: pyads.PLCTYPE_LREAL,
     ADSTYPE_STRING: pyads.PLCTYPE_STRING,
     ADSTYPE_TIME: pyads.PLCTYPE_TIME,
+    ADSTYPE_DATE_AND_TIME: pyads.PLCTYPE_DT,
 }
 
 CONF_ADS_FACTOR = "factor"
@@ -106,6 +109,7 @@ SCHEMA_SERVICE_WRITE_DATA_BY_NAME = vol.Schema(
                 ADSTYPE_LREAL,
                 ADSTYPE_STRING,
                 ADSTYPE_TIME,
+                ADSTYPE_DATE_AND_TIME,
             ]
         ),
         vol.Required(CONF_ADS_VALUE): vol.Coerce(int),
@@ -297,6 +301,11 @@ class AdsHub:
         elif notification_item.plc_datatype == pyads.PLCTYPE_TIME:
             milliseconds = struct.unpack("<I", bytearray(data))[0]
             value = timedelta(milliseconds=milliseconds)
+        elif notification_item.plc_datatype == pyads.PLCTYPE_DT:
+            raw_value = struct.unpack("<Q", bytearray(data))[0]
+            value = datetime.datetime(1601, 1, 1) + datetime.timedelta(
+                microseconds=raw_value / 10
+            )
         else:
             value = bytearray(data)
             _LOGGER.warning("No callback available for this datatype")

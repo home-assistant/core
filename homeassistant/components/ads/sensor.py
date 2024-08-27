@@ -43,6 +43,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
                 ads.ADSTYPE_DWORD,
                 ads.ADSTYPE_LREAL,
                 ads.ADSTYPE_REAL,
+                ads.ADSTYPE_DATE_AND_TIME,
             ]
         ),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
