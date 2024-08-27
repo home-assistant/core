@@ -86,13 +86,14 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
 
         self.read_only = Scope.VEHICLE_CMDS not in scopes or data.signing
 
+        if self.read_only:
+            self._attr_supported_features = ClimateEntityFeature(0)
+            self._attr_hvac_modes = []
+
         super().__init__(
             data,
             side,
         )
-
-        if self.read_only:
-            self._attr_supported_features = ClimateEntityFeature(0)
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
@@ -232,8 +233,6 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
         # Scopes
         self.read_only = Scope.VEHICLE_CMDS not in scopes or data.signing
 
-        super().__init__(data, "climate_state_cabin_overheat_protection")
-
         # Supported Features
         if self.read_only:
             self._attr_supported_features = ClimateEntityFeature(0)
@@ -242,8 +241,8 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
             self._attr_supported_features = (
                 ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
             )
-            if self.get("vehicle_config_cop_user_set_temp_supported"):
-                self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
+
+        super().__init__(data, "climate_state_cabin_overheat_protection")
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
@@ -263,6 +262,17 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
             self._attr_target_temperature = COP_LEVELS.get(level)
 
         self._attr_current_temperature = self.get("climate_state_inside_temp")
+
+    @property
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return the list of supported features."""
+        if not self.read_only and self.get(
+            "vehicle_config_cop_user_set_temp_supported"
+        ):
+            return (
+                self._attr_supported_features | ClimateEntityFeature.TARGET_TEMPERATURE
+            )
+        return self._attr_supported_features
 
     async def async_turn_on(self) -> None:
         """Set the climate state to on."""
