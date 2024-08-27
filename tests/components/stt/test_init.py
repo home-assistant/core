@@ -399,8 +399,11 @@ async def test_restore_state(
 
 
 @pytest.mark.parametrize(
-    ("setup", "engine_id"),
-    [("mock_setup", "test"), ("mock_config_entry_setup", "stt.test")],
+    ("setup", "engine_id", "extra_data"),
+    [
+        ("mock_setup", "test", {"name": "test"}),
+        ("mock_config_entry_setup", "stt.test", {}),
+    ],
     indirect=["setup"],
 )
 async def test_ws_list_engines(
@@ -408,6 +411,7 @@ async def test_ws_list_engines(
     hass_ws_client: WebSocketGenerator,
     setup: MockProvider | MockProviderEntity,
     engine_id: str,
+    extra_data: dict[str, str],
 ) -> None:
     """Test listing speech-to-text engines."""
     client = await hass_ws_client()
@@ -419,6 +423,7 @@ async def test_ws_list_engines(
     assert msg["result"] == {
         "providers": [
             {"engine_id": engine_id, "supported_languages": ["de", "de-CH", "en"]}
+            | extra_data
         ]
     }
 
@@ -427,7 +432,7 @@ async def test_ws_list_engines(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": engine_id, "supported_languages": []}]
+        "providers": [{"engine_id": engine_id, "supported_languages": []} | extra_data]
     }
 
     await client.send_json_auto_id({"type": "stt/engine/list", "language": "en"})
@@ -435,7 +440,9 @@ async def test_ws_list_engines(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": engine_id, "supported_languages": ["en"]}]
+        "providers": [
+            {"engine_id": engine_id, "supported_languages": ["en"]} | extra_data
+        ]
     }
 
     await client.send_json_auto_id({"type": "stt/engine/list", "language": "en-UK"})
@@ -443,7 +450,9 @@ async def test_ws_list_engines(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": engine_id, "supported_languages": ["en"]}]
+        "providers": [
+            {"engine_id": engine_id, "supported_languages": ["en"]} | extra_data
+        ]
     }
 
     await client.send_json_auto_id({"type": "stt/engine/list", "language": "de"})
@@ -451,7 +460,10 @@ async def test_ws_list_engines(
     assert msg["type"] == "result"
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": engine_id, "supported_languages": ["de", "de-CH"]}]
+        "providers": [
+            {"engine_id": engine_id, "supported_languages": ["de", "de-CH"]}
+            | extra_data
+        ]
     }
 
     await client.send_json_auto_id(
@@ -461,7 +473,10 @@ async def test_ws_list_engines(
     assert msg["type"] == "result"
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": engine_id, "supported_languages": ["de-CH", "de"]}]
+        "providers": [
+            {"engine_id": engine_id, "supported_languages": ["de-CH", "de"]}
+            | extra_data
+        ]
     }
 
 
