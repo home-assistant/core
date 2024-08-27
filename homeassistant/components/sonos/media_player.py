@@ -754,7 +754,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self.coordinator.soco.remove_from_queue(queue_position)
 
     @soco_error()
-    def get_queue(self) -> dict:
+    def get_queue(self) -> list[dict]:
         """Get the queue."""
         queue: list[DidlMusicTrack] = self.coordinator.soco.get_queue(max_items=0)
         retval: list[dict] = []
