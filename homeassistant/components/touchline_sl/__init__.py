@@ -25,23 +25,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: TouchlineSLConfigEntry) 
         username=entry.data[CONF_USERNAME], password=entry.data[CONF_PASSWORD]
     )
 
-    # Create a coordinator for each TouchlineSL module in the account
-    coordinators: list[TouchlineSLModuleCoordinator] = []
-    coordinator_tasks = []
-    modules = await account.modules()
+    coordinators: list[TouchlineSLModuleCoordinator] = [
+        TouchlineSLModuleCoordinator(hass, module) for module in await account.modules()
+    ]
 
-    for module in modules:
-        coordinator = TouchlineSLModuleCoordinator(hass, module=module)
-        coordinators.append(coordinator)
-        coordinator_tasks.append(coordinator.async_config_entry_first_refresh())
+    await asyncio.gather(
+        *[
+            coordinator.async_config_entry_first_refresh()
+            for coordinator in coordinators
+        ]
+    )
 
-    # Perform a parallel refresh on all the cooordinators
-    await asyncio.gather(*coordinator_tasks)
+    device_registry = dr.async_get(hass)
 
     # Create a new Device for each coorodinator to represent each module
     for c in coordinators:
         module = c.data.module
-        device_registry = dr.async_get(hass)
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, module.id)},

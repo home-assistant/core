@@ -1,137 +1,132 @@
 """Test the Roth Touchline SL config flow."""
 
-from typing import NamedTuple
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
+import pytest
 from pytouchlinesl.client import RothAPIError
 
-from homeassistant import config_entries
 from homeassistant.components.touchline_sl.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-class FakeModule(NamedTuple):
-    """Fake Module used for unit testing only."""
-
-    name: str
-    id: str
-
-
-FAKE_MODULES = [FakeModule(name="Foobar", id="deadbeef")]
-
-
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test we get the form."""
-    result1 = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+async def test_config_flow_success(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_touchlinesl_client: AsyncMock
+) -> None:
+    """Test the happy path where the provided username/password result in a new entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result1["type"] == FlowResultType.FORM
-    assert result1["step_id"] == "user"
-    assert result1["errors"] == {}
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
-    with (
-        patch("pytouchlinesl.TouchlineSL.modules", return_value=FAKE_MODULES),
-        patch("pytouchlinesl.TouchlineSL.user_id", return_value=12345),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result1["flow_id"],
-            {
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "test-username"
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test-username"
+    assert result["data"] == {"password": "test-password", "username": "test-username"}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+@pytest.mark.parametrize(
+    ("status_code", "error_base"), [(401, "invalid_auth"), (502, "cannot_connect")]
+)
+async def test_config_flow_failure_api_exceptions(
+    hass: HomeAssistant,
+    status_code: int,
+    error_base: str,
+    mock_setup_entry: AsyncMock,
+    mock_touchlinesl_client: AsyncMock,
 ) -> None:
-    """Test we handle invalid auth."""
-    result1 = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    """Test for invalid credentials or API connection errors, and that the form can recover."""
+    mock_touchlinesl_client.user_id.side_effect = RothAPIError(status=status_code)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result1["type"] == FlowResultType.FORM
-    assert result1["step_id"] == "user"
-    assert result1["errors"] == {}
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
-    with patch(
-        "pytouchlinesl.TouchlineSL.user_id", side_effect=RothAPIError(status=401)
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result1["flow_id"],
-            {
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": error_base}
 
-    with (
-        patch("pytouchlinesl.TouchlineSL.modules", return_value=FAKE_MODULES),
-        patch("pytouchlinesl.TouchlineSL.user_id", return_value=12345),
-    ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result1["flow_id"],
-            {
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
+    # "Fix" the problem, and try again.
+    mock_touchlinesl_client.user_id.side_effect = None
 
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "test-username"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test-username"
+    assert result["data"] == {"password": "test-password", "username": "test-username"}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+async def test_config_flow_failure_adding_non_unique_account(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_touchlinesl_client: AsyncMock,
 ) -> None:
-    """Test we handle invalid auth."""
-    result1 = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    """Test that the config flow fails when user tries to add duplicate accounts."""
+    # Add the first account
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result1["type"] == FlowResultType.FORM
-    assert result1["step_id"] == "user"
-    assert result1["errors"] == {}
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
-    with patch(
-        "pytouchlinesl.TouchlineSL.user_id", side_effect=RothAPIError(status=502)
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result1["flow_id"],
-            {
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test-username"
+    assert result["data"] == {"password": "test-password", "username": "test-username"}
+    assert len(mock_setup_entry.mock_calls) == 1
 
-    with (
-        patch("pytouchlinesl.TouchlineSL.modules", return_value=FAKE_MODULES),
-        patch("pytouchlinesl.TouchlineSL.user_id", return_value=12345),
-    ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result1["flow_id"],
-            {
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
+    # Try re-adding the account
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "test-username"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+
+    assert result["type"] == FlowResultType.ABORT
     assert len(mock_setup_entry.mock_calls) == 1

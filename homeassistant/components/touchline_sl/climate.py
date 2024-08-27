@@ -79,7 +79,7 @@ class TouchlineSLZone(CoordinatorEntity[TouchlineSLModuleCoordinator], ClimateEn
         super()._handle_coordinator_update()
 
     @property
-    def device(self) -> Zone:
+    def zone(self) -> Zone:
         """Return the device object from the coordinator data."""
         return self.coordinator.data.zones[self.zone_id]
 
@@ -93,34 +93,34 @@ class TouchlineSLZone(CoordinatorEntity[TouchlineSLModuleCoordinator], ClimateEn
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
-        await self.device.set_temperature(temperature)
+        await self.zone.set_temperature(temperature)
         await self.coordinator.async_request_refresh()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Assign the zone to a particular global schedule."""
-        if not self.device:
+        if not self.zone:
             return
 
         if preset_mode == CONST_TEMP_PRESET_NAME and self._attr_target_temperature:
-            await self.device.set_temperature(temperature=self._attr_target_temperature)
+            await self.zone.set_temperature(temperature=self._attr_target_temperature)
             await self.coordinator.async_request_refresh()
             return
 
         if schedule := self.coordinator.data.schedules[preset_mode]:
-            await self.device.set_schedule(schedule_id=schedule.id)
+            await self.zone.set_schedule(schedule_id=schedule.id)
             await self.coordinator.async_request_refresh()
 
     def set_attr(self) -> None:
         """Populate attributes with data from the coordinator."""
         schedule_names = self.coordinator.data.schedules.keys()
 
-        self._attr_current_temperature = self.device.temperature
-        self._attr_target_temperature = self.device.target_temperature
-        self._attr_current_humidity = int(self.device.humidity)
+        self._attr_current_temperature = self.zone.temperature
+        self._attr_target_temperature = self.zone.target_temperature
+        self._attr_current_humidity = int(self.zone.humidity)
         self._attr_preset_modes = [*schedule_names, CONST_TEMP_PRESET_NAME]
 
-        if self.device.mode == "constantTemp":
+        if self.zone.mode == "constantTemp":
             self._attr_preset_mode = CONST_TEMP_PRESET_NAME
-        elif self.device.mode == "globalSchedule":
-            schedule = self.device.schedule
+        elif self.zone.mode == "globalSchedule":
+            schedule = self.zone.schedule
             self._attr_preset_mode = schedule.name

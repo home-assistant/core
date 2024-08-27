@@ -27,10 +27,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class TouchlineSLConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Roth Touchline SL."""
 
-    def __init__(self) -> None:
-        """Construct a new ConfigFlow for the Roth Touchline SL module."""
-        self.account = None
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
