@@ -47,7 +47,7 @@ def process_events(events: list[assist_pipeline.PipelineEvent]) -> list[dict]:
 
 async def test_pipeline_from_audio_stream_auto(
     hass: HomeAssistant,
-    mock_stt_provider: MockSttProvider,
+    mock_stt_provider_entity: MockSttProviderEntity,
     init_components,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -80,9 +80,9 @@ async def test_pipeline_from_audio_stream_auto(
     )
 
     assert process_events(events) == snapshot
-    assert len(mock_stt_provider.received) == 2
-    assert mock_stt_provider.received[0].startswith(b"part1")
-    assert mock_stt_provider.received[1].startswith(b"part2")
+    assert len(mock_stt_provider_entity.received) == 2
+    assert mock_stt_provider_entity.received[0].startswith(b"part1")
+    assert mock_stt_provider_entity.received[1].startswith(b"part2")
 
 
 async def test_pipeline_from_audio_stream_legacy(
@@ -319,7 +319,7 @@ async def test_pipeline_from_audio_stream_unknown_pipeline(
 
 async def test_pipeline_from_audio_stream_wake_word(
     hass: HomeAssistant,
-    mock_stt_provider: MockSttProvider,
+    mock_stt_provider_entity: MockSttProviderEntity,
     mock_wake_word_provider_entity: MockWakeWordEntity,
     init_components,
     snapshot: SnapshotAssertion,
@@ -381,16 +381,16 @@ async def test_pipeline_from_audio_stream_wake_word(
     # 2. queued audio (from mock wake word entity)
     # 3. part1
     # 4. part2
-    assert len(mock_stt_provider.received) > 3
+    assert len(mock_stt_provider_entity.received) > 3
 
     first_chunk = bytes(
-        [c_byte for c in mock_stt_provider.received[:-3] for c_byte in c]
+        [c_byte for c in mock_stt_provider_entity.received[:-3] for c_byte in c]
     )
     assert first_chunk == wake_chunk_1[len(wake_chunk_1) // 2 :] + wake_chunk_2
 
-    assert mock_stt_provider.received[-3] == b"queued audio"
-    assert mock_stt_provider.received[-2].startswith(b"part1")
-    assert mock_stt_provider.received[-1].startswith(b"part2")
+    assert mock_stt_provider_entity.received[-3] == b"queued audio"
+    assert mock_stt_provider_entity.received[-2].startswith(b"part1")
+    assert mock_stt_provider_entity.received[-1].startswith(b"part2")
 
 
 async def test_pipeline_save_audio(

@@ -334,7 +334,9 @@ async def test_invalid_config(
     assert not await async_setup_component(hass, influxdb.DOMAIN, config)
 
 
-async def _setup(hass, mock_influx_client, config_ext, get_write_api):
+async def _setup(
+    hass: HomeAssistant, mock_influx_client, config_ext, get_write_api
+) -> None:
     """Prepare client for next test and return event handler method."""
     config = {
         "influxdb": {

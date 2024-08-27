@@ -1206,7 +1206,7 @@ async def async_api_set_mode(
             raise AlexaInvalidValueError(msg)
 
     # Remote Activity
-    if instance == f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}":
+    elif instance == f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}":
         activity = mode.split(".")[1]
         activities: list[str] | None = entity.attributes.get(remote.ATTR_ACTIVITY_LIST)
         if activity != PRESET_MODE_NA and activities and activity in activities:
