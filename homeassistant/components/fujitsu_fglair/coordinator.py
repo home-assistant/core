@@ -47,7 +47,7 @@ class FGLairCoordinator(DataUpdateCoordinator[dict[str, FujitsuHVAC]]):
         except AylaAuthError as e:
             raise ConfigEntryAuthFailed("Credentials expired for Ayla IoT API") from e
 
-        if len(listening_entities) == 0:
+        if not listening_entities:
             devices = list(filter(lambda x: isinstance(x, FujitsuHVAC), devices))
         else:
             devices = list(
