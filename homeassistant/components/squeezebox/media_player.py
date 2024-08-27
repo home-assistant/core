@@ -447,12 +447,6 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         """Send the play_media command to the media player."""
         index = None
 
-        if media_type == "favorite":
-            _command = ["favorites"]
-            _command.extend(["playlist", "play", "item_id:" + media_id])
-            await self._player.async_query(*_command)
-            return
-
         enqueue: MediaPlayerEnqueue | None = kwargs.get(ATTR_MEDIA_ENQUEUE)
 
         if enqueue == MediaPlayerEnqueue.ADD:

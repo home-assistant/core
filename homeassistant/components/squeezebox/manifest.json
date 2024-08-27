@@ -1,7 +1,9 @@
 {
   "domain": "squeezebox",
   "name": "Squeezebox (Lyrion Music Server)",
-  "codeowners": ["@rajlaud"],
+  "codeowners": [
+    "@rajlaud"
+  ],
   "config_flow": true,
   "dhcp": [
     {
@@ -11,6 +13,10 @@
   ],
   "documentation": "https://www.home-assistant.io/integrations/squeezebox",
   "iot_class": "local_polling",
-  "loggers": ["pysqueezebox"],
-  "requirements": ["pysqueezebox==0.7.1"]
+  "loggers": [
+    "pysqueezebox"
+  ],
+  "requirements": [
+    "pysqueezebox==0.8.1"
+  ]
 }
