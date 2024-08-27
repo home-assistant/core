@@ -73,6 +73,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
         self.api = NiceGOApi()
         self._unsub_connected: Callable[[], None] | None = None
         self._unsub_data: Callable[[], None] | None = None
+        self._unsub_connection_lost: Callable[[], None] | None = None
 
     async def _parse_barrier(self, barrier_state: BarrierState) -> NiceGODevice | None:
         """Parse barrier data."""
@@ -182,6 +183,9 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
         """Listen to the websocket for updates."""
         self._unsub_connected = self.api.listen("on_connected", self.on_connected)
         self._unsub_data = self.api.listen("on_data", self.on_data)
+        self._unsub_connection_lost = self.api.listen(
+            "on_connection_lost", self.on_connection_lost
+        )
         try:
             await self.api.connect(reconnect=True)
         except ApiError:
@@ -223,11 +227,22 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
         """Handle the websocket connection."""
         _LOGGER.debug("Connected to the websocket")
         await self.api.subscribe(self.organization_id)
+        self.async_set_updated_data(self.data)
+
+    async def on_connection_lost(self, data: dict[str, Exception]) -> None:
+        """Handle the websocket connection loss. Don't need to do much since the library will automatically reconnect."""
+        _LOGGER.debug("Connection lost to the websocket")
+        self.async_set_update_error(data["exception"])
 
     def unsubscribe(self) -> None:
         """Unsubscribe from the websocket."""
-        if self._unsub_connected is None or self._unsub_data is None:
+        if (
+            self._unsub_connected is None
+            or self._unsub_data is None
+            or self._unsub_connection_lost is None
+        ):
             return
+        self._unsub_connection_lost()
         self._unsub_connected()
         self._unsub_data()
         _LOGGER.debug("Unsubscribed from the websocket")
