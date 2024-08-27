@@ -5,21 +5,27 @@ from __future__ import annotations
 from asyncio import (
     AbstractEventLoop,
     Future,
+    Queue,
     Semaphore,
     Task,
     TimerHandle,
     gather,
     get_running_loop,
+    timeout as async_timeout,
 )
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import AsyncIterable, Awaitable, Callable, Coroutine
 import concurrent.futures
 import logging
 import threading
 from typing import Any
 
+from typing_extensions import TypeVar
+
 _LOGGER = logging.getLogger(__name__)
 
 _SHUTDOWN_RUN_CALLBACK_THREADSAFE = "_shutdown_run_callback_threadsafe"
+
+_DataT = TypeVar("_DataT", default=Any)
 
 
 def create_eager_task[_T](
@@ -138,3 +144,20 @@ def get_scheduled_timer_handles(loop: AbstractEventLoop) -> list[TimerHandle]:
     """Return a list of scheduled TimerHandles."""
     handles: list[TimerHandle] = loop._scheduled  # type: ignore[attr-defined] # noqa: SLF001
     return handles
+
+
+async def queue_to_iterable(
+    queue: Queue[_DataT], timeout: float | None = None
+) -> AsyncIterable[_DataT]:
+    """Stream items from a queue until None with an optional timeout per item."""
+    if timeout is None:
+        while (item := await queue.get()) is not None:
+            yield item
+    else:
+        async with async_timeout(timeout):
+            item = await queue.get()
+
+        while item is not None:
+            yield item
+            async with async_timeout(timeout):
+                item = await queue.get()
