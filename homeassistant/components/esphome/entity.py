@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import math
-from typing import TYPE_CHECKING, Any, Concatenate, Generic, ParamSpec, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Concatenate, Generic, TypeVar, cast
 
 from aioesphomeapi import (
     APIConnectionError,
@@ -30,8 +30,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
 
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
 _InfoT = TypeVar("_InfoT", bound=EntityInfo)
 _EntityT = TypeVar("_EntityT", bound="EsphomeEntity[Any,Any]")
 _StateT = TypeVar("_StateT", bound=EntityState)
@@ -96,7 +94,6 @@ async def platform_async_setup_entry(
     """
     entry_data = entry.runtime_data
     entry_data.info[info_type] = {}
-    entry_data.state.setdefault(state_type, {})
     platform = entity_platform.async_get_current_platform()
     on_static_info_update = functools.partial(
         async_static_info_updated,
@@ -116,30 +113,45 @@ async def platform_async_setup_entry(
     )
 
 
-def esphome_state_property(
+def esphome_state_property[_R, _EntityT: EsphomeEntity[Any, Any]](
     func: Callable[[_EntityT], _R],
 ) -> Callable[[_EntityT], _R | None]:
     """Wrap a state property of an esphome entity.
 
-    This checks if the state object in the entity is set, and
-    prevents writing NAN values to the Home Assistant state machine.
+    This checks if the state object in the entity is set
+    and returns None if it is not set.
     """
 
     @functools.wraps(func)
     def _wrapper(self: _EntityT) -> _R | None:
-        if not self._has_state:
-            return None
-        val = func(self)
-        if isinstance(val, float) and not math.isfinite(val):
-            # Home Assistant doesn't use NaN or inf values in state machine
-            # (not JSON serializable)
-            return None
-        return val
+        return func(self) if self._has_state else None
 
     return _wrapper
 
 
-def convert_api_error_ha_error(
+def esphome_float_state_property[_EntityT: EsphomeEntity[Any, Any]](
+    func: Callable[[_EntityT], float | None],
+) -> Callable[[_EntityT], float | None]:
+    """Wrap a state property of an esphome entity that returns a float.
+
+    This checks if the state object in the entity is set, and returns
+    None if its not set. If also prevents writing NAN values to the
+    Home Assistant state machine.
+    """
+
+    @functools.wraps(func)
+    def _wrapper(self: _EntityT) -> float | None:
+        if not self._has_state:
+            return None
+        val = func(self)
+        # Home Assistant doesn't use NaN or inf values in state machine
+        # (not JSON serializable)
+        return None if val is None or not math.isfinite(val) else val
+
+    return _wrapper
+
+
+def convert_api_error_ha_error[**_P, _R, _EntityT: EsphomeEntity[Any, Any]](
     func: Callable[Concatenate[_EntityT, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
     """Decorate ESPHome command calls that send commands/make changes to the device.
@@ -190,6 +202,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     ) -> None:
         """Initialize."""
         self._entry_data = entry_data
+        self._states = cast(dict[int, _StateT], entry_data.state[state_type])
         assert entry_data.device_info is not None
         device_info = entry_data.device_info
         self._device_info = device_info
@@ -267,11 +280,9 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     @callback
     def _update_state_from_entry_data(self) -> None:
         """Update state from entry data."""
-        state = self._entry_data.state
         key = self._key
-        state_type = self._state_type
-        if has_state := key in state[state_type]:
-            self._state = cast(_StateT, state[state_type][key])
+        if has_state := key in self._states:
+            self._state = self._states[key]
         self._has_state = has_state
 
     @callback

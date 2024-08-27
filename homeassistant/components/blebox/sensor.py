@@ -14,13 +14,13 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_VOLT_AMPERE_REACTIVE,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfReactivePower,
     UnitOfSpeed,
     UnitOfTemperature,
 )
@@ -85,7 +85,7 @@ SENSOR_TYPES = (
     SensorEntityDescription(
         key="reactivePower",
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
+        native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
     ),
     SensorEntityDescription(
         key="activePower",

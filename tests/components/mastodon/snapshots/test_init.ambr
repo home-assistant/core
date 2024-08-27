@@ -13,7 +13,7 @@
     'identifiers': set({
       tuple(
         'mastodon',
-        'client_id',
+        'trwnh_mastodon_social',
       ),
     }),
     'is_new': False,
@@ -22,7 +22,7 @@
     'manufacturer': 'Mastodon gGmbH',
     'model': '@trwnh@mastodon.social',
     'model_id': None,
-    'name': 'Mastodon',
+    'name': 'Mastodon @trwnh@mastodon.social',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
