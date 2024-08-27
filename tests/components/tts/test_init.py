@@ -1565,15 +1565,19 @@ async def test_fetching_in_async(
 
 
 @pytest.mark.parametrize(
-    ("setup", "engine_id"),
+    ("setup", "engine_id", "extra_data"),
     [
-        ("mock_setup", "test"),
-        ("mock_config_entry_setup", "tts.test"),
+        ("mock_setup", "test", {"name": "Test"}),
+        ("mock_config_entry_setup", "tts.test", {}),
     ],
     indirect=["setup"],
 )
 async def test_ws_list_engines(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup: str, engine_id: str
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    setup: str,
+    engine_id: str,
+    extra_data: dict[str, str],
 ) -> None:
     """Test listing tts engines and supported languages."""
     client = await hass_ws_client()
@@ -1588,6 +1592,7 @@ async def test_ws_list_engines(
                 "engine_id": engine_id,
                 "supported_languages": ["de_CH", "de_DE", "en_GB", "en_US"],
             }
+            | extra_data
         ]
     }
 
@@ -1596,7 +1601,7 @@ async def test_ws_list_engines(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": engine_id, "supported_languages": []}]
+        "providers": [{"engine_id": engine_id, "supported_languages": []} | extra_data]
     }
 
     await client.send_json_auto_id({"type": "tts/engine/list", "language": "en"})
@@ -1606,6 +1611,7 @@ async def test_ws_list_engines(
     assert msg["result"] == {
         "providers": [
             {"engine_id": engine_id, "supported_languages": ["en_US", "en_GB"]}
+            | extra_data
         ]
     }
 
@@ -1616,6 +1622,7 @@ async def test_ws_list_engines(
     assert msg["result"] == {
         "providers": [
             {"engine_id": engine_id, "supported_languages": ["en_GB", "en_US"]}
+            | extra_data
         ]
     }
 
@@ -1626,6 +1633,7 @@ async def test_ws_list_engines(
     assert msg["result"] == {
         "providers": [
             {"engine_id": engine_id, "supported_languages": ["de_DE", "de_CH"]}
+            | extra_data
         ]
     }
 
@@ -1638,6 +1646,7 @@ async def test_ws_list_engines(
     assert msg["result"] == {
         "providers": [
             {"engine_id": engine_id, "supported_languages": ["de_CH", "de_DE"]}
+            | extra_data
         ]
     }
 
@@ -1679,10 +1688,12 @@ async def test_ws_list_engines_deprecated(
             {
                 "deprecated": True,
                 "engine_id": "test",
+                "name": "Test",
                 "supported_languages": ["de_CH", "de_DE", "en_GB", "en_US"],
             },
             {
                 "engine_id": "test_2",
+                "name": "Test",
                 "supported_languages": ["de_CH", "de_DE", "en_GB", "en_US"],
             },
         ]
@@ -1690,15 +1701,19 @@ async def test_ws_list_engines_deprecated(
 
 
 @pytest.mark.parametrize(
-    ("setup", "engine_id"),
+    ("setup", "engine_id", "extra_data"),
     [
-        ("mock_setup", "test"),
-        ("mock_config_entry_setup", "tts.test"),
+        ("mock_setup", "test", {"name": "Test"}),
+        ("mock_config_entry_setup", "tts.test", {}),
     ],
     indirect=["setup"],
 )
 async def test_ws_get_engine(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, setup: str, engine_id: str
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    setup: str,
+    engine_id: str,
+    extra_data: dict[str, str],
 ) -> None:
     """Test getting an tts engine."""
     client = await hass_ws_client()
@@ -1712,6 +1727,7 @@ async def test_ws_get_engine(
             "engine_id": engine_id,
             "supported_languages": ["de_CH", "de_DE", "en_GB", "en_US"],
         }
+        | extra_data
     }
 
 
