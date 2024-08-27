@@ -75,23 +75,29 @@
       "frequency": {
         "name": "Frequency"
       },
-      "total_active_import": {
-        "name": "Total imported active energy"
+      "nresettable_counter1": {
+        "name": "Non-resettable counter 1"
       },
-      "total_active_export": {
-        "name": "Total exported active energy"
+      "nresettable_counter2": {
+        "name": "Non-resettable counter 2"
       },
-      "total_reactive_import": {
-        "name": "Total imported reactive energy"
+      "nresettable_counter3": {
+        "name": "Non-resettable counter 3"
       },
-      "total_reactive_export": {
-        "name": "Total exported reactive energy"
+      "nresettable_counter4": {
+        "name": "Non-resettable counter 4"
       },
-      "total_apparent_energy_import": {
-        "name": "Total imported apparent energy"
+      "nresettable_counter5": {
+        "name": "Non-resettable counter 5"
       },
-      "total_apparent_energy_export": {
-        "name": "Total exported apparent energy"
+      "nresettable_counter6": {
+        "name": "Non-resettable counter 6"
+      },
+      "nresettable_counter7": {
+        "name": "Non-resettable counter 7"
+      },
+      "nresettable_counter8": {
+        "name": "Non-resettable counter 8"
       },
       "resettable_counter1": {
         "name": "Resettable counter 1"
