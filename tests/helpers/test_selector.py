@@ -1,6 +1,7 @@
 """Test selectors."""
 
 from enum import Enum
+from typing import Any
 
 import pytest
 import voluptuous as vol
@@ -1122,7 +1123,19 @@ def test_condition_selector_schema(
 )
 def test_trigger_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test trigger sequence selector."""
-    _test_selector("trigger", schema, valid_selections, invalid_selections)
+
+    def custom_trigger_serializer(
+        triggers: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        return [{**trigger, "trigger": trigger["platform"]} for trigger in triggers]
+
+    _test_selector(
+        "trigger",
+        schema,
+        valid_selections,
+        invalid_selections,
+        custom_trigger_serializer,
+    )
 
 
 @pytest.mark.parametrize(
