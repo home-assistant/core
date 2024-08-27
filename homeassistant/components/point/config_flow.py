@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -25,7 +25,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def register_flow_implementation(hass, domain, client_id, client_secret):
+def register_flow_implementation(
+    hass: HomeAssistant, domain: str, client_id: str, client_secret: str
+) -> None:
     """Register a flow implementation.
 
     domain: Domain of the component responsible for the implementation.
@@ -49,9 +51,9 @@ class PointFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize flow."""
-        self.flow_impl = None
+        self.flow_impl: str | None = None
 
-    async def async_step_import(self, user_input=None):
+    async def async_step_import(self, import_data: None) -> ConfigFlowResult:
         """Handle external yaml configuration."""
         if self._async_current_entries():
             return self.async_abort(reason="already_setup")

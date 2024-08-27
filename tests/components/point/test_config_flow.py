@@ -65,7 +65,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_setup"
 
     with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
-        result = await flow.async_step_import()
+        result = await flow.async_step_import(None)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_setup"
 
@@ -100,7 +100,7 @@ async def test_step_import(hass: HomeAssistant, mock_pypoint) -> None:
     """Test that we trigger import when configuring with client."""
     flow = init_config_flow(hass)
 
-    result = await flow.async_step_import()
+    result = await flow.async_step_import(None)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
 
