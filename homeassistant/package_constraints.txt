@@ -23,7 +23,7 @@ cached-ipaddress==0.5.0
 certifi>=2021.5.30
 ciso8601==2.3.1
 cryptography==43.0.0
-dbus-fast==2.23.0
+dbus-fast==2.24.0
 fnv-hash-fast==1.0.2
 ha-av==10.1.1
 ha-ffmpeg==3.2.0
@@ -108,12 +108,6 @@ hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
 numpy==1.26.0
-
-# Prevent dependency conflicts between sisyphus-control and aioambient
-# until upper bounds for sisyphus-control have been updated
-# https://github.com/jkeljo/sisyphus-control/issues/6
-python-engineio>=3.13.1,<4.0
-python-socketio>=4.6.0,<5.0
 
 # Constrain multidict to avoid typing issues
 # https://github.com/home-assistant/core/pull/67046
