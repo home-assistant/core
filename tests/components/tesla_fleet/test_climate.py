@@ -175,22 +175,25 @@ async def test_climate(
     state = hass.states.get(entity_id)
     assert state.state == HVACMode.COOL
 
-    # Set Temp do nothing
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {
-            ATTR_ENTITY_ID: [entity_id],
-            ATTR_TARGET_TEMP_HIGH: 30,
-            ATTR_TARGET_TEMP_LOW: 30,
-        },
-        blocking=True,
-    )
+    # Call set temp without temperature
+    with pytest.raises(
+        ServiceValidationError, match="Temperature is required for this action"
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: [entity_id],
+                ATTR_TARGET_TEMP_HIGH: 30,
+                ATTR_TARGET_TEMP_LOW: 30,
+            },
+            blocking=True,
+        )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_TEMPERATURE] == 40
     assert state.state == HVACMode.COOL
 
-    # pytest raises ServiceValidationError
+    # Call set temp with invalid temperature
     with pytest.raises(
         ServiceValidationError,
         match="Cabin overheat protection does not support that temperature",
