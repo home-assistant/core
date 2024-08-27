@@ -241,7 +241,6 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         key="meter_reading",
         translation_key="water_meter_reading",
         device_class=SensorDeviceClass.WATER,
-        icon="mdi:gauge",
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         should_update_entity=lambda value: value is not None,

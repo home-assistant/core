@@ -76,6 +76,12 @@
       },
       "water_meter_reading": {
         "name": "Water meter reading"
+      },
+      "current_power": {
+        "name": "Current Power"
+      },
+      "power_consumption": {
+        "name": "Power Consumption"
       }
     },
     "number": {
