@@ -161,7 +161,7 @@ class TraccarServerConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import an entry."""
+        """Import an entry from `tracar` domain (see #109226)."""
         configured_port = str(import_data[CONF_PORT])
         self._async_abort_entries_match(
             {
