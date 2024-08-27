@@ -139,7 +139,6 @@ class SensorDeviceClass(StrEnum):
     Unit of measurement: `ppm` (parts per million)
     """
 
-
     CONDUCTIVITY = "conductivity"
     """Conductivity.
 
