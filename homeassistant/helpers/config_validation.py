@@ -6,6 +6,7 @@
 
 from collections.abc import Callable, Hashable
 import contextlib
+from copy import copy
 from datetime import (
     date as date_sys,
     datetime as datetime_sys,
@@ -1670,18 +1671,20 @@ def _backward_compat_trigger_schema(value: Any | None) -> Any:
     if not isinstance(value, dict):
         return value
 
+    response = copy(value)
+
     # `platform` has been renamed to `trigger`
     if CONF_PLATFORM in value:
         if CONF_TRIGGER in value:
             raise vol.Invalid(
                 "Cannot specify both 'platform' and 'trigger'. Please use 'trigger' only."
             )
-        value[CONF_TRIGGER] = value[CONF_PLATFORM]
+        response[CONF_TRIGGER] = value[CONF_PLATFORM]
     elif CONF_TRIGGER in value:
         # We should still support the old `platform` key
-        value[CONF_PLATFORM] = value[CONF_TRIGGER]
+        response[CONF_PLATFORM] = value[CONF_TRIGGER]
 
-    return value
+    return response
 
 
 TRIGGER_BASE_SCHEMA = vol.Schema(
