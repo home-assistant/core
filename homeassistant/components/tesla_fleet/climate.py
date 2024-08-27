@@ -140,15 +140,21 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the climate temperature."""
 
-        if temp := kwargs.get(ATTR_TEMPERATURE):
-            await self.wake_up_if_asleep()
-            await handle_vehicle_command(
-                self.api.set_temps(
-                    driver_temp=temp,
-                    passenger_temp=temp,
-                )
+        if ATTR_TEMPERATURE not in kwargs:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="missing_temperature",
             )
-            self._attr_target_temperature = temp
+
+        temp = kwargs[ATTR_TEMPERATURE]
+        await self.wake_up_if_asleep()
+        await handle_vehicle_command(
+            self.api.set_temps(
+                driver_temp=temp,
+                passenger_temp=temp,
+            )
+        )
+        self._attr_target_temperature = temp
 
         if mode := kwargs.get(ATTR_HVAC_MODE):
             # Set HVAC mode will call write_ha_state
@@ -268,9 +274,13 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the climate temperature."""
 
-        if not (temp := kwargs.get(ATTR_TEMPERATURE)):
-            return
+        if ATTR_TEMPERATURE not in kwargs:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="missing_temperature",
+            )
 
+        temp = kwargs[ATTR_TEMPERATURE]
         if (cop_mode := TEMP_LEVELS.get(temp)) is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
