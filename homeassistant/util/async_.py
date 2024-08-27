@@ -147,7 +147,7 @@ def get_scheduled_timer_handles(loop: AbstractEventLoop) -> list[TimerHandle]:
 
 
 async def queue_to_iterable(
-    queue: Queue[_DataT], timeout: float | None = None
+    queue: Queue[_DataT | None], timeout: float | None = None
 ) -> AsyncIterable[_DataT]:
     """Stream items from a queue until None with an optional timeout per item."""
     if timeout is None:
