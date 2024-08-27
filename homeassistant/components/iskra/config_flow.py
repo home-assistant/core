@@ -6,7 +6,12 @@ import logging
 from typing import Any
 
 from pyiskra.adapters import Modbus, RestAPI
-from pyiskra.exceptions import NotAuthorised
+from pyiskra.exceptions import (
+    DeviceConnectionError,
+    DeviceTimeoutError,
+    InvalidResponseCode,
+    NotAuthorised,
+)
 from pyiskra.helper import BasicInfo
 import voluptuous as vol
 
@@ -61,9 +66,16 @@ async def test_rest_api_connection(host: str, authentication=None) -> BasicInfo:
         basic_info = await rest_api.get_basic_info()
     except NotAuthorised as e:
         raise NotAuthorised from e
+    except DeviceConnectionError as e:
+        raise CannotConnect from e
+    except DeviceTimeoutError as e:
+        raise CannotConnect from e
+    except InvalidResponseCode as e:
+        raise CannotConnect from e
     except Exception as e:
         _LOGGER.error("Unexpected exception: %s", e)
-        raise CannotConnect from e
+        raise UnknownException from e
+
     _LOGGER.info("REST API connection successful")
     return basic_info
 
@@ -75,10 +87,19 @@ async def test_modbus_connection(host: str, port: int, address: int) -> BasicInf
     )
     try:
         basic_info = await modbus_api.get_basic_info()
+    except NotAuthorised as e:
+        raise NotAuthorised from e
+    except DeviceConnectionError as e:
+        raise CannotConnect from e
+    except DeviceTimeoutError as e:
+        raise CannotConnect from e
+    except InvalidResponseCode as e:
+        raise CannotConnect from e
     except Exception as e:
         _LOGGER.error("Unexpected exception: %s", e)
-        raise CannotConnect from e
-    _LOGGER.info("Modbus TCP connection successful")
+        raise UnknownException from e
+
+    _LOGGER.info("Modbus connection successful")
     return basic_info
 
 
@@ -101,7 +122,17 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 # Check if authentication is required.
                 try:
                     device_info = await test_rest_api_connection(self.host)
-                    # If the connection was successful, create the device.
+                except CannotConnect:
+                    errors["base"] = "cannot_connect"
+                except NotAuthorised:
+                    # Proceed to authentication step.
+                    return await self.async_step_authentication()
+                except UnknownException:
+                    errors["base"] = "unknown"
+                    # If the connection was not successful, show an error.
+
+                # If the connection was successful, create the device.
+                if not errors:
                     return await self._create_entry(
                         host=self.host,
                         protocol=self.protocol,
@@ -111,11 +142,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                         address=None,
                         authentication=None,
                     )
-                except CannotConnect:
-                    errors["base"] = "cannot_connect"
-                except NotAuthorised:
-                    # Proceed to authentication step.
-                    return await self.async_step_authentication()
 
             if self.protocol == "Modbus TCP":
                 # Proceed to modbus step.
@@ -139,7 +165,17 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             }
             try:
                 device_info = await test_rest_api_connection(self.host, authentication)
-                # if the connection was successful, create the device.
+            # If the connection failed, abort.
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            # If the authentication failed, show an error and authentication form again.
+            except NotAuthorised:
+                errors["base"] = "invalid_auth"
+            except UnknownException:
+                errors["base"] = "unknown"
+
+            # if the connection was successful, create the device.
+            if not errors:
                 return await self._create_entry(
                     self.host,
                     self.protocol,
@@ -149,12 +185,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     address=None,
                     authentication=authentication,
                 )
-            # If the connection failed, abort.
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            # If the authentication failed, show an error and authentication form again.
-            except NotAuthorised:
-                errors["base"] = "invalid_auth"
 
         # If there's no user_input or there was an error, show the authentication form again.
         return self.async_show_form(
@@ -176,7 +206,14 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     self.host, user_input[CONF_PORT], user_input[CONF_ADDRESS]
                 )
 
-                # If the connection was successful, create the device.
+            # If the connection failed, show an error.
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except UnknownException:
+                errors["base"] = "unknown"
+
+            # If the connection was successful, create the device.
+            if not errors:
                 return await self._create_entry(
                     host=self.host,
                     protocol=self.protocol,
@@ -186,9 +223,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     address=user_input[CONF_ADDRESS],
                     authentication=None,
                 )
-            # If the connection failed, show an error.
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
 
         # If there's no user_input or there was an error, show the modbus form again.
         return self.async_show_form(
@@ -207,6 +241,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         address,
         authentication,
     ) -> ConfigFlowResult:
+        """Create the config entry."""
+
         if not self.unique_id:
             await self.async_set_unique_id(serial)
         self._abort_if_unique_id_configured()
@@ -230,3 +266,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
+
+
+class UnknownException(HomeAssistantError):
+    """Error to indicate an unknown exception occurred."""
