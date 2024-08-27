@@ -1,7 +1,8 @@
 """Test the Tesla Fleet init."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
+from aiohttp.client_exceptions import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -15,6 +16,7 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
     VehicleOffline,
 )
+from tesla_fleet_api.teslafleetapi import TeslaFleetApi
 
 from homeassistant.components.tesla_fleet.coordinator import (
     ENERGY_INTERVAL,
@@ -70,6 +72,24 @@ async def test_init_error(
     mock_products.side_effect = side_effect
     await setup_platform(hass, normal_config_entry)
     assert normal_config_entry.state is state
+
+
+async def test_oauth_refresh_error(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_products: AsyncMock,
+) -> None:
+    """Test init with errors."""
+    # Reset the mock to actually call the function
+    mock_products.side_effect = TeslaFleetApi.products
+
+    # Patch the token refresh to raise an error
+    with patch(
+        "homeassistant.components.tesla_fleet.OAuth2Session.async_ensure_token_valid",
+        side_effect=ClientResponseError(None, None, status=401),
+    ):
+        await setup_platform(hass, normal_config_entry)
+    assert normal_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 # Test devices
