@@ -1133,7 +1133,6 @@ async def test_media_get_queue(
 ) -> None:
     """Test playing media with the announce."""
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
-
     result = await hass.services.async_call(
         SONOS_DOMAIN,
         SERVICE_GET_QUEUE,
