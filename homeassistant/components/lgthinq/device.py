@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DEVICE_TYPE_API_MAP, DOMAIN, NONE_KEY
+from .const import COMPANY, DEVICE_TYPE_API_MAP, DOMAIN, NONE_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -113,19 +113,10 @@ class LGDevice:
         """Return the device information."""
         return dr.DeviceInfo(
             identifiers={(DOMAIN, self._unique_id)},
-            manufacturer="LGE",
+            manufacturer=COMPANY,
             model=self._api.model_name,
             name=self.name,
         )
-
-    @property
-    def noti_message(self) -> str | None:
-        """Returns the notification message."""
-        return self._noti_message
-
-    @noti_message.setter
-    def noti_message(self, message: str) -> None:
-        self._noti_message = message
 
     @property
     def tag(self) -> str:
@@ -149,43 +140,6 @@ class LGDevice:
         self.api.set_status(result)
         self._is_connected = True
         return result
-
-    def update_partial_status(self, response: dict[str, Any] | None = None) -> None:
-        """Update device status from the given partial response data."""
-        if response is None:
-            _LOGGER.error("%s Failed to update status", self.tag)
-            return
-
-        status = response.get(self.sub_id) if self.sub_id else response
-        _LOGGER.debug("%s Update status: %s", self.tag, status)
-
-        # Partial response into the device api.
-        self.api.update_status(status)
-        self._is_connected = True
-
-    def handle_device_alias_changed(self, alias: str) -> None:
-        """Handle the event that the alias has changed."""
-        if alias is not None:
-            if self.sub_id:
-                alias = f"{alias} {self.sub_id}"
-
-            _LOGGER.debug("%s Device alias has been changed: %s", self.tag, alias)
-            self._name = alias
-
-            # Update device registry.
-            device_registry = dr.async_get(self.hass)
-            device_entry = device_registry.async_get_device(
-                identifiers={(DOMAIN, self._unique_id)}
-            )
-            if device_entry is not None:
-                device_registry.async_update_device(
-                    device_id=device_entry.id, name=alias
-                )
-
-    def handle_notification_message(self, message: str) -> None:
-        """Handle the notification message."""
-        _LOGGER.debug("%s Received notification message: %s", self.tag, message)
-        self._noti_message = message
 
     def __str__(self) -> str:
         """Return a string expression."""
