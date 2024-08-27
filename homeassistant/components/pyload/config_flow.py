@@ -133,16 +133,16 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import config from yaml."""
 
         config = {
-            CONF_NAME: import_info.get(CONF_NAME),
-            CONF_HOST: import_info.get(CONF_HOST, DEFAULT_HOST),
-            CONF_PASSWORD: import_info.get(CONF_PASSWORD, ""),
-            CONF_PORT: import_info.get(CONF_PORT, DEFAULT_PORT),
-            CONF_SSL: import_info.get(CONF_SSL, False),
-            CONF_USERNAME: import_info.get(CONF_USERNAME, ""),
+            CONF_NAME: import_data.get(CONF_NAME),
+            CONF_HOST: import_data.get(CONF_HOST, DEFAULT_HOST),
+            CONF_PASSWORD: import_data.get(CONF_PASSWORD, ""),
+            CONF_PORT: import_data.get(CONF_PORT, DEFAULT_PORT),
+            CONF_SSL: import_data.get(CONF_SSL, False),
+            CONF_USERNAME: import_data.get(CONF_USERNAME, ""),
             CONF_VERIFY_SSL: False,
         }
 
