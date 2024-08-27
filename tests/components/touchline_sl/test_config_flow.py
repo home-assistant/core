@@ -34,6 +34,7 @@ async def test_config_flow_success(
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-username"
     assert result["data"] == {"password": "test-password", "username": "test-username"}
+    assert result["result"].unique_id == "12345"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -82,6 +83,7 @@ async def test_config_flow_failure_api_exceptions(
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-username"
     assert result["data"] == {"password": "test-password", "username": "test-username"}
+    assert result["result"].unique_id == "12345"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -110,6 +112,7 @@ async def test_config_flow_failure_adding_non_unique_account(
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-username"
     assert result["data"] == {"password": "test-password", "username": "test-username"}
+    assert result["result"].unique_id == "12345"
     assert len(mock_setup_entry.mock_calls) == 1
 
     # Try re-adding the account
