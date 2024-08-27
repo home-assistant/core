@@ -1,6 +1,7 @@
 """Common fixtures for the Nice G.O. tests."""
 
 from collections.abc import Generator
+from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 from nice_go import Barrier, BarrierState, ConnectionState
@@ -71,7 +72,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_EMAIL: "test-email",
             CONF_PASSWORD: "test-password",
             CONF_REFRESH_TOKEN: "test-refresh-token",
-            CONF_REFRESH_TOKEN_CREATION_TIME: 1722184160.738171,
+            CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
         },
         version=1,
         unique_id="test-email",
