@@ -49,9 +49,9 @@ class PointFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize flow."""
-        self.flow_impl: str | None = None
+        self.flow_impl = None
 
-    async def async_step_import(self, import_data: None) -> ConfigFlowResult:
+    async def async_step_import(self, user_input=None):
         """Handle external yaml configuration."""
         if self._async_current_entries():
             return self.async_abort(reason="already_setup")
