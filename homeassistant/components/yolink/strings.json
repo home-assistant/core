@@ -51,6 +51,12 @@
       "plug_4": { "name": "Plug 4" }
     },
     "sensor": {
+      "current_power": {
+        "name": "Current Power"
+      },
+      "power_consumption": {
+        "name": "Power Consumption"
+      },
       "power_failure_alarm": {
         "name": "Power failure alarm",
         "state": {
@@ -76,12 +82,6 @@
       },
       "water_meter_reading": {
         "name": "Water meter reading"
-      },
-      "current_power": {
-        "name": "Current Power"
-      },
-      "power_consumption": {
-        "name": "Power Consumption"
       }
     },
     "number": {
