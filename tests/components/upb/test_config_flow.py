@@ -114,19 +114,3 @@ async def test_form_user_with_already_configured(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
     await hass.async_block_till_done()
-
-
-async def test_form_junk_input(hass: HomeAssistant) -> None:
-    """Test we get the form with import source."""
-
-    with mocked_upb():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={"foo": "goo", "goo": "foo"},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
-
-    await hass.async_block_till_done()
