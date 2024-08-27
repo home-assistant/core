@@ -59,14 +59,13 @@ class TouchlineSLZone(CoordinatorEntity[TouchlineSLModuleCoordinator], ClimateEn
             f"module-{self.coordinator.data.module.id}-zone-{self.zone_id}"
         )
 
-        zone_name = coordinator.data.zones[zone_id].name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(zone_id))},
-            name=zone_name,
+            name=self.zone.name,
             manufacturer="Roth",
             via_device=(DOMAIN, coordinator.data.module.id),
             model="zone",
-            suggested_area=zone_name,
+            suggested_area=self.zone.name,
         )
 
         # Call this in __init__ so data is populated right away, since it's

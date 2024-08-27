@@ -13,8 +13,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-RESULT_DATA = {"password": "test-password", "username": "test-username"}
-
 RESULT_UNIQUE_ID = "12345"
 
 CONFIG_DATA = {
@@ -40,7 +38,7 @@ async def test_config_flow_success(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-username"
-    assert result["data"] == RESULT_DATA
+    assert result["data"] == CONFIG_DATA
     assert result["result"].unique_id == RESULT_UNIQUE_ID
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -50,11 +48,12 @@ async def test_config_flow_success(
     [
         (RothAPIError(status=401), "invalid_auth"),
         (RothAPIError(status=502), "cannot_connect"),
+        (Exception, "unknown"),
     ],
 )
 async def test_config_flow_failure_api_exceptions(
     hass: HomeAssistant,
-    exception: int,
+    exception: Exception,
     error_base: str,
     mock_setup_entry: AsyncMock,
     mock_touchlinesl_client: AsyncMock,
@@ -85,7 +84,7 @@ async def test_config_flow_failure_api_exceptions(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-username"
-    assert result["data"] == RESULT_DATA
+    assert result["data"] == CONFIG_DATA
     assert result["result"].unique_id == RESULT_UNIQUE_ID
     assert len(mock_setup_entry.mock_calls) == 1
 
