@@ -1,11 +1,11 @@
 """Test MatrixBot's ability to parse and respond to commands in matrix rooms."""
 
+from dataclasses import dataclass
 from functools import partial
 from itertools import chain
 from typing import Any
 
 from nio import MatrixRoom, RoomMessageText
-from pydantic.dataclasses import dataclass
 import pytest
 
 from homeassistant.components.matrix import MatrixBot, RoomID

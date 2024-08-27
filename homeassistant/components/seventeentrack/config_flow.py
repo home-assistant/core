@@ -5,8 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from py17track import Client as SeventeenTrackClient
-from py17track.errors import SeventeenTrackError
+from pyseventeentrack import Client as SeventeenTrackClient
+from pyseventeentrack.errors import SeventeenTrackError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult

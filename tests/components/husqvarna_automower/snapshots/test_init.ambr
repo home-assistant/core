@@ -21,6 +21,7 @@
     }),
     'manufacturer': 'Husqvarna',
     'model': '450XH-TEST',
+    'model_id': None,
     'name': 'Test Mower 1',
     'name_by_user': None,
     'primary_config_entry': <ANY>,

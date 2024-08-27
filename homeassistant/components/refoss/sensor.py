@@ -91,7 +91,7 @@ SENSORS: dict[str, tuple[RefossSensorEntityDescription, ...]] = {
             native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
             suggested_display_precision=2,
             subkey="mConsume",
-            fn=lambda x: x if x > 0 else 0,
+            fn=lambda x: max(0, x),
         ),
         RefossSensorEntityDescription(
             key="energy_returned",

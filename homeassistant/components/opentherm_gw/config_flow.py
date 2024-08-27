@@ -3,13 +3,19 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 
 import pyotgw
 from pyotgw import vars as gw_vars
 from serial import SerialException
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_ID,
@@ -80,19 +86,21 @@ class OpenThermGwConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self._show_form()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle manual initiation of the config flow."""
         return await self.async_step_init(user_input)
 
-    async def async_step_import(self, import_config):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import an OpenTherm Gateway device as a config entry.
 
         This flow is triggered by `async_setup` for configured devices.
         """
         formatted_config = {
-            CONF_NAME: import_config.get(CONF_NAME, import_config[CONF_ID]),
-            CONF_DEVICE: import_config[CONF_DEVICE],
-            CONF_ID: import_config[CONF_ID],
+            CONF_NAME: import_data.get(CONF_NAME, import_data[CONF_ID]),
+            CONF_DEVICE: import_data[CONF_DEVICE],
+            CONF_ID: import_data[CONF_ID],
         }
         return await self.async_step_init(info=formatted_config)
 

@@ -556,3 +556,41 @@ async def async_test_flash_from_hass(
         manufacturer=None,
         tsn=None,
     )
+
+
+@patch(
+    "zigpy.zcl.clusters.lighting.Color.request",
+    new=AsyncMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
+)
+@patch(
+    "zigpy.zcl.clusters.general.Identify.request",
+    new=AsyncMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
+)
+@patch(
+    "zigpy.zcl.clusters.general.LevelControl.request",
+    new=AsyncMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
+)
+@patch(
+    "zigpy.zcl.clusters.general.OnOff.request",
+    new=AsyncMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
+)
+async def test_light_exception_on_creation(
+    hass: HomeAssistant,
+    setup_zha,
+    zigpy_device_mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test ZHA light entity creation exception."""
+
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+    zigpy_device = zigpy_device_mock(LIGHT_COLOR)
+
+    gateway.get_or_create_device(zigpy_device)
+    with patch(
+        "homeassistant.components.zha.light.Light.__init__", side_effect=Exception
+    ):
+        await gateway.async_device_initialized(zigpy_device)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert "Error while adding entity from entity data" in caplog.text

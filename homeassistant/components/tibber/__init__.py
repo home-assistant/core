@@ -25,7 +25,7 @@ from .services import async_setup_services
 
 PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,13 +61,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (
         TimeoutError,
         aiohttp.ClientError,
-        tibber.RetryableHttpException,
+        tibber.RetryableHttpExceptionError,
     ) as err:
         raise ConfigEntryNotReady("Unable to connect") from err
-    except tibber.InvalidLogin as exp:
+    except tibber.InvalidLoginError as exp:
         _LOGGER.error("Failed to login. %s", exp)
         return False
-    except tibber.FatalHttpException:
+    except tibber.FatalHttpExceptionError:
         return False
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

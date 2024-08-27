@@ -99,9 +99,10 @@ async def async_call_action_from_config(
         service = const.SERVICE_SET_MODE
         service_data[ATTR_MODE] = config[ATTR_MODE]
     else:
-        return await toggle_entity.async_call_action_from_config(
+        await toggle_entity.async_call_action_from_config(
             hass, config, variables, context, DOMAIN
         )
+        return
 
     await hass.services.async_call(
         DOMAIN, service, service_data, blocking=True, context=context

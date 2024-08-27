@@ -1590,7 +1590,7 @@ async def test_attributes(
                 }
             },
             True,
-            fan.FanEntityFeature(0),
+            fan.FanEntityFeature.TURN_OFF | fan.FanEntityFeature.TURN_ON,
             None,
         ),
         (
@@ -1605,7 +1605,9 @@ async def test_attributes(
                 }
             },
             True,
-            fan.FanEntityFeature.OSCILLATE,
+            fan.FanEntityFeature.OSCILLATE
+            | fan.FanEntityFeature.TURN_OFF
+            | fan.FanEntityFeature.TURN_ON,
             None,
         ),
         (
@@ -1620,7 +1622,9 @@ async def test_attributes(
                 }
             },
             True,
-            fan.FanEntityFeature.SET_SPEED,
+            fan.FanEntityFeature.SET_SPEED
+            | fan.FanEntityFeature.TURN_OFF
+            | fan.FanEntityFeature.TURN_ON,
             None,
         ),
         (
@@ -1651,7 +1655,9 @@ async def test_attributes(
                 }
             },
             True,
-            fan.FanEntityFeature.PRESET_MODE,
+            fan.FanEntityFeature.PRESET_MODE
+            | fan.FanEntityFeature.TURN_OFF
+            | fan.FanEntityFeature.TURN_ON,
             None,
         ),
         (
@@ -1667,7 +1673,9 @@ async def test_attributes(
                 }
             },
             True,
-            fan.FanEntityFeature.PRESET_MODE,
+            fan.FanEntityFeature.PRESET_MODE
+            | fan.FanEntityFeature.TURN_OFF
+            | fan.FanEntityFeature.TURN_ON,
             None,
         ),
         (
@@ -1682,7 +1690,9 @@ async def test_attributes(
                 }
             },
             True,
-            fan.FanEntityFeature.SET_SPEED,
+            fan.FanEntityFeature.SET_SPEED
+            | fan.FanEntityFeature.TURN_OFF
+            | fan.FanEntityFeature.TURN_ON,
             None,
         ),
         (
@@ -1698,7 +1708,10 @@ async def test_attributes(
                 }
             },
             True,
-            fan.FanEntityFeature.OSCILLATE | fan.FanEntityFeature.SET_SPEED,
+            fan.FanEntityFeature.OSCILLATE
+            | fan.FanEntityFeature.SET_SPEED
+            | fan.FanEntityFeature.TURN_OFF
+            | fan.FanEntityFeature.TURN_ON,
             None,
         ),
         (
@@ -1714,7 +1727,9 @@ async def test_attributes(
                 }
             },
             True,
-            fan.FanEntityFeature.PRESET_MODE,
+            fan.FanEntityFeature.PRESET_MODE
+            | fan.FanEntityFeature.TURN_OFF
+            | fan.FanEntityFeature.TURN_ON,
             None,
         ),
         (
@@ -1730,7 +1745,9 @@ async def test_attributes(
                 }
             },
             True,
-            fan.FanEntityFeature.PRESET_MODE,
+            fan.FanEntityFeature.PRESET_MODE
+            | fan.FanEntityFeature.TURN_OFF
+            | fan.FanEntityFeature.TURN_ON,
             None,
         ),
         (
@@ -1747,7 +1764,10 @@ async def test_attributes(
                 }
             },
             True,
-            fan.FanEntityFeature.PRESET_MODE | fan.FanEntityFeature.OSCILLATE,
+            fan.FanEntityFeature.PRESET_MODE
+            | fan.FanEntityFeature.OSCILLATE
+            | fan.FanEntityFeature.TURN_OFF
+            | fan.FanEntityFeature.TURN_ON,
             None,
         ),
         (
@@ -1764,7 +1784,9 @@ async def test_attributes(
                 }
             },
             True,
-            fan.FanEntityFeature.SET_SPEED,
+            fan.FanEntityFeature.SET_SPEED
+            | fan.FanEntityFeature.TURN_OFF
+            | fan.FanEntityFeature.TURN_ON,
             None,
         ),
         (
@@ -1831,7 +1853,9 @@ async def test_attributes(
                 }
             },
             True,
-            fan.FanEntityFeature.PRESET_MODE,
+            fan.FanEntityFeature.PRESET_MODE
+            | fan.FanEntityFeature.TURN_OFF
+            | fan.FanEntityFeature.TURN_ON,
             "some error",
         ),
         (
@@ -1846,7 +1870,9 @@ async def test_attributes(
                 }
             },
             True,
-            fan.FanEntityFeature.DIRECTION,
+            fan.FanEntityFeature.DIRECTION
+            | fan.FanEntityFeature.TURN_OFF
+            | fan.FanEntityFeature.TURN_ON,
             "some error",
         ),
     ],

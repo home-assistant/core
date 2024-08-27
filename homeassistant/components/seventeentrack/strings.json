@@ -52,7 +52,7 @@
         "step": {
           "confirm": {
             "title": "[%key:component::seventeentrack::issues::deprecate_sensor::title%]",
-            "description": "17Track package sensors are deprecated and will be removed.\nPlease update your automations and scripts to get data using the `seventeentrack.get_packages` service call."
+            "description": "17Track package sensors are deprecated and will be removed.\nPlease update your automations and scripts to get data using the `seventeentrack.get_packages` action."
           }
         }
       }

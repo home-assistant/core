@@ -2,16 +2,16 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, cast
+from typing import Any
 
 from py_nextbus import NextBusClient
-from py_nextbus.client import NextBusFormatError, NextBusHTTPError, RouteStop
+from py_nextbus.client import NextBusFormatError, NextBusHTTPError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
-from .util import listify
+from .util import RouteStop
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,53 +27,50 @@ class NextBusDataUpdateCoordinator(DataUpdateCoordinator):
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )
-        self.client = NextBusClient(output_format="json", agency=agency)
+        self.client = NextBusClient(agency_id=agency)
         self._agency = agency
-        self._stop_routes: set[RouteStop] = set()
+        self._route_stops: set[RouteStop] = set()
         self._predictions: dict[RouteStop, dict[str, Any]] = {}
 
-    def add_stop_route(self, stop_tag: str, route_tag: str) -> None:
+    def add_stop_route(self, stop_id: str, route_id: str) -> None:
         """Tell coordinator to start tracking a given stop and route."""
-        self._stop_routes.add(RouteStop(route_tag, stop_tag))
+        self._route_stops.add(RouteStop(route_id, stop_id))
 
-    def remove_stop_route(self, stop_tag: str, route_tag: str) -> None:
+    def remove_stop_route(self, stop_id: str, route_id: str) -> None:
         """Tell coordinator to stop tracking a given stop and route."""
-        self._stop_routes.remove(RouteStop(route_tag, stop_tag))
+        self._route_stops.remove(RouteStop(route_id, stop_id))
 
-    def get_prediction_data(
-        self, stop_tag: str, route_tag: str
-    ) -> dict[str, Any] | None:
+    def get_prediction_data(self, stop_id: str, route_id: str) -> dict[str, Any] | None:
         """Get prediction result for a given stop and route."""
-        return self._predictions.get(RouteStop(route_tag, stop_tag))
-
-    def _calc_predictions(self, data: dict[str, Any]) -> None:
-        self._predictions = {
-            RouteStop(prediction["routeTag"], prediction["stopTag"]): prediction
-            for prediction in listify(data.get("predictions", []))
-        }
-
-    def get_attribution(self) -> str | None:
-        """Get attribution from api results."""
-        return self.data.get("copyright")
+        return self._predictions.get(RouteStop(route_id, stop_id))
 
     def has_routes(self) -> bool:
         """Check if this coordinator is tracking any routes."""
-        return len(self._stop_routes) > 0
+        return len(self._route_stops) > 0
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from NextBus."""
-        self.logger.debug("Updating data from API. Routes: %s", str(self._stop_routes))
+
+        _route_stops = set(self._route_stops)
+        self.logger.debug("Updating data from API. Routes: %s", str(_route_stops))
 
         def _update_data() -> dict:
             """Fetch data from NextBus."""
             self.logger.debug("Updating data from API (executor)")
-            try:
-                data = self.client.get_predictions_for_multi_stops(self._stop_routes)
-                # Casting here because we expect dict and not a str due to the input format selected being JSON
-                data = cast(dict[str, Any], data)
-                self._calc_predictions(data)
-            except (NextBusHTTPError, NextBusFormatError) as ex:
-                raise UpdateFailed("Failed updating nextbus data", ex) from ex
-            return data
+            predictions: dict[RouteStop, dict[str, Any]] = {}
+            for route_stop in _route_stops:
+                prediction_results: list[dict[str, Any]] = []
+                try:
+                    prediction_results = self.client.predictions_for_stop(
+                        route_stop.stop_id, route_stop.route_id
+                    )
+                except (NextBusHTTPError, NextBusFormatError) as ex:
+                    raise UpdateFailed("Failed updating nextbus data", ex) from ex
+
+                if prediction_results:
+                    predictions[route_stop] = prediction_results[0]
+            self._predictions = predictions
+
+            return predictions
 
         return await self.hass.async_add_executor_job(_update_data)

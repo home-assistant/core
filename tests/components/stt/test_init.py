@@ -1,6 +1,7 @@
 """Test STT component setup."""
 
-from collections.abc import AsyncIterable, Generator
+from collections.abc import AsyncIterable, Generator, Iterable
+from contextlib import ExitStack
 from http import HTTPStatus
 from pathlib import Path
 from unittest.mock import AsyncMock
@@ -122,20 +123,23 @@ class STTFlow(ConfigFlow):
     """Test flow."""
 
 
-@pytest.fixture(name="config_flow_test_domain")
-def config_flow_test_domain_fixture() -> str:
+@pytest.fixture(name="config_flow_test_domains")
+def config_flow_test_domain_fixture() -> Iterable[str]:
     """Test domain fixture."""
-    return TEST_DOMAIN
+    return (TEST_DOMAIN,)
 
 
 @pytest.fixture(autouse=True)
 def config_flow_fixture(
-    hass: HomeAssistant, config_flow_test_domain: str
+    hass: HomeAssistant, config_flow_test_domains: Iterable[str]
 ) -> Generator[None]:
     """Mock config flow."""
-    mock_platform(hass, f"{config_flow_test_domain}.config_flow")
+    for domain in config_flow_test_domains:
+        mock_platform(hass, f"{domain}.config_flow")
 
-    with mock_config_flow(config_flow_test_domain, STTFlow):
+    with ExitStack() as stack:
+        for domain in config_flow_test_domains:
+            stack.enter_context(mock_config_flow(domain, STTFlow))
         yield
 
 
@@ -395,8 +399,11 @@ async def test_restore_state(
 
 
 @pytest.mark.parametrize(
-    ("setup", "engine_id"),
-    [("mock_setup", "test"), ("mock_config_entry_setup", "stt.test")],
+    ("setup", "engine_id", "extra_data"),
+    [
+        ("mock_setup", "test", {"name": "test"}),
+        ("mock_config_entry_setup", "stt.test", {}),
+    ],
     indirect=["setup"],
 )
 async def test_ws_list_engines(
@@ -404,6 +411,7 @@ async def test_ws_list_engines(
     hass_ws_client: WebSocketGenerator,
     setup: MockProvider | MockProviderEntity,
     engine_id: str,
+    extra_data: dict[str, str],
 ) -> None:
     """Test listing speech-to-text engines."""
     client = await hass_ws_client()
@@ -415,6 +423,7 @@ async def test_ws_list_engines(
     assert msg["result"] == {
         "providers": [
             {"engine_id": engine_id, "supported_languages": ["de", "de-CH", "en"]}
+            | extra_data
         ]
     }
 
@@ -423,7 +432,7 @@ async def test_ws_list_engines(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": engine_id, "supported_languages": []}]
+        "providers": [{"engine_id": engine_id, "supported_languages": []} | extra_data]
     }
 
     await client.send_json_auto_id({"type": "stt/engine/list", "language": "en"})
@@ -431,7 +440,9 @@ async def test_ws_list_engines(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": engine_id, "supported_languages": ["en"]}]
+        "providers": [
+            {"engine_id": engine_id, "supported_languages": ["en"]} | extra_data
+        ]
     }
 
     await client.send_json_auto_id({"type": "stt/engine/list", "language": "en-UK"})
@@ -439,7 +450,9 @@ async def test_ws_list_engines(
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": engine_id, "supported_languages": ["en"]}]
+        "providers": [
+            {"engine_id": engine_id, "supported_languages": ["en"]} | extra_data
+        ]
     }
 
     await client.send_json_auto_id({"type": "stt/engine/list", "language": "de"})
@@ -447,7 +460,10 @@ async def test_ws_list_engines(
     assert msg["type"] == "result"
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": engine_id, "supported_languages": ["de", "de-CH"]}]
+        "providers": [
+            {"engine_id": engine_id, "supported_languages": ["de", "de-CH"]}
+            | extra_data
+        ]
     }
 
     await client.send_json_auto_id(
@@ -457,7 +473,10 @@ async def test_ws_list_engines(
     assert msg["type"] == "result"
     assert msg["success"]
     assert msg["result"] == {
-        "providers": [{"engine_id": engine_id, "supported_languages": ["de-CH", "de"]}]
+        "providers": [
+            {"engine_id": engine_id, "supported_languages": ["de-CH", "de"]}
+            | extra_data
+        ]
     }
 
 
@@ -496,21 +515,25 @@ async def test_default_engine_entity(
     assert async_default_engine(hass) == f"{DOMAIN}.{TEST_DOMAIN}"
 
 
-@pytest.mark.parametrize("config_flow_test_domain", ["new_test"])
-async def test_default_engine_prefer_provider(
+@pytest.mark.parametrize("config_flow_test_domains", [("new_test",)])
+async def test_default_engine_prefer_entity(
     hass: HomeAssistant,
     tmp_path: Path,
     mock_provider_entity: MockProviderEntity,
     mock_provider: MockProvider,
-    config_flow_test_domain: str,
+    config_flow_test_domains: str,
 ) -> None:
-    """Test async_default_engine."""
+    """Test async_default_engine.
+
+    In this tests there's an entity and a legacy provider.
+    The test asserts async_default_engine returns the entity.
+    """
     mock_provider_entity.url_path = "stt.new_test"
     mock_provider_entity._attr_name = "New test"
 
     await mock_setup(hass, tmp_path, mock_provider)
     await mock_config_entry_setup(
-        hass, tmp_path, mock_provider_entity, test_domain=config_flow_test_domain
+        hass, tmp_path, mock_provider_entity, test_domain=config_flow_test_domains[0]
     )
     await hass.async_block_till_done()
 
@@ -520,7 +543,49 @@ async def test_default_engine_prefer_provider(
     provider_engine = async_get_speech_to_text_engine(hass, "test")
     assert provider_engine is not None
     assert provider_engine.name == "test"
-    assert async_default_engine(hass) == "test"
+    assert async_default_engine(hass) == "stt.new_test"
+
+
+@pytest.mark.parametrize(
+    "config_flow_test_domains",
+    [
+        # Test different setup order to ensure the default is not influenced
+        # by setup order.
+        ("cloud", "new_test"),
+        ("new_test", "cloud"),
+    ],
+)
+async def test_default_engine_prefer_cloud_entity(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_provider: MockProvider,
+    config_flow_test_domains: str,
+) -> None:
+    """Test async_default_engine.
+
+    In this tests there's an entity from domain cloud, an entity from domain new_test
+    and a legacy provider.
+    The test asserts async_default_engine returns the entity from domain cloud.
+    """
+    await mock_setup(hass, tmp_path, mock_provider)
+    for domain in config_flow_test_domains:
+        entity = MockProviderEntity()
+        entity.url_path = f"stt.{domain}"
+        entity._attr_name = f"{domain} STT entity"
+        await mock_config_entry_setup(hass, tmp_path, entity, test_domain=domain)
+    await hass.async_block_till_done()
+
+    for domain in config_flow_test_domains:
+        entity_engine = async_get_speech_to_text_engine(
+            hass, f"stt.{domain}_stt_entity"
+        )
+        assert entity_engine is not None
+        assert entity_engine.name == f"{domain} STT entity"
+
+    provider_engine = async_get_speech_to_text_engine(hass, "test")
+    assert provider_engine is not None
+    assert provider_engine.name == "test"
+    assert async_default_engine(hass) == "stt.cloud_stt_entity"
 
 
 async def test_get_engine_legacy(

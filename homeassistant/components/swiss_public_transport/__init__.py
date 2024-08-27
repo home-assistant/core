@@ -11,17 +11,31 @@ from opendata_transport.exceptions import (
 from homeassistant import config_entries, core
 from homeassistant.const import Platform
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_DESTINATION, CONF_START, CONF_VIA, DOMAIN, PLACEHOLDERS
 from .coordinator import SwissPublicTransportDataUpdateCoordinator
 from .helper import unique_id_from_config
+from .services import setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: core.HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Swiss public transport component."""
+    setup_services(hass)
+    return True
 
 
 async def async_setup_entry(
@@ -44,7 +58,7 @@ async def async_setup_entry(
             translation_key="request_timeout",
             translation_placeholders={
                 "config_title": entry.title,
-                "error": e,
+                "error": str(e),
             },
         ) from e
     except OpendataTransportError as e:
@@ -54,7 +68,7 @@ async def async_setup_entry(
             translation_placeholders={
                 **PLACEHOLDERS,
                 "config_title": entry.title,
-                "error": e,
+                "error": str(e),
             },
         ) from e
 

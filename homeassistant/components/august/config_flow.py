@@ -8,8 +8,8 @@ from typing import Any
 
 import aiohttp
 import voluptuous as vol
-from yalexs.authenticator import ValidationResult
-from yalexs.const import BRANDS, DEFAULT_BRAND
+from yalexs.authenticator_common import ValidationResult
+from yalexs.const import BRANDS_WITHOUT_OAUTH, DEFAULT_BRAND
 from yalexs.manager.exceptions import CannotConnect, InvalidAuth, RequireValidation
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -118,7 +118,7 @@ class AugustConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_BRAND,
                         default=self._user_auth_details.get(CONF_BRAND, DEFAULT_BRAND),
-                    ): vol.In(BRANDS),
+                    ): vol.In(BRANDS_WITHOUT_OAUTH),
                     vol.Required(
                         CONF_LOGIN_METHOD,
                         default=self._user_auth_details.get(
@@ -208,7 +208,7 @@ class AugustConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_BRAND,
                         default=self._user_auth_details.get(CONF_BRAND, DEFAULT_BRAND),
-                    ): vol.In(BRANDS),
+                    ): vol.In(BRANDS_WITHOUT_OAUTH),
                     vol.Required(CONF_PASSWORD): str,
                 }
             ),
