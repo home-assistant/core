@@ -703,7 +703,7 @@ datadog==0.15.0
 datapoint==0.9.9
 
 # homeassistant.components.bluetooth
-dbus-fast==2.23.0
+dbus-fast==2.24.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.1
@@ -1429,7 +1429,7 @@ nextdns==3.2.0
 nibe==2.11.0
 
 # homeassistant.components.nice_go
-nice-go==0.3.0
+nice-go==0.3.5
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
@@ -1707,7 +1707,7 @@ pyRFXtrx==0.31.1
 pySDCP==1
 
 # homeassistant.components.tibber
-pyTibber==0.28.2
+pyTibber==0.30.1
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -2385,6 +2385,9 @@ pytomorrowio==0.3.6
 # homeassistant.components.touchline
 pytouchline==0.7
 
+# homeassistant.components.touchline_sl
+pytouchlinesl==0.1.5
+
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
 pytraccar==2.1.1
@@ -2998,7 +3001,7 @@ zamg==0.3.6
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.132.2
+zeroconf==0.133.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
