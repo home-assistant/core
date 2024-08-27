@@ -1,22 +1,16 @@
 """Data update coordinator for the Gaposa integration."""
+from asyncio import timeout
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import TypedDict
 
-from pygaposa import FirebaseAuthException, Gaposa, GaposaAuthException, Motor
+from pygaposa import Device, FirebaseAuthException, Gaposa, GaposaAuthException, Motor
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import (
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    UPDATE_INTERVAL,
-    UPDATE_INTERVAL_FAST,
-)
+from .const import UPDATE_INTERVAL, UPDATE_INTERVAL_FAST
 
 
 class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
@@ -40,6 +34,7 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
         )
 
         self.gaposa = gaposa
+        self.devices: list[Device] = []
         self.listener: Callable[[], None] | None = None
 
     async def update_gateway(self):
@@ -51,11 +46,22 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
         except FirebaseAuthException as exp:
             raise ConfigEntryAuthFailed from exp
 
+        current_devices: list[Device] = []
+        new_devices: list[Device] = []
         if self.listener is None:
             self.listener = self.on_document_updated
             for client, _user in self.gaposa.clients:
                 for device in client.devices:
-                    device.addListener(self.listener)
+                    current_devices.append(device)
+                    if device not in self.devices:
+                        device.addListener(self.listener)
+                        new_devices.append(device)
+
+        for device in self.devices:
+            if device not in current_devices:
+                device.removeListener(self.listener)
+
+        self.devices = current_devices
 
         return True
 
@@ -64,17 +70,20 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
             "Gaposa coordinator _async_update_data, interval: %s",
             str(self.update_interval),
         )
+
         try:
-            result = await self.update_gateway()
+            async with timeout(10):
+                await self.update_gateway()
         except ConfigEntryAuthFailed:
             raise
+        except TimeoutError:
+            self.update_interval = timedelta(seconds=UPDATE_INTERVAL_FAST)
+            raise
         except Exception as exp:
+            self.update_interval = timedelta(seconds=UPDATE_INTERVAL_FAST)
             raise UpdateFailed from exp
 
-        if result:
-            self.update_interval = timedelta(seconds=UPDATE_INTERVAL)
-        else:
-            self.update_interval = timedelta(seconds=UPDATE_INTERVAL_FAST)
+        self.update_interval = timedelta(seconds=UPDATE_INTERVAL)
 
         return self._get_data_from_devices()
 
@@ -82,16 +91,17 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
         # Coordinator data consists of a Dictionary of the controllable motors, with
         # the dictionalry key being a unique id for the motor of the form
         # <device serial number>.motors.<channel number>
-        data: TypedDict[str, Motor] = {}
+        data: dict[str, Motor] = {}
 
         for client, _user in self.gaposa.clients:
             for device in client.devices:
                 for motor in device.motors:
-                    data[f"%{device.serial}.motors.%{motor.id}"] = motor
+                    data[f"{device.serial}.motors.{motor.id}"] = motor
 
         return data
 
     def on_document_updated(self):
         """Handle document updated."""
         self.logger.info("Gaposa coordinator on_document_updated")
-        self.async_set_updated_data(self._get_data_from_devices())
+        data = self._get_data_from_devices()
+        self.async_set_updated_data(data)
