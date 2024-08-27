@@ -82,10 +82,6 @@ class SMSFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Handle import."""
-        return await self.async_step_user(user_input)
-
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
