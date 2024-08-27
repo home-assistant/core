@@ -88,6 +88,7 @@ def mock_smlight_client(request: pytest.FixtureRequest) -> Generator[MagicMock]:
         api.authenticate.return_value = True
 
         api.cmds = AsyncMock(spec_set=CmdWrapper)
+        api.set_toggle = AsyncMock()
 
         yield api
 
