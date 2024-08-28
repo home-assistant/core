@@ -20,7 +20,12 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, CONF_ID, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    CONF_ID,
+    EntityCategory,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import async_generate_entity_id
@@ -47,6 +52,8 @@ class OpenThermClimateEntityDescription(
     ClimateEntityDescription, OpenThermEntityDescription
 ):
     """Describes an opentherm_gw climate entity."""
+
+    entity_category = EntityCategory.CONFIG
 
 
 async def async_setup_entry(

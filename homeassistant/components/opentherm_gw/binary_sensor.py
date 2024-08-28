@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ID
+from homeassistant.const import CONF_ID, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -33,6 +33,8 @@ class OpenThermBinarySensorEntityDescription(
 ):
     """Describes opentherm_gw binary sensor entity."""
 
+    entity_category = EntityCategory.DIAGNOSTIC
+
 
 BOILER_BINARY_SENSOR_DESCRIPTIONS: tuple[
     OpenThermBinarySensorEntityDescription, ...
@@ -46,12 +48,12 @@ BOILER_BINARY_SENSOR_DESCRIPTIONS: tuple[
         key=gw_vars.DATA_SLAVE_CH_ACTIVE,
         translation_key="central_heating_n",
         translation_placeholders={"circuit_number": "1"},
-        device_class=BinarySensorDeviceClass.HEAT,
+        device_class=BinarySensorDeviceClass.RUNNING,
     ),
     OpenThermBinarySensorEntityDescription(
         key=gw_vars.DATA_SLAVE_DHW_ACTIVE,
         translation_key="hot_water",
-        device_class=BinarySensorDeviceClass.HEAT,
+        device_class=BinarySensorDeviceClass.RUNNING,
     ),
     OpenThermBinarySensorEntityDescription(
         key=gw_vars.DATA_SLAVE_FLAME_ON,
@@ -61,13 +63,13 @@ BOILER_BINARY_SENSOR_DESCRIPTIONS: tuple[
     OpenThermBinarySensorEntityDescription(
         key=gw_vars.DATA_SLAVE_COOLING_ACTIVE,
         translation_key="cooling",
-        device_class=BinarySensorDeviceClass.COLD,
+        device_class=BinarySensorDeviceClass.RUNNING,
     ),
     OpenThermBinarySensorEntityDescription(
         key=gw_vars.DATA_SLAVE_CH2_ACTIVE,
         translation_key="central_heating_n",
         translation_placeholders={"circuit_number": "2"},
-        device_class=BinarySensorDeviceClass.HEAT,
+        device_class=BinarySensorDeviceClass.RUNNING,
     ),
     OpenThermBinarySensorEntityDescription(
         key=gw_vars.DATA_SLAVE_DIAG_IND,
@@ -175,14 +177,17 @@ THERMOSTAT_BINARY_SENSOR_DESCRIPTIONS: tuple[
         key=gw_vars.DATA_MASTER_CH_ENABLED,
         translation_key="central_heating_n",
         translation_placeholders={"circuit_number": "1"},
+        device_class=BinarySensorDeviceClass.RUNNING,
     ),
     OpenThermBinarySensorEntityDescription(
         key=gw_vars.DATA_MASTER_DHW_ENABLED,
         translation_key="hot_water",
+        device_class=BinarySensorDeviceClass.RUNNING,
     ),
     OpenThermBinarySensorEntityDescription(
         key=gw_vars.DATA_MASTER_COOLING_ENABLED,
         translation_key="cooling",
+        device_class=BinarySensorDeviceClass.RUNNING,
     ),
     OpenThermBinarySensorEntityDescription(
         key=gw_vars.DATA_MASTER_OTC_ENABLED,
@@ -192,6 +197,7 @@ THERMOSTAT_BINARY_SENSOR_DESCRIPTIONS: tuple[
         key=gw_vars.DATA_MASTER_CH2_ENABLED,
         translation_key="central_heating_n",
         translation_placeholders={"circuit_number": "2"},
+        device_class=BinarySensorDeviceClass.RUNNING,
     ),
     OpenThermBinarySensorEntityDescription(
         key=gw_vars.DATA_ROVRD_MAN_PRIO,

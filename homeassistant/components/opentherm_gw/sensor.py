@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ID,
     PERCENTAGE,
+    EntityCategory,
     UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
@@ -45,6 +46,7 @@ class OpenThermSensorEntityDescription(
     """Describes an opentherm_gw sensor entity."""
 
     make_state_lowercase: bool = True
+    entity_category = EntityCategory.DIAGNOSTIC
 
 
 BOILER_SENSOR_DESCRIPTIONS: tuple[OpenThermSensorEntityDescription, ...] = (
