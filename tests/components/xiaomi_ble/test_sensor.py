@@ -572,6 +572,8 @@ async def test_xiaomi_xmosb01xs(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
+    assert entry.data[CONF_SLEEPY_DEVICE] is True
+
 
 async def test_xiaomi_cgdk2_bind_key(hass: HomeAssistant) -> None:
     """Test CGDK2 bind key.
