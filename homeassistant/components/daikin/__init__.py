@@ -57,9 +57,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ClientConnectionError as err:
         _LOGGER.debug("ClientConnectionError to %s", host)
         raise ConfigEntryNotReady from err
-    except Exception as err:  # noqa: BLE001
-        _LOGGER.exception("Unexpected error creating device %s", host)
-        raise ConfigEntryNotReady from err
 
     coordinator = DaikinCoordinator(hass, device)
 
