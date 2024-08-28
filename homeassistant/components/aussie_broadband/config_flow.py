@@ -103,7 +103,7 @@ class AussieBroadbandConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.context["entry_id"]
                 )
                 assert entry
-                self.self.async_update_reload_and_abort(entry, data=data)
+                return self.self.async_update_reload_and_abort(entry, data=data)
 
         return self.async_show_form(
             step_id="reauth_confirm",
