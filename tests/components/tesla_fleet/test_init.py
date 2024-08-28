@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+from aiohttp import RequestInfo
 from aiohttp.client_exceptions import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -16,8 +17,8 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
     VehicleOffline,
 )
-from tesla_fleet_api.teslafleetapi import TeslaFleetApi
 
+from homeassistant.components.tesla_fleet.const import AUTHORIZE_URL
 from homeassistant.components.tesla_fleet.coordinator import (
     ENERGY_INTERVAL,
     ENERGY_INTERVAL_SECONDS,
@@ -80,15 +81,19 @@ async def test_oauth_refresh_error(
     mock_products: AsyncMock,
 ) -> None:
     """Test init with errors."""
-    # Reset the mock to actually call the function
-    mock_products.side_effect = TeslaFleetApi.products
 
     # Patch the token refresh to raise an error
     with patch(
         "homeassistant.components.tesla_fleet.OAuth2Session.async_ensure_token_valid",
-        side_effect=ClientResponseError(None, None, status=401),
-    ):
+        side_effect=ClientResponseError(
+            RequestInfo(AUTHORIZE_URL, "POST", {}, AUTHORIZE_URL), None, status=401
+        ),
+    ) as mock_async_ensure_token_valid:
+        # Trigger an unmocked function call
+        mock_products.side_effect = InvalidRegion
         await setup_platform(hass, normal_config_entry)
+
+        mock_async_ensure_token_valid.assert_called_once()
     assert normal_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
