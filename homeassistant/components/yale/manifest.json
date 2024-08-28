@@ -3,6 +3,7 @@
   "name": "Yale",
   "codeowners": ["@bdraco"],
   "config_flow": true,
+  "dependencies": ["application_credentials", "cloud"],
   "dhcp": [
     {
       "hostname": "yale-connect-plus",
