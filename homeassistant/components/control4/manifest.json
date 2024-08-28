@@ -3,6 +3,7 @@
   "name": "Control4",
   "codeowners": ["@lawtancool"],
   "config_flow": true,
+  "disabled": "This integration is disabled because it uses an old version of socketio.",
   "documentation": "https://www.home-assistant.io/integrations/control4",
   "iot_class": "local_polling",
   "loggers": ["pyControl4"],
