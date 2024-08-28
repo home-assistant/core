@@ -511,7 +511,7 @@ jobs:
         uses: docker/build-push-action@5cd11c3a4ced054e52742c5fd54dca954e0edd85 # v6.7.0
         with:
           context: ./script/hassfest/docker
-          build-args: BASE_IMAGE="ghcr.io/home-assistant/amd64-homeassistant:${{ needs.init.outputs.version }}"
+          build-args: BASE_IMAGE=ghcr.io/home-assistant/amd64-homeassistant:${{ needs.init.outputs.version }}
           load: true
           tags: ${{ env.HASSFEST_IMAGE_TAG }}
 
@@ -524,7 +524,7 @@ jobs:
         uses: docker/build-push-action@5cd11c3a4ced054e52742c5fd54dca954e0edd85 # v6.7.0
         with:
           context: ./script/hassfest/docker
-          build-args: BASE_IMAGE="ghcr.io/home-assistant/amd64-homeassistant:${{ needs.init.outputs.version }}"
+          build-args: BASE_IMAGE=ghcr.io/home-assistant/amd64-homeassistant:${{ needs.init.outputs.version }}
           push: true
           tags: ${{ env.HASSFEST_IMAGE_TAG }},${{ env.HASSFEST_IMAGE_NAME }}:latest
 
