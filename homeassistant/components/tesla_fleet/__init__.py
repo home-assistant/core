@@ -70,7 +70,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
             try:
                 await oauth_session.async_ensure_token_valid()
             except ClientResponseError as e:
-                raise ConfigEntryAuthFailed from e
+                if e.status == 401:
+                    raise ConfigEntryAuthFailed from e
+                raise ConfigEntryNotReady from e
             token: str = oauth_session.token[CONF_ACCESS_TOKEN]
             return token
 
