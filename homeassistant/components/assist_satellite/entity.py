@@ -76,8 +76,7 @@ class AssistSatelliteEntity(entity.Entity):
 
             vad_sensitivity = vad.VadSensitivity(vad_sensitivity_state.state)
 
-        assert self.registry_entry is not None
-        device_id = self.registry_entry.device_id
+        device_id = self.registry_entry.device_id if self.registry_entry else None
 
         # Refresh context if necessary
         if (
