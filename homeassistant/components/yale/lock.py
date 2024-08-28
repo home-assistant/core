@@ -19,7 +19,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.dt as dt_util
 
 from . import YaleConfigEntry, YaleData
-from .entity import YaleEntityMixin
+from .entity import YaleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ async def async_setup_entry(
     async_add_entities(YaleLock(data, lock) for lock in data.locks)
 
 
-class YaleLock(YaleEntityMixin, RestoreEntity, LockEntity):
+class YaleLock(YaleEntity, RestoreEntity, LockEntity):
     """Representation of an Yale lock."""
 
     _attr_name = None
