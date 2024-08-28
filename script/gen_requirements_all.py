@@ -15,7 +15,7 @@ import tomllib
 from typing import Any
 
 from homeassistant.util.yaml.loader import load_yaml
-from script.hassfest.model import Integration
+from script.hassfest.model import Config, Integration
 
 # Requirements which can't be installed on all systems because they rely on additional
 # system packages. Requirements listed in EXCLUDED_REQUIREMENTS_ALL will be commented-out
@@ -270,7 +270,9 @@ def gather_recursive_requirements(
         seen = set()
 
     seen.add(domain)
-    integration = Integration(Path(f"homeassistant/components/{domain}"))
+    integration = Integration(
+        Path(f"homeassistant/components/{domain}"), _get_hassfest_config()
+    )
     integration.load_manifest()
     reqs = {x for x in integration.requirements if x not in CONSTRAINT_BASE}
     for dep_domain in integration.dependencies:
@@ -336,7 +338,8 @@ def gather_requirements_from_manifests(
     errors: list[str], reqs: dict[str, list[str]]
 ) -> None:
     """Gather all of the requirements from manifests."""
-    integrations = Integration.load_dir(Path("homeassistant/components"))
+    config = _get_hassfest_config()
+    integrations = Integration.load_dir(config.core_integrations_path, config)
     for domain in sorted(integrations):
         integration = integrations[domain]
 
@@ -582,6 +585,17 @@ def main(validate: bool, ci: bool) -> int:
         Path(filename).write_text(content)
 
     return 0
+
+
+def _get_hassfest_config() -> Config:
+    """Get hassfest config."""
+    return Config(
+        root=Path(".").absolute(),
+        specific_integrations=None,
+        action="validate",
+        requirements=True,
+        core_integrations_path=Path("homeassistant/components"),
+    )
 
 
 if __name__ == "__main__":
