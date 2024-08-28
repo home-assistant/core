@@ -190,7 +190,7 @@
         "name": "Hot water flow rate"
       },
       "central_heating_temperature_n": {
-        "name": "Central heating {circuit_number) water temperature"
+        "name": "Central heating {circuit_number} water temperature"
       },
       "hot_water_temperature_n": {
         "name": "Hot water {circuit_number} temperature"
@@ -346,7 +346,7 @@
         "name": "Room setpoint override"
       },
       "room_setpoint_n": {
-        "name": "Room setpoint {setpoint_id)"
+        "name": "Room setpoint {setpoint_id}"
       },
       "room_temperature": {
         "name": "Room temperature"
