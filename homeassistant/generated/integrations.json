@@ -7012,7 +7012,7 @@
         "yale_home": {
           "integration_type": "virtual",
           "config_flow": false,
-          "supported_by": "august",
+          "supported_by": "yale",
           "name": "Yale Home"
         },
         "yale": {
