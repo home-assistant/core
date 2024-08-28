@@ -1,4 +1,4 @@
-"""Implements LG ThinQ device."""
+"""DataUpdateCoordinator for the LG ThinQ device."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ from thinqconnect import (
 )
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -22,67 +23,63 @@ from .const import COMPANY, DEVICE_TYPE_API_MAP, DOMAIN, NONE_KEY
 _LOGGER = logging.getLogger(__name__)
 
 
-class LGDevice:
-    """A class that implementats LG ThinQ device."""
+class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """LG Device's Data Update Coordinator."""
 
     def __init__(
         self,
         hass: HomeAssistant,
         thinq_api: ThinQApi,
         device_api: ConnectBaseDevice,
+        *,
         sub_id: str | None = None,
     ) -> None:
-        """Initialize device."""
-        self._hass = hass
-        self._thinq_api = thinq_api
-        self._is_connected: bool = True
-
-        # Create a data update coordinator.
-        self._coordinator = DataUpdateCoordinator(
+        """Initialize data coordinator."""
+        super().__init__(
             hass,
             _LOGGER,
             name=f"{DOMAIN}_{device_api.device_id}",
-            update_method=self.async_update_status,
         )
+        self._hass = hass
+        self._thinq_api = thinq_api
+        self._is_connected = True
 
         # If sub_id is NONE_KEY("_") then it should be None.
-        self._sub_id: str | None = None if sub_id == NONE_KEY else sub_id
+        self._sub_id = None if sub_id == NONE_KEY else sub_id
 
         # The device name is usually set to 'alias'.
         # But, if the sub_id exists, it will be set to 'alias {sub_id}'.
         # e.g. alias='MyWashTower', sub_id='dryer' then 'MyWashTower dryer'.
-        self._name = (
+        self._device_name = (
             f"{device_api.alias} {self._sub_id}" if self._sub_id else device_api.alias
         )
 
         # The unique id is usually set to 'device_id'.
         # But, if the sub_id exists, it will be set to 'device_id_{sub_id}'.
         # e.g. device_id='TQSXXXX', sub_id='dryer' then 'TQSXXXX_dryer'.
-        self._unique_id: str = (
+        self._unique_id = (
             f"{device_api.device_id}_{self._sub_id}"
             if self._sub_id
             else device_api.device_id
         )
 
         # Get the api instance.
-        self._api: ConnectBaseDevice = (
-            device_api.get_sub_device(self._sub_id) or device_api
-        )
+        self._device_api = device_api.get_sub_device(self._sub_id) or device_api
 
     @property
-    def hass(self) -> HomeAssistant:
-        """Returns the hass instance."""
-        return self._hass
+    def thinq_api(self) -> ThinQApi:
+        """Returns the thinq api."""
+        return self._thinq_api
 
     @property
-    def api(self) -> ConnectBaseDevice:
+    def device_api(self) -> ConnectBaseDevice:
         """Returns the device api."""
-        return self._api
+        return self._device_api
 
     @property
-    def name(self) -> str:
-        """Returns the name."""
-        return self._name
+    def device_name(self) -> str:
+        """Returns the device name."""
+        return self._device_name
 
     @property
     def sub_id(self) -> str | None:
@@ -104,52 +101,48 @@ class LGDevice:
         self._is_connected = connected
 
     @property
-    def coordinator(self) -> DataUpdateCoordinator[dict[str, Any]]:
-        """Return the DataUpdateCoordinator used by this device."""
-        return self._coordinator
-
-    @property
     def device_info(self) -> dr.DeviceInfo:
         """Return the device information."""
         return dr.DeviceInfo(
-            identifiers={(DOMAIN, self._unique_id)},
+            identifiers={(DOMAIN, self.unique_id)},
             manufacturer=COMPANY,
-            model=self._api.model_name,
-            name=self.name,
+            model=self.device_api.model_name,
+            name=self.device_name,
         )
 
     @property
     def tag(self) -> str:
         """Returns the tag string."""
-        return f"[{self.name}]"
+        return f"[{self.device_name}]"
 
-    async def async_init_coordinator(self) -> None:
-        """Initialize and start coordinator."""
-        await self._coordinator.async_refresh()
-
-    async def async_update_status(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Request to the server to update the status from full response data."""
         try:
-            result = await self._thinq_api.async_get_device_status(self.api.device_id)
+            data = await self.thinq_api.async_get_device_status(
+                self.device_api.device_id
+            )
         except ThinQAPIException as exc:
             if exc.code == ThinQAPIErrorCodes.NOT_CONNECTED_DEVICE:
-                self._is_connected = False
+                self.is_connected = False
             return {}
 
         # Full response into the device api.
-        self.api.set_status(result)
-        self._is_connected = True
-        return result
+        self.device_api.set_status(data)
+        self.is_connected = True
+        return data
 
     def __str__(self) -> str:
         """Return a string expression."""
-        return f"LGDevice:{self.name}(type={self.api.device_type}, id={self.api.device_id})"
+        return (
+            f"Coordinator:{self.device_name}"
+            f"(type={self.device_api.device_type}, id={self.device_api.device_id})"
+        )
 
 
-async def async_setup_lg_device(
+async def async_setup_device_coordinator(
     hass: HomeAssistant, thinq_api: ThinQApi, device: dict[str, Any]
-) -> list[LGDevice] | None:
-    """Create LG ThinQ Device and initialize."""
+) -> list[DeviceDataUpdateCoordinator] | None:
+    """Create DeviceDataUpdateCoordinator and device_api per device."""
     device_id = device.get("deviceId")
     if not device_id:
         _LOGGER.error("Failed to setup device: no device id")
@@ -178,7 +171,7 @@ async def async_setup_lg_device(
         _LOGGER.warning("Failed to setup device(%s): no profile", device_id)
         return None
 
-    device_group_id: str = device_info.get("groupId")
+    device_group_id = device_info.get("groupId")
 
     # Create new device api instance.
     device_api: ConnectBaseDevice = (
@@ -214,14 +207,19 @@ async def async_setup_lg_device(
         else [NONE_KEY]
     )
 
-    # Create new lg device instances.
-    lg_device_list: list[LGDevice] = []
+    # Create new device coordinator instances.
+    coordinator_list: list[DeviceDataUpdateCoordinator] = []
     for sub_id in device_sub_ids:
-        lg_device = LGDevice(hass, thinq_api, device_api, sub_id=sub_id)
-        await lg_device.async_init_coordinator()
+        coordinator = DeviceDataUpdateCoordinator(
+            hass, thinq_api, device_api, sub_id=sub_id
+        )
+        try:
+            await coordinator.async_config_entry_first_refresh()
+        except ConfigEntryNotReady:
+            coordinator.data = {}
 
-        # Finally add a lg device into the result list.
-        lg_device_list.append(lg_device)
-        _LOGGER.debug("Setup lg device: %s", lg_device)
+        # Finally add a device coordinator into the result list.
+        coordinator_list.append(coordinator)
+        _LOGGER.debug("Setup device's coordinator: %s", coordinator)
 
-    return lg_device_list
+    return coordinator_list

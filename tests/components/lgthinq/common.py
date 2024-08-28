@@ -4,11 +4,9 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 from homeassistant.components.lgthinq.const import DOMAIN
-from homeassistant.components.lgthinq.device import LGDevice, async_setup_lg_device
-from homeassistant.core import HomeAssistant
 from homeassistant.util.json import json_loads
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import load_fixture
 
 
 def get_device_file_name(device_type: str) -> str:
@@ -82,21 +80,3 @@ def mock_thinq_api_response(
     response.error_code = error_code
     response.error_message = error_message
     return response
-
-
-async def mock_lg_device(
-    hass: HomeAssistant, device_info: dict[str, Any]
-) -> list[LGDevice] | None:
-    """Create a mock lg device."""
-    return await async_setup_lg_device(hass, mock_thinq(device_info), device_info)
-
-
-def get_mock_lg_device_for_type(
-    config_entry: MockConfigEntry, device_type: str
-) -> LGDevice:
-    """Return a mock lg device for the given type."""
-    devices = config_entry.runtime_data.values()
-    lg_device = next((device for device in devices if device.type == device_type), None)
-    assert lg_device
-
-    return lg_device

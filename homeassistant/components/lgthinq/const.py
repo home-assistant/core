@@ -48,7 +48,6 @@ CONF_CONNECT_CLIENT_ID: Final = "connect_client_id"
 DEFAULT_COUNTRY: Final = "US"
 
 # Device
-DEFAULT_TEMP_STEP: Final = 1
 POWER_OFF: Final = "POWER_OFF"
 POWER_ON: Final = "POWER_ON"
 

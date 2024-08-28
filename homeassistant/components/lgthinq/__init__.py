@@ -16,9 +16,9 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_CONNECT_CLIENT_ID, DEFAULT_COUNTRY
-from .device import LGDevice, async_setup_lg_device
+from .coordinator import DeviceDataUpdateCoordinator, async_setup_device_coordinator
 
-type ThinqConfigEntry = ConfigEntry[dict]
+type ThinqConfigEntry = ConfigEntry[dict[str, DeviceDataUpdateCoordinator]]
 
 PLATFORMS = [Platform.SWITCH]
 
@@ -27,99 +27,94 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> bool:
     """Set up an entry."""
-
-    client_id = entry.data.get(CONF_CONNECT_CLIENT_ID)
     access_token = entry.data.get(CONF_ACCESS_TOKEN)
-
-    # Initialize runtime data.
-    device_map: dict[str, LGDevice] = {}
-    entry.runtime_data = device_map
+    client_id = entry.data.get(CONF_CONNECT_CLIENT_ID)
+    country_code = entry.data.get(CONF_COUNTRY, DEFAULT_COUNTRY)
 
     thinq_api = ThinQApi(
         session=async_get_clientsession(hass),
         access_token=access_token,
-        country_code=entry.data.get(CONF_COUNTRY, DEFAULT_COUNTRY),
+        country_code=country_code,
         client_id=client_id,
     )
 
-    # Setup and register devices.
-    await async_setup_devices(hass, thinq_api, entry)
+    # Setup coordinators and register devices.
+    await async_setup_coordinators(hass, entry, thinq_api)
 
     # Set up all platforms for this device/entry.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Clean up devices they are no longer in use.
-    async_cleanup_device_registry(hass, entry.runtime_data.values(), entry.entry_id)
+    async_cleanup_device_registry(hass, entry)
 
     return True
 
 
-async def async_setup_devices(
+async def async_setup_coordinators(
     hass: HomeAssistant,
-    thinq_api: ThinQApi,
     entry: ThinqConfigEntry,
+    thinq_api: ThinQApi,
 ) -> None:
-    """Set up and register devices."""
-    entry.runtime_data.clear()
+    """Set up coordinators and register devices."""
+    entry.runtime_data = {}
 
     # Get a device list from the server.
     try:
         device_list = await thinq_api.async_get_device_list()
     except ThinQAPIException as exc:
-        raise ConfigEntryError(
-            exc.message,
-        ) from exc
+        raise ConfigEntryError(exc.message) from exc
 
     if not device_list or not isinstance(device_list, Collection):
         return
 
-    # Setup devices.
-    lg_device_list: list[LGDevice] = []
+    # Setup coordinator per device.
+    coordinator_list: list[DeviceDataUpdateCoordinator] = []
     task_list = [
-        hass.async_create_task(async_setup_lg_device(hass, thinq_api, device))
+        hass.async_create_task(async_setup_device_coordinator(hass, thinq_api, device))
         for device in device_list
     ]
     if task_list:
         task_result = await asyncio.gather(*task_list)
-        for lg_devices in task_result:
-            if lg_devices:
-                lg_device_list.extend(lg_devices)
+        for coordinators in task_result:
+            if coordinators:
+                coordinator_list += coordinators
 
     # Register devices.
-    device_registry = dr.async_get(hass)
-    async_register_devices(lg_device_list, device_registry, entry)
+    async_register_devices(hass, entry, coordinator_list)
 
 
 @callback
 def async_register_devices(
-    lg_device_list: list[LGDevice],
-    device_registry: dr.DeviceRegistry,
+    hass: HomeAssistant,
     entry: ThinqConfigEntry,
+    coordinator_list: list[DeviceDataUpdateCoordinator],
 ) -> None:
     """Register devices to the device registry."""
-    for lg_device in lg_device_list:
+    device_registry = dr.async_get(hass)
+
+    for coordinator in coordinator_list:
         device_entry = device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            **lg_device.device_info,
+            **coordinator.device_info,
         )
         _LOGGER.debug(
             "Register device: device_id=%s, device_entry_id=%s",
-            lg_device.api.device_id,
+            coordinator.device_api.device_id,
             device_entry.id,
         )
-        entry.runtime_data[device_entry.id] = lg_device
+        entry.runtime_data[device_entry.id] = coordinator
 
 
 @callback
-def async_cleanup_device_registry(
-    hass: HomeAssistant,
-    lg_devices: Collection[LGDevice],
-    entry_id: str,
-) -> None:
+def async_cleanup_device_registry(hass: HomeAssistant, entry: ThinqConfigEntry) -> None:
     """Clean up device registry."""
-    new_device_unique_ids: list[str] = [device.unique_id for device in lg_devices]
+    new_device_unique_ids = [
+        coordinator.unique_id for coordinator in entry.runtime_data.values()
+    ]
     device_registry = dr.async_get(hass)
-    existing_entries = dr.async_entries_for_config_entry(device_registry, entry_id)
+    existing_entries = dr.async_entries_for_config_entry(
+        device_registry, entry.entry_id
+    )
 
     # Remove devices that are no longer exist.
     for old_entry in existing_entries:
@@ -131,5 +126,4 @@ def async_cleanup_device_registry(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> bool:
     """Unload the entry."""
-
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
