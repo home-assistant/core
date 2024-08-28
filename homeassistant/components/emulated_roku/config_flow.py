@@ -56,6 +56,6 @@ class EmulatedRokuFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_config):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle a flow import."""
-        return await self.async_step_user(import_config)
+        return await self.async_step_user(import_data)

@@ -116,11 +116,6 @@ class SomfyConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, user_input):
-        """Handle import."""
-        self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-        return await self.async_step_user(user_input)
-
     @staticmethod
     @callback
     def async_get_options_flow(

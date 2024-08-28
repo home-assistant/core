@@ -1,10 +1,5 @@
 """Support for MQTT vacuums."""
 
-# The legacy schema for MQTT vacuum was deprecated with HA Core 2023.8.0
-# and was removed with HA Core 2024.2.0
-# The use of the schema attribute with MQTT vacuum was deprecated with HA Core 2024.2
-# the attribute will be remove with HA Core 2024.8
-
 from __future__ import annotations
 
 import logging
@@ -38,14 +33,11 @@ from homeassistant.util.json import json_loads_object
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .const import CONF_COMMAND_TOPIC, CONF_RETAIN, CONF_SCHEMA, CONF_STATE_TOPIC
+from .const import CONF_COMMAND_TOPIC, CONF_RETAIN, CONF_STATE_TOPIC
 from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic
-
-LEGACY = "legacy"
-STATE = "state"
 
 BATTERY = "battery_level"
 FAN_SPEED = "fan_speed"
@@ -149,7 +141,7 @@ MQTT_VACUUM_ATTRIBUTES_BLOCKED = frozenset(
 MQTT_VACUUM_DOCS_URL = "https://www.home-assistant.io/integrations/vacuum.mqtt/"
 
 
-VACUUM_BASE_SCHEMA = MQTT_BASE_SCHEMA.extend(
+PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_FAN_SPEED_LIST, default=[]): vol.All(
             cv.ensure_list, [cv.string]
@@ -173,26 +165,10 @@ VACUUM_BASE_SCHEMA = MQTT_BASE_SCHEMA.extend(
         ),
         vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Optional(CONF_SCHEMA): vol.All(vol.Lower, vol.Any(LEGACY, STATE)),
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-DISCOVERY_SCHEMA = vol.All(
-    VACUUM_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA),
-    # Do not fail a config is the schema option is still present,
-    # De option was deprecated with HA Core 2024.2 and removed with HA Core 2024.8.
-    # As we allow extra options, and we will remove this check silently
-    # with HA Core 2025.8.0, we will only warn,
-    # if a adiscovery config still uses this option.
-    cv.removed(CONF_SCHEMA, raise_if_present=False),
-)
-
-PLATFORM_SCHEMA_MODERN = vol.All(
-    VACUUM_BASE_SCHEMA,
-    # The schema options was removed with HA Core 2024.8,
-    # the cleanup is planned for HA Core 2025.8.
-    cv.removed(CONF_SCHEMA, raise_if_present=True),
-)
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup_entry(

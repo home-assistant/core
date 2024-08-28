@@ -126,10 +126,10 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_init()
 
-    async def async_step_import(self, user_input=None):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry."""
-        name = user_input.get(CONF_NAME)
-        endpoint = user_input.get(CONF_ENDPOINT)
+        name = import_data.get(CONF_NAME)
+        endpoint = import_data.get(CONF_ENDPOINT)
         parsed_url = urlparse(endpoint)
 
         # Try to connect to test the endpoint
@@ -146,4 +146,4 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.conf = SongpalConfig(name, parsed_url.hostname, endpoint)
 
-        return await self.async_step_init(user_input)
+        return await self.async_step_init(import_data)
