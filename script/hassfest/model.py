@@ -29,6 +29,7 @@ class Config:
     root: pathlib.Path
     action: Literal["validate", "generate"]
     requirements: bool
+    core_integrations_path: pathlib.Path
     errors: list[Error] = field(default_factory=list)
     cache: dict[str, Any] = field(default_factory=dict)
     plugins: set[str] = field(default_factory=set)
@@ -105,8 +106,9 @@ class Integration:
     """Represent an integration in our validator."""
 
     @classmethod
-    def load_dir(cls, path: pathlib.Path) -> dict[str, Integration]:
+    def load_dir(cls, config: Config) -> dict[str, Integration]:
         """Load all integrations in a directory."""
+        path = config.core_integrations_path
         assert path.is_dir()
         integrations: dict[str, Integration] = {}
         for fil in path.iterdir():
@@ -123,13 +125,14 @@ class Integration:
                 )
                 continue
 
-            integration = cls(fil)
+            integration = cls(fil, config)
             integration.load_manifest()
             integrations[integration.domain] = integration
 
         return integrations
 
     path: pathlib.Path
+    _config: Config
     _manifest: dict[str, Any] | None = None
     manifest_path: pathlib.Path | None = None
     errors: list[Error] = field(default_factory=list)
@@ -151,10 +154,7 @@ class Integration:
     def core(self) -> bool:
         """Core integration."""
         return self.path.as_posix().startswith(
-            (
-                "homeassistant/components",  # used by the CI and local development
-                "/homeassistant/components",  # used by the hassfest docker image
-            )
+            self._config.core_integrations_path.as_posix()
         )
 
     @property
