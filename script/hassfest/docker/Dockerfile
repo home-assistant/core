@@ -1,5 +1,5 @@
-ARG BASE_IMAGE
-FROM BASE_IMAGE
+ARG BASE_IMAGE="ghcr.io/home-assistant/home-assistant:beta"
+FROM $BASE_IMAGE
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 

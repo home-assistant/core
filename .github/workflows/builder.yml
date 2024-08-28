@@ -492,9 +492,10 @@ jobs:
       attestations: write
       id-token: write
     needs: ["init", "build_base"]
+    if: github.repository_owner == 'home-assistant'
     env:
       HASSFEST_IMAGE_NAME: ghcr.io/homeassistant/hassfest
-      HASSFEST_IMAGE_TAG: ghcr.io/homeassistant/hassfest:latest
+      HASSFEST_IMAGE_TAG: ghcr.io/homeassistant/hassfest:${{ needs.init.outputs.version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
@@ -518,15 +519,19 @@ jobs:
         run: docker run --rm -v ${{ github.workspace }}/homeassistant:/github/workspace/homeassistant ${{ env.HASSFEST_IMAGE_TAG }} --core-integrations-path=/github/workspace/homeassistant/components
 
       - name: Push Docker image
+        if: needs.init.outputs.channel != 'dev' && needs.init.outputs.publish == 'true'
         id: push
         uses: docker/build-push-action@5cd11c3a4ced054e52742c5fd54dca954e0edd85 # v6.7.0
         with:
-          context: ./hassfest
-          build-args: FROM_VERSION=${{ github.event.inputs.version }}
+          context: ./script/hassfest/docker
+          build-args: BASE_IMAGE="ghcr.io/home-assistant/amd64-homeassistant:${{ needs.init.outputs.version }}"
           push: true
-          tags: ${{ env.HASSFEST_IMAGE_TAG }}
+          tags:
+            - ${{ env.HASSFEST_IMAGE_TAG }}
+            - ${{ env.HASSFEST_IMAGE_NAME }}:latest
 
       - name: Generate artifact attestation
+        if: needs.init.outputs.channel != 'dev' && needs.init.outputs.publish == 'true'
         uses: actions/attest-build-provenance@6149ea5740be74af77f260b9db67e633f6b0a9a1 # v1.4.2
         with:
           subject-name: ${{ env.HASSFEST_IMAGE_NAME }}
