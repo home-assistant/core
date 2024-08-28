@@ -1,13 +1,11 @@
 """Test the Control4 config flow."""
 
-# mypy: ignore-errors
 from unittest.mock import AsyncMock, patch
 
-import pytest
+from pyControl4.account import C4Account
+from pyControl4.director import C4Director
+from pyControl4.error_handling import Unauthorized
 
-# from pyControl4.account import C4Account
-# from pyControl4.director import C4Director
-# from pyControl4.error_handling import Unauthorized
 from homeassistant import config_entries
 from homeassistant.components.control4.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.const import (
@@ -18,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
 from tests.common import MockConfigEntry
 
 
@@ -42,7 +41,6 @@ def _get_mock_c4_director():
     return c4_director_mock
 
 
-@pytest.skip(allow_module_level=True)
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
