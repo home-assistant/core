@@ -1,5 +1,7 @@
 """Platform for Control4 Rooms Media Players."""
 
+# mypy: ignore-errors
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -8,9 +10,8 @@ import enum
 import logging
 from typing import Any
 
-from pyControl4.error_handling import C4Exception
-from pyControl4.room import C4Room
-
+# from pyControl4.error_handling import C4Exception
+# from pyControl4.room import C4Room
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,

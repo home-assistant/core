@@ -80,7 +80,7 @@ class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders={"pin": self._ecobee.pin},
         )
 
-    async def async_step_import(self, import_data):
+    async def async_step_import(self, import_data: None) -> ConfigFlowResult:
         """Import ecobee config from configuration.yaml.
 
         Triggered by async_setup only if a config entry doesn't already exist.
