@@ -39,6 +39,8 @@
     }
   },
   "services": {
-    "update": "mdi:refresh"
+    "update": {
+      "service": "mdi:refresh"
+    }
   }
 }

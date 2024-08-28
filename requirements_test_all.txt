@@ -171,7 +171,7 @@ aioairzone==0.8.2
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
-aioambient==2024.01.0
+aioambient==2024.08.0
 
 # homeassistant.components.apcupsd
 aioapcaccess==0.4.2
@@ -189,7 +189,7 @@ aioasuswrt==1.4.0
 aioautomower==2024.8.0
 
 # homeassistant.components.azure_devops
-aioazuredevops==2.1.1
+aioazuredevops==2.2.1
 
 # homeassistant.components.baf
 aiobafi6==0.9.0
@@ -341,7 +341,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==11.2.4
+aioshelly==11.3.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -599,7 +599,7 @@ datadog==0.15.0
 datapoint==0.9.9
 
 # homeassistant.components.bluetooth
-dbus-fast==2.23.0
+dbus-fast==2.24.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.1
@@ -925,7 +925,7 @@ hole==0.8.0
 holidays==0.55
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240809.0
+home-assistant-frontend==20240828.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.8.7
@@ -1369,7 +1369,7 @@ py-synologydsm-api==2.5.2
 pyCEC==0.5.2
 
 # homeassistant.components.control4
-pyControl4==1.1.0
+pyControl4==1.2.0
 
 # homeassistant.components.duotecno
 pyDuotecno==2024.5.1
@@ -1445,7 +1445,10 @@ pycoolmasternet-async==0.2.2
 pycsspeechtts==1.0.8
 
 # homeassistant.components.daikin
-pydaikin==2.13.4
+pydaikin==2.13.5
+
+# homeassistant.components.deako
+pydeako==0.4.0
 
 # homeassistant.components.deconz
 pydeconz==116
@@ -1783,7 +1786,7 @@ pysoma==0.0.12
 pyspcwebgw==0.7.0
 
 # homeassistant.components.assist_pipeline
-pyspeex-noise==1.0.0
+pyspeex-noise==1.0.2
 
 # homeassistant.components.squeezebox
 pysqueezebox==0.7.1
@@ -1986,7 +1989,7 @@ renault-api==0.2.5
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.9.7
+reolink-aio==0.9.8
 
 # homeassistant.components.rflink
 rflink==0.0.66
@@ -2350,11 +2353,13 @@ xmltodict==0.13.0
 yalesmartalarmclient==0.4.0
 
 # homeassistant.components.august
+# homeassistant.components.yale
 # homeassistant.components.yalexs_ble
 yalexs-ble==2.4.3
 
 # homeassistant.components.august
-yalexs==8.4.2
+# homeassistant.components.yale
+yalexs==8.5.4
 
 # homeassistant.components.yeelight
 yeelight==0.7.14
