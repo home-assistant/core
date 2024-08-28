@@ -57,27 +57,25 @@ class AssistSatelliteEntity(entity.Entity):
         pipeline_id: str | None = None
         vad_sensitivity = vad.VadSensitivity.DEFAULT
 
-        if (
-            pipeline_entity_id
-            and (
-                (pipeline_entity_state := self.hass.states.get(pipeline_entity_id))
-                is not None
-            )
-            and (pipeline_entity_state.state != OPTION_PREFERRED)
-        ):
-            # Resolve pipeline by name
-            for pipeline in async_get_pipelines(self.hass):
-                if pipeline.name == pipeline_entity_state.state:
-                    pipeline_id = pipeline.id
-                    break
+        if pipeline_entity_id:
+            if (
+                pipeline_entity_state := self.hass.states.get(pipeline_entity_id)
+            ) is None:
+                raise ValueError("Pipeline entity not found")
 
-        if (
-            vad_sensitivity_entity_id
-            and (
+            if pipeline_entity_state.state != OPTION_PREFERRED:
+                # Resolve pipeline by name
+                for pipeline in async_get_pipelines(self.hass):
+                    if pipeline.name == pipeline_entity_state.state:
+                        pipeline_id = pipeline.id
+                        break
+
+        if vad_sensitivity_entity_id:
+            if (
                 vad_sensitivity_state := self.hass.states.get(vad_sensitivity_entity_id)
-            )
-            is not None
-        ):
+            ) is None:
+                raise ValueError("VAD sensitivity entity not found")
+
             vad_sensitivity = vad.VadSensitivity(vad_sensitivity_state.state)
 
         assert self.registry_entry is not None
