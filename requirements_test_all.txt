@@ -1368,6 +1368,9 @@ py-synologydsm-api==2.5.2
 # homeassistant.components.hdmi_cec
 pyCEC==0.5.2
 
+# homeassistant.components.control4
+pyControl4==1.2.0
+
 # homeassistant.components.duotecno
 pyDuotecno==2024.5.1
 
@@ -1983,7 +1986,7 @@ renault-api==0.2.5
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.9.7
+reolink-aio==0.9.8
 
 # homeassistant.components.rflink
 rflink==0.0.66
