@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 import logging
+from typing import Any
 
 from somfy_mylink_synergy import SomfyMyLinkSynergy
 import voluptuous as vol
@@ -61,11 +62,11 @@ class SomfyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the somfy_mylink flow."""
-        self.host = None
-        self.mac = None
-        self.ip_address = None
+        self.host: str | None = None
+        self.mac: str | None = None
+        self.ip_address: str | None = None
 
     async def async_step_dhcp(
         self, discovery_info: dhcp.DhcpServiceInfo
@@ -82,7 +83,9 @@ class SomfyConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"ip": self.ip_address, "mac": self.mac}
         return await self.async_step_user()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
 
@@ -112,11 +115,6 @@ class SomfyConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def async_step_import(self, user_input):
-        """Handle import."""
-        self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-        return await self.async_step_user(user_input)
 
     @staticmethod
     @callback

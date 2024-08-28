@@ -189,6 +189,11 @@ async def async_setup_entry(
 class AirzoneSensor(AirzoneEntity, SensorEntity):
     """Define an Airzone Cloud sensor."""
 
+    @property
+    def available(self) -> bool:
+        """Return Airzone Cloud sensor availability."""
+        return super().available and self.native_value is not None
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update attributes when the coordinator updates."""

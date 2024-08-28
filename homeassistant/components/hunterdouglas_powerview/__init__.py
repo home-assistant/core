@@ -13,7 +13,6 @@ from homeassistant.const import CONF_API_VERSION, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN, HUB_EXCEPTIONS
 from .coordinator import PowerviewShadeUpdateCoordinator
@@ -22,7 +21,6 @@ from .shade_data import PowerviewShadeData
 
 PARALLEL_UPDATES = 1
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 PLATFORMS = [
     Platform.BUTTON,

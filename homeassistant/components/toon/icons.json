@@ -1,5 +1,7 @@
 {
   "services": {
-    "update": "mdi:update"
+    "update": {
+      "service": "mdi:update"
+    }
   }
 }

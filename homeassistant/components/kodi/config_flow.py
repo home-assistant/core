@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pykodi import CannotConnectError, InvalidAuthError, Kodi, get_kodi_connection
 import voluptuous as vol
@@ -149,7 +150,9 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self._create_entry()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
 
@@ -223,12 +226,12 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self._show_ws_port_form(errors)
 
-    async def async_step_import(self, data):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from YAML."""
         reason = None
         try:
-            await validate_http(self.hass, data)
-            await validate_ws(self.hass, data)
+            await validate_http(self.hass, import_data)
+            await validate_ws(self.hass, import_data)
         except InvalidAuth:
             _LOGGER.exception("Invalid Kodi credentials")
             reason = "invalid_auth"
@@ -239,7 +242,9 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             reason = "unknown"
         else:
-            return self.async_create_entry(title=data[CONF_NAME], data=data)
+            return self.async_create_entry(
+                title=import_data[CONF_NAME], data=import_data
+            )
 
         return self.async_abort(reason=reason)
 
