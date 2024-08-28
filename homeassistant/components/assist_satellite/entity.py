@@ -15,7 +15,6 @@ from homeassistant.components.assist_pipeline import (
     async_pipeline_from_audio_stream,
     vad,
 )
-from homeassistant.const import EntityCategory
 from homeassistant.core import Context
 from homeassistant.helpers import entity
 from homeassistant.helpers.entity import EntityDescription
@@ -35,11 +34,9 @@ class AssistSatelliteEntity(entity.Entity):
 
     entity_description: AssistSatelliteEntityDescription
     _attr_translation_key = "assist_satellite"
-    _attr_entity_category = EntityCategory.CONFIG
     _attr_has_entity_name = True
-    _attr_name = None
     _attr_should_poll = False
-    _attr_state: AssistSatelliteState | None = AssistSatelliteState.LISTENING_WAKE_WORD
+    _attr_state: AssistSatelliteState | None = None
 
     _conversation_id: str | None = None
     _conversation_id_time: float | None = None
