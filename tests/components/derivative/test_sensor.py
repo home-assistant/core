@@ -357,14 +357,20 @@ async def test_suffix(hass: HomeAssistant) -> None:
 
 async def test_total_increasing_reset(hass: HomeAssistant) -> None:
     """Test derivative sensor state with total_increasing sensor input where it should ignore the reset value."""
-    times = [20, 30, 40]
-    values = [10, 30, 0]
+    times = [0, 20, 30, 35, 40, 50, 60]
+    values = [0, 10, 30, 40, 0, 10, 40]
+    expected_times = [0, 20, 30, 35, 50, 60]
+    expected_values = ["0.00", "0.50", "2.00", "2.00", "1.00", "3.00"]
+
     config, entity_id = await _setup_sensor(hass, {"unit_time": UnitOfTime.SECONDS})
 
-    base = dt_util.utcnow()
-    with freeze_time(base) as freezer:
+    base_time = dt_util.utcnow()
+    actual_times = []
+    actual_values = []
+    with freeze_time(base_time) as freezer:
         for time, value in zip(times, values, strict=False):
-            freezer.move_to(base + timedelta(seconds=time))
+            current_time = base_time + timedelta(seconds=time)
+            freezer.move_to(current_time)
             hass.states.async_set(
                 entity_id,
                 value,
@@ -373,14 +379,15 @@ async def test_total_increasing_reset(hass: HomeAssistant) -> None:
             )
             await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.power")
-    assert state is not None
+            state = hass.states.get("sensor.power")
+            assert state is not None
 
-    # The final state should be the first derivative, because the second derivative is negative
-    # To calculate the first derivative
-    # = (values[1] - values[0]) / (times[1] - times[0])
-    # = (30 - 10) / (30 - 20) = 2
-    assert round(float(state.state), config["sensor"]["round"]) == 2.00
+            if state.last_reported == current_time:
+                actual_times.append(time)
+                actual_values.append(state.state)
+
+    assert actual_times == expected_times
+    assert actual_values == expected_values
 
 
 async def test_device_id(
