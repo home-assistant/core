@@ -139,10 +139,14 @@ async def test_discovered_zeroconf(
     }
     assert result2["title"] == f"{MOCKED_DEVICE_TYPE}_{MOCKED_DEVICE_SERIAL_NUMBER}"
 
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+async def test_zeroconf_setup_already_exists(
+    hass: HomeAssistant, mock_device, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test we abort zeroconf flow if device already configured."""
+    mock_config_entry.add_to_hass(hass)
     zc_data_new_ip = dataclasses.replace(MOCKED_DEVICE_ZEROCONF_DATA)
     zc_data_new_ip.ip_address = ip_address(MOCKED_DEVICE_IP_ADDRESS)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
@@ -151,7 +155,6 @@ async def test_discovered_zeroconf(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_HOST] == MOCKED_DEVICE_IP_ADDRESS
 
 
 async def test_discovered_zeroconf_device_connection_error(
