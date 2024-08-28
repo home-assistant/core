@@ -42,7 +42,7 @@ from .const import (
     OPERATION_METHOD_REMOTE,
     OPERATION_METHOD_TAG,
 )
-from .entity import YaleDescriptionEntity, YaleEntityMixin
+from .entity import YaleDescriptionEntity, YaleEntity
 
 
 def _retrieve_device_battery_state(detail: LockDetail) -> int:
@@ -112,7 +112,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class YaleOperatorSensor(YaleEntityMixin, RestoreSensor):
+class YaleOperatorSensor(YaleEntity, RestoreSensor):
     """Representation of an Yale lock operation sensor."""
 
     _attr_translation_key = "operator"

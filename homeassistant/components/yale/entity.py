@@ -20,7 +20,7 @@ from .const import MANUFACTURER
 DEVICE_TYPES = ["keypad", "lock", "camera", "doorbell", "door", "bell"]
 
 
-class YaleEntityMixin(Entity):
+class YaleEntity(Entity):
     """Base implementation for Yale device."""
 
     _attr_should_poll = False
@@ -87,7 +87,7 @@ class YaleEntityMixin(Entity):
         self._update_from_data()
 
 
-class YaleDescriptionEntity(YaleEntityMixin):
+class YaleDescriptionEntity(YaleEntity):
     """An Yale entity with a description."""
 
     def __init__(
