@@ -99,11 +99,7 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
     mock_config = MockConfigEntry(domain=DOMAIN, unique_id=UNIQUE_ID, data=CONFIG)
     mock_config.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH, "unique_id": UNIQUE_ID},
-        data=mock_config.data,
-    )
+    result = await mock_config.start_reauth_flow(hass)
 
     with patch("sharkiq.AylaApi.async_sign_in", return_value=True):
         result = await hass.config_entries.flow.async_configure(
@@ -131,11 +127,10 @@ async def test_reauth(
     msg: str,
 ) -> None:
     """Test reauth failures."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH, "unique_id": UNIQUE_ID},
-        data=CONFIG,
-    )
+    mock_config = MockConfigEntry(domain=DOMAIN, unique_id=UNIQUE_ID, data=CONFIG)
+    mock_config.add_to_hass(hass)
+
+    result = await mock_config.start_reauth_flow(hass)
 
     with patch("sharkiq.AylaApi.async_sign_in", side_effect=side_effect):
         result = await hass.config_entries.flow.async_configure(
