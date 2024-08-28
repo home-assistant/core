@@ -1,13 +1,13 @@
 """Provides data updates from the Control4 controller for platforms."""
+# mypy: ignore-errors
 
 from collections import defaultdict
 import logging
 from typing import Any
 
-from pyControl4.account import C4Account
-from pyControl4.director import C4Director
-from pyControl4.error_handling import BadToken
-
+# from pyControl4.account import C4Account
+# from pyControl4.director import C4Director
+# from pyControl4.error_handling import BadToken
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant

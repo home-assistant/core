@@ -1685,9 +1685,6 @@ pyAtome==0.1.1
 # homeassistant.components.hdmi_cec
 pyCEC==0.5.2
 
-# homeassistant.components.control4
-pyControl4==1.1.0
-
 # homeassistant.components.duotecno
 pyDuotecno==2024.5.1
 
@@ -2229,7 +2226,7 @@ pysoma==0.0.12
 pyspcwebgw==0.7.0
 
 # homeassistant.components.assist_pipeline
-pyspeex-noise==1.0.0
+pyspeex-noise==1.0.2
 
 # homeassistant.components.squeezebox
 pysqueezebox==0.7.1
