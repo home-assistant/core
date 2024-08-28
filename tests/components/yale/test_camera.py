@@ -23,7 +23,7 @@ async def test_create_doorbell(
     with patch.object(
         doorbell_one, "async_get_doorbell_image", create=False, return_value="image"
     ):
-        await _create_yale_with_devices(hass, [doorbell_one], brand=Brand.YALE_HOME)
+        await _create_yale_with_devices(hass, [doorbell_one], brand=Brand.YALE_GLOBAL)
 
         camera_k98gidt45gul_name_camera = hass.states.get(
             "camera.k98gidt45gul_name_camera"
@@ -55,7 +55,7 @@ async def test_doorbell_refresh_content_token_recover(
         await _create_yale_with_devices(
             hass,
             [doorbell_two],
-            brand=Brand.YALE_HOME,
+            brand=Brand.YALE_GLOBAL,
         )
         url = hass.states.get("camera.k98gidt45gul_name_camera").attributes[
             "entity_picture"
@@ -82,7 +82,7 @@ async def test_doorbell_refresh_content_token_fail(
         await _create_yale_with_devices(
             hass,
             [doorbell_two],
-            brand=Brand.YALE_HOME,
+            brand=Brand.YALE_GLOBAL,
         )
         url = hass.states.get("camera.k98gidt45gul_name_camera").attributes[
             "entity_picture"

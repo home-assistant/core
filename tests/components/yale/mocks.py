@@ -33,7 +33,7 @@ from yalexs.const import Brand
 from yalexs.doorbell import Doorbell, DoorbellDetail
 from yalexs.lock import Lock, LockDetail
 from yalexs.manager.ratelimit import _RateLimitChecker
-from yalexs.pubnub_async import AugustPubNub
+from yalexs.manager.socketio import SocketIORunner
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -114,27 +114,27 @@ def patch_yale_setup():
     with (
         patch("yalexs.manager.gateway.ApiAsync") as api_mock,
         patch.object(_RateLimitChecker, "register_wakeup") as authenticate_mock,
-        patch("yalexs.manager.data.async_create_pubnub", return_value=AsyncMock()),
-        patch("yalexs.manager.data.AugustPubNub") as pubnub_mock,
+        patch("yalexs.manager.data.SocketIORunner") as socketio_mock,
+        patch.object(socketio_mock, "run"),
         patch(
             "homeassistant.components.yale.config_entry_oauth2_flow.async_get_config_entry_implementation"
         ),
     ):
-        yield api_mock, authenticate_mock, pubnub_mock
+        yield api_mock, authenticate_mock, socketio_mock
 
 
 async def _mock_setup_yale(
     hass: HomeAssistant,
     api_instance: ApiAsync,
-    pubnub_mock: AugustPubNub,
+    socketio_mock: SocketIORunner,
     authenticate_side_effect: MagicMock,
 ) -> ConfigEntry:
     """Set up yale integration."""
     entry = await mock_yale_config_entry(hass)
     with patch_yale_setup() as patched_setup:
-        api_mock, authenticate_mock, pubnub_mock_ = patched_setup
+        api_mock, authenticate_mock, sockio_mock_ = patched_setup
         authenticate_mock.side_effect = authenticate_side_effect
-        pubnub_mock_.return_value = pubnub_mock
+        sockio_mock_.return_value = socketio_mock
         api_mock.return_value = api_instance
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -146,20 +146,18 @@ async def _create_yale_with_devices(
     devices: Iterable[LockDetail | DoorbellDetail] | None = None,
     api_call_side_effects: dict[str, Any] | None = None,
     activities: list[Any] | None = None,
-    pubnub: AugustPubNub | None = None,
-    brand: Brand = Brand.YALE_HOME,
+    brand: Brand = Brand.YALE_GLOBAL,
     authenticate_side_effect: MagicMock | None = None,
-) -> ConfigEntry:
-    entry, _ = await _create_yale_api_with_devices(
+) -> tuple[ConfigEntry, SocketIORunner]:
+    entry, _, socketio = await _create_yale_api_with_devices(
         hass,
         devices,
         api_call_side_effects,
         activities,
-        pubnub,
         brand,
         authenticate_side_effect,
     )
-    return entry
+    return entry, socketio
 
 
 async def _create_yale_api_with_devices(
@@ -167,12 +165,9 @@ async def _create_yale_api_with_devices(
     devices: Iterable[LockDetail | DoorbellDetail] | None = None,
     api_call_side_effects: dict[str, Any] | None = None,
     activities: dict[str, Any] | None = None,
-    pubnub: AugustPubNub | None = None,
-    brand: Brand = Brand.YALE_HOME,
+    brand: Brand = Brand.YALE_GLOBAL,
     authenticate_side_effect: MagicMock | None = None,
-) -> tuple[ConfigEntry, ApiAsync]:
-    if pubnub is None:
-        pubnub = AugustPubNub()
+) -> tuple[ConfigEntry, ApiAsync, SocketIORunner]:
     if api_call_side_effects is None:
         api_call_side_effects = {}
     if devices is None:
@@ -181,18 +176,21 @@ async def _create_yale_api_with_devices(
     update_api_call_side_effects(api_call_side_effects, devices, activities)
 
     api_instance = await make_mock_api(api_call_side_effects, brand)
+    socketio = SocketIORunner(
+        MagicMock(
+            api=api_instance, async_get_access_token=AsyncMock(return_value="token")
+        )
+    )
+    socketio.run = AsyncMock()
+
     entry = await _mock_setup_yale(
         hass,
         api_instance,
-        pubnub,
+        socketio,
         authenticate_side_effect=authenticate_side_effect,
     )
-    if any(device for device in devices if isinstance(device, LockDetail)):
-        # Ensure we sync status when the integration is loaded if there
-        # are any locks
-        assert api_instance.async_status_async.mock_calls
 
-    return entry, api_instance
+    return entry, api_instance, socketio
 
 
 def update_api_call_side_effects(
@@ -213,7 +211,7 @@ def update_api_call_side_effects(
                 {
                     "base": _mock_yale_doorbell(
                         deviceid=device.device_id,
-                        brand=device._data.get("brand", Brand.YALE_HOME),
+                        brand=device._data.get("brand", Brand.YALE_GLOBAL),
                     ),
                     "detail": device,
                 }
@@ -289,7 +287,7 @@ def update_api_call_side_effects(
 
 async def make_mock_api(
     api_call_side_effects: dict[str, Any],
-    brand: Brand = Brand.YALE_HOME,
+    brand: Brand = Brand.YALE_GLOBAL,
 ) -> ApiAsync:
     """Make a mock ApiAsync instance."""
     api_instance = MagicMock(name="Api", brand=brand)
@@ -340,6 +338,7 @@ async def make_mock_api(
     api_instance.async_get_user = AsyncMock(return_value={"UserID": "abc"})
     api_instance.async_unlatch_async = AsyncMock()
     api_instance.async_unlatch = AsyncMock()
+    api_instance.async_add_websocket_subscription = AsyncMock()
 
     return api_instance
 
@@ -361,7 +360,7 @@ def _mock_yale_lock(lockid: str = "mocklockid1", houseid: str = "mockhouseid1") 
 
 
 def _mock_yale_doorbell(
-    deviceid="mockdeviceid1", houseid="mockhouseid1", brand=Brand.YALE_HOME
+    deviceid="mockdeviceid1", houseid="mockhouseid1", brand=Brand.YALE_GLOBAL
 ) -> Doorbell:
     return Doorbell(
         deviceid,
@@ -372,7 +371,7 @@ def _mock_yale_doorbell(
 def _mock_yale_doorbell_data(
     deviceid: str = "mockdeviceid1",
     houseid: str = "mockhouseid1",
-    brand: Brand = Brand.YALE_HOME,
+    brand: Brand = Brand.YALE_GLOBAL,
 ) -> dict[str, Any]:
     return {
         "_id": deviceid,

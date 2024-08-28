@@ -1,9 +1,7 @@
 """The event tests for the yale."""
 
 import datetime
-from unittest.mock import Mock, patch
-
-from yalexs.pubnub_async import AugustPubNub
+from unittest.mock import patch
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -14,7 +12,6 @@ from .mocks import (
     _mock_activities_from_fixture,
     _mock_doorbell_from_fixture,
     _mock_lock_from_fixture,
-    _timetoken,
 )
 
 from tests.common import async_fire_time_changed
@@ -73,12 +70,11 @@ async def test_create_doorbell_with_motion(hass: HomeAssistant) -> None:
     assert motion_state.state == isotime
 
 
-async def test_doorbell_update_via_pubnub(hass: HomeAssistant) -> None:
-    """Test creation of a doorbell that can be updated via pubnub."""
+async def test_doorbell_update_via_socketio(hass: HomeAssistant) -> None:
+    """Test creation of a doorbell that can be updated via socketio."""
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.json")
-    pubnub = AugustPubNub()
 
-    await _create_yale_with_devices(hass, [doorbell_one], pubnub=pubnub)
+    _, socketio = await _create_yale_with_devices(hass, [doorbell_one])
     assert doorbell_one.pubsub_channel == "7c7a6672-59c8-3333-ffff-dcd98705cccc"
 
     motion_state = hass.states.get("event.k98gidt45gul_name_motion")
@@ -88,34 +84,32 @@ async def test_doorbell_update_via_pubnub(hass: HomeAssistant) -> None:
     assert doorbell_state is not None
     assert doorbell_state.state == STATE_UNKNOWN
 
-    pubnub.message(
-        pubnub,
-        Mock(
-            channel=doorbell_one.pubsub_channel,
-            timetoken=_timetoken(),
-            message={
-                "status": "doorbell_motion_detected",
-                "data": {
-                    "event": "doorbell_motion_detected",
-                    "image": {
-                        "height": 640,
-                        "width": 480,
-                        "format": "jpg",
-                        "created_at": "2021-03-16T02:36:26.886Z",
-                        "bytes": 14061,
-                        "secure_url": (
-                            "https://dyu7azbnaoi74.cloudfront.net/images/1f8.jpeg"
-                        ),
-                        "url": "https://dyu7azbnaoi74.cloudfront.net/images/1f8.jpeg",
-                        "etag": "09e839331c4ea59eef28081f2caa0e90",
-                    },
-                    "doorbellName": "Front Door",
-                    "callID": None,
-                    "origin": "mars-api",
-                    "mutableContent": True,
+    listener = list(socketio._listeners)[0]
+    listener(
+        doorbell_one.device_id,
+        dt_util.utcnow(),
+        {
+            "status": "doorbell_motion_detected",
+            "data": {
+                "event": "doorbell_motion_detected",
+                "image": {
+                    "height": 640,
+                    "width": 480,
+                    "format": "jpg",
+                    "created_at": "2021-03-16T02:36:26.886Z",
+                    "bytes": 14061,
+                    "secure_url": (
+                        "https://dyu7azbnaoi74.cloudfront.net/images/1f8.jpeg"
+                    ),
+                    "url": "https://dyu7azbnaoi74.cloudfront.net/images/1f8.jpeg",
+                    "etag": "09e839331c4ea59eef28081f2caa0e90",
                 },
+                "doorbellName": "Front Door",
+                "callID": None,
+                "origin": "mars-api",
+                "mutableContent": True,
             },
-        ),
+        },
     )
 
     await hass.async_block_till_done()
@@ -138,16 +132,14 @@ async def test_doorbell_update_via_pubnub(hass: HomeAssistant) -> None:
     assert motion_state is not None
     assert motion_state.state != STATE_UNKNOWN
 
-    pubnub.message(
-        pubnub,
-        Mock(
-            channel=doorbell_one.pubsub_channel,
-            timetoken=_timetoken(),
-            message={
-                "status": "buttonpush",
-            },
-        ),
+    listener(
+        doorbell_one.device_id,
+        dt_util.utcnow(),
+        {
+            "status": "buttonpush",
+        },
     )
+
     await hass.async_block_till_done()
 
     doorbell_state = hass.states.get("event.k98gidt45gul_name_doorbell")

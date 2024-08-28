@@ -1,9 +1,7 @@
 """The binary_sensor tests for the yale platform."""
 
 import datetime
-from unittest.mock import Mock, patch
-
-from yalexs.pubnub_async import AugustPubNub
+from unittest.mock import patch
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.const import (
@@ -24,7 +22,6 @@ from .mocks import (
     _mock_doorbell_from_fixture,
     _mock_doorsense_enabled_yale_lock_detail,
     _mock_lock_from_fixture,
-    _timetoken,
 )
 
 from tests.common import async_fire_time_changed
@@ -160,12 +157,11 @@ async def test_create_doorbell_with_motion(hass: HomeAssistant) -> None:
     assert binary_sensor_k98gidt45gul_name_motion.state == STATE_OFF
 
 
-async def test_doorbell_update_via_pubnub(hass: HomeAssistant) -> None:
-    """Test creation of a doorbell that can be updated via pubnub."""
+async def test_doorbell_update_via_socketio(hass: HomeAssistant) -> None:
+    """Test creation of a doorbell that can be updated via socketio."""
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.json")
-    pubnub = AugustPubNub()
 
-    await _create_yale_with_devices(hass, [doorbell_one], pubnub=pubnub)
+    _, socketio = await _create_yale_with_devices(hass, [doorbell_one])
     assert doorbell_one.pubsub_channel == "7c7a6672-59c8-3333-ffff-dcd98705cccc"
 
     binary_sensor_k98gidt45gul_name_motion = hass.states.get(
@@ -177,23 +173,21 @@ async def test_doorbell_update_via_pubnub(hass: HomeAssistant) -> None:
     )
     assert binary_sensor_k98gidt45gul_name_ding.state == STATE_OFF
 
-    pubnub.message(
-        pubnub,
-        Mock(
-            channel=doorbell_one.pubsub_channel,
-            timetoken=_timetoken(),
-            message={
-                "status": "imagecapture",
-                "data": {
-                    "result": {
-                        "created_at": "2021-03-16T01:07:08.817Z",
-                        "secure_url": (
-                            "https://dyu7azbnaoi74.cloudfront.net/zip/images/zip.jpeg"
-                        ),
-                    },
+    listener = list(socketio._listeners)[0]
+    listener(
+        doorbell_one.device_id,
+        dt_util.utcnow(),
+        {
+            "status": "imagecapture",
+            "data": {
+                "result": {
+                    "created_at": "2021-03-16T01:07:08.817Z",
+                    "secure_url": (
+                        "https://dyu7azbnaoi74.cloudfront.net/zip/images/zip.jpeg"
+                    ),
                 },
             },
-        ),
+        },
     )
 
     await hass.async_block_till_done()
@@ -203,34 +197,31 @@ async def test_doorbell_update_via_pubnub(hass: HomeAssistant) -> None:
     )
     assert binary_sensor_k98gidt45gul_name_image_capture.state == STATE_ON
 
-    pubnub.message(
-        pubnub,
-        Mock(
-            channel=doorbell_one.pubsub_channel,
-            timetoken=_timetoken(),
-            message={
-                "status": "doorbell_motion_detected",
-                "data": {
-                    "event": "doorbell_motion_detected",
-                    "image": {
-                        "height": 640,
-                        "width": 480,
-                        "format": "jpg",
-                        "created_at": "2021-03-16T02:36:26.886Z",
-                        "bytes": 14061,
-                        "secure_url": (
-                            "https://dyu7azbnaoi74.cloudfront.net/images/1f8.jpeg"
-                        ),
-                        "url": "https://dyu7azbnaoi74.cloudfront.net/images/1f8.jpeg",
-                        "etag": "09e839331c4ea59eef28081f2caa0e90",
-                    },
-                    "doorbellName": "Front Door",
-                    "callID": None,
-                    "origin": "mars-api",
-                    "mutableContent": True,
+    listener(
+        doorbell_one.device_id,
+        dt_util.utcnow(),
+        {
+            "status": "doorbell_motion_detected",
+            "data": {
+                "event": "doorbell_motion_detected",
+                "image": {
+                    "height": 640,
+                    "width": 480,
+                    "format": "jpg",
+                    "created_at": "2021-03-16T02:36:26.886Z",
+                    "bytes": 14061,
+                    "secure_url": (
+                        "https://dyu7azbnaoi74.cloudfront.net/images/1f8.jpeg"
+                    ),
+                    "url": "https://dyu7azbnaoi74.cloudfront.net/images/1f8.jpeg",
+                    "etag": "09e839331c4ea59eef28081f2caa0e90",
                 },
+                "doorbellName": "Front Door",
+                "callID": None,
+                "origin": "mars-api",
+                "mutableContent": True,
             },
-        ),
+        },
     )
 
     await hass.async_block_till_done()
@@ -259,16 +250,14 @@ async def test_doorbell_update_via_pubnub(hass: HomeAssistant) -> None:
     )
     assert binary_sensor_k98gidt45gul_name_image_capture.state == STATE_OFF
 
-    pubnub.message(
-        pubnub,
-        Mock(
-            channel=doorbell_one.pubsub_channel,
-            timetoken=_timetoken(),
-            message={
-                "status": "buttonpush",
-            },
-        ),
+    listener(
+        doorbell_one.device_id,
+        dt_util.utcnow(),
+        {
+            "status": "buttonpush",
+        },
     )
+
     await hass.async_block_till_done()
 
     binary_sensor_k98gidt45gul_name_ding = hass.states.get(
@@ -304,15 +293,14 @@ async def test_doorbell_device_registry(
     assert reg_device.sw_version == "3.1.0-HYDRC75+201909251139"
 
 
-async def test_door_sense_update_via_pubnub(hass: HomeAssistant) -> None:
+async def test_door_sense_update_via_socketio(hass: HomeAssistant) -> None:
     """Test creation of a lock with doorsense and bridge."""
     lock_one = await _mock_doorsense_enabled_yale_lock_detail(hass)
     assert lock_one.pubsub_channel == "pubsub"
-    pubnub = AugustPubNub()
 
     activities = await _mock_activities_from_fixture(hass, "get_activity.lock.json")
-    config_entry = await _create_yale_with_devices(
-        hass, [lock_one], activities=activities, pubnub=pubnub
+    config_entry, socketio = await _create_yale_with_devices(
+        hass, [lock_one], activities=activities
     )
 
     binary_sensor_online_with_doorsense_name = hass.states.get(
@@ -320,13 +308,11 @@ async def test_door_sense_update_via_pubnub(hass: HomeAssistant) -> None:
     )
     assert binary_sensor_online_with_doorsense_name.state == STATE_ON
 
-    pubnub.message(
-        pubnub,
-        Mock(
-            channel=lock_one.pubsub_channel,
-            timetoken=_timetoken(),
-            message={"status": "kAugLockState_Unlocking", "doorState": "closed"},
-        ),
+    listener = list(socketio._listeners)[0]
+    listener(
+        lock_one.device_id,
+        dt_util.utcnow(),
+        {"status": "kAugLockState_Unlocking", "doorState": "closed"},
     )
 
     await hass.async_block_till_done()
@@ -335,14 +321,12 @@ async def test_door_sense_update_via_pubnub(hass: HomeAssistant) -> None:
     )
     assert binary_sensor_online_with_doorsense_name.state == STATE_OFF
 
-    pubnub.message(
-        pubnub,
-        Mock(
-            channel=lock_one.pubsub_channel,
-            timetoken=_timetoken(),
-            message={"status": "kAugLockState_Locking", "doorState": "open"},
-        ),
+    listener(
+        lock_one.device_id,
+        dt_util.utcnow(),
+        {"status": "kAugLockState_Locking", "doorState": "open"},
     )
+
     await hass.async_block_till_done()
     binary_sensor_online_with_doorsense_name = hass.states.get(
         "binary_sensor.online_with_doorsense_name_door"
@@ -356,7 +340,7 @@ async def test_door_sense_update_via_pubnub(hass: HomeAssistant) -> None:
     )
     assert binary_sensor_online_with_doorsense_name.state == STATE_ON
 
-    pubnub.connected = True
+    socketio.connected = True
     async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(seconds=30))
     await hass.async_block_till_done()
     binary_sensor_online_with_doorsense_name = hass.states.get(
@@ -364,7 +348,7 @@ async def test_door_sense_update_via_pubnub(hass: HomeAssistant) -> None:
     )
     assert binary_sensor_online_with_doorsense_name.state == STATE_ON
 
-    # Ensure pubnub status is always preserved
+    # Ensure socketio status is always preserved
     async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=2))
     await hass.async_block_till_done()
     binary_sensor_online_with_doorsense_name = hass.states.get(
@@ -372,14 +356,12 @@ async def test_door_sense_update_via_pubnub(hass: HomeAssistant) -> None:
     )
     assert binary_sensor_online_with_doorsense_name.state == STATE_ON
 
-    pubnub.message(
-        pubnub,
-        Mock(
-            channel=lock_one.pubsub_channel,
-            timetoken=_timetoken(),
-            message={"status": "kAugLockState_Unlocking", "doorState": "open"},
-        ),
+    listener(
+        lock_one.device_id,
+        dt_util.utcnow(),
+        {"status": "kAugLockState_Unlocking", "doorState": "open"},
     )
+
     await hass.async_block_till_done()
     binary_sensor_online_with_doorsense_name = hass.states.get(
         "binary_sensor.online_with_doorsense_name_door"
