@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from homeassistant.components.assist_satellite import AssistSatelliteState
 from homeassistant.helpers import entity
 from homeassistant.helpers.device_registry import DeviceInfo
 
@@ -14,6 +15,7 @@ class VoIPEntity(entity.Entity):
 
     _attr_has_entity_name = True
     _attr_should_poll = False
+    _attr_state = AssistSatelliteState.LISTENING_WAKE_WORD
 
     def __init__(self, voip_device: VoIPDevice) -> None:
         """Initialize VoIP entity."""
