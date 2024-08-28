@@ -25,6 +25,8 @@
     }
   },
   "services": {
-    "fetch_connections": "mdi:bus-clock"
+    "fetch_connections": {
+      "service": "mdi:bus-clock"
+    }
   }
 }

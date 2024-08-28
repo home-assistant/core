@@ -61,7 +61,20 @@ DATA_ENTRY_ICONS_SCHEMA = vol.Schema(
 )
 
 
-SERVICE_ICONS_SCHEMA = cv.schema_with_slug_keys(
+CORE_SERVICE_ICONS_SCHEMA = cv.schema_with_slug_keys(
+    vol.Schema(
+        {
+            vol.Optional("service"): icon_value_validator,
+            vol.Optional("sections"): cv.schema_with_slug_keys(
+                icon_value_validator, slug_validator=translation_key_validator
+            ),
+        }
+    ),
+    slug_validator=translation_key_validator,
+)
+
+
+CUSTOM_INTEGRATION_SERVICE_ICONS_SCHEMA = cv.schema_with_slug_keys(
     vol.All(
         convert_shorthand_service_icon,
         vol.Schema(
@@ -77,7 +90,9 @@ SERVICE_ICONS_SCHEMA = cv.schema_with_slug_keys(
 )
 
 
-def icon_schema(integration_type: str, no_entity_platform: bool) -> vol.Schema:
+def icon_schema(
+    core_integration: bool, integration_type: str, no_entity_platform: bool
+) -> vol.Schema:
     """Create an icon schema."""
 
     state_validator = cv.schema_with_slug_keys(
@@ -108,7 +123,9 @@ def icon_schema(integration_type: str, no_entity_platform: bool) -> vol.Schema:
                 {str: {"fix_flow": DATA_ENTRY_ICONS_SCHEMA}}
             ),
             vol.Optional("options"): DATA_ENTRY_ICONS_SCHEMA,
-            vol.Optional("services"): SERVICE_ICONS_SCHEMA,
+            vol.Optional("services"): CORE_SERVICE_ICONS_SCHEMA
+            if core_integration
+            else CUSTOM_INTEGRATION_SERVICE_ICONS_SCHEMA,
         }
     )
 
@@ -163,7 +180,9 @@ def validate_icon_file(config: Config, integration: Integration) -> None:
 
     no_entity_platform = integration.domain in ("notify", "image_processing")
 
-    schema = icon_schema(integration.integration_type, no_entity_platform)
+    schema = icon_schema(
+        integration.core, integration.integration_type, no_entity_platform
+    )
 
     try:
         schema(icons)

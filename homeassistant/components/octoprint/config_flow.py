@@ -215,13 +215,15 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_reauth(self, config: Mapping[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauthorization request from Octoprint."""
-        self._reauth_data = dict(config)
+        self._reauth_data = dict(entry_data)
 
         self.context.update(
             {
-                "title_placeholders": {CONF_HOST: config[CONF_HOST]},
+                "title_placeholders": {CONF_HOST: entry_data[CONF_HOST]},
             }
         )
 
