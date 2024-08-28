@@ -30,13 +30,7 @@ from homeassistant.components.deconz.climate import (
     DECONZ_PRESET_MANUAL,
 )
 from homeassistant.components.deconz.const import CONF_ALLOW_CLIP_SENSOR
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    STATE_OFF,
-    STATE_UNAVAILABLE,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_OFF, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -276,17 +270,6 @@ async def test_climate_device_without_cooling_support(
             },
             blocking=True,
         )
-
-    await hass.config_entries.async_unload(config_entry.entry_id)
-
-    states = hass.states.async_all()
-    assert len(states) == 1
-    for state in states:
-        assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_remove(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
 
 
 @pytest.mark.parametrize(

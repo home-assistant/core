@@ -11,9 +11,9 @@
   "loggers": ["xknx", "xknxproject"],
   "quality_scale": "platinum",
   "requirements": [
-    "xknx==2.12.2",
+    "xknx==3.1.1",
     "xknxproject==3.7.1",
-    "knx-frontend==2024.1.20.105944"
+    "knx-frontend==2024.8.9.225351"
   ],
   "single_config_entry": true
 }

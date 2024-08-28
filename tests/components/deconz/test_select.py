@@ -4,6 +4,7 @@ from collections.abc import Callable
 from typing import Any
 from unittest.mock import patch
 
+from pydeconz.models.sensor.air_purifier import AirPurifierFanMode
 from pydeconz.models.sensor.presence import (
     PresenceConfigDeviceMode,
     PresenceConfigTriggerDistance,
@@ -16,7 +17,7 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -119,6 +120,42 @@ TEST_DATA = [
             "request_data": {"triggerdistance": "far"},
         },
     ),
+    (  # Air Purifier Fan Mode
+        {
+            "config": {
+                "filterlifetime": 259200,
+                "ledindication": True,
+                "locked": False,
+                "mode": "speed_1",
+                "on": True,
+                "reachable": True,
+            },
+            "ep": 1,
+            "etag": "de26d19d9e91b2db3ded6ee7ab6b6a4b",
+            "lastannounced": None,
+            "lastseen": "2024-08-07T18:27Z",
+            "manufacturername": "IKEA of Sweden",
+            "modelid": "STARKVIND Air purifier",
+            "name": "IKEA Starkvind",
+            "productid": "E2007",
+            "state": {
+                "deviceruntime": 73405,
+                "filterruntime": 73405,
+                "lastupdated": "2024-08-07T18:27:52.543",
+                "replacefilter": False,
+                "speed": 20,
+            },
+            "swversion": "1.1.001",
+            "type": "ZHAAirPurifier",
+            "uniqueid": "0c:43:14:ff:fe:6c:20:12-01-fc7d",
+        },
+        {
+            "entity_id": "select.ikea_starkvind_fan_mode",
+            "option": AirPurifierFanMode.AUTO.value,
+            "request": "/sensors/0/config",
+            "request_data": {"mode": "auto"},
+        },
+    ),
 ]
 
 
@@ -149,14 +186,3 @@ async def test_select(
         blocking=True,
     )
     assert aioclient_mock.mock_calls[1][2] == expected["request_data"]
-
-    # Unload entry
-
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    assert hass.states.get(expected["entity_id"]).state == STATE_UNAVAILABLE
-
-    # Remove entry
-
-    await hass.config_entries.async_remove(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0

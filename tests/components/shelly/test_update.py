@@ -385,13 +385,14 @@ async def test_rpc_restored_sleeping_update(
 ) -> None:
     """Test RPC restored update entity."""
     entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         UPDATE_DOMAIN,
         "test_name_firmware_update",
         "sys-fwupdate",
         entry,
+        device_id=device.id,
     )
 
     attr = {ATTR_INSTALLED_VERSION: "1", ATTR_LATEST_VERSION: "2"}
@@ -443,13 +444,14 @@ async def test_rpc_restored_sleeping_update_no_last_state(
         },
     )
     entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         UPDATE_DOMAIN,
         "test_name_firmware_update",
         "sys-fwupdate",
         entry,
+        device_id=device.id,
     )
 
     monkeypatch.setattr(mock_rpc_device, "initialized", False)

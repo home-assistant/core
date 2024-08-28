@@ -57,7 +57,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bo
 
     if not version.valid:
         LOGGER.warning(
-            "It seems like you are using the nightly version of Mealie, nightly versions could have changes that stop this integration working"
+            "It seems like you are using the nightly version of Mealie, nightly"
+            " versions could have changes that stop this integration working"
         )
     if version.valid and version < MIN_REQUIRED_MEALIE_VERSION:
         raise ConfigEntryError(

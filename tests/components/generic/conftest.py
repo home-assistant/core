@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from io import BytesIO
 from unittest.mock import AsyncMock, MagicMock, Mock, _patch, patch
 
@@ -51,15 +52,23 @@ def fakeimgbytes_gif() -> bytes:
 
 
 @pytest.fixture
-def fakeimg_png(fakeimgbytes_png: bytes) -> None:
+def fakeimg_png(fakeimgbytes_png: bytes) -> Generator[None]:
     """Set up respx to respond to test url with fake image bytes."""
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
+    respx.get("http://127.0.0.1/testurl/1", name="fake_img").respond(
+        stream=fakeimgbytes_png
+    )
+    yield
+    respx.pop("fake_img")
 
 
 @pytest.fixture
-def fakeimg_gif(fakeimgbytes_gif: bytes) -> None:
+def fakeimg_gif(fakeimgbytes_gif: bytes) -> Generator[None]:
     """Set up respx to respond to test url with fake image bytes."""
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_gif)
+    respx.get("http://127.0.0.1/testurl/1", name="fake_img").respond(
+        stream=fakeimgbytes_gif
+    )
+    yield
+    respx.pop("fake_img")
 
 
 @pytest.fixture(scope="package")

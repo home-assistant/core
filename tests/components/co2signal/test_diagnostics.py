@@ -2,6 +2,7 @@
 
 import pytest
 from syrupy import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
 
@@ -20,4 +21,4 @@ async def test_entry_diagnostics(
     """Test config entry diagnostics."""
     result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 
-    assert result == snapshot
+    assert result == snapshot(exclude=props("created_at", "modified_at"))
