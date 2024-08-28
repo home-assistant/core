@@ -69,13 +69,11 @@ async def async_setup_entry(
         for lock in data.locks
         if (detail := data.get_device_detail(lock.device_id)) and detail.doorbell
     ]
-
     entities.extend(
         YaleEventEntity(data, doorbell, description)
         for description in TYPES_DOORBELL + TYPES_VIDEO_DOORBELL
         for doorbell in data.doorbells
     )
-
     async_add_entities(entities)
 
 
@@ -83,7 +81,6 @@ class YaleEventEntity(YaleDescriptionEntity, EventEntity):
     """An yale event entity."""
 
     entity_description: YaleEventEntityDescription
-    _attr_has_entity_name = True
     _last_activity: Activity | None = None
 
     @callback
