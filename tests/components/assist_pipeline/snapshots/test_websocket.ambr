@@ -11,7 +11,7 @@
 # ---
 # name: test_audio_pipeline.1
   dict({
-    'engine': 'test',
+    'engine': 'stt.mock_stt',
     'metadata': dict({
       'bit_rate': 16,
       'channel': 1,
@@ -92,7 +92,7 @@
 # ---
 # name: test_audio_pipeline_debug.1
   dict({
-    'engine': 'test',
+    'engine': 'stt.mock_stt',
     'metadata': dict({
       'bit_rate': 16,
       'channel': 1,
@@ -185,7 +185,7 @@
 # ---
 # name: test_audio_pipeline_with_enhancements.1
   dict({
-    'engine': 'test',
+    'engine': 'stt.mock_stt',
     'metadata': dict({
       'bit_rate': 16,
       'channel': 1,
@@ -288,7 +288,7 @@
 # ---
 # name: test_audio_pipeline_with_wake_word_no_timeout.3
   dict({
-    'engine': 'test',
+    'engine': 'stt.mock_stt',
     'metadata': dict({
       'bit_rate': 16,
       'channel': 1,
@@ -401,7 +401,7 @@
 # ---
 # name: test_device_capture.1
   dict({
-    'engine': 'test',
+    'engine': 'stt.mock_stt',
     'metadata': dict({
       'bit_rate': 16,
       'channel': 1,
@@ -427,7 +427,7 @@
 # ---
 # name: test_device_capture_override.1
   dict({
-    'engine': 'test',
+    'engine': 'stt.mock_stt',
     'metadata': dict({
       'bit_rate': 16,
       'channel': 1,
@@ -475,7 +475,7 @@
 # ---
 # name: test_device_capture_queue_full.1
   dict({
-    'engine': 'test',
+    'engine': 'stt.mock_stt',
     'metadata': dict({
       'bit_rate': 16,
       'channel': 1,
@@ -649,7 +649,7 @@
 # ---
 # name: test_stt_stream_failed.1
   dict({
-    'engine': 'test',
+    'engine': 'stt.mock_stt',
     'metadata': dict({
       'bit_rate': 16,
       'channel': 1,

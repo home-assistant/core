@@ -1,6 +1,10 @@
 {
   "services": {
-    "push_alarm_state": "mdi:security",
-    "trigger": "mdi:play"
+    "push_alarm_state": {
+      "service": "mdi:security"
+    },
+    "trigger": {
+      "service": "mdi:play"
+    }
   }
 }
