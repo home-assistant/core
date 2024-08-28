@@ -30,6 +30,7 @@ class YaleEntity(Entity):
         self, data: YaleData, device: Doorbell | Lock | KeypadDetail, unique_id: str
     ) -> None:
         """Initialize an Yale device."""
+        super().__init__()
         self._data = data
         self._stream = data.activity_stream
         self._device = device
