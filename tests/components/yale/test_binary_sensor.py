@@ -3,6 +3,8 @@
 import datetime
 from unittest.mock import patch
 
+from syrupy import SnapshotAssertion
+
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -226,17 +228,19 @@ async def test_doorbell_update_via_socketio(hass: HomeAssistant) -> None:
 
 
 async def test_doorbell_device_registry(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test creation of a lock with doorsense and bridge ands up in the registry."""
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.offline.json")
     await _create_yale_with_devices(hass, [doorbell_one])
 
     reg_device = device_registry.async_get_device(identifiers={("yale", "tmt100")})
-    assert reg_device.model == "hydra1"
-    assert reg_device.name == "tmt100 Name"
-    assert reg_device.manufacturer == "Yale Home Inc."
-    assert reg_device.sw_version == "3.1.0-HYDRC75+201909251139"
+    assert reg_device.model == snapshot
+    assert reg_device.name == snapshot
+    assert reg_device.manufacturer == snapshot
+    assert reg_device.sw_version == snapshot
 
 
 async def test_door_sense_update_via_socketio(hass: HomeAssistant) -> None:
