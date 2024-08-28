@@ -161,27 +161,19 @@ class OpenThermClimate(OpenThermThermostatDeviceEntity, ClimateEntity):
         # GPIO mode 5: 0 == Away
         # GPIO mode 6: 1 == Away
         gpio_a_state = status[gw_vars.OTGW].get(gw_vars.OTGW_GPIO_A)
-        if gpio_a_state == 5:
-            self._away_mode_a = 0
-        elif gpio_a_state == 6:
-            self._away_mode_a = 1
-        else:
-            self._away_mode_a = None
         gpio_b_state = status[gw_vars.OTGW].get(gw_vars.OTGW_GPIO_B)
-        if gpio_b_state == 5:
-            self._away_mode_b = 0
-        elif gpio_b_state == 6:
-            self._away_mode_b = 1
-        else:
-            self._away_mode_b = None
-        if self._away_mode_a is not None:
-            self._away_state_a = (
-                status[gw_vars.OTGW].get(gw_vars.OTGW_GPIO_A_STATE) == self._away_mode_a
-            )
-        if self._away_mode_b is not None:
-            self._away_state_b = (
-                status[gw_vars.OTGW].get(gw_vars.OTGW_GPIO_B_STATE) == self._away_mode_b
-            )
+        self._away_mode_a = gpio_a_state - 5 if gpio_a_state in (5, 6) else None
+        self._away_mode_b = gpio_b_state - 5 if gpio_b_state in (5, 6) else None
+        self._away_state_a = (
+            (status[gw_vars.OTGW].get(gw_vars.OTGW_GPIO_A_STATE) == self._away_mode_a)
+            if self._away_mode_a is not None
+            else None
+        )
+        self._away_state_b = (
+            (status[gw_vars.OTGW].get(gw_vars.OTGW_GPIO_B_STATE) == self._away_mode_b)
+            if self._away_mode_b is not None
+            else None
+        )
         self.async_write_ha_state()
 
     @property
