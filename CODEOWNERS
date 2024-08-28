@@ -144,6 +144,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/assist_pipeline/ @balloob @synesthesiam
 /tests/components/assist_pipeline/ @balloob @synesthesiam
 /homeassistant/components/assist_satellite/ @synesthesiam
+/tests/components/assist_satellite/ @synesthesiam
 /homeassistant/components/asuswrt/ @kennedyshead @ollo69
 /tests/components/asuswrt/ @kennedyshead @ollo69
 /homeassistant/components/atag/ @MatsNL
