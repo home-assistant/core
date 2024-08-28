@@ -35,12 +35,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     SERVER_PORT,
 )
-from homeassistant.core import (
-    DOMAIN as HOMEASSISTANT_DOMAIN,
-    Event,
-    HomeAssistant,
-    callback,
-)
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import frame, issue_registry as ir, storage
 import homeassistant.helpers.config_validation as cv
@@ -286,7 +281,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ):
             ir.async_create_issue(
                 hass,
-                HOMEASSISTANT_DOMAIN,
+                DOMAIN,
                 "ssl_configured_without_configured_urls",
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
