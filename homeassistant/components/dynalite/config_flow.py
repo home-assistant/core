@@ -26,9 +26,9 @@ class DynaliteFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the Dynalite flow."""
         self.host = None
 
-    async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a new bridge as a config entry."""
-        LOGGER.debug("Starting async_step_import (deprecated) - %s", import_info)
+        LOGGER.debug("Starting async_step_import (deprecated) - %s", import_data)
         # Raise an issue that this is deprecated and has been imported
         async_create_issue(
             self.hass,
@@ -46,17 +46,17 @@ class DynaliteFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-        host = import_info[CONF_HOST]
+        host = import_data[CONF_HOST]
         # Check if host already exists
         for entry in self._async_current_entries():
             if entry.data[CONF_HOST] == host:
                 self.hass.config_entries.async_update_entry(
-                    entry, data=dict(import_info)
+                    entry, data=dict(import_data)
                 )
                 return self.async_abort(reason="already_configured")
 
         # New entry
-        return await self._try_create(import_info)
+        return await self._try_create(import_data)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

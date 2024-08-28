@@ -80,13 +80,11 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_import(
-        self, import_config: dict[str, Any]
-    ) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Attempt to import the existing configuration."""
-        self._async_abort_entries_match({CONF_HOST: import_config[CONF_HOST]})
-        host = import_config[CONF_HOST]
-        port = import_config.get(CONF_PORT, 9621)
+        self._async_abort_entries_match({CONF_HOST: import_data[CONF_HOST]})
+        host = import_data[CONF_HOST]
+        port = import_data.get(CONF_PORT, 9621)
 
         # Connection logic is repeated here since this method will be removed in future releases
         russ = Russound(self.hass.loop, host, port)

@@ -9,6 +9,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries, loader, setup
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_COMPONENT_LOADED, EVENT_HOMEASSISTANT_START
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -23,6 +24,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.issue_registry import IssueRegistry
+from homeassistant.helpers.typing import ConfigType
 
 from .common import (
     MockConfigEntry,
@@ -298,9 +300,10 @@ async def test_component_not_setup_twice_if_loaded_during_other_setup(
     """Test component setup while waiting for lock is not set up twice."""
     result = []
 
-    async def async_setup(hass, config):
+    async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Tracking Setup."""
         result.append(1)
+        return True
 
     mock_integration(hass, MockModule("comp", async_setup=async_setup))
 
@@ -345,9 +348,9 @@ async def test_component_exception_setup(hass: HomeAssistant) -> None:
     """Test component that raises exception during setup."""
     setup.async_set_domains_to_be_loaded(hass, {"comp"})
 
-    def exception_setup(hass, config):
+    def exception_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Raise exception."""
-        raise Exception("fail!")  # pylint: disable=broad-exception-raised
+        raise Exception("fail!")  # noqa: TRY002
 
     mock_integration(hass, MockModule("comp", setup=exception_setup))
 
@@ -359,9 +362,9 @@ async def test_component_base_exception_setup(hass: HomeAssistant) -> None:
     """Test component that raises exception during setup."""
     setup.async_set_domains_to_be_loaded(hass, {"comp"})
 
-    def exception_setup(hass, config):
+    def exception_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Raise exception."""
-        raise BaseException("fail!")  # pylint: disable=broad-exception-raised
+        raise BaseException("fail!")  # noqa: TRY002
 
     mock_integration(hass, MockModule("comp", setup=exception_setup))
 
@@ -377,12 +380,11 @@ async def test_component_setup_with_validation_and_dependency(
 ) -> None:
     """Test all config is passed to dependencies."""
 
-    def config_check_setup(hass, config):
+    def config_check_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Test that config is passed in."""
         if config.get("comp_a", {}).get("valid", False):
             return True
-        # pylint: disable-next=broad-exception-raised
-        raise Exception(f"Config not passed in: {config}")
+        raise Exception(f"Config not passed in: {config}")  # noqa: TRY002
 
     platform = MockPlatform()
 
@@ -500,7 +502,7 @@ async def test_all_work_done_before_start(hass: HomeAssistant) -> None:
     """Test all init work done till start."""
     call_order = []
 
-    async def component1_setup(hass, config):
+    async def component1_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Set up mock component."""
         await discovery.async_discover(
             hass, "test_component2", {}, "test_component2", {}
@@ -510,7 +512,7 @@ async def test_all_work_done_before_start(hass: HomeAssistant) -> None:
         )
         return True
 
-    def component_track_setup(hass, config):
+    def component_track_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Set up mock component."""
         call_order.append(1)
         return True
@@ -586,7 +588,7 @@ async def test_when_setup_already_loaded(hass: HomeAssistant) -> None:
     """Test when setup."""
     calls = []
 
-    async def mock_callback(hass, component):
+    async def mock_callback(hass: HomeAssistant, component: str) -> None:
         """Mock callback."""
         calls.append(component)
 
@@ -614,7 +616,7 @@ async def test_async_when_setup_or_start_already_loaded(hass: HomeAssistant) -> 
     """Test when setup or start."""
     calls = []
 
-    async def mock_callback(hass, component):
+    async def mock_callback(hass: HomeAssistant, component: str) -> None:
         """Mock callback."""
         calls.append(component)
 
@@ -660,7 +662,7 @@ async def test_parallel_entry_setup(hass: HomeAssistant, mock_handlers) -> None:
 
     calls = []
 
-    async def mock_async_setup_entry(hass, entry):
+    async def mock_async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Mock setting up an entry."""
         calls.append(entry.data["value"])
         await asyncio.sleep(0)

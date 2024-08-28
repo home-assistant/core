@@ -235,8 +235,8 @@ def _build_entities(
 
     entities: list[ViCareNumber] = [
         ViCareNumber(
-            device.api,
             device.config,
+            device.api,
             description,
         )
         for device in device_list
@@ -247,8 +247,8 @@ def _build_entities(
     entities.extend(
         [
             ViCareNumber(
-                circuit,
                 device.config,
+                circuit,
                 description,
             )
             for device in device_list
@@ -283,8 +283,8 @@ class ViCareNumber(ViCareEntity, NumberEntity):
 
     def __init__(
         self,
-        api: PyViCareHeatingDeviceComponent,
         device_config: PyViCareDeviceConfig,
+        api: PyViCareDevice | PyViCareHeatingDeviceComponent,
         description: ViCareNumberEntityDescription,
     ) -> None:
         """Initialize the number."""

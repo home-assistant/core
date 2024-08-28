@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections import defaultdict
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from functools import partial
@@ -111,7 +112,9 @@ class RuntimeEntryData:
     title: str
     client: APIClient
     store: ESPHomeStorage
-    state: dict[type[EntityState], dict[int, EntityState]] = field(default_factory=dict)
+    state: defaultdict[type[EntityState], dict[int, EntityState]] = field(
+        default_factory=lambda: defaultdict(dict)
+    )
     # When the disconnect callback is called, we mark all states
     # as stale so we will always dispatch a state update when the
     # device reconnects. This is the same format as state_subscriptions.

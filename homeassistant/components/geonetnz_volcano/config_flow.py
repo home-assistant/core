@@ -1,8 +1,10 @@
 """Config flow to configure the GeoNet NZ Volcano integration."""
 
+from typing import Any
+
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -45,11 +47,13 @@ class GeonetnzVolcanoFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors or {}
         )
 
-    async def async_step_import(self, import_config):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
+        return await self.async_step_user(import_data)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
         if not user_input:
             return await self._show_form()
