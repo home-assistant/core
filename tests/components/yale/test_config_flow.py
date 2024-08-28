@@ -1,7 +1,7 @@
 """Test the yale config flow."""
 
 from collections.abc import Generator
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
 
 import pytest
 
@@ -78,12 +78,26 @@ async def test_full_flow(
         },
     )
 
-    await hass.config_entries.flow.async_configure(result["flow_id"])
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.unique_id == USER_ID
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["result"].unique_id == USER_ID
+    assert entry.data == {
+        "auth_implementation": "yale",
+        "token": {
+            "access_token": jwt,
+            "expires_at": ANY,
+            "expires_in": ANY,
+            "refresh_token": "mock-refresh-token",
+            "scope": "any",
+            "user_id": "mock-user-id",
+        },
+    }
 
 
 @pytest.mark.usefixtures("client_credentials")
