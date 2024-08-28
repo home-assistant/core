@@ -768,6 +768,7 @@ select = [
     "SLOT", # flake8-slots
     "T100", # Trace found: {name} used
     "T20", # flake8-print
+    "TCH", # flake8-type-checking
     "TID251", # Banned imports
     "TRY", # tryceratops
     "UP", # pyupgrade
@@ -800,6 +801,12 @@ ignore = [
     "SIM103", # Return the condition {condition} directly
     "SIM108", # Use ternary operator {contents} instead of if-else-block
     "SIM115", # Use context handler for opening files
+    
+    # Moving imports into type-checking blocks can mess with pytest.patch()
+    "TCH001", # Move application import {} into a type-checking block
+    "TCH002", # Move third-party import {} into a type-checking block
+    "TCH003", # Move standard library import {} into a type-checking block
+
     "TRY003", # Avoid specifying long messages outside the exception class
     "TRY400", # Use `logging.exception` instead of `logging.error`
     # Ignored due to performance: https://github.com/charliermarsh/ruff/issues/2923
