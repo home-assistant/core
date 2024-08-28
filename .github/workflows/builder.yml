@@ -526,9 +526,7 @@ jobs:
           context: ./script/hassfest/docker
           build-args: BASE_IMAGE="ghcr.io/home-assistant/amd64-homeassistant:${{ needs.init.outputs.version }}"
           push: true
-          tags:
-            - ${{ env.HASSFEST_IMAGE_TAG }}
-            - ${{ env.HASSFEST_IMAGE_NAME }}:latest
+          tags: ${{ env.HASSFEST_IMAGE_TAG }},${{ env.HASSFEST_IMAGE_NAME }}:latest
 
       - name: Generate artifact attestation
         if: needs.init.outputs.channel != 'dev' && needs.init.outputs.publish == 'true'
