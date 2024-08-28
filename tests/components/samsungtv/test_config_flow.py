@@ -1749,11 +1749,7 @@ async def test_form_reauth_legacy(hass: HomeAssistant) -> None:
     """Test reauthenticate legacy."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY)
     entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"entry_id": entry.entry_id, "source": config_entries.SOURCE_REAUTH},
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
@@ -1773,11 +1769,7 @@ async def test_form_reauth_websocket(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     assert entry.state is ConfigEntryState.NOT_LOADED
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"entry_id": entry.entry_id, "source": config_entries.SOURCE_REAUTH},
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
@@ -1798,11 +1790,7 @@ async def test_form_reauth_websocket_cannot_connect(
     """Test reauthenticate websocket when we cannot connect on the first attempt."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRYDATA_WS)
     entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"entry_id": entry.entry_id, "source": config_entries.SOURCE_REAUTH},
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
@@ -1830,11 +1818,7 @@ async def test_form_reauth_websocket_not_supported(hass: HomeAssistant) -> None:
     """Test reauthenticate websocket when the device is not supported."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRYDATA_WS)
     entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"entry_id": entry.entry_id, "source": config_entries.SOURCE_REAUTH},
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
@@ -1863,11 +1847,7 @@ async def test_form_reauth_encrypted(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
     assert entry.state is ConfigEntryState.NOT_LOADED
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"entry_id": entry.entry_id, "source": config_entries.SOURCE_REAUTH},
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 

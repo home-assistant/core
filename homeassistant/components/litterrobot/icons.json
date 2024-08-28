@@ -40,6 +40,8 @@
     }
   },
   "services": {
-    "set_sleep_mode": "mdi:sleep"
+    "set_sleep_mode": {
+      "service": "mdi:sleep"
+    }
   }
 }

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
@@ -41,7 +42,9 @@ class KitchenSinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title="Kitchen Sink", data=import_data)
 
-    async def async_step_reauth(self, data):
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Reauth step."""
         return await self.async_step_reauth_confirm()
 
