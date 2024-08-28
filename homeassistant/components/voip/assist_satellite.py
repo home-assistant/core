@@ -22,6 +22,7 @@ from homeassistant.components.assist_pipeline import (
 from homeassistant.components.assist_satellite import (
     AssistSatelliteEntity,
     AssistSatelliteEntityDescription,
+    AssistSatelliteState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant, callback
@@ -85,6 +86,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     _attr_translation_key = "assist_satellite"
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_state = AssistSatelliteState.LISTENING_WAKE_WORD
 
     def __init__(
         self,
