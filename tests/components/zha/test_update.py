@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, call, patch
 
 import pytest
 from zigpy.exceptions import DeliveryError
-from zigpy.ota import OtaImageWithMetadata
+from zigpy.ota import OtaImagesResult, OtaImageWithMetadata
 import zigpy.ota.image as firmware
 from zigpy.ota.providers import BaseOtaImageMetadata
 from zigpy.profiles import zha
@@ -119,8 +119,11 @@ async def setup_test_data(
         ),
     )
 
-    cluster.endpoint.device.application.ota.get_ota_image = AsyncMock(
-        return_value=None if file_not_found else fw_image
+    cluster.endpoint.device.application.ota.get_ota_images = AsyncMock(
+        return_value=OtaImagesResult(
+            upgrades=() if file_not_found else (fw_image,),
+            downgrades=(),
+        )
     )
     zha_device_proxy: ZHADeviceProxy = gateway_proxy.get_device_proxy(zigpy_device.ieee)
     zha_device_proxy.device.async_update_sw_build_id(installed_fw_version)
