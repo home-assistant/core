@@ -556,23 +556,10 @@ async def test_async_step_reauth_abort_early(hass: HomeAssistant) -> None:
     (This can't currently happen in practice).
     """
     entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="54:48:E6:8F:80:A5",
+        domain=DOMAIN, unique_id="54:48:E6:8F:80:A5", data={"device": DeviceData()}
     )
     entry.add_to_hass(hass)
 
-    device = DeviceData()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "title_placeholders": {"name": entry.title},
-            "unique_id": entry.unique_id,
-        },
-        data=entry.data | {"device": device},
-    )
-
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"

@@ -734,13 +734,10 @@ async def test_flow_reauth_works(hass: HomeAssistant) -> None:
     mock_entry.add_to_hass(hass)
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = blke.AuthenticationError()
-    data = {"name": device.name, **device.get_entry_data()}
+    mock_entry.data = {"name": device.name, **device.get_entry_data()}
 
     with patch(DEVICE_FACTORY, return_value=mock_api):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=data
-        )
-
+        result = await mock_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reset"
 
@@ -770,12 +767,9 @@ async def test_flow_reauth_invalid_host(hass: HomeAssistant) -> None:
     mock_entry.add_to_hass(hass)
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = blke.AuthenticationError()
-    data = {"name": device.name, **device.get_entry_data()}
-
+    mock_entry.data = {"name": device.name, **device.get_entry_data()}
     with patch(DEVICE_FACTORY, return_value=mock_api):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=data
-        )
+        result = await mock_entry.start_reauth_flow(hass)
 
     device.mac = get_device("Office").mac
     mock_api = device.get_mock_api()
@@ -804,12 +798,10 @@ async def test_flow_reauth_valid_host(hass: HomeAssistant) -> None:
     mock_entry.add_to_hass(hass)
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = blke.AuthenticationError()
-    data = {"name": device.name, **device.get_entry_data()}
+    mock_entry.data = {"name": device.name, **device.get_entry_data()}
 
     with patch(DEVICE_FACTORY, return_value=mock_api):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=data
-        )
+        result = await mock_entry.start_reauth_flow(hass)
 
     device.host = "192.168.1.128"
     mock_api = device.get_mock_api()
