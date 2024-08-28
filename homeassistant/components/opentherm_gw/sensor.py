@@ -44,6 +44,8 @@ class OpenThermSensorEntityDescription(
 ):
     """Describes an opentherm_gw sensor entity."""
 
+    make_state_lowercase: bool = True
+
 
 BOILER_SENSOR_DESCRIPTIONS: tuple[OpenThermSensorEntityDescription, ...] = (
     OpenThermSensorEntityDescription(
@@ -316,14 +318,17 @@ GATEWAY_SENSOR_DESCRIPTIONS: tuple[OpenThermSensorEntityDescription, ...] = (
     OpenThermSensorEntityDescription(
         key=gw_vars.OTGW_ABOUT,
         translation_key="firmware_version",
+        make_state_lowercase=False,
     ),
     OpenThermSensorEntityDescription(
         key=gw_vars.OTGW_BUILD,
         translation_key="firmware_build",
+        make_state_lowercase=False,
     ),
     OpenThermSensorEntityDescription(
         key=gw_vars.OTGW_CLOCKMHZ,
         translation_key="clock_speed",
+        make_state_lowercase=False,
     ),
     OpenThermSensorEntityDescription(
         key=gw_vars.OTGW_LED_A,
@@ -380,6 +385,7 @@ GATEWAY_SENSOR_DESCRIPTIONS: tuple[OpenThermSensorEntityDescription, ...] = (
     OpenThermSensorEntityDescription(
         key=gw_vars.OTGW_SMART_PWR,
         translation_key="smart_power_mode",
+        make_state_lowercase=False,
     ),
     OpenThermSensorEntityDescription(
         key=gw_vars.OTGW_THRM_DETECT,
@@ -499,7 +505,9 @@ class OpenThermSensor(OpenThermBaseEntity, SensorEntity):
         """Handle status updates from the component."""
         self._attr_available = self._gateway.connected
         value = status[self._data_source].get(self.entity_description.key)
-        self._attr_native_value = value.lower() if isinstance(value, str) else value
+        if isinstance(value, str) and self.entity_description.make_state_lowercase:
+            value = value.lower()
+        self._attr_native_value = value
         self.async_write_ha_state()
 
 
