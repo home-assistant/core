@@ -96,8 +96,6 @@ class HomeAssistantYellowConfigFlow(BaseFirmwareConfigFlow, domain=DOMAIN):
 
     def _async_flow_finished(self) -> ConfigFlowResult:
         """Create the config entry."""
-        assert self._probed_firmware_type is not None
-
         return self.async_create_entry(
             title=BOARD_NAME,
             data={
