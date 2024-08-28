@@ -31,12 +31,3 @@
     'via_device_id': None,
   })
 # ---
-# name: test_doorbell_device_registry.1
-  'tmt100 Name'
-# ---
-# name: test_doorbell_device_registry.2
-  'Yale Home Inc.'
-# ---
-# name: test_doorbell_device_registry.3
-  '3.1.0-HYDRC75+201909251139'
-# ---
