@@ -81,7 +81,6 @@ class AugustEventEntity(AugustDescriptionEntity, EventEntity):
     """An august event entity."""
 
     entity_description: AugustEventEntityDescription
-    _attr_has_entity_name = True
     _last_activity: Activity | None = None
 
     @callback
