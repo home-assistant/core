@@ -817,20 +817,20 @@ class BluesoundPlayer(MediaPlayerEntity):
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
         if self.volume_level is None:
-            return None
+            return
 
         new_volume = self.volume_level + 0.01
         new_volume = min(1, new_volume)
-        return await self.async_set_volume_level(new_volume)
+        await self.async_set_volume_level(new_volume)
 
     async def async_volume_down(self) -> None:
         """Volume down the media player."""
         if self.volume_level is None:
-            return None
+            return
 
         new_volume = self.volume_level - 0.01
         new_volume = max(0, new_volume)
-        return await self.async_set_volume_level(new_volume)
+        await self.async_set_volume_level(new_volume)
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Send volume_up command to media player."""
