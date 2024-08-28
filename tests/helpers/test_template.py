@@ -6453,226 +6453,41 @@ async def test_merge_response(
     assert tpl.async_render() == snapshot(name="b_rendered")
 
 
-@pytest.mark.parametrize(
-    ("service_response"),
-    [
-        {
-            "weather.smhi_home": {
-                "forecast": [
-                    {
-                        "datetime": "2024-03-31T16:00:00",
-                        "condition": "cloudy",
-                        "wind_bearing": 79,
-                        "cloud_coverage": 100,
-                        "temperature": 10,
-                        "templow": 4,
-                        "pressure": 998,
-                        "wind_gust_speed": 21.6,
-                        "wind_speed": 11.88,
-                        "precipitation": 0.2,
-                        "humidity": 87,
-                    },
-                    {
-                        "datetime": "2024-04-01T12:00:00",
-                        "condition": "rainy",
-                        "wind_bearing": 17,
-                        "cloud_coverage": 100,
-                        "temperature": 6,
-                        "templow": 1,
-                        "pressure": 999,
-                        "wind_gust_speed": 20.52,
-                        "wind_speed": 8.64,
-                        "precipitation": 2.2,
-                        "humidity": 88,
-                    },
-                    {
-                        "datetime": "2024-04-02T12:00:00",
-                        "condition": "cloudy",
-                        "wind_bearing": 17,
-                        "cloud_coverage": 100,
-                        "temperature": 0,
-                        "templow": -3,
-                        "pressure": 1003,
-                        "wind_gust_speed": 57.24,
-                        "wind_speed": 30.6,
-                        "precipitation": 1.3,
-                        "humidity": 71,
-                    },
-                ]
-            },
-            "weather.forecast_home": {
-                "forecast": [
-                    {
-                        "condition": "cloudy",
-                        "precipitation_probability": 6.6,
-                        "datetime": "2024-03-31T10:00:00+00:00",
-                        "wind_bearing": 71.8,
-                        "temperature": 10.9,
-                        "templow": 6.5,
-                        "wind_gust_speed": 24.1,
-                        "wind_speed": 13.7,
-                        "precipitation": 0,
-                        "humidity": 71,
-                    },
-                    {
-                        "condition": "cloudy",
-                        "precipitation_probability": 8,
-                        "datetime": "2024-04-01T10:00:00+00:00",
-                        "wind_bearing": 350.6,
-                        "temperature": 10.2,
-                        "templow": 3.4,
-                        "wind_gust_speed": 38.2,
-                        "wind_speed": 21.6,
-                        "precipitation": 0,
-                        "humidity": 79,
-                    },
-                    {
-                        "condition": "snowy",
-                        "precipitation_probability": 67.4,
-                        "datetime": "2024-04-02T10:00:00+00:00",
-                        "wind_bearing": 24.5,
-                        "temperature": 3,
-                        "templow": 0,
-                        "wind_gust_speed": 64.8,
-                        "wind_speed": 37.4,
-                        "precipitation": 2.3,
-                        "humidity": 77,
-                    },
-                ]
-            },
-        },
-    ],
-    ids=["weather"],
-)
-async def test_merge_response_with_sorting(
+async def test_merge_response_with_entity_id_in_response(
     hass: HomeAssistant,
-    service_response: dict,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the merge_response function/filter using sort_by."""
+    """Test the merge_response function/filter with empty lists."""
 
-    _template = "{{ merge_response(" + str(service_response) + ", 'datetime') }}"
-
-    tpl = template.Template(_template, hass)
-    assert service_response == snapshot(name="a_response")
-    assert tpl.async_render() == snapshot(name="b_rendered")
-
-
-@pytest.mark.parametrize(
-    ("service_response"),
-    [
-        {
-            "binary_sensor.workday": {"workday": True},
-            "binary_sensor.workday2": {"workday": False},
-        },
-    ],
-)
-async def test_merge_response_with_sort_missing_key(
-    hass: HomeAssistant,
-    service_response: dict,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test the merge_response function/filter using sort_by with incorrect key."""
-
-    _template = "{{ merge_response(" + str(service_response) + ", 'datetime') }}"
-
-    tpl = template.Template(_template, hass)
-    with pytest.raises(TemplateError, match="ValueError: Sort by key is incorrect"):
-        assert tpl.async_render()
-
-
-@pytest.mark.parametrize(
-    ("service_response"),
-    [
-        {
-            "vacuum.deebot_n8_plus_1": {
-                "payloadType": "j",
-                "resp": {
-                    "body": {
-                        "msg": "ok",
-                    }
-                },
-                "header": {
-                    "ver": "0.0.1",
-                },
-            },
-            "vacuum.deebot_n8_plus_2": {
-                "payloadType": "j",
-                "resp": {
-                    "body": {
-                        "msg": "not_ok",
-                    }
-                },
-                "header": {
-                    "ver": "0.0.1",
-                },
-            },
-        },
-    ],
-    ids=["vacuum"],
-)
-async def test_merge_response_with_selected_key(
-    hass: HomeAssistant,
-    service_response: dict,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test the merge_response function/filter with selected key."""
-
-    _template = (
-        "{{ merge_response(" + str(service_response) + ",selected_key='resp') }}"
-    )
-
-    tpl = template.Template(_template, hass)
-    assert service_response == snapshot(name="a_response")
-    assert tpl.async_render() == snapshot(name="b_rendered")
-
-
-@pytest.mark.parametrize(
-    ("service_response"),
-    [
-        {
-            "vacuum.deebot_n8_plus_1": {
-                "payloadType": "j",
-                "resp": {
-                    "body": {
-                        "msg": "ok",
-                    }
-                },
-                "header": {
-                    "ver": "0.0.1",
-                },
-            },
-            "vacuum.deebot_n8_plus_2": {
-                "payloadType": "j",
-                "resp": {
-                    "body": {
-                        "msg": "not_ok",
-                    }
-                },
-                "header": {
-                    "ver": "0.0.1",
-                },
-            },
-        },
-    ],
-    ids=["vacuum"],
-)
-async def test_merge_response_with_selected_key_missing(
-    hass: HomeAssistant,
-    service_response: dict,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test the merge_response function/filter with selected key missing."""
-
-    _template = (
-        "{{ merge_response(" + str(service_response) + ",selected_key='not_exist') }}"
-    )
-
-    tpl = template.Template(_template, hass)
+    service_response = {
+        "test.response": {"some_key": True, "entity_id": "test.response"},
+        "test.response2": {"some_key": False, "entity_id": "test.response2"},
+    }
+    _template = "{{ merge_response(" + str(service_response) + ") }}"
     with pytest.raises(
-        TemplateError, match="ValueError: Key 'not_exist' missing in response"
+        TemplateError,
+        match="ValueError: Response dictionary already contains key 'entity_id'",
     ):
-        tpl.async_render()
+        template.Template(_template, hass).async_render()
+
+    service_response = {
+        "test.response": {
+            "happening": [
+                {
+                    "start": "2024-02-27T17:00:00-06:00",
+                    "end": "2024-02-27T18:00:00-06:00",
+                    "summary": "Magic day",
+                    "entity_id": "test.response",
+                }
+            ]
+        }
+    }
+    _template = "{{ merge_response(" + str(service_response) + ") }}"
+    with pytest.raises(
+        TemplateError,
+        match="ValueError: Response dictionary already contains key 'entity_id'",
+    ):
+        template.Template(_template, hass).async_render()
 
 
 async def test_merge_response_with_empty_response(
@@ -6690,6 +6505,30 @@ async def test_merge_response_with_empty_response(
     tpl = template.Template(_template, hass)
     assert service_response == snapshot(name="a_response")
     assert tpl.async_render() == snapshot(name="b_rendered")
+
+
+async def test_response_empty_dict(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the merge_response function/filter with empty dict."""
+
+    service_response = {}
+    _template = "{{ merge_response(" + str(service_response) + ") }}"
+    tpl = template.Template(_template, hass)
+    assert tpl.async_render() == []
+
+
+async def test_response_incorrect_value(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the merge_response function/filter with incorrect response."""
+
+    service_response = "incorrect"
+    _template = "{{ merge_response(" + str(service_response) + ") }}"
+    with pytest.raises(TemplateError, match="TypeError: Response is not a dictionary"):
+        template.Template(_template, hass).async_render()
 
 
 async def test_merge_response_with_incorrect_response(hass: HomeAssistant) -> None:

@@ -2119,9 +2119,7 @@ def as_timedelta(value: str) -> timedelta | None:
     return dt_util.parse_duration(value)
 
 
-def merge_response(
-    value: ServiceResponse, sort_by: str | None = None, selected_key: str | None = None
-) -> list[Any]:
+def merge_response(value: ServiceResponse) -> list[Any]:
     """Merge action responses into single list.
 
     Checks that the input is a correct service response:
@@ -2142,7 +2140,7 @@ def merge_response(
 
     is_single_list = False
     response_items: list = []
-    for entity_id, entity_response in value.items():
+    for entity_id, entity_response in value.items():  # pylint: disable=too-many-nested-blocks
         if not isinstance(entity_response, dict):
             raise TypeError("Response is not a dictionary")
         for value_key, type_response in entity_response.items():
@@ -2153,7 +2151,11 @@ def merge_response(
                 is_single_list = True
                 for dict_in_list in type_response:
                     if isinstance(dict_in_list, dict):
-                        dict_in_list["entity_id"] = entity_id
+                        if ATTR_ENTITY_ID in dict_in_list:
+                            raise ValueError(
+                                f"Response dictionary already contains key '{ATTR_ENTITY_ID}'"
+                            )
+                        dict_in_list[ATTR_ENTITY_ID] = entity_id
                         dict_in_list["value_key"] = value_key
                 response_items.extend(type_response)
             else:
@@ -2163,28 +2165,12 @@ def merge_response(
 
         if not is_single_list:
             _response = entity_response.copy()
-            _response["entity_id"] = entity_id
+            if ATTR_ENTITY_ID in _response:
+                raise ValueError(
+                    f"Response dictionary already contains key '{ATTR_ENTITY_ID}'"
+                )
+            _response[ATTR_ENTITY_ID] = entity_id
             response_items.append(_response)
-
-    # Allows to sort the response items by a key within the list
-    if sort_by:
-        # Check that response items are a list of dictionaries has already been done
-        if sort_by not in response_items[0]:
-            raise ValueError("Sort by key is incorrect")
-        response_items = sorted(response_items, key=lambda x: x[sort_by])
-
-    # Allows to select a specific key from the response items (second level)
-    if selected_key:
-        # Check that response items are a list of dictionaries has already been done
-        new_list = []
-        for sub_dict in response_items:
-            try:
-                new_dict = sub_dict[selected_key]
-            except KeyError as err:
-                raise ValueError(f"Key '{selected_key}' missing in response") from err
-            new_dict["entity_id"] = sub_dict["entity_id"]
-            new_list.append(new_dict)
-        response_items = new_list
 
     return response_items
 
