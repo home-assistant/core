@@ -237,10 +237,7 @@ async def test_doorbell_device_registry(
     await _create_yale_with_devices(hass, [doorbell_one])
 
     reg_device = device_registry.async_get_device(identifiers={("yale", "tmt100")})
-    assert reg_device.model == snapshot
-    assert reg_device.name == snapshot
-    assert reg_device.manufacturer == snapshot
-    assert reg_device.sw_version == snapshot
+    assert reg_device == snapshot
 
 
 async def test_door_sense_update_via_socketio(hass: HomeAssistant) -> None:
