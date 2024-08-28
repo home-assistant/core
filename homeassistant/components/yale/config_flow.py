@@ -56,4 +56,5 @@ class YaleConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=
                 return self.async_abort(reason="reauth_invalid_user")
             return self.async_update_reload_and_abort(entry, data=data)
         await self.async_set_unique_id(user_id)
+        self._abort_if_unique_id_configured()
         return await super().async_oauth_create_entry(data)
