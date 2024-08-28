@@ -1,5 +1,6 @@
 """Assist satellite entity."""
 
+from abc import abstractmethod
 from collections.abc import AsyncIterable
 import time
 from typing import Final
@@ -108,7 +109,7 @@ class AssistSatelliteEntity(entity.Entity):
         await async_pipeline_from_audio_stream(
             self.hass,
             context=self._context,
-            event_callback=self.on_pipeline_event,
+            event_callback=self._internal_on_pipeline_event,
             stt_metadata=stt.SpeechMetadata(
                 language="",  # set in async_pipeline_from_audio_stream
                 format=stt.AudioFormats.WAV,
@@ -130,7 +131,11 @@ class AssistSatelliteEntity(entity.Entity):
             end_stage=end_stage,
         )
 
+    @abstractmethod
     def on_pipeline_event(self, event: PipelineEvent) -> None:
+        """Handle pipeline events."""
+
+    def _internal_on_pipeline_event(self, event: PipelineEvent) -> None:
         """Set state based on pipeline stage."""
         if event.type is PipelineEventType.WAKE_WORD_START:
             self._set_state(AssistSatelliteState.LISTENING_WAKE_WORD)
@@ -145,6 +150,8 @@ class AssistSatelliteEntity(entity.Entity):
         elif event.type is PipelineEventType.RUN_END:
             if not self._run_has_tts:
                 self._set_state(AssistSatelliteState.LISTENING_WAKE_WORD)
+
+        self.on_pipeline_event(event)
 
     def _set_state(self, state: AssistSatelliteState):
         """Set the entity's state."""
