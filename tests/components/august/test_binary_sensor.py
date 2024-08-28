@@ -4,6 +4,7 @@ import datetime
 from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
+from syrupy import SnapshotAssertion
 from yalexs.pubnub_async import AugustPubNub
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
@@ -231,17 +232,14 @@ async def test_doorbell_update_via_pubnub(
 
 
 async def test_doorbell_device_registry(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, snapshot: SnapshotAssertion
 ) -> None:
     """Test creation of a lock with doorsense and bridge ands up in the registry."""
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.offline.json")
     await _create_august_with_devices(hass, [doorbell_one])
 
     reg_device = device_registry.async_get_device(identifiers={("august", "tmt100")})
-    assert reg_device.model == "hydra1"
-    assert reg_device.name == "tmt100 Name"
-    assert reg_device.manufacturer == "August Home Inc."
-    assert reg_device.sw_version == "3.1.0-HYDRC75+201909251139"
+    assert reg_device == snapshot
 
 
 async def test_door_sense_update_via_pubnub(hass: HomeAssistant) -> None:
