@@ -34,8 +34,6 @@ class AssistSatelliteEntity(entity.Entity):
     """Entity encapsulating the state and functionality of an Assist satellite."""
 
     entity_description: AssistSatelliteEntityDescription
-    _attr_translation_key = "assist_satellite"
-    _attr_has_entity_name = True
     _attr_should_poll = False
     _attr_state: AssistSatelliteState | None = None
 

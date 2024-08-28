@@ -82,6 +82,8 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     """Assist satellite for VoIP devices."""
 
     entity_description = AssistSatelliteEntityDescription(key="assist_satellite")
+    _attr_translation_key = "assist_satellite"
+    _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(
