@@ -106,9 +106,8 @@ class Integration:
     """Represent an integration in our validator."""
 
     @classmethod
-    def load_dir(cls, config: Config) -> dict[str, Integration]:
+    def load_dir(cls, path: pathlib.Path, config: Config) -> dict[str, Integration]:
         """Load all integrations in a directory."""
-        path = config.core_integrations_path
         assert path.is_dir()
         integrations: dict[str, Integration] = {}
         for fil in path.iterdir():

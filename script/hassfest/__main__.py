@@ -158,7 +158,7 @@ def main() -> int:
             integrations[integration.domain] = integration
 
     else:
-        integrations = Integration.load_dir(config)
+        integrations = Integration.load_dir(config.core_integrations_path, config)
         plugins += HASS_PLUGINS
 
     for plugin in plugins:
