@@ -129,7 +129,6 @@ EXCEPTIONS = {
     "aiooui",  # https://github.com/Bluetooth-Devices/aiooui/pull/8
     "aioruuvigateway",  # https://github.com/akx/aioruuvigateway/pull/6
     "aiovodafone",  # https://github.com/chemelli74/aiovodafone/pull/131
-    "airthings-ble",  # https://github.com/Airthings/airthings-ble/pull/42
     "apple_weatherkit",  # https://github.com/tjhorner/python-weatherkit/pull/3
     "asyncio",  # PSF License
     "chacha20poly1305",  # LGPL
@@ -154,9 +153,7 @@ EXCEPTIONS = {
     "neurio",  # https://github.com/jordanh/neurio-python/pull/13
     "nsw-fuel-api-client",  # https://github.com/nickw444/nsw-fuel-api-client/pull/14
     "pigpio",  # https://github.com/joan2937/pigpio/pull/608
-    "pyEmby",  # https://github.com/mezz64/pyEmby/pull/12
     "pymitv",  # MIT
-    "pyTibber",  # https://github.com/Danielhiversen/pyTibber/pull/294
     "pybbox",  # https://github.com/HydrelioxGitHub/pybbox/pull/5
     "pyeconet",  # https://github.com/w1ll1am23/pyeconet/pull/41
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6

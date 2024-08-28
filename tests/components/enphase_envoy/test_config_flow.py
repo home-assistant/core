@@ -14,7 +14,6 @@ from homeassistant.components.enphase_envoy.const import (
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
 )
 from homeassistant.config_entries import (
-    SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
     SOURCE_USER,
     SOURCE_ZEROCONF,
@@ -636,14 +635,7 @@ async def test_reauth(
 ) -> None:
     """Test we reauth auth."""
     await setup_integration(hass, config_entry)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": config_entry.unique_id,
-            "entry_id": config_entry.entry_id,
-        },
-    )
+    result = await config_entry.start_reauth_flow(hass)
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
