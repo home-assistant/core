@@ -179,7 +179,7 @@ class BlueprintInputs:
     def async_substitute(self) -> dict:
         """Get the blueprint value with the inputs substituted."""
         processed = yaml.substitute(self.blueprint.data, self.inputs_with_default)
-        combined = {**processed, **self.config_with_inputs}
+        combined = {**self.config_with_inputs, **processed}
         # From config_with_inputs
         combined.pop(CONF_USE_BLUEPRINT)
         # From blueprint
