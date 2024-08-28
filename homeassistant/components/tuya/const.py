@@ -456,7 +456,6 @@ UNITS = (
         device_classes={
             SensorDeviceClass.CO,
             SensorDeviceClass.CO2,
-            SensorDeviceClass.CONCENTRATION,
         },
     ),
     UnitOfMeasurement(

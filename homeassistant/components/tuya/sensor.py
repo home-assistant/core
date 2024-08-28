@@ -172,7 +172,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.TDS_CURRENT,
             translation_key="total_dissolved_solids",
-            device_class=SensorDeviceClass.CONCENTRATION,
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
@@ -184,25 +184,26 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.SALINITY_CURRENT,
             translation_key="salinity",
-            device_class=SensorDeviceClass.CONCENTRATION,
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.SG_CURRENT,
             translation_key="specific_gravity",
-            device_class=SensorDeviceClass.CONCENTRATION,
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.ORP_CURRENT,
             translation_key="oxygen_reducing_potential",
             device_class=SensorDeviceClass.VOLTAGE,
+            native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CF_CURRENT,
             translation_key="calcium_factor",
-            device_class=SensorDeviceClass.CONCENTRATION,
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         *BATTERY_SENSORS,
@@ -1231,7 +1232,6 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.SALINITY,
             translation_key="salinity",
             native_unit_of_measurement=CONCENTRATION_GRAMS_PER_LITER,
-            device_class=SensorDeviceClass.CONCENTRATION,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
@@ -1244,11 +1244,8 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.SG_CURRENT,
             translation_key="specific_gravity",
-            device_class=SensorDeviceClass.CONCENTRATION,
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
             entity_category=EntityCategory.CONFIG,
-            max_value=199999,
-            min_value=0,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TOTAL_RUNNING_TIME,
