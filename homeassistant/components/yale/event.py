@@ -63,21 +63,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up the yale event platform."""
     data = config_entry.runtime_data
-    entities: list[YaleEventEntity] = []
+    entities: list[YaleEventEntity] = [
+        YaleEventEntity(data, lock, description)
+        for description in TYPES_DOORBELL
+        for lock in data.locks
+        if (detail := data.get_device_detail(lock.device_id)) and detail.doorbell
+    ]
 
-    for lock in data.locks:
-        detail = data.get_device_detail(lock.device_id)
-        if detail.doorbell:
-            entities.extend(
-                YaleEventEntity(data, lock, description)
-                for description in TYPES_DOORBELL
-            )
-
-    for doorbell in data.doorbells:
-        entities.extend(
-            YaleEventEntity(data, doorbell, description)
-            for description in TYPES_DOORBELL + TYPES_VIDEO_DOORBELL
-        )
+    entities.extend(
+        YaleEventEntity(data, doorbell, description)
+        for description in TYPES_DOORBELL + TYPES_VIDEO_DOORBELL
+        for doorbell in data.doorbells
+    )
 
     async_add_entities(entities)
 
