@@ -75,12 +75,12 @@ async def test_init_error(
     assert normal_config_entry.state is state
 
 
-async def test_oauth_refresh_error(
+async def test_oauth_refresh_expired(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     mock_products: AsyncMock,
 ) -> None:
-    """Test init with errors."""
+    """Test init with expired Oauth token."""
 
     # Patch the token refresh to raise an error
     with patch(
@@ -95,6 +95,28 @@ async def test_oauth_refresh_error(
 
         mock_async_ensure_token_valid.assert_called_once()
     assert normal_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_oauth_refresh_error(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_products: AsyncMock,
+) -> None:
+    """Test init with Oauth refresh failure."""
+
+    # Patch the token refresh to raise an error
+    with patch(
+        "homeassistant.components.tesla_fleet.OAuth2Session.async_ensure_token_valid",
+        side_effect=ClientResponseError(
+            RequestInfo(AUTHORIZE_URL, "POST", {}, AUTHORIZE_URL), None, status=400
+        ),
+    ) as mock_async_ensure_token_valid:
+        # Trigger an unmocked function call
+        mock_products.side_effect = InvalidRegion
+        await setup_platform(hass, normal_config_entry)
+
+        mock_async_ensure_token_valid.assert_called_once()
+    assert normal_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 # Test devices
