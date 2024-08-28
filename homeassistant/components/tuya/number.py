@@ -134,7 +134,6 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             translation_key="cf_warning_max",
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
             entity_category=EntityCategory.CONFIG,
-
         ),
         NumberEntityDescription(
             key=DPCode.CF_WARN_MIN,

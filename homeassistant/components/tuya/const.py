@@ -134,7 +134,7 @@ class DPCode(StrEnum):
     BRIGHTNESS_MIN_2 = "brightness_min_2"
     BRIGHTNESS_MIN_3 = "brightness_min_3"
     C_F = "c_f"  # Temperature unit switching
-    CF_CURRENT = "cf_current" # Calcium Factor (1 CF:1 PPM)
+    CF_CURRENT = "cf_current"  # Calcium Factor (1 CF:1 PPM)
     CF_WARN_MAX = "cf_warn_max"
     CF_WARN_MIN = "cf_warn_min"
     CH2O_STATE = "ch2o_state"
@@ -142,7 +142,7 @@ class DPCode(StrEnum):
     CH4_SENSOR_STATE = "ch4_sensor_state"
     CH4_SENSOR_VALUE = "ch4_sensor_value"
     CHILD_LOCK = "child_lock"  # Child lock
-    CHLORINATE = "clorinate" # Hours to run the chlorination cycle
+    CHLORINATE = "clorinate"  # Hours to run the chlorination cycle
     CISTERN = "cistern"
     CLEAN_AREA = "clean_area"
     CLEAN_TIME = "clean_time"
@@ -187,7 +187,7 @@ class DPCode(StrEnum):
     DOORCONTACT_STATE_2 = "doorcontact_state_2"
     DOORCONTACT_STATE_3 = "doorcontact_state_3"
     DUSTER_CLOTH = "duster_cloth"
-    EC_CURRENT = "ec_current" # Electrical Conductivity
+    EC_CURRENT = "ec_current"  # Electrical Conductivity
     EC_WARN_MAX = "ec_warn_max"
     EC_WARN_MIN = "ec_warn_min"
     ECO2 = "eco2"
@@ -246,7 +246,7 @@ class DPCode(StrEnum):
     MUFFLING = "muffling"  # Muffling
     NEAR_DETECTION = "near_detection"
     OPPOSITE = "opposite"
-    ORP_CURRENT = "orp_current" # Oxygen Reducing Potential
+    ORP_CURRENT = "orp_current"  # Oxygen Reducing Potential
     ORP_WARN_MAX = "orp_warn_max"
     ORP_WARN_MIN = "orp_warn_min"
     OUTPUT = "output"
@@ -315,7 +315,9 @@ class DPCode(StrEnum):
     SOS_STATE = "sos_state"  # Emergency mode
     SPEED = "speed"  # Speed level
     SPRAY_MODE = "spray_mode"  # Spraying mode
-    SG_CURRENT = "pro_current" # Proportion/Specific Gravity relative to distilled water
+    SG_CURRENT = (
+        "pro_current"  # Proportion/Specific Gravity relative to distilled water
+    )
     SG_WARN_MAX = "pro_warn_max"
     SG_WARN_MIN = "pro_warn_min"
     START = "start"  # Start
@@ -492,12 +494,20 @@ UNITS = (
     UnitOfMeasurement(
         unit=UnitOfVolume.CUBIC_FEET,
         aliases={"ft3"},
-        device_classes={SensorDeviceClass.GAS,SensorDeviceClass.VOLUME,SensorDeviceClass.VOLUME_STORAGE},
+        device_classes={
+            SensorDeviceClass.GAS,
+            SensorDeviceClass.VOLUME,
+            SensorDeviceClass.VOLUME_STORAGE,
+        },
     ),
     UnitOfMeasurement(
         unit=UnitOfVolume.CUBIC_METERS,
         aliases={"m3"},
-        device_classes={SensorDeviceClass.GAS,SensorDeviceClass.VOLUME,SensorDeviceClass.VOLUME_STORAGE},
+        device_classes={
+            SensorDeviceClass.GAS,
+            SensorDeviceClass.VOLUME,
+            SensorDeviceClass.VOLUME_STORAGE,
+        },
     ),
     UnitOfMeasurement(
         unit=LIGHT_LUX,
