@@ -1,7 +1,5 @@
 """Platform for Control4 Lights."""
 
-# mypy: ignore-errors
-
 from __future__ import annotations
 
 import asyncio
@@ -9,8 +7,9 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-# from pyControl4.error_handling import C4Exception
-# from pyControl4.light import C4Light
+from pyControl4.error_handling import C4Exception
+from pyControl4.light import C4Light
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,

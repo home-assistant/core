@@ -1,17 +1,14 @@
 """Config flow for Control4 integration."""
 
-# mypy: ignore-errors
-
 from __future__ import annotations
 
 import logging
 from typing import Any
 
 from aiohttp.client_exceptions import ClientError
-
-# from pyControl4.account import C4Account
-# from pyControl4.director import C4Director
-# from pyControl4.error_handling import NotFound, Unauthorized
+from pyControl4.account import C4Account
+from pyControl4.director import C4Director
+from pyControl4.error_handling import NotFound, Unauthorized
 import voluptuous as vol
 
 from homeassistant.config_entries import (

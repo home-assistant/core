@@ -1685,6 +1685,9 @@ pyAtome==0.1.1
 # homeassistant.components.hdmi_cec
 pyCEC==0.5.2
 
+# homeassistant.components.control4
+pyControl4==1.1.0
+
 # homeassistant.components.duotecno
 pyDuotecno==2024.5.1
 
