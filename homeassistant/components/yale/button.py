@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import YaleConfigEntry
-from .entity import YaleEntityMixin
+from .entity import YaleEntity
 
 
 async def async_setup_entry(
@@ -18,7 +18,7 @@ async def async_setup_entry(
     async_add_entities(YaleWakeLockButton(data, lock, "wake") for lock in data.locks)
 
 
-class YaleWakeLockButton(YaleEntityMixin, ButtonEntity):
+class YaleWakeLockButton(YaleEntity, ButtonEntity):
     """Representation of an Yale lock wake button."""
 
     _attr_translation_key = "wake"
