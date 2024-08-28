@@ -22,8 +22,8 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import (
     BYTES_ONE_SECOND,
-    MockSttProvider,
-    MockSttProviderEntity,
+    MockSTTProvider,
+    MockSTTProviderEntity,
     MockTTSProvider,
     MockWakeWordEntity,
     make_10ms_chunk,
@@ -47,7 +47,7 @@ def process_events(events: list[assist_pipeline.PipelineEvent]) -> list[dict]:
 
 async def test_pipeline_from_audio_stream_auto(
     hass: HomeAssistant,
-    mock_stt_provider_entity: MockSttProviderEntity,
+    mock_stt_provider_entity: MockSTTProviderEntity,
     init_components,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -88,7 +88,7 @@ async def test_pipeline_from_audio_stream_auto(
 async def test_pipeline_from_audio_stream_legacy(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    mock_stt_provider: MockSttProvider,
+    mock_stt_provider: MockSTTProvider,
     init_components,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -153,7 +153,7 @@ async def test_pipeline_from_audio_stream_legacy(
 async def test_pipeline_from_audio_stream_entity(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    mock_stt_provider_entity: MockSttProviderEntity,
+    mock_stt_provider_entity: MockSTTProviderEntity,
     init_components,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -218,7 +218,7 @@ async def test_pipeline_from_audio_stream_entity(
 async def test_pipeline_from_audio_stream_no_stt(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    mock_stt_provider: MockSttProvider,
+    mock_stt_provider: MockSTTProvider,
     init_components,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -281,7 +281,7 @@ async def test_pipeline_from_audio_stream_no_stt(
 async def test_pipeline_from_audio_stream_unknown_pipeline(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    mock_stt_provider: MockSttProvider,
+    mock_stt_provider: MockSTTProvider,
     init_components,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -319,7 +319,7 @@ async def test_pipeline_from_audio_stream_unknown_pipeline(
 
 async def test_pipeline_from_audio_stream_wake_word(
     hass: HomeAssistant,
-    mock_stt_provider_entity: MockSttProviderEntity,
+    mock_stt_provider_entity: MockSTTProviderEntity,
     mock_wake_word_provider_entity: MockWakeWordEntity,
     init_components,
     snapshot: SnapshotAssertion,
@@ -395,7 +395,7 @@ async def test_pipeline_from_audio_stream_wake_word(
 
 async def test_pipeline_save_audio(
     hass: HomeAssistant,
-    mock_stt_provider: MockSttProvider,
+    mock_stt_provider: MockSTTProvider,
     mock_wake_word_provider_entity: MockWakeWordEntity,
     init_supporting_components,
     snapshot: SnapshotAssertion,
@@ -474,7 +474,7 @@ async def test_pipeline_save_audio(
 
 async def test_pipeline_saved_audio_with_device_id(
     hass: HomeAssistant,
-    mock_stt_provider: MockSttProvider,
+    mock_stt_provider: MockSTTProvider,
     mock_wake_word_provider_entity: MockWakeWordEntity,
     init_supporting_components,
     snapshot: SnapshotAssertion,
@@ -529,7 +529,7 @@ async def test_pipeline_saved_audio_with_device_id(
 
 async def test_pipeline_saved_audio_write_error(
     hass: HomeAssistant,
-    mock_stt_provider: MockSttProvider,
+    mock_stt_provider: MockSTTProvider,
     mock_wake_word_provider_entity: MockWakeWordEntity,
     init_supporting_components,
     snapshot: SnapshotAssertion,
@@ -578,7 +578,7 @@ async def test_pipeline_saved_audio_write_error(
 
 async def test_pipeline_saved_audio_empty_queue(
     hass: HomeAssistant,
-    mock_stt_provider: MockSttProvider,
+    mock_stt_provider: MockSTTProvider,
     mock_wake_word_provider_entity: MockWakeWordEntity,
     init_supporting_components,
     snapshot: SnapshotAssertion,
@@ -641,7 +641,7 @@ async def test_pipeline_saved_audio_empty_queue(
 
 async def test_wake_word_detection_aborted(
     hass: HomeAssistant,
-    mock_stt_provider: MockSttProvider,
+    mock_stt_provider: MockSTTProvider,
     mock_wake_word_provider_entity: MockWakeWordEntity,
     init_components,
     pipeline_data: assist_pipeline.pipeline.PipelineData,
