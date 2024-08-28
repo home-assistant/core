@@ -1,0 +1,13 @@
+{
+  "services": {
+    "play_media": {
+      "service": "mdi:play-circle"
+    },
+    "play_announcement": {
+      "service": "mdi:bullhorn-outline"
+    },
+    "search": {
+      "service": "mdi:magnify"
+    }
+  }
+}
