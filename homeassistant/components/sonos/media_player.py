@@ -757,16 +757,15 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     def get_queue(self) -> list[dict]:
         """Get the queue."""
         queue: list[DidlMusicTrack] = self.coordinator.soco.get_queue(max_items=0)
-        retval: list[dict] = []
-        for track in queue:
-            track_item = {
+        return [
+            {
                 ATTR_MEDIA_TITLE: track.title,
                 ATTR_MEDIA_ALBUM_NAME: track.album,
                 ATTR_MEDIA_ARTIST: track.creator,
                 ATTR_MEDIA_CONTENT_ID: track.get_uri(),
             }
-            retval.append(track_item)
-        return retval
+            for track in queue
+        ]
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
