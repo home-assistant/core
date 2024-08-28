@@ -180,9 +180,12 @@ class UpdateEntityDescription(EntityDescription, frozen_or_thawed=True):
 
 
 @lru_cache(maxsize=256)
-def _version_is_newer(latest_version: str, installed_version: str) -> bool:
+def _version_is_newer(
+    latest_version: str, installed_version: str, compare_by_string: bool = False
+) -> bool:
     """Return True if version is newer."""
-    return AwesomeVersion(latest_version) > installed_version
+    latest_ver = latest_version if compare_by_string else AwesomeVersion(latest_version)
+    return latest_ver > installed_version
 
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
@@ -211,6 +214,7 @@ class UpdateEntity(
 
     entity_description: UpdateEntityDescription
     _attr_auto_update: bool = False
+    _attr_compare_by_strings: bool = False
     _attr_installed_version: str | None = None
     _attr_device_class: UpdateDeviceClass | None
     _attr_in_progress: bool | int = False
@@ -399,7 +403,9 @@ class UpdateEntity(
             return STATE_OFF
 
         try:
-            newer = _version_is_newer(latest_version, installed_version)
+            newer = _version_is_newer(
+                latest_version, installed_version, self._attr_compare_by_strings
+            )
         except AwesomeVersionCompareException:
             # Can't compare versions, already tried exact match
             return STATE_ON
