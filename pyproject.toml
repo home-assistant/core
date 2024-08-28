@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2024.9.0.dev0"
+version     = "2024.9.0b0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -801,7 +801,7 @@ ignore = [
     "SIM103", # Return the condition {condition} directly
     "SIM108", # Use ternary operator {contents} instead of if-else-block
     "SIM115", # Use context handler for opening files
-    
+
     # Moving imports into type-checking blocks can mess with pytest.patch()
     "TCH001", # Move application import {} into a type-checking block
     "TCH002", # Move third-party import {} into a type-checking block
