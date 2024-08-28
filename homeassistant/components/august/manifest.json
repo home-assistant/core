@@ -5,10 +5,6 @@
   "config_flow": true,
   "dhcp": [
     {
-      "hostname": "yale-connect-plus",
-      "macaddress": "00177A*"
-    },
-    {
       "hostname": "connect",
       "macaddress": "D86162*"
     },
