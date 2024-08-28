@@ -5,12 +5,12 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.yale.application_credentials import (
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
 )
 from homeassistant.components.yale.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -44,7 +44,7 @@ async def test_full_flow(
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -101,7 +101,7 @@ async def test_full_flow_already_exists(
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
