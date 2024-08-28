@@ -1,10 +1,9 @@
 {
   "domain": "yale",
   "name": "Yale",
-  "after_dependencies": ["cloud"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
-  "dependencies": ["application_credentials"],
+  "dependencies": ["application_credentials", "cloud"],
   "dhcp": [
     {
       "hostname": "yale-connect-plus",
