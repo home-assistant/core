@@ -305,6 +305,8 @@ async def async_setup_entry(
 class LektricoSensor(LektricoEntity, SensorEntity):
     """The entity class for Lektrico charging stations sensors."""
 
+    entity_description: LektricoSensorEntityDescription
+
     def __init__(
         self,
         description: LektricoSensorEntityDescription,
@@ -313,7 +315,7 @@ class LektricoSensor(LektricoEntity, SensorEntity):
     ) -> None:
         """Initialize Lektrico charger."""
         super().__init__(coordinator, device_name)
-        self.entity_description: LektricoSensorEntityDescription = description
+        self.entity_description = description
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
 
     @property
