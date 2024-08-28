@@ -80,3 +80,7 @@ async def test_entity_state(
         kwargs["event_callback"](PipelineEvent(event_type, {}))
         state = hass.states.get(ENTITY_ID)
         assert state.state == expected_state, event_type
+
+    entity.tts_response_finished()
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == AssistSatelliteState.LISTENING_WAKE_WORD
