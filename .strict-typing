@@ -139,6 +139,7 @@ homeassistant.components.cpuspeed.*
 homeassistant.components.crownstone.*
 homeassistant.components.date.*
 homeassistant.components.datetime.*
+homeassistant.components.deako.*
 homeassistant.components.deconz.*
 homeassistant.components.default_config.*
 homeassistant.components.demo.*
