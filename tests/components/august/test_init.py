@@ -122,16 +122,16 @@ async def test_unlock_throws_august_api_http_error(hass: HomeAssistant) -> None:
             "unlock_return_activities": _unlock_return_activities_side_effect
         },
     )
-    last_err = None
     data = {ATTR_ENTITY_ID: "lock.a6697750d607098bae8d6baa11ef8063_name"}
-    try:
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=(
+            "A6697750D607098BAE8D6BAA11EF8063 Name: This should bubble up as its user"
+            " consumable"
+        ),
+    ):
         await hass.services.async_call(LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True)
-    except HomeAssistantError as err:
-        last_err = err
-    assert str(last_err) == (
-        "A6697750D607098BAE8D6BAA11EF8063 Name: This should bubble up as its user"
-        " consumable"
-    )
 
 
 async def test_lock_throws_august_api_http_error(hass: HomeAssistant) -> None:
@@ -152,16 +152,15 @@ async def test_lock_throws_august_api_http_error(hass: HomeAssistant) -> None:
             "lock_return_activities": _lock_return_activities_side_effect
         },
     )
-    last_err = None
     data = {ATTR_ENTITY_ID: "lock.a6697750d607098bae8d6baa11ef8063_name"}
-    try:
+    with pytest.raises(
+        HomeAssistantError,
+        match=(
+            "A6697750D607098BAE8D6BAA11EF8063 Name: This should bubble up as its user"
+            " consumable"
+        ),
+    ):
         await hass.services.async_call(LOCK_DOMAIN, SERVICE_LOCK, data, blocking=True)
-    except HomeAssistantError as err:
-        last_err = err
-    assert str(last_err) == (
-        "A6697750D607098BAE8D6BAA11EF8063 Name: This should bubble up as its user"
-        " consumable"
-    )
 
 
 async def test_open_throws_hass_service_not_supported_error(
