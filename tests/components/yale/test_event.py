@@ -1,7 +1,6 @@
 """The event tests for the yale."""
 
-import datetime
-from unittest.mock import patch
+from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -42,7 +41,9 @@ async def test_create_doorbell_offline(hass: HomeAssistant) -> None:
     assert doorbell_state.state == STATE_UNAVAILABLE
 
 
-async def test_create_doorbell_with_motion(hass: HomeAssistant) -> None:
+async def test_create_doorbell_with_motion(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test creation of a doorbell."""
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.json")
     activities = await _mock_activities_from_fixture(
@@ -58,19 +59,16 @@ async def test_create_doorbell_with_motion(hass: HomeAssistant) -> None:
     assert doorbell_state is not None
     assert doorbell_state.state == STATE_UNKNOWN
 
-    new_time = dt_util.utcnow() + datetime.timedelta(seconds=40)
-    native_time = datetime.datetime.now() + datetime.timedelta(seconds=40)
-    with patch(
-        "homeassistant.components.yale.util._native_datetime",
-        return_value=native_time,
-    ):
-        async_fire_time_changed(hass, new_time)
-        await hass.async_block_till_done()
+    freezer.tick(40)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     motion_state = hass.states.get("event.k98gidt45gul_name_motion")
     assert motion_state.state == isotime
 
 
-async def test_doorbell_update_via_socketio(hass: HomeAssistant) -> None:
+async def test_doorbell_update_via_socketio(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test creation of a doorbell that can be updated via socketio."""
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.json")
 
@@ -119,14 +117,9 @@ async def test_doorbell_update_via_socketio(hass: HomeAssistant) -> None:
     assert motion_state.state != STATE_UNKNOWN
     isotime = motion_state.state
 
-    new_time = dt_util.utcnow() + datetime.timedelta(seconds=40)
-    native_time = datetime.datetime.now() + datetime.timedelta(seconds=40)
-    with patch(
-        "homeassistant.components.yale.util._native_datetime",
-        return_value=native_time,
-    ):
-        async_fire_time_changed(hass, new_time)
-        await hass.async_block_till_done()
+    freezer.tick(40)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     motion_state = hass.states.get("event.k98gidt45gul_name_motion")
     assert motion_state is not None
@@ -147,14 +140,9 @@ async def test_doorbell_update_via_socketio(hass: HomeAssistant) -> None:
     assert doorbell_state.state != STATE_UNKNOWN
     isotime = motion_state.state
 
-    new_time = dt_util.utcnow() + datetime.timedelta(seconds=40)
-    native_time = datetime.datetime.now() + datetime.timedelta(seconds=40)
-    with patch(
-        "homeassistant.components.yale.util._native_datetime",
-        return_value=native_time,
-    ):
-        async_fire_time_changed(hass, new_time)
-        await hass.async_block_till_done()
+    freezer.tick(40)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     doorbell_state = hass.states.get("event.k98gidt45gul_name_doorbell")
     assert doorbell_state is not None

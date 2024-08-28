@@ -1,8 +1,8 @@
 """The binary_sensor tests for the yale platform."""
 
 import datetime
-from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
@@ -97,7 +97,9 @@ async def test_create_doorbell_offline(hass: HomeAssistant) -> None:
     )
 
 
-async def test_create_doorbell_with_motion(hass: HomeAssistant) -> None:
+async def test_create_doorbell_with_motion(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test creation of a doorbell."""
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.json")
     activities = await _mock_activities_from_fixture(
@@ -110,18 +112,15 @@ async def test_create_doorbell_with_motion(hass: HomeAssistant) -> None:
     assert (
         states.get("binary_sensor.k98gidt45gul_name_doorbell_ding").state == STATE_OFF
     )
-    new_time = dt_util.utcnow() + datetime.timedelta(seconds=40)
-    native_time = datetime.datetime.now() + datetime.timedelta(seconds=40)
-    with patch(
-        "homeassistant.components.yale.util._native_datetime",
-        return_value=native_time,
-    ):
-        async_fire_time_changed(hass, new_time)
-        await hass.async_block_till_done()
+    freezer.tick(40)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     assert states.get("binary_sensor.k98gidt45gul_name_motion").state == STATE_OFF
 
 
-async def test_doorbell_update_via_socketio(hass: HomeAssistant) -> None:
+async def test_doorbell_update_via_socketio(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test creation of a doorbell that can be updated via socketio."""
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.json")
 
@@ -188,14 +187,9 @@ async def test_doorbell_update_via_socketio(hass: HomeAssistant) -> None:
         states.get("binary_sensor.k98gidt45gul_name_doorbell_ding").state == STATE_OFF
     )
 
-    new_time = dt_util.utcnow() + datetime.timedelta(seconds=40)
-    native_time = datetime.datetime.now() + datetime.timedelta(seconds=40)
-    with patch(
-        "homeassistant.components.yale.util._native_datetime",
-        return_value=native_time,
-    ):
-        async_fire_time_changed(hass, new_time)
-        await hass.async_block_till_done()
+    freezer.tick(40)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     assert (
         states.get("binary_sensor.k98gidt45gul_name_image_capture").state == STATE_OFF
@@ -213,14 +207,9 @@ async def test_doorbell_update_via_socketio(hass: HomeAssistant) -> None:
 
     assert states.get("binary_sensor.k98gidt45gul_name_doorbell_ding").state == STATE_ON
 
-    new_time = dt_util.utcnow() + datetime.timedelta(seconds=40)
-    native_time = datetime.datetime.now() + datetime.timedelta(seconds=40)
-    with patch(
-        "homeassistant.components.yale.util._native_datetime",
-        return_value=native_time,
-    ):
-        async_fire_time_changed(hass, new_time)
-        await hass.async_block_till_done()
+    freezer.tick(40)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     assert (
         states.get("binary_sensor.k98gidt45gul_name_doorbell_ding").state == STATE_OFF
