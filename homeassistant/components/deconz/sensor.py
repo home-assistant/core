@@ -48,6 +48,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -117,7 +118,9 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         name_suffix="Filter Time",
         value_fn=lambda device: device.filter_run_time,
         instance_check=AirPurifier,
+        device_class=SensorDeviceClass.DURATION,
         entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
     ),
     DeconzSensorDescription[AirQuality](
         key="air_quality",

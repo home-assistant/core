@@ -1559,7 +1559,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'IKEA Starkvind Filter Time',
     'platform': 'deconz',
@@ -1567,13 +1567,15 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '0c:43:14:ff:fe:6c:20:12-01-fc7d-air_purifier_filter_run_time',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload21-expected21][sensor.ikea_starkvind_filter_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'IKEA Starkvind Filter Time',
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ikea_starkvind_filter_time',
