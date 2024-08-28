@@ -245,4 +245,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
         self._unsub_connection_lost()
         self._unsub_connected()
         self._unsub_data()
+        self._unsub_connected = None
+        self._unsub_data = None
+        self._unsub_connection_lost = None
         _LOGGER.debug("Unsubscribed from the websocket")
