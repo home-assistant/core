@@ -42,7 +42,7 @@ from .const import (
     OPERATION_METHOD_REMOTE,
     OPERATION_METHOD_TAG,
 )
-from .entity import AugustDescriptionEntity, AugustEntityMixin
+from .entity import AugustDescriptionEntity, AugustEntity
 
 
 def _retrieve_device_battery_state(detail: LockDetail) -> int:
@@ -114,7 +114,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AugustOperatorSensor(AugustEntityMixin, RestoreSensor):
+class AugustOperatorSensor(AugustEntity, RestoreSensor):
     """Representation of an August lock operation sensor."""
 
     _attr_translation_key = "operator"
