@@ -24,7 +24,6 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_WIRED_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -302,15 +301,7 @@ async def test_reauth_flow_update_configuration(
     """Verify reauth flow can update hub configuration."""
     config_entry = config_entry_setup
 
-    result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": config_entry.unique_id,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -344,15 +335,7 @@ async def test_reauth_flow_update_configuration_on_not_loaded_entry(
     with patch("aiounifi.Controller.login", side_effect=aiounifi.errors.RequestError):
         config_entry = await config_entry_factory()
 
-    result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": config_entry.unique_id,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
