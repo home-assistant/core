@@ -19,7 +19,11 @@ from homeassistant.components.assist_pipeline import (
     PipelineEventType,
     PipelineNotFound,
 )
-from homeassistant.components.assist_satellite import AssistSatelliteEntity
+from homeassistant.components.assist_satellite import (
+    AssistSatelliteEntity,
+    AssistSatelliteEntityDescription,
+    AssistSatelliteState,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -78,6 +82,12 @@ async def async_setup_entry(
 class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol):
     """Assist satellite for VoIP devices."""
 
+    entity_description = AssistSatelliteEntityDescription(key="assist_satellite")
+    _attr_translation_key = "assist_satellite"
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_state = AssistSatelliteState.LISTENING_WAKE_WORD
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -108,8 +118,8 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
-        if self.voip_device.protocol == self:
-            self.voip_device.protocol = None
+        assert self.voip_device.protocol == self
+        self.voip_device.protocol = None
 
     # -------------------------------------------------------------------------
     # VoIP
@@ -188,8 +198,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
 
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Set state based on pipeline stage."""
-        super().on_pipeline_event(event)
-
         if event.type == PipelineEventType.STT_END:
             if (self._tones & Tones.PROCESSING) == Tones.PROCESSING:
                 self._processing_tone_done.clear()
