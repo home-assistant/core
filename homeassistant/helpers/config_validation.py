@@ -1727,10 +1727,6 @@ def _backward_compat_trigger_schema(value: Any | None) -> Any:
 
     # `platform` has been renamed to `trigger`
     if CONF_PLATFORM in value:
-        if CONF_TRIGGER in value:
-            raise vol.Invalid(
-                "Cannot specify both 'platform' and 'trigger'. Please use 'trigger' only."
-            )
         response[CONF_TRIGGER] = value[CONF_PLATFORM]
     elif CONF_TRIGGER in value:
         # We should still support the old `platform` key
@@ -1743,7 +1739,11 @@ TRIGGER_BASE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ALIAS): str,
         vol.Exclusive(CONF_PLATFORM, "trigger"): str,
-        vol.Exclusive(CONF_TRIGGER, "trigger"): str,
+        vol.Exclusive(
+            CONF_TRIGGER,
+            "trigger",
+            msg="Cannot specify both 'platform' and 'trigger'. Please use 'trigger' only.",
+        ): str,
         vol.Optional(CONF_ID): str,
         vol.Optional(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
         vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
