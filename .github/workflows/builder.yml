@@ -494,8 +494,8 @@ jobs:
     needs: ["init", "build_base"]
     if: github.repository_owner == 'home-assistant'
     env:
-      HASSFEST_IMAGE_NAME: ghcr.io/homeassistant/hassfest
-      HASSFEST_IMAGE_TAG: ghcr.io/homeassistant/hassfest:${{ needs.init.outputs.version }}
+      HASSFEST_IMAGE_NAME: ghcr.io/home-assistant/hassfest
+      HASSFEST_IMAGE_TAG: ghcr.io/home-assistant/hassfest:${{ needs.init.outputs.version }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
