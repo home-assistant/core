@@ -416,21 +416,6 @@ class RpcShellyLightBase(ShellyRpcEntity, LightEntity):
         return percentage_to_brightness(self.status["brightness"])
 
     @property
-    def color_temp_kelvin(self) -> int:
-        """Return the CT color value in Kelvin."""
-        return cast(int, self.status["ct"])
-
-    @property
-    def min_color_temp_kelvin(self) -> int:
-        """Return the warmest color_temp_kelvin that this light supports."""
-        return cast(int, self.coordinator.device.config[self.key]["ct_range"][0])
-
-    @property
-    def max_color_temp_kelvin(self) -> int:
-        """Return the coldest color_temp_kelvin that this light supports."""
-        return cast(int, self.coordinator.device.config[self.key]["ct_range"][1])
-
-    @property
     def rgb_color(self) -> tuple[int, int, int]:
         """Return the rgb color value [int, int, int]."""
         return cast(tuple, self.status["rgb"])
@@ -503,6 +488,21 @@ class RpcShellyCctLight(RpcShellyLightBase):
     _attr_color_mode = ColorMode.COLOR_TEMP
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
     _attr_supported_features = LightEntityFeature.TRANSITION
+
+    @property
+    def color_temp_kelvin(self) -> int:
+        """Return the CT color value in Kelvin."""
+        return cast(int, self.status["ct"])
+
+    @property
+    def min_color_temp_kelvin(self) -> int:
+        """Return the warmest color_temp_kelvin that this light supports."""
+        return cast(int, self.coordinator.device.config[self.key]["ct_range"][0])
+
+    @property
+    def max_color_temp_kelvin(self) -> int:
+        """Return the coldest color_temp_kelvin that this light supports."""
+        return cast(int, self.coordinator.device.config[self.key]["ct_range"][1])
 
 
 class RpcShellyRgbLight(RpcShellyLightBase):
