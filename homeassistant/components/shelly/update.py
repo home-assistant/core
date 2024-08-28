@@ -137,6 +137,7 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
     )
+    _attr_compare_by_strings = True
     entity_description: RestUpdateDescription
 
     def __init__(
