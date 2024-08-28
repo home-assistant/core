@@ -59,16 +59,11 @@ async def test_user_setup(hass: HomeAssistant, mock_device, mock_setup_entry) ->
     assert result.get("result").unique_id == MOCKED_DEVICE_SERIAL_NUMBER
 
 
-async def test_user_setup_already_exists(hass: HomeAssistant, mock_device) -> None:
+async def test_user_setup_already_exists(
+    hass: HomeAssistant, mock_device, mock_config_entry: MockConfigEntry
+) -> None:
     """Test manually setting up when the device already exists."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: MOCKED_DEVICE_IP_ADDRESS,
-        },
-        unique_id=MOCKED_DEVICE_SERIAL_NUMBER,
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -96,7 +91,7 @@ async def test_user_setup_device_offline(hass: HomeAssistant, mock_device) -> No
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    mock_device.side_effect = DeviceConnectionError
+    mock_device.device_config.side_effect = DeviceConnectionError
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -108,7 +103,7 @@ async def test_user_setup_device_offline(hass: HomeAssistant, mock_device) -> No
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
     assert result["step_id"] == "user"
 
-    mock_device.side_effect = None
+    mock_device.device_config.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -164,7 +159,7 @@ async def test_discovered_zeroconf_device_connection_error(
 ) -> None:
     """Test we can setup when discovered from zeroconf but device went offline."""
 
-    mock_device.side_effect = DeviceConnectionError
+    mock_device.device_config.side_effect = DeviceConnectionError
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},

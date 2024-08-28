@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
-from lektricowifi import DeviceConnectionError, lektricowifi
+from lektricowifi import Device, DeviceConnectionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -36,7 +36,7 @@ class LektricoDeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]])
             name=device_name,
             update_interval=SCAN_INTERVAL,
         )
-        self.device = lektricowifi.Device(
+        self.device = Device(
             self.config_entry.data[CONF_HOST],
             asyncClient=get_async_client(hass),
         )
