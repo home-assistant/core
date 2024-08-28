@@ -26,14 +26,16 @@ from .models import AssistSatelliteState
 _CONVERSATION_TIMEOUT_SEC: Final = 5 * 60  # 5 minutes
 
 
+class AssistSatelliteEntityDescription(EntityDescription, frozen_or_thawed=True):
+    """A class that describes binary sensor entities."""
+
+
 class AssistSatelliteEntity(entity.Entity):
     """Entity encapsulating the state and functionality of an Assist satellite."""
 
-    entity_description = EntityDescription(
-        key="assist_satellite",
-        translation_key="assist_satellite",
-        entity_category=EntityCategory.CONFIG,
-    )
+    entity_description: AssistSatelliteEntityDescription
+    _attr_translation_key = "assist_satellite"
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_has_entity_name = True
     _attr_name = None
     _attr_should_poll = False

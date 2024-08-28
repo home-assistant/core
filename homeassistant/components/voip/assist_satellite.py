@@ -19,7 +19,10 @@ from homeassistant.components.assist_pipeline import (
     PipelineEventType,
     PipelineNotFound,
 )
-from homeassistant.components.assist_satellite import AssistSatelliteEntity
+from homeassistant.components.assist_satellite import (
+    AssistSatelliteEntity,
+    AssistSatelliteEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -77,6 +80,8 @@ async def async_setup_entry(
 
 class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol):
     """Assist satellite for VoIP devices."""
+
+    entity_description = AssistSatelliteEntityDescription(key="assist_satellite")
 
     def __init__(
         self,
