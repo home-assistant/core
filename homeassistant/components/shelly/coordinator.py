@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
+from functools import cached_property
 from typing import Any, cast
 
 from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
@@ -120,12 +121,12 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
         )
 
-    @property
+    @cached_property
     def model(self) -> str:
         """Model of the device."""
         return cast(str, self.entry.data["model"])
 
-    @property
+    @cached_property
     def mac(self) -> str:
         """Mac address of the device."""
         return cast(str, self.entry.unique_id)
