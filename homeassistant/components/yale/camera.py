@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import YaleConfigEntry, YaleData
 from .const import DEFAULT_NAME, DEFAULT_TIMEOUT
-from .entity import YaleEntityMixin
+from .entity import YaleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ async def async_setup_entry(
     )
 
 
-class YaleCamera(YaleEntityMixin, Camera):
+class YaleCamera(YaleEntity, Camera):
     """An implementation of an Yale security camera."""
 
     _attr_translation_key = "camera"
