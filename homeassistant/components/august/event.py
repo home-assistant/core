@@ -63,22 +63,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up the august event platform."""
     data = config_entry.runtime_data
-    entities: list[AugustEventEntity] = []
-
-    for lock in data.locks:
-        detail = data.get_device_detail(lock.device_id)
-        if detail.doorbell:
-            entities.extend(
-                AugustEventEntity(data, lock, description)
-                for description in TYPES_DOORBELL
-            )
-
-    for doorbell in data.doorbells:
-        entities.extend(
-            AugustEventEntity(data, doorbell, description)
-            for description in TYPES_DOORBELL + TYPES_VIDEO_DOORBELL
-        )
-
+    entities: list[AugustEventEntity] = [
+        AugustEventEntity(data, lock, description)
+        for description in TYPES_DOORBELL
+        for lock in data.locks
+        if (detail := data.get_device_detail(lock.device_id)) and detail.doorbell
+    ]
+    entities.extend(
+        AugustEventEntity(data, doorbell, description)
+        for description in TYPES_DOORBELL + TYPES_VIDEO_DOORBELL
+        for doorbell in data.doorbells
+    )
     async_add_entities(entities)
 
 
