@@ -30,6 +30,7 @@ DEFAULT_NAME = "ADS Climate"
 CONF_ADS_VAR_ACTUAL_TEMP = "adsvar_actual_temperature"
 CONF_ADS_VAR_SET_TEMP = "adsvar_set_temperature"
 CONF_ADS_VAR_MODE = "adsvar_mode"
+CONF_ADS_VAR_ACTION = "adsvar_action"
 CONF_ADS_VAR_PRESET = "adsvar_preset"
 
 
@@ -38,6 +39,7 @@ PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_ADS_VAR_ACTUAL_TEMP): cv.string,
         vol.Optional(CONF_ADS_VAR_SET_TEMP): cv.string,
         vol.Optional(CONF_ADS_VAR_MODE): cv.string,
+        vol.Optional(CONF_ADS_VAR_ACTION): cv.string,
         vol.Optional(CONF_ADS_VAR_PRESET): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
@@ -56,6 +58,7 @@ def setup_platform(
     ads_var_actual_temp = config.get(CONF_ADS_VAR_ACTUAL_TEMP)
     ads_var_set_temp = config.get(CONF_ADS_VAR_SET_TEMP)
     ads_var_mode = config.get(CONF_ADS_VAR_MODE)
+    ads_var_action = config.get(CONF_ADS_VAR_ACTION)
     ads_var_preset = config.get(CONF_ADS_VAR_PRESET)
     name = config[CONF_NAME]
 
@@ -66,6 +69,7 @@ def setup_platform(
                 ads_var_actual_temp,
                 ads_var_set_temp,
                 ads_var_mode,
+                ads_var_action,
                 ads_var_preset,
                 name,
             )
@@ -76,7 +80,6 @@ def setup_platform(
 class AdsClimate(AdsEntity, ClimateEntity):
     """Representation of ADS climate entity."""
 
-    # Define supported presets
     PRESET_NONE = "None"
     PRESET_ECO = "Eco"
     PRESET_AWAY = "Away"
@@ -103,6 +106,7 @@ class AdsClimate(AdsEntity, ClimateEntity):
         ads_var_actual_temp,
         ads_var_set_temp,
         ads_var_mode,
+        ads_var_action,
         ads_var_preset,
         name,
     ):
@@ -110,6 +114,7 @@ class AdsClimate(AdsEntity, ClimateEntity):
         super().__init__(ads_hub, name, ads_var_actual_temp)
         self._ads_var_set_temp = ads_var_set_temp
         self._ads_var_mode = ads_var_mode
+        self._ads_var_action = ads_var_action
         self._ads_var_preset = ads_var_preset
         self._ads_var_actual_temp = ads_var_actual_temp
         self._hvac_mode = ads_var_mode
@@ -118,6 +123,7 @@ class AdsClimate(AdsEntity, ClimateEntity):
         self._attr_current_temperature = 24.0
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_hvac_mode = HVACMode.AUTO
+        self._attr_hvac_action = HVACAction.IDLE
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
         )
@@ -128,16 +134,19 @@ class AdsClimate(AdsEntity, ClimateEntity):
 
         if self._ads_var_actual_temp is not None:
             await self.async_initialize_device(
-                self._ads_var_actual_temp, pyads.PLCTYPE_LREAL
+                self._ads_var_actual_temp, pyads.PLCTYPE_REAL
             )
 
         if self._ads_var_set_temp is not None:
             await self.async_initialize_device(
-                self._ads_var_set_temp, pyads.PLCTYPE_LREAL
+                self._ads_var_set_temp, pyads.PLCTYPE_REAL
             )
 
         if self._ads_var_mode is not None:
             await self.async_initialize_device(self._ads_var_mode, pyads.PLCTYPE_INT)
+
+        if self._ads_var_action is not None:
+            await self.async_initialize_device(self._ads_var_action, pyads.PLCTYPE_INT)
 
         if self._ads_var_preset:
             await self.async_initialize_device(self._ads_var_preset, pyads.PLCTYPE_INT)
@@ -155,12 +164,12 @@ class AdsClimate(AdsEntity, ClimateEntity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return 7.0  # or get from configuration
+        return 7.0
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return 35.0  # or get from configuration
+        return 35.0
 
     @property
     def name(self) -> str:
@@ -186,6 +195,20 @@ class AdsClimate(AdsEntity, ClimateEntity):
     def hvac_action(self) -> HVACAction | None:
         """Return the current running action of the HVAC unit."""
         return self._attr_hvac_action
+
+    @property
+    def hvac_actions(self) -> list[HVACAction]:
+        """Return the list of available HVAC actions."""
+        return [
+            HVACAction.OFF,
+            HVACAction.PREHEATING,
+            HVACAction.HEATING,
+            HVACAction.COOLING,
+            HVACAction.DRYING,
+            HVACAction.FAN,
+            HVACAction.IDLE,
+            HVACAction.DEFROSTING,
+        ]
 
     @property
     def temperature_unit(self) -> str:
@@ -221,9 +244,7 @@ class AdsClimate(AdsEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        preset_value = self.PRESETS.get(
-            preset_mode, self.PRESETS[self.PRESET_NONE]
-        )  # Default to None if preset not found
+        preset_value = self.PRESETS.get(preset_mode, self.PRESETS[self.PRESET_NONE])
         self._ads_hub.write_by_name(
             self._ads_var_preset, preset_value, pyads.PLCTYPE_INT
         )
@@ -249,19 +270,18 @@ class AdsClimate(AdsEntity, ClimateEntity):
             new_temp = kwargs[ATTR_TEMPERATURE]
             self._attr_target_temperature = new_temp
             self._ads_hub.write_by_name(
-                self._ads_var_set_temp, new_temp, pyads.PLCTYPE_LREAL
+                self._ads_var_set_temp, new_temp, pyads.PLCTYPE_REAL
             )
             self.async_write_ha_state()
 
     async def async_update(self) -> None:
         """Retrieve the latest state from the ADS device."""
-        # Read the actual temperature value from the ADS device
         self._attr_current_temperature = self._ads_hub.read_by_name(
-            self._ads_var_actual_temp, pyads.PLCTYPE_LREAL
+            self._ads_var_actual_temp, pyads.PLCTYPE_REAL
         )
 
         self._attr_target_temperature = self._ads_hub.read_by_name(
-            self._ads_var_set_temp, pyads.PLCTYPE_LREAL
+            self._ads_var_set_temp, pyads.PLCTYPE_REAL
         )
 
         mode = self._ads_hub.read_by_name(self._ads_var_mode, pyads.PLCTYPE_INT)
@@ -271,6 +291,18 @@ class AdsClimate(AdsEntity, ClimateEntity):
             2: HVACMode.COOL,
             4: HVACMode.AUTO,
         }.get(mode, HVACMode.OFF)
+
+        action = self._ads_hub.read_by_name(self._ads_var_action, pyads.PLCTYPE_INT)
+        self._attr_hvac_action = {
+            0: HVACAction.OFF,
+            1: HVACAction.PREHEATING,
+            2: HVACAction.HEATING,
+            3: HVACAction.COOLING,
+            4: HVACAction.DRYING,
+            5: HVACAction.FAN,
+            6: HVACAction.IDLE,
+            7: HVACAction.DEFROSTING,
+        }.get(action, HVACAction.OFF)
 
         preset_value = self._ads_hub.read_by_name(
             self._ads_var_preset, pyads.PLCTYPE_INT
@@ -285,27 +317,5 @@ class AdsClimate(AdsEntity, ClimateEntity):
             6: self.PRESET_SLEEP,
             7: self.PRESET_ACTIVITY,
         }.get(preset_value, self.PRESET_NONE)
-
-        # Determine the HVAC action based on the mode and temperatures
-        if self._attr_hvac_mode == HVACMode.OFF:
-            self._attr_hvac_action = HVACAction.OFF
-        elif self._attr_hvac_mode == HVACMode.HEAT:
-            if (
-                self._attr_current_temperature is not None
-                and self._attr_target_temperature is not None
-                and self._attr_current_temperature < self._attr_target_temperature
-            ):
-                self._attr_hvac_action = HVACAction.HEATING
-            else:
-                self._attr_hvac_action = HVACAction.IDLE
-        elif self._attr_hvac_mode == HVACMode.COOL:
-            if (
-                self._attr_current_temperature is not None
-                and self._attr_target_temperature is not None
-                and self._attr_current_temperature > self._attr_target_temperature
-            ):
-                self._attr_hvac_action = HVACAction.COOLING
-            else:
-                self._attr_hvac_action = HVACAction.IDLE
 
         self.async_write_ha_state()
