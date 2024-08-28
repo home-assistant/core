@@ -110,7 +110,7 @@ async def test_update_refresh_token(
     assert mock_nice_go.authenticate.call_count == 0
 
     mock_nice_go.authenticate.return_value = "new-refresh-token"
-    freezer.tick(timedelta(days=30))
+    freezer.tick(timedelta(days=30, seconds=1))
     async_fire_time_changed(hass)
     assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()

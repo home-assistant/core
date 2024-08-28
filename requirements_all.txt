@@ -183,7 +183,7 @@ aioairzone==0.8.2
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
-aioambient==2024.01.0
+aioambient==2024.08.0
 
 # homeassistant.components.apcupsd
 aioapcaccess==0.4.2
@@ -359,7 +359,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==11.2.4
+aioshelly==11.3.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -703,7 +703,7 @@ datadog==0.15.0
 datapoint==0.9.9
 
 # homeassistant.components.bluetooth
-dbus-fast==2.23.0
+dbus-fast==2.24.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.1
@@ -1429,7 +1429,7 @@ nextdns==3.2.0
 nibe==2.11.0
 
 # homeassistant.components.nice_go
-nice-go==0.3.0
+nice-go==0.3.5
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
@@ -1685,9 +1685,6 @@ pyAtome==0.1.1
 # homeassistant.components.hdmi_cec
 pyCEC==0.5.2
 
-# homeassistant.components.control4
-pyControl4==1.1.0
-
 # homeassistant.components.duotecno
 pyDuotecno==2024.5.1
 
@@ -1707,7 +1704,7 @@ pyRFXtrx==0.31.1
 pySDCP==1
 
 # homeassistant.components.tibber
-pyTibber==0.28.2
+pyTibber==0.30.1
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -2229,7 +2226,7 @@ pysoma==0.0.12
 pyspcwebgw==0.7.0
 
 # homeassistant.components.assist_pipeline
-pyspeex-noise==1.0.0
+pyspeex-noise==1.0.2
 
 # homeassistant.components.squeezebox
 pysqueezebox==0.7.1
@@ -2384,6 +2381,9 @@ pytomorrowio==0.3.6
 
 # homeassistant.components.touchline
 pytouchline==0.7
+
+# homeassistant.components.touchline_sl
+pytouchlinesl==0.1.5
 
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
@@ -2614,9 +2614,6 @@ simplepush==2.2.3
 
 # homeassistant.components.simplisafe
 simplisafe-python==2024.01.0
-
-# homeassistant.components.sisyphus
-sisyphus-control==3.1.3
 
 # homeassistant.components.slack
 slackclient==2.5.0
@@ -2973,7 +2970,7 @@ yalexs-ble==2.4.3
 
 # homeassistant.components.august
 # homeassistant.components.yale
-yalexs==8.4.2
+yalexs==8.5.4
 
 # homeassistant.components.yeelight
 yeelight==0.7.14
@@ -3000,7 +2997,7 @@ zamg==0.3.6
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.132.2
+zeroconf==0.133.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
