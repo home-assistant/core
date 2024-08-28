@@ -6,7 +6,7 @@ import logging
 from typing import Final
 
 from aioazuredevops.client import DevOpsClient
-from aioazuredevops.models.builds import Build
+from aioazuredevops.models.build import Build
 from aioazuredevops.models.core import Project
 import aiohttp
 
