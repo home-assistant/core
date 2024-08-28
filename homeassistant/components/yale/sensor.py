@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Generic, TypeVar, cast
+from typing import Any, cast
 
 from yalexs.activity import ActivityType, LockOperationActivity
 from yalexs.doorbell import Doorbell
@@ -42,7 +42,7 @@ from .const import (
     OPERATION_METHOD_REMOTE,
     OPERATION_METHOD_TAG,
 )
-from .entity import YaleDescriptionEntity, YaleEntityMixin
+from .entity import YaleDescriptionEntity, YaleEntity
 
 
 def _retrieve_device_battery_state(detail: LockDetail) -> int:
@@ -55,14 +55,13 @@ def _retrieve_linked_keypad_battery_state(detail: KeypadDetail) -> int | None:
     return detail.battery_percentage
 
 
-_T = TypeVar("_T", LockDetail, KeypadDetail)
-
-
 @dataclass(frozen=True, kw_only=True)
-class YaleSensorEntityDescription(SensorEntityDescription, Generic[_T]):
+class YaleSensorEntityDescription[T: LockDetail | KeypadDetail](
+    SensorEntityDescription
+):
     """Mixin for required keys."""
 
-    value_fn: Callable[[_T], int | None]
+    value_fn: Callable[[T], int | None]
 
 
 SENSOR_TYPE_DEVICE_BATTERY = YaleSensorEntityDescription[LockDetail](
@@ -112,7 +111,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class YaleOperatorSensor(YaleEntityMixin, RestoreSensor):
+class YaleOperatorSensor(YaleEntity, RestoreSensor):
     """Representation of an Yale lock operation sensor."""
 
     _attr_translation_key = "operator"
@@ -196,10 +195,12 @@ class YaleOperatorSensor(YaleEntityMixin, RestoreSensor):
             self._operated_autorelock = last_attrs[ATTR_OPERATION_AUTORELOCK]
 
 
-class YaleBatterySensor(YaleDescriptionEntity, SensorEntity, Generic[_T]):
+class YaleBatterySensor[T: LockDetail | KeypadDetail](
+    YaleDescriptionEntity, SensorEntity
+):
     """Representation of an Yale sensor."""
 
-    entity_description: YaleSensorEntityDescription[_T]
+    entity_description: YaleSensorEntityDescription[T]
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
 

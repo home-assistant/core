@@ -26,7 +26,9 @@ class YaleConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=
         """Return logger."""
         return _LOGGER
 
-    async def async_step_reauth(self, data: Mapping[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -54,4 +56,5 @@ class YaleConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=
                 return self.async_abort(reason="reauth_invalid_user")
             return self.async_update_reload_and_abort(entry, data=data)
         await self.async_set_unique_id(user_id)
+        self._abort_if_unique_id_configured()
         return await super().async_oauth_create_entry(data)
