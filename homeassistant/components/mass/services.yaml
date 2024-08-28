@@ -1,0 +1,123 @@
+# Descriptions for Music Assistant custom services
+
+play_media:
+  target:
+    entity:
+      domain: media_player
+      integration: mass
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
+  fields:
+    media_id:
+      required: true
+      example: "spotify://playlist/aabbccddeeff"
+      selector:
+        object:
+    media_type:
+      required: false
+      example: "playlist"
+      selector:
+        select:
+          options:
+            - artist
+            - album
+            - playlist
+            - track
+            - radio
+    artist:
+      required: false
+      example: "Queen"
+      selector:
+        text:
+    album:
+      required: false
+      example: "News of the world"
+      selector:
+        text:
+    enqueue:
+      filter:
+        supported_features:
+          - media_player.MediaPlayerEntityFeature.MEDIA_ENQUEUE
+      required: false
+      selector:
+        select:
+          options:
+            - "play"
+            - "replace"
+            - "next"
+            - "replace_next"
+            - "add"
+          translation_key: enqueue
+    radio_mode:
+      required: false
+      advanced: true
+      selector:
+        boolean:
+
+play_announcement:
+  target:
+    entity:
+      domain: media_player
+      integration: mass
+      supported_features:
+        - media_player.MediaPlayerEntityFeature.PLAY_MEDIA
+        - media_player.MediaPlayerEntityFeature.MEDIA_ANNOUNCE
+  fields:
+    url:
+      required: true
+      example: "http://someremotesite.com/doorbell.mp3"
+      selector:
+        text:
+    use_pre_announce:
+      required: false
+      example: "true"
+      selector:
+        boolean:
+    announce_volume:
+      required: false
+      example: 75
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 1
+
+search:
+  fields:
+    name:
+      required: true
+      example: "We Are The Champions"
+      selector:
+        text:
+    media_type:
+      required: false
+      example: "playlist"
+      selector:
+        select:
+          multiple: true
+          options:
+            - artist
+            - album
+            - playlist
+            - track
+            - radio
+    artist:
+      required: false
+      example: "Queen"
+      selector:
+        text:
+    album:
+      required: false
+      example: "News of the world"
+      selector:
+        text:
+    limit:
+      required: false
+      advanced: true
+      example: 25
+      default: 5
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 1
