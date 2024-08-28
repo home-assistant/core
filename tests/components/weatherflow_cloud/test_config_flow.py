@@ -112,14 +112,17 @@ async def test_reauth(hass: HomeAssistant, mock_get_stations_401_error) -> None:
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id}, data=None
-    )
-    assert result["type"] is FlowResultType.FORM
-    result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
-        data={CONF_API_TOKEN: "SAME_SAME"},
+        data=entry.data,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_TOKEN: "SAME_SAME"}
     )
 
     assert result["reason"] == "reauth_successful"
     assert result["type"] is FlowResultType.ABORT
+    assert entry.data[CONF_API_TOKEN] == "SAME_SAME"
