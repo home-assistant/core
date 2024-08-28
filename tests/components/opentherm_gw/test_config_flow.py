@@ -223,7 +223,7 @@ async def test_options_migration(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.opentherm_gw.OpenThermGatewayDevice.connect_and_subscribe",
+            "homeassistant.components.opentherm_gw.OpenThermGatewayHub.connect_and_subscribe",
             return_value=True,
         ),
         patch(

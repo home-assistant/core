@@ -1,10 +1,13 @@
 # serializer version: 1
 # name: test_sensor
   ReadOnlyDict({
-    'device_class': 'pm25',
-    'friendly_name': 'Kitchen PM2.5',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    'unit_of_measurement': 'µg/m³',
+    'device_class': 'enum',
+    'friendly_name': 'Kitchen Pure AQI',
+    'options': list([
+      'good',
+      'moderate',
+      'bad',
+    ]),
   })
 # ---
 # name: test_sensor.1

@@ -63,7 +63,9 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a config flow for OctoPrint."""
         self._sessions: list[aiohttp.ClientSession] = []
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         # When coming back from the progress steps, the user_input is stored in the
         # instance variable instead of being passed in
@@ -158,9 +160,9 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle api fetch failure."""
         return self.async_abort(reason="auth_failed")
 
-    async def async_step_import(self, user_input):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import."""
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(import_data)
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo

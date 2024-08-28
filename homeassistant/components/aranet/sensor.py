@@ -99,6 +99,13 @@ SENSOR_DESCRIPTIONS = {
         suggested_display_precision=4,
         scale=0.000001,
     ),
+    "radon_concentration": AranetSensorEntityDescription(
+        key="radon_concentration",
+        translation_key="radon_concentration",
+        name="Radon Concentration",
+        native_unit_of_measurement="Bq/m³",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     "battery": AranetSensorEntityDescription(
         key="battery",
         name="Battery",

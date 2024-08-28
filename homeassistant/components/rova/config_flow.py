@@ -60,11 +60,11 @@ class RovaConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import the yaml config."""
-        zip_code = user_input[CONF_ZIP_CODE]
-        number = user_input[CONF_HOUSE_NUMBER]
-        suffix = user_input[CONF_HOUSE_NUMBER_SUFFIX]
+        zip_code = import_data[CONF_ZIP_CODE]
+        number = import_data[CONF_HOUSE_NUMBER]
+        suffix = import_data[CONF_HOUSE_NUMBER_SUFFIX]
 
         await self.async_set_unique_id(f"{zip_code}{number}{suffix}".strip())
         self._abort_if_unique_id_configured()

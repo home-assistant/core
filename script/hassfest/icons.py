@@ -9,6 +9,7 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.icon import convert_shorthand_service_icon
 
 from .model import Config, Integration
 from .translations import translation_key_validator
@@ -51,12 +52,28 @@ DATA_ENTRY_ICONS_SCHEMA = vol.Schema(
     {
         "step": {
             str: {
-                "section": {
+                "sections": {
                     str: icon_value_validator,
                 }
             }
         }
     }
+)
+
+
+SERVICE_ICONS_SCHEMA = cv.schema_with_slug_keys(
+    vol.All(
+        convert_shorthand_service_icon,
+        vol.Schema(
+            {
+                vol.Optional("service"): icon_value_validator,
+                vol.Optional("sections"): cv.schema_with_slug_keys(
+                    icon_value_validator, slug_validator=translation_key_validator
+                ),
+            }
+        ),
+    ),
+    slug_validator=translation_key_validator,
 )
 
 
@@ -91,7 +108,7 @@ def icon_schema(integration_type: str, no_entity_platform: bool) -> vol.Schema:
                 {str: {"fix_flow": DATA_ENTRY_ICONS_SCHEMA}}
             ),
             vol.Optional("options"): DATA_ENTRY_ICONS_SCHEMA,
-            vol.Optional("services"): state_validator,
+            vol.Optional("services"): SERVICE_ICONS_SCHEMA,
         }
     )
 

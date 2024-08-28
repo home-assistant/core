@@ -3,12 +3,14 @@
 from unittest.mock import patch
 
 from homeassistant.components.ring import DOMAIN
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
 
-async def setup_platform(hass, platform):
+async def setup_platform(hass: HomeAssistant, platform: Platform) -> None:
     """Set up the ring platform and prerequisites."""
     MockConfigEntry(domain=DOMAIN, data={"username": "foo", "token": {}}).add_to_hass(
         hass
