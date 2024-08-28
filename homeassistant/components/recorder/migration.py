@@ -695,6 +695,18 @@ def _restore_foreign_key_constraints(
             _LOGGER.info("Did not find a matching constraint for %s.%s", table, column)
             continue
 
+        inspector = sqlalchemy.inspect(engine)
+        if any(
+            foreign_key["name"] and foreign_key["constrained_columns"] == [column]
+            for foreign_key in inspector.get_foreign_keys(table)
+        ):
+            _LOGGER.info(
+                "The database already has a matching constraint for %s.%s",
+                table,
+                column,
+            )
+            continue
+
         if TYPE_CHECKING:
             assert foreign_table is not None
             assert foreign_column is not None

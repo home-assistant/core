@@ -1805,3 +1805,27 @@ async def test_async_validate(hass: HomeAssistant, tmpdir: py.path.local) -> Non
             "string": [hass.loop_thread_id],
         }
         validator_calls = {}
+
+
+async def test_is_entity_service_schema(
+    hass: HomeAssistant,
+) -> None:
+    """Test cv.is_entity_service_schema."""
+    for schema in (
+        vol.Schema({"some": str}),
+        vol.All(vol.Schema({"some": str})),
+        vol.Any(vol.Schema({"some": str})),
+        vol.Any(cv.make_entity_service_schema({"some": str})),
+    ):
+        assert cv.is_entity_service_schema(schema) is False
+
+    for schema in (
+        cv.make_entity_service_schema({"some": str}),
+        vol.Schema(cv.make_entity_service_schema({"some": str})),
+        vol.Schema(vol.All(cv.make_entity_service_schema({"some": str}))),
+        vol.Schema(vol.Schema(cv.make_entity_service_schema({"some": str}))),
+        vol.All(cv.make_entity_service_schema({"some": str})),
+        vol.All(vol.All(cv.make_entity_service_schema({"some": str}))),
+        vol.All(vol.Schema(cv.make_entity_service_schema({"some": str}))),
+    ):
+        assert cv.is_entity_service_schema(schema) is True

@@ -108,6 +108,11 @@ async def test_expose_attribute(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await hass.async_block_till_done()
     await knx.assert_telegram_count(0)
 
+    # Ignore "unavailable" state
+    hass.states.async_set(entity_id, "unavailable", {attribute: None})
+    await hass.async_block_till_done()
+    await knx.assert_telegram_count(0)
+
 
 async def test_expose_attribute_with_default(
     hass: HomeAssistant, knx: KNXTestKit
@@ -131,7 +136,7 @@ async def test_expose_attribute_with_default(
     await knx.receive_read("1/1/8")
     await knx.assert_response("1/1/8", (0,))
 
-    # Change state to "on"; no attribute
+    # Change state to "on"; no attribute -> default
     hass.states.async_set(entity_id, "on", {})
     await hass.async_block_till_done()
     await knx.assert_write("1/1/8", (0,))
@@ -145,6 +150,11 @@ async def test_expose_attribute_with_default(
     hass.states.async_set(entity_id, "off", {attribute: 1})
     await hass.async_block_till_done()
     await knx.assert_no_telegram()
+
+    # Use default for "unavailable" state
+    hass.states.async_set(entity_id, "unavailable")
+    await hass.async_block_till_done()
+    await knx.assert_write("1/1/8", (0,))
 
     # Change state and attribute
     hass.states.async_set(entity_id, "on", {attribute: 3})
@@ -290,8 +300,18 @@ async def test_expose_value_template(
     assert "Error rendering value template for KNX expose" in caplog.text
 
 
+@pytest.mark.parametrize(
+    "invalid_attribute",
+    [
+        101.0,
+        "invalid",  # can't cast to float
+    ],
+)
 async def test_expose_conversion_exception(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, knx: KNXTestKit
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    knx: KNXTestKit,
+    invalid_attribute: str,
 ) -> None:
     """Test expose throws exception."""
 
@@ -313,16 +333,17 @@ async def test_expose_conversion_exception(
     await knx.receive_read("1/1/8")
     await knx.assert_response("1/1/8", (3,))
 
+    caplog.clear()
     # Change attribute: Expect no exception
     hass.states.async_set(
         entity_id,
         "on",
-        {attribute: 101},
+        {attribute: invalid_attribute},
     )
     await hass.async_block_till_done()
     await knx.assert_no_telegram()
     assert (
-        'Could not expose fake.entity fake_attribute value "101.0" to KNX:'
+        f'Could not expose fake.entity fake_attribute value "{invalid_attribute}" to KNX:'
         in caplog.text
     )
 

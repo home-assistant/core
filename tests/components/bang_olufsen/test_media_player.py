@@ -105,7 +105,9 @@ async def test_initialization(
 
 
 async def test_async_update_sources_audio_only(
-    hass: HomeAssistant, mock_config_entry, mock_mozart_client
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_mozart_client: AsyncMock,
 ) -> None:
     """Test sources are correctly handled in _async_update_sources."""
     mock_mozart_client.get_remote_menu.return_value = {}
@@ -118,7 +120,9 @@ async def test_async_update_sources_audio_only(
 
 
 async def test_async_update_sources_outdated_api(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test fallback sources are correctly handled in _async_update_sources."""
     mock_mozart_client.get_available_sources.side_effect = ValueError()

@@ -206,3 +206,23 @@ def test_timeout() -> None:
 
     assert not segmenter.process(_ONE_SECOND * 0.5, False)
     assert segmenter.timed_out
+
+
+def test_command_seconds() -> None:
+    """Test minimum number of seconds for voice command."""
+
+    segmenter = VoiceCommandSegmenter(
+        command_seconds=3, speech_seconds=1, silence_seconds=1, reset_seconds=1
+    )
+
+    assert segmenter.process(_ONE_SECOND, True)
+
+    # Silence counts towards total command length
+    assert segmenter.process(_ONE_SECOND * 0.5, False)
+
+    # Enough to finish command now
+    assert segmenter.process(_ONE_SECOND, True)
+    assert segmenter.process(_ONE_SECOND * 0.5, False)
+
+    # Silence to finish
+    assert not segmenter.process(_ONE_SECOND * 0.5, False)
