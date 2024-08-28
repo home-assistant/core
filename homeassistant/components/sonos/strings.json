@@ -172,6 +172,10 @@
           "description": "Enable or disable including grouped rooms."
         }
       }
+    },
+    "get_queue": {
+      "name": "Get queue",
+      "description": "Returns the contents of the queue."
     }
   },
   "exceptions": {

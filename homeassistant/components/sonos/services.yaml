@@ -63,6 +63,11 @@ remove_from_queue:
           max: 10000
           mode: box
 
+get_queue:
+  target:
+    entity:
+      domain: media_player
+
 update_alarm:
   target:
     device:
