@@ -66,7 +66,7 @@
       "service": "mdi:alarm"
     },
     "get_queue": {
-       "service": "mdi:queue-first-in-last-out"
+      "service": "mdi:queue-first-in-last-out"
     }
   }
 }
