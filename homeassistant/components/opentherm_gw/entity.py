@@ -51,7 +51,6 @@ class OpenThermBaseEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates from the component."""
-        _LOGGER.debug("Added OpenTherm Gateway entity %s", self._attr_name)
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, self._gateway.update_signal, self.receive_report
