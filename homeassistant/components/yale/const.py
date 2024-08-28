@@ -1,7 +1,5 @@
 """Constants for Yale devices."""
 
-from yalexs.const import Brand
-
 from homeassistant.const import Platform
 
 DEFAULT_TIMEOUT = 25
@@ -12,8 +10,6 @@ CONF_LOGIN_METHOD = "login_method"
 CONF_INSTALL_ID = "install_id"
 
 VERIFICATION_CODE_KEY = "verification_code"
-
-DEFAULT_BRAND = Brand.YALE_HOME
 
 MANUFACTURER = "Yale Home Inc."
 
