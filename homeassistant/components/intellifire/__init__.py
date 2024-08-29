@@ -62,7 +62,7 @@ def _construct_common_data(entry: ConfigEntry) -> IntelliFireCommonFireplaceData
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate entries."""
-    LOGGER.info(
+    LOGGER.debug(
         "Migrating configuration from version %s.%s",
         config_entry.version,
         config_entry.minor_version,
