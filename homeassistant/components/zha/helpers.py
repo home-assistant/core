@@ -814,9 +814,12 @@ class ZHAGatewayProxy(EventBase):
         # then we get all group entity entries tied to the coordinator
         entity_registry = er.async_get(self.hass)
         assert self.gateway.coordinator_zha_device
+        coordinator_proxy = self.device_proxies[
+            self.gateway.coordinator_zha_device.ieee
+        ]
         all_group_entity_entries = er.async_entries_for_device(
             entity_registry,
-            self.gateway.coordinator_zha_device.device_id,
+            coordinator_proxy.device_id,
             include_disabled_entities=True,
         )
 
