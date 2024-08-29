@@ -19,8 +19,6 @@ COPY . /usr/src/homeassistant
 RUN \
     # Required for PyTurboJPEG
     apk add --no-cache libturbojpeg \
-    && mkdir -p /usr/lib64 \
-    && ln -s /usr/lib/libturbojpeg.so.0 /usr/lib64/libturbojpeg.so.0 \
     && cd /usr/src/homeassistant \
     && uv pip install \
         --no-build \
@@ -28,7 +26,7 @@ RUN \
         -c homeassistant/package_constraints.txt \
         -r requirements.txt \
         stdlib-list==0.10.0 pipdeptree==2.23.1 tqdm==4.66.4 ruff==0.6.2 \
-        PyTurboJPEG==1.7.1 ha-ffmpeg==3.2.0 hassil==1.7.4 home-assistant-intents==2024.8.7 mutagen==1.47.0
+        PyTurboJPEG==1.7.5 ha-ffmpeg==3.2.0 hassil==1.7.4 home-assistant-intents==2024.8.29 mutagen==1.47.0
 
 LABEL "name"="hassfest"
 LABEL "maintainer"="Home Assistant <hello@home-assistant.io>"

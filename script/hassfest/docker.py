@@ -87,8 +87,6 @@ COPY . /usr/src/homeassistant
 RUN \
     # Required for PyTurboJPEG
     apk add --no-cache libturbojpeg \
-    && mkdir -p /usr/lib64 \
-    && ln -s /usr/lib/libturbojpeg.so.0 /usr/lib64/libturbojpeg.so.0 \
     && cd /usr/src/homeassistant \
     && uv pip install \
         --no-build \
