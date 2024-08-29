@@ -68,35 +68,37 @@ from .issues import raise_mirrored_entries, raise_no_prob_given_false
 _LOGGER = logging.getLogger(__name__)
 
 
-NUMERIC_STATE_SCHEMA = vol.Schema(
-    {
-        CONF_PLATFORM: CONF_NUMERIC_STATE,
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Optional(CONF_ABOVE): vol.Coerce(float),
-        vol.Optional(CONF_BELOW): vol.Coerce(float),
-        vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
-        vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
-    },
-    required=True,
-)
-
-
-def _above_greater_than_below(configs: list[dict[str, Any]]) -> list:
-    for config in configs:
-        if config.get(CONF_PLATFORM, None) != CONF_NUMERIC_STATE:
-            continue
-        above = config.get(CONF_ABOVE, None)
-        below = config.get(CONF_BELOW, None)
-        if above is None and below is None:
+def _above_greater_than_below(config: dict[str, Any]) -> list:
+    if config[CONF_PLATFORM] != CONF_NUMERIC_STATE:
+        return config
+    above = config.get(CONF_ABOVE)
+    below = config.get(CONF_BELOW)
+    if above is None and below is None:
+        raise vol.Invalid(
+            "For bayesian numeric state at least one of 'above' or 'below' must be specified."
+        )
+    if above is not None and below is not None:
+        if above > below:
             raise vol.Invalid(
-                "For bayesian numeric state at least one of 'above' or 'below' must be specified."
+                f"For bayesian numeric state 'above' ({above}) must be less than 'below' ({below})."
             )
-        if above is not None and below is not None:
-            if above > below:
-                raise vol.Invalid(
-                    f"For bayesian numeric state 'above' ({above}) must be less than 'below' ({below})."
-                )
-    return configs
+    return config
+
+
+NUMERIC_STATE_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            CONF_PLATFORM: CONF_NUMERIC_STATE,
+            vol.Required(CONF_ENTITY_ID): cv.entity_id,
+            vol.Optional(CONF_ABOVE): vol.Coerce(float),
+            vol.Optional(CONF_BELOW): vol.Coerce(float),
+            vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
+            vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
+        },
+        required=True,
+    ),
+    _above_greater_than_below,
+)
 
 
 def _no_overlapping(configs: list[dict]) -> list[dict]:
@@ -157,7 +159,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_OBSERVATIONS): vol.Schema(
             vol.All(
                 [vol.Any(TEMPLATE_SCHEMA, STATE_SCHEMA, NUMERIC_STATE_SCHEMA)],
-                _above_greater_than_below,
                 _no_overlapping,
                 cv.ensure_list,
             )
