@@ -2,8 +2,6 @@
 
 from unittest.mock import AsyncMock, patch
 
-from intellifire4py.exceptions import LoginError
-
 from homeassistant.components.intellifire import CONF_USER_ID
 from homeassistant.components.intellifire.const import (
     API_MODE_CLOUD,
@@ -24,7 +22,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -77,7 +74,6 @@ async def test_init_with_no_username(hass: HomeAssistant, mock_apis_single_fp) -
         minor_version=2,
         data={
             CONF_IP_ADDRESS: "192.168.2.108",
-            # CONF_USERNAME: "grumpypanda@china.cn",
             CONF_PASSWORD: "you-stole-my-pandas",
             CONF_SERIAL: "3FB284769E4736F30C8973A7ED358123",
             CONF_WEB_CLIENT_ID: "FA2B1C3045601234D0AE17D72F8E975",
@@ -132,27 +128,3 @@ async def test_pseudo_migration_bad_title(
         "username": "grumpypanda@china.cn",
         "password": "you-stole-my-pandas",
     }
-
-
-async def test_reauth_flow(
-    hass: HomeAssistant,
-    mock_config_entry_current,
-    mock_apis_single_fp,
-) -> None:
-    """Test reauth."""
-
-    mock_local_interface, mock_cloud_interface, mock_fp = mock_apis_single_fp
-    # Set login error
-    mock_cloud_interface.login_with_credentials.side_effect = LoginError
-
-    mock_config_entry_current.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": "reauth",
-            "unique_id": mock_config_entry_current.unique_id,
-            "entry_id": mock_config_entry_current.entry_id,
-        },
-    )
-    assert result["type"] == FlowResultType.FORM
-    result["step_id"] = "cloud_api"

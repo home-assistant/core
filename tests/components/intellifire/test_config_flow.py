@@ -202,3 +202,27 @@ async def test_dhcp_discovery_non_intellifire_device(
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "not_intellifire_device"
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_config_entry_current,
+    mock_apis_single_fp,
+) -> None:
+    """Test reauth."""
+
+    mock_local_interface, mock_cloud_interface, mock_fp = mock_apis_single_fp
+    # Set login error
+    mock_cloud_interface.login_with_credentials.side_effect = LoginError
+
+    mock_config_entry_current.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": "reauth",
+            "unique_id": mock_config_entry_current.unique_id,
+            "entry_id": mock_config_entry_current.entry_id,
+        },
+    )
+    assert result["type"] == FlowResultType.FORM
+    result["step_id"] = "cloud_api"

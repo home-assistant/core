@@ -86,9 +86,6 @@ class IntelliFireConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._configured_serials: list[str] = []
 
-        # Tracking login state of API
-        self.logged_in = False
-
         # Define a cloud api interface we can use
         self.cloud_api_interface = IntelliFireCloudInterface()
 
@@ -122,9 +119,6 @@ class IntelliFireConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         username=user_input[CONF_USERNAME],
                         password=user_input[CONF_PASSWORD],
                     )
-
-                # Mark as logged in
-                self.logged_in = True
 
                 # If login was successful pass username/password to next step
                 return await self.async_step_pick_cloud_device()

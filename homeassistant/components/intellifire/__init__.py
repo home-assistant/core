@@ -62,7 +62,7 @@ def _construct_common_data(entry: ConfigEntry) -> IntelliFireCommonFireplaceData
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate entries."""
-    LOGGER.error(
+    LOGGER.info(
         "Migrating configuration from version %s.%s",
         config_entry.version,
         config_entry.minor_version,
@@ -86,7 +86,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 )
 
                 # See if we can find the fireplace first by serial and then secondly by IP.
-
                 serial = config_entry.title.replace("Fireplace ", "")
 
                 # If serial matches the hex style pattern we'll assume its good
@@ -131,20 +130,12 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up IntelliFire from a config entry."""
-    LOGGER.debug("Setting up config entry: %s", entry.unique_id)
 
     if CONF_USERNAME not in entry.data:
         LOGGER.debug("Config entry without username detected: %s", entry.unique_id)
         raise ConfigEntryAuthFailed
 
-    # if CONF_IP_ADDRESS not in entry.data:
-    #     LOGGER.debug("Config entry without IP-address detected: %s", entry.unique_id)
-    #     entry = await _async_pseudo_migrate_entry(hass, entry)
-
-    # Fireplace will throw an error if it can't connect
     try:
-        LOGGER.error("TRYING TO BUILD FIREPLACE")
-
         fireplace: UnifiedFireplace = (
             await UnifiedFireplace.build_fireplace_from_common(
                 _construct_common_data(entry)

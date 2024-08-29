@@ -205,9 +205,9 @@ def mock_fp(mock_common_data_local) -> Generator[AsyncMock, None, None]:
 
     with patch(
         "homeassistant.components.intellifire.UnifiedFireplace"
-    ) as MockUnifiedFireplace:
+    ) as mock_unified_fireplace:
         # Create an instance of the mock
-        mock_instance = MockUnifiedFireplace.return_value
+        mock_instance = mock_unified_fireplace.return_value
 
         # Mock methods and properties of the instance
         mock_instance.perform_cloud_poll = AsyncMock()
