@@ -130,7 +130,6 @@ async def test_one_lock_operation(
 
     data = {ATTR_ENTITY_ID: "lock.online_with_doorsense_name"}
     await hass.services.async_call(LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True)
-    await hass.async_block_till_done()
 
     lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
     assert lock_online_with_doorsense_name.state == STATE_UNLOCKED
@@ -142,7 +141,6 @@ async def test_one_lock_operation(
     )
 
     await hass.services.async_call(LOCK_DOMAIN, SERVICE_LOCK, data, blocking=True)
-    await hass.async_block_till_done()
 
     lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
     assert lock_online_with_doorsense_name.state == STATE_LOCKED
@@ -168,7 +166,6 @@ async def test_open_lock_operation(hass: HomeAssistant) -> None:
 
     data = {ATTR_ENTITY_ID: "lock.online_with_unlatch_name"}
     await hass.services.async_call(LOCK_DOMAIN, SERVICE_OPEN, data, blocking=True)
-    await hass.async_block_till_done()
 
     lock_online_with_unlatch_name = hass.states.get("lock.online_with_unlatch_name")
     assert lock_online_with_unlatch_name.state == STATE_UNLOCKED
@@ -191,7 +188,6 @@ async def test_open_lock_operation_socketio_connected(
 
     data = {ATTR_ENTITY_ID: "lock.online_with_unlatch_name"}
     await hass.services.async_call(LOCK_DOMAIN, SERVICE_OPEN, data, blocking=True)
-    await hass.async_block_till_done()
 
     listener = list(socketio._listeners)[0]
     listener(
@@ -234,7 +230,6 @@ async def test_one_lock_operation_socketio_connected(
 
     data = {ATTR_ENTITY_ID: "lock.online_with_doorsense_name"}
     await hass.services.async_call(LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True)
-    await hass.async_block_till_done()
 
     listener = list(socketio._listeners)[0]
     listener(
@@ -258,7 +253,6 @@ async def test_one_lock_operation_socketio_connected(
     )
 
     await hass.services.async_call(LOCK_DOMAIN, SERVICE_LOCK, data, blocking=True)
-    await hass.async_block_till_done()
 
     listener(
         lock_one.device_id,
@@ -327,7 +321,6 @@ async def test_lock_jammed(hass: HomeAssistant) -> None:
 
     data = {ATTR_ENTITY_ID: "lock.online_with_doorsense_name"}
     await hass.services.async_call(LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True)
-    await hass.async_block_till_done()
 
     lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
     assert lock_online_with_doorsense_name.state == STATE_JAMMED
