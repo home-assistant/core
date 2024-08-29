@@ -74,6 +74,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
         self._unsub_connected: Callable[[], None] | None = None
         self._unsub_data: Callable[[], None] | None = None
         self._unsub_connection_lost: Callable[[], None] | None = None
+        self.connected = False
 
     async def _parse_barrier(self, barrier_state: BarrierState) -> NiceGODevice | None:
         """Parse barrier data."""
@@ -226,12 +227,25 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
     async def on_connected(self) -> None:
         """Handle the websocket connection."""
         _LOGGER.debug("Connected to the websocket")
+        self.connected = True
+
         await self.api.subscribe(self.organization_id)
-        self.async_set_updated_data(self.data)
+
+        if not self.last_update_success:
+            self.async_set_updated_data(self.data)
 
     async def on_connection_lost(self, data: dict[str, Exception]) -> None:
         """Handle the websocket connection loss. Don't need to do much since the library will automatically reconnect."""
         _LOGGER.debug("Connection lost to the websocket")
+        self.connected = False
+
+        # Give some time for reconnection
+        await asyncio.sleep(5)
+        if self.connected:
+            _LOGGER.debug("Reconnected, not setting error")
+            return
+
+        # There's likely a problem with the connection, and not the server being flaky
         self.async_set_update_error(data["exception"])
 
     def unsubscribe(self) -> None:
