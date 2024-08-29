@@ -66,6 +66,7 @@ remove_from_queue:
 get_queue:
   target:
     entity:
+      integration: sonos
       domain: media_player
 
 update_alarm:
