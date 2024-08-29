@@ -154,7 +154,5 @@ class TPLinkSensorEntity(CoordinatedTPLinkFeatureEntity, SensorEntity):
 
         self._attr_native_value = value
         # Map to homeassistant units and fallback to upstream one if none found
-        if self._feature.unit is not None:
-            self._attr_native_unit_of_measurement = UNIT_MAPPING.get(
-                self._feature.unit, self._feature.unit
-            )
+        if (unit := self._feature.unit) is not None:
+            self._attr_native_unit_of_measurement = UNIT_MAPPING.get(unit, unit)

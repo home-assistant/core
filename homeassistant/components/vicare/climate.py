@@ -87,10 +87,9 @@ def _build_entities(
     """Create ViCare climate entities for a device."""
     return [
         ViCareClimate(
+            device.config,
             device.api,
             circuit,
-            device.config,
-            "heating",
         )
         for device in device_list
         for circuit in get_circuits(device.api)
@@ -136,24 +135,22 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
     _attr_min_temp = VICARE_TEMP_HEATING_MIN
     _attr_max_temp = VICARE_TEMP_HEATING_MAX
     _attr_target_temperature_step = PRECISION_WHOLE
+    _attr_translation_key = "heating"
     _current_action: bool | None = None
     _current_mode: str | None = None
+    _current_program: str | None = None
     _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
-        api: PyViCareDevice,
-        circuit: PyViCareHeatingCircuit,
         device_config: PyViCareDeviceConfig,
-        translation_key: str,
+        device: PyViCareDevice,
+        circuit: PyViCareHeatingCircuit,
     ) -> None:
         """Initialize the climate device."""
-        super().__init__(device_config, api, circuit.id)
+        super().__init__(device_config, device, circuit.id)
         self._circuit = circuit
         self._attributes: dict[str, Any] = {}
-        self._current_program = None
-        self._attr_translation_key = translation_key
-
         self._attributes["vicare_programs"] = self._circuit.getPrograms()
         self._attr_preset_modes = [
             preset
@@ -340,7 +337,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
                 ) from err
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Show Device Attributes."""
         return self._attributes
 

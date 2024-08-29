@@ -98,7 +98,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                     account.meter_type.name.lower(),
                     # Some utilities like AEP have "-" in their account id.
                     # Replace it with "_" to avoid "Invalid statistic_id"
-                    account.utility_account_id.replace("-", "_"),
+                    account.utility_account_id.replace("-", "_").lower(),
                 )
             )
             cost_statistic_id = f"{DOMAIN}:{id_prefix}_energy_cost"

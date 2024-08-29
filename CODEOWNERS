@@ -294,6 +294,8 @@ build.json @home-assistant/supervisor
 /tests/components/date/ @home-assistant/core
 /homeassistant/components/datetime/ @home-assistant/core
 /tests/components/datetime/ @home-assistant/core
+/homeassistant/components/deako/ @sebirdman @balake @deakolights
+/tests/components/deako/ @sebirdman @balake @deakolights
 /homeassistant/components/debugpy/ @frenck
 /tests/components/debugpy/ @frenck
 /homeassistant/components/deconz/ @Kane610
@@ -1493,6 +1495,8 @@ build.json @home-assistant/supervisor
 /tests/components/tomorrowio/ @raman325 @lymanepp
 /homeassistant/components/totalconnect/ @austinmroczek
 /tests/components/totalconnect/ @austinmroczek
+/homeassistant/components/touchline_sl/ @jnsgruk
+/tests/components/touchline_sl/ @jnsgruk
 /homeassistant/components/tplink/ @rytilahti @bdraco @sdb9696
 /tests/components/tplink/ @rytilahti @bdraco @sdb9696
 /homeassistant/components/tplink_omada/ @MarkGodwin
@@ -1658,6 +1662,8 @@ build.json @home-assistant/supervisor
 /tests/components/xiaomi_miio/ @rytilahti @syssi @starkillerOG
 /homeassistant/components/xiaomi_tv/ @simse
 /homeassistant/components/xmpp/ @fabaff @flowolf
+/homeassistant/components/yale/ @bdraco
+/tests/components/yale/ @bdraco
 /homeassistant/components/yale_smart_alarm/ @gjohansson-ST
 /tests/components/yale_smart_alarm/ @gjohansson-ST
 /homeassistant/components/yalexs_ble/ @bdraco
