@@ -67,8 +67,8 @@ class SomaFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Connection to SOMA Connect failed with KeyError")
             return self.async_abort(reason="connection_error")
 
-    async def async_step_import(self, user_input=None):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle flow start from existing config section."""
         if self._async_current_entries():
             return self.async_abort(reason="already_setup")
-        return await self.async_step_creation(user_input)
+        return await self.async_step_creation(import_data)

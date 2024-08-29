@@ -1743,6 +1743,16 @@ class ConfigEntries:
         ]
 
     @callback
+    def async_loaded_entries(self, domain: str) -> list[ConfigEntry]:
+        """Return loaded entries for a specific domain.
+
+        This will exclude ignored or disabled config entruis.
+        """
+        entries = self._entries.get_entries_for_domain(domain)
+
+        return [entry for entry in entries if entry.state == ConfigEntryState.LOADED]
+
+    @callback
     def async_entry_for_domain_unique_id(
         self, domain: str, unique_id: str
     ) -> ConfigEntry | None:

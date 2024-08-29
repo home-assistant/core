@@ -124,7 +124,7 @@ def mock_site_info() -> Generator[AsyncMock]:
         yield mock_live_status
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock_find_server() -> Generator[AsyncMock]:
     """Mock Tesla Fleet find server method."""
     with patch(
