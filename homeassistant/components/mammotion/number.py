@@ -66,7 +66,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Mammotion number entities."""
     coordinator = entry.runtime_data
-    limits = coordinator.devices.mower(coordinator.device_name).limits
+    limits = coordinator.manager.mower(coordinator.device_name).limits
 
     entities: list[MammotionNumberEntity] = []
 
