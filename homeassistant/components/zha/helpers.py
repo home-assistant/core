@@ -802,12 +802,12 @@ class ZHAGatewayProxy(EventBase):
                 )
 
     def _cleanup_group_entity_registry_entries(
-        self, zigpy_group: zigpy.group.Group
+        self, zha_group_proxy: ZHAGroupProxy
     ) -> None:
         """Remove entity registry entries for group entities when the groups are removed from HA."""
         # first we collect the potential unique ids for entities that could be created from this group
         possible_entity_unique_ids = [
-            f"{domain}_zha_group_0x{zigpy_group.group_id:04x}"
+            f"{domain}_zha_group_0x{zha_group_proxy.group.group_id:04x}"
             for domain in GROUP_ENTITY_DOMAINS
         ]
 
