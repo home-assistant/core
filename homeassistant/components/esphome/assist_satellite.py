@@ -101,7 +101,6 @@ class EsphomeAssistSatellite(
         translation_key="assist_satellite",
         entity_category=EntityCategory.CONFIG,
     )
-    _attr_supported_features = assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
 
     def __init__(
         self,
@@ -160,6 +159,12 @@ class EsphomeAssistSatellite(
                 async_register_timer_handler(
                     self.hass, self.registry_entry.device_id, self.handle_timer_event
                 )
+            )
+
+        if feature_flags & VoiceAssistantFeature.ANNOUNCE:
+            # Device supports announcements
+            self._attr_supported_features |= (
+                assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
             )
 
     async def async_will_remove_from_hass(self) -> None:
@@ -443,6 +448,8 @@ class EsphomeAssistSatellite(
             self._udp_server.close()
         finally:
             self._udp_server = None
+
+        _LOGGER.debug("Stopped UDP server")
 
 
 # -----------------------------------------------------------------------------
