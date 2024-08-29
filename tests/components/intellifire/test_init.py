@@ -48,13 +48,12 @@ async def test_pseudo_migration_good(
     }
 
 
-async def test_what_ever_we_are_calling_this_if_its_a_migration_or_something_else_i_dont_know(
-    hass: HomeAssistant, mock_apis_single_fp
-) -> None:
+async def test_minor_migration(hass: HomeAssistant, mock_apis_single_fp) -> None:
     """Test the case where we completely fail to initialize."""
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
         version=1,
+        minor_version=1,
         title="Fireplace of testing",
         data={
             CONF_HOST: "11.168.2.218",
@@ -67,7 +66,7 @@ async def test_what_ever_we_are_calling_this_if_its_a_migration_or_something_els
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert mock_config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state == ConfigEntryState.MIGRATION_ERROR
 
 
 async def test_init_with_no_username(hass: HomeAssistant, mock_apis_single_fp) -> None:
@@ -75,6 +74,7 @@ async def test_init_with_no_username(hass: HomeAssistant, mock_apis_single_fp) -
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
         version=1,
+        minor_version=2,
         data={
             CONF_IP_ADDRESS: "192.168.2.108",
             # CONF_USERNAME: "grumpypanda@china.cn",
@@ -86,7 +86,7 @@ async def test_init_with_no_username(hass: HomeAssistant, mock_apis_single_fp) -
             CONF_USER_ID: "52C3F9E8B9D3AC99F8E4D12345678901FE9A2BC7D85F7654E28BF98BCD123456",
         },
         options={CONF_READ_MODE: API_MODE_LOCAL, CONF_CONTROL_MODE: API_MODE_CLOUD},
-        unique_id="serial",
+        unique_id="3FB284769E4736F30C8973A7ED358123",
     )
 
     mock_config_entry.add_to_hass(hass)

@@ -60,61 +60,73 @@ def _construct_common_data(entry: ConfigEntry) -> IntelliFireCommonFireplaceData
     )
 
 
-async def _async_pseudo_migrate_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> ConfigEntry:
-    """Update configuration entry to latest VERSION 1 format."""
-    new = {**config_entry.data}
-    # Rename Host to IP Address
-    new[CONF_IP_ADDRESS] = new.pop("host")
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate entries."""
+    LOGGER.error(
+        "Migrating configuration from version %s.%s",
+        config_entry.version,
+        config_entry.minor_version,
+    )
 
-    username = config_entry.data[CONF_USERNAME]
-    password = config_entry.data[CONF_PASSWORD]
+    if config_entry.version == 1:
+        new = {**config_entry.data}
 
-    # Create a Cloud Interface
-    async with IntelliFireCloudInterface() as cloud_interface:
-        await cloud_interface.login_with_credentials(
-            username=username, password=password
-        )
+        if config_entry.minor_version < 2:
+            try:
+                new[CONF_IP_ADDRESS] = new.pop("host")
+            except KeyError:
+                return False
+            username = config_entry.data[CONF_USERNAME]
+            password = config_entry.data[CONF_PASSWORD]
 
-        # See if we can find the fireplace first by serial and then secondly by IP.
+            # Create a Cloud Interface
+            async with IntelliFireCloudInterface() as cloud_interface:
+                await cloud_interface.login_with_credentials(
+                    username=username, password=password
+                )
 
-        serial = config_entry.title.replace("Fireplace ", "")
+                # See if we can find the fireplace first by serial and then secondly by IP.
 
-        # If serial matches the hex style pattern we'll assume its good
-        valid_serial = bool(re.match(r"^[0-9A-Fa-f]{32}$", serial))
+                serial = config_entry.title.replace("Fireplace ", "")
 
-        new_data = (
-            cloud_interface.user_data.get_data_for_serial(serial)
-            if valid_serial
-            else None
-        )
+                # If serial matches the hex style pattern we'll assume its good
+                valid_serial = bool(re.match(r"^[0-9A-Fa-f]{32}$", serial))
 
-    if not new_data:
-        new_data = cloud_interface.user_data.get_data_for_ip(new[CONF_IP_ADDRESS])
+                new_data = (
+                    cloud_interface.user_data.get_data_for_serial(serial)
+                    if valid_serial
+                    else None
+                )
 
-    if not new_data:
-        raise ConfigEntryAuthFailed
+            if not new_data:
+                new_data = cloud_interface.user_data.get_data_for_ip(
+                    new[CONF_IP_ADDRESS]
+                )
 
-    # Find the correct fireplace
-    if new_data is not None:
-        new[CONF_API_KEY] = new_data.api_key
-        new[CONF_WEB_CLIENT_ID] = new_data.web_client_id
-        new[CONF_AUTH_COOKIE] = new_data.auth_cookie
+            if not new_data:
+                raise ConfigEntryAuthFailed
 
-        new[CONF_IP_ADDRESS] = new_data.ip_address
-        new[CONF_SERIAL] = new_data.serial
+            # Find the correct fireplace
+            if new_data is not None:
+                new[CONF_API_KEY] = new_data.api_key
+                new[CONF_WEB_CLIENT_ID] = new_data.web_client_id
+                new[CONF_AUTH_COOKIE] = new_data.auth_cookie
 
-        config_entry.version = 1
-        hass.config_entries.async_update_entry(
-            config_entry,
-            data=new,
-            options={CONF_READ_MODE: "local", CONF_CONTROL_MODE: "local"},
-            unique_id=serial,
-        )
-        LOGGER.debug("Pseudo Migration %s successful", config_entry.version)
+                new[CONF_IP_ADDRESS] = new_data.ip_address
+                new[CONF_SERIAL] = new_data.serial
 
-    return config_entry
+                config_entry.version = 1
+                hass.config_entries.async_update_entry(
+                    config_entry,
+                    data=new,
+                    options={CONF_READ_MODE: "local", CONF_CONTROL_MODE: "local"},
+                    unique_id=serial,
+                    version=1,
+                    minor_version=2,
+                )
+                LOGGER.debug("Pseudo Migration %s successful", config_entry.version)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -125,9 +137,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER.debug("Config entry without username detected: %s", entry.unique_id)
         raise ConfigEntryAuthFailed
 
-    if CONF_IP_ADDRESS not in entry.data:
-        LOGGER.debug("Config entry without IP-address detected: %s", entry.unique_id)
-        entry = await _async_pseudo_migrate_entry(hass, entry)
+    # if CONF_IP_ADDRESS not in entry.data:
+    #     LOGGER.debug("Config entry without IP-address detected: %s", entry.unique_id)
+    #     entry = await _async_pseudo_migrate_entry(hass, entry)
 
     # Fireplace will throw an error if it can't connect
     try:

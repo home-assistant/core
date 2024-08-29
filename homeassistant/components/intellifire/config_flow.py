@@ -71,6 +71,7 @@ class IntelliFireConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for IntelliFire."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the Config Flow Handler."""

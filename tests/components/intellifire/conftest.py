@@ -60,6 +60,7 @@ def mock_config_entry_current() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         version=1,
+        minor_version=2,
         data={
             CONF_IP_ADDRESS: "192.168.2.108",
             CONF_USERNAME: "grumpypanda@china.cn",
@@ -81,6 +82,7 @@ def mock_config_entry_old() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         version=1,
+        minor_version=1,
         title="Fireplace 3FB284769E4736F30C8973A7ED358123",
         data={
             CONF_HOST: "192.168.2.108",
