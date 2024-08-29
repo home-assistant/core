@@ -78,7 +78,7 @@ class AuthBase(ABC):
                 build,
                 "photoslibrary",
                 "v1",
-                credentials=Credentials(token=token),
+                credentials=Credentials(token=token),  # type: ignore[no-untyped-call]
                 static_discovery=False,
             )
         )
@@ -87,7 +87,7 @@ class AuthBase(ABC):
         """Get current profile service API resource."""
         token = await self.async_get_access_token()
         return await self._hass.async_add_executor_job(
-            partial(build, "oauth2", "v2", credentials=Credentials(token=token))
+            partial(build, "oauth2", "v2", credentials=Credentials(token=token))  # type: ignore[no-untyped-call]
         )
 
     async def _execute(self, request: HttpRequest | BatchHttpRequest) -> dict[str, Any]:
