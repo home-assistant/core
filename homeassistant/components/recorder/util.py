@@ -96,7 +96,7 @@ MARIADB_WITH_FIXED_IN_QUERIES_108 = _simple_version("10.8.4")
 MIN_VERSION_MYSQL = _simple_version("8.0.0")
 MIN_VERSION_PGSQL = _simple_version("12.0")
 MIN_VERSION_SQLITE = _simple_version("3.31.0")
-UPCOMING_MIN_VERSION_SQLITE = _simple_version("3.40.1")
+UPCOMING_MIN_VERSION_SQLITE = _simple_version("3.37.2")
 MIN_VERSION_SQLITE_MODERN_BIND_VARS = _simple_version("3.32.0")
 
 
