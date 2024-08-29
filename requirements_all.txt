@@ -2698,7 +2698,6 @@ streamlabswater==1.0.1
 
 # homeassistant.components.huawei_lte
 # homeassistant.components.solaredge
-# homeassistant.components.thermoworks_smoke
 # homeassistant.components.traccar
 stringcase==1.2.0
 
@@ -2775,9 +2774,6 @@ thermobeacon-ble==0.7.0
 
 # homeassistant.components.thermopro
 thermopro-ble==0.10.0
-
-# homeassistant.components.thermoworks_smoke
-thermoworks-smoke==0.1.8
 
 # homeassistant.components.thingspeak
 thingspeak==1.0.0

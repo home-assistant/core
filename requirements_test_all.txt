@@ -2141,7 +2141,6 @@ streamlabswater==1.0.1
 
 # homeassistant.components.huawei_lte
 # homeassistant.components.solaredge
-# homeassistant.components.thermoworks_smoke
 # homeassistant.components.traccar
 stringcase==1.2.0
 
