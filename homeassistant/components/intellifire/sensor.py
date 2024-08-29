@@ -137,12 +137,6 @@ INTELLIFIRE_SENSORS: tuple[IntellifireSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda coordinator: coordinator.data.ipv4_address,
     ),
-    IntellifireSensorEntityDescription(
-        key="local_connectivity",
-        translation_key="local_connectivity",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda coordinator: coordinator.fireplace.local_connectivity,
-    ),
 )
 
 

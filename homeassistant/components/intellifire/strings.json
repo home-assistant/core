@@ -24,7 +24,7 @@
     "abort": {
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "not_intellifire_device": "Not an IntelliFire device.",
-      "all_devices_already_configured": "All available devices have already been configured."
+      "no_available_devices": "All available devices have already been configured."
     }
   },
   "entity": {

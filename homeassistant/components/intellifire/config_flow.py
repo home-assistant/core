@@ -157,7 +157,7 @@ class IntelliFireConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 serial = user_input[CONF_SERIAL]
 
             # Run a unique ID Check prior to anything else
-            await self.async_set_unique_id(serial, raise_on_progress=False)
+            await self.async_set_unique_id(serial)
             self._abort_if_unique_id_configured(updates={CONF_SERIAL: serial})
 
             # If Serial is Good obtain fireplace and configure
@@ -170,17 +170,15 @@ class IntelliFireConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Parse User Data to see if we auto-configure or prompt for selection:
         user_data = self.cloud_api_interface.user_data
 
-        available_fireplaces: list[IntelliFireCommonFireplaceData] = list(
-            {
-                fp.serial: fp
-                for fp in user_data.fireplaces
-                if fp.serial not in self._configured_serials
-            }.values()
-        )
+        available_fireplaces: list[IntelliFireCommonFireplaceData] = [
+            fp
+            for fp in user_data.fireplaces
+            if fp.serial not in self._configured_serials
+        ]
 
         # Abort if all devices have been configured
         if not available_fireplaces:
-            return self.async_abort(reason="all_devices_already_configured")
+            return self.async_abort(reason="no_available_devices")
 
         # If there is a single fireplace configure it
         if len(available_fireplaces) == 1:

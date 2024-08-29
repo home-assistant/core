@@ -68,7 +68,7 @@ async def test_standard_config_with_pre_configured_fireplace(
 
     # For a single fireplace we just create it
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "all_devices_already_configured"
+    assert result["reason"] == "no_available_devices"
 
 
 async def test_standard_config_with_single_fireplace_and_bad_credentials(

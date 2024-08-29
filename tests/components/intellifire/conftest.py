@@ -1,7 +1,6 @@
 """Fixtures for IntelliFire integration tests."""
 
 from collections.abc import Generator
-import json
 from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 from intellifire4py.const import IntelliFireApiMode
@@ -31,7 +30,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
-from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -151,7 +150,7 @@ def mock_apis_single_fp(
 def mock_cloud_interface() -> Generator[AsyncMock, None, None]:
     """Mock cloud interface to use for testing."""
     user_data = IntelliFireUserData(
-        **json.loads(load_fixture("user_data_3.json", DOMAIN))
+        **load_json_object_fixture("user_data_3.json", DOMAIN)
     )
 
     with (
@@ -161,10 +160,6 @@ def mock_cloud_interface() -> Generator[AsyncMock, None, None]:
         ) as mock_client,
         patch(
             "homeassistant.components.intellifire.config_flow.IntelliFireCloudInterface",
-            new=mock_client,
-        ),
-        patch(
-            "intellifire4py.cloud_interface.IntelliFireCloudInterface",
             new=mock_client,
         ),
     ):
@@ -184,8 +179,9 @@ def mock_cloud_interface() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def mock_local_interface() -> Generator[AsyncMock, None, None]:
     """Mock version of IntelliFireAPILocal."""
-    fixture_data = load_fixture("intellifire/local_poll.json")
-    poll_data = IntelliFirePollData(**json.loads(fixture_data))
+    poll_data = IntelliFirePollData(
+        **load_json_object_fixture("intellifire/local_poll.json")
+    )
     with patch(
         "homeassistant.components.intellifire.config_flow.IntelliFireAPILocal",
         autospec=True,
@@ -198,8 +194,10 @@ def mock_local_interface() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def mock_fp(mock_common_data_local) -> Generator[AsyncMock, None, None]:
     """Mock fireplace."""
-    fixture_data = load_fixture("local_poll.json", DOMAIN)
-    local_poll_data = IntelliFirePollData(**json.loads(fixture_data))
+
+    local_poll_data = IntelliFirePollData(
+        **load_json_object_fixture("local_poll.json", DOMAIN)
+    )
 
     assert local_poll_data.connection_quality == 988451
 
