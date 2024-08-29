@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Collection
 import logging
 
 from thinqconnect import ThinQApi, ThinQAPIException
@@ -11,11 +10,11 @@ from thinqconnect import ThinQApi, ThinQAPIException
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_COUNTRY, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_CONNECT_CLIENT_ID, DEFAULT_COUNTRY
+from .const import CONF_CONNECT_CLIENT_ID
 from .coordinator import DeviceDataUpdateCoordinator, async_setup_device_coordinator
 
 type ThinqConfigEntry = ConfigEntry[dict[str, DeviceDataUpdateCoordinator]]
@@ -27,9 +26,9 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> bool:
     """Set up an entry."""
-    access_token = entry.data.get(CONF_ACCESS_TOKEN)
-    client_id = entry.data.get(CONF_CONNECT_CLIENT_ID)
-    country_code = entry.data.get(CONF_COUNTRY, DEFAULT_COUNTRY)
+    access_token = entry.data[CONF_ACCESS_TOKEN]
+    client_id = entry.data[CONF_CONNECT_CLIENT_ID]
+    country_code = entry.data[CONF_COUNTRY]
 
     thinq_api = ThinQApi(
         session=async_get_clientsession(hass),
@@ -62,9 +61,9 @@ async def async_setup_coordinators(
     try:
         device_list = await thinq_api.async_get_device_list()
     except ThinQAPIException as exc:
-        raise ConfigEntryError(exc.message) from exc
+        raise ConfigEntryNotReady(exc.message) from exc
 
-    if not device_list or not isinstance(device_list, Collection):
+    if not device_list:
         return
 
     # Setup coordinator per device.
@@ -73,36 +72,13 @@ async def async_setup_coordinators(
         hass.async_create_task(async_setup_device_coordinator(hass, thinq_api, device))
         for device in device_list
     ]
-    if task_list:
-        task_result = await asyncio.gather(*task_list)
-        for coordinators in task_result:
-            if coordinators:
-                coordinator_list += coordinators
-
-    # Register devices.
-    async_register_devices(hass, entry, coordinator_list)
-
-
-@callback
-def async_register_devices(
-    hass: HomeAssistant,
-    entry: ThinqConfigEntry,
-    coordinator_list: list[DeviceDataUpdateCoordinator],
-) -> None:
-    """Register devices to the device registry."""
-    device_registry = dr.async_get(hass)
+    task_result = await asyncio.gather(*task_list)
+    for coordinators in task_result:
+        if coordinators:
+            coordinator_list += coordinators
 
     for coordinator in coordinator_list:
-        device_entry = device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            **coordinator.device_info,
-        )
-        _LOGGER.debug(
-            "Register device: device_id=%s, device_entry_id=%s",
-            coordinator.device_api.device_id,
-            device_entry.id,
-        )
-        entry.runtime_data[device_entry.id] = coordinator
+        entry.runtime_data[coordinator.unique_id] = coordinator
 
 
 @callback

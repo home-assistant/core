@@ -5,20 +5,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from thinqconnect import (
-    ConnectBaseDevice,
-    DeviceType,
-    ThinQApi,
-    ThinQAPIErrorCodes,
-    ThinQAPIException,
-)
+from thinqconnect import ConnectBaseDevice, DeviceType, ThinQApi, ThinQAPIException
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import COMPANY, DEVICE_TYPE_API_MAP, DOMAIN, NONE_KEY
+from .const import COMPANY, DEVICE_TYPE_API_MAP, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +23,6 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def __init__(
         self,
         hass: HomeAssistant,
-        thinq_api: ThinQApi,
         device_api: ConnectBaseDevice,
         *,
         sub_id: str | None = None,
@@ -40,65 +33,28 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER,
             name=f"{DOMAIN}_{device_api.device_id}",
         )
-        self._hass = hass
-        self._thinq_api = thinq_api
-        self._is_connected = True
 
-        # If sub_id is NONE_KEY("_") then it should be None.
-        self._sub_id = None if sub_id == NONE_KEY else sub_id
+        # For washTower's washer or dryer
+        self.sub_id = sub_id
 
         # The device name is usually set to 'alias'.
         # But, if the sub_id exists, it will be set to 'alias {sub_id}'.
         # e.g. alias='MyWashTower', sub_id='dryer' then 'MyWashTower dryer'.
-        self._device_name = (
-            f"{device_api.alias} {self._sub_id}" if self._sub_id else device_api.alias
+        self.device_name = (
+            f"{device_api.alias} {self.sub_id}" if self.sub_id else device_api.alias
         )
 
         # The unique id is usually set to 'device_id'.
         # But, if the sub_id exists, it will be set to 'device_id_{sub_id}'.
         # e.g. device_id='TQSXXXX', sub_id='dryer' then 'TQSXXXX_dryer'.
-        self._unique_id = (
-            f"{device_api.device_id}_{self._sub_id}"
-            if self._sub_id
+        self.unique_id = (
+            f"{device_api.device_id}_{self.sub_id}"
+            if self.sub_id
             else device_api.device_id
         )
 
         # Get the api instance.
-        self._device_api = device_api.get_sub_device(self._sub_id) or device_api
-
-    @property
-    def thinq_api(self) -> ThinQApi:
-        """Returns the thinq api."""
-        return self._thinq_api
-
-    @property
-    def device_api(self) -> ConnectBaseDevice:
-        """Returns the device api."""
-        return self._device_api
-
-    @property
-    def device_name(self) -> str:
-        """Returns the device name."""
-        return self._device_name
-
-    @property
-    def sub_id(self) -> str | None:
-        """Returns the device sub id."""
-        return self._sub_id
-
-    @property
-    def unique_id(self) -> str:
-        """Returns the unique id."""
-        return self._unique_id
-
-    @property
-    def is_connected(self) -> bool:
-        """Check whether the device is connected or not."""
-        return self._is_connected
-
-    @is_connected.setter
-    def is_connected(self, connected: bool) -> None:
-        self._is_connected = connected
+        self.device_api = device_api.get_sub_device(self.sub_id) or device_api
 
     @property
     def device_info(self) -> dr.DeviceInfo:
@@ -110,33 +66,18 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             name=self.device_name,
         )
 
-    @property
-    def tag(self) -> str:
-        """Returns the tag string."""
-        return f"[{self.device_name}]"
-
     async def _async_update_data(self) -> dict[str, Any]:
         """Request to the server to update the status from full response data."""
         try:
-            data = await self.thinq_api.async_get_device_status(
+            data = await self.device_api.thinq_api.async_get_device_status(
                 self.device_api.device_id
             )
         except ThinQAPIException as exc:
-            if exc.code == ThinQAPIErrorCodes.NOT_CONNECTED_DEVICE:
-                self.is_connected = False
-            return {}
+            raise UpdateFailed(exc) from exc
 
-        # Full response into the device api.
+        # Full response data into the device api.
         self.device_api.set_status(data)
-        self.is_connected = True
         return data
-
-    def __str__(self) -> str:
-        """Return a string expression."""
-        return (
-            f"Coordinator:{self.device_name}"
-            f"(type={self.device_api.device_type}, id={self.device_api.device_id})"
-        )
 
 
 async def async_setup_device_coordinator(
@@ -204,15 +145,13 @@ async def async_setup_device_coordinator(
     device_sub_ids = (
         list(profile.keys())
         if device_type == DeviceType.WASHTOWER and "property" not in profile
-        else [NONE_KEY]
+        else [None]
     )
 
     # Create new device coordinator instances.
     coordinator_list: list[DeviceDataUpdateCoordinator] = []
     for sub_id in device_sub_ids:
-        coordinator = DeviceDataUpdateCoordinator(
-            hass, thinq_api, device_api, sub_id=sub_id
-        )
+        coordinator = DeviceDataUpdateCoordinator(hass, device_api, sub_id=sub_id)
         try:
             await coordinator.async_config_entry_first_refresh()
         except ConfigEntryNotReady:

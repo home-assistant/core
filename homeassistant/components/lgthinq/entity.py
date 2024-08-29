@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from thinqconnect import ThinQAPIErrorCodes, ThinQAPIException
+from thinqconnect import ThinQAPIException
 from thinqconnect.integration.homeassistant.property import Property as ThinQProperty
 
 from homeassistant.core import callback
@@ -55,7 +55,7 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         super().__init__(coordinator)
 
         self.entity_description = entity_description
-        self._property = property
+        self.property = property
         self._attr_device_info = coordinator.device_info
 
         # Set the unique key. If there exist a location, add the prefix location name.
@@ -66,40 +66,26 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         )
         self._attr_unique_id = f"{coordinator.unique_id}_{unique_key}"
 
+        # Update initial status.
+        self._update_status()
+
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.coordinator.is_connected
-
-    def get_property(self) -> ThinQProperty | None:
-        """Return the property corresponding to the feature."""
-        return self._property
-
-    def get_value_as_bool(self) -> bool:
-        """Return the property value of entity as bool."""
-        prop = self.get_property()
-        return prop.get_value_as_bool() if prop is not None else False
+        return self.coordinator.last_update_success
 
     async def async_post_value(self, value: Any) -> None:
         """Post the value of entity to server."""
-        prop = self.get_property()
-        if prop is None:
-            return
-
         try:
-            await prop.async_post_value(value)
+            await self.property.async_post_value(value)
         except ThinQAPIException as exc:
-            if exc.code == ThinQAPIErrorCodes.NOT_CONNECTED_DEVICE:
-                self.coordinator.is_connected = False
-
-            # Rollback device's status data.
-            self.coordinator.async_set_updated_data({})
-
             raise ServiceValidationError(
                 exc.message,
                 translation_domain=DOMAIN,
                 translation_key=exc.code,
             ) from exc
+        finally:
+            await self.coordinator.async_request_refresh()
 
     def _update_status(self) -> None:
         """Update status itself.
@@ -112,8 +98,3 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         """Handle updated data from the coordinator."""
         self._update_status()
         self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Call when entity is added to hass."""
-        await super().async_added_to_hass()
-        self._handle_coordinator_update()

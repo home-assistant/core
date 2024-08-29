@@ -84,6 +84,3 @@ DEVICE_TYPE_API_MAP: Final = {
     DeviceType.WATER_PURIFIER: WaterPurifierDevice,
     DeviceType.WINE_CELLAR: WineCellarDevice,
 }
-
-# Misc
-NONE_KEY: Final = "_"
