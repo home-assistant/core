@@ -68,7 +68,7 @@ from .issues import raise_mirrored_entries, raise_no_prob_given_false
 _LOGGER = logging.getLogger(__name__)
 
 
-def _above_greater_than_below(config: dict[str, Any]) -> list:
+def _above_greater_than_below(config: dict[str, Any]) -> dict[str, Any]:
     if config[CONF_PLATFORM] != CONF_NUMERIC_STATE:
         return config
     above = config.get(CONF_ABOVE)
