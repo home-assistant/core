@@ -5,7 +5,6 @@ from unittest.mock import patch
 from yalexs.authenticator_common import ValidationResult
 from yalexs.manager.exceptions import CannotConnect, InvalidAuth, RequireValidation
 
-from homeassistant import config_entries
 from homeassistant.components.august.const import (
     CONF_ACCESS_TOKEN_CACHE_FILE,
     CONF_BRAND,
@@ -14,6 +13,7 @@ from homeassistant.components.august.const import (
     DOMAIN,
     VERIFICATION_CODE_KEY,
 )
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -25,7 +25,7 @@ async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -66,7 +66,7 @@ async def test_form(hass: HomeAssistant) -> None:
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     with patch(
@@ -90,7 +90,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 async def test_user_unexpected_exception(hass: HomeAssistant) -> None:
     """Test we handle an unexpected exception."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     with patch(
@@ -115,7 +115,7 @@ async def test_user_unexpected_exception(hass: HomeAssistant) -> None:
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     with patch(
@@ -138,7 +138,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 async def test_form_needs_validate(hass: HomeAssistant) -> None:
     """Test we present validation when we need to validate."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     with (
@@ -367,7 +367,7 @@ async def test_switching_brands(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
