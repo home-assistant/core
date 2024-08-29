@@ -39,13 +39,13 @@
       "central_heating_n": {
         "name": "Central heating {circuit_number}"
       },
-      "hot_water": {
+      "cooling": {
         "name": "Cooling"
       },
       "flame": {
         "name": "Flame"
       },
-      "cooling": {
+      "hot_water": {
         "name": "Hot water"
       },
       "diagnostic_indication": {

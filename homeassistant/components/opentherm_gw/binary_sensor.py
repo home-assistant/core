@@ -177,17 +177,14 @@ THERMOSTAT_BINARY_SENSOR_DESCRIPTIONS: tuple[
         key=gw_vars.DATA_MASTER_CH_ENABLED,
         translation_key="central_heating_n",
         translation_placeholders={"circuit_number": "1"},
-        device_class=BinarySensorDeviceClass.RUNNING,
     ),
     OpenThermBinarySensorEntityDescription(
         key=gw_vars.DATA_MASTER_DHW_ENABLED,
         translation_key="hot_water",
-        device_class=BinarySensorDeviceClass.RUNNING,
     ),
     OpenThermBinarySensorEntityDescription(
         key=gw_vars.DATA_MASTER_COOLING_ENABLED,
         translation_key="cooling",
-        device_class=BinarySensorDeviceClass.RUNNING,
     ),
     OpenThermBinarySensorEntityDescription(
         key=gw_vars.DATA_MASTER_OTC_ENABLED,
@@ -197,7 +194,6 @@ THERMOSTAT_BINARY_SENSOR_DESCRIPTIONS: tuple[
         key=gw_vars.DATA_MASTER_CH2_ENABLED,
         translation_key="central_heating_n",
         translation_placeholders={"circuit_number": "2"},
-        device_class=BinarySensorDeviceClass.RUNNING,
     ),
     OpenThermBinarySensorEntityDescription(
         key=gw_vars.DATA_ROVRD_MAN_PRIO,
