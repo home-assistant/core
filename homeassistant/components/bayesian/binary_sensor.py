@@ -69,19 +69,18 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _above_greater_than_below(config: dict[str, Any]) -> dict[str, Any]:
-    if config[CONF_PLATFORM] != CONF_NUMERIC_STATE:
-        return config
-    above = config.get(CONF_ABOVE)
-    below = config.get(CONF_BELOW)
-    if above is None and below is None:
-        raise vol.Invalid(
-            "For bayesian numeric state at least one of 'above' or 'below' must be specified."
-        )
-    if above is not None and below is not None:
-        if above > below:
+    if config[CONF_PLATFORM] == CONF_NUMERIC_STATE:
+        above = config.get(CONF_ABOVE)
+        below = config.get(CONF_BELOW)
+        if above is None and below is None:
             raise vol.Invalid(
-                f"For bayesian numeric state 'above' ({above}) must be less than 'below' ({below})."
+                "For bayesian numeric state at least one of 'above' or 'below' must be specified."
             )
+        if above is not None and below is not None:
+            if above > below:
+                raise vol.Invalid(
+                    f"For bayesian numeric state 'above' ({above}) must be less than 'below' ({below})."
+                )
     return config
 
 
