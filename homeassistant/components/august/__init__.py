@@ -24,7 +24,7 @@ from .util import async_create_august_clientsession
 type AugustConfigEntry = ConfigEntry[AugustData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> bool:
     """Set up August from a config entry."""
     session = async_create_august_clientsession(hass)
     august_gateway = AugustGateway(Path(hass.config.config_dir), session)
