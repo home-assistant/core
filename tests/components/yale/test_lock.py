@@ -5,6 +5,7 @@ import datetime
 from aiohttp import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy import SnapshotAssertion
 from yalexs.manager.activity import INITIAL_LOCK_RESYNC_TIME
 
 from homeassistant.components.lock import (
@@ -41,7 +42,7 @@ from tests.common import async_fire_time_changed
 
 
 async def test_lock_device_registry(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, snapshot: SnapshotAssertion
 ) -> None:
     """Test creation of a lock with doorsense and bridge ands up in the registry."""
     lock_one = await _mock_doorsense_enabled_yale_lock_detail(hass)
@@ -50,10 +51,7 @@ async def test_lock_device_registry(
     reg_device = device_registry.async_get_device(
         identifiers={("yale", "online_with_doorsense")}
     )
-    assert reg_device.model == "AUG-MD01"
-    assert reg_device.sw_version == "undefined-4.3.0-1.8.14"
-    assert reg_device.name == "online_with_doorsense Name"
-    assert reg_device.manufacturer == "Yale Home Inc."
+    assert reg_device == snapshot
 
 
 async def test_lock_changed_by(hass: HomeAssistant) -> None:
