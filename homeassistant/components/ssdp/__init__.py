@@ -291,7 +291,7 @@ class IntegrationMatchers:
             for domain, matcher in matchers_by_key.get(match_value, []):
                 if domain in domains:
                     continue
-                if all(info_with_desc.get(k) == v for (k, v) in matcher.items()):
+                if info_with_desc.items() >= matcher.items():
                     domains.add(domain)
         return domains
 
