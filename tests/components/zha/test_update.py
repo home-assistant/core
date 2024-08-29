@@ -23,7 +23,6 @@ from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
-    ATTR_RELEASE_SUMMARY,
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
 )
@@ -46,6 +45,8 @@ from homeassistant.setup import async_setup_component
 
 from .common import find_entity_id, update_attribute_cache
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
+
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -551,12 +552,13 @@ async def test_firmware_update_raises(
         )
 
 
-async def test_update_release_summary(
+async def test_update_release_notes(
     hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     setup_zha,
     zigpy_device_mock,
 ) -> None:
-    """Test ZHA update platform."""
+    """Test ZHA update platform release notes."""
     await setup_zha()
 
     gateway = get_zha_gateway(hass)
@@ -584,13 +586,22 @@ async def test_update_release_summary(
         for e in zha_device.device.platform_entities.values()
         if isinstance(e, ZhaFirmwareUpdateEntity)
     )
-    zha_lib_entity._attr_release_summary = "Some release summary"
+    zha_lib_entity._attr_release_notes = "Some lengthy release notes"
     zha_lib_entity.maybe_emit_state_changed_event()
     await hass.async_block_till_done()
 
     entity_id = find_entity_id(Platform.UPDATE, zha_device, hass)
     assert entity_id is not None
-    assert (
-        hass.states.get(entity_id).attributes[ATTR_RELEASE_SUMMARY]
-        == "Some release summary"
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": entity_id,
+        }
     )
+
+    result = await ws_client.receive_json()
+    assert result["success"] is True
+    assert result["result"] == "Some lengthy release notes"
