@@ -893,7 +893,7 @@ async def test_bad_multi_numeric(
 
     assert await async_setup_component(hass, "binary_sensor", config)
 
-    assert "they must not overlap" in caplog.text
+    assert "entities must not overlap" in caplog.text
 
 
 async def test_inverted_numeric(
