@@ -106,7 +106,7 @@ class AutomowerLawnMowerEntity(AutomowerAvailableEntity, LawnMowerEntity):
             return LawnMowerActivity.PAUSED
         if mower_attributes.mower.activity in MOWING_ACTIVITIES:
             return LawnMowerActivity.MOWING
-        if mower_attributes.mower.activity is MowerActivities.GOING_HOME:
+        if mower_attributes.mower.activity == MowerActivities.GOING_HOME:
             return LawnMowerActivity.RETURNING
         if (mower_attributes.mower.state == "RESTRICTED") or (
             mower_attributes.mower.activity in DOCKED_ACTIVITIES
