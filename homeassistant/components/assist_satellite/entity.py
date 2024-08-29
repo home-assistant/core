@@ -84,7 +84,12 @@ class AssistSatelliteEntity(entity.Entity):
         self._is_announcing = True
 
         try:
-            if not announce_media_id:
+            if announce_media_id:
+                # Resolve to full URL
+                announce_media_id = async_process_play_media_url(
+                    self.hass, announce_media_id
+                )
+            else:
                 # Synthesize audio and get URL
                 pipeline_id = self._resolve_pipeline(pipeline_entity_id)
                 pipeline = async_get_pipeline(self.hass, pipeline_id)
