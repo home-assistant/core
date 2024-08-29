@@ -13,9 +13,8 @@ from intellifire4py.local_api import IntelliFireAPILocal
 from intellifire4py.model import IntelliFireCommonFireplaceData
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.dhcp import DhcpServiceInfo
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,

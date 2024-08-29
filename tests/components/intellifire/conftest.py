@@ -162,6 +162,10 @@ def mock_cloud_interface() -> Generator[AsyncMock, None, None]:
             "homeassistant.components.intellifire.config_flow.IntelliFireCloudInterface",
             new=mock_client,
         ),
+        patch(
+            "intellifire4py.cloud_interface.IntelliFireCloudInterface",
+            new=mock_client,
+        ),
     ):
         # Mock async context manager
         mock_client = mock_client.return_value
@@ -186,8 +190,9 @@ def mock_local_interface() -> Generator[AsyncMock, None, None]:
         "homeassistant.components.intellifire.config_flow.IntelliFireAPILocal",
         autospec=True,
     ) as mock_client:
-        mock_local_client = mock_client.return_value
-        mock_local_client.data.return_value = poll_data
+        mock_client = mock_client.return_value
+        # Mock all instances of the class
+        type(mock_client).data = PropertyMock(return_value=poll_data)
         yield mock_client
 
 
