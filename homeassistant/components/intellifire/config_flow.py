@@ -67,7 +67,7 @@ async def _async_poll_local_fireplace_for_serial(
     return serial
 
 
-class IntelliFireConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for IntelliFire."""
 
     VERSION = 1

@@ -186,8 +186,8 @@ def mock_local_interface() -> Generator[AsyncMock, None, None]:
         "homeassistant.components.intellifire.config_flow.IntelliFireAPILocal",
         autospec=True,
     ) as mock_client:
-        mock_client = mock_client.return_value
-        type(mock_client).data = PropertyMock(return_value=poll_data)
+        mock_local_client = mock_client.return_value
+        mock_local_client.data.return_value = poll_data
         yield mock_client
 
 
