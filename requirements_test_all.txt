@@ -91,7 +91,7 @@ PyTransportNSW==0.1.1
 
 # homeassistant.components.camera
 # homeassistant.components.stream
-PyTurboJPEG==1.7.1
+PyTurboJPEG==1.7.5
 
 # homeassistant.components.vicare
 PyViCare-neo==0.2.1
@@ -925,10 +925,10 @@ hole==0.8.0
 holidays==0.55
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240828.0
+home-assistant-frontend==20240829.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.8.7
+home-assistant-intents==2024.8.29
 
 # homeassistant.components.home_connect
 homeconnect==0.8.0
@@ -1445,7 +1445,7 @@ pycoolmasternet-async==0.2.2
 pycsspeechtts==1.0.8
 
 # homeassistant.components.daikin
-pydaikin==2.13.5
+pydaikin==2.13.6
 
 # homeassistant.components.deako
 pydeako==0.4.0
