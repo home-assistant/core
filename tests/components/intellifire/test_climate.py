@@ -27,10 +27,6 @@ async def test_all_sensor_entities(
     """Test all entities."""
     with (
         patch("homeassistant.components.intellifire.PLATFORMS", [Platform.CLIMATE]),
-        patch(
-            "intellifire4py.unified_fireplace.UnifiedFireplace.build_fireplace_from_common",
-            return_value=mock_fp,
-        ),
     ):
         await setup_integration(hass, mock_config_entry_current)
         await snapshot_platform(
