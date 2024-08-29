@@ -51,7 +51,7 @@ pyOpenSSL==24.2.1
 pyserial==3.5
 pyspeex-noise==1.0.2
 python-slugify==8.0.4
-PyTurboJPEG==1.7.1
+PyTurboJPEG==1.7.5
 pyudev==0.24.1
 PyYAML==6.0.2
 requests==2.32.3
