@@ -71,7 +71,7 @@ def mock_config_entry_current() -> MockConfigEntry:
             CONF_USER_ID: "52C3F9E8B9D3AC99F8E4D12345678901FE9A2BC7D85F7654E28BF98BCD123456",
         },
         options={CONF_READ_MODE: API_MODE_LOCAL, CONF_CONTROL_MODE: API_MODE_CLOUD},
-        unique_id="serial",
+        unique_id="3FB284769E4736F30C8973A7ED358123",
     )
 
 
