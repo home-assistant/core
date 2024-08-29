@@ -2,7 +2,7 @@
 
 from typing import Final
 
-from aioazuredevops.models.builds import Build, BuildDefinition
+from aioazuredevops.models.build import Build, BuildDefinition
 from aioazuredevops.models.core import Project
 
 from homeassistant.components.azure_devops.const import CONF_ORG, CONF_PAT, CONF_PROJECT

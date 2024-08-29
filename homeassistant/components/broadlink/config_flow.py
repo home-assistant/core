@@ -5,7 +5,7 @@ import errno
 from functools import partial
 import logging
 import socket
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import broadlink as blk
 from broadlink.exceptions import (
@@ -37,9 +37,7 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the Broadlink flow."""
-        self.device: blk.Device | None = None
+    device: blk.Device
 
     async def async_set_device(
         self, device: blk.Device, raise_on_progress: bool = True
@@ -131,8 +129,6 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
                     )
                     return await self.async_step_auth()
 
-                if TYPE_CHECKING:
-                    assert self.device
                 if device.mac == self.device.mac:
                     await self.async_set_device(device, raise_on_progress=False)
                     return await self.async_step_auth()
@@ -158,10 +154,10 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_auth(self):
+    async def async_step_auth(self) -> ConfigFlowResult:
         """Authenticate to the device."""
         device = self.device
-        errors = {}
+        errors: dict[str, str] = {}
 
         try:
             await self.hass.async_add_executor_job(device.auth)
@@ -211,7 +207,11 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="auth", errors=errors)
 
-    async def async_step_reset(self, user_input=None, errors=None):
+    async def async_step_reset(
+        self,
+        user_input: dict[str, Any] | None = None,
+        errors: dict[str, str] | None = None,
+    ) -> ConfigFlowResult:
         """Guide the user to unlock the device manually.
 
         We are unable to authenticate because the device is locked.
@@ -234,7 +234,9 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
             {CONF_HOST: device.host[0], CONF_TIMEOUT: device.timeout}
         )
 
-    async def async_step_unlock(self, user_input=None):
+    async def async_step_unlock(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Unlock the device.
 
         The authentication succeeded, but the device is locked.
@@ -288,10 +290,12 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_finish(self, user_input=None):
+    async def async_step_finish(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Choose a name for the device and create config entry."""
         device = self.device
-        errors = {}
+        errors: dict[str, str] = {}
 
         # Abort reauthentication flow.
         self._abort_if_unique_id_configured(
@@ -314,10 +318,10 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="finish", data_schema=vol.Schema(data_schema), errors=errors
         )
 
-    async def async_step_import(self, import_info):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a device."""
-        self._async_abort_entries_match({CONF_HOST: import_info[CONF_HOST]})
-        return await self.async_step_user(import_info)
+        self._async_abort_entries_match({CONF_HOST: import_data[CONF_HOST]})
+        return await self.async_step_user(import_data)
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]

@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from aioazuredevops.models.builds import Build
+from aioazuredevops.models.build import Build
 from aioazuredevops.models.core import Project
 
 
