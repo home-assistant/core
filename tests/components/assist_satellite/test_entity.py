@@ -12,7 +12,6 @@ from homeassistant.components.assist_pipeline import (
 )
 from homeassistant.components.assist_satellite import AssistSatelliteState
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import Context, HomeAssistant
 
 from .conftest import MockAssistSatellite
@@ -27,9 +26,10 @@ async def test_entity_state(
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert state.state == AssistSatelliteState.LISTENING_WAKE_WORD
 
     context = Context()
+
     audio_stream = object()
 
     entity.async_set_context(context)
@@ -37,7 +37,7 @@ async def test_entity_state(
     with patch(
         "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream"
     ) as mock_start_pipeline:
-        await entity._async_accept_pipeline_from_satellite(audio_stream)
+        await entity._async_accept_pipeline_from_satellite(audio_stream)  # type: ignore[arg-type]
 
     assert mock_start_pipeline.called
     kwargs = mock_start_pipeline.call_args[1]
@@ -63,8 +63,7 @@ async def test_entity_state(
     assert kwargs["end_stage"] == PipelineStage.TTS
 
     for event_type, expected_state in (
-        (PipelineEventType.RUN_START, STATE_UNKNOWN),
-        (PipelineEventType.RUN_END, AssistSatelliteState.LISTENING_WAKE_WORD),
+        (PipelineEventType.RUN_START, AssistSatelliteState.LISTENING_WAKE_WORD),
         (PipelineEventType.WAKE_WORD_START, AssistSatelliteState.LISTENING_WAKE_WORD),
         (PipelineEventType.WAKE_WORD_END, AssistSatelliteState.LISTENING_WAKE_WORD),
         (PipelineEventType.STT_START, AssistSatelliteState.LISTENING_COMMAND),
@@ -76,11 +75,14 @@ async def test_entity_state(
         (PipelineEventType.TTS_START, AssistSatelliteState.RESPONDING),
         (PipelineEventType.TTS_END, AssistSatelliteState.RESPONDING),
         (PipelineEventType.ERROR, AssistSatelliteState.RESPONDING),
+        (PipelineEventType.RUN_END, AssistSatelliteState.RESPONDING),
     ):
         kwargs["event_callback"](PipelineEvent(event_type, {}))
         state = hass.states.get(ENTITY_ID)
+        assert state is not None
         assert state.state == expected_state, event_type
 
     entity.tts_response_finished()
     state = hass.states.get(ENTITY_ID)
+    assert state is not None
     assert state.state == AssistSatelliteState.LISTENING_WAKE_WORD
