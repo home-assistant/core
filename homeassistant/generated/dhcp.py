@@ -1024,11 +1024,19 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "tuya",
+        "macaddress": "A09208*",
+    },
+    {
+        "domain": "tuya",
         "macaddress": "D4A651*",
     },
     {
         "domain": "tuya",
         "macaddress": "D81F12*",
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "D8D668*",
     },
     {
         "domain": "twinkly",
