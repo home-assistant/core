@@ -122,4 +122,4 @@ async def test_update_options(
     await hass.async_block_till_done()
     assert entry_check.state is ConfigEntryState.LOADED
 
-    assert hass.states.get("sensor.inverter_1_current_power") is None
+    assert hass.states.get("sensor.inverter_1_power") is None

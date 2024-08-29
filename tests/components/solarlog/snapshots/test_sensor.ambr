@@ -50,6 +50,54 @@
     'state': '354.687',
   })
 # ---
+# name: test_all_entities[sensor.inverter_1_consumption_year-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.inverter_1_consumption_year',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Consumption year',
+    'platform': 'solarlog',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'consumption_year',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-inverter_1-consumption_year',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[sensor.inverter_1_consumption_year-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Inverter 1 Consumption year',
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inverter_1_consumption_year',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '354.687',
+  })
+# ---
 # name: test_all_entities[sensor.inverter_1_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -149,7 +197,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2',
+    'state': '2.0',
   })
 # ---
 # name: test_all_entities[sensor.solarlog_capacity-entry]
@@ -200,7 +248,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '85.0',
+    'state': '0.85',
   })
 # ---
 # name: test_all_entities[sensor.solarlog_consumption_ac-entry]
@@ -545,7 +593,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '98.0',
+    'state': '0.9804',
   })
 # ---
 # name: test_all_entities[sensor.solarlog_installed_peak_power-entry]
@@ -593,7 +641,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '120',
+    'state': '120.0',
   })
 # ---
 # name: test_all_entities[sensor.solarlog_last_update-entry]
@@ -691,7 +739,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '100.0',
   })
 # ---
 # name: test_all_entities[sensor.solarlog_power_available-entry]
@@ -793,7 +841,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '102',
+    'state': '102.0',
   })
 # ---
 # name: test_all_entities[sensor.solarlog_self_consumption_year-entry]
@@ -844,7 +892,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '545',
+    'state': '545.0',
   })
 # ---
 # name: test_all_entities[sensor.solarlog_usage-entry]
@@ -895,7 +943,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '54.9',
+    'state': '0.5487',
   })
 # ---
 # name: test_all_entities[sensor.solarlog_voltage_ac-entry]
@@ -946,7 +994,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '100.0',
   })
 # ---
 # name: test_all_entities[sensor.solarlog_voltage_dc-entry]
@@ -997,7 +1045,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '100.0',
   })
 # ---
 # name: test_all_entities[sensor.solarlog_yield_day-entry]

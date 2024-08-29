@@ -6,6 +6,7 @@ from urllib.parse import ParseResult, urlparse
 
 from solarlog_cli.solarlog_connector import SolarLogConnector
 from solarlog_cli.solarlog_exceptions import SolarLogConnectionError, SolarLogError
+from solarlog_cli.solarlog_models import InverterData
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -77,7 +78,6 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
         """Step when user initializes a integration."""
         self._errors = {}
         if user_input is not None:
-            # set some defaults in case we need to return to the form
             user_input[CONF_NAME] = slugify(user_input[CONF_NAME])
             user_input[CONF_HOST] = self._parse_url(user_input[CONF_HOST])
 
@@ -88,42 +88,19 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_NAME], data=user_input
                 )
         else:
-            user_input = {}
-            user_input[CONF_NAME] = DEFAULT_NAME
-            user_input[CONF_HOST] = DEFAULT_HOST
+            user_input = {CONF_NAME: DEFAULT_NAME, CONF_HOST: DEFAULT_HOST}
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
-                    ): str,
-                    vol.Required(
-                        CONF_HOST, default=user_input.get(CONF_HOST, DEFAULT_HOST)
-                    ): str,
+                    vol.Required(CONF_NAME, default=user_input[CONF_NAME]): str,
+                    vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
                     vol.Required("extended_data", default=False): bool,
                 }
             ),
             errors=self._errors,
         )
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Import a config entry."""
-
-        user_input = {
-            CONF_HOST: DEFAULT_HOST,
-            CONF_NAME: DEFAULT_NAME,
-            "extended_data": False,
-            **user_input,
-        }
-
-        user_input[CONF_HOST] = self._parse_url(user_input[CONF_HOST])
-
-        if self._host_in_configuration_exists(user_input[CONF_HOST]):
-            return self.async_abort(reason="already_configured")
-
-        return await self.async_step_user(user_input)
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
@@ -168,7 +145,7 @@ class OptionsFlowHandler(OptionsFlow):
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
-        self._device_list: dict[int, dict[str, str]] = {}
+        self._device_list: dict[int, InverterData] = {}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -183,23 +160,23 @@ class OptionsFlowHandler(OptionsFlow):
             for key in self._device_list:
                 devices |= {key: (str(key) in user_input["enabled_devices"])}
 
-            await coordinator.solarlog.set_enabled_devices(devices)
+            coordinator.solarlog.set_enabled_devices(devices)
 
             return self.async_create_entry(data={"devices": devices})
 
         try:
-            self._device_list = await coordinator.solarlog.client.get_device_list()
+            self._device_list = await coordinator.solarlog.update_device_list()
         except SolarLogConnectionError:
             errors["base"] = "cannot_connect"
         except Exception:  # noqa: BLE001
             errors["base"] = "unknown"
 
-        if not self._device_list:
+        if self._device_list == {}:
             return self.async_abort(reason="no_devices")
 
         device_list: dict[str, str] = {}
         for key, value in self._device_list.items():
-            device_list |= {str(key): value["name"]}
+            device_list |= {str(key): value.name}
 
         return self.async_show_form(
             step_id="init",
