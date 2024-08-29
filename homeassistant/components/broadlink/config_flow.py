@@ -5,7 +5,7 @@ import errno
 from functools import partial
 import logging
 import socket
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import broadlink as blk
 from broadlink.exceptions import (
@@ -39,9 +39,11 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the Broadlink flow."""
-        self.device = None
+        self.device: blk.Device | None = None
 
-    async def async_set_device(self, device, raise_on_progress=True):
+    async def async_set_device(
+        self, device: blk.Device, raise_on_progress: bool = True
+    ) -> None:
         """Define a device for the config flow."""
         if device.type not in DEVICE_TYPES:
             _LOGGER.error(
@@ -90,7 +92,9 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_device(device)
         return await self.async_step_auth()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
@@ -127,6 +131,8 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
                     )
                     return await self.async_step_auth()
 
+                if TYPE_CHECKING:
+                    assert self.device
                 if device.mac == self.device.mac:
                     await self.async_set_device(device, raise_on_progress=False)
                     return await self.async_step_auth()
@@ -308,10 +314,10 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="finish", data_schema=vol.Schema(data_schema), errors=errors
         )
 
-    async def async_step_import(self, import_info):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a device."""
-        self._async_abort_entries_match({CONF_HOST: import_info[CONF_HOST]})
-        return await self.async_step_user(import_info)
+        self._async_abort_entries_match({CONF_HOST: import_data[CONF_HOST]})
+        return await self.async_step_user(import_data)
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]

@@ -10,7 +10,7 @@ from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.ring import DOMAIN
 from homeassistant.components.ring.const import SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_USERNAME
+from homeassistant.const import CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -42,11 +42,11 @@ async def test_setup_entry_device_update(
     """Test devices are updating after setup entry."""
 
     front_door_doorbell = mock_ring_devices.get_device(987654)
-    front_door_doorbell.history.assert_not_called()
+    front_door_doorbell.async_history.assert_not_called()
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
-    front_door_doorbell.history.assert_called_once()
+    front_door_doorbell.async_history.assert_called_once()
 
 
 async def test_auth_failed_on_setup(
@@ -56,7 +56,7 @@ async def test_auth_failed_on_setup(
 ) -> None:
     """Test auth failure on setup entry."""
     mock_config_entry.add_to_hass(hass)
-    mock_ring_client.update_data.side_effect = AuthenticationError
+    mock_ring_client.async_update_data.side_effect = AuthenticationError
 
     assert not any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -90,7 +90,7 @@ async def test_error_on_setup(
     """Test non-auth errors on setup entry."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_ring_client.update_data.side_effect = error_type
+    mock_ring_client.async_update_data.side_effect = error_type
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -113,7 +113,7 @@ async def test_auth_failure_on_global_update(
     await hass.async_block_till_done()
     assert not any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
-    mock_ring_client.update_devices.side_effect = AuthenticationError
+    mock_ring_client.async_update_devices.side_effect = AuthenticationError
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -139,7 +139,7 @@ async def test_auth_failure_on_device_update(
     assert not any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
     front_door_doorbell = mock_ring_devices.get_device(987654)
-    front_door_doorbell.history.side_effect = AuthenticationError
+    front_door_doorbell.async_history.side_effect = AuthenticationError
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -178,7 +178,7 @@ async def test_error_on_global_update(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_ring_client.update_devices.side_effect = error_type
+    mock_ring_client.async_update_devices.side_effect = error_type
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -219,7 +219,7 @@ async def test_error_on_device_update(
     await hass.async_block_till_done()
 
     front_door_doorbell = mock_ring_devices.get_device(765432)
-    front_door_doorbell.history.side_effect = error_type
+    front_door_doorbell.async_history.side_effect = error_type
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -386,3 +386,30 @@ async def test_update_unique_id_no_update(
     assert entity_migrated
     assert entity_migrated.unique_id == correct_unique_id
     assert "Fixing non string unique id" not in caplog.text
+
+
+async def test_token_updated(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_ring_client,
+    mock_ring_init_auth_class,
+) -> None:
+    """Test that the token value is updated in the config entry.
+
+    This simulates the api calling the callback.
+    """
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_ring_init_auth_class.call_count == 1
+    token_updater = mock_ring_init_auth_class.call_args.args[2]
+    assert mock_config_entry.data[CONF_TOKEN] == {"access_token": "mock-token"}
+
+    mock_ring_client.async_update_devices.side_effect = lambda: token_updater(
+        {"access_token": "new-mock-token"}
+    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_config_entry.data[CONF_TOKEN] == {"access_token": "new-mock-token"}

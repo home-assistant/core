@@ -101,23 +101,6 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=self._errors,
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Import a config entry."""
-
-        user_input = {
-            CONF_HOST: DEFAULT_HOST,
-            CONF_NAME: DEFAULT_NAME,
-            "extended_data": False,
-            **user_input,
-        }
-
-        user_input[CONF_HOST] = self._parse_url(user_input[CONF_HOST])
-
-        if self._host_in_configuration_exists(user_input[CONF_HOST]):
-            return self.async_abort(reason="already_configured")
-
-        return await self.async_step_user(user_input)
-
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -13,6 +13,7 @@ import pytest
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt.client import RECONNECT_INTERVAL_SECONDS
+from homeassistant.components.mqtt.const import SUPPORTED_COMPONENTS
 from homeassistant.components.mqtt.models import MessageCallbackType, ReceiveMessage
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import (
@@ -34,11 +35,6 @@ from tests.common import (
     async_fire_time_changed,
 )
 from tests.typing import MqttMockHAClient, MqttMockHAClientGenerator, MqttMockPahoClient
-
-
-@pytest.fixture(autouse=True)
-def mock_storage(hass_storage: dict[str, Any]) -> None:
-    """Autouse hass_storage for the TestCase tests."""
 
 
 def help_assert_message(
@@ -1614,8 +1610,9 @@ async def test_subscription_done_when_birth_message_is_sent(
     """Test sending birth message until initial subscription has been completed."""
     mqtt_client_mock = setup_with_birth_msg_client_mock
     subscribe_calls = help_all_subscribe_calls(mqtt_client_mock)
-    assert ("homeassistant/+/+/config", 0) in subscribe_calls
-    assert ("homeassistant/+/+/+/config", 0) in subscribe_calls
+    for component in SUPPORTED_COMPONENTS:
+        assert (f"homeassistant/{component}/+/config", 0) in subscribe_calls
+        assert (f"homeassistant/{component}/+/+/config", 0) in subscribe_calls
     mqtt_client_mock.publish.assert_called_with(
         "homeassistant/status", "online", 0, False
     )

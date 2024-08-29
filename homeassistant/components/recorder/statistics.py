@@ -148,6 +148,12 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
     **{unit: VolumeFlowRateConverter for unit in VolumeFlowRateConverter.VALID_UNITS},
 }
 
+
+UNIT_CLASSES = {
+    unit: converter.UNIT_CLASS
+    for unit, converter in STATISTIC_UNIT_TO_UNIT_CONVERTER.items()
+}
+
 DATA_SHORT_TERM_STATISTICS_RUN_CACHE = "recorder_short_term_statistics_run_cache"
 
 
@@ -209,13 +215,6 @@ class StatisticsRow(BaseStatisticsRow, total=False):
     max: float | None
     mean: float | None
     change: float | None
-
-
-def _get_unit_class(unit: str | None) -> str | None:
-    """Get corresponding unit class from from the statistics unit."""
-    if converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(unit):
-        return converter.UNIT_CLASS
-    return None
 
 
 def get_display_unit(
@@ -807,7 +806,7 @@ def _statistic_by_id_from_metadata(
             "has_sum": meta["has_sum"],
             "name": meta["name"],
             "source": meta["source"],
-            "unit_class": _get_unit_class(meta["unit_of_measurement"]),
+            "unit_class": UNIT_CLASSES.get(meta["unit_of_measurement"]),
             "unit_of_measurement": meta["unit_of_measurement"],
         }
         for _, meta in metadata.values()
@@ -881,7 +880,7 @@ def list_statistic_ids(
                     "has_sum": meta["has_sum"],
                     "name": meta["name"],
                     "source": meta["source"],
-                    "unit_class": _get_unit_class(meta["unit_of_measurement"]),
+                    "unit_class": UNIT_CLASSES.get(meta["unit_of_measurement"]),
                     "unit_of_measurement": meta["unit_of_measurement"],
                 }
 
@@ -2089,71 +2088,38 @@ def _build_stats(
     db_rows: list[Row],
     table_duration_seconds: float,
     start_ts_idx: int,
-    mean_idx: int | None,
-    min_idx: int | None,
-    max_idx: int | None,
-    last_reset_ts_idx: int | None,
-    state_idx: int | None,
-    sum_idx: int | None,
+    row_mapping: tuple[tuple[str, int], ...],
 ) -> list[StatisticsRow]:
     """Build a list of statistics without unit conversion."""
-    result: list[StatisticsRow] = []
-    ent_results_append = result.append
-    for db_row in db_rows:
-        row: StatisticsRow = {
+    return [
+        {
             "start": (start_ts := db_row[start_ts_idx]),
             "end": start_ts + table_duration_seconds,
+            **{key: db_row[idx] for key, idx in row_mapping},  # type: ignore[typeddict-item]
         }
-        if last_reset_ts_idx is not None:
-            row["last_reset"] = db_row[last_reset_ts_idx]
-        if mean_idx is not None:
-            row["mean"] = db_row[mean_idx]
-        if min_idx is not None:
-            row["min"] = db_row[min_idx]
-        if max_idx is not None:
-            row["max"] = db_row[max_idx]
-        if state_idx is not None:
-            row["state"] = db_row[state_idx]
-        if sum_idx is not None:
-            row["sum"] = db_row[sum_idx]
-        ent_results_append(row)
-    return result
+        for db_row in db_rows
+    ]
 
 
 def _build_converted_stats(
     db_rows: list[Row],
     table_duration_seconds: float,
     start_ts_idx: int,
-    mean_idx: int | None,
-    min_idx: int | None,
-    max_idx: int | None,
-    last_reset_ts_idx: int | None,
-    state_idx: int | None,
-    sum_idx: int | None,
+    row_mapping: tuple[tuple[str, int], ...],
     convert: Callable[[float | None], float | None] | Callable[[float], float],
 ) -> list[StatisticsRow]:
     """Build a list of statistics with unit conversion."""
-    result: list[StatisticsRow] = []
-    ent_results_append = result.append
-    for db_row in db_rows:
-        row: StatisticsRow = {
+    return [
+        {
             "start": (start_ts := db_row[start_ts_idx]),
             "end": start_ts + table_duration_seconds,
+            **{
+                key: None if (v := db_row[idx]) is None else convert(v)  # type: ignore[typeddict-item]
+                for key, idx in row_mapping
+            },
         }
-        if last_reset_ts_idx is not None:
-            row["last_reset"] = db_row[last_reset_ts_idx]
-        if mean_idx is not None:
-            row["mean"] = None if (v := db_row[mean_idx]) is None else convert(v)
-        if min_idx is not None:
-            row["min"] = None if (v := db_row[min_idx]) is None else convert(v)
-        if max_idx is not None:
-            row["max"] = None if (v := db_row[max_idx]) is None else convert(v)
-        if state_idx is not None:
-            row["state"] = None if (v := db_row[state_idx]) is None else convert(v)
-        if sum_idx is not None:
-            row["sum"] = None if (v := db_row[sum_idx]) is None else convert(v)
-        ent_results_append(row)
-    return result
+        for db_row in db_rows
+    ]
 
 
 def _sorted_statistics_to_dict(
@@ -2193,14 +2159,11 @@ def _sorted_statistics_to_dict(
     # Figure out which fields we need to extract from the SQL result
     # and which indices they have in the result so we can avoid the overhead
     # of doing a dict lookup for each row
-    mean_idx = field_map["mean"] if "mean" in types else None
-    min_idx = field_map["min"] if "min" in types else None
-    max_idx = field_map["max"] if "max" in types else None
-    last_reset_ts_idx = field_map["last_reset_ts"] if "last_reset" in types else None
-    state_idx = field_map["state"] if "state" in types else None
+    if "last_reset_ts" in field_map:
+        field_map["last_reset"] = field_map.pop("last_reset_ts")
     sum_idx = field_map["sum"] if "sum" in types else None
     sum_only = len(types) == 1 and sum_idx is not None
-    row_idxes = (mean_idx, min_idx, max_idx, last_reset_ts_idx, state_idx, sum_idx)
+    row_mapping = tuple((key, field_map[key]) for key in types if key in field_map)
     # Append all statistic entries, and optionally do unit conversion
     table_duration_seconds = table.duration.total_seconds()
     for meta_id, db_rows in stats_by_meta_id.items():
@@ -2229,9 +2192,9 @@ def _sorted_statistics_to_dict(
             else:
                 _stats = _build_sum_stats(*build_args, sum_idx)
         elif convert:
-            _stats = _build_converted_stats(*build_args, *row_idxes, convert)
+            _stats = _build_converted_stats(*build_args, row_mapping, convert)
         else:
-            _stats = _build_stats(*build_args, *row_idxes)
+            _stats = _build_stats(*build_args, row_mapping)
 
         result[statistic_id] = _stats
 
