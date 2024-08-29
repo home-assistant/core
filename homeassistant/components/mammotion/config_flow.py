@@ -1,6 +1,6 @@
 """Config flow for Mammotion Luba."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from bleak import BLEDevice
 from pymammotion.http.http import connect_http
@@ -93,7 +93,7 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the user step to pick discovered device."""
 
         if user_input is not None:
-            address = user_input.get(CONF_ADDRESS)
+            address = user_input.get(CONF_ADDRESS) or self._config.get(CONF_ADDRESS)
             if address is not None:
                 name = self._discovered_devices.get(address)
                 if name is None:
@@ -138,8 +138,6 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_wifi(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle the user step for Wi-Fi control."""
-        print("step_wifi")
-        print(user_input)
         if user_input is not None and (
             user_input.get(CONF_ACCOUNTNAME) is not None
             or user_input.get(CONF_USE_WIFI) is True
@@ -149,13 +147,10 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
             address = self._config.get(CONF_ADDRESS)
             device_name = user_input.get(CONF_DEVICE_NAME)
             name = self._discovered_devices.get(address)
-            print(self._config)
             if address is None or name is None:
                 if device_name is not None:
                     await self.async_set_unique_id(device_name, raise_on_progress=False)
                     self._abort_if_unique_id_configured()
-                else:
-                    return self.async_abort(reason="no_device_name")
 
             try:
                 await connect_http(account, password)
@@ -163,7 +158,7 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason=str(err))
 
             return self.async_create_entry(
-                title=name,
+                title=name or device_name,
                 data={
                     **self._config,
                     CONF_ACCOUNTNAME: account,
@@ -178,7 +173,7 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
             vol.Optional(CONF_USE_WIFI, default=True): cv.boolean,
         }
 
-        if user_input.get(CONF_ADDRESS) is None:
+        if self._config.get(CONF_ADDRESS) is None:
             schema = {
                 vol.Required(CONF_DEVICE_NAME): vol.All(cv.string, vol.Strip),
                 vol.Required(CONF_ACCOUNTNAME): vol.All(cv.string, vol.Strip),
@@ -194,6 +189,55 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> OptionsFlow:
         """Create the options flow."""
         return MammotionConfigFlowHandler(config_entry)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        if TYPE_CHECKING:
+            assert entry
+
+        errors: dict[str, str] | None = None
+        user_input = user_input or {}
+        if user_input:
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data={
+                        **entry.data,
+                        **user_input,
+                    },
+                    reason="reconfigure_successful",
+                )
+
+        schema = {
+            vol.Required(
+                CONF_ACCOUNTNAME, default=entry.data.get(CONF_ACCOUNTNAME)
+            ): cv.string,
+            vol.Required(
+                CONF_PASSWORD, default=entry.data.get(CONF_PASSWORD)
+            ): cv.string,
+            vol.Optional(
+                CONF_USE_WIFI, default=entry.data.get(CONF_USE_WIFI) or True
+            ): cv.boolean,
+        }
+
+        if user_input is not None and entry.data.get(CONF_ADDRESS) is None:
+            schema = {
+                vol.Required(
+                    CONF_ACCOUNTNAME, default=entry.data.get(CONF_ACCOUNTNAME)
+                ): vol.All(cv.string, vol.Strip),
+                vol.Required(
+                    CONF_PASSWORD, default=entry.data.get(CONF_PASSWORD)
+                ): vol.All(cv.string, vol.Strip),
+            }
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(schema),
+            errors=errors,
+        )
 
 
 class MammotionConfigFlowHandler(OptionsFlowWithConfigEntry):

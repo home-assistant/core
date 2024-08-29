@@ -20,14 +20,14 @@ class MammotionBaseEntity(CoordinatorEntity[MammotionDataUpdateCoordinator]):
         swversion = "0.0.0"
         if (
             len(
-                coordinator.devices.mower(
+                coordinator.manager.mower(
                     coordinator.device_name
                 ).net.toapp_devinfo_resp.resp_ids
             )
             > 0
         ):
             swversion = (
-                coordinator.devices.mower(coordinator.device_name)
+                coordinator.manager.mower(coordinator.device_name)
                 .net.toapp_devinfo_resp.resp_ids[0]
                 .info
             )
@@ -41,7 +41,7 @@ class MammotionBaseEntity(CoordinatorEntity[MammotionDataUpdateCoordinator]):
             sw_version=swversion,
             model=DeviceType.value_of_str(
                 coordinator.device_name,
-                coordinator.devices.mower(
+                coordinator.manager.mower(
                     coordinator.device_name
                 ).net.toapp_wifi_iot_status.productkey,
             ).get_model(),

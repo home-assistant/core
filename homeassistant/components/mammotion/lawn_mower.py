@@ -87,14 +87,14 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
             )
         if self.rpt_dev_status.sys_status == WorkMode.MODE_PAUSE:
             try:
-                await self.coordinator.devices.command("resume_execute_task")
+                await self.coordinator.async_send_command("resume_execute_task")
                 return await self.coordinator.async_request_iot_sync()
             except COMMAND_EXCEPTIONS as exc:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN, translation_key="resume_failed"
                 ) from exc
         try:
-            await self.coordinator.devices.command("start_job")
+            await self.coordinator.async_send_command("start_job")
             await self.coordinator.async_request_iot_sync()
         except COMMAND_EXCEPTIONS as exc:
             raise HomeAssistantError(
@@ -102,7 +102,7 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
             ) from exc
         finally:
             self.coordinator.async_set_updated_data(
-                self.coordinator.devices.mower(self.coordinator.device_name)
+                self.coordinator.manager.mower(self.coordinator.device_name)
             )
 
     async def async_dock(self) -> None:
@@ -112,11 +112,11 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
 
         try:
             if mode == WorkMode.MODE_RETURNING:
-                await self.coordinator.devices.command("cancel_return_to_dock")
-                return await self.coordinator.devices.command("get_report_cfg")
+                await self.coordinator.async_send_command("cancel_return_to_dock")
+                return await self.coordinator.async_send_command("get_report_cfg")
             if mode == WorkMode.MODE_WORKING:
-                await self.coordinator.devices.command("pause_execute_task")
-            await self.coordinator.devices.command("return_to_dock")
+                await self.coordinator.async_send_command("pause_execute_task")
+            await self.coordinator.async_send_command("return_to_dock")
             await self.coordinator.async_request_iot_sync()
         except COMMAND_EXCEPTIONS as exc:
             raise HomeAssistantError(
@@ -124,13 +124,13 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
             ) from exc
         finally:
             self.coordinator.async_set_updated_data(
-                self.coordinator.devices.mower(self.coordinator.device_name)
+                self.coordinator.manager.mower(self.coordinator.device_name)
             )
 
     async def async_pause(self) -> None:
         """Pause mower."""
         try:
-            await self.coordinator.devices.command("pause_execute_task")
+            await self.coordinator.async_send_command("pause_execute_task")
             await self.coordinator.async_request_iot_sync()
         except COMMAND_EXCEPTIONS as exc:
             raise HomeAssistantError(
@@ -138,5 +138,5 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
             ) from exc
         finally:
             self.coordinator.async_set_updated_data(
-                self.coordinator.devices.mower(self.coordinator.device_name)
+                self.coordinator.manager.mower(self.coordinator.device_name)
             )
