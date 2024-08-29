@@ -19,6 +19,7 @@ from homeassistant.components.assist_pipeline import (
     async_pipeline_from_audio_stream,
     vad,
 )
+from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.components.tts.media_source import (
     generate_media_source_id as tts_generate_media_source_id,
 )
@@ -28,11 +29,7 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.util import ulid
 
 from .errors import SatelliteBusyError
-from .models import (
-    AssistSatelliteEntityFeature,
-    AssistSatelliteState,
-    PipelineRunConfig,
-)
+from .models import AssistSatelliteEntityFeature, AssistSatelliteState
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,6 +51,7 @@ class AssistSatelliteEntity(entity.Entity):
     _conversation_id: str | None = None
     _conversation_id_time: float | None = None
 
+    _is_announcing: bool = False
     _tts_finished_event: asyncio.Event | None = None
     _wake_word_future: asyncio.Future[str | None] | None = None
 
@@ -61,14 +59,10 @@ class AssistSatelliteEntity(entity.Entity):
         """Run when entity about to be added to hass."""
         self._set_state(AssistSatelliteState.LISTENING_WAKE_WORD)
 
-    async def async_trigger_pipeline_on_satellite(
-        self, run_config: PipelineRunConfig
-    ) -> None:
-        """Run a pipeline on the satellite with the configuration.
-
-        Requires TRIGGER_PIPELINE supported feature.
-        """
-        raise NotImplementedError
+    @property
+    def is_announcing(self) -> bool:
+        """Returns true if currently announcing."""
+        return self._is_announcing
 
     async def async_announce(
         self,
@@ -76,72 +70,78 @@ class AssistSatelliteEntity(entity.Entity):
         announce_media_id: str | None = None,
         pipeline_entity_id: str | None = None,
     ) -> None:
-        """Play an announcement on the satellite."""
-        if self._tts_finished_event is not None:
-            raise SatelliteBusyError()
+        """Play an announcement on the satellite.
 
-        if not announce_media_id:
-            # Synthesize audio and get URL
-            pipeline_id = self._resolve_pipeline(pipeline_entity_id)
-            pipeline = async_get_pipeline(self.hass, pipeline_id)
+        If announce_media_id is not provided, announce_text is synthesized to
+        audio with the selected pipeline.
 
-            tts_options: dict[str, Any] = {}
-            if pipeline.tts_voice is not None:
-                tts_options[tts.ATTR_VOICE] = pipeline.tts_voice
+        Calls _internal_async_announce with media id and expects it to block
+        until the announcement is completed.
+        """
+        if self._is_announcing:
+            raise SatelliteBusyError
 
-            tts_media_id = tts_generate_media_source_id(
-                self.hass,
-                announce_text,
-                engine=pipeline.tts_engine,
-                language=pipeline.tts_language,
-                options=tts_options,
-            )
-            tts_media = await media_source.async_resolve_media(
-                self.hass,
-                tts_media_id,
-                None,
-            )
-            announce_media_id = tts_media.url
+        self._is_announcing = True
 
-        await self.async_trigger_pipeline_on_satellite(
-            PipelineRunConfig(
-                start_stage=PipelineStage.TTS,
-                end_stage=PipelineStage.TTS,
-                pipeline_entity_id=pipeline_entity_id,
-                announce_text=announce_text,
-                announce_media_id=announce_media_id,
-            ),
+        try:
+            if not announce_media_id:
+                # Synthesize audio and get URL
+                pipeline_id = self._resolve_pipeline(pipeline_entity_id)
+                pipeline = async_get_pipeline(self.hass, pipeline_id)
+
+                tts_options: dict[str, Any] = {}
+                if pipeline.tts_voice is not None:
+                    tts_options[tts.ATTR_VOICE] = pipeline.tts_voice
+
+                tts_media_id = tts_generate_media_source_id(
+                    self.hass,
+                    announce_text,
+                    engine=pipeline.tts_engine,
+                    language=pipeline.tts_language,
+                    options=tts_options,
+                )
+                tts_media = await media_source.async_resolve_media(
+                    self.hass,
+                    tts_media_id,
+                    None,
+                )
+
+                # Resolve to full URL
+                announce_media_id = async_process_play_media_url(
+                    self.hass, tts_media.url
+                )
+
+            # Block until announcement is finished
+            await self._internal_async_announce(announce_media_id)
+        finally:
+            self._is_announcing = False
+
+    async def _internal_async_announce(self, media_id: str) -> None:
+        """Announce the media URL on the satellite and returns when finished."""
+        raise NotImplementedError
+
+    @property
+    def is_intercepting_wake_word(self) -> bool:
+        """Return true if next wake word will be intercepted."""
+        return (self._wake_word_future is not None) and (
+            not self._wake_word_future.cancelled()
         )
 
-        # Wait for device to report that announcement has finished
-        if self._tts_finished_event is not None:
-            try:
-                await self._tts_finished_event.wait()
-            finally:
-                self._tts_finished_event = None
-
-    async def async_wait_wake(
-        self,
-        announce_text: str | None = None,
-        announce_media_id: str | None = None,
-        pipeline_entity_id: str | None = None,
-    ) -> str | None:
-        """Block until a wake word is detected from the satellite.
+    async def async_intercept_wake_word(self) -> str | None:
+        """Intercept the next wake word from the satellite.
 
         Returns the detected wake word phrase or None.
         """
         if self._wake_word_future is not None:
-            raise SatelliteBusyError()
+            raise SatelliteBusyError
 
+        # Will cause next wake word to be intercepted in
+        # _async_accept_pipeline_from_satellite
         self._wake_word_future = asyncio.Future()
 
-        try:
-            if announce_text or announce_media_id:
-                # Make announcement first
-                await self.async_announce(
-                    announce_text or "", announce_media_id, pipeline_entity_id
-                )
+        _LOGGER.debug("Next wake word will be intercepted: %s", self.entity_id)
 
+        try:
             return await self._wake_word_future
         finally:
             self._wake_word_future = None
@@ -157,12 +157,15 @@ class AssistSatelliteEntity(entity.Entity):
         vad_sensitivity_entity_id: str | None = None,
         wake_word_phrase: str | None = None,
     ) -> None:
-        """Triggers an Assist pipeline in Home Assistant from a satellite."""
-        if (self._wake_word_future is not None) and (
-            not self._wake_word_future.cancelled()
-        ):
-            # Intercepting wake word
-            _LOGGER.debug("Intercepted wake word: %s", wake_word_phrase)
+        """Trigger an Assist pipeline in Home Assistant from a satellite."""
+        if self.is_intercepting_wake_word:
+            # Intercepting wake word and immediately end pipeline
+            _LOGGER.debug(
+                "Intercepted wake word: %s (entity_id=%s)",
+                wake_word_phrase,
+                self.entity_id,
+            )
+            assert self._wake_word_future is not None
             self._wake_word_future.set_result(wake_word_phrase)
             self._internal_on_pipeline_event(PipelineEvent(PipelineEventType.RUN_END))
             return
@@ -265,6 +268,7 @@ class AssistSatelliteEntity(entity.Entity):
             self._tts_finished_event.set()
 
     def _resolve_pipeline(self, pipeline_entity_id: str | None) -> str | None:
+        """Resolve pipeline from select entity to id."""
         if not pipeline_entity_id:
             return None
 

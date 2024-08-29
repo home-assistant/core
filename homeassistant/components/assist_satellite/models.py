@@ -1,9 +1,6 @@
 """Models for assist satellite."""
 
-from dataclasses import dataclass
 from enum import IntFlag, StrEnum
-
-from homeassistant.components.assist_pipeline import PipelineStage
 
 
 class AssistSatelliteState(StrEnum):
@@ -25,25 +22,5 @@ class AssistSatelliteState(StrEnum):
 class AssistSatelliteEntityFeature(IntFlag):
     """Supported features of Assist satellite entity."""
 
-    TRIGGER_PIPELINE = 1
-    """Device supports remote triggering of a pipeline."""
-
-
-@dataclass(frozen=True)
-class PipelineRunConfig:
-    """Configuration for a satellite pipeline run."""
-
-    start_stage: PipelineStage
-    """Start stage of the pipeline to run."""
-
-    end_stage: PipelineStage
-    """End stage of the pipeline to run."""
-
-    pipeline_entity_id: str | None = None
-    """Id of the entity with which pipeline to run."""
-
-    announce_text: str | None = None
-    """Text to announce using text-to-speech."""
-
-    announce_media_id: str | None = None
-    """Media id to announce."""
+    ANNOUNCE = 1
+    """Device supports remotely triggered announcements."""

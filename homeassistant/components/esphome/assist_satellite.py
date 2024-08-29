@@ -33,7 +33,6 @@ from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.ulid import ulid_now
 
 from .const import DOMAIN
 from .entity import EsphomeAssistEntity
@@ -102,9 +101,7 @@ class EsphomeAssistSatellite(
         translation_key="assist_satellite",
         entity_category=EntityCategory.CONFIG,
     )
-    _attr_supported_features = (
-        assist_satellite.AssistSatelliteEntityFeature.TRIGGER_PIPELINE
-    )
+    _attr_supported_features = assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
 
     def __init__(
         self,
@@ -123,7 +120,6 @@ class EsphomeAssistSatellite(
         self._is_running: bool = True
         self._pipeline_task: asyncio.Task | None = None
         self._audio_queue: asyncio.Queue[bytes | None] = asyncio.Queue()
-        self._pipeline_runs: dict[str, assist_satellite.PipelineRunConfig] = {}
         self._tts_streaming_task: asyncio.Task | None = None
         self._udp_server: VoiceAssistantUDPServer | None = None
 
@@ -166,28 +162,13 @@ class EsphomeAssistSatellite(
                 )
             )
 
-        # async def test() -> None:
-        #     await asyncio.sleep(5)
-        #     await self.async_announce("This is a test.")
-
-        self.config_entry.async_create_background_task(self.hass, test(), "test")
-
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         self._is_running = False
         self._stop_pipeline()
 
-    async def async_trigger_pipeline_on_satellite(
-        self,
-        run_config: assist_satellite.PipelineRunConfig,
-    ) -> None:
-        """Triggers a remote pipeline run on the satellite."""
-        pipeline_run_id = ulid_now()
-        self._pipeline_runs[pipeline_run_id] = run_config
-        self.cli.trigger_voice_assistant_pipeline(
-            pipeline_run_id, run_config.announce_text, run_config.announce_media_id
-        )
-        _LOGGER.debug("Triggered remote pipeline run (id=%s)", pipeline_run_id)
+    async def _internal_async_announce(self, media_id: str) -> None:
+        self.cli.send_voice_assistant_announce(media_id)
 
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Handle pipeline events."""
@@ -257,7 +238,6 @@ class EsphomeAssistSatellite(
         flags: int,
         audio_settings: VoiceAssistantAudioSettings,
         wake_word_phrase: str | None,
-        pipeline_run_id: str | None,
     ) -> int | None:
         """Handle pipeline run request."""
         # Clear audio queue
@@ -265,7 +245,7 @@ class EsphomeAssistSatellite(
             await self._audio_queue.get()
 
         if self._tts_streaming_task is not None:
-            # Cancel any exiting TTS response
+            # Cancel current TTS response
             self._tts_streaming_task.cancel()
             self._tts_streaming_task = None
 
@@ -290,28 +270,19 @@ class EsphomeAssistSatellite(
             DOMAIN,
             f"{self.entry_data.device_info.mac_address}-pipeline",
         )
-        vad_sensitivity_id = ent_reg.async_get_entity_id(
+        vad_sensitivity_entity_id = ent_reg.async_get_entity_id(
             Platform.SELECT,
             DOMAIN,
             f"{self.entry_data.device_info.mac_address}-vad_sensitivity",
         )
 
-        # Determine if this pipeline was triggered remotely or on-device
-        if (pipeline_run_id is not None) and (
-            (run_config := self._pipeline_runs.pop(pipeline_run_id)) is not None
-        ):
-            # HA triggered pipeline
-            start_stage = run_config.start_stage
-            end_stage = run_config.end_stage
-            pipeline_entity_id = run_config.pipeline_entity_id or pipeline_entity_id
+        # Device triggered pipeline (wake word, etc.)
+        if flags & VoiceAssistantCommandFlag.USE_WAKE_WORD:
+            start_stage = PipelineStage.WAKE_WORD
         else:
-            # Device triggered pipeline (wake word, etc.)
-            if flags & VoiceAssistantCommandFlag.USE_WAKE_WORD:
-                start_stage = PipelineStage.WAKE_WORD
-            else:
-                start_stage = PipelineStage.STT
+            start_stage = PipelineStage.STT
 
-            end_stage = PipelineStage.TTS
+        end_stage = PipelineStage.TTS
 
         # Run the pipeline
         _LOGGER.debug("Running pipeline from %s to %s", start_stage, end_stage)
@@ -323,6 +294,7 @@ class EsphomeAssistSatellite(
                 start_stage=start_stage,
                 end_stage=end_stage,
                 pipeline_entity_id=pipeline_entity_id,
+                vad_sensitivity_entity_id=vad_sensitivity_entity_id,
                 wake_word_phrase=wake_word_phrase,
             ),
             "esphome_assist_satellite_pipeline",
@@ -391,37 +363,34 @@ class EsphomeAssistSatellite(
             if extension != "wav":
                 raise ValueError(f"Only WAV audio can be streamed, got {extension}")
 
-            with io.BytesIO(data) as wav_io:
-                with wave.open(wav_io, "rb") as wav_file:
-                    if (
-                        (wav_file.getframerate() != sample_rate)
-                        or (wav_file.getsampwidth() != sample_width)
-                        or (wav_file.getnchannels() != sample_channels)
-                    ):
-                        _LOGGER.error("Can only stream 16Khz 16-bit mono WAV")
-                        return
+            with io.BytesIO(data) as wav_io, wave.open(wav_io, "rb") as wav_file:
+                if (
+                    (wav_file.getframerate() != sample_rate)
+                    or (wav_file.getsampwidth() != sample_width)
+                    or (wav_file.getnchannels() != sample_channels)
+                ):
+                    _LOGGER.error("Can only stream 16Khz 16-bit mono WAV")
+                    return
 
-                    _LOGGER.debug("Streaming %s audio samples", wav_file.getnframes())
+                _LOGGER.debug("Streaming %s audio samples", wav_file.getnframes())
 
-                    while True:
-                        chunk = wav_file.readframes(samples_per_chunk)
-                        if not chunk:
-                            break
+                while True:
+                    chunk = wav_file.readframes(samples_per_chunk)
+                    if not chunk:
+                        break
 
-                        if self._udp_server is not None:
-                            self._udp_server.send_audio_bytes(chunk)
-                        else:
-                            self.cli.send_voice_assistant_audio(chunk)
+                    if self._udp_server is not None:
+                        self._udp_server.send_audio_bytes(chunk)
+                    else:
+                        self.cli.send_voice_assistant_audio(chunk)
 
-                        # Wait for 90% of the duration of the audio that was
-                        # sent for it to be played.  This will overrun the
-                        # device's buffer for very long audio, so using a media
-                        # player is preferred.
-                        samples_in_chunk = len(chunk) // (
-                            sample_width * sample_channels
-                        )
-                        seconds_in_chunk = samples_in_chunk / sample_rate
-                        await asyncio.sleep(seconds_in_chunk * 0.9)
+                    # Wait for 90% of the duration of the audio that was
+                    # sent for it to be played.  This will overrun the
+                    # device's buffer for very long audio, so using a media
+                    # player is preferred.
+                    samples_in_chunk = len(chunk) // (sample_width * sample_channels)
+                    seconds_in_chunk = samples_in_chunk / sample_rate
+                    await asyncio.sleep(seconds_in_chunk * 0.9)
         except asyncio.CancelledError:
             return  # Don't trigger state change
         finally:
@@ -433,7 +402,7 @@ class EsphomeAssistSatellite(
         self.tts_response_finished()
 
     async def _wrap_audio_stream(self) -> AsyncIterable[bytes]:
-        """Yields audio chunks from the queue until None."""
+        """Yield audio chunks from the queue until None."""
         while True:
             chunk = await self._audio_queue.get()
             if not chunk:
@@ -442,12 +411,12 @@ class EsphomeAssistSatellite(
             yield chunk
 
     def _stop_pipeline(self) -> None:
-        """Requests pipeline to be stopped."""
+        """Request pipeline to be stopped."""
         self._audio_queue.put_nowait(None)
         _LOGGER.debug("Requested pipeline stop")
 
     async def _start_udp_server(self) -> int:
-        """Starts a UDP server on a random free port."""
+        """Start a UDP server on a random free port."""
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setblocking(False)
         sock.bind(("", 0))  # random free port
@@ -466,7 +435,7 @@ class EsphomeAssistSatellite(
         return cast(int, sock.getsockname()[1])
 
     def _stop_udp_server(self) -> None:
-        """Stops the UDP server if it's running."""
+        """Stop the UDP server if it's running."""
         if self._udp_server is None:
             return
 
@@ -488,6 +457,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
     def __init__(
         self, audio_queue: asyncio.Queue[bytes | None], *args: Any, **kwargs: Any
     ) -> None:
+        """Initialize protocol."""
         super().__init__(*args, **kwargs)
         self._audio_queue = audio_queue
 

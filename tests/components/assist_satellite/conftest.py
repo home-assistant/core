@@ -8,6 +8,7 @@ from homeassistant.components.assist_pipeline import PipelineEvent
 from homeassistant.components.assist_satellite import (
     DOMAIN as AS_DOMAIN,
     AssistSatelliteEntity,
+    AssistSatelliteEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.core import HomeAssistant
@@ -30,6 +31,7 @@ class MockAssistSatellite(AssistSatelliteEntity):
     """Mock Assist Satellite Entity."""
 
     _attr_name = "Test Entity"
+    _attr_supported_features = AssistSatelliteEntityFeature.ANNOUNCE
 
     def __init__(self) -> None:
         """Initialize the mock entity."""

@@ -10,18 +10,14 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .entity import AssistSatelliteEntity, AssistSatelliteEntityDescription
-from .models import (
-    AssistSatelliteEntityFeature,
-    AssistSatelliteState,
-    PipelineRunConfig,
-)
+from .models import AssistSatelliteEntityFeature, AssistSatelliteState
+from .websocket_api import async_register_websocket_api
 
 __all__ = [
     "DOMAIN",
     "AssistSatelliteState",
     "AssistSatelliteEntity",
     "AssistSatelliteEntityDescription",
-    "PipelineRunConfig",
     "AssistSatelliteEntityFeature",
 ]
 
@@ -35,6 +31,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER, DOMAIN, hass
     )
     await component.async_setup(config)
+    async_register_websocket_api(hass)
 
     return True
 
