@@ -1,5 +1,6 @@
 """The tests for sensor recorder platform."""
 
+from collections.abc import Iterable
 from datetime import datetime, timedelta
 import math
 from statistics import mean
@@ -188,7 +189,7 @@ async def assert_validation_result(
     hass: HomeAssistant,
     client: MockHAClientWebSocket,
     expected_validation_result: dict[str, list[dict[str, Any]]],
-    expected_issues: dict[str, dict[str, Any]],
+    expected_issues: Iterable[str],
 ) -> None:
     """Assert statistics validation result."""
     await client.send_json_auto_id({"type": "recorder/validate_statistics"})
@@ -196,7 +197,19 @@ async def assert_validation_result(
     assert response["success"]
     assert response["result"] == expected_validation_result
     await hass.async_block_till_done()
-    assert_issues(hass, expected_issues)
+
+    # Check we get corresponding issues
+    await client.send_json_auto_id({"type": "recorder/update_statistics_issues"})
+    response = await client.receive_json()
+    assert response["success"]
+    expected_issue_registry_issues = {
+        f"{issue['type']}_{statistic_id}": issue["data"] | {"issue_type": issue["type"]}
+        for statistic_id, issues in expected_validation_result.items()
+        for issue in issues
+        if issue["type"] in expected_issues
+    }
+
+    assert_issues(hass, expected_issue_registry_issues)
 
 
 @pytest.mark.parametrize(
@@ -4303,15 +4316,19 @@ async def test_validate_unit_change_convertible(
     )
     await async_recorder_block_till_done(hass)
     expected = {
-        "units_changed_sensor.test": {
-            "issue_type": "units_changed",
-            "metadata_unit": unit,
-            "state_unit": "dogs",
-            "statistic_id": "sensor.test",
-            "supported_unit": supported_unit,
-        }
+        "sensor.test": [
+            {
+                "data": {
+                    "metadata_unit": unit,
+                    "state_unit": "dogs",
+                    "statistic_id": "sensor.test",
+                    "supported_unit": supported_unit,
+                },
+                "type": "units_changed",
+            }
+        ],
     }
-    await assert_validation_result(hass, client, {}, expected)
+    await assert_validation_result(hass, client, expected, {"units_changed"})
 
     # Valid state - empty response
     hass.states.async_set(
@@ -4498,15 +4515,19 @@ async def test_validate_statistics_unit_change_no_device_class(
     )
     await async_recorder_block_till_done(hass)
     expected = {
-        "units_changed_sensor.test": {
-            "issue_type": "units_changed",
-            "metadata_unit": unit,
-            "state_unit": "dogs",
-            "statistic_id": "sensor.test",
-            "supported_unit": supported_unit,
-        }
+        "sensor.test": [
+            {
+                "data": {
+                    "metadata_unit": unit,
+                    "state_unit": "dogs",
+                    "statistic_id": "sensor.test",
+                    "supported_unit": supported_unit,
+                },
+                "type": "units_changed",
+            }
+        ],
     }
-    await assert_validation_result(hass, client, {}, expected)
+    await assert_validation_result(hass, client, expected, {"units_changed"})
 
     # Valid state - empty response
     hass.states.async_set(
@@ -4595,13 +4616,17 @@ async def test_validate_statistics_unsupported_state_class(
     )
     await hass.async_block_till_done()
     expected = {
-        "unsupported_state_class_sensor.test": {
-            "issue_type": "unsupported_state_class",
-            "state_class": None,
-            "statistic_id": "sensor.test",
-        }
+        "sensor.test": [
+            {
+                "data": {
+                    "state_class": None,
+                    "statistic_id": "sensor.test",
+                },
+                "type": "unsupported_state_class",
+            }
+        ],
     }
-    await assert_validation_result(hass, client, {}, expected)
+    await assert_validation_result(hass, client, expected, {"unsupported_state_class"})
 
 
 @pytest.mark.parametrize(
@@ -4833,15 +4858,19 @@ async def test_validate_statistics_unit_change_no_conversion(
     )
     await async_recorder_block_till_done(hass)
     expected = {
-        "units_changed_sensor.test": {
-            "issue_type": "units_changed",
-            "metadata_unit": unit1,
-            "state_unit": unit2,
-            "statistic_id": "sensor.test",
-            "supported_unit": unit1,
-        }
+        "sensor.test": [
+            {
+                "data": {
+                    "metadata_unit": unit1,
+                    "state_unit": unit2,
+                    "statistic_id": "sensor.test",
+                    "supported_unit": unit1,
+                },
+                "type": "units_changed",
+            }
+        ],
     }
-    await assert_validation_result(hass, client, {}, expected)
+    await assert_validation_result(hass, client, expected, {"units_changed"})
 
     # Original unit - empty response
     hass.states.async_set(
@@ -4990,15 +5019,19 @@ async def test_validate_statistics_unit_change_equivalent_units_2(
         timestamp=now.timestamp(),
     )
     expected = {
-        "units_changed_sensor.test": {
-            "issue_type": "units_changed",
-            "metadata_unit": unit1,
-            "state_unit": unit2,
-            "statistic_id": "sensor.test",
-            "supported_unit": supported_unit,
-        }
+        "sensor.test": [
+            {
+                "data": {
+                    "metadata_unit": unit1,
+                    "state_unit": unit2,
+                    "statistic_id": "sensor.test",
+                    "supported_unit": supported_unit,
+                },
+                "type": "units_changed",
+            }
+        ],
     }
-    await assert_validation_result(hass, client, {}, expected)
+    await assert_validation_result(hass, client, expected, {"units_changed"})
 
     # Run statistics one hour later, metadata will not be updated
     await async_recorder_block_till_done(hass)
@@ -5007,7 +5040,7 @@ async def test_validate_statistics_unit_change_equivalent_units_2(
     await assert_statistic_ids(
         hass, [{"statistic_id": "sensor.test", "unit_of_measurement": unit1}]
     )
-    await assert_validation_result(hass, client, {}, expected)
+    await assert_validation_result(hass, client, expected, {"units_changed"})
 
 
 async def test_validate_statistics_other_domain(

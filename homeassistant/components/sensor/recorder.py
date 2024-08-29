@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Callable, Iterable
 import datetime
+from functools import partial
 import itertools
 import logging
 import math
@@ -673,7 +674,8 @@ def list_statistic_ids(
 
 @callback
 def _update_issues(
-    hass: HomeAssistant,
+    report_issue: Callable[[str, str, dict[str, Any]], None],
+    clear_issue: Callable[[str, str], None],
     sensor_states: list[State],
     metadatas: dict[str, tuple[int, StatisticMetaData]],
 ) -> None:
@@ -688,67 +690,50 @@ def _update_issues(
         if metadata := metadatas.get(entity_id):
             if state_class is None:
                 # Sensor no longer has a valid state class
-                ir.async_create_issue(
-                    hass,
-                    DOMAIN,
-                    f"unsupported_state_class_{entity_id}",
-                    data={
-                        "issue_type": "unsupported_state_class",
+                report_issue(
+                    "unsupported_state_class",
+                    entity_id,
+                    {
                         "statistic_id": entity_id,
                         "state_class": state_class,
                     },
-                    is_fixable=False,
-                    severity=ir.IssueSeverity.WARNING,
-                    translation_key="unsupported_state_class",
                 )
             else:
-                ir.async_delete_issue(
-                    hass, DOMAIN, f"unsupported_state_class_{entity_id}"
-                )
+                clear_issue("unsupported_state_class", entity_id)
 
             metadata_unit = metadata[1]["unit_of_measurement"]
             converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER.get(metadata_unit)
             if not converter:
                 if not _equivalent_units({state_unit, metadata_unit}):
                     # The unit has changed, and it's not possible to convert
-                    ir.async_create_issue(
-                        hass,
-                        DOMAIN,
-                        f"units_changed_{entity_id}",
-                        data={
-                            "issue_type": "units_changed",
+                    report_issue(
+                        "units_changed",
+                        entity_id,
+                        {
                             "statistic_id": entity_id,
                             "state_unit": state_unit,
                             "metadata_unit": metadata_unit,
                             "supported_unit": metadata_unit,
                         },
-                        is_fixable=False,
-                        severity=ir.IssueSeverity.WARNING,
-                        translation_key="units_changed",
                     )
                 else:
-                    ir.async_delete_issue(hass, DOMAIN, f"units_changed_{entity_id}")
+                    clear_issue("units_changed", entity_id)
             elif state_unit not in converter.VALID_UNITS:
                 # The state unit can't be converted to the unit in metadata
                 valid_units = (unit or "<None>" for unit in converter.VALID_UNITS)
                 valid_units_str = ", ".join(sorted(valid_units))
-                ir.async_create_issue(
-                    hass,
-                    DOMAIN,
-                    f"units_changed_{entity_id}",
-                    data={
-                        "issue_type": "units_changed",
+                report_issue(
+                    "units_changed",
+                    entity_id,
+                    {
                         "statistic_id": entity_id,
                         "state_unit": state_unit,
                         "metadata_unit": metadata_unit,
                         "supported_unit": valid_units_str,
                     },
-                    is_fixable=False,
-                    severity=ir.IssueSeverity.WARNING,
-                    translation_key="units_changed",
                 )
             else:
-                ir.async_delete_issue(hass, DOMAIN, f"units_changed_{entity_id}")
+                clear_issue("units_changed", entity_id)
 
 
 def update_statistics_issues(
@@ -762,7 +747,35 @@ def update_statistics_issues(
         instance, session, statistic_source=RECORDER_DOMAIN
     )
 
-    hass.loop.call_soon_threadsafe(_update_issues, hass, sensor_states, metadatas)
+    def create_issue_registry_issue(
+        issue_type: str, statistic_id: str, data: dict[str, Any]
+    ) -> None:
+        """Create an issue registry issue."""
+        hass.loop.call_soon_threadsafe(
+            partial(
+                ir.async_create_issue,
+                hass,
+                DOMAIN,
+                f"{issue_type}_{statistic_id}",
+                data=data | {"issue_type": issue_type},
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=issue_type,
+            )
+        )
+
+    def delete_issue_registry_issue(issue_type: str, statistic_id: str) -> None:
+        """Delete an issue registry issue."""
+        hass.loop.call_soon_threadsafe(
+            ir.async_delete_issue, hass, DOMAIN, f"{issue_type}_{statistic_id}"
+        )
+
+    _update_issues(
+        create_issue_registry_issue,
+        delete_issue_registry_issue,
+        sensor_states,
+        metadatas,
+    )
 
 
 def validate_statistics(
@@ -778,7 +791,20 @@ def validate_statistics(
     instance = get_instance(hass)
     entity_filter = instance.entity_filter
 
-    hass.loop.call_soon_threadsafe(_update_issues, hass, sensor_states, metadatas)
+    def create_statistic_validation_issue(
+        issue_type: str, statistic_id: str, data: dict[str, Any]
+    ) -> None:
+        """Create a statistic validation issue."""
+        validation_result[statistic_id].append(
+            statistics.ValidationIssue(issue_type, data)
+        )
+
+    _update_issues(
+        create_statistic_validation_issue,
+        lambda issue_type, statistic_id: None,
+        sensor_states,
+        metadatas,
+    )
 
     for state in sensor_states:
         entity_id = state.entity_id

@@ -2224,6 +2224,16 @@ def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]
     return platform_validation
 
 
+def update_statistics_issues(hass: HomeAssistant) -> None:
+    """Update statistics issues."""
+    with session_scope(hass=hass, read_only=True) as session:
+        for platform in hass.data[DOMAIN].recorder_platforms.values():
+            if platform_update_statistics_issues := getattr(
+                platform, INTEGRATION_PLATFORM_UPDATE_STATISTICS_ISSUES, None
+            ):
+                platform_update_statistics_issues(hass, session)
+
+
 def _statistics_exists(
     session: Session,
     table: type[StatisticsBase],
