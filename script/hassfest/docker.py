@@ -80,7 +80,7 @@ ENTRYPOINT ["/usr/src/homeassistant/script/hassfest/docker/entrypoint.sh"]
 WORKDIR "/github/workspace"
 
 # Install uv
-COPY --from=ghcr.io/astral-sh/uv:0.4.0 /uv /bin/uv
+COPY --from=ghcr.io/astral-sh/uv:{uv} /uv /bin/uv
 
 COPY . /usr/src/homeassistant
 
