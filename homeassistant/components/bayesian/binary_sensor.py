@@ -121,7 +121,7 @@ def _no_overlapping(configs: list[dict]) -> list[dict]:
         intervals = sorted(intervals, key=lambda tup: tup.above)
 
         for i, tup in enumerate(intervals):
-            if len(intervals) > i and tup.below > intervals[i + 1].above:
+            if len(intervals) > i + 1 and tup.below > intervals[i + 1].above:
                 raise vol.Invalid(
                     f"Ranges for bayesian numeric state entities must not overlap, but {ent_id} has overlapping ranges, above:{tup.above}, below:{tup.below} overlaps with above:{intervals[i+1].above}, below:{intervals[i+1].below}."
                 )
