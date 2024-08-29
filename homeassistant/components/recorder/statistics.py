@@ -217,27 +217,6 @@ class StatisticsRow(BaseStatisticsRow, total=False):
     change: float | None
 
 
-def get_display_unit(
-    hass: HomeAssistant,
-    statistic_id: str,
-    statistic_unit: str | None,
-) -> str | None:
-    """Return the unit which the statistic will be displayed in."""
-
-    if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
-        return statistic_unit
-
-    state_unit: str | None = statistic_unit
-    if state := hass.states.get(statistic_id):
-        state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-
-    if state_unit == statistic_unit or state_unit not in converter.VALID_UNITS:
-        # Guard against invalid state unit in the DB
-        return statistic_unit
-
-    return state_unit
-
-
 def _get_statistic_to_display_unit_converter(
     statistic_unit: str | None,
     state_unit: str | None,
@@ -797,11 +776,17 @@ def _statistic_by_id_from_metadata(
     metadata: dict[str, tuple[int, StatisticMetaData]],
 ) -> dict[str, dict[str, Any]]:
     """Return a list of results for a given metadata dict."""
+    _unit_converters = STATISTIC_UNIT_TO_UNIT_CONVERTER
     return {
         meta["statistic_id"]: {
-            "display_unit_of_measurement": get_display_unit(
-                hass, meta["statistic_id"], meta["unit_of_measurement"]
-            ),
+            "display_unit_of_measurement": state_unit
+            if (
+                (converter := _unit_converters.get(meta["unit_of_measurement"]))
+                and (state := hass.states.get(meta["statistic_id"]))
+                and (state_unit := state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
+                and state_unit in converter.VALID_UNITS
+            )
+            else meta["unit_of_measurement"],
             "has_mean": meta["has_mean"],
             "has_sum": meta["has_sum"],
             "name": meta["name"],
