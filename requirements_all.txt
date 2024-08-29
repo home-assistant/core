@@ -1791,9 +1791,6 @@ pycomfoconnect==0.5.1
 # homeassistant.components.coolmaster
 pycoolmasternet-async==0.2.2
 
-# homeassistant.components.lgthinq
-pycountry==23.12.11
-
 # homeassistant.components.microsoft
 pycsspeechtts==1.0.8
 
@@ -2786,7 +2783,7 @@ thermoworks-smoke==0.1.8
 thingspeak==1.0.0
 
 # homeassistant.components.lgthinq
-thinqconnect==0.9.2
+thinqconnect==0.9.5
 
 # homeassistant.components.tikteck
 tikteck==0.4
