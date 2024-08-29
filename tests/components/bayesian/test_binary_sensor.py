@@ -952,7 +952,7 @@ async def test_no_value_numeric(
     }
 
     assert await async_setup_component(hass, "binary_sensor", config)
-    assert "For bayesian numeric state at least one of" in caplog.text
+    assert "at least one of 'above' or 'below' must be specified" in caplog.text
 
 
 async def test_probability_updates(hass: HomeAssistant) -> None:

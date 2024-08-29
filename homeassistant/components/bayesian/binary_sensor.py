@@ -73,14 +73,21 @@ def _above_greater_than_below(config: dict[str, Any]) -> dict[str, Any]:
         above = config.get(CONF_ABOVE)
         below = config.get(CONF_BELOW)
         if above is None and below is None:
+            _LOGGER.error(
+                "For bayesian numeric state for entity: %s at least one of 'above' or 'below' must be specified",
+                config[CONF_ENTITY_ID],
+            )
             raise vol.Invalid(
                 "For bayesian numeric state at least one of 'above' or 'below' must be specified."
             )
         if above is not None and below is not None:
             if above > below:
-                raise vol.Invalid(
-                    f"For bayesian numeric state 'above' ({above}) must be less than 'below' ({below})."
+                _LOGGER.error(
+                    "For bayesian numeric state 'above' (%s) must be less than 'below' (%s)",
+                    above,
+                    below,
                 )
+                raise vol.Invalid("'above' is greater than 'below'")
     return config
 
 
@@ -157,9 +164,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_DEVICE_CLASS): cv.string,
         vol.Required(CONF_OBSERVATIONS): vol.Schema(
             vol.All(
+                cv.ensure_list,
                 [vol.Any(TEMPLATE_SCHEMA, STATE_SCHEMA, NUMERIC_STATE_SCHEMA)],
                 _no_overlapping,
-                cv.ensure_list,
             )
         ),
         vol.Required(CONF_PRIOR): vol.Coerce(float),
