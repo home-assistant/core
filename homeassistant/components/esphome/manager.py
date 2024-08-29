@@ -27,12 +27,12 @@ from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
 from homeassistant.components import tag, zeroconf
-from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_MODE,
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_LOGGING_CHANGED,
+    Platform,
 )
 from homeassistant.core import (
     Event,
@@ -77,7 +77,6 @@ from .voice_assistant import (
     VoiceAssistantAPIPipeline,
     VoiceAssistantPipeline,
     VoiceAssistantUDPPipeline,
-    handle_timer_event,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -500,29 +499,14 @@ class ESPHomeManager:
                 )
             )
 
-        flags = device_info.voice_assistant_feature_flags_compat(api_version)
-        if flags:
-            if flags & VoiceAssistantFeature.API_AUDIO:
-                entry_data.disconnect_callbacks.add(
-                    cli.subscribe_voice_assistant(
-                        handle_start=self._handle_pipeline_start,
-                        handle_stop=self._handle_pipeline_stop,
-                        handle_audio=self._handle_audio,
-                    )
-                )
-            else:
-                entry_data.disconnect_callbacks.add(
-                    cli.subscribe_voice_assistant(
-                        handle_start=self._handle_pipeline_start,
-                        handle_stop=self._handle_pipeline_stop,
-                    )
-                )
-            if flags & VoiceAssistantFeature.TIMERS:
-                entry_data.disconnect_callbacks.add(
-                    async_register_timer_handler(
-                        hass, self.device_id, partial(handle_timer_event, cli)
-                    )
-                )
+        if device_info.voice_assistant_feature_flags_compat(api_version) and (
+            Platform.ASSIST_SATELLITE not in entry_data.loaded_platforms
+        ):
+            # Create assist satellite entity
+            await self.hass.config_entries.async_forward_entry_setups(
+                self.entry, [Platform.ASSIST_SATELLITE]
+            )
+            entry_data.loaded_platforms.add(Platform.ASSIST_SATELLITE)
 
         cli.subscribe_states(entry_data.async_update_state)
         cli.subscribe_service_calls(self.async_on_service_call)
@@ -844,4 +828,5 @@ async def cleanup_instance(
         cleanup_callback()
     await data.async_cleanup()
     await data.client.disconnect()
+
     return data

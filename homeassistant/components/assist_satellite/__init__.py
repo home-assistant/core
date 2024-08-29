@@ -10,13 +10,19 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .entity import AssistSatelliteEntity, AssistSatelliteEntityDescription
-from .models import AssistSatelliteState
+from .models import (
+    AssistSatelliteEntityFeature,
+    AssistSatelliteState,
+    PipelineRunConfig,
+)
 
 __all__ = [
     "DOMAIN",
     "AssistSatelliteState",
     "AssistSatelliteEntity",
     "AssistSatelliteEntityDescription",
+    "PipelineRunConfig",
+    "AssistSatelliteEntityFeature",
 ]
 
 _LOGGER = logging.getLogger(__name__)
