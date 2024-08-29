@@ -183,15 +183,7 @@ async def test_reauth_success(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Successful reauth flow initialized by the user."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
-
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
@@ -211,15 +203,7 @@ async def test_reauth_connect_failure(
     mock_fibaro_client: Mock,
 ) -> None:
     """Successful reauth flow initialized by the user."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
-
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
@@ -244,15 +228,7 @@ async def test_reauth_auth_failure(
     mock_fibaro_client: Mock,
 ) -> None:
     """Successful reauth flow initialized by the user."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
-
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}

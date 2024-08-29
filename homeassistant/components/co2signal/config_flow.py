@@ -131,16 +131,23 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
+        return await self.async_step_reauth_confirm()
 
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the reauth step."""
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_API_KEY): cv.string,
             }
         )
-        return await self._validate_and_create("reauth", data_schema, entry_data)
+        return await self._validate_and_create(
+            "reauth_confirm", data_schema, user_input
+        )
 
     async def _validate_and_create(
-        self, step_id: str, data_schema: vol.Schema, data: Mapping[str, Any]
+        self, step_id: str, data_schema: vol.Schema, data: Mapping[str, Any] | None
     ) -> ConfigFlowResult:
         """Validate data and show form if it is invalid."""
         errors: dict[str, str] = {}

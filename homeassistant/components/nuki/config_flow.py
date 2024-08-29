@@ -62,12 +62,14 @@ async def validate_input(hass, data):
 class NukiConfigFlow(ConfigFlow, domain=DOMAIN):
     """Nuki config flow."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the Nuki config flow."""
-        self.discovery_schema = {}
-        self._data = {}
+        self.discovery_schema: vol.Schema | None = None
+        self._data: Mapping[str, Any] = {}
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         return await self.async_step_validate(user_input)
 

@@ -139,6 +139,7 @@ homeassistant.components.cpuspeed.*
 homeassistant.components.crownstone.*
 homeassistant.components.date.*
 homeassistant.components.datetime.*
+homeassistant.components.deako.*
 homeassistant.components.deconz.*
 homeassistant.components.default_config.*
 homeassistant.components.demo.*
@@ -294,7 +295,6 @@ homeassistant.components.london_underground.*
 homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
 homeassistant.components.madvr.*
-homeassistant.components.mailbox.*
 homeassistant.components.manual.*
 homeassistant.components.map.*
 homeassistant.components.mastodon.*

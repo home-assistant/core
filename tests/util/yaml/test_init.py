@@ -726,3 +726,44 @@ def test_load_yaml_dict_fail() -> None:
     """Test item without a key."""
     with pytest.raises(yaml_loader.YamlTypeError):
         yaml_loader.load_yaml_dict(YAML_CONFIG_FILE)
+
+
+@pytest.mark.parametrize(
+    "tag",
+    [
+        "!include",
+        "!include_dir_named",
+        "!include_dir_merge_named",
+        "!include_dir_list",
+        "!include_dir_merge_list",
+    ],
+)
+@pytest.mark.usefixtures("try_both_loaders")
+def test_include_without_parameter(tag: str) -> None:
+    """Test include extensions without parameters."""
+    with (
+        io.StringIO(f"key: {tag}") as file,
+        pytest.raises(HomeAssistantError, match=f"{tag} needs an argument"),
+    ):
+        yaml_loader.parse_yaml(file)
+
+
+@pytest.mark.parametrize(
+    ("open_exception", "load_yaml_exception"),
+    [
+        (FileNotFoundError, OSError),
+        (NotADirectoryError, HomeAssistantError),
+        (PermissionError, HomeAssistantError),
+    ],
+)
+@pytest.mark.usefixtures("try_both_loaders")
+def test_load_yaml_wrap_oserror(
+    open_exception: Exception,
+    load_yaml_exception: Exception,
+) -> None:
+    """Test load_yaml wraps OSError in HomeAssistantError."""
+    with (
+        patch("homeassistant.util.yaml.loader.open", side_effect=open_exception),
+        pytest.raises(load_yaml_exception),
+    ):
+        yaml_loader.load_yaml("bla")
