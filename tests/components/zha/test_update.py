@@ -3,6 +3,9 @@
 from unittest.mock import AsyncMock, call, patch
 
 import pytest
+from zha.application.platforms.update import (
+    FirmwareUpdateEntity as ZhaFirmwareUpdateEntity,
+)
 from zigpy.exceptions import DeliveryError
 from zigpy.ota import OtaImagesResult, OtaImageWithMetadata
 import zigpy.ota.image as firmware
@@ -20,6 +23,7 @@ from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
+    ATTR_RELEASE_SUMMARY,
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
 )
@@ -545,3 +549,48 @@ async def test_firmware_update_raises(
             },
             blocking=True,
         )
+
+
+async def test_update_release_summary(
+    hass: HomeAssistant,
+    setup_zha,
+    zigpy_device_mock,
+) -> None:
+    """Test ZHA update platform."""
+    await setup_zha()
+
+    gateway = get_zha_gateway(hass)
+    gateway_proxy: ZHAGatewayProxy = get_zha_gateway_proxy(hass)
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [general.Basic.cluster_id, general.OnOff.cluster_id],
+                SIG_EP_OUTPUT: [general.Ota.cluster_id],
+                SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+            }
+        },
+        node_descriptor=b"\x02@\x84_\x11\x7fd\x00\x00,d\x00\x00",
+    )
+
+    gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zigpy_device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    zha_device: ZHADeviceProxy = gateway_proxy.get_device_proxy(zigpy_device.ieee)
+    zha_lib_entity = next(
+        e
+        for e in zha_device.device.platform_entities.values()
+        if isinstance(e, ZhaFirmwareUpdateEntity)
+    )
+    zha_lib_entity._attr_release_summary = "Some release summary"
+    zha_lib_entity.maybe_emit_state_changed_event()
+    await hass.async_block_till_done()
+
+    entity_id = find_entity_id(Platform.UPDATE, zha_device, hass)
+    assert entity_id is not None
+    assert (
+        hass.states.get(entity_id).attributes[ATTR_RELEASE_SUMMARY]
+        == "Some release summary"
+    )
