@@ -97,7 +97,7 @@ PyTransportNSW==0.1.1
 
 # homeassistant.components.camera
 # homeassistant.components.stream
-PyTurboJPEG==1.7.1
+PyTurboJPEG==1.7.5
 
 # homeassistant.components.vicare
 PyViCare-neo==0.2.1
