@@ -236,14 +236,12 @@ async def async_setup_entry(
     device_data = coordinator.data.get("devices", {})
 
     if not device_data:
-        for did in device_data:
-            device_id = int(did)
-            if coordinator.solarlog.device_enabled(device_id):
-                entities.extend(
-                    SolarLogInverterSensor(coordinator, sensor, device_id)
-                    for sensor in INVERTER_SENSOR_TYPES
-                    if sensor.key in device_data[device_id]
-                )
+        entities.extend(
+            SolarLogInverterSensor(coordinator, sensor, int(device_id))
+            for device_id in device_data
+            for sensor in INVERTER_SENSOR_TYPES
+            if sensor.key in device_data[device_id]
+        )
 
     async_add_entities(entities)
 
