@@ -67,7 +67,7 @@ async def test_user(
 
     # tests with all provided
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: HOST, CONF_NAME: NAME, "extended_data": False}
+        result["flow_id"], {CONF_HOST: HOST, CONF_NAME: NAME, "extended_data": True}
     )
     await hass.async_block_till_done()
 
