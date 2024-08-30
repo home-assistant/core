@@ -139,8 +139,8 @@
           "on": "[%key:component::opentherm_gw::common::state_supported%]"
         }
       },
-      "gpio_n": {
-        "name": "GPIO {id}"
+      "gpio_state_n": {
+        "name": "GPIO {gpio_id} state"
       },
       "ignore_transitions": {
         "name": "Ignore transitions"

@@ -152,13 +152,13 @@ GATEWAY_BINARY_SENSOR_DESCRIPTIONS: tuple[
 ] = (
     OpenThermBinarySensorEntityDescription(
         key=gw_vars.OTGW_GPIO_A_STATE,
-        translation_key="gpio_n",
-        translation_placeholders={"id": "A"},
+        translation_key="gpio_state_n",
+        translation_placeholders={"gpio_id": "A"},
     ),
     OpenThermBinarySensorEntityDescription(
         key=gw_vars.OTGW_GPIO_B_STATE,
-        translation_key="gpio_n",
-        translation_placeholders={"id": "B"},
+        translation_key="gpio_state_n",
+        translation_placeholders={"gpio_id": "B"},
     ),
     OpenThermBinarySensorEntityDescription(
         key=gw_vars.OTGW_IGNORE_TRANSITIONS,
