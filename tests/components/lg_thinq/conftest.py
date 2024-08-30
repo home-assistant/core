@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from thinqconnect import ThinQAPIException
 
-from homeassistant.components.lgthinq.const import CONF_CONNECT_CLIENT_ID, DOMAIN
+from homeassistant.components.lg_thinq.const import CONF_CONNECT_CLIENT_ID, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_COUNTRY
 
 from .const import MOCK_CONNECT_CLIENT_ID, MOCK_COUNTRY, MOCK_PAT, MOCK_UUID
@@ -51,7 +51,7 @@ def mock_uuid() -> Generator[AsyncMock]:
     with (
         patch("uuid.uuid4", autospec=True, return_value=MOCK_UUID) as mock_uuid,
         patch(
-            "homeassistant.components.lgthinq.config_flow.uuid.uuid4",
+            "homeassistant.components.lg_thinq.config_flow.uuid.uuid4",
             new=mock_uuid,
         ),
     ):
@@ -64,7 +64,7 @@ def mock_thinq_api() -> Generator[AsyncMock]:
     with (
         patch("thinqconnect.ThinQApi", autospec=True) as mock_api,
         patch(
-            "homeassistant.components.lgthinq.config_flow.ThinQApi",
+            "homeassistant.components.lg_thinq.config_flow.ThinQApi",
             new=mock_api,
         ),
     ):

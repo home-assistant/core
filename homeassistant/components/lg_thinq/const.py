@@ -37,7 +37,7 @@ from thinqconnect import (
 )
 
 # Common
-DOMAIN = "lgthinq"
+DOMAIN = "lg_thinq"
 COMPANY = "LGE"
 THINQ_DEFAULT_NAME: Final = "LG ThinQ"
 THINQ_PAT_URL: Final = "https://connect-pat.lgthinq.com"
