@@ -1,7 +1,6 @@
 """Test helpers."""
 
 from collections.abc import Generator
-from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest

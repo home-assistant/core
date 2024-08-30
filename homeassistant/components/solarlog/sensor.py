@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
 
 from solarlog_cli.solarlog_models import InverterData, SolarlogData
 
@@ -34,6 +33,7 @@ class SolarLogCoordinatorSensorEntityDescription(SensorEntityDescription):
     """Describes Solarlog coordinator sensor entity."""
 
     value_fn: Callable[[SolarlogData], StateType | datetime | None]
+
 
 @dataclass(frozen=True, kw_only=True)
 class SolarLogInverterSensorEntityDescription(SensorEntityDescription):
@@ -93,7 +93,6 @@ SOLARLOG_SENSOR_TYPES: tuple[SolarLogCoordinatorSensorEntityDescription, ...] = 
         translation_key="yield_yesterday",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-
         value_fn=lambda data: round(data.yield_yesterday / 1000, 3),
     ),
     SolarLogCoordinatorSensorEntityDescription(
