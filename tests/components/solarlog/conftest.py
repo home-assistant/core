@@ -1,6 +1,7 @@
 """Test helpers."""
 
 from collections.abc import Generator
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -35,9 +36,27 @@ def mock_solarlog_connector():
 
     mock_solarlog_api = AsyncMock()
     mock_solarlog_api.test_connection = AsyncMock(return_value=True)
-    mock_solarlog_api.update_data.return_value = load_json_object_fixture(
-        "solarlog_data.json", SOLARLOG_DOMAIN
-    )
+
+    data = {
+        "devices": {
+            0: {"consumption_total": 354687, "current_power": 5},
+        }
+    }
+    data |= load_json_object_fixture("solarlog_data.json", SOLARLOG_DOMAIN)
+    data["last_updated"] = datetime.fromisoformat(data["last_updated"]).astimezone(UTC)
+
+    mock_solarlog_api.update_data.return_value = data
+    mock_solarlog_api.device_list.return_value = {
+        0: {"name": "Inverter 1"},
+        1: {"name": "Inverter 2"},
+    }
+    mock_solarlog_api.device_name = {0: "Inverter 1", 1: "Inverter 2"}.get
+    mock_solarlog_api.client.get_device_list.return_value = {
+        0: {"name": "Inverter 1"},
+        1: {"name": "Inverter 2"},
+    }
+    mock_solarlog_api.client.close = AsyncMock(return_value=None)
+
     with (
         patch(
             "homeassistant.components.solarlog.coordinator.SolarLogConnector",
