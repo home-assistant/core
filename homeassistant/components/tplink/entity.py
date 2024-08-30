@@ -70,6 +70,8 @@ EXCLUDED_FEATURES = {
     "available_firmware_version",
     "update_available",
     "check_latest_firmware",
+    # siren
+    "alarm",
 }
 
 
