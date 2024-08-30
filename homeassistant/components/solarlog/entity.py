@@ -64,12 +64,7 @@ class SolarLogInverterEntity(SolarLogBaseEntity):
         self._attr_device_info = DeviceInfo(
             manufacturer="Solar-Log",
             model="Inverter",
-            identifiers={
-                (
-                    DOMAIN,
-                    name,
-                )
-            },
+            identifiers={(DOMAIN, name)},
             name=coordinator.solarlog.device_name(device_id),
             via_device=(DOMAIN, coordinator.unique_id),
         )
