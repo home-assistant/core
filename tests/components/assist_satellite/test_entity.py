@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components import stt
 from homeassistant.components.assist_pipeline import (
     AudioSettings,
@@ -84,3 +86,38 @@ async def test_entity_state(
     entity.tts_response_finished()
     state = hass.states.get(ENTITY_ID)
     assert state.state == AssistSatelliteState.LISTENING_WAKE_WORD
+
+
+@pytest.mark.parametrize(
+    ["service_data", "expected_params"],
+    [
+        (
+            {"text": "Hello"},
+            ("Hello", "media-source://bla"),
+        ),
+        (
+            {
+                "text": "Hello",
+                "media_id": "http://example.com/bla.mp3",
+            },
+            ("Hello", "http://example.com/bla.mp3"),
+        ),
+        (
+            {"media_id": "http://example.com/bla.mp3"},
+            ("", "http://example.com/bla.mp3"),
+        ),
+    ],
+)
+async def test_announce(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    service_data: dict,
+    expected_params: tuple[str, str],
+) -> None:
+    """Test announcing on a device."""
+    await hass.services.async_call(
+        "assist_satellite", "announce", service_data, blocking=True
+    )
+
+    assert entity.announcements[0] == expected_params
