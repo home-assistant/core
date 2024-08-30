@@ -26,7 +26,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-async def test_pseudo_migration_good(
+async def test_minor_migration(
     hass: HomeAssistant, mock_config_entry_old, mock_apis_single_fp
 ) -> None:
     """With the new library we are going to end up rewriting the config entries."""
@@ -35,6 +35,7 @@ async def test_pseudo_migration_good(
 
     assert mock_config_entry_old.data == {
         "ip_address": "192.168.2.108",
+        "host": "192.168.2.108",
         "api_key": "B5C4DA27AAEF31D1FB21AFF9BFA6BCD2",
         "serial": "3FB284769E4736F30C8973A7ED358123",
         "auth_cookie": "B984F21A6378560019F8A1CDE41B6782",
@@ -45,7 +46,7 @@ async def test_pseudo_migration_good(
     }
 
 
-async def test_minor_migration(hass: HomeAssistant, mock_apis_single_fp) -> None:
+async def test_minor_migration_error(hass: HomeAssistant, mock_apis_single_fp) -> None:
     """Test the case where we completely fail to initialize."""
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -108,23 +109,3 @@ async def test_connectivity_bad(
 
         await hass.async_block_till_done()
         assert len(hass.states.async_all()) == 0
-
-
-async def test_pseudo_migration_bad_title(
-    hass: HomeAssistant, mock_config_entry_v1_bad_title, mock_apis_single_fp
-) -> None:
-    """Test entity update from older Version1 to a newer Version1 with serial that can't be detected."""
-    mock_config_entry_v1_bad_title.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry_v1_bad_title.entry_id)
-    assert mock_config_entry_v1_bad_title.state == ConfigEntryState.LOADED
-
-    assert mock_config_entry_v1_bad_title.data == {
-        "ip_address": "192.168.2.108",
-        "api_key": "B5C4DA27AAEF31D1FB21AFF9BFA6BCD2",
-        "serial": "3FB284769E4736F30C8973A7ED358123",
-        "auth_cookie": "B984F21A6378560019F8A1CDE41B6782",
-        "web_client_id": "FA2B1C3045601234D0AE17D72F8E975",
-        "user_id": "52C3F9E8B9D3AC99F8E4D12345678901FE9A2BC7D85F7654E28BF98BCD123456",
-        "username": "grumpypanda@china.cn",
-        "password": "you-stole-my-pandas",
-    }

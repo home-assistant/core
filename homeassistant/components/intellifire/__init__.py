@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import re
 
 from intellifire4py import UnifiedFireplace
 from intellifire4py.cloud_interface import IntelliFireCloudInterface
@@ -12,6 +11,7 @@ from intellifire4py.model import IntelliFireCommonFireplaceData
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_HOST,
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -72,10 +72,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         new = {**config_entry.data}
 
         if config_entry.minor_version < 2:
-            try:
-                new[CONF_IP_ADDRESS] = new.pop("host")
-            except KeyError:
-                return False
             username = config_entry.data[CONF_USERNAME]
             password = config_entry.data[CONF_PASSWORD]
 
@@ -85,45 +81,27 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                     username=username, password=password
                 )
 
-                # See if we can find the fireplace first by serial and then secondly by IP.
-                serial = config_entry.title.replace("Fireplace ", "")
-
-                # If serial matches the hex style pattern we'll assume its good
-                valid_serial = bool(re.match(r"^[0-9A-Fa-f]{32}$", serial))
-
-                new_data = (
-                    cloud_interface.user_data.get_data_for_serial(serial)
-                    if valid_serial
-                    else None
-                )
-
-            if not new_data:
-                new_data = cloud_interface.user_data.get_data_for_ip(
-                    new[CONF_IP_ADDRESS]
-                )
+                new_data = cloud_interface.user_data.get_data_for_ip(new[CONF_HOST])
 
             if not new_data:
                 raise ConfigEntryAuthFailed
+            new[CONF_API_KEY] = new_data.api_key
+            new[CONF_WEB_CLIENT_ID] = new_data.web_client_id
+            new[CONF_AUTH_COOKIE] = new_data.auth_cookie
 
-            # Find the correct fireplace
-            if new_data is not None:
-                new[CONF_API_KEY] = new_data.api_key
-                new[CONF_WEB_CLIENT_ID] = new_data.web_client_id
-                new[CONF_AUTH_COOKIE] = new_data.auth_cookie
+            new[CONF_IP_ADDRESS] = new_data.ip_address
+            new[CONF_SERIAL] = new_data.serial
 
-                new[CONF_IP_ADDRESS] = new_data.ip_address
-                new[CONF_SERIAL] = new_data.serial
-
-                config_entry.version = 1
-                hass.config_entries.async_update_entry(
-                    config_entry,
-                    data=new,
-                    options={CONF_READ_MODE: "local", CONF_CONTROL_MODE: "local"},
-                    unique_id=serial,
-                    version=1,
-                    minor_version=2,
-                )
-                LOGGER.debug("Pseudo Migration %s successful", config_entry.version)
+            config_entry.version = 1
+            hass.config_entries.async_update_entry(
+                config_entry,
+                data=new,
+                options={CONF_READ_MODE: "local", CONF_CONTROL_MODE: "local"},
+                unique_id=new[CONF_SERIAL],
+                version=1,
+                minor_version=2,
+            )
+            LOGGER.debug("Pseudo Migration %s successful", config_entry.version)
 
     return True
 

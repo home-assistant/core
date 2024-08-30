@@ -93,22 +93,6 @@ def mock_config_entry_old() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_config_entry_v1_bad_title() -> MockConfigEntry:
-    """For migration testing."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        version=1,
-        title="Fireplace Of Doom",
-        data={
-            CONF_HOST: "192.168.2.108",
-            CONF_USERNAME: "grumpypanda@china.cn",
-            CONF_PASSWORD: "you-stole-my-pandas",
-            CONF_USER_ID: "52C3F9E8B9D3AC99F8E4D12345678901FE9A2BC7D85F7654E28BF98BCD123456",
-        },
-    )
-
-
-@pytest.fixture
 def mock_common_data_local() -> IntelliFireCommonFireplaceData:
     """Fixture for mock common data."""
     return IntelliFireCommonFireplaceData(
