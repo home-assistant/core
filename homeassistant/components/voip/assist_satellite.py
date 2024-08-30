@@ -124,10 +124,12 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
         self.voip_device.protocol = self
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
+        await super().async_will_remove_from_hass()
         assert self.voip_device.protocol == self
         self.voip_device.protocol = None
 
