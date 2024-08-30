@@ -48,9 +48,9 @@ async def test_no_config_entries(
 @pytest.mark.parametrize(
     ("fixture_name", "expected_results", "expected_medias"),
     [
-        ("google_photos/list_mediaitems_empty.json", [], []),
+        ("list_mediaitems_empty.json", [], []),
         (
-            "google_photos/list_mediaitems.json",
+            "list_mediaitems.json",
             [
                 ("config-entry-id-123/p/id1", "example1.jpg"),
                 ("config-entry-id-123/p/id2", "example2.mp4"),
@@ -113,7 +113,7 @@ async def test_invalid_config_entry(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("setup_integration", "setup_api")
-@pytest.mark.parametrize("fixture_name", ["google_photos/list_mediaitems.json"])
+@pytest.mark.parametrize("fixture_name", ["list_mediaitems.json"])
 async def test_invalid_album_id(hass: HomeAssistant) -> None:
     """Test browsing to an album id that does not exist."""
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
@@ -180,8 +180,8 @@ async def test_list_media_items_failure(
 @pytest.mark.parametrize(
     "fixture_name",
     [
-        "google_photos/api_not_enabled_response.json",
-        "google_photos/not_dict.json",
+        "api_not_enabled_response.json",
+        "not_dict.json",
     ],
 )
 async def test_media_items_error_parsing_response(hass: HomeAssistant) -> None:

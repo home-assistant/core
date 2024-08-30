@@ -1,7 +1,6 @@
 """Test fixtures for Google Photos."""
 
 from collections.abc import Awaitable, Callable, Generator
-import json
 import time
 from typing import Any
 from unittest.mock import Mock, patch
@@ -16,7 +15,7 @@ from homeassistant.components.google_photos.const import DOMAIN, OAUTH2_SCOPES
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_array_fixture
 
 USER_IDENTIFIER = "user-identifier-1"
 CLIENT_ID = "1234"
@@ -83,7 +82,9 @@ def mock_setup_api(fixture_name: str) -> Generator[Mock, None, None]:
             "name": "Test Name",
         }
 
-        responses = load_json_array_fixture(fixture_name, DOMAIN) if fixture_name else []
+        responses = (
+            load_json_array_fixture(fixture_name, DOMAIN) if fixture_name else []
+        )
 
         queue = list(responses)
 

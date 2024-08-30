@@ -27,7 +27,7 @@ CLIENT_SECRET = "5678"
 
 
 @pytest.mark.usefixtures("current_request_with_host", "setup_api")
-@pytest.mark.parametrize("fixture_name", ["google_photos/list_mediaitems.json"])
+@pytest.mark.parametrize("fixture_name", ["list_mediaitems.json"])
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -35,7 +35,7 @@ async def test_full_flow(
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -74,8 +74,22 @@ async def test_full_flow(
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == USER_IDENTIFIER
-    assert result["result"].title == "Test Name"
+    config_entry = result["result"]
+    assert config_entry.unique_id == USER_IDENTIFIER
+    assert config_entry.title == "Test Name"
+    config_entry_data = dict(config_entry.data)
+    assert "token" in config_entry_data
+    assert "expires_at" in config_entry_data["token"]
+    del config_entry_data["token"]["expires_at"]
+    assert config_entry_data == {
+        "auth_implementation": DOMAIN,
+        "token": {
+            "access_token": "mock-access-token",
+            "expires_in": 60,
+            "refresh_token": "mock-refresh-token",
+            "type": "Bearer",
+        },
+    }
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
 
@@ -92,7 +106,7 @@ async def test_api_not_enabled(
 ) -> None:
     """Check flow aborts if api is not enabled."""
     result = await hass.config_entries.flow.async_init(
-        "google_photos", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -148,7 +162,7 @@ async def test_general_exception(
 ) -> None:
     """Check flow aborts if exception happens."""
     result = await hass.config_entries.flow.async_init(
-        "google_photos", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
