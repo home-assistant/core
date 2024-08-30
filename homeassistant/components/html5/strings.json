@@ -2,10 +2,13 @@
   "config": {
     "step": {
       "user": {
-        "description": "VAPID email: Email to use for html5 push notifications.\n\nVAPID private key (Optional): If not specified, one will be automatically generated.",
         "data": {
           "vapid_email": "[%key:common::config_flow::data::email%]",
           "vapid_prv_key": "VAPID private key"
+        },
+        "data_description": {
+          "vapid_email": "Email to use for html5 push notifications.",
+          "vapid_prv_key": "If not specified, one will be automatically generated."
         }
       }
     },

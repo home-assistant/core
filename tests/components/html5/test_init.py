@@ -38,6 +38,7 @@ async def test_setup_entry_issue(
     """Test setup of an imported config entry with deprecated YAML."""
     config_entry = MockConfigEntry(domain="html5", data={})
     config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, "notify", NOTIFY_CONF)
     assert await async_setup_component(hass, "html5", NOTIFY_CONF)
 
     assert len(issue_registry.issues) == 1
