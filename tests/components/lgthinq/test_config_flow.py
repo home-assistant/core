@@ -46,7 +46,6 @@ async def test_config_flow_invalid_pat(
         context={"source": SOURCE_USER},
         data={CONF_ACCESS_TOKEN: MOCK_PAT, CONF_COUNTRY: MOCK_COUNTRY},
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is not None
     mock_invalid_thinq_api.async_get_device_list.assert_called_once()
