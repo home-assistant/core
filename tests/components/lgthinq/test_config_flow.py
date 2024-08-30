@@ -31,7 +31,7 @@ async def test_config_flow(
     assert result["data"] == {
         CONF_ACCESS_TOKEN: MOCK_PAT,
         CONF_COUNTRY: MOCK_COUNTRY,
-        CONF_CONNECT_CLIENT_ID: MOCK_CONNECT_CLIENT_ID
+        CONF_CONNECT_CLIENT_ID: MOCK_CONNECT_CLIENT_ID,
     }
 
     mock_thinq_api.async_get_device_list.assert_called_once()
