@@ -44,16 +44,8 @@ class SolarLogCoordinator(DataUpdateCoordinator[SolarlogData]):
         self.name = entry.title
         self.host = url.geturl()
 
-        extended_data = entry.data["extended_data"]
-
-        enabled_devices: dict[int, bool] = {}
-        if extended_data:
-            if entry.options.get("devices", {}) != {}:
-                for key, value in entry.options["devices"].items():
-                    enabled_devices |= {int(key): value}
-
         self.solarlog = SolarLogConnector(
-            self.host, extended_data, hass.config.time_zone, enabled_devices
+            self.host, entry.data["extended_data"], hass.config.time_zone
         )
 
     async def _async_setup(self) -> None:
