@@ -20,5 +20,4 @@ async def test_wake_lock(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    await hass.async_block_till_done()
     api_instance.async_status_async.assert_called_once()

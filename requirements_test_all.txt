@@ -225,7 +225,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==25.2.1
+aioesphomeapi==25.3.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -329,7 +329,7 @@ aiorecollect==2023.09.0
 aioridwell==2024.01.0
 
 # homeassistant.components.ruckus_unleashed
-aioruckus==0.34
+aioruckus==0.41
 
 # homeassistant.components.russound_rio
 aiorussound==2.3.2
@@ -1047,6 +1047,9 @@ leaone-ble==0.1.0
 # homeassistant.components.led_ble
 led-ble==1.0.2
 
+# homeassistant.components.lektrico
+lektricowifi==0.0.41
+
 # homeassistant.components.foscam
 libpyfoscam==1.2.2
 
@@ -1060,7 +1063,7 @@ libsoundtouch==0.8
 linear-garage-door==0.2.9
 
 # homeassistant.components.lamarzocco
-lmcloud==1.1.13
+lmcloud==1.2.2
 
 # homeassistant.components.london_underground
 london-tube-status==0.5
@@ -1789,7 +1792,7 @@ pyspcwebgw==0.7.0
 pyspeex-noise==1.0.2
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.7.1
+pysqueezebox==0.8.1
 
 # homeassistant.components.suez_water
 pysuez==0.2.0
@@ -2310,7 +2313,7 @@ wallbox==0.7.0
 watchdog==2.3.1
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==0.2.21
+weatherflow4py==0.2.23
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2

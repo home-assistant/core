@@ -709,8 +709,8 @@ build.json @home-assistant/supervisor
 /tests/components/ios/ @robbiet480
 /homeassistant/components/iotawatt/ @gtdiehl @jyavenard
 /tests/components/iotawatt/ @gtdiehl @jyavenard
-/homeassistant/components/iotty/ @pburgio
-/tests/components/iotty/ @pburgio
+/homeassistant/components/iotty/ @pburgio @shapournemati-iotty
+/tests/components/iotty/ @pburgio @shapournemati-iotty
 /homeassistant/components/iperf3/ @rohankapoorcom
 /homeassistant/components/ipma/ @dgomes
 /tests/components/ipma/ @dgomes
@@ -799,6 +799,8 @@ build.json @home-assistant/supervisor
 /tests/components/leaone/ @bdraco
 /homeassistant/components/led_ble/ @bdraco
 /tests/components/led_ble/ @bdraco
+/homeassistant/components/lektrico/ @lektrico
+/tests/components/lektrico/ @lektrico
 /homeassistant/components/lg_netcast/ @Drafteed @splinter98
 /tests/components/lg_netcast/ @Drafteed @splinter98
 /homeassistant/components/lidarr/ @tkdrob

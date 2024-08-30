@@ -1,6 +1,6 @@
 """Config flow for ProgettiHWSW Automation integration."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ProgettiHWSW.ProgettiHWSWAPI import ProgettiHWSWAPI
 import voluptuous as vol
@@ -42,9 +42,13 @@ class ProgettiHWSWConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize class variables."""
         self.s1_in: dict[str, Any] | None = None
 
-    async def async_step_relay_modes(self, user_input=None):
+    async def async_step_relay_modes(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Manage relay modes step."""
-        errors = {}
+        errors: dict[str, str] = {}
+        if TYPE_CHECKING:
+            assert self.s1_in is not None
         if user_input is not None:
             whole_data = user_input
             whole_data.update(self.s1_in)
