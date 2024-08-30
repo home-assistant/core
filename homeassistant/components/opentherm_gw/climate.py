@@ -124,11 +124,6 @@ class OpenThermClimate(OpenThermThermostatDeviceEntity, ClimateEntity):
         await super().async_added_to_hass()
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, self._gateway.update_signal, self.receive_report
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
                 self.hass, self._gateway.options_update_signal, self.update_options
             )
         )
