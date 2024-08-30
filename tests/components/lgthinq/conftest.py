@@ -1,73 +1,71 @@
 """Configure tests for the LGThinQ integration."""
 
-from typing import Any
-import uuid
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
 import pytest
+from thinqconnect import ThinQAPIException
 
-from homeassistant.components.lgthinq.const import (
-    CLIENT_PREFIX,
-    CONF_CONNECT_CLIENT_ID,
-    DOMAIN,
-)
+from homeassistant.components.lgthinq.const import CONF_CONNECT_CLIENT_ID, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_COUNTRY
 
-from .common import mock_device_info
-from .const import (
-    AIR_CONDITIONER,
-    COOKTOP,
-    DEHUMIDIFIER,
-    MOCK_COUNTRY,
-    MOCK_PAT,
-    REFRIGERATOR,
-    WASHER,
-)
+from .common import mock_thinq_api_response
+from .const import MOCK_CONNECT_CLIENT_ID, MOCK_COUNTRY, MOCK_PAT, MOCK_UUID
 
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture(name="country_code")
-def country_code_ficture() -> str:
-    """Return a mock country code."""
-    return MOCK_COUNTRY
-
-
-@pytest.fixture(name="connect_client_id")
-def connect_client_id_fixture() -> str:
-    """Return a mock connect client id."""
-    return f"{CLIENT_PREFIX}-{uuid.uuid4()!s}"
-
-
-@pytest.fixture(name="access_token")
-def access_token_fixture() -> str:
-    """Return a mock connect client id."""
-    return MOCK_PAT
-
-
-@pytest.fixture(name="device_list")
-def device_list_fixture() -> list[dict[str, Any]]:
-    """Return a mock device list."""
-    return [
-        mock_device_info(AIR_CONDITIONER),
-        mock_device_info(COOKTOP),
-        mock_device_info(DEHUMIDIFIER),
-        mock_device_info(REFRIGERATOR),
-        mock_device_info(WASHER),
-    ]
-
-
-@pytest.fixture(name="config_entry")
-def config_entry_fixture(
-    country_code: str, connect_client_id: str, access_token: str
-) -> MockConfigEntry:
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
     """Create a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title=f"Test {DOMAIN} entry",
-        unique_id=access_token,
+        title=f"Test {DOMAIN}",
+        unique_id=MOCK_PAT,
         data={
-            CONF_COUNTRY: country_code,
-            CONF_CONNECT_CLIENT_ID: connect_client_id,
-            CONF_ACCESS_TOKEN: access_token,
+            CONF_ACCESS_TOKEN: MOCK_PAT,
+            CONF_CONNECT_CLIENT_ID: MOCK_CONNECT_CLIENT_ID,
+            CONF_COUNTRY: MOCK_COUNTRY,
         },
     )
+
+
+@pytest.fixture
+def mock_uuid() -> Generator[AsyncMock]:
+    """Mock a uuid."""
+    with (
+        patch("uuid.uuid4", autospec=True, return_value=MOCK_UUID) as mock_uuid,
+        patch(
+            "homeassistant.components.lgthinq.config_flow.uuid.uuid4",
+            new=mock_uuid,
+        ),
+    ):
+        yield mock_uuid.return_value
+
+
+@pytest.fixture
+def mock_thinq_api() -> Generator[AsyncMock]:
+    """Mock a thinq api."""
+    with (
+        patch("thinqconnect.ThinQApi", autospec=True) as mock_api,
+        patch(
+            "homeassistant.components.lgthinq.config_flow.ThinQApi",
+            new=mock_api,
+        ),
+    ):
+        thinq_api = mock_api.return_value
+        thinq_api.async_get_device_list = AsyncMock(
+            return_value=mock_thinq_api_response(status=200, body={})
+        )
+        yield thinq_api
+
+
+@pytest.fixture
+def mock_invalid_thinq_api(mock_thinq_api: AsyncMock) -> AsyncMock:
+    """Mock an invalid thinq api."""
+    mock_thinq_api.async_get_device_list = AsyncMock(
+        side_effect=ThinQAPIException(
+            code="1309", message="Not allowed api call", headers=None
+        )
+    )
+    return mock_thinq_api
