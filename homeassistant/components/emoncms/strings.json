@@ -30,7 +30,7 @@
   "issues": {
     "remove_value_template": {
       "title": "The {domain} integration cannot start",
-      "description": "Please remove `value_template` from your yaml configuration.\n\nAnd restart Home Assistant"
+      "description": "Configuring {domain} using YAML is being removed and the `{parameter}` parameter cannot be imported.\n\nPlease remove `{parameter}` from your `{domain}` yaml configuration and restart Home Assistant\n\nAlternatively, you may entirely remove the `{domain}` configuration from your configuration.yaml, restart Home Assistant, and add the {domain} integration manually."
     }
   }
 }

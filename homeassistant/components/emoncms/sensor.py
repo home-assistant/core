@@ -85,13 +85,14 @@ async def async_setup_platform(
         async_create_issue(
             hass,
             DOMAIN,
-            f"remove_value_template_{DOMAIN}",
+            f"remove_{CONF_VALUE_TEMPLATE}_{DOMAIN}",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=IssueSeverity.ERROR,
-            translation_key="remove_value_template",
+            translation_key=f"remove_{CONF_VALUE_TEMPLATE}",
             translation_placeholders={
                 "domain": DOMAIN,
+                "parameter": CONF_VALUE_TEMPLATE,
             },
         )
         return
