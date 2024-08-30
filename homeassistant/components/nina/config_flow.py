@@ -250,7 +250,7 @@ class OptionsFlowHandler(OptionsFlow):
 
             errors["base"] = "no_selection"
 
-        schema: dict[vol.Marker, Any] = {
+        schema: VolDictType = {
             **{
                 vol.Optional(region, default=self.data[region]): cv.multi_select(
                     self.regions[region]
