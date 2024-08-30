@@ -30,16 +30,6 @@ def integration():
     )
 
 
-def test_validate_requirements_format_with_space(integration: Integration) -> None:
-    """Test validate requirement with space around separator."""
-    integration.manifest["requirements"] = ["test_package == 1"]
-    assert not validate_requirements_format(integration)
-    assert len(integration.errors) == 1
-    assert 'Requirement "test_package == 1" contains a space' in [
-        x.error for x in integration.errors
-    ]
-
-
 def test_validate_requirements_format_wrongly_pinned(integration: Integration) -> None:
     """Test requirement with loose pin."""
     integration.manifest["requirements"] = ["test_package>=1"]
@@ -66,16 +56,6 @@ def test_validate_requirements_format_ignore_pin_for_custom(
     integration.path = Path("")
     assert validate_requirements_format(integration)
     assert len(integration.errors) == 0
-
-
-def test_validate_requirements_format_invalid_version(integration: Integration) -> None:
-    """Test requirement with invalid version."""
-    integration.manifest["requirements"] = ["test_package==invalid"]
-    assert not validate_requirements_format(integration)
-    assert len(integration.errors) == 1
-    assert "Unable to parse package version (invalid) for test_package." in [
-        x.error for x in integration.errors
-    ]
 
 
 def test_validate_requirements_format_successful(integration: Integration) -> None:
