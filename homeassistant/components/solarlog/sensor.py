@@ -235,7 +235,7 @@ async def async_setup_entry(
 
     device_data = coordinator.data.get("devices", {})
 
-    if device_data != {}:
+    if not device_data:
         for did in device_data:
             device_id = int(did)
             if coordinator.solarlog.device_enabled(device_id):
