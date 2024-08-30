@@ -24,7 +24,6 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
     """The base implementation of all lg thinq entities."""
 
     _attr_has_entity_name = True
-    entity_description: EntityDescription
 
     def __init__(
         self,
