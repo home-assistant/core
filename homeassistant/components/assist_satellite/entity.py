@@ -63,18 +63,18 @@ class AssistSatelliteEntity(entity.Entity):
 
     async def async_internal_announce(
         self,
-        text: str | None = None,
+        message: str | None = None,
         media_id: str | None = None,
     ) -> None:
         """Play an announcement on the satellite.
 
-        If media_id is not provided, text is synthesized to
+        If media_id is not provided, message is synthesized to
         audio with the selected pipeline.
 
         Calls async_announce with media id.
         """
-        if text is None:
-            text = ""
+        if message is None:
+            message = ""
 
         if not media_id:
             # Synthesize audio and get URL
@@ -87,7 +87,7 @@ class AssistSatelliteEntity(entity.Entity):
 
             media_id = tts_generate_media_source_id(
                 self.hass,
-                text,
+                message,
                 engine=pipeline.tts_engine,
                 language=pipeline.tts_language,
                 options=tts_options,
@@ -111,11 +111,11 @@ class AssistSatelliteEntity(entity.Entity):
 
         try:
             # Block until announcement is finished
-            await self.async_announce(text, media_id)
+            await self.async_announce(message, media_id)
         finally:
             self._is_announcing = False
 
-    async def async_announce(self, text: str, media_id: str) -> None:
+    async def async_announce(self, message: str, media_id: str) -> None:
         """Announce media on the satellite.
 
         Should block until the announcement is done playing.

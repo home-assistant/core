@@ -38,11 +38,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         vol.All(
             cv.make_entity_service_schema(
                 {
-                    vol.Optional("text"): str,
+                    vol.Optional("message"): str,
                     vol.Optional("media_id"): str,
                 }
             ),
-            cv.has_at_least_one_key("text", "media_id"),
+            cv.has_at_least_one_key("message", "media_id"),
         ),
         "async_internal_announce",
         [AssistSatelliteEntityFeature.ANNOUNCE],

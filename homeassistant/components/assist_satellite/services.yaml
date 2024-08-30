@@ -1,11 +1,11 @@
-play_media:
+announce:
   target:
     entity:
       domain: assist_satellite
       supported_features:
         - assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
   fields:
-    text:
+    message:
       required: false
       example: "Time to wake up!"
       selector:

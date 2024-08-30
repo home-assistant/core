@@ -95,12 +95,12 @@ async def test_entity_state(
     ("service_data", "expected_params"),
     [
         (
-            {"text": "Hello"},
+            {"message": "Hello"},
             ("Hello", "https://www.home-assistant.io/resolved.mp3"),
         ),
         (
             {
-                "text": "Hello",
+                "message": "Hello",
                 "media_id": "http://example.com/bla.mp3",
             },
             ("Hello", "http://example.com/bla.mp3"),
