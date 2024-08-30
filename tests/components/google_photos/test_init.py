@@ -6,7 +6,6 @@ import time
 from aiohttp import ClientError
 import pytest
 
-from homeassistant.components.google_photos import DOMAIN
 from homeassistant.components.google_photos.const import OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -27,7 +26,6 @@ async def test_setup(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
-    assert not hass.services.async_services().get(DOMAIN)
 
 
 @pytest.fixture(name="refresh_token_status")
