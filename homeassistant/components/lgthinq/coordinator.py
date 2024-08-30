@@ -74,14 +74,7 @@ async def async_setup_device_coordinator(
 ) -> list[DeviceDataUpdateCoordinator] | None:
     """Create DeviceDataUpdateCoordinator and device_api per device."""
     device_id = device.get("deviceId")
-    if not device_id:
-        _LOGGER.error("Failed to setup device: no device id")
-        return None
-
     device_info = device.get("deviceInfo")
-    if not device_info:
-        _LOGGER.error("Failed to setup device(%s): no device info", device_id)
-        return None
 
     # Get an appropriate class constructor for the device type.
     device_type = device_info.get("deviceType")
@@ -141,10 +134,7 @@ async def async_setup_device_coordinator(
     coordinator_list: list[DeviceDataUpdateCoordinator] = []
     for sub_id in device_sub_ids:
         coordinator = DeviceDataUpdateCoordinator(hass, device_api, sub_id=sub_id)
-        try:
-            await coordinator.async_config_entry_first_refresh()
-        except ConfigEntryNotReady:
-            coordinator.data = {}
+        await coordinator.async_config_entry_first_refresh()
 
         # Finally add a device coordinator into the result list.
         coordinator_list.append(coordinator)

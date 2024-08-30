@@ -70,12 +70,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up an entry for switch platform."""
+    entities: list[ThinQSwitchEntity] = []
     for coordinator in entry.runtime_data.values():
         descriptions = DEVIE_TYPE_SWITCH_MAP.get(coordinator.device_api.device_type)
         if not isinstance(descriptions, tuple):
             continue
 
-        entities: list[ThinQSwitchEntity] = []
         for description in descriptions:
             properties = create_properties(
                 device_api=coordinator.device_api,
@@ -91,8 +91,8 @@ async def async_setup_entry(
                 for prop in properties
             )
 
-        if entities:
-            async_add_entities(entities)
+    if entities:
+        async_add_entities(entities)
 
 
 class ThinQSwitchEntity(ThinQEntity, SwitchEntity):
