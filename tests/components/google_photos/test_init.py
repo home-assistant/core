@@ -80,9 +80,9 @@ async def test_expired_token_refresh_success(
     [
         (
             time.time() - 3600,
-            http.HTTPStatus.NOT_FOUND,
+            http.HTTPStatus.UNAUTHORIZED,
             None,
-            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.SETUP_ERROR,  # Reauth
         ),
         (
             time.time() - 3600,

@@ -17,6 +17,8 @@ from homeassistant.components.media_source import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from .conftest import CONFIG_ENTRY_ID
+
 from tests.common import MockConfigEntry
 
 
@@ -52,8 +54,8 @@ async def test_no_config_entries(
         (
             "list_mediaitems.json",
             [
-                ("config-entry-id-123/p/id1", "example1.jpg"),
-                ("config-entry-id-123/p/id2", "example2.mp4"),
+                (f"{CONFIG_ENTRY_ID}/p/id1", "example1.jpg"),
+                (f"{CONFIG_ENTRY_ID}/p/id2", "example2.mp4"),
             ],
             [
                 ("http://img.example.com/id1=w2048", "image/jpeg"),
@@ -73,22 +75,22 @@ async def test_recent_items(
     assert browse.identifier is None
     assert browse.title == "Google Photos"
     assert [(child.identifier, child.title) for child in browse.children] == [
-        ("config-entry-id-123", "Account Name")
+        (CONFIG_ENTRY_ID, "Account Name")
     ]
 
-    browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/config-entry-id-123")
+    browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{CONFIG_ENTRY_ID}")
     assert browse.domain == DOMAIN
-    assert browse.identifier == "config-entry-id-123"
+    assert browse.identifier == CONFIG_ENTRY_ID
     assert browse.title == "Account Name"
     assert [(child.identifier, child.title) for child in browse.children] == [
-        ("config-entry-id-123/a/recent", "Recent Photos")
+        (f"{CONFIG_ENTRY_ID}/a/recent", "Recent Photos")
     ]
 
     browse = await async_browse_media(
-        hass, f"{URI_SCHEME}{DOMAIN}/config-entry-id-123/a/recent"
+        hass, f"{URI_SCHEME}{DOMAIN}/{CONFIG_ENTRY_ID}/a/recent"
     )
     assert browse.domain == DOMAIN
-    assert browse.identifier == "config-entry-id-123"
+    assert browse.identifier == CONFIG_ENTRY_ID
     assert browse.title == "Account Name"
     assert [
         (child.identifier, child.title) for child in browse.children
@@ -121,12 +123,12 @@ async def test_invalid_album_id(hass: HomeAssistant) -> None:
     assert browse.identifier is None
     assert browse.title == "Google Photos"
     assert [(child.identifier, child.title) for child in browse.children] == [
-        ("config-entry-id-123", "Account Name")
+        (CONFIG_ENTRY_ID, "Account Name")
     ]
 
     with pytest.raises(BrowseError, match="Unsupported album"):
         await async_browse_media(
-            hass, f"{URI_SCHEME}{DOMAIN}/config-entry-id-123/a/invalid-album-id"
+            hass, f"{URI_SCHEME}{DOMAIN}/{CONFIG_ENTRY_ID}/a/invalid-album-id"
         )
 
 
@@ -164,7 +166,7 @@ async def test_list_media_items_failure(
     assert browse.identifier is None
     assert browse.title == "Google Photos"
     assert [(child.identifier, child.title) for child in browse.children] == [
-        ("config-entry-id-123", "Account Name")
+        (CONFIG_ENTRY_ID, "Account Name")
     ]
 
     setup_api.return_value.mediaItems.return_value.list = Mock()
@@ -172,7 +174,7 @@ async def test_list_media_items_failure(
 
     with pytest.raises(BrowseError, match="Error listing media items"):
         await async_browse_media(
-            hass, f"{URI_SCHEME}{DOMAIN}/config-entry-id-123/a/recent"
+            hass, f"{URI_SCHEME}{DOMAIN}/{CONFIG_ENTRY_ID}/a/recent"
         )
 
 
@@ -191,9 +193,9 @@ async def test_media_items_error_parsing_response(hass: HomeAssistant) -> None:
     assert browse.identifier is None
     assert browse.title == "Google Photos"
     assert [(child.identifier, child.title) for child in browse.children] == [
-        ("config-entry-id-123", "Account Name")
+        (CONFIG_ENTRY_ID, "Account Name")
     ]
     with pytest.raises(BrowseError, match="Error listing media items"):
         await async_browse_media(
-            hass, f"{URI_SCHEME}{DOMAIN}/config-entry-id-123/a/recent"
+            hass, f"{URI_SCHEME}{DOMAIN}/{CONFIG_ENTRY_ID}/a/recent"
         )
