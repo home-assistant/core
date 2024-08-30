@@ -270,7 +270,7 @@ aiolookin==1.0.0
 aiolyric==2.0.1
 
 # homeassistant.components.mealie
-aiomealie==0.8.1
+aiomealie==0.9.0
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -829,6 +829,7 @@ goalzero==0.2.2
 goodwe==0.3.6
 
 # homeassistant.components.google_mail
+# homeassistant.components.google_photos
 # homeassistant.components.google_tasks
 google-api-python-client==2.71.0
 
