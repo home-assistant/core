@@ -211,14 +211,19 @@ async def test_reauth_flow(
     hass: HomeAssistant,
     mock_config_entry_current: MockConfigEntry,
     mock_apis_single_fp,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reauth."""
-
-    mock_local_interface, mock_cloud_interface, mock_fp = mock_apis_single_fp
-    # Set login error
-    mock_cloud_interface.login_with_credentials.side_effect = LoginError
 
     mock_config_entry_current.add_to_hass(hass)
     result = await mock_config_entry_current.start_reauth_flow(hass)
     assert result["type"] == FlowResultType.FORM
     result["step_id"] = "cloud_api"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "donJulio", CONF_PASSWORD: "Tequila0FD00m"},
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
