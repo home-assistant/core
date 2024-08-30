@@ -16,7 +16,7 @@ from homeassistant.components.assist_pipeline import (
     async_pipeline_from_audio_stream,
     vad,
 )
-from homeassistant.core import Context
+from homeassistant.core import Context, callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.util import ulid
@@ -36,46 +36,32 @@ class AssistSatelliteEntity(entity.Entity):
     entity_description: AssistSatelliteEntityDescription
     _attr_should_poll = False
     _attr_state: AssistSatelliteState | None = None
+    _attr_pipeline_entity_id: str | None = None
+    _attr_vad_sensitivity_entity_id: str | None = None
 
     _conversation_id: str | None = None
     _conversation_id_time: float | None = None
 
     _run_has_tts: bool = False
 
-    async def _async_accept_pipeline_from_satellite(
+    @property
+    def pipeline_entity_id(self) -> str | None:
+        """Entity ID of the pipeline to use for the next conversation."""
+        return self._attr_pipeline_entity_id
+
+    @property
+    def vad_sensitivity_entity_id(self) -> str | None:
+        """Entity ID of the VAD sensitivity to use for the next conversation."""
+        return self._attr_vad_sensitivity_entity_id
+
+    async def async_accept_pipeline_from_satellite(
         self,
         audio_stream: AsyncIterable[bytes],
         start_stage: PipelineStage = PipelineStage.STT,
         end_stage: PipelineStage = PipelineStage.TTS,
-        pipeline_entity_id: str | None = None,
-        vad_sensitivity_entity_id: str | None = None,
         wake_word_phrase: str | None = None,
     ) -> None:
         """Triggers an Assist pipeline in Home Assistant from a satellite."""
-        pipeline_id: str | None = None
-        vad_sensitivity = vad.VadSensitivity.DEFAULT
-
-        if pipeline_entity_id:
-            if (
-                pipeline_entity_state := self.hass.states.get(pipeline_entity_id)
-            ) is None:
-                raise ValueError("Pipeline entity not found")
-
-            if pipeline_entity_state.state != OPTION_PREFERRED:
-                # Resolve pipeline by name
-                for pipeline in async_get_pipelines(self.hass):
-                    if pipeline.name == pipeline_entity_state.state:
-                        pipeline_id = pipeline.id
-                        break
-
-        if vad_sensitivity_entity_id:
-            if (
-                vad_sensitivity_state := self.hass.states.get(vad_sensitivity_entity_id)
-            ) is None:
-                raise ValueError("VAD sensitivity entity not found")
-
-            vad_sensitivity = vad.VadSensitivity(vad_sensitivity_state.state)
-
         device_id = self.registry_entry.device_id if self.registry_entry else None
 
         # Refresh context if necessary
@@ -116,13 +102,13 @@ class AssistSatelliteEntity(entity.Entity):
                 channel=stt.AudioChannels.CHANNEL_MONO,
             ),
             stt_stream=audio_stream,
-            pipeline_id=pipeline_id,
+            pipeline_id=self._resolve_pipeline(),
             conversation_id=self._conversation_id,
             device_id=device_id,
             tts_audio_output="wav",
             wake_word_phrase=wake_word_phrase,
             audio_settings=AudioSettings(
-                silence_seconds=vad.VadSensitivity.to_seconds(vad_sensitivity)
+                silence_seconds=self._resolve_vad_sensitivity()
             ),
             start_stage=start_stage,
             end_stage=end_stage,
@@ -132,6 +118,7 @@ class AssistSatelliteEntity(entity.Entity):
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Handle pipeline events."""
 
+    @callback
     def _internal_on_pipeline_event(self, event: PipelineEvent) -> None:
         """Set state based on pipeline stage."""
         if event.type is PipelineEventType.WAKE_WORD_START:
@@ -150,11 +137,45 @@ class AssistSatelliteEntity(entity.Entity):
 
         self.on_pipeline_event(event)
 
+    @callback
     def _set_state(self, state: AssistSatelliteState):
         """Set the entity's state."""
         self._attr_state = state
         self.async_write_ha_state()
 
+    @callback
     def tts_response_finished(self) -> None:
         """Tell entity that the text-to-speech response has finished playing."""
         self._set_state(AssistSatelliteState.LISTENING_WAKE_WORD)
+
+    @callback
+    def _resolve_pipeline(self) -> str | None:
+        """Resolve pipeline from select entity to id."""
+        if not (pipeline_entity_id := self.pipeline_entity_id):
+            return None
+
+        if (pipeline_entity_state := self.hass.states.get(pipeline_entity_id)) is None:
+            raise RuntimeError("Pipeline entity not found")
+
+        if pipeline_entity_state.state != OPTION_PREFERRED:
+            # Resolve pipeline by name
+            for pipeline in async_get_pipelines(self.hass):
+                if pipeline.name == pipeline_entity_state.state:
+                    return pipeline.id
+
+        return None
+
+    @callback
+    def _resolve_vad_sensitivity(self) -> float:
+        """Resolve VAD sensitivity from select entity to enum."""
+        vad_sensitivity = vad.VadSensitivity.DEFAULT
+
+        if vad_sensitivity_entity_id := self.vad_sensitivity_entity_id:
+            if (
+                vad_sensitivity_state := self.hass.states.get(vad_sensitivity_entity_id)
+            ) is None:
+                raise RuntimeError("VAD sensitivity entity not found")
+
+            vad_sensitivity = vad.VadSensitivity(vad_sensitivity_state.state)
+
+        return vad.VadSensitivity.to_seconds(vad_sensitivity)

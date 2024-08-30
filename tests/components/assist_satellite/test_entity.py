@@ -37,7 +37,7 @@ async def test_entity_state(
     with patch(
         "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream"
     ) as mock_start_pipeline:
-        await entity._async_accept_pipeline_from_satellite(audio_stream)
+        await entity.async_accept_pipeline_from_satellite(audio_stream)
 
     assert mock_start_pipeline.called
     kwargs = mock_start_pipeline.call_args[1]
