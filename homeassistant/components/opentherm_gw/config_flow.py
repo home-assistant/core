@@ -50,7 +50,9 @@ class OpenThermGwConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OpenThermGwOptionsFlow(config_entry)
 
-    async def async_step_init(self, info=None):
+    async def async_step_init(
+        self, info: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle config flow initiation."""
         if info:
             name = info[CONF_NAME]
@@ -104,7 +106,7 @@ class OpenThermGwConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_init(info=formatted_config)
 
-    def _show_form(self, errors=None):
+    def _show_form(self, errors: dict[str, str] | None = None) -> ConfigFlowResult:
         """Show the config flow form with possible errors."""
         return self.async_show_form(
             step_id="init",
@@ -132,7 +134,9 @@ class OpenThermGwOptionsFlow(OptionsFlow):
         """Initialize the options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Manage the opentherm_gw options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
