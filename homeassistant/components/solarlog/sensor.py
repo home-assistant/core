@@ -233,7 +233,7 @@ async def async_setup_entry(
         for sensor in SOLARLOG_SENSOR_TYPES
     ]
 
-    device_data = coordinator.data.get("devices", {})
+    device_data = coordinator.data.get("devices")
 
     if not device_data:
         entities.extend(
