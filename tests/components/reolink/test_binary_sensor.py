@@ -10,7 +10,7 @@ from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import TEST_NVR_NAME, TEST_UID
+from .conftest import TEST_DUO_MODEL, TEST_NVR_NAME, TEST_UID
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
@@ -25,7 +25,7 @@ async def test_motion_sensor(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test binary sensor entity with motion sensor."""
-    reolink_connect.model = "Reolink Duo PoE"
+    reolink_connect.model = TEST_DUO_MODEL
     reolink_connect.motion_detected.return_value = True
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.BINARY_SENSOR]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
