@@ -21,6 +21,7 @@ from homeassistant.helpers.update_coordinator import (
     BaseDataUpdateCoordinatorProtocol,
 )
 
+from . import DATA_NASWEB
 from .const import DOMAIN, STATUS_UPDATE_MAX_TIME_INTERVAL
 from .nasweb_data import NASwebData
 
@@ -36,7 +37,7 @@ async def async_setup_entry(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up switch platform."""
-    nasweb_data: NASwebData = hass.data[DOMAIN]
+    nasweb_data: NASwebData = hass.data[DATA_NASWEB]
     coordinator = nasweb_data.entries_coordinators[config.entry_id]
     nasweb_outputs = coordinator.data[KEY_OUTPUTS]
     entities: list[RelaySwitch] = []

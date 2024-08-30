@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.network import NoURLAvailableError
+from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN, MANUFACTURER, SUPPORT_EMAIL
 from .coordinator import NASwebCoordinator
@@ -23,16 +24,17 @@ PLATFORMS: list[Platform] = [Platform.SWITCH]
 NASWEB_CONFIG_URL = "https://{host}/page"
 
 _LOGGER = logging.getLogger(__name__)
+DATA_NASWEB: HassKey[NASwebData] = HassKey(DOMAIN)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up NASweb from a config entry."""
 
-    if DOMAIN not in hass.data:
+    if DATA_NASWEB not in hass.data:
         data = NASwebData()
         data.initialize(hass)
-        hass.data[DOMAIN] = data
-    nasweb_data: NASwebData = hass.data[DOMAIN]
+        hass.data[DATA_NASWEB] = data
+    nasweb_data: NASwebData = hass.data[DATA_NASWEB]
 
     webio_api = WebioAPI(
         entry.data[CONF_HOST], entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
@@ -103,7 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        nasweb_data: NASwebData = hass.data[DOMAIN]
+        nasweb_data: NASwebData = hass.data[DATA_NASWEB]
         coordinator: NASwebCoordinator = nasweb_data.entries_coordinators.pop(
             entry.entry_id
         )
@@ -115,6 +117,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             nasweb_data.notify_coordinator.remove_coordinator(serial)
         if nasweb_data.can_be_deinitialized():
             nasweb_data.deinitialize(hass)
-            hass.data.pop(DOMAIN)
+            hass.data.pop(DATA_NASWEB)
 
     return unload_ok
