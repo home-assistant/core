@@ -15,6 +15,7 @@ from PyViCare.PyViCareUtils import (
     PyViCareInvalidCredentialsError,
 )
 
+from homeassistant.components.climate import DOMAIN as DOMAIN_CLIMATE
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
@@ -159,6 +160,13 @@ async def async_migrate_entities(
 
         unique_id_parts = entity_entry.unique_id.split("-")
         unique_id_parts[0] = new_identifier
+
+        # convert climate entity unique id from `<device_identifier>-<circuit_no>` to `<device_identifier>-heating-<circuit_no>`
+        if entity_entry.domain == DOMAIN_CLIMATE:
+            unique_id_parts[len(unique_id_parts) - 1] = (
+                f"{entity_entry.translation_key}-{unique_id_parts[len(unique_id_parts)-1]}"
+            )
+
         entity_new_unique_id = "-".join(unique_id_parts)
 
         _LOGGER.debug(
