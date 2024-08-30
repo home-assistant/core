@@ -47,23 +47,18 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_solarlog_connector():
     """Build a fixture for the SolarLog API that connects successfully and returns one device."""
 
-    mock_solarlog_api = AsyncMock()
-    mock_solarlog_api.test_connection = AsyncMock(return_value=True)
-
     data = SolarlogData.from_dict(
         load_json_object_fixture("solarlog_data.json", SOLARLOG_DOMAIN)
     )
     data.inverter_data = INVERTER_DATA
 
+    mock_solarlog_api = AsyncMock()
+    mock_solarlog_api.test_connection.return_value = True
     mock_solarlog_api.update_data.return_value = data
     mock_solarlog_api.update_device_list.return_value = INVERTER_DATA
     mock_solarlog_api.update_inverter_data.return_value = INVERTER_DATA
     mock_solarlog_api.device_name = {0: "Inverter 1", 1: "Inverter 2"}.get
     mock_solarlog_api.device_enabled = {0: True, 1: False}.get
-    mock_solarlog_api.client.get_device_list.return_value = {
-        0: "Inverter 1",
-        1: "Inverter 2",
-    }
 
     with (
         patch(

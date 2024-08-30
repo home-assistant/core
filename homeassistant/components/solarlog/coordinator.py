@@ -51,7 +51,7 @@ class SolarLogCoordinator(DataUpdateCoordinator[SolarlogData]):
     async def _async_setup(self) -> None:
         """Do initialization logic."""
         if self.solarlog.extended_data:
-            device_list = await self.solarlog.client.get_device_list()
+            device_list = await self.solarlog.update_device_list()
             self.solarlog.set_enabled_devices({key: True for key in device_list})
 
     async def _async_update_data(self) -> SolarlogData:
