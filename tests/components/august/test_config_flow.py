@@ -385,7 +385,7 @@ async def test_switching_brands(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_BRAND: "yale_home",
+                CONF_BRAND: "yale_access",
                 CONF_LOGIN_METHOD: "email",
                 CONF_USERNAME: "my@email.tld",
                 CONF_PASSWORD: "test-password",
@@ -396,4 +396,4 @@ async def test_switching_brands(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1
-    assert entry.data[CONF_BRAND] == "yale_home"
+    assert entry.data[CONF_BRAND] == "yale_access"
