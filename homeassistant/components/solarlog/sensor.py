@@ -229,7 +229,7 @@ async def async_setup_entry(
     # https://github.com/python/mypy/issues/14294
 
     entities: list[SensorEntity] = [
-        SolarLogCoordinatorSensor(coordinator, sensor)  # noqa: PGH003
+        SolarLogCoordinatorSensor(coordinator, sensor)
         for sensor in SOLARLOG_SENSOR_TYPES
     ]
 
@@ -240,7 +240,7 @@ async def async_setup_entry(
             device_id = int(did)
             if coordinator.solarlog.device_enabled(device_id):
                 entities.extend(
-                    SolarLogInverterSensor(coordinator, sensor, device_id)  # noqa: PGH003
+                    SolarLogInverterSensor(coordinator, sensor, device_id)
                     for sensor in INVERTER_SENSOR_TYPES
                     if sensor.key in device_data[device_id]
                 )
