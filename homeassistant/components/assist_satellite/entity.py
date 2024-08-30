@@ -71,8 +71,7 @@ class AssistSatelliteEntity(entity.Entity):
         If media_id is not provided, text is synthesized to
         audio with the selected pipeline.
 
-        Calls _internal_async_announce with media id and expects it to block
-        until the announcement is completed.
+        Calls async_announce with media id.
         """
         if text is None:
             text = ""
@@ -117,7 +116,10 @@ class AssistSatelliteEntity(entity.Entity):
             self._is_announcing = False
 
     async def async_announce(self, text: str, media_id: str) -> None:
-        """Announce media on the satellite."""
+        """Announce media on the satellite.
+
+        Should block until the announcement is done playing.
+        """
         raise NotImplementedError
 
     async def async_accept_pipeline_from_satellite(
