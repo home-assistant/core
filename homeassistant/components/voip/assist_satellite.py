@@ -112,6 +112,16 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self._tones = tones
         self._processing_tone_done = asyncio.Event()
 
+    @property
+    def pipeline_entity_id(self) -> str | None:
+        """Return the entity ID of the pipeline to use for the next conversation."""
+        return self.voip_device.get_pipeline_entity_id(self.hass)
+
+    @property
+    def vad_sensitivity_entity_id(self) -> str | None:
+        """Return the entity ID of the VAD sensitivity to use for the next conversation."""
+        return self.voip_device.get_vad_sensitivity_entity_id(self.hass)
+
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         self.voip_device.protocol = self
@@ -155,15 +165,9 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             # Run pipeline with a timeout
             _LOGGER.debug("Starting pipeline")
             async with asyncio.timeout(_PIPELINE_TIMEOUT_SEC):
-                await self._async_accept_pipeline_from_satellite(  # noqa: SLF001
+                await self.async_accept_pipeline_from_satellite(
                     audio_stream=queue_to_iterable(
                         self._audio_queue, timeout=self._audio_chunk_timeout
-                    ),
-                    pipeline_entity_id=self.voip_device.get_pipeline_entity_id(
-                        self.hass
-                    ),
-                    vad_sensitivity_entity_id=self.voip_device.get_vad_sensitivity_entity_id(
-                        self.hass
                     ),
                 )
 
