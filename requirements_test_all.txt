@@ -834,10 +834,10 @@ goodwe==0.3.6
 google-api-python-client==2.71.0
 
 # homeassistant.components.google_pubsub
-google-cloud-pubsub==2.13.11
+google-cloud-pubsub==2.23.0
 
 # homeassistant.components.google_generative_ai_conversation
-google-generativeai==0.6.0
+google-generativeai==0.7.2
 
 # homeassistant.components.nest
 google-nest-sdm==5.0.0
@@ -2199,7 +2199,7 @@ thermobeacon-ble==0.7.0
 # homeassistant.components.thermopro
 thermopro-ble==0.10.0
 
-# homeassistant.components.lgthinq
+# homeassistant.components.lg_thinq
 thinqconnect==0.9.5
 
 # homeassistant.components.tilt_ble

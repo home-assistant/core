@@ -1,5 +1,5 @@
 {
-  "domain": "lgthinq",
+  "domain": "lg_thinq",
   "name": "LG ThinQ",
   "codeowners": ["@LG-ThinQ-Integration"],
   "config_flow": true,
