@@ -32,6 +32,7 @@ from homeassistant.components.sonos.const import (
 )
 from homeassistant.components.sonos.media_player import (
     LONG_SERVICE_TIMEOUT,
+    SERVICE_GET_QUEUE,
     SERVICE_RESTORE,
     SERVICE_SNAPSHOT,
     VOLUME_INCREMENT,
@@ -1121,3 +1122,25 @@ async def test_play_media_announce(
             blocking=True,
         )
     assert sonos_websocket.play_clip.call_count == 1
+
+
+async def test_media_get_queue(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    soco_factory,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test getting the media queue."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+    result = await hass.services.async_call(
+        SONOS_DOMAIN,
+        SERVICE_GET_QUEUE,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    soco_mock.get_queue.assert_called_with(max_items=0)
+    assert result == snapshot

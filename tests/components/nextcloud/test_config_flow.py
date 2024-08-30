@@ -11,7 +11,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nextcloud.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -135,11 +135,7 @@ async def test_reauth(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     entry.add_to_hass(hass)
 
     # start reauth flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 

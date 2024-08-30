@@ -10,6 +10,8 @@
     }
   },
   "services": {
-    "set_absolute_position": "mdi:set-square"
+    "set_absolute_position": {
+      "service": "mdi:set-square"
+    }
   }
 }

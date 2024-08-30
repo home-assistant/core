@@ -97,7 +97,7 @@ PyTransportNSW==0.1.1
 
 # homeassistant.components.camera
 # homeassistant.components.stream
-PyTurboJPEG==1.7.1
+PyTurboJPEG==1.7.5
 
 # homeassistant.components.vicare
 PyViCare-neo==0.2.1
@@ -201,7 +201,7 @@ aioasuswrt==1.4.0
 aioautomower==2024.8.0
 
 # homeassistant.components.azure_devops
-aioazuredevops==2.1.1
+aioazuredevops==2.2.1
 
 # homeassistant.components.baf
 aiobafi6==0.9.0
@@ -237,7 +237,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==25.2.1
+aioesphomeapi==25.3.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -288,7 +288,7 @@ aiolookin==1.0.0
 aiolyric==2.0.1
 
 # homeassistant.components.mealie
-aiomealie==0.8.1
+aiomealie==0.9.0
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -347,7 +347,7 @@ aiorecollect==2023.09.0
 aioridwell==2024.01.0
 
 # homeassistant.components.ruckus_unleashed
-aioruckus==0.34
+aioruckus==0.41
 
 # homeassistant.components.russound_rio
 aiorussound==2.3.2
@@ -359,7 +359,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==11.3.0
+aioshelly==11.4.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -979,6 +979,7 @@ goalzero==0.2.2
 goodwe==0.3.6
 
 # homeassistant.components.google_mail
+# homeassistant.components.google_photos
 # homeassistant.components.google_tasks
 google-api-python-client==2.71.0
 
@@ -1102,10 +1103,10 @@ hole==0.8.0
 holidays==0.55
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240809.0
+home-assistant-frontend==20240829.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.8.7
+home-assistant-intents==2024.8.29
 
 # homeassistant.components.home_connect
 homeconnect==0.8.0
@@ -1254,6 +1255,9 @@ leaone-ble==0.1.0
 # homeassistant.components.led_ble
 led-ble==1.0.2
 
+# homeassistant.components.lektrico
+lektricowifi==0.0.41
+
 # homeassistant.components.foscam
 libpyfoscam==1.2.2
 
@@ -1282,7 +1286,7 @@ linear-garage-door==0.2.9
 linode-api==4.1.9b1
 
 # homeassistant.components.lamarzocco
-lmcloud==1.1.13
+lmcloud==1.2.2
 
 # homeassistant.components.google_maps
 locationsharinglib==5.0.1
@@ -1429,7 +1433,7 @@ nextdns==3.2.0
 nibe==2.11.0
 
 # homeassistant.components.nice_go
-nice-go==0.3.5
+nice-go==0.3.8
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
@@ -1741,7 +1745,7 @@ pyasuswrt==0.1.21
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==8.0.3
+pyatmo==8.1.0
 
 # homeassistant.components.apple_tv
 pyatv==0.15.0
@@ -1759,7 +1763,7 @@ pybbox==0.0.5-alpha
 pyblackbird==0.6
 
 # homeassistant.components.bluesound
-pyblu==0.4.0
+pyblu==1.0.1
 
 # homeassistant.components.neato
 pybotvac==0.0.25
@@ -1798,10 +1802,13 @@ pycsspeechtts==1.0.8
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.13.4
+pydaikin==2.13.6
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
+
+# homeassistant.components.deako
+pydeako==0.4.0
 
 # homeassistant.components.deconz
 pydeconz==116
@@ -2232,7 +2239,7 @@ pyspcwebgw==0.7.0
 pyspeex-noise==1.0.2
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.7.1
+pysqueezebox==0.8.1
 
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.0.1.dev2
@@ -2313,7 +2320,7 @@ python-join-api==0.0.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.7.1
+python-kasa[speedups]==0.7.2
 
 # homeassistant.components.linkplay
 python-linkplay==0.0.8
@@ -2739,7 +2746,7 @@ tellcore-net==0.4
 tellcore-py==1.1.2
 
 # homeassistant.components.tellduslive
-tellduslive==0.10.11
+tellduslive==0.10.12
 
 # homeassistant.components.lg_soundbar
 temescal==0.5
@@ -2778,6 +2785,9 @@ thermoworks-smoke==0.1.8
 
 # homeassistant.components.thingspeak
 thingspeak==1.0.0
+
+# homeassistant.components.lgthinq
+thinqconnect==0.9.5
 
 # homeassistant.components.tikteck
 tikteck==0.4
@@ -2915,7 +2925,7 @@ watchdog==2.3.1
 waterfurnace==1.1.0
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==0.2.21
+weatherflow4py==0.2.23
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
@@ -2967,11 +2977,13 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.4.0
 
 # homeassistant.components.august
+# homeassistant.components.yale
 # homeassistant.components.yalexs_ble
 yalexs-ble==2.4.3
 
 # homeassistant.components.august
-yalexs==8.5.4
+# homeassistant.components.yale
+yalexs==8.5.5
 
 # homeassistant.components.yeelight
 yeelight==0.7.14
@@ -3004,7 +3016,7 @@ zeroconf==0.133.0
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha==0.0.31
+zha==0.0.32
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.12

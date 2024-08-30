@@ -130,6 +130,8 @@ class BaseProvider:
     def __init__(self, lang: str) -> None:
         """Initialize test provider."""
         self._lang = lang
+        self._supported_languages = SUPPORT_LANGUAGES
+        self._supported_options = ["voice", "age"]
 
     @property
     def default_language(self) -> str:
@@ -139,7 +141,7 @@ class BaseProvider:
     @property
     def supported_languages(self) -> list[str]:
         """Return list of supported languages."""
-        return SUPPORT_LANGUAGES
+        return self._supported_languages
 
     @callback
     def async_get_supported_voices(self, language: str) -> list[Voice] | None:
@@ -154,7 +156,7 @@ class BaseProvider:
     @property
     def supported_options(self) -> list[str]:
         """Return list of supported options like voice, emotions."""
-        return ["voice", "age"]
+        return self._supported_options
 
     def get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
@@ -163,7 +165,7 @@ class BaseProvider:
         return ("mp3", b"")
 
 
-class MockProvider(BaseProvider, Provider):
+class MockTTSProvider(BaseProvider, Provider):
     """Test speech API provider."""
 
     def __init__(self, lang: str) -> None:
@@ -185,7 +187,7 @@ class MockTTS(MockPlatform):
         {vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES)}
     )
 
-    def __init__(self, provider: MockProvider, **kwargs: Any) -> None:
+    def __init__(self, provider: MockTTSProvider, **kwargs: Any) -> None:
         """Initialize."""
         super().__init__(**kwargs)
         self._provider = provider
@@ -202,7 +204,7 @@ class MockTTS(MockPlatform):
 
 async def mock_setup(
     hass: HomeAssistant,
-    mock_provider: MockProvider,
+    mock_provider: MockTTSProvider,
 ) -> None:
     """Set up a test provider."""
     mock_integration(hass, MockModule(domain=TEST_DOMAIN))
