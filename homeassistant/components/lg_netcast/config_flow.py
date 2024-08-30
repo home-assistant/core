@@ -68,11 +68,11 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, config: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import configuration from yaml."""
         self.device_config = {
-            CONF_HOST: config[CONF_HOST],
-            CONF_NAME: config[CONF_NAME],
+            CONF_HOST: import_data[CONF_HOST],
+            CONF_NAME: import_data[CONF_NAME],
         }
 
         def _create_issue():
@@ -92,7 +92,7 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         try:
-            result: ConfigFlowResult = await self.async_step_authorize(config)
+            result: ConfigFlowResult = await self.async_step_authorize(import_data)
         except AbortFlow as err:
             if err.reason != "already_configured":
                 async_create_issue(

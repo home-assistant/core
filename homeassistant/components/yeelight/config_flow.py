@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 import voluptuous as vol
@@ -57,11 +58,11 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return the options flow."""
         return OptionsFlowHandler(config_entry)
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the config flow."""
-        self._discovered_devices = {}
+        self._discovered_devices: dict[str, Any] = {}
         self._discovered_model = None
-        self._discovered_ip = None
+        self._discovered_ip: str | None = None
 
     async def async_step_homekit(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
@@ -162,7 +163,9 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="discovery_confirm", description_placeholders=placeholders
         )
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -176,6 +179,8 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 self._abort_if_unique_id_configured()
+                if TYPE_CHECKING:
+                    assert self.unique_id
                 return self.async_create_entry(
                     title=async_format_model_id(model, self.unique_id),
                     data={
@@ -239,21 +244,21 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
         )
 
-    async def async_step_import(self, user_input=None):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import step."""
-        host = user_input[CONF_HOST]
+        host = import_data[CONF_HOST]
         try:
             await self._async_try_connect(host, raise_on_progress=False)
         except CannotConnect:
             _LOGGER.error("Failed to import %s: cannot connect", host)
             return self.async_abort(reason="cannot_connect")
-        if CONF_NIGHTLIGHT_SWITCH_TYPE in user_input:
-            user_input[CONF_NIGHTLIGHT_SWITCH] = (
-                user_input.pop(CONF_NIGHTLIGHT_SWITCH_TYPE)
+        if CONF_NIGHTLIGHT_SWITCH_TYPE in import_data:
+            import_data[CONF_NIGHTLIGHT_SWITCH] = (
+                import_data.pop(CONF_NIGHTLIGHT_SWITCH_TYPE)
                 == NIGHTLIGHT_SWITCH_TYPE_LIGHT
             )
         self._abort_if_unique_id_configured()
-        return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+        return self.async_create_entry(title=import_data[CONF_NAME], data=import_data)
 
     async def _async_try_connect(self, host, raise_on_progress=True):
         """Set up with options."""

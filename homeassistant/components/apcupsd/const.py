@@ -6,4 +6,4 @@ DOMAIN: Final = "apcupsd"
 CONNECTION_TIMEOUT: int = 10
 
 # Field name of last self test retrieved from apcupsd.
-LASTSTEST: Final = "laststest"
+LAST_S_TEST: Final = "laststest"
