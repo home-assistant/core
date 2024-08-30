@@ -104,6 +104,19 @@ class EnumTypeData:
             return None
         return cls(dpcode, **parsed)
 
+@dataclass
+class BitmapTypeData:
+    """Bitmap Type Data."""
+
+    dpcode: DPCode
+    label: list[str]
+
+    @classmethod
+    def from_json(cls, dpcode: DPCode, data: str) -> BitmapTypeData | None:
+        """Load JSON string and return a BitmapTypeData object."""
+        if not (parsed := json.loads(data)):
+            return None
+        return cls(dpcode, **parsed)
 
 @dataclass
 class ElectricityTypeData:
@@ -159,6 +172,15 @@ class TuyaEntity(Entity):
     def available(self) -> bool:
         """Return if the device is available."""
         return self.device.online
+
+    @overload
+    def find_dpcode(
+        self,
+        dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+        *,
+        prefer_function: bool = False,
+        dptype: Literal[DPType.BITMAP],
+    ) -> BitmapTypeData | None: ...
 
     @overload
     def find_dpcode(
@@ -226,6 +248,20 @@ class TuyaEntity(Entity):
                     ):
                         continue
                     return enum_type
+
+                if dpcode not in getattr(self.device, key):
+                    continue
+                if (
+                    dptype == DPType.BITMAP
+                    and getattr(self.device, key)[dpcode].type == DPType.BITMAP
+                ):
+                    if not (
+                        bitmap_type := BitmapTypeData.from_json(
+                            dpcode, getattr(self.device, key)[dpcode].values
+                        )
+                    ):
+                        continue
+                    return bitmap_type
 
                 if (
                     dptype == DPType.INTEGER
