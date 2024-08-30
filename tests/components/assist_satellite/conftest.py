@@ -63,7 +63,9 @@ def config_entry(hass: HomeAssistant) -> ConfigEntry:
 
 @pytest.fixture
 async def init_components(
-    hass: HomeAssistant, config_entry: ConfigEntry, entity: MockAssistSatellite
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    entity: MockAssistSatellite,
 ) -> None:
     """Initialize components."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -98,7 +100,7 @@ async def init_components(
         config_entry: ConfigEntry,
         async_add_entities: AddEntitiesCallback,
     ) -> None:
-        """Set up test tts platform via config entry."""
+        """Set up test satellite platform via config entry."""
         async_add_entities([entity])
 
     loaded_platform = MockPlatform(async_setup_entry=async_setup_entry_platform)

@@ -36,15 +36,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         "announce",
         vol.All(
-            vol.Schema(
+            cv.make_entity_service_schema(
                 {
                     vol.Optional("text"): str,
-                    vol.Optional("media"): str,
+                    vol.Optional("media_id"): str,
                 }
             ),
-            cv.has_at_least_one_key("text", "media"),
+            cv.has_at_least_one_key("text", "media_id"),
         ),
-        "async_internal_annonuce",
+        "async_internal_announce",
         [AssistSatelliteEntityFeature.ANNOUNCE],
     )
 

@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from collections.abc import AsyncIterable
 import time
-from typing import Final
+from typing import Any, Final
 
 from homeassistant.components import media_source, stt, tts
 from homeassistant.components.assist_pipeline import (
@@ -79,7 +79,7 @@ class AssistSatelliteEntity(entity.Entity):
 
         if not media_id:
             # Synthesize audio and get URL
-            pipeline_id = self._resolve_pipeline(pipeline_entity_id)
+            pipeline_id = self._resolve_pipeline()
             pipeline = async_get_pipeline(self.hass, pipeline_id)
 
             tts_options: dict[str, Any] = {}
