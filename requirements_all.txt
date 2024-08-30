@@ -1254,6 +1254,9 @@ leaone-ble==0.1.0
 # homeassistant.components.led_ble
 led-ble==1.0.2
 
+# homeassistant.components.lektrico
+lektricowifi==0.0.41
+
 # homeassistant.components.foscam
 libpyfoscam==1.2.2
 
@@ -2235,7 +2238,7 @@ pyspcwebgw==0.7.0
 pyspeex-noise==1.0.2
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.7.1
+pysqueezebox==0.8.1
 
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.0.1.dev2
@@ -2782,6 +2785,9 @@ thermoworks-smoke==0.1.8
 # homeassistant.components.thingspeak
 thingspeak==1.0.0
 
+# homeassistant.components.lgthinq
+thinqconnect==0.9.5
+
 # homeassistant.components.tikteck
 tikteck==0.4
 
@@ -2918,7 +2924,7 @@ watchdog==2.3.1
 waterfurnace==1.1.0
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==0.2.21
+weatherflow4py==0.2.23
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
@@ -3009,7 +3015,7 @@ zeroconf==0.133.0
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha==0.0.31
+zha==0.0.32
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.12
