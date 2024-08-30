@@ -78,8 +78,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._errors[CONF_HOST] = "already_configured"
             elif await self._test_connection(user_input[CONF_HOST]):
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME],
-                    data=user_input,
+                    title=user_input[CONF_NAME], data=user_input
                 )
         else:
             user_input = {}
