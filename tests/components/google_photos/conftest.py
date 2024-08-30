@@ -13,7 +13,6 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.google_photos.const import DOMAIN, OAUTH2_SCOPES
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -24,12 +23,6 @@ CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 FAKE_ACCESS_TOKEN = "some-access-token"
 FAKE_REFRESH_TOKEN = "some-refresh-token"
-
-
-@pytest.fixture
-def platforms() -> list[Platform]:
-    """Fixture to specify platforms to test."""
-    return []
 
 
 @pytest.fixture(name="expires_at")
@@ -119,11 +112,9 @@ def mock_setup_api(fixture_name: str) -> Generator[Mock, None, None]:
 async def mock_setup_integration(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    platforms: list[str],
 ) -> Callable[[], Awaitable[bool]]:
     """Fixture to set up the integration."""
     config_entry.add_to_hass(hass)
 
-    with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()

@@ -12,7 +12,6 @@ from homeassistant.components.media_source import (
     MediaSourceItem,
     PlayMedia,
 )
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import GooglePhotosConfigEntry
@@ -36,7 +35,7 @@ LARGE_IMAGE_SIZE = 2048
 # The PhotosIdentifier can be in the following forms:
 #  config-entry-id
 #  config-entry-id/a/album-media-id
-#  config-entry-id/p/photo-media-id
+#  config-entry-id/p/photo-media-idxf
 #
 # The album-media-id can contain special reserved folder names for use by
 # this integration for virtual folders like the `recent` album.
@@ -126,9 +125,11 @@ class GooglePhotosMediaSource(MediaSource):
         )
         is_video = media_item["mediaMetadata"].get("video") is not None
         return PlayMedia(
-            url=_video_url(media_item)
-            if is_video
-            else _media_url(media_item, LARGE_IMAGE_SIZE),
+            url=(
+                _video_url(media_item)
+                if is_video
+                else _media_url(media_item, LARGE_IMAGE_SIZE)
+            ),
             mime_type=media_item["mimeType"],
         )
 
@@ -152,7 +153,7 @@ class GooglePhotosMediaSource(MediaSource):
                 children_media_class=MediaClass.DIRECTORY,
                 children=[
                     _build_account(entry, PhotosIdentifier(cast(str, entry.unique_id)))
-                    for entry in self._async_config_entries()
+                    for entry in self.hass.config_entries.async_loaded_entries(DOMAIN)
                 ],
             )
 
@@ -205,19 +206,10 @@ class GooglePhotosMediaSource(MediaSource):
         ]
         return source
 
-    def _async_config_entries(self) -> list[GooglePhotosConfigEntry]:
-        """Return active config entries."""
-        entries = self.hass.config_entries.async_entries(
-            DOMAIN, include_disabled=False, include_ignore=False
-        )
-        return [entry for entry in entries if entry.state == ConfigEntryState.LOADED]
-
     def _async_config_entry(self, config_entry_id: str) -> GooglePhotosConfigEntry:
         """Return a config entry with the specified id."""
-        entries = self._async_config_entries()
-        entry = next(
-            iter(entry for entry in entries if entry.unique_id == config_entry_id),
-            None,
+        entry = self.hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, config_entry_id
         )
         if not entry:
             raise BrowseError(
