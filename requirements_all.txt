@@ -984,7 +984,7 @@ goodwe==0.3.6
 google-api-python-client==2.71.0
 
 # homeassistant.components.google_pubsub
-google-cloud-pubsub==2.13.11
+google-cloud-pubsub==2.23.0
 
 # homeassistant.components.google_cloud
 google-cloud-texttospeech==2.16.3
