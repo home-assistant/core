@@ -286,7 +286,7 @@ async def test_reauth(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == abort_reason
 
     assert config_entry.unique_id == USER_IDENTIFIER
