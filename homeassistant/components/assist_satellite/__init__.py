@@ -2,6 +2,8 @@
 
 import logging
 
+import voluptuous as vol
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -32,6 +34,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await component.async_setup(config)
     async_register_websocket_api(hass)
+
+    component.async_register_entity_service(
+        "announce",
+        vol.All(
+            vol.Schema(
+                {
+                    vol.Optional("text"): str,
+                    vol.Optional("media"): str,
+                }
+            ),
+            cv.has_at_least_one_key("text", "media"),
+        ),
+        "async_annonuce",
+        [AssistSatelliteEntityFeature.ANNOUNCE],
+    )
 
     return True
 
