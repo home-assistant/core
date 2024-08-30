@@ -837,7 +837,7 @@ google-api-python-client==2.71.0
 google-cloud-pubsub==2.23.0
 
 # homeassistant.components.google_generative_ai_conversation
-google-generativeai==0.6.0
+google-generativeai==0.7.2
 
 # homeassistant.components.nest
 google-nest-sdm==5.0.0
@@ -1428,7 +1428,7 @@ pybalboa==1.0.2
 pyblackbird==0.6
 
 # homeassistant.components.bluesound
-pyblu==0.4.0
+pyblu==1.0.1
 
 # homeassistant.components.neato
 pybotvac==0.0.25
