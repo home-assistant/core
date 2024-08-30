@@ -55,6 +55,8 @@ REGISTRATIONS_FILE = "html5_push_registrations.conf"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
+        vol.Optional("gcm_sender_id"): cv.string,
+        vol.Optional("gcm_api_key"): cv.string,
         vol.Required(ATTR_VAPID_PUB_KEY): cv.string,
         vol.Required(ATTR_VAPID_PRV_KEY): cv.string,
         vol.Required(ATTR_VAPID_EMAIL): cv.string,
