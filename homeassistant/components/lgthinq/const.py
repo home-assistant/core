@@ -47,10 +47,6 @@ CLIENT_PREFIX: Final = "home-assistant"
 CONF_CONNECT_CLIENT_ID: Final = "connect_client_id"
 DEFAULT_COUNTRY: Final = "US"
 
-# Device
-POWER_OFF: Final = "POWER_OFF"
-POWER_ON: Final = "POWER_ON"
-
 THINQ_DEVICE_ADDED: Final = "thinq_device_added"
 
 DEVICE_TYPE_API_MAP: Final = {

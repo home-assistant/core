@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -22,34 +20,16 @@ from .coordinator import DeviceDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(kw_only=True)
-class PropertyInfo:
-    """A data class contains an information for creating property."""
-
-    # The property key for use in SDK must be snake_case string.
-    key: str
-
-    # Optional, if the value should be converted before calling api.
-    value_converter: Callable[[Any], Any] | None = None
-
-
-@dataclass(kw_only=True, frozen=True)
-class ThinQEntityDescription(EntityDescription):
-    """The base thinq entity description."""
-
-    property_info: PropertyInfo
-
-
 class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
     """The base implementation of all lg thinq entities."""
 
     _attr_has_entity_name = True
-    entity_description: ThinQEntityDescription
+    entity_description: EntityDescription
 
     def __init__(
         self,
         coordinator: DeviceDataUpdateCoordinator,
-        entity_description: ThinQEntityDescription,
+        entity_description: EntityDescription,
         property: ThinQProperty,
     ) -> None:
         """Initialize an entity."""
