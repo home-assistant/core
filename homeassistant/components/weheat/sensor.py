@@ -1,5 +1,6 @@
 """Platform for sensor integration."""
 
+from datetime import date
 from decimal import Decimal
 
 from weheat.abstractions.heat_pump import HeatPump
@@ -78,11 +79,14 @@ class WeheatHeatPumpSensor(WeheatEntity, SensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-
-        if self.coordinator.data is None or self.entity_description.key == "":
-            self._attr_native_value = Decimal(0)
-        else:
-            self._attr_native_value = getattr(
-                self.coordinator.data, self.entity_description.key
-            )
+        self._attr_native_value = getattr(
+            self.coordinator.data, self.entity_description.key
+        )
         self.async_write_ha_state()
+
+    @property
+    def native_value(self) -> str | int | float | date | Decimal:
+        """Return the value reported by the sensor and show 0 if not available."""
+        if self._attr_native_value is None:
+            return Decimal(0)
+        return self._attr_native_value
