@@ -77,14 +77,6 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
             if self._host_in_configuration_exists(user_input[CONF_HOST]):
                 self._errors[CONF_HOST] = "already_configured"
             elif await self._test_connection(user_input[CONF_HOST]):
-                if user_input["extended_data"]:
-                    solarlog: SolarLogConnector = SolarLogConnector(
-                        user_input[CONF_HOST]
-                    )
-                    device_list = await solarlog.client.get_device_list()
-                    await solarlog.client.close()
-                    user_input |= {"devices": {key: True for key in device_list}}
-
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
                     data=user_input,

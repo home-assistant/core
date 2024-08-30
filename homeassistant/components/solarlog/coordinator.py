@@ -45,15 +45,15 @@ class SolarLogCoordinator(update_coordinator.DataUpdateCoordinator):
 
         extended_data = entry.data["extended_data"]
 
-        enabled_devices: dict[int, bool] = {}
-        if extended_data:
-            if entry.data.get("devices", {}) != {}:
-                for key, value in entry.data["devices"].items():
-                    enabled_devices |= {int(key): value}
-
         self.solarlog = SolarLogConnector(
-            self.host, extended_data, hass.config.time_zone, enabled_devices
+            self.host, extended_data, hass.config.time_zone
         )
+
+    async def _async_setup(self) -> None:
+        """Do initialization logic."""
+        if self.solarlog.extended_data:
+            device_list = await self.solarlog.client.get_device_list()
+            self.solarlog.set_enabled_devices({key: True for key in device_list})
 
     async def _async_update_data(self):
         """Update the data from the SolarLog device."""

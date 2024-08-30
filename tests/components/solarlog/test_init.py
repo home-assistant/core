@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import enabled_devices, setup_platform
+from . import setup_platform
 from .const import HOST, NAME
 
 from tests.common import MockConfigEntry
@@ -114,7 +114,6 @@ async def test_update_options(
     assert state.state == "5"
 
     mock_config_entry.runtime_data = SolarLogCoordinator(hass, mock_config_entry)
-    mock_solarlog_connector.device_enabled = lambda *args: enabled_devices(*args)  # pylint: disable=unnecessary-lambda
     hass.config_entries.async_update_entry(mock_config_entry, options={})
     await hass.async_block_till_done()
 
