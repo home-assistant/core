@@ -83,7 +83,7 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
 
             try:
                 return await self._validate_and_create_entry(access_token, country_code)
-            except ThinQAPIException as e:
+            except ThinQAPIException:
                 errors["base"] = "token_unauthorized"
 
         return self.async_show_form(
