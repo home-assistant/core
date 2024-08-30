@@ -162,17 +162,41 @@
     }
   },
   "services": {
-    "permit": "mdi:cellphone-link",
-    "remove": "mdi:cellphone-remove",
-    "reconfigure_device": "mdi:cellphone-cog",
-    "set_zigbee_cluster_attribute": "mdi:cog",
-    "issue_zigbee_cluster_command": "mdi:console",
-    "issue_zigbee_group_command": "mdi:console",
-    "warning_device_squawk": "mdi:alert",
-    "warning_device_warn": "mdi:alert",
-    "clear_lock_user_code": "mdi:lock-remove",
-    "enable_lock_user_code": "mdi:lock",
-    "disable_lock_user_code": "mdi:lock-off",
-    "set_lock_user_code": "mdi:lock"
+    "permit": {
+      "service": "mdi:cellphone-link"
+    },
+    "remove": {
+      "service": "mdi:cellphone-remove"
+    },
+    "reconfigure_device": {
+      "service": "mdi:cellphone-cog"
+    },
+    "set_zigbee_cluster_attribute": {
+      "service": "mdi:cog"
+    },
+    "issue_zigbee_cluster_command": {
+      "service": "mdi:console"
+    },
+    "issue_zigbee_group_command": {
+      "service": "mdi:console"
+    },
+    "warning_device_squawk": {
+      "service": "mdi:alert"
+    },
+    "warning_device_warn": {
+      "service": "mdi:alert"
+    },
+    "clear_lock_user_code": {
+      "service": "mdi:lock-remove"
+    },
+    "enable_lock_user_code": {
+      "service": "mdi:lock"
+    },
+    "disable_lock_user_code": {
+      "service": "mdi:lock-off"
+    },
+    "set_lock_user_code": {
+      "service": "mdi:lock"
+    }
   }
 }
