@@ -1,4 +1,5 @@
 """The NASweb integration."""
+
 from __future__ import annotations
 
 import logging
@@ -9,22 +10,16 @@ from webio_api.api_client import AuthError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.network import NoURLAvailableError
 
-from .config_flow import MissingNASwebData, MissingNASwebStatus
 from .const import DOMAIN, MANUFACTURER, SUPPORT_EMAIL
 from .coordinator import NASwebCoordinator
 from .nasweb_data import NASwebData
 
 PLATFORMS: list[Platform] = [Platform.SWITCH]
 
-DOMAIN_DISPLAY_NAME = "NASweb"
-ISSUE_NO_STATUS_UPDATE = "no_status_update"
-ISSUE_INVALID_AUTHENTICATION = "invalid_authentication"
-ISSUE_INTERNAL_ERROR = "internal_error"
-ISSUE_INTERNAL_URL_ERROR = "internal_url_error"
 NASWEB_CONFIG_URL = "https://{host}/page"
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,11 +44,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         if not await webio_api.refresh_device_info():
             _LOGGER.error("[%s] Refresh device info failed", entry.data[CONF_HOST])
-            raise MissingNASwebData
+            raise ConfigEntryError(
+                translation_key="config_entry_error_internal_error",
+                translation_placeholders={"support_email": SUPPORT_EMAIL},
+            )
         webio_serial = webio_api.get_serial_number()
         if webio_serial is None:
             _LOGGER.error("[%s] Serial number not available", entry.data[CONF_HOST])
-            raise MissingNASwebData
+            raise ConfigEntryError(
+                translation_key="config_entry_error_internal_error",
+                translation_placeholders={"support_email": SUPPORT_EMAIL},
+            )
 
         coordinator = NASwebCoordinator(
             hass, webio_api, name=f"NASweb[{webio_api.get_name()}]"
@@ -64,78 +65,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         webhook_url = nasweb_data.get_webhook_url(hass)
         if not await webio_api.status_subscription(webhook_url, True):
             _LOGGER.error("Failed to subscribe for status updates from webio")
-            raise MissingNASwebData
+            raise ConfigEntryError(
+                translation_key="config_entry_error_internal_error",
+                translation_placeholders={"support_email": SUPPORT_EMAIL},
+            )
         if not await nasweb_data.notify_coordinator.check_connection(webio_serial):
             _LOGGER.error("Did not receive status from device")
-            raise MissingNASwebStatus
-    except AuthError:
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"{ISSUE_INVALID_AUTHENTICATION}_{entry.entry_id}",
-            is_fixable=False,
-            is_persistent=False,
-            severity=ir.IssueSeverity.ERROR,
-            translation_key=ISSUE_INVALID_AUTHENTICATION,
-            translation_placeholders={
-                "domain_name": DOMAIN_DISPLAY_NAME,
-                "device_name": entry.title,
-            },
-        )
-        return False
-    except NoURLAvailableError:
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"{ISSUE_INTERNAL_URL_ERROR}_{entry.entry_id}",
-            is_fixable=False,
-            is_persistent=False,
-            severity=ir.IssueSeverity.ERROR,
-            translation_key=ISSUE_INTERNAL_URL_ERROR,
-            translation_placeholders={
-                "domain_name": DOMAIN_DISPLAY_NAME,
-                "device_name": entry.title,
-            },
-        )
-        return False
-    except MissingNASwebData:
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"{ISSUE_INTERNAL_ERROR}_{entry.entry_id}",
-            is_fixable=False,
-            is_persistent=False,
-            severity=ir.IssueSeverity.ERROR,
-            translation_key=ISSUE_INTERNAL_ERROR,
-            translation_placeholders={
-                "domain_name": DOMAIN_DISPLAY_NAME,
-                "device_name": entry.title,
-                "support_email": SUPPORT_EMAIL,
-            },
-        )
-        return False
-    except MissingNASwebStatus:
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"{ISSUE_NO_STATUS_UPDATE}_{entry.entry_id}",
-            is_fixable=False,
-            is_persistent=False,
-            severity=ir.IssueSeverity.ERROR,
-            translation_key=ISSUE_NO_STATUS_UPDATE,
-            translation_placeholders={
-                "domain_name": DOMAIN_DISPLAY_NAME,
-                "device_name": entry.title,
-                "support_email": SUPPORT_EMAIL,
-            },
-        )
-        return False
-    ir.async_delete_issue(
-        hass, DOMAIN, f"{ISSUE_INVALID_AUTHENTICATION}_{entry.entry_id}"
-    )
-    ir.async_delete_issue(hass, DOMAIN, f"{ISSUE_INTERNAL_URL_ERROR}_{entry.entry_id}")
-    ir.async_delete_issue(hass, DOMAIN, f"{ISSUE_INTERNAL_ERROR}_{entry.entry_id}")
-    ir.async_delete_issue(hass, DOMAIN, f"{ISSUE_NO_STATUS_UPDATE}_{entry.entry_id}")
+            raise ConfigEntryError(
+                translation_key="config_entry_error_no_status_update",
+                translation_placeholders={"support_email": SUPPORT_EMAIL},
+            )
+    except TimeoutError as error:
+        raise ConfigEntryNotReady(
+            f"[{entry.data[CONF_HOST]}] Check connection reached timeout"
+        ) from error
+    except AuthError as error:
+        raise ConfigEntryError(
+            translation_key="config_entry_error_invalid_authentication"
+        ) from error
+    except NoURLAvailableError as error:
+        raise ConfigEntryError(
+            translation_key="config_entry_error_missing_internal_url"
+        ) from error
+
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -151,16 +103,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        ir.async_delete_issue(
-            hass, DOMAIN, f"{ISSUE_INVALID_AUTHENTICATION}_{entry.entry_id}"
-        )
-        ir.async_delete_issue(
-            hass, DOMAIN, f"{ISSUE_INTERNAL_URL_ERROR}_{entry.entry_id}"
-        )
-        ir.async_delete_issue(hass, DOMAIN, f"{ISSUE_INTERNAL_ERROR}_{entry.entry_id}")
-        ir.async_delete_issue(
-            hass, DOMAIN, f"{ISSUE_NO_STATUS_UPDATE}_{entry.entry_id}"
-        )
         nasweb_data: NASwebData = hass.data[DOMAIN]
         coordinator: NASwebCoordinator = nasweb_data.entries_coordinators.pop(
             entry.entry_id
