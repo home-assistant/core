@@ -54,7 +54,7 @@ class AuthBase(ABC):
         """Get all MediaItem resources."""
         service = await self._get_photos_service()
         cmd: HttpRequest = service.mediaItems().get(
-            mediaItemId=media_item_id, fields=GET_MEDIA_ITEM_FIELDS
+            media_item_id, fields=GET_MEDIA_ITEM_FIELDS
         )
         return await self._execute(cmd)
 

@@ -96,10 +96,10 @@ def mock_setup_api(fixture_name: str) -> Generator[Mock, None, None]:
         mock.return_value.mediaItems.return_value.list = list_media_items
 
         # Mock a point lookup by reading contents of the fixture above
-        def get_media_item(mediaItemId: str, **kwargs: Any) -> Mock:
+        def get_media_item(media_item_id: str, **kwargs: Any) -> Mock:
             for response in responses:
                 for media_item in response["mediaItems"]:
-                    if media_item["id"] == mediaItemId:
+                    if media_item["id"] == media_item_id:
                         mock = Mock()
                         mock.execute.return_value = media_item
                         return mock
