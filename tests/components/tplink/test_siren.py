@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from kasa import Device, Feature, Module
+from kasa import Device, Module
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -35,9 +35,6 @@ async def mocked_hub(hass: HomeAssistant) -> Device:
     features = [
         _mocked_feature(
             "alarm",
-            value=False,
-            category=Feature.Category.Info,
-            type_=Feature.Type.BinarySensor,
         ),
         _mocked_feature(
             "test_alarm",
