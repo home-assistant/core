@@ -1,16 +1,18 @@
-#!/usr/bin/env bashio
-declare -a integrations
-declare integration_path
+#!/bin/sh
 
-shopt -s globstar nullglob
-for manifest in **/manifest.json; do
+integrations=""
+integration_path=""
+
+# Enable recursive globbing using find
+for manifest in $(find . -name "manifest.json"); do
     manifest_path=$(realpath "${manifest}")
-    integrations+=(--integration-path "${manifest_path%/*}")
+    integrations="$integrations --integration-path ${manifest_path%/*}"
 done
 
-if [[ ${#integrations[@]} -eq 0 ]]; then
-    bashio::exit.nok "No integrations found!"
+if [ -z "$integrations" ]; then
+    echo "Error: No integrations found!"
+    exit 1
 fi
 
-cd /usr/src/homeassistant
-exec python3 -m script.hassfest --action validate "${integrations[@]}" "$@"
+cd /usr/src/homeassistant || exit 1
+exec python3 -m script.hassfest --action validate $integrations "$@"
