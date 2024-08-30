@@ -94,6 +94,8 @@ async def test_config_flow_errors(
 
     reolink_connect.is_admin = False
     reolink_connect.user_level = "guest"
+    reolink_connect.unsubscribe.side_effect = ReolinkError("Test error")
+    reolink_connect.logout.side_effect = ReolinkError("Test error")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -327,16 +329,7 @@ async def test_reauth(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-            "title_placeholders": {"name": TEST_NVR_NAME},
-            "unique_id": format_mac(TEST_MAC),
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -471,7 +464,7 @@ async def test_dhcp_ip_update(
 
     if not last_update_success:
         # ensure the last_update_succes is False for the device_coordinator.
-        reolink_connect.get_states = AsyncMock(side_effect=ReolinkError("Test error"))
+        reolink_connect.get_states.side_effect = ReolinkError("Test error")
         freezer.tick(DEVICE_UPDATE_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()

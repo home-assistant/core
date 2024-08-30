@@ -108,9 +108,7 @@ async def test_firmware_error_twice(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test when the firmware update fails 2 times."""
-    reolink_connect.check_new_firmware = AsyncMock(
-        side_effect=ReolinkError("Test error")
-    )
+    reolink_connect.check_new_firmware.side_effect = ReolinkError("Test error")
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.UPDATE]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -140,9 +138,7 @@ async def test_credential_error_three(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    reolink_connect.get_states = AsyncMock(
-        side_effect=CredentialsInvalidError("Test error")
-    )
+    reolink_connect.get_states.side_effect = CredentialsInvalidError("Test error")
 
     issue_id = f"config_entry_reauth_{const.DOMAIN}_{config_entry.entry_id}"
     for _ in range(NUM_CRED_ERRORS):
@@ -549,7 +545,7 @@ async def test_port_repair_issue(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test repairs issue is raised when auto enable of ports fails."""
-    reolink_connect.set_net_port = AsyncMock(side_effect=ReolinkError("Test error"))
+    reolink_connect.set_net_port.side_effect = ReolinkError("Test error")
     reolink_connect.onvif_enabled = False
     reolink_connect.rtsp_enabled = False
     reolink_connect.rtmp_enabled = False

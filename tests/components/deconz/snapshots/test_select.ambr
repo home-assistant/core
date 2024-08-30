@@ -506,3 +506,68 @@
     'state': 'medium',
   })
 # ---
+# name: test_select[sensor_payload3-expected3][select.ikea_starkvind_fan_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'auto',
+        'speed_1',
+        'speed_2',
+        'speed_3',
+        'speed_4',
+        'speed_5',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.ikea_starkvind_fan_mode',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'IKEA Starkvind Fan Mode',
+    'platform': 'deconz',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '0c:43:14:ff:fe:6c:20:12-01-fc7d-fan_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[sensor_payload3-expected3][select.ikea_starkvind_fan_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'IKEA Starkvind Fan Mode',
+      'options': list([
+        'off',
+        'auto',
+        'speed_1',
+        'speed_2',
+        'speed_3',
+        'speed_4',
+        'speed_5',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ikea_starkvind_fan_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'speed_1',
+  })
+# ---

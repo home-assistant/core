@@ -8,7 +8,7 @@ from datetime import datetime
 import logging
 from typing import Any
 
-from aioazuredevops.models.builds import Build
+from aioazuredevops.models.build import Build
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,

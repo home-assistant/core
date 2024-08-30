@@ -72,9 +72,18 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 @callback
 def async_default_engine(hass: HomeAssistant) -> str | None:
     """Return the domain or entity id of the default engine."""
-    return async_default_provider(hass) or next(
-        iter(hass.states.async_entity_ids(DOMAIN)), None
-    )
+    component: EntityComponent[SpeechToTextEntity] = hass.data[DOMAIN]
+
+    default_entity_id: str | None = None
+
+    for entity in component.entities:
+        if entity.platform and entity.platform.platform_name == "cloud":
+            return entity.entity_id
+
+        if default_entity_id is None:
+            default_entity_id = entity.entity_id
+
+    return default_entity_id or async_default_provider(hass)
 
 
 @callback
@@ -439,6 +448,7 @@ def websocket_list_engines(
     for engine_id, provider in legacy_providers.items():
         provider_info = {
             "engine_id": engine_id,
+            "name": provider.name,
             "supported_languages": provider.supported_languages,
         }
         if language:

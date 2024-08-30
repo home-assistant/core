@@ -82,7 +82,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={},
         )
 
-    async def async_step_import(self, import_data):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import habitica config from configuration.yaml."""
 
         async_create_issue(
