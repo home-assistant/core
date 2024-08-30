@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.components.assist_pipeline.select import OPTION_PREFERRED
+from homeassistant.components.assist_pipeline import OPTION_PREFERRED
 from homeassistant.components.wyoming import DOMAIN
 from homeassistant.components.wyoming.devices import SatelliteDevice
 from homeassistant.config_entries import ConfigEntry

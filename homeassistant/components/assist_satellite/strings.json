@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "assist_satellite": {
+      "assist_satellite": {
+        "state": {
+          "listening_wake_word": "Wake word",
+          "listening_command": "Voice command",
+          "responding": "Responding",
+          "processing": "Processing"
+        }
+      }
+    }
+  }
+}
