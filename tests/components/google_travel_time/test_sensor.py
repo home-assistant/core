@@ -47,7 +47,7 @@ def mock_update_fixture() -> Generator[MagicMock]:
                                 "value": 1560,
                                 "text": "26 mins",
                             },
-                            "distance": {"text": "21.3 km"},
+                            "distance": {"value": 21300, "text": "21.3 km"},
                         }
                     ]
                 }
@@ -68,7 +68,7 @@ def mock_update_duration_fixture(mock_update: MagicMock) -> MagicMock:
                             "value": 1560,
                             "text": "26 mins",
                         },
-                        "distance": {"text": "21.3 km"},
+                        "distance": {"value": 21300, "text": "21.3 km"},
                     }
                 ]
             }
@@ -96,16 +96,12 @@ async def test_sensor(hass: HomeAssistant) -> None:
         hass.states.get("sensor.google_travel_time").attributes["attribution"]
         == "Powered by Google"
     )
-    assert (
-        hass.states.get("sensor.google_travel_time").attributes["duration"] == "26 mins"
-    )
+    assert hass.states.get("sensor.google_travel_time").attributes["duration"] == 26.0
     assert (
         hass.states.get("sensor.google_travel_time").attributes["duration_in_traffic"]
-        == "27 mins"
+        == 27.0
     )
-    assert (
-        hass.states.get("sensor.google_travel_time").attributes["distance"] == "21.3 km"
-    )
+    assert hass.states.get("sensor.google_travel_time").attributes["distance"] == 21.3
     assert (
         hass.states.get("sensor.google_travel_time").attributes["origin"] == "location1"
     )
