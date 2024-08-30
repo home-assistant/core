@@ -92,7 +92,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             new[CONF_IP_ADDRESS] = new_data.ip_address
             new[CONF_SERIAL] = new_data.serial
 
-            config_entry.version = 1
             hass.config_entries.async_update_entry(
                 config_entry,
                 data=new,
