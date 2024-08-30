@@ -23,6 +23,9 @@ from tests.common import (
     mock_integration,
     mock_platform,
 )
+from tests.components.tts.conftest import (
+    mock_tts_cache_dir_fixture_autouse,  # noqa: F401
+)
 
 TEST_DOMAIN = "test_satellite"
 
