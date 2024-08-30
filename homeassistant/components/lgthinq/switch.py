@@ -87,10 +87,8 @@ async def async_setup_entry(
                 continue
 
             entities.extend(
-                [
-                    ThinQSwitchEntity(coordinator, description, prop)
-                    for prop in properties
-                ]
+                ThinQSwitchEntity(coordinator, description, prop)
+                for prop in properties
             )
 
         if entities:
