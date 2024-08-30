@@ -30,12 +30,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_HOST: HOST,
             CONF_NAME: NAME,
             "extended_data": True,
-        },
-        options={
-            "devices": {
-                0: True,
-                1: False,
-            }
+            "devices": {0: True, 1: False},
         },
         minor_version=2,
         entry_id="ce5f5431554d101905d31797e1232da8",
