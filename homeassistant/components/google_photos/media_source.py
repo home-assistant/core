@@ -35,7 +35,7 @@ LARGE_IMAGE_SIZE = 2048
 # The PhotosIdentifier can be in the following forms:
 #  config-entry-id
 #  config-entry-id/a/album-media-id
-#  config-entry-id/p/photo-media-idxf
+#  config-entry-id/p/photo-media-id
 #
 # The album-media-id can contain special reserved folder names for use by
 # this integration for virtual folders like the `recent` album.
