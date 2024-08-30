@@ -8,7 +8,6 @@ from typing import Any
 from thinqconnect import ConnectBaseDevice, DeviceType, ThinQApi, ThinQAPIException
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEVICE_TYPE_API_MAP, DOMAIN
