@@ -48,7 +48,9 @@ class KitchenSinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Reauth step."""
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self, user_input=None):
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Reauth confirm step."""
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")
