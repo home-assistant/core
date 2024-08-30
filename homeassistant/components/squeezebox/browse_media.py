@@ -220,4 +220,4 @@ async def generate_playlist(player, payload):
     result = await player.async_browse(
         "titles", limit=BROWSE_LIMIT, browse_id=browse_id
     )
-    return result.get("items")
+    return result.get("items") if result else None
