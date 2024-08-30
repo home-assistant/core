@@ -47,7 +47,7 @@ async def test_config_flow_invalid_pat(
         data={CONF_ACCESS_TOKEN: MOCK_PAT, CONF_COUNTRY: MOCK_COUNTRY},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] is not None
+    assert result["errors"] == {"base": "token_unauthorized"}
     mock_invalid_thinq_api.async_get_device_list.assert_called_once()
 
 
