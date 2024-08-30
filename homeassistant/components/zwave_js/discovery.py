@@ -238,6 +238,12 @@ SWITCH_BINARY_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
     command_class={CommandClass.SWITCH_BINARY}, property={CURRENT_VALUE_PROPERTY}
 )
 
+COLOR_SWITCH_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
+    command_class={CommandClass.SWITCH_COLOR},
+    property={CURRENT_COLOR_PROPERTY},
+    property_key={None},
+)
+
 SIREN_TONE_SCHEMA = ZWaveValueDiscoverySchema(
     command_class={CommandClass.SOUND_SWITCH},
     property={TONE_ID_PROPERTY},
@@ -762,33 +768,6 @@ DISCOVERY_SCHEMAS = [
             },
         ),
     ),
-    # HomeSeer HSM-200 v1
-    ZWaveDiscoverySchema(
-        platform=Platform.LIGHT,
-        hint="black_is_off",
-        manufacturer_id={0x001E},
-        product_id={0x0001},
-        product_type={0x0004},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_COLOR},
-            property={CURRENT_COLOR_PROPERTY},
-            property_key={None},
-        ),
-        absent_values=[SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA],
-    ),
-    # Logic Group ZDB5100
-    ZWaveDiscoverySchema(
-        platform=Platform.LIGHT,
-        hint="black_is_off",
-        manufacturer_id={0x0234},
-        product_id={0x0121},
-        product_type={0x0003},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_COLOR},
-            property={CURRENT_COLOR_PROPERTY},
-            property_key={None},
-        ),
-    ),
     # ====== START OF GENERIC MAPPING SCHEMAS =======
     # locks
     # Door Lock CC
@@ -1014,10 +993,11 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_category=EntityCategory.CONFIG,
     ),
-    # binary switches
+    # binary switches without color support
     ZWaveDiscoverySchema(
         platform=Platform.SWITCH,
         primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
+        absent_values=[COLOR_SWITCH_CURRENT_VALUE_SCHEMA],
     ),
     # switch for Indicator CC
     ZWaveDiscoverySchema(
@@ -1111,6 +1091,25 @@ DISCOVERY_SCHEMAS = [
     # catch any device with multilevel CC as light
     # NOTE: keep this at the bottom of the discovery scheme,
     # to handle all others that need the multilevel CC first
+    #
+    # Colored light (legacy device) that can only be controlled through Color Switch CC.
+    ZWaveDiscoverySchema(
+        platform=Platform.LIGHT,
+        hint="color_onoff",
+        primary_value=COLOR_SWITCH_CURRENT_VALUE_SCHEMA,
+        absent_values=[
+            SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
+            SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        ],
+    ),
+    # Colored light that can be turned on or off with the Binary Switch CC.
+    ZWaveDiscoverySchema(
+        platform=Platform.LIGHT,
+        hint="color_onoff",
+        primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
+        required_values=[COLOR_SWITCH_CURRENT_VALUE_SCHEMA],
+    ),
+    # Dimmable light with or without color support.
     ZWaveDiscoverySchema(
         platform=Platform.LIGHT,
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,

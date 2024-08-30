@@ -28,7 +28,9 @@ class MobileAppFlowHandler(ConfigFlow, domain=DOMAIN):
             reason="install_app", description_placeholders=placeholders
         )
 
-    async def async_step_registration(self, user_input=None):
+    async def async_step_registration(
+        self, user_input: dict[str, Any]
+    ) -> ConfigFlowResult:
         """Handle a flow initialized during registration."""
         if ATTR_DEVICE_ID in user_input:
             # Unique ID is combi of app + device ID.

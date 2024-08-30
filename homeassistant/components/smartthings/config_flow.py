@@ -54,9 +54,9 @@ class SmartThingsFlowHandler(ConfigFlow, domain=DOMAIN):
         self.location_id = None
         self.endpoints_initialized = False
 
-    async def async_step_import(self, user_input=None):
+    async def async_step_import(self, import_data: None) -> ConfigFlowResult:
         """Occurs when a previously entry setup fails and is re-initiated."""
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(import_data)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

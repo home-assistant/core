@@ -5,8 +5,8 @@ from unittest.mock import patch
 import steam
 
 from homeassistant.components.steam_online.const import CONF_ACCOUNTS, DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_SOURCE
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
@@ -111,18 +111,10 @@ async def test_flow_user_already_configured(hass: HomeAssistant) -> None:
 async def test_flow_reauth(hass: HomeAssistant) -> None:
     """Test reauth step."""
     entry = create_entry(hass)
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
     with patch_interface():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                CONF_SOURCE: SOURCE_REAUTH,
-                "entry_id": entry.entry_id,
-                "unique_id": entry.unique_id,
-            },
-            data=CONF_DATA,
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={},

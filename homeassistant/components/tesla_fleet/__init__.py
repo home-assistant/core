@@ -3,6 +3,7 @@
 import asyncio
 from typing import Final
 
+from aiohttp.client_exceptions import ClientResponseError
 import jwt
 from tesla_fleet_api import EnergySpecific, TeslaFleetApi, VehicleSpecific
 from tesla_fleet_api.const import Scope
@@ -66,7 +67,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
 
     async def _refresh_token() -> str:
         async with refresh_lock:
-            await oauth_session.async_ensure_token_valid()
+            try:
+                await oauth_session.async_ensure_token_valid()
+            except ClientResponseError as e:
+                if e.status == 401:
+                    raise ConfigEntryAuthFailed from e
+                raise ConfigEntryNotReady from e
             token: str = oauth_session.token[CONF_ACCESS_TOKEN]
             return token
 
