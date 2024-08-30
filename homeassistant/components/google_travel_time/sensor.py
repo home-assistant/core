@@ -132,11 +132,11 @@ class GoogleTravelTimeSensor(SensorEntity):
         del res["rows"]
         _data = self._matrix["rows"][0]["elements"][0]
         if "duration_in_traffic" in _data:
-            res["duration_in_traffic"] = _data["duration_in_traffic"]["text"]
+            res["duration_in_traffic"] = _data["duration_in_traffic"]["value"] / 60
         if "duration" in _data:
-            res["duration"] = _data["duration"]["text"]
+            res["duration"] = _data["duration"]["value"] / 60
         if "distance" in _data:
-            res["distance"] = _data["distance"]["text"]
+            res["distance"] = _data["distance"]["value"] / 1000
         res["origin"] = self._resolved_origin
         res["destination"] = self._resolved_destination
         return res
