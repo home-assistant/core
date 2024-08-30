@@ -2,15 +2,20 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components import stt
 from homeassistant.components.assist_pipeline import (
     AudioSettings,
     PipelineEvent,
     PipelineEventType,
     PipelineStage,
+    async_get_pipeline,
+    async_update_pipeline,
     vad,
 )
 from homeassistant.components.assist_satellite import AssistSatelliteState
+from homeassistant.components.media_source import PlayMedia
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import Context, HomeAssistant
@@ -84,3 +89,62 @@ async def test_entity_state(
     entity.tts_response_finished()
     state = hass.states.get(ENTITY_ID)
     assert state.state == AssistSatelliteState.LISTENING_WAKE_WORD
+
+
+@pytest.mark.parametrize(
+    ("service_data", "expected_params"),
+    [
+        (
+            {"message": "Hello"},
+            ("Hello", "https://www.home-assistant.io/resolved.mp3"),
+        ),
+        (
+            {
+                "message": "Hello",
+                "media_id": "http://example.com/bla.mp3",
+            },
+            ("Hello", "http://example.com/bla.mp3"),
+        ),
+        (
+            {"media_id": "http://example.com/bla.mp3"},
+            ("", "http://example.com/bla.mp3"),
+        ),
+    ],
+)
+async def test_announce(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    service_data: dict,
+    expected_params: tuple[str, str],
+) -> None:
+    """Test announcing on a device."""
+    await async_update_pipeline(
+        hass,
+        async_get_pipeline(hass),
+        tts_engine="tts.mock_entity",
+        tts_language="en",
+    )
+
+    with (
+        patch(
+            "homeassistant.components.assist_satellite.entity.tts_generate_media_source_id",
+            return_value="media-source://bla",
+        ),
+        patch(
+            "homeassistant.components.media_source.async_resolve_media",
+            return_value=PlayMedia(
+                url="https://www.home-assistant.io/resolved.mp3",
+                mime_type="audio/mp3",
+            ),
+        ),
+    ):
+        await hass.services.async_call(
+            "assist_satellite",
+            "announce",
+            service_data,
+            target={"entity_id": "assist_satellite.test_entity"},
+            blocking=True,
+        )
+
+    assert entity.announcements[0] == expected_params

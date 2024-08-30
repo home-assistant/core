@@ -8,6 +8,7 @@ from homeassistant.components.assist_pipeline import PipelineEvent
 from homeassistant.components.assist_satellite import (
     DOMAIN as AS_DOMAIN,
     AssistSatelliteEntity,
+    AssistSatelliteEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.core import HomeAssistant
@@ -22,6 +23,9 @@ from tests.common import (
     mock_integration,
     mock_platform,
 )
+from tests.components.tts.conftest import (
+    mock_tts_cache_dir_fixture_autouse,  # noqa: F401
+)
 
 TEST_DOMAIN = "test_satellite"
 
@@ -30,14 +34,20 @@ class MockAssistSatellite(AssistSatelliteEntity):
     """Mock Assist Satellite Entity."""
 
     _attr_name = "Test Entity"
+    _attr_supported_features = AssistSatelliteEntityFeature.ANNOUNCE
 
     def __init__(self) -> None:
         """Initialize the mock entity."""
         self.events = []
+        self.announcements = []
 
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Handle pipeline events."""
         self.events.append(event)
+
+    async def async_announce(self, message: str, media_id: str) -> None:
+        """Announce media on a device."""
+        self.announcements.append((message, media_id))
 
 
 @pytest.fixture
@@ -56,7 +66,9 @@ def config_entry(hass: HomeAssistant) -> ConfigEntry:
 
 @pytest.fixture
 async def init_components(
-    hass: HomeAssistant, config_entry: ConfigEntry, entity: MockAssistSatellite
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    entity: MockAssistSatellite,
 ) -> None:
     """Initialize components."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -91,7 +103,7 @@ async def init_components(
         config_entry: ConfigEntry,
         async_add_entities: AddEntitiesCallback,
     ) -> None:
-        """Set up test tts platform via config entry."""
+        """Set up test satellite platform via config entry."""
         async_add_entities([entity])
 
     loaded_platform = MockPlatform(async_setup_entry=async_setup_entry_platform)

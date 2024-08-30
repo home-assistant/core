@@ -2,6 +2,8 @@
 
 import logging
 
+import voluptuous as vol
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -10,13 +12,14 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .entity import AssistSatelliteEntity, AssistSatelliteEntityDescription
-from .models import AssistSatelliteState
+from .models import AssistSatelliteEntityFeature, AssistSatelliteState
 
 __all__ = [
     "DOMAIN",
-    "AssistSatelliteState",
     "AssistSatelliteEntity",
     "AssistSatelliteEntityDescription",
+    "AssistSatelliteEntityFeature",
+    "AssistSatelliteState",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,6 +32,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER, DOMAIN, hass
     )
     await component.async_setup(config)
+
+    component.async_register_entity_service(
+        "announce",
+        vol.All(
+            cv.make_entity_service_schema(
+                {
+                    vol.Optional("message"): str,
+                    vol.Optional("media_id"): str,
+                }
+            ),
+            cv.has_at_least_one_key("message", "media_id"),
+        ),
+        "async_internal_announce",
+        [AssistSatelliteEntityFeature.ANNOUNCE],
+    )
 
     return True
 

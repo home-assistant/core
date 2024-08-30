@@ -3,24 +3,30 @@
 from abc import abstractmethod
 from collections.abc import AsyncIterable
 import time
-from typing import Final
+from typing import Any, Final
 
-from homeassistant.components import stt
+from homeassistant.components import media_source, stt, tts
 from homeassistant.components.assist_pipeline import (
     OPTION_PREFERRED,
     AudioSettings,
     PipelineEvent,
     PipelineEventType,
     PipelineStage,
+    async_get_pipeline,
     async_get_pipelines,
     async_pipeline_from_audio_stream,
     vad,
+)
+from homeassistant.components.media_player import async_process_play_media_url
+from homeassistant.components.tts.media_source import (
+    generate_media_source_id as tts_generate_media_source_id,
 )
 from homeassistant.core import Context, callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.util import ulid
 
+from .errors import SatelliteBusyError
 from .models import AssistSatelliteState
 
 _CONVERSATION_TIMEOUT_SEC: Final = 5 * 60  # 5 minutes
@@ -43,6 +49,7 @@ class AssistSatelliteEntity(entity.Entity):
     _conversation_id_time: float | None = None
 
     _run_has_tts: bool = False
+    _is_announcing = False
 
     @property
     def pipeline_entity_id(self) -> str | None:
@@ -53,6 +60,67 @@ class AssistSatelliteEntity(entity.Entity):
     def vad_sensitivity_entity_id(self) -> str | None:
         """Entity ID of the VAD sensitivity to use for the next conversation."""
         return self._attr_vad_sensitivity_entity_id
+
+    async def async_internal_announce(
+        self,
+        message: str | None = None,
+        media_id: str | None = None,
+    ) -> None:
+        """Play an announcement on the satellite.
+
+        If media_id is not provided, message is synthesized to
+        audio with the selected pipeline.
+
+        Calls async_announce with media id.
+        """
+        if message is None:
+            message = ""
+
+        if not media_id:
+            # Synthesize audio and get URL
+            pipeline_id = self._resolve_pipeline()
+            pipeline = async_get_pipeline(self.hass, pipeline_id)
+
+            tts_options: dict[str, Any] = {}
+            if pipeline.tts_voice is not None:
+                tts_options[tts.ATTR_VOICE] = pipeline.tts_voice
+
+            media_id = tts_generate_media_source_id(
+                self.hass,
+                message,
+                engine=pipeline.tts_engine,
+                language=pipeline.tts_language,
+                options=tts_options,
+            )
+
+        if media_source.is_media_source_id(media_id):
+            media = await media_source.async_resolve_media(
+                self.hass,
+                media_id,
+                None,
+            )
+            media_id = media.url
+
+        # Resolve to full URL
+        media_id = async_process_play_media_url(self.hass, media_id)
+
+        if self._is_announcing:
+            raise SatelliteBusyError
+
+        self._is_announcing = True
+
+        try:
+            # Block until announcement is finished
+            await self.async_announce(message, media_id)
+        finally:
+            self._is_announcing = False
+
+    async def async_announce(self, message: str, media_id: str) -> None:
+        """Announce media on the satellite.
+
+        Should block until the announcement is done playing.
+        """
+        raise NotImplementedError
 
     async def async_accept_pipeline_from_satellite(
         self,

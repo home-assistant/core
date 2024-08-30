@@ -1,6 +1,6 @@
 """Models for assist satellite."""
 
-from enum import StrEnum
+from enum import IntFlag, StrEnum
 
 
 class AssistSatelliteState(StrEnum):
@@ -17,3 +17,10 @@ class AssistSatelliteState(StrEnum):
 
     RESPONDING = "responding"
     """Device is speaking the response."""
+
+
+class AssistSatelliteEntityFeature(IntFlag):
+    """Supported features of Assist satellite entity."""
+
+    ANNOUNCE = 1
+    """Device supports remotely triggered announcements."""
