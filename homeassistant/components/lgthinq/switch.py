@@ -72,24 +72,21 @@ async def async_setup_entry(
     """Set up an entry for switch platform."""
     entities: list[ThinQSwitchEntity] = []
     for coordinator in entry.runtime_data.values():
-        descriptions = DEVIE_TYPE_SWITCH_MAP.get(coordinator.device_api.device_type)
-        if not isinstance(descriptions, tuple):
-            continue
+        if (descriptions := DEVIE_TYPE_SWITCH_MAP.get(coordinator.device_api.device_type)) is not None:
+            for description in descriptions:
+                properties = create_properties(
+                    device_api=coordinator.device_api,
+                    key=description.key,
+                    children_keys=None,
+                    rw_type=PROPERTY_WRITABLE,
+                )
+                if not properties:
+                    continue
 
-        for description in descriptions:
-            properties = create_properties(
-                device_api=coordinator.device_api,
-                key=description.key,
-                children_keys=None,
-                rw_type=PROPERTY_WRITABLE,
-            )
-            if not properties:
-                continue
-
-            entities.extend(
-                ThinQSwitchEntity(coordinator, description, prop)
-                for prop in properties
-            )
+                entities.extend(
+                    ThinQSwitchEntity(coordinator, description, prop)
+                    for prop in properties
+                )
 
     if entities:
         async_add_entities(entities)

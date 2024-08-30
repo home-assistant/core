@@ -1,7 +1,7 @@
 """Configure tests for the LGThinQ integration."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from thinqconnect import ThinQAPIException
@@ -9,10 +9,25 @@ from thinqconnect import ThinQAPIException
 from homeassistant.components.lgthinq.const import CONF_CONNECT_CLIENT_ID, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_COUNTRY
 
-from .common import mock_thinq_api_response
 from .const import MOCK_CONNECT_CLIENT_ID, MOCK_COUNTRY, MOCK_PAT, MOCK_UUID
 
 from tests.common import MockConfigEntry
+
+
+def mock_thinq_api_response(
+    *,
+    status: int = 200,
+    body: dict | None = None,
+    error_code: str | None = None,
+    error_message: str | None = None,
+) -> MagicMock:
+    """Create a mock thinq api response."""
+    response = MagicMock()
+    response.status = status
+    response.body = body
+    response.error_code = error_code
+    response.error_message = error_message
+    return response
 
 
 @pytest.fixture

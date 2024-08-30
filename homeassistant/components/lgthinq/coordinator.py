@@ -74,7 +74,14 @@ async def async_setup_device_coordinator(
 ) -> list[DeviceDataUpdateCoordinator] | None:
     """Create DeviceDataUpdateCoordinator and device_api per device."""
     device_id = device.get("deviceId")
+    if not device_id:
+        _LOGGER.error("Failed to setup device: no device id")
+        return None
+
     device_info = device.get("deviceInfo")
+    if not device_info:
+        _LOGGER.error("Failed to setup device(%s): no device info", device_id)
+        return None
 
     # Get an appropriate class constructor for the device type.
     device_type = device_info.get("deviceType")
