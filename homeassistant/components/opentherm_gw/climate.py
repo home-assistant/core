@@ -136,7 +136,6 @@ class OpenThermClimate(OpenThermThermostatDeviceEntity, ClimateEntity):
     @callback
     def receive_report(self, status):
         """Receive and handle a new report from the Gateway."""
-        self._attr_available = self._gateway.connected
         ch_active = status[gw_vars.BOILER].get(gw_vars.DATA_SLAVE_CH_ACTIVE)
         flame_on = status[gw_vars.BOILER].get(gw_vars.DATA_SLAVE_FLAME_ON)
         cooling_active = status[gw_vars.BOILER].get(gw_vars.DATA_SLAVE_COOLING_ACTIVE)

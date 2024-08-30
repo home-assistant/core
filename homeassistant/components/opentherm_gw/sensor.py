@@ -505,7 +505,6 @@ class OpenThermSensor(OpenThermBaseEntity, SensorEntity):
     @callback
     def receive_report(self, status: dict[str, dict]) -> None:
         """Handle status updates from the component."""
-        self._attr_available = self._gateway.connected
         value = status[self._data_source].get(self.entity_description.key)
         if isinstance(value, str) and self.entity_description.make_state_lowercase:
             value = value.lower()

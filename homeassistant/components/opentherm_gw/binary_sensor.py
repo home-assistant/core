@@ -243,7 +243,6 @@ class OpenThermBinarySensor(OpenThermBaseEntity, BinarySensorEntity):
     @callback
     def receive_report(self, status: dict[str, dict]) -> None:
         """Handle status updates from the component."""
-        self._attr_available = self._gateway.connected
         state = status[self._data_source].get(self.entity_description.key)
         self._attr_is_on = None if state is None else bool(state)
         self.async_write_ha_state()

@@ -34,7 +34,6 @@ class OpenThermEntityDescription(EntityDescription):
 class OpenThermBaseEntity(Entity):
     """Represent an OpenTherm entity."""
 
-    _attr_available = False
     _attr_has_entity_name = True
     _attr_should_poll = False
     _data_source: OpenThermDataSource
@@ -56,6 +55,11 @@ class OpenThermBaseEntity(Entity):
                 self.hass, self._gateway.update_signal, self.receive_report
             )
         )
+
+    @property
+    def available(self) -> bool:
+        """Return connection status of the hub to indicate availability."""
+        return self._gateway.connected
 
     @callback
     def receive_report(self, status: dict[str, dict]) -> None:
