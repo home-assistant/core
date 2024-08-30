@@ -69,6 +69,7 @@ def mock_solarlog_connector():
         0: {"name": "Inverter 1"},
         1: {"name": "Inverter 2"},
     }
+    mock_solarlog_api.client.close = AsyncMock(return_value=None)
 
     with (
         patch(

@@ -68,13 +68,14 @@ async def test_user(
 
     # tests with all provided
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: HOST, CONF_NAME: NAME, "extended_data": False}
+        result["flow_id"], {CONF_HOST: HOST, CONF_NAME: NAME, "extended_data": True}
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "solarlog_test_1_2_3"
     assert result["data"][CONF_HOST] == HOST
+    assert result["options"]["devices"] == {0: True, 1: True}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
