@@ -122,6 +122,34 @@ class EsphomeAssistSatellite(
         self._tts_streaming_task: asyncio.Task | None = None
         self._udp_server: VoiceAssistantUDPServer | None = None
 
+    @property
+    def pipeline_entity_id(self) -> str | None:
+        """Return the entity ID of the pipeline to use for the next conversation."""
+        if self._attr_pipeline_entity_id is None:
+            assert self.entry_data.device_info is not None
+            ent_reg = er.async_get(self.hass)
+            self._attr_pipeline_entity_id = ent_reg.async_get_entity_id(
+                Platform.SELECT,
+                DOMAIN,
+                f"{self.entry_data.device_info.mac_address}-pipeline",
+            )
+
+        return self._attr_pipeline_entity_id
+
+    @property
+    def vad_sensitivity_entity_id(self) -> str | None:
+        """Return the entity ID of the VAD sensitivity to use for the next conversation."""
+        if self._attr_vad_sensitivity_entity_id is None:
+            assert self.entry_data.device_info is not None
+            ent_reg = er.async_get(self.hass)
+            self._attr_vad_sensitivity_entity_id = ent_reg.async_get_entity_id(
+                Platform.SELECT,
+                DOMAIN,
+                f"{self.entry_data.device_info.mac_address}-vad_sensitivity",
+            )
+
+        return self._attr_vad_sensitivity_entity_id
+
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
@@ -165,6 +193,8 @@ class EsphomeAssistSatellite(
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
+        await super().async_will_remove_from_hass()
+
         self._is_running = False
         self._stop_pipeline()
 
@@ -259,22 +289,6 @@ class EsphomeAssistSatellite(
         ):
             port = await self._start_udp_server()
             _LOGGER.debug("Started UDP server on port %s", port)
-
-        # Get entity ids for pipeline and finished speaking detection
-        if (self._attr_pipeline_entity_id is None) or (
-            self._attr_vad_sensitivity_entity_id is None
-        ):
-            ent_reg = er.async_get(self.hass)
-            self._attr_pipeline_entity_id = ent_reg.async_get_entity_id(
-                Platform.SELECT,
-                DOMAIN,
-                f"{self.entry_data.device_info.mac_address}-pipeline",
-            )
-            self._attr_vad_sensitivity_entity_id = ent_reg.async_get_entity_id(
-                Platform.SELECT,
-                DOMAIN,
-                f"{self.entry_data.device_info.mac_address}-vad_sensitivity",
-            )
 
         # Device triggered pipeline (wake word, etc.)
         if flags & VoiceAssistantCommandFlag.USE_WAKE_WORD:
