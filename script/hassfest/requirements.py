@@ -11,7 +11,6 @@ import subprocess
 import sys
 from typing import Any
 
-from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 from tqdm import tqdm
 
 import homeassistant.util.package as pkg_util
@@ -26,7 +25,6 @@ PACKAGE_REGEX = re.compile(
     r"^(?:--.+\s)?([-_,\.\w\d\[\]]+)(==|>=|<=|~=|!=|<|>|===)*(.*)$"
 )
 PIP_REGEX = re.compile(r"^(--.+\s)?([-_\.\w\d]+.*(?:==|>=|<=|~=|!=|<|>|===)?.*$)")
-PIP_VERSION_RANGE_SEPARATOR = re.compile(r"^(==|>=|<=|~=|!=|<|>|===)?(.*)$")
 
 IGNORE_STANDARD_LIBRARY_VIOLATIONS = {
     # Integrations which have standard library requirements.
@@ -59,20 +57,13 @@ def validate_requirements_format(integration: Integration) -> bool:
     start_errors = len(integration.errors)
 
     for req in integration.requirements:
-        if " " in req:
-            integration.add_error(
-                "requirements",
-                f'Requirement "{req}" contains a space',
-            )
-            continue
-
         if not (match := PACKAGE_REGEX.match(req)):
             integration.add_error(
                 "requirements",
                 f'Requirement "{req}" does not match package regex pattern',
             )
             continue
-        pkg, sep, version = match.groups()
+        _, sep, _ = match.groups()
 
         if integration.core and sep != "==":
             integration.add_error(
@@ -80,22 +71,6 @@ def validate_requirements_format(integration: Integration) -> bool:
                 f'Requirement {req} need to be pinned "<pkg name>==<version>".',
             )
             continue
-
-        if not version:
-            continue
-
-        for part in version.split(";", 1)[0].split(","):
-            version_part = PIP_VERSION_RANGE_SEPARATOR.match(part)
-            if (
-                version_part
-                and AwesomeVersion(version_part.group(2)).strategy
-                == AwesomeVersionStrategy.UNKNOWN
-            ):
-                integration.add_error(
-                    "requirements",
-                    f"Unable to parse package version ({version}) for {pkg}.",
-                )
-                continue
 
     return len(integration.errors) == start_errors
 
