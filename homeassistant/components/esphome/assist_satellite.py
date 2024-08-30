@@ -125,30 +125,24 @@ class EsphomeAssistSatellite(
     @property
     def pipeline_entity_id(self) -> str | None:
         """Return the entity ID of the pipeline to use for the next conversation."""
-        if self._attr_pipeline_entity_id is None:
-            assert self.entry_data.device_info is not None
-            ent_reg = er.async_get(self.hass)
-            self._attr_pipeline_entity_id = ent_reg.async_get_entity_id(
-                Platform.SELECT,
-                DOMAIN,
-                f"{self.entry_data.device_info.mac_address}-pipeline",
-            )
-
-        return self._attr_pipeline_entity_id
+        assert self.entry_data.device_info is not None
+        ent_reg = er.async_get(self.hass)
+        return ent_reg.async_get_entity_id(
+            Platform.SELECT,
+            DOMAIN,
+            f"{self.entry_data.device_info.mac_address}-pipeline",
+        )
 
     @property
     def vad_sensitivity_entity_id(self) -> str | None:
         """Return the entity ID of the VAD sensitivity to use for the next conversation."""
-        if self._attr_vad_sensitivity_entity_id is None:
-            assert self.entry_data.device_info is not None
-            ent_reg = er.async_get(self.hass)
-            self._attr_vad_sensitivity_entity_id = ent_reg.async_get_entity_id(
-                Platform.SELECT,
-                DOMAIN,
-                f"{self.entry_data.device_info.mac_address}-vad_sensitivity",
-            )
-
-        return self._attr_vad_sensitivity_entity_id
+        assert self.entry_data.device_info is not None
+        ent_reg = er.async_get(self.hass)
+        return ent_reg.async_get_entity_id(
+            Platform.SELECT,
+            DOMAIN,
+            f"{self.entry_data.device_info.mac_address}-vad_sensitivity",
+        )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
