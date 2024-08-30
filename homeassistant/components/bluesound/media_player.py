@@ -309,7 +309,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         return True
 
-    async def _start_poll_command(self):
+    async def _poll_loop(self):
         """Loop which polls the status of the player."""
         while True:
             try:
@@ -335,7 +335,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         await super().async_added_to_hass()
 
         self._polling_task = self.hass.async_create_background_task(
-            self._start_poll_command(),
+            self._poll_loop(),
             name=f"bluesound.polling_{self.host}:{self.port}",
         )
 
@@ -345,7 +345,9 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         assert self._polling_task is not None
         if self._polling_task.cancel():
-            await self._polling_task
+            # the sleeps in _poll_loop will raise CancelledError
+            with suppress(CancelledError):
+                await self._polling_task
 
         self.hass.data[DATA_BLUESOUND].remove(self)
 
