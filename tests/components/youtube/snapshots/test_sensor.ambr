@@ -42,7 +42,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '308151826',
+    'state': '214141263',
   })
 # ---
 # name: test_sensor_without_uploaded_video
@@ -85,6 +85,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '308151826',
+    'state': '214141263',
   })
 # ---
