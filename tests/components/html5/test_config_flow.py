@@ -16,7 +16,7 @@ from homeassistant.components.html5.issues import (
     SUCCESSFUL_IMPORT_TRANSLATION_KEY,
 )
 from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.issue_registry as ir
 
 MOCK_CONF = {
@@ -161,7 +161,9 @@ async def test_step_import_good(
 
         assert mock_setup_entry.call_count == 1
         assert len(issue_registry.issues) == 1
-        issue = issue_registry.async_get_issue(DOMAIN, f"deprecated_yaml_{DOMAIN}")
+        issue = issue_registry.async_get_issue(
+            HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+        )
         assert issue
         assert issue.translation_key == SUCCESSFUL_IMPORT_TRANSLATION_KEY
 
