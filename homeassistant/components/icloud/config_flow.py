@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 import logging
 import os
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
@@ -200,11 +200,17 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self._validate_and_create_entry(user_input, "reauth_confirm")
 
-    async def async_step_trusted_device(self, user_input=None, errors=None):
+    async def async_step_trusted_device(
+        self,
+        user_input: dict[str, Any] | None = None,
+        errors: dict[str, str] | None = None,
+    ) -> ConfigFlowResult:
         """We need a trusted device."""
         if errors is None:
             errors = {}
 
+        if TYPE_CHECKING:
+            assert self.api is not None
         trusted_devices = await self.hass.async_add_executor_job(
             getattr, self.api, "trusted_devices"
         )
@@ -216,7 +222,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is None:
             return await self._show_trusted_device_form(
-                trusted_devices_for_form, user_input, errors
+                trusted_devices_for_form, errors
             )
 
         self._trusted_device = trusted_devices[int(user_input[CONF_TRUSTED_DEVICE])]
@@ -229,18 +235,18 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             errors[CONF_TRUSTED_DEVICE] = "send_verification_code"
 
             return await self._show_trusted_device_form(
-                trusted_devices_for_form, user_input, errors
+                trusted_devices_for_form, errors
             )
 
         return await self.async_step_verification_code()
 
     async def _show_trusted_device_form(
-        self, trusted_devices, user_input=None, errors=None
-    ):
+        self, trusted_devices, errors: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Show the trusted_device form to the user."""
 
         return self.async_show_form(
-            step_id=CONF_TRUSTED_DEVICE,
+            step_id="trusted_device",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_TRUSTED_DEVICE): vol.All(
@@ -251,13 +257,20 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def async_step_verification_code(self, user_input=None, errors=None):
+    async def async_step_verification_code(
+        self,
+        user_input: dict[str, Any] | None = None,
+        errors: dict[str, str] | None = None,
+    ) -> ConfigFlowResult:
         """Ask the verification code to the user."""
         if errors is None:
             errors = {}
 
         if user_input is None:
-            return await self._show_verification_code_form(user_input, errors)
+            return await self._show_verification_code_form(errors)
+
+        if TYPE_CHECKING:
+            assert self.api is not None
 
         self._verification_code = user_input[CONF_VERIFICATION_CODE]
 
@@ -310,11 +323,13 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             }
         )
 
-    async def _show_verification_code_form(self, user_input=None, errors=None):
+    async def _show_verification_code_form(
+        self, errors: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Show the verification_code form to the user."""
 
         return self.async_show_form(
-            step_id=CONF_VERIFICATION_CODE,
+            step_id="verification_code",
             data_schema=vol.Schema({vol.Required(CONF_VERIFICATION_CODE): str}),
-            errors=errors or {},
+            errors=errors,
         )
