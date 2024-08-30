@@ -83,7 +83,7 @@ def mock_setup_api(fixture_name: str) -> Generator[Mock, None, None]:
             "name": "Test Name",
         }
 
-        responses = json.loads(load_fixture(fixture_name)) if fixture_name else []
+        responses = load_json_array_fixture(fixture_name, DOMAIN) if fixture_name else []
 
         queue = list(responses)
 
