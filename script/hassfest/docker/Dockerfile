@@ -26,7 +26,7 @@ RUN \
         -c homeassistant/package_constraints.txt \
         -r requirements.txt \
         stdlib-list==0.10.0 pipdeptree==2.23.1 tqdm==4.66.4 ruff==0.6.2 \
-        PyTurboJPEG==1.7.5 ha-ffmpeg==3.2.0 hassil==1.7.4 home-assistant-intents==2024.8.29 mutagen==1.47.0
+        PyTurboJPEG==1.7.5 ha-ffmpeg==3.2.0 hassil==1.7.4 home-assistant-intents==2024.8.29 mutagen==1.47.0 pymicro-vad==1.0.1 pyspeex-noise==1.0.2
 
 LABEL "name"="hassfest"
 LABEL "maintainer"="Home Assistant <hello@home-assistant.io>"

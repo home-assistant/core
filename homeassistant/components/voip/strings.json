@@ -10,6 +10,16 @@
     }
   },
   "entity": {
+    "assist_satellite": {
+      "assist_satellite": {
+        "state": {
+          "listening_wake_word": "[%key:component::assist_satellite::entity::assist_satellite::assist_satellite::state::listening_wake_word%]",
+          "listening_command": "[%key:component::assist_satellite::entity::assist_satellite::assist_satellite::state::listening_command%]",
+          "responding": "[%key:component::assist_satellite::entity::assist_satellite::assist_satellite::state::responding%]",
+          "processing": "[%key:component::assist_satellite::entity::assist_satellite::assist_satellite::state::processing%]"
+        }
+      }
+    },
     "binary_sensor": {
       "call_in_progress": {
         "name": "Call in progress"

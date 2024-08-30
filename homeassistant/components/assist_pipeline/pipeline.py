@@ -504,7 +504,7 @@ class AudioSettings:
     is_vad_enabled: bool = True
     """True if VAD is used to determine the end of the voice command."""
 
-    silence_seconds: float = 0.5
+    silence_seconds: float = 0.7
     """Seconds of silence after voice command has ended."""
 
     def __post_init__(self) -> None:
@@ -906,6 +906,8 @@ class PipelineRun:
                 metadata,
                 self._speech_to_text_stream(audio_stream=stream, stt_vad=stt_vad),
             )
+        except (asyncio.CancelledError, TimeoutError):
+            raise  # expected
         except Exception as src_error:
             _LOGGER.exception("Unexpected error during speech-to-text")
             raise SpeechToTextError(
