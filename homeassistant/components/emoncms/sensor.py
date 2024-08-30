@@ -96,6 +96,19 @@ async def async_setup_platform(
             },
         )
         return
+    if CONF_ONLY_INCLUDE_FEEDID not in config:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"missing_{CONF_ONLY_INCLUDE_FEEDID}_{DOMAIN}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key=f"missing_{CONF_ONLY_INCLUDE_FEEDID}",
+            translation_placeholders={
+                "domain": DOMAIN,
+            },
+        )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=config
     )

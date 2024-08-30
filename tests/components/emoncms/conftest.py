@@ -50,25 +50,35 @@ FLOW_RESULT = {
 
 SENSOR_NAME = "emoncms@1.1.1.1"
 
-YAML = {
+YAML_BASE = {
     CONF_PLATFORM: "emoncms",
     CONF_API_KEY: "my_api_key",
     CONF_ID: 1,
     CONF_URL: "http://1.1.1.1",
+}
+
+YAML = {
+    **YAML_BASE,
     CONF_ONLY_INCLUDE_FEEDID: [1],
 }
 
 
 @pytest.fixture
 def emoncms_yaml_config() -> ConfigType:
-    """Mock emoncms configuration from yaml."""
+    """Mock emoncms yaml configuration."""
     return {"sensor": YAML}
 
 
 @pytest.fixture
 def emoncms_yaml_config_with_template() -> ConfigType:
-    """Mock emoncms configuration from yaml."""
+    """Mock emoncms yaml conf with template parameter."""
     return {"sensor": {**YAML, CONF_VALUE_TEMPLATE: "{{ value | float + 1500 }}"}}
+
+
+@pytest.fixture
+def emoncms_yaml_config_no_include_only_feed_id() -> ConfigType:
+    """Mock emoncms yaml configuration without include_only_feed_id parameter."""
+    return {"sensor": YAML_BASE}
 
 
 @pytest.fixture
