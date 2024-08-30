@@ -3,12 +3,13 @@
 from datetime import timedelta
 from unittest.mock import Mock
 
+from freezegun.api import FrozenDateTimeFactory
 from pyschlage.exceptions import UnknownError
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed
 
@@ -18,29 +19,32 @@ async def test_keypad_disabled_binary_sensor(
     mock_schlage: Mock,
     mock_lock: Mock,
     mock_added_config_entry: ConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the keypad_disabled binary_sensor."""
     mock_lock.keypad_disabled.reset_mock()
     mock_lock.keypad_disabled.return_value = True
 
     # Make the coordinator refresh data.
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=31))
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     keypad = hass.states.get("binary_sensor.vault_door_keypad_disabled")
     assert keypad is not None
-    assert keypad.state == "on"
+    assert keypad.state == STATE_ON
     assert keypad.attributes["device_class"] == BinarySensorDeviceClass.PROBLEM
 
     mock_lock.keypad_disabled.assert_called_once_with([])
 
     mock_schlage.locks.return_value = []
     # Make the coordinator refresh data.
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=31))
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     keypad = hass.states.get("binary_sensor.vault_door_keypad_disabled")
     assert keypad is not None
-    assert keypad.state == "unavailable"
+    assert keypad.state == STATE_UNAVAILABLE
 
 
 async def test_keypad_disabled_binary_sensor_use_previous_logs_on_failure(
@@ -48,6 +52,7 @@ async def test_keypad_disabled_binary_sensor_use_previous_logs_on_failure(
     mock_schlage: Mock,
     mock_lock: Mock,
     mock_added_config_entry: ConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the keypad_disabled binary_sensor."""
     mock_lock.keypad_disabled.reset_mock()
@@ -56,12 +61,13 @@ async def test_keypad_disabled_binary_sensor_use_previous_logs_on_failure(
     mock_lock.logs.side_effect = UnknownError("Cannot load logs")
 
     # Make the coordinator refresh data.
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=31))
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     keypad = hass.states.get("binary_sensor.vault_door_keypad_disabled")
     assert keypad is not None
-    assert keypad.state == "on"
+    assert keypad.state == STATE_ON
     assert keypad.attributes["device_class"] == BinarySensorDeviceClass.PROBLEM
 
     mock_lock.keypad_disabled.assert_called_once_with([])
