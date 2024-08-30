@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 from aiohttp import ClientResponseError
 import pytest
 from yalexs.authenticator_common import AuthenticationState
+from yalexs.const import Brand
 from yalexs.exceptions import AugustApiAIOHTTPError
 
 from homeassistant.components.august.const import DOMAIN
@@ -20,7 +21,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
 from .mocks import (
@@ -420,3 +425,24 @@ async def test_device_remove_devices(
     )
     response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
     assert response["success"]
+
+
+async def test_brand_migration_issue(hass: HomeAssistant) -> None:
+    """Test creating and removing the brand migration issue."""
+    august_operative_lock = await _mock_operative_august_lock_detail(hass)
+    config_entry = await _create_august_with_devices(
+        hass, [august_operative_lock], brand=Brand.YALE_HOME
+    )
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    issue_reg = ir.async_get(hass)
+    issue_entry = issue_reg.async_get_issue(DOMAIN, "yale_brand_migration")
+    assert issue_entry
+    assert issue_entry.severity == ir.IssueSeverity.CRITICAL
+    assert issue_entry.translation_placeholders == {
+        "migrate_url": "https://my.home-assistant.io/redirect/config_flow_start?domain=yale"
+    }
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    assert not issue_reg.async_get_issue(DOMAIN, "yale_brand_migration")
