@@ -62,6 +62,5 @@ async def test_config_flow_already_configured(
         context={"source": SOURCE_USER},
         data={CONF_ACCESS_TOKEN: MOCK_PAT, CONF_COUNTRY: MOCK_COUNTRY},
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
