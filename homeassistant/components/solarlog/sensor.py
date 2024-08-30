@@ -247,8 +247,6 @@ async def async_setup_entry(
     """Add solarlog entry."""
     coordinator = entry.runtime_data
 
-    # https://github.com/python/mypy/issues/14294
-
     entities: list[SensorEntity] = [
         SolarLogCoordinatorSensor(coordinator, sensor)
         for sensor in SOLARLOG_SENSOR_TYPES

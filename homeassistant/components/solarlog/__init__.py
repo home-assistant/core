@@ -5,7 +5,7 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from .coordinator import SolarLogCoordinator
 
@@ -72,31 +72,3 @@ async def async_migrate_entry(
     )
 
     return True
-
-
-async def update_listener(hass: HomeAssistant, entry: SolarlogConfigEntry) -> None:
-    """Handle options update."""
-
-    # remove devices that have been checked-off
-    coordinator: SolarLogCoordinator = entry.runtime_data
-
-    device_reg = dr.async_get(hass)
-
-    device_list = dr.async_entries_for_config_entry(device_reg, entry.entry_id)
-
-    for device_entry in device_list:
-        if device_entry.model == "Controller":
-            # Controller device cannot be removed
-            continue
-
-        for key in coordinator.solarlog.device_enabled():
-            if device_entry.name == coordinator.solarlog.device_name(key):
-                if not coordinator.solarlog.device_enabled(key):
-                    _LOGGER.debug(
-                        "Device %s removed",
-                        device_entry.name,
-                    )
-                    device_reg.async_remove_device(device_entry.id)
-
-    # Reload entry to update data
-    await hass.config_entries.async_reload(entry.entry_id)

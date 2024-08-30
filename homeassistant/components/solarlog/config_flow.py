@@ -6,28 +6,20 @@ from urllib.parse import ParseResult, urlparse
 
 from solarlog_cli.solarlog_connector import SolarLogConnector
 from solarlog_cli.solarlog_exceptions import SolarLogConnectionError, SolarLogError
-from solarlog_cli.solarlog_models import InverterData
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
 
 from .const import DEFAULT_HOST, DEFAULT_NAME, DOMAIN
-from .coordinator import SolarLogCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def solarlog_entries(hass: HomeAssistant):
+def solarlog_entries(hass: HomeAssistant) -> set[Any]:
     """Return the hosts already configured."""
     return {
         entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN)
@@ -44,7 +36,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._errors: dict = {}
 
-    def _host_in_configuration_exists(self, host) -> bool:
+    def _host_in_configuration_exists(self, host: str) -> bool:
         """Return True if host exists in configuration."""
         if host in solarlog_entries(self.hass):
             return True
@@ -58,7 +50,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
         url = ParseResult("http", netloc, path, *url[3:])
         return url.geturl()
 
-    async def _test_connection(self, host):
+    async def _test_connection(self, host: str) -> bool:
         """Check if we can connect to the Solar-Log device."""
         solarlog = SolarLogConnector(host)
         try:
@@ -74,7 +66,9 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return True
 
-    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Step when user initializes a integration."""
         self._errors = {}
         if user_input is not None:
@@ -128,64 +122,4 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
                     ): bool,
                 }
             ),
-        )
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> OptionsFlow:
-        """Create the options flow."""
-        return OptionsFlowHandler(config_entry)
-
-
-class OptionsFlowHandler(OptionsFlow):
-    """Handle an option flow for solarlog."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-        self._device_list: dict[int, InverterData] = {}
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        errors = {}
-        devices: dict[int, bool] = {}
-
-        coordinator: SolarLogCoordinator = self.config_entry.runtime_data
-
-        if user_input:
-            for key in self._device_list:
-                devices |= {key: (str(key) in user_input["enabled_devices"])}
-
-            coordinator.solarlog.set_enabled_devices(devices)
-
-            return self.async_create_entry(data={"devices": devices})
-
-        try:
-            self._device_list = await coordinator.solarlog.update_device_list()
-        except SolarLogConnectionError:
-            errors["base"] = "cannot_connect"
-        except Exception:  # noqa: BLE001
-            errors["base"] = "unknown"
-
-        if self._device_list == {}:
-            return self.async_abort(reason="no_devices")
-
-        device_list: dict[str, str] = {}
-        for key, value in self._device_list.items():
-            device_list |= {str(key): value.name}
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        "enabled_devices", default=list(device_list.keys())
-                    ): cv.multi_select(device_list)
-                }
-            ),
-            errors=errors,
         )
