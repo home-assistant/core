@@ -36,6 +36,22 @@ async def test_deprecated_yaml(
     )
 
 
+async def test_yaml_with_template(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    emoncms_yaml_config_with_template: ConfigType,
+    emoncms_client: AsyncMock,
+) -> None:
+    """Test an issue is created when we import a yaml config with a value_template parameter."""
+
+    await async_setup_component(hass, SENSOR_DOMAIN, emoncms_yaml_config_with_template)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id=f"remove_value_template_{DOMAIN}"
+    )
+
+
 async def test_no_feed_selected(
     hass: HomeAssistant,
     config_no_feed: MockConfigEntry,

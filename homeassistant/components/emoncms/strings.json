@@ -26,5 +26,11 @@
         }
       }
     }
+  },
+  "issues": {
+    "remove_value_template": {
+      "title": "The {domain} integration cannot start",
+      "description": "Please remove `value_template` from your yaml configuration.\n\nAnd restart Home Assistant"
+    }
   }
 }

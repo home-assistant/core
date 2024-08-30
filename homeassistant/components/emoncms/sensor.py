@@ -81,6 +81,20 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import config from yaml."""
+    if CONF_VALUE_TEMPLATE in config:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"remove_value_template_{DOMAIN}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.ERROR,
+            translation_key="remove_value_template",
+            translation_placeholders={
+                "domain": DOMAIN,
+            },
+        )
+        return
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=config
     )
