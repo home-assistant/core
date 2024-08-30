@@ -224,6 +224,7 @@ FLOWS = {
         "google_assistant_sdk",
         "google_generative_ai_conversation",
         "google_mail",
+        "google_photos",
         "google_sheets",
         "google_tasks",
         "google_translate",
