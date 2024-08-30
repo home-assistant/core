@@ -359,7 +359,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==11.3.0
+aioshelly==11.4.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -2320,7 +2320,7 @@ python-join-api==0.0.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.7.1
+python-kasa[speedups]==0.7.2
 
 # homeassistant.components.linkplay
 python-linkplay==0.0.8
@@ -2786,7 +2786,7 @@ thermoworks-smoke==0.1.8
 # homeassistant.components.thingspeak
 thingspeak==1.0.0
 
-# homeassistant.components.lgthinq
+# homeassistant.components.lg_thinq
 thinqconnect==0.9.5
 
 # homeassistant.components.tikteck
