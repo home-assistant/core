@@ -98,7 +98,6 @@ async def async_setup_entry(
 class ThinQSwitchEntity(ThinQEntity, SwitchEntity):
     """Represent a thinq switch platform."""
 
-    entity_description: SwitchEntityDescription
     attr_device_class = SwitchDeviceClass.SWITCH
 
     def _update_status(self) -> None:
