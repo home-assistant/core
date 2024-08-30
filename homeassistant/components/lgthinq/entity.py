@@ -12,10 +12,11 @@ from thinqconnect.integration.homeassistant.property import Property as ThinQPro
 
 from homeassistant.core import callback
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import COMPANY, DOMAIN
 from .coordinator import DeviceDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,7 +57,12 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
 
         self.entity_description = entity_description
         self.property = property
-        self._attr_device_info = coordinator.device_info
+        self._attr_device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, coordinator.unique_id)},
+            manufacturer=COMPANY,
+            model=coordinator.device_api.model_name,
+            name=coordinator.device_name,
+        )
 
         # Set the unique key. If there exist a location, add the prefix location name.
         unique_key = (
@@ -68,11 +74,6 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
 
         # Update initial status.
         self._update_status()
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
 
     async def async_post_value(self, value: Any) -> None:
         """Post the value of entity to server."""

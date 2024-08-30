@@ -15,7 +15,6 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -121,18 +120,14 @@ async def async_setup_entry(
             if not properties:
                 continue
 
-            entities += [
-                ThinQSwitchEntity(coordinator, description, prop) for prop in properties
-            ]
+            entities.extend(
+                [
+                    ThinQSwitchEntity(coordinator, description, prop)
+                    for prop in properties
+                ]
+            )
 
         if entities:
-            for entity in entities:
-                _LOGGER.debug(
-                    "[%s] Add %s:%s entity",
-                    coordinator.device_name,
-                    Platform.SWITCH,
-                    entity.entity_description.key,
-                )
             async_add_entities(entities)
 
 

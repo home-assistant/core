@@ -37,10 +37,11 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def _get_default_country_code(self) -> str:
         """Get the default country code based on config."""
-        return next(
-            (x for x in SUPPORTED_COUNTRIES if x == self.hass.config.country),
-            DEFAULT_COUNTRY,
-        )
+        country = self.hass.config.country
+        if country is not None and country in SUPPORTED_COUNTRIES:
+            return country
+
+        return DEFAULT_COUNTRY
 
     async def _validate_and_create_entry(
         self, access_token: str, country_code: str
@@ -73,8 +74,8 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            access_token = str(user_input[CONF_ACCESS_TOKEN])
-            country_code = str(user_input[CONF_COUNTRY])
+            access_token = user_input[CONF_ACCESS_TOKEN]
+            country_code = user_input[CONF_COUNTRY]
 
             # Check if PAT is already configured.
             await self.async_set_unique_id(access_token)

@@ -9,10 +9,9 @@ from thinqconnect import ConnectBaseDevice, DeviceType, ThinQApi, ThinQAPIExcept
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import COMPANY, DEVICE_TYPE_API_MAP, DOMAIN
+from .const import DEVICE_TYPE_API_MAP, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,16 +54,6 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Get the api instance.
         self.device_api = device_api.get_sub_device(self.sub_id) or device_api
-
-    @property
-    def device_info(self) -> dr.DeviceInfo:
-        """Return the device information."""
-        return dr.DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
-            manufacturer=COMPANY,
-            model=self.device_api.model_name,
-            name=self.device_name,
-        )
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Request to the server to update the status from full response data."""
