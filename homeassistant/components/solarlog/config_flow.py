@@ -83,12 +83,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                     device_list = await solarlog.client.get_device_list()
                     await solarlog.client.close()
-
-                    return self.async_create_entry(
-                        title=user_input[CONF_NAME],
-                        data=user_input,
-                        options={"devices": {key: True for key in device_list}},
-                    )
+                    user_input |= {"devices": {key: True for key in device_list}}
 
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],

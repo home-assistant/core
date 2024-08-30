@@ -47,8 +47,8 @@ class SolarLogCoordinator(update_coordinator.DataUpdateCoordinator):
 
         enabled_devices: dict[int, bool] = {}
         if extended_data:
-            if entry.options.get("devices", {}) != {}:
-                for key, value in entry.options["devices"].items():
+            if entry.data.get("devices", {}) != {}:
+                for key, value in entry.data["devices"].items():
                     enabled_devices |= {int(key): value}
 
         self.solarlog = SolarLogConnector(

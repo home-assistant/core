@@ -74,7 +74,7 @@ async def test_user(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "solarlog_test_1_2_3"
     assert result["data"][CONF_HOST] == HOST
-    assert result["options"]["devices"] == {0: True, 1: True}
+    assert result["data"]["devices"] == {0: True, 1: True}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
