@@ -23,11 +23,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.media_player import BrowseError, BrowseMedia, MediaType
+from homeassistant.components.media_player import MediaType
 from homeassistant.components.squeezebox.browse_media import (
     LIBRARY,
     MEDIA_TYPE_TO_SQUEEZEBOX,
-    SQUEEZEBOX_ID_BY_TYPE,
 )
 from homeassistant.components.squeezebox.const import DOMAIN, KNOWN_PLAYERS
 from homeassistant.components.squeezebox.media_player import SqueezeBoxEntity
@@ -211,18 +210,33 @@ async def player(
 
 
 async def test_async_browse_media_root(
-    hass: HomeAssistant, config_entry: MockConfigEntry, player: SqueezeBoxEntity
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test the async_browse_media function at the root level."""
 
-    root = await player.async_browse_media()
-    assert type(root) is BrowseMedia
-    for idx, item in enumerate(root.as_dict()["children"]):
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.test_player",
+            "media_content_id": "",
+            "media_content_type": "library",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    result = response["result"]
+    for idx, item in enumerate(result["children"]):
         assert item["title"] == LIBRARY[idx]
 
 
 async def test_async_browse_media_with_subitems(
-    hass: HomeAssistant, config_entry: MockConfigEntry, player: SqueezeBoxEntity
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test each category with subitems."""
     for category in ("Favorites", "Artists", "Albums", "Playlists", "Genres"):
@@ -230,18 +244,38 @@ async def test_async_browse_media_with_subitems(
             "homeassistant.components.squeezebox.browse_media.is_internal_request",
             return_value=False,
         ):
-            category_level = await player.async_browse_media(category)
-            assert type(category_level) is BrowseMedia
-            assert (
-                category_level.as_dict()["title"] == MEDIA_TYPE_TO_SQUEEZEBOX[category]
+            client = await hass_ws_client()
+            await client.send_json(
+                {
+                    "id": 1,
+                    "type": "media_player/browse_media",
+                    "entity_id": "media_player.test_player",
+                    "media_content_id": "",
+                    "media_content_type": category,
+                }
             )
-            assert category_level.as_dict()["children"][0]["title"] == "Fake Item 1"
+            response = await client.receive_json()
+            assert response["success"]
+            category_level = response["result"]
+            assert category_level["title"] == MEDIA_TYPE_TO_SQUEEZEBOX[category]
+            assert category_level["children"][0]["title"] == "Fake Item 1"
 
             # Look up a subitem
-            search_type = category_level.as_dict()["children"][0]["media_content_type"]
-            search_id = category_level.as_dict()["children"][0]["media_content_id"]
-            search = await player.async_browse_media(search_type, search_id)
-            assert search.as_dict()["title"] == "Fake Item 1"
+            search_type = category_level["children"][0]["media_content_type"]
+            search_id = category_level["children"][0]["media_content_id"]
+            await client.send_json(
+                {
+                    "id": 2,
+                    "type": "media_player/browse_media",
+                    "entity_id": "media_player.test_player",
+                    "media_content_id": search_id,
+                    "media_content_type": search_type,
+                }
+            )
+            response = await client.receive_json()
+            assert response["success"]
+            search = response["result"]
+            assert search["title"] == "Fake Item 1"
 
 
 async def test_async_browse_tracks(
@@ -312,15 +346,28 @@ async def test_play_browse_item(
 
 
 async def test_async_browse_error(
-    hass: HomeAssistant, config_entry: MockConfigEntry, player: SqueezeBoxEntity
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Search for a non-existent item and assert BrowseError is raised."""
-    with pytest.raises(BrowseError):
-        await player.async_browse_media(MediaType.ALBUM, "0")
+    """Search for a non-existent item and assert error."""
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.test_player",
+            "media_content_id": "0",
+            "media_content_type": MediaType.ALBUM,
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
 
 
 async def test_play_browse_item(
-    hass: HomeAssistant, config_entry: MockConfigEntry, player: SqueezeBoxEntity
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test play browse item."""
     await player.async_play_media(
@@ -368,18 +415,29 @@ async def test_play_browse_item_bad_category(
     hass: HomeAssistant, config_entry: MockConfigEntry, player: SqueezeBoxEntity
 ) -> None:
     """Test trying to play an item that doesn't exist."""
-    await player.async_play_media(
-        media_type=MediaType.PLAYLIST,
-        media_id="1234567890",
+    await hass.services.async_call(
+        "media_player",
+        "play_media",
+        {
+            "entity_id": "media_player.test_player",
+            "media_content_id": "0",
+            "media_content_type": "album",
+        },
     )
 
 
 async def test_play_browse_item_bad_category(
-    hass: HomeAssistant, config_entry: MockConfigEntry, player: SqueezeBoxEntity
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test trying to play an item whose category doesn't exist."""
-    await player.async_play_media(
-        media_type="bad_category",
-        media_id="1234",
+    await hass.services.async_call(
+        "media_player",
+        "play_media",
+        {
+            "entity_id": "media_player.test_player",
+            "media_content_id": "1234",
+            "media_content_type": "bad_category",
+        },
     )
 >>>>>>> 3d3e5699d7 (Improve unit tests)
