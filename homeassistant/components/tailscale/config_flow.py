@@ -13,7 +13,9 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import AUTHKEYS_URL, CONF_TAILNET, DOMAIN
+from .const import CONF_TAILNET, DOMAIN
+
+AUTHKEYS_URL = "https://login.tailscale.com/admin/settings/keys"
 
 
 async def validate_input(hass: HomeAssistant, *, tailnet: str, api_key: str) -> None:

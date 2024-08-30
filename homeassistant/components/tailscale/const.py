@@ -12,5 +12,3 @@ LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(minutes=1)
 
 CONF_TAILNET: Final = "tailnet"
-
-AUTHKEYS_URL = "https://login.tailscale.com/admin/settings/keys"
