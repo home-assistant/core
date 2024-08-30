@@ -449,6 +449,7 @@ MODULE_TO_MOCK_GEN = {
     Module.Light: _mocked_light_module,
     Module.LightEffect: _mocked_light_effect_module,
     Module.Fan: _mocked_fan_module,
+    Module.Alarm: lambda _: AsyncMock(),
 }
 
 
