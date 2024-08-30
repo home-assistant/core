@@ -554,6 +554,8 @@ build.json @home-assistant/supervisor
 /tests/components/google_generative_ai_conversation/ @tronikos
 /homeassistant/components/google_mail/ @tkdrob
 /tests/components/google_mail/ @tkdrob
+/homeassistant/components/google_photos/ @allenporter
+/tests/components/google_photos/ @allenporter
 /homeassistant/components/google_sheets/ @tkdrob
 /tests/components/google_sheets/ @tkdrob
 /homeassistant/components/google_tasks/ @allenporter

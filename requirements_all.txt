@@ -979,6 +979,7 @@ goalzero==0.2.2
 goodwe==0.3.6
 
 # homeassistant.components.google_mail
+# homeassistant.components.google_photos
 # homeassistant.components.google_tasks
 google-api-python-client==2.71.0
 
