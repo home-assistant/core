@@ -11,6 +11,8 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 
 async def test_standard_config_with_single_fireplace(
     hass: HomeAssistant,
@@ -84,7 +86,7 @@ async def test_standard_config_with_single_fireplace_and_bad_credentials(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "cloud_api"
 
@@ -185,7 +187,7 @@ async def test_dhcp_discovery_non_intellifire_device(
     mock_setup_entry: AsyncMock,
     mock_apis_multifp,
 ) -> None:
-    """Test successful DHCP Discovery."""
+    """Test successful DHCP Discovery of a non intellifire device.."""
 
     # Patch poll with an exception
     mock_local_interface, mock_cloud_interface, mock_fp = mock_apis_multifp
@@ -202,11 +204,12 @@ async def test_dhcp_discovery_non_intellifire_device(
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "not_intellifire_device"
+    # Test is finished - the DHCP scanner detected a hostname that "might" be an IntelliFire device, but it was not.
 
 
 async def test_reauth_flow(
     hass: HomeAssistant,
-    mock_config_entry_current,
+    mock_config_entry_current: MockConfigEntry,
     mock_apis_single_fp,
 ) -> None:
     """Test reauth."""
@@ -216,13 +219,6 @@ async def test_reauth_flow(
     mock_cloud_interface.login_with_credentials.side_effect = LoginError
 
     mock_config_entry_current.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": "reauth",
-            "unique_id": mock_config_entry_current.unique_id,
-            "entry_id": mock_config_entry_current.entry_id,
-        },
-    )
+    result = await mock_config_entry_current.start_reauth_flow(hass)
     assert result["type"] == FlowResultType.FORM
     result["step_id"] = "cloud_api"
