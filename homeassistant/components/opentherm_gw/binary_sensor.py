@@ -223,6 +223,177 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[OpenThermBinarySensorEntityDescription, ...] =
     ),
 )
 
+OBSOLETE_BINARY_SENSOR_DESCRIPTIONS: tuple[
+    OpenThermBinarySensorEntityDescription, ...
+] = (
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_FAULT_IND,
+        translation_key="fault_indication",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_CH_ACTIVE,
+        translation_key="central_heating_n",
+        translation_placeholders={"circuit_number": "1"},
+        device_class=BinarySensorDeviceClass.RUNNING,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_CH2_ACTIVE,
+        translation_key="central_heating_n",
+        translation_placeholders={"circuit_number": "2"},
+        device_class=BinarySensorDeviceClass.RUNNING,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_DHW_ACTIVE,
+        translation_key="hot_water",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_FLAME_ON,
+        translation_key="flame",
+        device_class=BinarySensorDeviceClass.HEAT,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_COOLING_ACTIVE,
+        translation_key="cooling",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_DIAG_IND,
+        translation_key="diagnostic_indication",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_DHW_PRESENT,
+        translation_key="supports_hot_water",
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_CONTROL_TYPE,
+        translation_key="control_type",
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_COOLING_SUPPORTED,
+        translation_key="supports_cooling",
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_DHW_CONFIG,
+        translation_key="hot_water_config",
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_MASTER_LOW_OFF_PUMP,
+        translation_key="supports_pump_control",
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_CH2_PRESENT,
+        translation_key="supports_ch_2",
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_SERVICE_REQ,
+        translation_key="service_required",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_REMOTE_RESET,
+        translation_key="supports_remote_reset",
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_LOW_WATER_PRESS,
+        translation_key="low_water_pressure",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_GAS_FAULT,
+        translation_key="gas_fault",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_AIR_PRESS_FAULT,
+        translation_key="air_pressure_fault",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_WATER_OVERTEMP,
+        translation_key="water_overtemperature",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_REMOTE_TRANSFER_MAX_CH,
+        translation_key="supports_central_heating_setpoint_transfer",
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_REMOTE_RW_MAX_CH,
+        translation_key="supports_central_heating_setpoint_writing",
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_REMOTE_TRANSFER_DHW,
+        translation_key="supports_hot_water_setpoint_transfer",
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_REMOTE_RW_DHW,
+        translation_key="supports_hot_water_setpoint_writing",
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_MASTER_CH_ENABLED,
+        translation_key="central_heating_n",
+        translation_placeholders={"circuit_number": "1"},
+        device_description=BOILER_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_MASTER_CH2_ENABLED,
+        translation_key="central_heating_n",
+        translation_placeholders={"circuit_number": "2"},
+        device_description=BOILER_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_MASTER_DHW_ENABLED,
+        translation_key="hot_water",
+        device_description=BOILER_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_MASTER_COOLING_ENABLED,
+        translation_key="cooling",
+        device_description=BOILER_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_MASTER_OTC_ENABLED,
+        translation_key="outside_temp_correction",
+        device_description=BOILER_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_ROVRD_MAN_PRIO,
+        translation_key="override_manual_change_prio",
+        device_description=BOILER_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_ROVRD_AUTO_PRIO,
+        translation_key="override_program_change_prio",
+        device_description=BOILER_DEVICE_DESCRIPTION,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -235,6 +406,11 @@ async def async_setup_entry(
     async_add_entities(
         OpenThermBinarySensor(gw_hub, description)
         for description in BINARY_SENSOR_DESCRIPTIONS
+    )
+
+    async_add_entities(
+        OpenThermBinarySensor(gw_hub, description)
+        for description in OBSOLETE_BINARY_SENSOR_DESCRIPTIONS
     )
 
 

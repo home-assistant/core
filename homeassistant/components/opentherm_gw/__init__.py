@@ -27,11 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
@@ -126,7 +122,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             {(DOMAIN, config_entry.data[CONF_ID])}
         )
     ) is not None:
-        er.async_get(hass).async_clear_config_entry(config_entry.entry_id)
         dev_reg.async_update_device(
             migrate_device.id,
             new_identifiers={

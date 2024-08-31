@@ -10,7 +10,6 @@ from typing import Any
 from pyotgw import vars as gw_vars
 
 from homeassistant.components.climate import (
-    ENTITY_ID_FORMAT,
     PRESET_AWAY,
     PRESET_NONE,
     ClimateEntity,
@@ -23,7 +22,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, CONF_ID, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import OpenThermGatewayHub
@@ -99,16 +97,13 @@ class OpenThermClimate(OpenThermEntity, ClimateEntity):
         description: OpenThermClimateEntityDescription,
         options: MappingProxyType[str, Any],
     ) -> None:
-        """Initialize the device."""
+        """Initialize the entity."""
         super().__init__(gw_hub, description)
-        self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, gw_hub.hub_id, hass=gw_hub.hass
-        )
         if CONF_READ_PRECISION in options:
             self._attr_precision = options[CONF_READ_PRECISION]
         self._attr_target_temperature_step = options.get(CONF_SET_PRECISION)
         self.temporary_ovrd_mode = options.get(CONF_TEMPORARY_OVRD_MODE, True)
-        self._attr_unique_id = f"{gw_hub.hub_id}-{description.device_description.device_identifier}-{description.key}"
+        self._attr_unique_id = gw_hub.hub_id
 
     @callback
     def update_options(self, entry):
