@@ -2163,6 +2163,7 @@ stookwijzer==1.3.0
 # homeassistant.components.streamlabswater
 streamlabswater==1.0.1
 
+# homeassistant.components.home_connect
 # homeassistant.components.huawei_lte
 # homeassistant.components.solaredge
 # homeassistant.components.traccar

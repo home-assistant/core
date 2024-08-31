@@ -7,7 +7,6 @@ from homeconnect.api import HomeConnectAppliance, HomeConnectError
 import pytest
 
 from homeassistant.components.home_connect.const import (
-    BSH_ACTIVE_PROGRAM,
     BSH_CHILD_LOCK_STATE,
     BSH_OPERATION_STATE,
     BSH_POWER_OFF,
@@ -39,8 +38,6 @@ SETTINGS_STATUS = {
     .get("settings")
 }
 
-PROGRAM = "LaundryCare.Dryer.Program.Mix"
-
 
 @pytest.fixture
 def platforms() -> list[str]:
@@ -66,18 +63,6 @@ async def test_switches(
 @pytest.mark.parametrize(
     ("entity_id", "status", "service", "state"),
     [
-        (
-            "switch.washer_program_mix",
-            {BSH_ACTIVE_PROGRAM: {"value": PROGRAM}},
-            SERVICE_TURN_ON,
-            STATE_ON,
-        ),
-        (
-            "switch.washer_program_mix",
-            {BSH_ACTIVE_PROGRAM: {"value": ""}},
-            SERVICE_TURN_OFF,
-            STATE_OFF,
-        ),
         (
             "switch.washer_power",
             {BSH_POWER_STATE: {"value": BSH_POWER_ON}},
@@ -130,7 +115,6 @@ async def test_switch_functionality(
 ) -> None:
     """Test switch functionality."""
     appliance.status.update(SETTINGS_STATUS)
-    appliance.get_programs_available.return_value = [PROGRAM]
     get_appliances.return_value = [appliance]
 
     assert config_entry.state == ConfigEntryState.NOT_LOADED
@@ -147,18 +131,6 @@ async def test_switch_functionality(
 @pytest.mark.parametrize(
     ("entity_id", "status", "service", "mock_attr"),
     [
-        (
-            "switch.washer_program_mix",
-            {BSH_ACTIVE_PROGRAM: {"value": PROGRAM}},
-            SERVICE_TURN_ON,
-            "start_program",
-        ),
-        (
-            "switch.washer_program_mix",
-            {BSH_ACTIVE_PROGRAM: {"value": PROGRAM}},
-            SERVICE_TURN_OFF,
-            "stop_program",
-        ),
         (
             "switch.washer_power",
             {BSH_POWER_STATE: {"value": ""}},
@@ -199,8 +171,6 @@ async def test_switch_exception_handling(
     get_appliances: MagicMock,
 ) -> None:
     """Test exception handling."""
-    problematic_appliance.get_programs_available.side_effect = None
-    problematic_appliance.get_programs_available.return_value = [PROGRAM]
     get_appliances.return_value = [problematic_appliance]
 
     assert config_entry.state == ConfigEntryState.NOT_LOADED

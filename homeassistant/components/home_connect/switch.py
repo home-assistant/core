@@ -8,14 +8,13 @@ from homeconnect.api import HomeConnectError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE, CONF_ENTITIES
+from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .api import ConfigEntryAuth
 from .const import (
     ATTR_VALUE,
-    BSH_ACTIVE_PROGRAM,
     BSH_CHILD_LOCK_STATE,
     BSH_OPERATION_STATE,
     BSH_POWER_ON,
@@ -66,9 +65,7 @@ async def async_setup_entry(
         entities = []
         hc_api: ConfigEntryAuth = hass.data[DOMAIN][config_entry.entry_id]
         for device_dict in hc_api.devices:
-            entity_dicts = device_dict.get(CONF_ENTITIES, {}).get("switch", [])
-            entity_list = [HomeConnectProgramSwitch(**d) for d in entity_dicts]
-            entity_list += [HomeConnectPowerSwitch(device_dict[CONF_DEVICE])]
+            entity_list = [HomeConnectPowerSwitch(device_dict[CONF_DEVICE])]
             entity_list += [HomeConnectChildLockSwitch(device_dict[CONF_DEVICE])]
             # Auto-discover entities
             hc_device: HomeConnectDevice = device_dict[CONF_DEVICE]
@@ -143,49 +140,6 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
             self.entity_description.key,
             self._attr_is_on,
         )
-
-
-class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
-    """Switch class for Home Connect."""
-
-    def __init__(self, device, program_name):
-        """Initialize the entity."""
-        desc = " ".join(["Program", program_name.split(".")[-1]])
-        if device.appliance.type == "WasherDryer":
-            desc = " ".join(
-                ["Program", program_name.split(".")[-3], program_name.split(".")[-1]]
-            )
-        super().__init__(device, desc)
-        self.program_name = program_name
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Start the program."""
-        _LOGGER.debug("Tried to turn on program %s", self.program_name)
-        try:
-            await self.hass.async_add_executor_job(
-                self.device.appliance.start_program, self.program_name
-            )
-        except HomeConnectError as err:
-            _LOGGER.error("Error while trying to start program: %s", err)
-        self.async_entity_update()
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Stop the program."""
-        _LOGGER.debug("Tried to stop program %s", self.program_name)
-        try:
-            await self.hass.async_add_executor_job(self.device.appliance.stop_program)
-        except HomeConnectError as err:
-            _LOGGER.error("Error while trying to stop program: %s", err)
-        self.async_entity_update()
-
-    async def async_update(self) -> None:
-        """Update the switch's status."""
-        state = self.device.appliance.status.get(BSH_ACTIVE_PROGRAM, {})
-        if state.get(ATTR_VALUE) == self.program_name:
-            self._attr_is_on = True
-        else:
-            self._attr_is_on = False
-        _LOGGER.debug("Updated, new state: %s", self._attr_is_on)
 
 
 class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
