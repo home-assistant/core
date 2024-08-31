@@ -158,12 +158,13 @@ async def websocket_get_entity_configs(
     else:
         entity_configs = config_entry.data[CONF_ENTITIES]
 
-    for entity_config in entity_configs:
-        if (entity := get_entity_entry(hass, entity_config, config_entry)) is None:
-            continue
-        entity_config[CONF_NAME] = entity.name or entity.original_name
+    result_entity_configs = [
+        {**entity_config, CONF_NAME: entity.name or entity.original_name}
+        for entity_config in entity_configs[:]
+        if (entity := get_entity_entry(hass, entity_config, config_entry)) is not None
+    ]
 
-    connection.send_result(msg["id"], entity_configs)
+    connection.send_result(msg["id"], result_entity_configs)
 
 
 @websocket_api.require_admin
