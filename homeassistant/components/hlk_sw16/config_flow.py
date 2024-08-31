@@ -4,6 +4,7 @@ import asyncio
 from typing import Any
 
 from hlk_sw16 import create_hlk_sw16_connection
+from hlk_sw16.protocol import SW16Client
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -27,7 +28,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def connect_client(hass, user_input):
+async def connect_client(hass: HomeAssistant, user_input: dict[str, Any]) -> SW16Client:
     """Connect the HLK-SW16 client."""
     client_aw = create_hlk_sw16_connection(
         host=user_input[CONF_HOST],
@@ -41,7 +42,7 @@ async def connect_client(hass, user_input):
         return await client_aw
 
 
-async def validate_input(hass: HomeAssistant, user_input):
+async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]) -> None:
     """Validate the user input allows us to connect."""
     try:
         client = await connect_client(hass, user_input)

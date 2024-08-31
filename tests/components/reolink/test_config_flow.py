@@ -94,6 +94,8 @@ async def test_config_flow_errors(
 
     reolink_connect.is_admin = False
     reolink_connect.user_level = "guest"
+    reolink_connect.unsubscribe.side_effect = ReolinkError("Test error")
+    reolink_connect.logout.side_effect = ReolinkError("Test error")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
