@@ -42,7 +42,7 @@ class OAuth2FlowHandler(
         client = api.AsyncConfigFlowAuth(self.hass, data[CONF_TOKEN][CONF_ACCESS_TOKEN])
         try:
             user_resource_info = await client.get_user_info()
-            await client.list_media_items()
+            await client.list_media_items(page_size=1)
         except GooglePhotosApiError as ex:
             return self.async_abort(
                 reason="access_not_configured",
