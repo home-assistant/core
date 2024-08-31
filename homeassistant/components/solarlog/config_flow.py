@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def solarlog_entries(hass: HomeAssistant) -> set[Any]:
+def solarlog_entries(hass: HomeAssistant) -> set[str]:
     """Return the hosts already configured."""
     return {
         entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN)
