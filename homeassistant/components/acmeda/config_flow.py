@@ -40,13 +40,13 @@ class AcmedaFlowHandler(ConfigFlow, domain=DOMAIN):
             entry.unique_id for entry in self._async_current_entries()
         }
 
+        # Find / discover hubs
+        hubs: list[aiopulse.Hub] = []
         with suppress(TimeoutError):
             async with timeout(5):
-                hubs: list[aiopulse.Hub] = [
-                    hub
-                    async for hub in aiopulse.Hub.discover()
-                    if hub.id not in already_configured
-                ]
+                async for hub in aiopulse.Hub.discover():
+                    if hub.id not in already_configured:
+                        hubs.append(hub)
 
         if not hubs:
             return self.async_abort(reason="no_devices_found")
