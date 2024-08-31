@@ -1,12 +1,14 @@
 """Config flow for Bond integration."""
 from __future__ import annotations
 
+import asyncio
+import contextlib
 from http import HTTPStatus
 import logging
 from typing import Any
 
 from aiohttp import ClientConnectionError, ClientResponseError
-from bond_api import Bond
+from bond_async import Bond
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -33,10 +35,9 @@ TOKEN_SCHEMA = vol.Schema({})
 async def async_get_token(hass: HomeAssistant, host: str) -> str | None:
     """Try to fetch the token from the bond device."""
     bond = Bond(host, "", session=async_get_clientsession(hass))
-    try:
-        response: dict[str, str] = await bond.token()
-    except ClientConnectionError:
-        return None
+    response: dict[str, str] = {}
+    with contextlib.suppress(ClientConnectionError):
+        response = await bond.token()
     return response.get("token")
 
 
@@ -47,7 +48,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> tuple[st
         data[CONF_HOST], data[CONF_ACCESS_TOKEN], session=async_get_clientsession(hass)
     )
     try:
-        hub = BondHub(bond)
+        hub = BondHub(bond, data[CONF_HOST])
         await hub.setup(max_devices=1)
     except ClientConnectionError as error:
         raise InputValidationError("cannot_connect") from error
@@ -83,21 +84,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         instead ask them to manually enter the token.
         """
         host = self._discovered[CONF_HOST]
-        if not (token := await async_get_token(self.hass, host)):
+        try:
+            if not (token := await async_get_token(self.hass, host)):
+                return
+        except asyncio.TimeoutError:
             return
 
         self._discovered[CONF_ACCESS_TOKEN] = token
-        _, hub_name = await _validate_input(self.hass, self._discovered)
+        try:
+            _, hub_name = await _validate_input(self.hass, self._discovered)
+        except InputValidationError:
+            return
         self._discovered[CONF_NAME] = hub_name
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle a flow initialized by zeroconf discovery."""
-        name: str = discovery_info[zeroconf.ATTR_NAME]
-        host: str = discovery_info[zeroconf.ATTR_HOST]
+        name: str = discovery_info.name
+        host: str = discovery_info.host
         bond_id = name.partition(".")[0]
         await self.async_set_unique_id(bond_id)
+        hass = self.hass
         for entry in self._async_current_entries():
             if entry.unique_id != bond_id:
                 continue
@@ -107,13 +115,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 updates[CONF_ACCESS_TOKEN] = token
             new_data = {**entry.data, **updates}
-            if new_data != dict(entry.data):
-                self.hass.config_entries.async_update_entry(
-                    entry, data={**entry.data, **updates}
-                )
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(entry.entry_id)
-                )
+            changed = new_data != dict(entry.data)
+            if changed:
+                hass.config_entries.async_update_entry(entry, data=new_data)
+                entry_id = entry.entry_id
+                hass.async_create_task(hass.config_entries.async_reload(entry_id))
             raise AbortFlow("already_configured")
 
         self._discovered = {CONF_HOST: host, CONF_NAME: bond_id}

@@ -11,12 +11,7 @@ from xbox.webapi.api.provider.gameclips.models import GameclipsResponse
 from xbox.webapi.api.provider.screenshots.models import ScreenshotResponse
 from xbox.webapi.api.provider.smartglass.models import InstalledPackage
 
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_GAME,
-    MEDIA_CLASS_IMAGE,
-    MEDIA_CLASS_VIDEO,
-)
+from homeassistant.components.media_player import MediaClass
 from homeassistant.components.media_source.models import (
     BrowseMediaSource,
     MediaSource,
@@ -35,8 +30,8 @@ MIME_TYPE_MAP = {
 }
 
 MEDIA_CLASS_MAP = {
-    "gameclips": MEDIA_CLASS_VIDEO,
-    "screenshots": MEDIA_CLASS_IMAGE,
+    "gameclips": MediaClass.VIDEO,
+    "screenshots": MediaClass.IMAGE,
 }
 
 
@@ -55,7 +50,7 @@ def async_parse_identifier(
     identifier = item.identifier or ""
     start = ["", "", ""]
     items = identifier.lstrip("/").split("~~", 2)
-    return tuple(items + start[len(items) :])
+    return tuple(items + start[len(items) :])  # type: ignore[return-value]
 
 
 @dataclass
@@ -120,13 +115,13 @@ class XboxSource(MediaSource):
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier="",
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_type="",
             title="Xbox Game Media",
             can_play=False,
             can_expand=True,
             children=[_build_game_item(game, images) for game in games.values()],
-            children_media_class=MEDIA_CLASS_GAME,
+            children_media_class=MediaClass.GAME,
         )
 
     async def _build_media_items(self, title, category):
@@ -157,7 +152,7 @@ class XboxSource(MediaSource):
                         ).strftime("%b. %d, %Y %I:%M %p"),
                         item.thumbnails[0].uri,
                         item.game_clip_uris[0].uri,
-                        MEDIA_CLASS_VIDEO,
+                        MediaClass.VIDEO,
                     )
                     for item in response.game_clips
                 ]
@@ -182,7 +177,7 @@ class XboxSource(MediaSource):
                         ),
                         item.thumbnails[0].uri,
                         item.screenshot_uris[0].uri,
-                        MEDIA_CLASS_IMAGE,
+                        MediaClass.IMAGE,
                     )
                     for item in response.screenshots
                 ]
@@ -190,7 +185,7 @@ class XboxSource(MediaSource):
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"{title}~~{category}",
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_type="",
             title=f"{owner.title()} {kind.title()}",
             can_play=False,
@@ -201,7 +196,7 @@ class XboxSource(MediaSource):
         )
 
 
-def _build_game_item(item: InstalledPackage, images: list[Image]):
+def _build_game_item(item: InstalledPackage, images: dict[str, list[Image]]):
     """Build individual game."""
     thumbnail = ""
     image = _find_media_image(images.get(item.one_store_product_id, []))
@@ -213,12 +208,12 @@ def _build_game_item(item: InstalledPackage, images: list[Image]):
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier=f"{item.title_id}#{item.name}#{thumbnail}",
-        media_class=MEDIA_CLASS_GAME,
+        media_class=MediaClass.GAME,
         media_content_type="",
         title=item.name,
         can_play=False,
         can_expand=True,
-        children_media_class=MEDIA_CLASS_DIRECTORY,
+        children_media_class=MediaClass.DIRECTORY,
         thumbnail=thumbnail,
     )
 
@@ -229,13 +224,13 @@ def _build_categories(title):
     base = BrowseMediaSource(
         domain=DOMAIN,
         identifier=f"{title}",
-        media_class=MEDIA_CLASS_GAME,
+        media_class=MediaClass.GAME,
         media_content_type="",
         title=name,
         can_play=False,
         can_expand=True,
         children=[],
-        children_media_class=MEDIA_CLASS_DIRECTORY,
+        children_media_class=MediaClass.DIRECTORY,
         thumbnail=thumbnail,
     )
 
@@ -247,7 +242,7 @@ def _build_categories(title):
                 BrowseMediaSource(
                     domain=DOMAIN,
                     identifier=f"{title}~~{owner}#{kind}",
-                    media_class=MEDIA_CLASS_DIRECTORY,
+                    media_class=MediaClass.DIRECTORY,
                     media_content_type="",
                     title=f"{owner.title()} {kind.title()}",
                     can_play=False,

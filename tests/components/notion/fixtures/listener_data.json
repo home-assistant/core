@@ -1,0 +1,57 @@
+{
+  "listeners": [
+    {
+      "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+      "definition_id": 4,
+      "created_at": "2019-06-28T22:12:49.651Z",
+      "type": "sensor",
+      "model_version": "2.1",
+      "sensor_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+      "status": {
+        "trigger_value": "no_leak",
+        "data_received_at": "2022-03-20T08:00:29.763Z"
+      },
+      "status_localized": {
+        "state": "No Leak",
+        "description": "Mar 20 at 2:00am"
+      },
+      "insights": {
+        "primary": {
+          "origin": {
+            "type": "Sensor",
+            "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+          },
+          "value": "no_leak",
+          "data_received_at": "2022-03-20T08:00:29.763Z"
+        }
+      },
+      "configuration": {},
+      "pro_monitoring_status": "eligible"
+    },
+    {
+      "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+      "definition_id": 7,
+      "created_at": "2019-07-10T22:40:48.847Z",
+      "type": "sensor",
+      "model_version": "3.1",
+      "sensor_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+      "status": {
+        "trigger_value": "no_alarm",
+        "data_received_at": "2019-06-28T22:12:49.516Z"
+      },
+      "status_localized": {
+        "state": "No Sound",
+        "description": "Jun 28 at 4:12pm"
+      },
+      "insights": {
+        "primary": {
+          "origin": {},
+          "value": "no_alarm",
+          "data_received_at": "2019-06-28T22:12:49.516Z"
+        }
+      },
+      "configuration": {},
+      "pro_monitoring_status": "eligible"
+    }
+  ]
+}

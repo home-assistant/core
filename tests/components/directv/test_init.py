@@ -3,10 +3,9 @@ from homeassistant.components.directv.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from tests.components.directv import setup_integration
-from tests.test_util.aiohttp import AiohttpClientMocker
+from . import setup_integration
 
-# pylint: disable=redefined-outer-name
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_config_entry_not_ready(

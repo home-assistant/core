@@ -1,16 +1,11 @@
 """Support for media browsing."""
 import json
 
-from homeassistant.components.media_player import BrowseError, BrowseMedia
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_ALBUM,
-    MEDIA_CLASS_ARTIST,
-    MEDIA_CLASS_CHANNEL,
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_GENRE,
-    MEDIA_CLASS_PLAYLIST,
-    MEDIA_CLASS_TRACK,
-    MEDIA_TYPE_MUSIC,
+from homeassistant.components.media_player import (
+    BrowseError,
+    BrowseMedia,
+    MediaClass,
+    MediaType,
 )
 
 PLAYABLE_ITEM_TYPES = [
@@ -48,52 +43,52 @@ FAVOURITES_URI = "favourites"
 
 def _item_to_children_media_class(item, info=None):
     if info and "album" in info and "artist" in info:
-        return MEDIA_CLASS_TRACK
+        return MediaClass.TRACK
     if item["uri"].startswith(PLAYLISTS_URI_PREFIX):
-        return MEDIA_CLASS_PLAYLIST
+        return MediaClass.PLAYLIST
     if item["uri"].startswith(ARTISTS_URI_PREFIX):
         if len(item["uri"]) > len(ARTISTS_URI_PREFIX):
-            return MEDIA_CLASS_ALBUM
-        return MEDIA_CLASS_ARTIST
+            return MediaClass.ALBUM
+        return MediaClass.ARTIST
     if item["uri"].startswith(ALBUMS_URI_PREFIX):
         if len(item["uri"]) > len(ALBUMS_URI_PREFIX):
-            return MEDIA_CLASS_TRACK
-        return MEDIA_CLASS_ALBUM
+            return MediaClass.TRACK
+        return MediaClass.ALBUM
     if item["uri"].startswith(GENRES_URI_PREFIX):
         if len(item["uri"]) > len(GENRES_URI_PREFIX):
-            return MEDIA_CLASS_ALBUM
-        return MEDIA_CLASS_GENRE
+            return MediaClass.ALBUM
+        return MediaClass.GENRE
     if item["uri"].startswith(LAST_100_URI_PREFIX) or item["uri"] == FAVOURITES_URI:
-        return MEDIA_CLASS_TRACK
+        return MediaClass.TRACK
     if item["uri"].startswith(RADIO_URI_PREFIX):
-        return MEDIA_CLASS_CHANNEL
-    return MEDIA_CLASS_DIRECTORY
+        return MediaClass.CHANNEL
+    return MediaClass.DIRECTORY
 
 
 def _item_to_media_class(item, parent_item=None):
     if "type" not in item:
-        return MEDIA_CLASS_DIRECTORY
+        return MediaClass.DIRECTORY
     if item["type"] in ("webradio", "mywebradio"):
-        return MEDIA_CLASS_CHANNEL
+        return MediaClass.CHANNEL
     if item["type"] in ("song", "cuesong"):
-        return MEDIA_CLASS_TRACK
+        return MediaClass.TRACK
     if item.get("artist"):
-        return MEDIA_CLASS_ALBUM
+        return MediaClass.ALBUM
     if item["uri"].startswith(ARTISTS_URI_PREFIX) and len(item["uri"]) > len(
         ARTISTS_URI_PREFIX
     ):
-        return MEDIA_CLASS_ARTIST
+        return MediaClass.ARTIST
     if parent_item:
         return _item_to_children_media_class(parent_item)
-    return MEDIA_CLASS_DIRECTORY
+    return MediaClass.DIRECTORY
 
 
 def _list_payload(item, children=None):
     return BrowseMedia(
         title=item["name"],
-        media_class=MEDIA_CLASS_DIRECTORY,
+        media_class=MediaClass.DIRECTORY,
         children_media_class=_item_to_children_media_class(item),
-        media_content_type=MEDIA_TYPE_MUSIC,
+        media_content_type=MediaType.MUSIC,
         media_content_id=json.dumps(item),
         can_play=False,
         can_expand=True,
@@ -105,7 +100,7 @@ def _raw_item_payload(entity, item, parent_item=None, title=None, info=None):
         if thumbnail := item.get("albumart"):
             item_hash = str(hash(thumbnail))
             entity.thumbnail_cache.setdefault(item_hash, thumbnail)
-            thumbnail = entity.get_browse_image_url(MEDIA_TYPE_MUSIC, item_hash)
+            thumbnail = entity.get_browse_image_url(MediaType.MUSIC, item_hash)
     else:
         # don't use the built-in volumio white-on-white icons
         thumbnail = None
@@ -114,7 +109,7 @@ def _raw_item_payload(entity, item, parent_item=None, title=None, info=None):
         "title": title or item.get("title"),
         "media_class": _item_to_media_class(item, parent_item),
         "children_media_class": _item_to_children_media_class(item, info),
-        "media_content_type": MEDIA_TYPE_MUSIC,
+        "media_content_type": MediaType.MUSIC,
         "media_content_id": json.dumps(item),
         "can_play": item.get("type") in PLAYABLE_ITEM_TYPES,
         "can_expand": item.get("type") not in NON_EXPANDABLE_ITEM_TYPES,
@@ -131,7 +126,7 @@ async def browse_top_level(media_library):
     navigation = await media_library.browse()
     children = [_list_payload(item) for item in navigation["lists"]]
     return BrowseMedia(
-        media_class=MEDIA_CLASS_DIRECTORY,
+        media_class=MediaClass.DIRECTORY,
         media_content_id="library",
         media_content_type="library",
         title="Media Library",

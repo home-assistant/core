@@ -1,9 +1,0 @@
-{
-    "config": {
-        "error": {
-            "few": "Nekoliko",
-            "one": "Jedan",
-            "other": "Ostalo"
-        }
-    }
-}

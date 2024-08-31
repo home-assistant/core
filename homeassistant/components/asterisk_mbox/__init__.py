@@ -10,10 +10,11 @@ from asterisk_mbox.commands import (
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_connect
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,9 +40,9 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up for the Asterisk Voicemail box."""
-    conf = config.get(DOMAIN)
+    conf = config[DOMAIN]
 
     host = conf[CONF_HOST]
     port = conf[CONF_PORT]

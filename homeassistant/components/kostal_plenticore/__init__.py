@@ -1,9 +1,10 @@
 """The Kostal Plenticore Solar Inverter integration."""
 import logging
 
-from kostal.plenticore import PlenticoreApiException
+from pykoplenti import ApiException
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
@@ -11,7 +12,7 @@ from .helper import Plenticore
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["select", "sensor", "switch"]
+PLATFORMS = [Platform.NUMBER, Platform.SELECT, Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -25,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id] = plenticore
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -38,7 +39,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         plenticore = hass.data[DOMAIN].pop(entry.entry_id)
         try:
             await plenticore.async_unload()
-        except PlenticoreApiException as err:
+        except ApiException as err:
             _LOGGER.error("Error logging out from inverter: %s", err)
 
     return unload_ok

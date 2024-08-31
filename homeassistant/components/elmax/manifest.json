@@ -1,0 +1,10 @@
+{
+  "domain": "elmax",
+  "name": "Elmax",
+  "codeowners": ["@albertogeniola"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/elmax",
+  "iot_class": "cloud_polling",
+  "loggers": ["elmax_api"],
+  "requirements": ["elmax-api==0.0.4"]
+}

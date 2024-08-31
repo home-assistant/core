@@ -1,0 +1,80 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'alarm_systems': dict({
+    }),
+    'config': dict({
+      'data': dict({
+        'api_key': '**REDACTED**',
+        'host': '1.2.3.4',
+        'port': 80,
+      }),
+      'disabled_by': None,
+      'domain': 'deconz',
+      'entry_id': '1',
+      'minor_version': 1,
+      'options': dict({
+        'master': True,
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Mock Title',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'deconz_config': dict({
+      'bridgeid': '**REDACTED**',
+      'ipaddress': '1.2.3.4',
+      'mac': '**REDACTED**',
+      'modelid': 'deCONZ',
+      'name': 'deCONZ mock gateway',
+      'sw_version': '2.05.69',
+      'uuid': '1234',
+      'websocketport': 1234,
+    }),
+    'deconz_ids': dict({
+    }),
+    'entities': dict({
+      'alarm_control_panel': list([
+      ]),
+      'binary_sensor': list([
+      ]),
+      'button': list([
+      ]),
+      'climate': list([
+      ]),
+      'cover': list([
+      ]),
+      'fan': list([
+      ]),
+      'light': list([
+      ]),
+      'lock': list([
+      ]),
+      'number': list([
+      ]),
+      'scene': list([
+      ]),
+      'select': list([
+      ]),
+      'sensor': list([
+      ]),
+      'siren': list([
+      ]),
+      'switch': list([
+      ]),
+    }),
+    'events': dict({
+    }),
+    'groups': dict({
+    }),
+    'lights': dict({
+    }),
+    'scenes': dict({
+    }),
+    'sensors': dict({
+    }),
+    'websocket_state': 'running',
+  })
+# ---

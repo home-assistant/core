@@ -6,7 +6,7 @@ import logging
 from broadlink.exceptions import AuthorizationError, BroadlinkException
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,7 +16,9 @@ def get_update_manager(device):
     update_managers = {
         "A1": BroadlinkA1UpdateManager,
         "BG1": BroadlinkBG1UpdateManager,
+        "HYS": BroadlinkThermostatUpdateManager,
         "LB1": BroadlinkLB1UpdateManager,
+        "LB2": BroadlinkLB1UpdateManager,
         "MP1": BroadlinkMP1UpdateManager,
         "RM4MINI": BroadlinkRMUpdateManager,
         "RM4PRO": BroadlinkRMUpdateManager,
@@ -63,7 +65,7 @@ class BroadlinkUpdateManager(ABC):
 
         except (BroadlinkException, OSError) as err:
             if self.available and (
-                dt.utcnow() - self.last_update > self.SCAN_INTERVAL * 3
+                dt_util.utcnow() - self.last_update > self.SCAN_INTERVAL * 3
                 or isinstance(err, (AuthorizationError, OSError))
             ):
                 self.available = False
@@ -75,17 +77,16 @@ class BroadlinkUpdateManager(ABC):
                 )
             raise UpdateFailed(err) from err
 
-        else:
-            if self.available is False:
-                _LOGGER.warning(
-                    "Connected to %s (%s at %s)",
-                    self.device.name,
-                    self.device.api.model,
-                    self.device.api.host[0],
-                )
-            self.available = True
-            self.last_update = dt.utcnow()
-            return data
+        if self.available is False:
+            _LOGGER.warning(
+                "Connected to %s (%s at %s)",
+                self.device.name,
+                self.device.api.model,
+                self.device.api.host[0],
+            )
+        self.available = True
+        self.last_update = dt_util.utcnow()
+        return data
 
     @abstractmethod
     async def async_fetch_data(self):
@@ -184,3 +185,11 @@ class BroadlinkLB1UpdateManager(BroadlinkUpdateManager):
     async def async_fetch_data(self):
         """Fetch data from the device."""
         return await self.device.async_request(self.device.api.get_state)
+
+
+class BroadlinkThermostatUpdateManager(BroadlinkUpdateManager):
+    """Manages updates for thermostats with Broadlink DNA."""
+
+    async def async_fetch_data(self):
+        """Fetch data from the device."""
+        return await self.device.async_request(self.device.api.get_full_status)

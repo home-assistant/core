@@ -1,12 +1,17 @@
 """Support for Bizkaibus, Biscay (Basque Country, Spain) Bus service."""
+from __future__ import annotations
+
 from contextlib import suppress
 
 from bizkaibus.bizkaibus import BizkaibusData
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_NAME, TIME_MINUTES
+from homeassistant.const import CONF_NAME, UnitOfTime
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 ATTR_DUE_IN = "Due in"
 
@@ -24,7 +29,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Bizkaibus public transport sensor."""
     name = config[CONF_NAME]
     stop = config[CONF_STOP_ID]
@@ -37,14 +47,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BizkaibusSensor(SensorEntity):
     """The class for handling the data."""
 
-    _attr_native_unit_of_measurement = TIME_MINUTES
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
     def __init__(self, data, name):
         """Initialize the sensor."""
         self.data = data
         self._attr_name = name
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from the webservice."""
         self.data.update()
         with suppress(TypeError):

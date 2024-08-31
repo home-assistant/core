@@ -1,64 +1,58 @@
 """Support for the cloud for speech to text service."""
 from __future__ import annotations
 
-from aiohttp import StreamReader
-from hass_nabucasa import Cloud
-from hass_nabucasa.voice import VoiceError
+from collections.abc import AsyncIterable
+import logging
 
-from homeassistant.components.stt import Provider, SpeechMetadata, SpeechResult
-from homeassistant.components.stt.const import (
+from hass_nabucasa import Cloud
+from hass_nabucasa.voice import STT_LANGUAGES, VoiceError
+
+from homeassistant.components.stt import (
     AudioBitRates,
     AudioChannels,
     AudioCodecs,
     AudioFormats,
     AudioSampleRates,
+    SpeechMetadata,
+    SpeechResult,
     SpeechResultState,
+    SpeechToTextEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .assist_pipeline import async_migrate_cloud_pipeline_stt_engine
+from .client import CloudClient
+from .const import DOMAIN, STT_ENTITY_UNIQUE_ID
 
-SUPPORT_LANGUAGES = [
-    "da-DK",
-    "de-DE",
-    "en-AU",
-    "en-CA",
-    "en-GB",
-    "en-US",
-    "es-ES",
-    "fi-FI",
-    "fr-CA",
-    "fr-FR",
-    "it-IT",
-    "ja-JP",
-    "nl-NL",
-    "pl-PL",
-    "pt-PT",
-    "ru-RU",
-    "sv-SE",
-    "th-TH",
-    "zh-CN",
-    "zh-HK",
-]
+_LOGGER = logging.getLogger(__name__)
 
 
-async def async_get_engine(hass, config, discovery_info=None):
-    """Set up Cloud speech component."""
-    cloud: Cloud = hass.data[DOMAIN]
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Home Assistant Cloud speech platform via config entry."""
+    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    async_add_entities([CloudProviderEntity(cloud)])
 
-    return CloudProvider(cloud)
 
-
-class CloudProvider(Provider):
+class CloudProviderEntity(SpeechToTextEntity):
     """NabuCasa speech API provider."""
 
-    def __init__(self, cloud: Cloud) -> None:
+    _attr_name = "Home Assistant Cloud"
+    _attr_unique_id = STT_ENTITY_UNIQUE_ID
+
+    def __init__(self, cloud: Cloud[CloudClient]) -> None:
         """Home Assistant NabuCasa Speech to text."""
         self.cloud = cloud
 
     @property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
-        return SUPPORT_LANGUAGES
+        return STT_LANGUAGES
 
     @property
     def supported_formats(self) -> list[AudioFormats]:
@@ -85,18 +79,28 @@ class CloudProvider(Provider):
         """Return a list of supported channels."""
         return [AudioChannels.CHANNEL_MONO]
 
+    async def async_added_to_hass(self) -> None:
+        """Run when entity is about to be added to hass."""
+        await async_migrate_cloud_pipeline_stt_engine(self.hass, self.entity_id)
+
     async def async_process_audio_stream(
-        self, metadata: SpeechMetadata, stream: StreamReader
+        self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> SpeechResult:
         """Process an audio stream to STT service."""
-        content = f"audio/{metadata.format!s}; codecs=audio/{metadata.codec!s}; samplerate=16000"
+        content_type = (
+            f"audio/{metadata.format!s}; codecs=audio/{metadata.codec!s};"
+            " samplerate=16000"
+        )
 
         # Process STT
         try:
             result = await self.cloud.voice.process_stt(
-                stream, content, metadata.language
+                stream=stream,
+                content_type=content_type,
+                language=metadata.language,
             )
-        except VoiceError:
+        except VoiceError as err:
+            _LOGGER.error("Voice error: %s", err)
             return SpeechResult(None, SpeechResultState.ERROR)
 
         # Return Speech as Text

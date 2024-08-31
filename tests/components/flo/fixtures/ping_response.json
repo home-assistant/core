@@ -1,0 +1,8 @@
+{
+  "ipAddress": "11.111.111.111",
+  "userId": "12345abcde",
+  "action": "report",
+  "type": "user",
+  "appName": "legacy",
+  "userData": { "account": { "type": "personal" } }
+}

@@ -7,10 +7,10 @@ from env_canada import ECWeather, ec_exc
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_LANGUAGE, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_LANGUAGE, CONF_STATION, CONF_TITLE, DOMAIN
+from .const import CONF_STATION, CONF_TITLE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,7 +94,3 @@ class EnvironmentCanadaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
         )
-
-    async def async_step_import(self, import_data):
-        """Import entry from configuration.yaml."""
-        return await self.async_step_user(import_data)

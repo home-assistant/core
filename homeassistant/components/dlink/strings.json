@@ -1,0 +1,35 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "use_legacy_protocol": "Use legacy protocol"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your D-Link device",
+          "password": "Default: PIN code on the back."
+        }
+      },
+      "confirm_discovery": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "use_legacy_protocol": "[%key:component::dlink::config::step::user::data::use_legacy_protocol%]"
+        },
+        "data_description": {
+          "password": "[%key:component::dlink::config::step::user::data_description::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

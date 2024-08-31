@@ -1,5 +1,4 @@
-"""
-Support for Fido.
+"""Support for Fido.
 
 Get data from 'Usage Summary' page:
 https://www.fido.ca/pages/#/my-account/wireless
@@ -15,6 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -23,10 +23,14 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
-    DATA_KILOBITS,
-    TIME_MINUTES,
+    UnitOfInformation,
+    UnitOfTime,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,19 +59,22 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="data_used",
         name="Data used",
-        native_unit_of_measurement=DATA_KILOBITS,
+        native_unit_of_measurement=UnitOfInformation.KILOBITS,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="data_limit",
         name="Data limit",
-        native_unit_of_measurement=DATA_KILOBITS,
+        native_unit_of_measurement=UnitOfInformation.KILOBITS,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="data_remaining",
         name="Data remaining",
-        native_unit_of_measurement=DATA_KILOBITS,
+        native_unit_of_measurement=UnitOfInformation.KILOBITS,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:download",
     ),
     SensorEntityDescription(
@@ -127,37 +134,37 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="talk_used",
         name="Talk used",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:cellphone",
     ),
     SensorEntityDescription(
         key="talk_limit",
         name="Talk limit",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:cellphone",
     ),
     SensorEntityDescription(
         key="talk_remaining",
         name="Talk remaining",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:cellphone",
     ),
     SensorEntityDescription(
         key="other_talk_used",
         name="Other Talk used",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:cellphone",
     ),
     SensorEntityDescription(
         key="other_talk_limit",
         name="Other Talk limit",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:cellphone",
     ),
     SensorEntityDescription(
         key="other_talk_remaining",
         name="Other Talk remaining",
-        native_unit_of_measurement=TIME_MINUTES,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:cellphone",
     ),
 )
@@ -176,12 +183,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Fido sensor."""
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
 
-    httpsession = hass.helpers.aiohttp_client.async_get_clientsession()
+    httpsession = async_get_clientsession(hass)
     fido_data = FidoData(username, password, httpsession)
     ret = await fido_data.async_update()
     if ret is False:
@@ -202,7 +214,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class FidoSensor(SensorEntity):
     """Implementation of a Fido sensor."""
 
-    def __init__(self, fido_data, name, number, description: SensorEntityDescription):
+    def __init__(
+        self, fido_data, name, number, description: SensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.fido_data = fido_data
@@ -215,17 +229,16 @@ class FidoSensor(SensorEntity):
         """Return the state attributes of the sensor."""
         return {"number": self._number}
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from Fido and update the state."""
         await self.fido_data.async_update()
         if (sensor_type := self.entity_description.key) == "balance":
             if self.fido_data.data.get(sensor_type) is not None:
                 self._attr_native_value = round(self.fido_data.data[sensor_type], 2)
-        else:
-            if self.fido_data.data.get(self._number, {}).get(sensor_type) is not None:
-                self._attr_native_value = round(
-                    self.fido_data.data[self._number][sensor_type], 2
-                )
+        elif self.fido_data.data.get(self._number, {}).get(sensor_type) is not None:
+            self._attr_native_value = round(
+                self.fido_data.data[self._number][sensor_type], 2
+            )
 
 
 class FidoData:

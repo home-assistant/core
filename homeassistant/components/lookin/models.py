@@ -4,17 +4,25 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from aiolookin import Device, LookInHttpProtocol, LookinUDPSubscriptions
+from aiolookin import (
+    Device,
+    LookInHttpProtocol,
+    LookinUDPSubscriptions,
+    MeteoSensor,
+    Remote,
+)
 
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from .coordinator import LookinDataUpdateCoordinator
 
 
 @dataclass
 class LookinData:
     """Data for the lookin integration."""
 
+    host: str
     lookin_udp_subs: LookinUDPSubscriptions
     lookin_device: Device
-    meteo_coordinator: DataUpdateCoordinator
+    meteo_coordinator: LookinDataUpdateCoordinator[MeteoSensor] | None
     devices: list[dict[str, Any]]
     lookin_protocol: LookInHttpProtocol
+    device_coordinators: dict[str, LookinDataUpdateCoordinator[Remote]]

@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 from aiomodernforms import ModernFormsConnectionError
+import pytest
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.modern_forms.const import (
@@ -21,17 +22,18 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.modern_forms import init_integration
+from . import init_integration
+
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_light_state(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test the creation and values of the Modern Forms lights."""
     await init_integration(hass, aioclient_mock)
-
-    entity_registry = er.async_get(hass)
 
     state = hass.states.get("light.modernformsfan_light")
     assert state
@@ -45,7 +47,9 @@ async def test_light_state(
 
 
 async def test_change_state(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the change of state of the Modern Forms segments."""
     await init_integration(hass, aioclient_mock)
@@ -74,7 +78,9 @@ async def test_change_state(
 
 
 async def test_sleep_timer_services(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the change of state of the Modern Forms segments."""
     await init_integration(hass, aioclient_mock)
@@ -101,7 +107,9 @@ async def test_sleep_timer_services(
 
 
 async def test_light_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error handling of the Modern Forms lights."""
 

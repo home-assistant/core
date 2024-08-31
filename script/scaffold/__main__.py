@@ -59,7 +59,9 @@ def main():
         # If it's a new integration and it's not a config flow,
         # create a config flow too.
         if not args.template.startswith("config_flow"):
-            if info.oauth2:
+            if info.helper:
+                template = "config_flow_helper"
+            elif info.oauth2:
                 template = "config_flow_oauth2"
             elif info.authentication or not info.discoverable:
                 template = "config_flow"
@@ -75,11 +77,13 @@ def main():
     pipe_null = {} if args.develop else {"stdout": subprocess.DEVNULL}
 
     print("Running hassfest to pick up new information.")
-    subprocess.run(["python", "-m", "script.hassfest"], **pipe_null)
+    subprocess.run(["python", "-m", "script.hassfest"], **pipe_null, check=True)
     print()
 
     print("Running gen_requirements_all to pick up new information.")
-    subprocess.run(["python", "-m", "script.gen_requirements_all"], **pipe_null)
+    subprocess.run(
+        ["python", "-m", "script.gen_requirements_all"], **pipe_null, check=True
+    )
     print()
 
     print("Running script/translations_develop to pick up new translation strings.")
@@ -93,13 +97,24 @@ def main():
             info.domain,
         ],
         **pipe_null,
+        check=True,
     )
     print()
 
     if args.develop:
         print("Running tests")
-        print(f"$ pytest -vvv tests/components/{info.domain}")
-        subprocess.run(["pytest", "-vvv", f"tests/components/{info.domain}"])
+        print(f"$ python3 -b -m pytest -vvv tests/components/{info.domain}")
+        subprocess.run(
+            [
+                "python3",
+                "-b",
+                "-m",
+                "pytest",
+                "-vvv",
+                f"tests/components/{info.domain}",
+            ],
+            check=True,
+        )
         print()
 
     docs.print_relevant_docs(args.template, info)

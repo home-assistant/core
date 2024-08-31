@@ -1,4 +1,6 @@
 """Support for departure information for public transport in Munich."""
+from __future__ import annotations
+
 from copy import deepcopy
 from datetime import timedelta
 import logging
@@ -7,8 +9,11 @@ import MVGLive
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, TIME_MINUTES
+from homeassistant.const import CONF_NAME, UnitOfTime
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +45,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NEXT_DEPARTURE): [
+        vol.Required(CONF_NEXT_DEPARTURE): [
             {
                 vol.Required(CONF_STATION): cv.string,
                 vol.Optional(CONF_DESTINATIONS, default=[""]): cv.ensure_list_csv,
@@ -58,10 +63,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the MVGLive sensor."""
     sensors = []
-    for nextdeparture in config.get(CONF_NEXT_DEPARTURE):
+    for nextdeparture in config[CONF_NEXT_DEPARTURE]:
         sensors.append(
             MVGLiveSensor(
                 nextdeparture.get(CONF_STATION),
@@ -79,6 +89,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class MVGLiveSensor(SensorEntity):
     """Implementation of an MVG Live sensor."""
+
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
@@ -129,9 +141,9 @@ class MVGLiveSensor(SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return TIME_MINUTES
+        return UnitOfTime.MINUTES
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and update the state."""
         self.data.update()
         if not self.data.departures:
@@ -200,7 +212,7 @@ class MVGLiveData:
                 continue
 
             # now select the relevant data
-            _nextdep = {ATTR_ATTRIBUTION: ATTRIBUTION}
+            _nextdep = {}
             for k in ("destination", "linename", "time", "direction", "product"):
                 _nextdep[k] = _departure.get(k, "")
             _nextdep["time"] = int(_nextdep["time"])

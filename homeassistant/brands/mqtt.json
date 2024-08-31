@@ -1,0 +1,12 @@
+{
+  "domain": "mqtt",
+  "name": "MQTT",
+  "integrations": [
+    "manual_mqtt",
+    "mqtt",
+    "mqtt_eventstream",
+    "mqtt_json",
+    "mqtt_room",
+    "mqtt_statestream"
+  ]
+}

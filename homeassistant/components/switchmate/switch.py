@@ -1,13 +1,18 @@
 """Support for Switchmate."""
-from datetime import timedelta
+from __future__ import annotations
 
-# pylint: disable=import-error
-import switchmate
+from datetime import timedelta
+from typing import Any
+
+from switchmate import Switchmate
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_MAC, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 CONF_FLIP_ON_OFF = "flip_on_off"
 DEFAULT_NAME = "Switchmate"
@@ -23,7 +28,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Perform the setup for Switchmate devices."""
     name = config.get(CONF_NAME)
     mac_addr = config[CONF_MAC]
@@ -39,7 +49,7 @@ class SwitchmateEntity(SwitchEntity):
 
         self._mac = mac
         self._name = name
-        self._device = switchmate.Switchmate(mac=mac, flip_on_off=flip_on_off)
+        self._device = Switchmate(mac=mac, flip_on_off=flip_on_off)
 
     @property
     def unique_id(self) -> str:
@@ -56,19 +66,19 @@ class SwitchmateEntity(SwitchEntity):
         """Return the name of the switch."""
         return self._name
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Synchronize state with switch."""
-        self._device.update()
+        await self._device.update()
 
     @property
     def is_on(self) -> bool:
         """Return true if it is on."""
         return self._device.state
 
-    def turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        self._device.turn_on()
+        await self._device.turn_on()
 
-    def turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        self._device.turn_off()
+        await self._device.turn_off()

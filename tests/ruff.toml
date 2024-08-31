@@ -1,0 +1,37 @@
+# This extend our general Ruff rules specifically for tests
+extend = "../pyproject.toml"
+
+extend-select = [
+    "PT001", # Use @pytest.fixture without parentheses
+    "PT002", # Configuration for fixture specified via positional args, use kwargs
+    "PT003", # The scope='function' is implied in @pytest.fixture()
+    "PT006", # Single parameter in parameterize is a string, multiple a tuple
+    "PT013", # Found incorrect pytest import, use simple import pytest instead
+    "PT015", # Assertion always fails, replace with pytest.fail()
+    "PT021", # use yield instead of request.addfinalizer
+    "PT022", # No teardown in fixture, replace useless yield with return
+]
+
+extend-ignore = [
+    "PLC", # pylint
+    "PLE", # pylint
+    "PLR", # pylint
+    "PLW", # pylint
+    "N815", # Variable {name} in class scope should not be mixedCase
+]
+
+[isort]
+known-first-party = [
+    "homeassistant",
+    "tests",
+    "script",
+]
+known-third-party = [
+    "syrupy",
+    "pytest",
+    "voluptuous",
+    "pylint",
+]
+forced-separate = [
+    "tests",
+]

@@ -1,12 +1,16 @@
 """Support for the Xiaomi IR Remote (Chuangmi IR)."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
 import time
+from typing import Any
 
 from miio import ChuangmiIr, DeviceException
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.components.remote import (
     ATTR_DELAY_SECS,
     ATTR_NUM_REPEATS,
@@ -21,8 +25,11 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_TOKEN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utcnow
 
 from .const import SERVICE_LEARN, SERVICE_SET_REMOTE_LED_OFF, SERVICE_SET_REMOTE_LED_ON
@@ -58,7 +65,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Xiaomi IR Remote (Chuangmi IR) platform."""
     host = config[CONF_HOST]
     token = config[CONF_TOKEN]
@@ -128,8 +140,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             if "code" in message and message["code"]:
                 log_msg = "Received command is: {}".format(message["code"])
                 _LOGGER.info(log_msg)
-                hass.components.persistent_notification.async_create(
-                    log_msg, title="Xiaomi Miio Remote"
+                persistent_notification.async_create(
+                    hass, log_msg, title="Xiaomi Miio Remote"
                 )
                 return
 
@@ -139,8 +151,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             await asyncio.sleep(1)
 
         _LOGGER.error("Timeout. No infrared command captured")
-        hass.components.persistent_notification.async_create(
-            "Timeout. No infrared command captured", title="Xiaomi Miio Remote"
+        persistent_notification.async_create(
+            hass, "Timeout. No infrared command captured", title="Xiaomi Miio Remote"
         )
 
     platform = entity_platform.async_get_current_platform()
@@ -169,6 +181,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 class XiaomiMiioRemote(RemoteEntity):
     """Representation of a Xiaomi Miio Remote device."""
+
+    _attr_should_poll = False
 
     def __init__(self, friendly_name, device, unique_id, slot, timeout, commands):
         """Initialize the remote."""
@@ -214,19 +228,14 @@ class XiaomiMiioRemote(RemoteEntity):
         except DeviceException:
             return False
 
-    @property
-    def should_poll(self):
-        """We should not be polled for device up state."""
-        return False
-
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         _LOGGER.error(
             "Device does not support turn_on, "
             "please use 'remote.send_command' to send commands"
         )
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         _LOGGER.error(
             "Device does not support turn_off, "

@@ -1,6 +1,7 @@
 """Config flow to configure the devolo home control integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
@@ -49,7 +50,7 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle zeroconf discovery."""
         # Check if it is a gateway
-        if discovery_info[zeroconf.ATTR_PROPERTIES].get("MT") in SUPPORTED_MODEL_TYPES:
+        if discovery_info.properties.get("MT") in SUPPORTED_MODEL_TYPES:
             await self._async_handle_discovery_without_unique_id()
             return await self.async_step_zeroconf_confirm()
         return self.async_abort(reason="Not a devolo Home Control gateway.")
@@ -67,14 +68,14 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="zeroconf_confirm", errors={"base": "invalid_auth"}
             )
 
-    async def async_step_reauth(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle reauthentication."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
-        self._url = user_input[CONF_MYDEVOLO]
+        self._url = entry_data[CONF_MYDEVOLO]
         self.data_schema = {
-            vol.Required(CONF_USERNAME, default=user_input[CONF_USERNAME]): str,
+            vol.Required(CONF_USERNAME, default=entry_data[CONF_USERNAME]): str,
             vol.Required(CONF_PASSWORD): str,
         }
         return await self.async_step_reauth_confirm()

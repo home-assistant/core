@@ -1,18 +1,29 @@
 """Support for Abode Security System binary sensors."""
-import abodepy.helpers.constants as CONST
+from __future__ import annotations
+
+from typing import cast
+
+from jaraco.abode.devices.sensor import BinarySensor as ABBinarySensor
+from jaraco.abode.helpers import constants as CONST
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_WINDOW,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.enum import try_parse_enum
 
-from . import AbodeDevice
+from . import AbodeDevice, AbodeSystem
 from .const import DOMAIN
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Abode binary sensor devices."""
-    data = hass.data[DOMAIN]
+    data: AbodeSystem = hass.data[DOMAIN]
 
     device_types = [
         CONST.TYPE_CONNECTIVITY,
@@ -22,25 +33,26 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         CONST.TYPE_OPENING,
     ]
 
-    entities = []
-
-    for device in data.abode.get_devices(generic_type=device_types):
-        entities.append(AbodeBinarySensor(data, device))
-
-    async_add_entities(entities)
+    async_add_entities(
+        AbodeBinarySensor(data, device)
+        for device in data.abode.get_devices(generic_type=device_types)
+    )
 
 
 class AbodeBinarySensor(AbodeDevice, BinarySensorEntity):
     """A binary sensor implementation for Abode device."""
 
-    @property
-    def is_on(self):
-        """Return True if the binary sensor is on."""
-        return self._device.is_on
+    _attr_name = None
+    _device: ABBinarySensor
 
     @property
-    def device_class(self):
+    def is_on(self) -> bool:
+        """Return True if the binary sensor is on."""
+        return cast(bool, self._device.is_on)
+
+    @property
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of the binary sensor."""
         if self._device.get_value("is_window") == "1":
-            return DEVICE_CLASS_WINDOW
-        return self._device.generic_type
+            return BinarySensorDeviceClass.WINDOW
+        return try_parse_enum(BinarySensorDeviceClass, self._device.generic_type)

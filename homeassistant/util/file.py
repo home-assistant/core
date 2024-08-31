@@ -54,11 +54,10 @@ def write_utf8_file(
     """
 
     tmp_filename = ""
-    tmp_path = os.path.split(filename)[0]
     try:
         # Modern versions of Python tempfile create this file with mode 0o600
         with tempfile.NamedTemporaryFile(
-            mode="w", encoding="utf-8", dir=tmp_path, delete=False
+            mode="w", encoding="utf-8", dir=os.path.dirname(filename), delete=False
         ) as fdesc:
             fdesc.write(utf8_data)
             tmp_filename = fdesc.name

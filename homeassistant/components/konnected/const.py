@@ -13,7 +13,6 @@ CONF_INVERSE = "inverse"
 CONF_BLINK = "blink"
 CONF_DHT_SENSORS = "dht_sensors"
 CONF_DS18B20_SENSORS = "ds18b20_sensors"
-CONF_MODEL = "model"
 
 STATE_LOW = "low"
 STATE_HIGH = "high"

@@ -2,40 +2,37 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
+from collections.abc import Callable, Coroutine
 from functools import partial, wraps
 import inspect
 import logging
 import logging.handlers
 import queue
 import traceback
-from typing import Any, Awaitable, Callable, cast, overload
+from typing import Any, TypeVar, TypeVarTuple, cast, overload
 
-from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import HomeAssistant, callback, is_callback
 
-
-class HideSensitiveDataFilter(logging.Filter):
-    """Filter API password calls."""
-
-    def __init__(self, text: str) -> None:
-        """Initialize sensitive data filter."""
-        super().__init__()
-        self.text = text
-
-    def filter(self, record: logging.LogRecord) -> bool:
-        """Hide sensitive data in messages."""
-        record.msg = record.msg.replace(self.text, "*******")
-
-        return True
+_T = TypeVar("_T")
+_Ts = TypeVarTuple("_Ts")
 
 
 class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
     """Process the log in another thread."""
 
-    def handle(self, record: logging.LogRecord) -> Any:
+    listener: logging.handlers.QueueListener | None = None
+
+    def prepare(self, record: logging.LogRecord) -> logging.LogRecord:
+        """Prepare a record for queuing.
+
+        This is added as a workaround for https://bugs.python.org/issue46755
         """
-        Conditionally emit the specified logging record.
+        record = super().prepare(record)
+        record.stack_info = None
+        return record
+
+    def handle(self, record: logging.LogRecord) -> Any:
+        """Conditionally emit the specified logging record.
 
         Depending on which filters have been added to the handler, push the new
         records onto the backing Queue.
@@ -51,20 +48,30 @@ class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
             self.emit(record)
         return return_value
 
+    def close(self) -> None:
+        """Tidy up any resources used by the handler.
+
+        This adds shutdown of the QueueListener
+        """
+        super().close()
+        if not self.listener:
+            return
+        self.listener.stop()
+        self.listener = None
+
 
 @callback
 def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
-    """
-    Migrate the existing log handlers to use the queue.
+    """Migrate the existing log handlers to use the queue.
 
     This allows us to avoid blocking I/O and formatting messages
     in the event loop as log messages are written in another thread.
     """
-    simple_queue = queue.SimpleQueue()  # type: ignore
+    simple_queue: queue.SimpleQueue[logging.Handler] = queue.SimpleQueue()
     queue_handler = HomeAssistantQueueHandler(simple_queue)
     logging.root.addHandler(queue_handler)
 
-    migrated_handlers = []
+    migrated_handlers: list[logging.Handler] = []
     for handler in logging.root.handlers[:]:
         if handler is queue_handler:
             continue
@@ -72,22 +79,12 @@ def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
         migrated_handlers.append(handler)
 
     listener = logging.handlers.QueueListener(simple_queue, *migrated_handlers)
+    queue_handler.listener = listener
 
     listener.start()
 
-    @callback
-    def _async_stop_queue_handler(_: Any) -> None:
-        """Cleanup handler."""
-        # Ensure any messages that happen after close still get logged
-        for original_handler in migrated_handlers:
-            logging.root.addHandler(original_handler)
-        logging.root.removeHandler(queue_handler)
-        listener.stop()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_stop_queue_handler)
-
-
-def log_exception(format_err: Callable[..., Any], *args: Any) -> None:
+def log_exception(format_err: Callable[[*_Ts], Any], *args: *_Ts) -> None:
     """Log an exception with additional context."""
     module = inspect.getmodule(inspect.stack(context=0)[1].frame)
     if module is not None:
@@ -105,67 +102,82 @@ def log_exception(format_err: Callable[..., Any], *args: Any) -> None:
     logging.getLogger(module_name).error("%s\n%s", friendly_msg, exc_msg)
 
 
-@overload
-def catch_log_exception(  # type: ignore
-    func: Callable[..., Awaitable[Any]], format_err: Callable[..., Any], *args: Any
-) -> Callable[..., Awaitable[None]]:
-    """Overload for Callables that return an Awaitable."""
+async def _async_wrapper(
+    async_func: Callable[[*_Ts], Coroutine[Any, Any, None]],
+    format_err: Callable[[*_Ts], Any],
+    *args: *_Ts,
+) -> None:
+    """Catch and log exception."""
+    try:
+        await async_func(*args)
+    except Exception:  # pylint: disable=broad-except
+        log_exception(format_err, *args)
+
+
+def _sync_wrapper(
+    func: Callable[[*_Ts], Any], format_err: Callable[[*_Ts], Any], *args: *_Ts
+) -> None:
+    """Catch and log exception."""
+    try:
+        func(*args)
+    except Exception:  # pylint: disable=broad-except
+        log_exception(format_err, *args)
+
+
+@callback
+def _callback_wrapper(
+    func: Callable[[*_Ts], Any], format_err: Callable[[*_Ts], Any], *args: *_Ts
+) -> None:
+    """Catch and log exception."""
+    try:
+        func(*args)
+    except Exception:  # pylint: disable=broad-except
+        log_exception(format_err, *args)
 
 
 @overload
 def catch_log_exception(
-    func: Callable[..., Any], format_err: Callable[..., Any], *args: Any
-) -> Callable[..., None]:
-    """Overload for Callables that return Any."""
+    func: Callable[[*_Ts], Coroutine[Any, Any, Any]], format_err: Callable[[*_Ts], Any]
+) -> Callable[[*_Ts], Coroutine[Any, Any, None]]:
+    ...
+
+
+@overload
+def catch_log_exception(
+    func: Callable[[*_Ts], Any], format_err: Callable[[*_Ts], Any]
+) -> Callable[[*_Ts], None] | Callable[[*_Ts], Coroutine[Any, Any, None]]:
+    ...
 
 
 def catch_log_exception(
-    func: Callable[..., Any], format_err: Callable[..., Any], *args: Any
-) -> Callable[..., None] | Callable[..., Awaitable[None]]:
-    """Decorate a callback to catch and log exceptions."""
+    func: Callable[[*_Ts], Any], format_err: Callable[[*_Ts], Any]
+) -> Callable[[*_Ts], None] | Callable[[*_Ts], Coroutine[Any, Any, None]]:
+    """Decorate a function func to catch and log exceptions.
 
+    If func is a coroutine function, a coroutine function will be returned.
+    If func is a callback, a callback will be returned.
+    """
     # Check for partials to properly determine if coroutine function
     check_func = func
     while isinstance(check_func, partial):
-        check_func = check_func.func
+        check_func = check_func.func  # type: ignore[unreachable]  # false positive
 
-    wrapper_func: Callable[..., None] | Callable[..., Awaitable[None]]
     if asyncio.iscoroutinefunction(check_func):
-        async_func = cast(Callable[..., Awaitable[None]], func)
+        async_func = cast(Callable[[*_Ts], Coroutine[Any, Any, None]], func)
+        return wraps(async_func)(partial(_async_wrapper, async_func, format_err))  # type: ignore[return-value]
 
-        @wraps(async_func)
-        async def async_wrapper(*args: Any) -> None:
-            """Catch and log exception."""
-            try:
-                await async_func(*args)
-            except Exception:  # pylint: disable=broad-except
-                log_exception(format_err, *args)
+    if is_callback(check_func):
+        return wraps(func)(partial(_callback_wrapper, func, format_err))  # type: ignore[return-value]
 
-        wrapper_func = async_wrapper
-
-    else:
-
-        @wraps(func)
-        def wrapper(*args: Any) -> None:
-            """Catch and log exception."""
-            try:
-                func(*args)
-            except Exception:  # pylint: disable=broad-except
-                log_exception(format_err, *args)
-
-        if is_callback(check_func):
-            wrapper = callback(wrapper)
-
-        wrapper_func = wrapper
-    return wrapper_func
+    return wraps(func)(partial(_sync_wrapper, func, format_err))  # type: ignore[return-value]
 
 
 def catch_log_coro_exception(
-    target: Coroutine[Any, Any, Any], format_err: Callable[..., Any], *args: Any
-) -> Coroutine[Any, Any, Any]:
+    target: Coroutine[Any, Any, _T], format_err: Callable[[*_Ts], Any], *args: *_Ts
+) -> Coroutine[Any, Any, _T | None]:
     """Decorate a coroutine to catch and log exceptions."""
 
-    async def coro_wrapper(*args: Any) -> Any:
+    async def coro_wrapper(*args: *_Ts) -> _T | None:
         """Catch and log exception."""
         try:
             return await target
@@ -173,10 +185,12 @@ def catch_log_coro_exception(
             log_exception(format_err, *args)
             return None
 
-    return coro_wrapper()
+    return coro_wrapper(*args)
 
 
-def async_create_catching_coro(target: Coroutine) -> Coroutine:
+def async_create_catching_coro(
+    target: Coroutine[Any, Any, _T],
+) -> Coroutine[Any, Any, _T | None]:
     """Wrap a coroutine to catch and log exceptions.
 
     The exception will be logged together with a stacktrace of where the
@@ -187,7 +201,7 @@ def async_create_catching_coro(target: Coroutine) -> Coroutine:
     trace = traceback.extract_stack()
     wrapped_target = catch_log_coro_exception(
         target,
-        lambda *args: "Exception in {} called from\n {}".format(
+        lambda: "Exception in {} called from\n {}".format(
             target.__name__,
             "".join(traceback.format_list(trace[:-1])),
         ),

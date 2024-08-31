@@ -6,6 +6,7 @@ import secrets
 
 from toonapi import Status, Toon, ToonError
 
+from homeassistant.components import cloud, webhook
 from homeassistant.components.webhook import (
     async_register as webhook_register,
     async_unregister as webhook_unregister,
@@ -46,30 +47,30 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator[Status]):
             hass, _LOGGER, name=DOMAIN, update_interval=DEFAULT_SCAN_INTERVAL
         )
 
-    def update_listeners(self) -> None:
-        """Call update on all listeners."""
-        for update_callback in self._listeners:
-            update_callback()
-
     async def register_webhook(self, event: Event | None = None) -> None:
         """Register a webhook with Toon to get live updates."""
         if CONF_WEBHOOK_ID not in self.entry.data:
             data = {**self.entry.data, CONF_WEBHOOK_ID: secrets.token_hex()}
             self.hass.config_entries.async_update_entry(self.entry, data=data)
 
-        if self.hass.components.cloud.async_active_subscription():
-
+        if cloud.async_active_subscription(self.hass):
             if CONF_CLOUDHOOK_URL not in self.entry.data:
-                webhook_url = await self.hass.components.cloud.async_create_cloudhook(
-                    self.entry.data[CONF_WEBHOOK_ID]
-                )
-                data = {**self.entry.data, CONF_CLOUDHOOK_URL: webhook_url}
-                self.hass.config_entries.async_update_entry(self.entry, data=data)
+                try:
+                    webhook_url = await cloud.async_create_cloudhook(
+                        self.hass, self.entry.data[CONF_WEBHOOK_ID]
+                    )
+                except cloud.CloudNotConnected:
+                    webhook_url = webhook.async_generate_url(
+                        self.hass, self.entry.data[CONF_WEBHOOK_ID]
+                    )
+                else:
+                    data = {**self.entry.data, CONF_CLOUDHOOK_URL: webhook_url}
+                    self.hass.config_entries.async_update_entry(self.entry, data=data)
             else:
                 webhook_url = self.entry.data[CONF_CLOUDHOOK_URL]
         else:
-            webhook_url = self.hass.components.webhook.async_generate_url(
-                self.entry.data[CONF_WEBHOOK_ID]
+            webhook_url = webhook.async_generate_url(
+                self.hass, self.entry.data[CONF_WEBHOOK_ID]
             )
 
         # Ensure the webhook is not registered already
@@ -121,7 +122,7 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator[Status]):
 
         try:
             await self.toon.update(data["updateDataSet"])
-            self.update_listeners()
+            self.async_update_listeners()
         except ToonError as err:
             _LOGGER.error("Could not process data received from Toon webhook - %s", err)
 

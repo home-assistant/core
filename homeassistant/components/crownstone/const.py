@@ -3,9 +3,12 @@ from __future__ import annotations
 
 from typing import Final
 
+from homeassistant.const import Platform
+
 # Platforms
 DOMAIN: Final = "crownstone"
-PLATFORMS: Final[list[str]] = ["light"]
+PROJECT_NAME: Final = "home-assistant-core"
+PLATFORMS: Final[list[Platform]] = [Platform.LIGHT]
 
 # Listeners
 SSE_LISTENERS: Final = "sse_listeners"

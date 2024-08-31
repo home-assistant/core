@@ -3,24 +3,22 @@ from meteoclimatic import Condition
 
 from homeassistant.components.weather import WeatherEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfPressure, UnitOfSpeed, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import ATTRIBUTION, CONDITION_CLASSES, DOMAIN, MANUFACTURER, MODEL
+from .const import ATTRIBUTION, CONDITION_MAP, DOMAIN, MANUFACTURER, MODEL
 
 
 def format_condition(condition):
-    """Return condition from dict CONDITION_CLASSES."""
-    for key, value in CONDITION_CLASSES.items():
-        if condition in value:
-            return key
+    """Return condition from dict CONDITION_MAP."""
+    if condition in CONDITION_MAP:
+        return CONDITION_MAP[condition]
     if isinstance(condition, Condition):
         return condition.value
     return condition
@@ -37,6 +35,11 @@ async def async_setup_entry(
 
 class MeteoclimaticWeather(CoordinatorEntity, WeatherEntity):
     """Representation of a weather condition."""
+
+    _attr_attribution = ATTRIBUTION
+    _attr_native_pressure_unit = UnitOfPressure.HPA
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
 
     def __init__(self, coordinator: DataUpdateCoordinator) -> None:
         """Initialise the weather platform."""
@@ -71,14 +74,9 @@ class MeteoclimaticWeather(CoordinatorEntity, WeatherEntity):
         return format_condition(self.coordinator.data["weather"].condition)
 
     @property
-    def temperature(self):
+    def native_temperature(self):
         """Return the temperature."""
         return self.coordinator.data["weather"].temp_current
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
 
     @property
     def humidity(self):
@@ -86,12 +84,12 @@ class MeteoclimaticWeather(CoordinatorEntity, WeatherEntity):
         return self.coordinator.data["weather"].humidity_current
 
     @property
-    def pressure(self):
+    def native_pressure(self):
         """Return the pressure."""
         return self.coordinator.data["weather"].pressure_current
 
     @property
-    def wind_speed(self):
+    def native_wind_speed(self):
         """Return the wind speed."""
         return self.coordinator.data["weather"].wind_current
 
@@ -99,8 +97,3 @@ class MeteoclimaticWeather(CoordinatorEntity, WeatherEntity):
     def wind_bearing(self):
         """Return the wind bearing."""
         return self.coordinator.data["weather"].wind_bearing
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return ATTRIBUTION

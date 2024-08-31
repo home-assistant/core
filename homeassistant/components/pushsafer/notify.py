@@ -1,4 +1,6 @@
 """Pushsafer platform for notify component."""
+from __future__ import annotations
+
 import base64
 from http import HTTPStatus
 import logging
@@ -17,7 +19,9 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import ATTR_ICON
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "https://www.pushsafer.com/api"
@@ -36,7 +40,10 @@ ATTR_TIME2LIVE = "time2live"
 ATTR_PRIORITY = "priority"
 ATTR_RETRY = "retry"
 ATTR_EXPIRE = "expire"
+ATTR_CONFIRM = "confirm"
 ATTR_ANSWER = "answer"
+ATTR_ANSWEROPTIONS = "answeroptions"
+ATTR_ANSWERFORCE = "answerforce"
 ATTR_PICTURE1 = "picture1"
 
 # Attributes contained in picture1
@@ -49,7 +56,11 @@ ATTR_PICTURE1_AUTH = "auth"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_DEVICE_KEY): cv.string})
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> PushsaferNotificationService:
     """Get the Pushsafer.com notification service."""
     return PushsaferNotificationService(
         config.get(CONF_DEVICE_KEY), hass.config.is_allowed_path
@@ -112,7 +123,10 @@ class PushsaferNotificationService(BaseNotificationService):
             "pr": data.get(ATTR_PRIORITY, ""),
             "re": data.get(ATTR_RETRY, ""),
             "ex": data.get(ATTR_EXPIRE, ""),
+            "cr": data.get(ATTR_CONFIRM, ""),
             "a": data.get(ATTR_ANSWER, ""),
+            "ao": data.get(ATTR_ANSWEROPTIONS, ""),
+            "af": data.get(ATTR_ANSWERFORCE, ""),
             "p": picture1_encoded,
         }
 

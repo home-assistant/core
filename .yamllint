@@ -1,5 +1,6 @@
 ignore: |
   azure-*.yml
+  tests/fixtures/core/config/yaml_errors/
 rules:
   braces:
     level: error
@@ -25,7 +26,7 @@ rules:
   comments:
     level: error
     require-starting-space: true
-    min-spaces-from-content: 2
+    min-spaces-from-content: 1
   comments-indentation:
     level: error
   document-end:

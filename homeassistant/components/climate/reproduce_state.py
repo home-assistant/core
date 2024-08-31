@@ -10,6 +10,7 @@ from homeassistant.core import Context, HomeAssistant, State
 
 from .const import (
     ATTR_AUX_HEAT,
+    ATTR_FAN_MODE,
     ATTR_HUMIDITY,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
@@ -19,6 +20,7 @@ from .const import (
     DOMAIN,
     HVAC_MODES,
     SERVICE_SET_AUX_HEAT,
+    SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
@@ -36,7 +38,9 @@ async def _async_reproduce_states(
 ) -> None:
     """Reproduce component states."""
 
-    async def call_service(service: str, keys: Iterable, data=None):
+    async def call_service(
+        service: str, keys: Iterable, data: dict[str, Any] | None = None
+    ) -> None:
         """Call service with set of attributes given."""
         data = data or {}
         data["entity_id"] = state.entity_id
@@ -69,6 +73,9 @@ async def _async_reproduce_states(
 
     if ATTR_SWING_MODE in state.attributes:
         await call_service(SERVICE_SET_SWING_MODE, [ATTR_SWING_MODE])
+
+    if ATTR_FAN_MODE in state.attributes:
+        await call_service(SERVICE_SET_FAN_MODE, [ATTR_FAN_MODE])
 
     if ATTR_HUMIDITY in state.attributes:
         await call_service(SERVICE_SET_HUMIDITY, [ATTR_HUMIDITY])

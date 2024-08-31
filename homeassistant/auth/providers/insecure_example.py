@@ -11,10 +11,8 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
-
-# mypy: disallow-any-generics
+from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 
 USER_SCHEMA = vol.Schema(
     {
@@ -102,7 +100,7 @@ class ExampleLoginFlow(LoginFlow):
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Handle the step of the form."""
-        errors = {}
+        errors = None
 
         if user_input is not None:
             try:
@@ -110,7 +108,7 @@ class ExampleLoginFlow(LoginFlow):
                     user_input["username"], user_input["password"]
                 )
             except InvalidAuthError:
-                errors["base"] = "invalid_auth"
+                errors = {"base": "invalid_auth"}
 
             if not errors:
                 user_input.pop("password")

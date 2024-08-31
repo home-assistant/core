@@ -13,15 +13,13 @@ from homeassistant.components.tuya.const import (
     CONF_ACCESS_SECRET,
     CONF_APP_TYPE,
     CONF_AUTH_TYPE,
-    CONF_COUNTRY_CODE,
     CONF_ENDPOINT,
-    CONF_PASSWORD,
-    CONF_USERNAME,
     DOMAIN,
     SMARTLIFE_APP,
     TUYA_COUNTRIES,
     TUYA_SMART_APP,
 )
+from homeassistant.const import CONF_COUNTRY_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 MOCK_SMART_HOME_PROJECT_TYPE = 0
@@ -65,7 +63,7 @@ def tuya_setup_fixture() -> None:
 
 
 @pytest.mark.parametrize(
-    "app_type,side_effects, project_type",
+    ("app_type", "side_effects", "project_type"),
     [
         ("", [RESPONSE_SUCCESS], 1),
         (TUYA_SMART_APP, [RESPONSE_ERROR, RESPONSE_SUCCESS], 0),
@@ -84,7 +82,7 @@ async def test_user_flow(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     tuya().connect = MagicMock(side_effect=side_effects)
@@ -95,7 +93,7 @@ async def test_user_flow(
 
     country = [country for country in TUYA_COUNTRIES if country.name == MOCK_COUNTRY][0]
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_USERNAME
     assert result["data"][CONF_ACCESS_ID] == MOCK_ACCESS_ID
     assert result["data"][CONF_ACCESS_SECRET] == MOCK_ACCESS_SECRET
@@ -108,14 +106,14 @@ async def test_user_flow(
     assert not result["result"].unique_id
 
 
-async def test_error_on_invalid_credentials(hass, tuya):
+async def test_error_on_invalid_credentials(hass: HomeAssistant, tuya) -> None:
     """Test when we have invalid credentials."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     tuya().connect = MagicMock(return_value=RESPONSE_ERROR)

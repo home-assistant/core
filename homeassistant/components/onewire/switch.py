@@ -2,29 +2,27 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 import os
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-from homeassistant.components.onewire.model import OWServerDeviceDescription
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TYPE, ENTITY_CATEGORY_CONFIG
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    CONF_TYPE_OWSERVER,
+    DEVICE_KEYS_0_3,
     DEVICE_KEYS_0_7,
     DEVICE_KEYS_A_B,
     DOMAIN,
     READ_MODE_BOOL,
 )
-from .onewire_entities import OneWireEntityDescription, OneWireProxyEntity
+from .onewire_entities import OneWireEntity, OneWireEntityDescription
 from .onewirehub import OneWireHub
 
 
-@dataclass
+@dataclass(frozen=True)
 class OneWireSwitchEntityDescription(OneWireEntityDescription, SwitchEntityDescription):
     """Class describing OneWire switch entities."""
 
@@ -34,8 +32,8 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
         OneWireSwitchEntityDescription(
             key="PIO",
             entity_registry_enabled_default=False,
-            name="PIO",
             read_mode=READ_MODE_BOOL,
+            translation_key="pio",
         ),
     ),
     "12": tuple(
@@ -43,8 +41,8 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
             OneWireSwitchEntityDescription(
                 key=f"PIO.{id}",
                 entity_registry_enabled_default=False,
-                name=f"PIO {id}",
                 read_mode=READ_MODE_BOOL,
+                translation_key=f"pio_{id.lower()}",
             )
             for id in DEVICE_KEYS_A_B
         ]
@@ -52,8 +50,8 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
             OneWireSwitchEntityDescription(
                 key=f"latch.{id}",
                 entity_registry_enabled_default=False,
-                name=f"Latch {id}",
                 read_mode=READ_MODE_BOOL,
+                translation_key=f"latch_{id.lower()}",
             )
             for id in DEVICE_KEYS_A_B
         ]
@@ -62,9 +60,9 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
         OneWireSwitchEntityDescription(
             key="IAD",
             entity_registry_enabled_default=False,
-            entity_category=ENTITY_CATEGORY_CONFIG,
-            name="IAD",
+            entity_category=EntityCategory.CONFIG,
             read_mode=READ_MODE_BOOL,
+            translation_key="iad",
         ),
     ),
     "29": tuple(
@@ -72,8 +70,8 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
             OneWireSwitchEntityDescription(
                 key=f"PIO.{id}",
                 entity_registry_enabled_default=False,
-                name=f"PIO {id}",
                 read_mode=READ_MODE_BOOL,
+                translation_key=f"pio_{id}",
             )
             for id in DEVICE_KEYS_0_7
         ]
@@ -81,8 +79,8 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
             OneWireSwitchEntityDescription(
                 key=f"latch.{id}",
                 entity_registry_enabled_default=False,
-                name=f"Latch {id}",
                 read_mode=READ_MODE_BOOL,
+                translation_key=f"latch_{id}",
             )
             for id in DEVICE_KEYS_0_7
         ]
@@ -91,14 +89,59 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
         OneWireSwitchEntityDescription(
             key=f"PIO.{id}",
             entity_registry_enabled_default=False,
-            name=f"PIO {id}",
             read_mode=READ_MODE_BOOL,
+            translation_key=f"pio_{id.lower()}",
         )
         for id in DEVICE_KEYS_A_B
     ),
+    "EF": (),  # "HobbyBoard": special
 }
 
-LOGGER = logging.getLogger(__name__)
+# EF sensors are usually hobbyboards specialized sensors.
+
+HOBBYBOARD_EF: dict[str, tuple[OneWireEntityDescription, ...]] = {
+    "HB_HUB": tuple(
+        OneWireSwitchEntityDescription(
+            key=f"hub/branch.{id}",
+            entity_registry_enabled_default=False,
+            read_mode=READ_MODE_BOOL,
+            entity_category=EntityCategory.CONFIG,
+            translation_key=f"hub_branch_{id}",
+        )
+        for id in DEVICE_KEYS_0_3
+    ),
+    "HB_MOISTURE_METER": tuple(
+        [
+            OneWireSwitchEntityDescription(
+                key=f"moisture/is_leaf.{id}",
+                entity_registry_enabled_default=False,
+                read_mode=READ_MODE_BOOL,
+                entity_category=EntityCategory.CONFIG,
+                translation_key=f"leaf_sensor_{id}",
+            )
+            for id in DEVICE_KEYS_0_3
+        ]
+        + [
+            OneWireSwitchEntityDescription(
+                key=f"moisture/is_moisture.{id}",
+                entity_registry_enabled_default=False,
+                read_mode=READ_MODE_BOOL,
+                entity_category=EntityCategory.CONFIG,
+                translation_key=f"moisture_sensor_{id}",
+            )
+            for id in DEVICE_KEYS_0_3
+        ]
+    ),
+}
+
+
+def get_sensor_types(
+    device_sub_type: str,
+) -> dict[str, tuple[OneWireEntityDescription, ...]]:
+    """Return the proper info array for the device type."""
+    if "HobbyBoard" in device_sub_type:
+        return HOBBYBOARD_EF
+    return DEVICE_SWITCHES
 
 
 async def async_setup_entry(
@@ -107,48 +150,47 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up 1-Wire platform."""
-    # Only OWServer implementation works with switches
-    if config_entry.data[CONF_TYPE] == CONF_TYPE_OWSERVER:
-        onewirehub = hass.data[DOMAIN][config_entry.entry_id]
+    onewire_hub = hass.data[DOMAIN][config_entry.entry_id]
 
-        entities = await hass.async_add_executor_job(get_entities, onewirehub)
-        async_add_entities(entities, True)
+    entities = await hass.async_add_executor_job(get_entities, onewire_hub)
+    async_add_entities(entities, True)
 
 
-def get_entities(onewirehub: OneWireHub) -> list[SwitchEntity]:
+def get_entities(onewire_hub: OneWireHub) -> list[OneWireSwitch]:
     """Get a list of entities."""
-    if not onewirehub.devices:
+    if not onewire_hub.devices:
         return []
 
-    entities: list[SwitchEntity] = []
+    entities: list[OneWireSwitch] = []
 
-    for device in onewirehub.devices:
-        if TYPE_CHECKING:
-            assert isinstance(device, OWServerDeviceDescription)
+    for device in onewire_hub.devices:
         family = device.family
+        device_type = device.type
         device_id = device.id
         device_info = device.device_info
+        device_sub_type = "std"
+        if "EF" in family:
+            device_sub_type = "HobbyBoard"
+            family = device_type
 
-        if family not in DEVICE_SWITCHES:
+        if family not in get_sensor_types(device_sub_type):
             continue
-        for description in DEVICE_SWITCHES[family]:
+        for description in get_sensor_types(device_sub_type)[family]:
             device_file = os.path.join(os.path.split(device.path)[0], description.key)
-            name = f"{device_id} {description.name}"
             entities.append(
-                OneWireProxySwitch(
+                OneWireSwitch(
                     description=description,
                     device_id=device_id,
                     device_file=device_file,
                     device_info=device_info,
-                    name=name,
-                    owproxy=onewirehub.owproxy,
+                    owproxy=onewire_hub.owproxy,
                 )
             )
 
     return entities
 
 
-class OneWireProxySwitch(OneWireProxyEntity, SwitchEntity):
+class OneWireSwitch(OneWireEntity, SwitchEntity):
     """Implementation of a 1-Wire switch."""
 
     entity_description: OneWireSwitchEntityDescription
@@ -160,8 +202,8 @@ class OneWireProxySwitch(OneWireProxyEntity, SwitchEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        self._write_value_ownet(b"1")
+        self._write_value(b"1")
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        self._write_value_ownet(b"0")
+        self._write_value(b"0")

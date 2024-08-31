@@ -1,4 +1,5 @@
 """The tests for the Remote component, adapted from Light Test."""
+import pytest
 
 import homeassistant.components.remote as remote
 from homeassistant.components.remote import (
@@ -19,8 +20,9 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 
-from tests.common import async_mock_service
+from tests.common import async_mock_service, import_and_test_deprecated_constant_enum
 
 TEST_PLATFORM = {DOMAIN: {CONF_PLATFORM: "test"}}
 SERVICE_SEND_COMMAND = "send_command"
@@ -29,7 +31,7 @@ SERVICE_DELETE_COMMAND = "delete_command"
 ENTITY_ID = "entity_id_val"
 
 
-async def test_is_on(hass):
+async def test_is_on(hass: HomeAssistant) -> None:
     """Test is_on."""
     hass.states.async_set("remote.test", STATE_ON)
     assert remote.is_on(hass, "remote.test")
@@ -38,7 +40,7 @@ async def test_is_on(hass):
     assert not remote.is_on(hass, "remote.test")
 
 
-async def test_turn_on(hass):
+async def test_turn_on(hass: HomeAssistant) -> None:
     """Test turn_on."""
     turn_on_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
     await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID})
@@ -51,7 +53,7 @@ async def test_turn_on(hass):
     assert call.domain == DOMAIN
 
 
-async def test_turn_off(hass):
+async def test_turn_off(hass: HomeAssistant) -> None:
     """Test turn_off."""
     turn_off_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
 
@@ -69,7 +71,7 @@ async def test_turn_off(hass):
     assert call.data[ATTR_ENTITY_ID] == ENTITY_ID
 
 
-async def test_send_command(hass):
+async def test_send_command(hass: HomeAssistant) -> None:
     """Test send_command."""
     send_command_calls = async_mock_service(hass, DOMAIN, SERVICE_SEND_COMMAND)
 
@@ -93,7 +95,7 @@ async def test_send_command(hass):
     assert call.data[ATTR_ENTITY_ID] == ENTITY_ID
 
 
-async def test_learn_command(hass):
+async def test_learn_command(hass: HomeAssistant) -> None:
     """Test learn_command."""
     learn_command_calls = async_mock_service(hass, DOMAIN, SERVICE_LEARN_COMMAND)
 
@@ -117,7 +119,7 @@ async def test_learn_command(hass):
     assert call.data[ATTR_ENTITY_ID] == ENTITY_ID
 
 
-async def test_delete_command(hass):
+async def test_delete_command(hass: HomeAssistant) -> None:
     """Test delete_command."""
     delete_command_calls = async_mock_service(
         hass, remote.DOMAIN, SERVICE_DELETE_COMMAND
@@ -141,11 +143,10 @@ async def test_delete_command(hass):
     assert call.data[ATTR_ENTITY_ID] == ENTITY_ID
 
 
-async def test_deprecated_base_class(caplog):
-    """Test deprecated base class."""
-
-    class CustomRemote(remote.RemoteDevice):
-        pass
-
-    CustomRemote()
-    assert "RemoteDevice is deprecated, modify CustomRemote" in caplog.text
+@pytest.mark.parametrize(("enum"), list(remote.RemoteEntityFeature))
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: remote.RemoteEntityFeature,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(caplog, remote, enum, "SUPPORT_", "2025.1")

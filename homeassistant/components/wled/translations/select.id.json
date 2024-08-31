@@ -1,9 +1,0 @@
-{
-    "state": {
-        "wled__live_override": {
-            "0": "Mati",
-            "1": "Nyala",
-            "2": "Hingga perangkat dimulai ulang"
-        }
-    }
-}

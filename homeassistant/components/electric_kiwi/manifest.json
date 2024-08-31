@@ -1,0 +1,11 @@
+{
+  "domain": "electric_kiwi",
+  "name": "Electric Kiwi",
+  "codeowners": ["@mikey0000"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/electric_kiwi",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "requirements": ["electrickiwi-api==0.8.5"]
+}

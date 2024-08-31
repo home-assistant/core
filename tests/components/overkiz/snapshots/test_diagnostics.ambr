@@ -1,0 +1,1933 @@
+# serializer version: 1
+# name: test_device_diagnostics
+  dict({
+    'api_type': 'cloud',
+    'device': dict({
+      'controllable_name': 'rts:RollerShutterRTSComponent',
+      'device_url': 'rts://****-****-6867/16756006',
+      'firmware': None,
+      'model': 'UpDownRollerShutter',
+    }),
+    'execution_history': list([
+    ]),
+    'server': 'somfy_europe',
+    'setup': dict({
+      'creationTime': 1665238624000,
+      'devices': list([
+        dict({
+          'attributes': list([
+            dict({
+              'name': 'homekit:SetupPayload',
+              'type': 3,
+              'value': '**:*/*/**',
+            }),
+            dict({
+              'name': 'homekit:SetupCode',
+              'type': 3,
+              'value': '**',
+            }),
+          ]),
+          'available': True,
+          'controllableName': 'homekit:StackComponent',
+          'creationTime': 1665238630000,
+          'definition': dict({
+            'commands': list([
+              dict({
+                'commandName': 'deleteControllers',
+                'nparams': 0,
+              }),
+            ]),
+            'dataProperties': list([
+            ]),
+            'qualifiedName': 'homekit:StackComponent',
+            'states': list([
+            ]),
+            'type': 'PROTOCOL_GATEWAY',
+            'uiClass': 'ProtocolGateway',
+            'uiProfiles': list([
+              'Specific',
+            ]),
+            'widgetName': 'HomekitStack',
+          }),
+          'deviceURL': 'homekit://****-****-6867/stack',
+          'enabled': True,
+          'label': '** *(**)*',
+          'lastUpdateTime': 1665238630000,
+          'oid': 'ab964849-56ca-4e9c-a58c-33ce5e341b68',
+          'placeOID': '41d63e43-bfa8-4e24-8c16-4faae0448cab',
+          'shortcut': False,
+          'type': 5,
+          'uiClass': 'ProtocolGateway',
+          'widget': 'HomekitStack',
+        }),
+        dict({
+          'available': True,
+          'controllableName': 'internal:PodV3Component',
+          'creationTime': 1665238630000,
+          'definition': dict({
+            'commands': list([
+              dict({
+                'commandName': 'getName',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'update',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'setCountryCode',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'activateCalendar',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'deactivateCalendar',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'refreshPodMode',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'refreshUpdateStatus',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'setCalendar',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'setLightingLedPodMode',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'setPodLedOff',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'setPodLedOn',
+                'nparams': 0,
+              }),
+            ]),
+            'dataProperties': list([
+            ]),
+            'qualifiedName': 'internal:PodV3Component',
+            'states': list([
+              dict({
+                'qualifiedName': 'core:ConnectivityState',
+                'type': 'DiscreteState',
+                'values': list([
+                  'offline',
+                  'online',
+                ]),
+              }),
+              dict({
+                'qualifiedName': 'core:CountryCodeState',
+                'type': 'DataState',
+              }),
+              dict({
+                'eventBased': True,
+                'qualifiedName': 'core:LocalAccessProofState',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:LocalIPv4AddressState',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:NameState',
+                'type': 'DataState',
+              }),
+              dict({
+                'eventBased': True,
+                'qualifiedName': 'internal:Button1State',
+                'type': 'DiscreteState',
+                'values': list([
+                  'pressed',
+                  'stop',
+                ]),
+              }),
+              dict({
+                'eventBased': True,
+                'qualifiedName': 'internal:Button2State',
+                'type': 'DiscreteState',
+                'values': list([
+                  'pressed',
+                  'stop',
+                ]),
+              }),
+              dict({
+                'eventBased': True,
+                'qualifiedName': 'internal:Button3State',
+                'type': 'DiscreteState',
+                'values': list([
+                  'pressed',
+                  'stop',
+                ]),
+              }),
+              dict({
+                'qualifiedName': 'internal:LightingLedPodModeState',
+                'type': 'ContinuousState',
+              }),
+            ]),
+            'type': 'ACTUATOR',
+            'uiClass': 'Pod',
+            'uiProfiles': list([
+              'UpdatableComponent',
+            ]),
+            'widgetName': 'Pod',
+          }),
+          'deviceURL': 'internal://****-****-6867/pod/0',
+          'enabled': True,
+          'label': '**',
+          'lastUpdateTime': 1665238630000,
+          'oid': 'c79a8bf6-59d6-434e-8cfd-97193541fa17',
+          'placeOID': '41d63e43-bfa8-4e24-8c16-4faae0448cab',
+          'shortcut': False,
+          'states': list([
+            dict({
+              'name': 'internal:LightingLedPodModeState',
+              'type': 2,
+              'value': 1,
+            }),
+            dict({
+              'name': 'core:CountryCodeState',
+              'type': 3,
+              'value': 'NL',
+            }),
+            dict({
+              'name': 'internal:Button1State',
+              'type': 3,
+              'value': 'pressed',
+            }),
+            dict({
+              'name': 'internal:Button3State',
+              'type': 3,
+              'value': 'stop',
+            }),
+            dict({
+              'name': 'core:LocalAccessProofState',
+              'type': 3,
+              'value': 'localAccessProof',
+            }),
+            dict({
+              'name': 'core:LocalIPv4AddressState',
+              'type': 3,
+              'value': '192.168.1.42',
+            }),
+            dict({
+              'name': 'core:NameState',
+              'type': 3,
+              'value': '**',
+            }),
+          ]),
+          'type': 1,
+          'uiClass': 'Pod',
+          'widget': 'Pod',
+        }),
+        dict({
+          'available': True,
+          'controllableName': 'internal:WifiComponent',
+          'creationTime': 1665238630000,
+          'definition': dict({
+            'commands': list([
+              dict({
+                'commandName': 'clearCredentials',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'setTargetInfraConfig',
+                'nparams': 2,
+              }),
+              dict({
+                'commandName': 'setWifiMode',
+                'nparams': 1,
+              }),
+            ]),
+            'dataProperties': list([
+            ]),
+            'qualifiedName': 'internal:WifiComponent',
+            'states': list([
+              dict({
+                'qualifiedName': 'internal:CurrentInfraConfigState',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'internal:SignalStrengthState',
+                'type': 'ContinuousState',
+              }),
+              dict({
+                'qualifiedName': 'internal:WifiModeState',
+                'type': 'DataState',
+              }),
+            ]),
+            'type': 'ACTUATOR',
+            'uiClass': 'Wifi',
+            'uiProfiles': list([
+              'Specific',
+            ]),
+            'widgetName': 'Wifi',
+          }),
+          'deviceURL': 'internal://****-****-6867/wifi/0',
+          'enabled': True,
+          'label': '** *(**/**)*',
+          'lastUpdateTime': 1665238630000,
+          'oid': '4272c61b-5493-453c-8d87-a58e45ef60f8',
+          'placeOID': '41d63e43-bfa8-4e24-8c16-4faae0448cab',
+          'shortcut': False,
+          'states': list([
+            dict({
+              'name': 'internal:WifiModeState',
+              'type': 3,
+              'value': 'infrastructure',
+            }),
+            dict({
+              'name': 'internal:CurrentInfraConfigState',
+              'type': 3,
+              'value': 'AM',
+            }),
+            dict({
+              'name': 'internal:SignalStrengthState',
+              'type': 1,
+              'value': 69,
+            }),
+          ]),
+          'type': 1,
+          'uiClass': 'Wifi',
+          'widget': 'Wifi',
+        }),
+        dict({
+          'available': True,
+          'controllableName': 'io:StackComponent',
+          'creationTime': 1665238924000,
+          'definition': dict({
+            'commands': list([
+              dict({
+                'commandName': 'advancedSomfyDiscover',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'discover1WayController',
+                'nparams': 2,
+              }),
+              dict({
+                'commandName': 'discoverActuators',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'discoverSensors',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'discoverSomfyUnsetActuators',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'joinNetwork',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'resetNetworkSecurity',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'shareNetwork',
+                'nparams': 0,
+              }),
+            ]),
+            'dataProperties': list([
+            ]),
+            'qualifiedName': 'io:StackComponent',
+            'states': list([
+            ]),
+            'type': 'PROTOCOL_GATEWAY',
+            'uiClass': 'ProtocolGateway',
+            'uiProfiles': list([
+              'Specific',
+            ]),
+            'widgetName': 'IOStack',
+          }),
+          'deviceURL': 'io://****-****-6867/4167385',
+          'enabled': True,
+          'label': '** *(**)*',
+          'lastUpdateTime': 1665238924000,
+          'oid': 'bb301e56-0957-417f-ba37-26efc11659aa',
+          'placeOID': '41d63e43-bfa8-4e24-8c16-4faae0448cab',
+          'shortcut': False,
+          'type': 5,
+          'uiClass': 'ProtocolGateway',
+          'widget': 'IOStack',
+        }),
+        dict({
+          'attributes': list([
+            dict({
+              'name': 'core:Technology',
+              'type': 3,
+              'value': 'KNX',
+            }),
+            dict({
+              'name': 'core:ManufacturerReference',
+              'type': 3,
+              'value': 'OGP KNX Bridge',
+            }),
+            dict({
+              'name': 'ogp:Features',
+              'type': 10,
+              'value': list([
+                dict({
+                  'name': 'private',
+                }),
+                dict({
+                  'name': 'identification',
+                }),
+              ]),
+            }),
+            dict({
+              'name': 'core:Manufacturer',
+              'type': 3,
+              'value': 'Overkiz',
+            }),
+          ]),
+          'available': True,
+          'controllableName': 'ogp:Bridge',
+          'creationTime': 1665238637000,
+          'definition': dict({
+            'commands': list([
+              dict({
+                'commandName': 'identify',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'sendPrivate',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'setName',
+                'nparams': 1,
+              }),
+            ]),
+            'dataProperties': list([
+            ]),
+            'qualifiedName': 'ogp:Bridge',
+            'states': list([
+              dict({
+                'qualifiedName': 'core:AvailabilityState',
+                'type': 'DiscreteState',
+                'values': list([
+                  'available',
+                  'unavailable',
+                ]),
+              }),
+              dict({
+                'qualifiedName': 'core:NameState',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:Private10State',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:Private1State',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:Private2State',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:Private3State',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:Private4State',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:Private5State',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:Private6State',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:Private7State',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:Private8State',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:Private9State',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:RemovableState',
+                'type': 'DataState',
+              }),
+            ]),
+            'type': 'ACTUATOR',
+            'uiClass': 'ProtocolGateway',
+            'uiProfiles': list([
+              'Specific',
+            ]),
+            'widgetName': 'DynamicBridge',
+          }),
+          'deviceURL': 'ogp://****-****-6867/00000BE8',
+          'enabled': True,
+          'label': '** ** **',
+          'lastUpdateTime': 1665238637000,
+          'oid': 'e88717c3-02a9-49b6-a5a5-5adca558afe9',
+          'placeOID': '41d63e43-bfa8-4e24-8c16-4faae0448cab',
+          'shortcut': False,
+          'states': list([
+            dict({
+              'name': 'core:NameState',
+              'type': 3,
+              'value': '** ** **',
+            }),
+          ]),
+          'type': 1,
+          'uiClass': 'ProtocolGateway',
+          'widget': 'DynamicBridge',
+        }),
+        dict({
+          'attributes': list([
+            dict({
+              'name': 'core:ManufacturerReference',
+              'type': 3,
+              'value': 'OGP Sonos Bridge',
+            }),
+            dict({
+              'name': 'core:Manufacturer',
+              'type': 3,
+              'value': 'Overkiz',
+            }),
+            dict({
+              'name': 'ogp:Features',
+              'type': 10,
+              'value': list([
+                dict({
+                  'commandLess': True,
+                  'name': 'identification',
+                }),
+                dict({
+                  'name': 'discovery',
+                }),
+                dict({
+                  'name': 'reset',
+                }),
+              ]),
+            }),
+            dict({
+              'name': 'core:Technology',
+              'type': 3,
+              'value': 'Sonos',
+            }),
+          ]),
+          'available': True,
+          'controllableName': 'ogp:Bridge',
+          'creationTime': 1665238799000,
+          'definition': dict({
+            'commands': list([
+              dict({
+                'commandName': 'discover',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'reset',
+                'nparams': 0,
+              }),
+            ]),
+            'dataProperties': list([
+            ]),
+            'qualifiedName': 'ogp:Bridge',
+            'states': list([
+              dict({
+                'qualifiedName': 'core:AvailabilityState',
+                'type': 'DiscreteState',
+                'values': list([
+                  'available',
+                  'unavailable',
+                ]),
+              }),
+              dict({
+                'qualifiedName': 'core:NameState',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:RemovableState',
+                'type': 'DataState',
+              }),
+            ]),
+            'type': 'ACTUATOR',
+            'uiClass': 'ProtocolGateway',
+            'uiProfiles': list([
+              'Specific',
+            ]),
+            'widgetName': 'DynamicBridge',
+          }),
+          'deviceURL': 'ogp://****-****-6867/0003FEF3',
+          'enabled': True,
+          'label': '** ** **',
+          'lastUpdateTime': 1665238799000,
+          'oid': '4031915f-df40-4a70-a97f-64031182a507',
+          'placeOID': '41d63e43-bfa8-4e24-8c16-4faae0448cab',
+          'shortcut': False,
+          'states': list([
+            dict({
+              'name': 'core:NameState',
+              'type': 3,
+              'value': '** ** **',
+            }),
+          ]),
+          'type': 1,
+          'uiClass': 'ProtocolGateway',
+          'widget': 'DynamicBridge',
+        }),
+        dict({
+          'attributes': list([
+            dict({
+              'name': 'core:Manufacturer',
+              'type': 3,
+              'value': 'Overkiz',
+            }),
+            dict({
+              'name': 'ogp:Features',
+              'type': 10,
+              'value': list([
+                dict({
+                  'name': 'discovery',
+                }),
+                dict({
+                  'name': 'identification',
+                }),
+              ]),
+            }),
+            dict({
+              'name': 'core:ManufacturerReference',
+              'type': 3,
+              'value': 'OGP Siegenia Bridge',
+            }),
+            dict({
+              'name': 'core:Technology',
+              'type': 3,
+              'value': 'Siegenia',
+            }),
+          ]),
+          'available': True,
+          'controllableName': 'ogp:Bridge',
+          'creationTime': 1665238637000,
+          'definition': dict({
+            'commands': list([
+              dict({
+                'commandName': 'discover',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'identify',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'setName',
+                'nparams': 1,
+              }),
+            ]),
+            'dataProperties': list([
+            ]),
+            'qualifiedName': 'ogp:Bridge',
+            'states': list([
+              dict({
+                'qualifiedName': 'core:AvailabilityState',
+                'type': 'DiscreteState',
+                'values': list([
+                  'available',
+                  'unavailable',
+                ]),
+              }),
+              dict({
+                'qualifiedName': 'core:NameState',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:RemovableState',
+                'type': 'DataState',
+              }),
+            ]),
+            'type': 'ACTUATOR',
+            'uiClass': 'ProtocolGateway',
+            'uiProfiles': list([
+              'Specific',
+            ]),
+            'widgetName': 'DynamicBridge',
+          }),
+          'deviceURL': 'ogp://****-****-6867/039575E9',
+          'enabled': True,
+          'label': '** ** **',
+          'lastUpdateTime': 1665238637000,
+          'oid': '5cdf0023-2d7e-4e8e-bfb0-74ebb6ebe0eb',
+          'placeOID': '41d63e43-bfa8-4e24-8c16-4faae0448cab',
+          'shortcut': False,
+          'states': list([
+            dict({
+              'name': 'core:NameState',
+              'type': 3,
+              'value': '** ** **',
+            }),
+          ]),
+          'type': 1,
+          'uiClass': 'ProtocolGateway',
+          'widget': 'DynamicBridge',
+        }),
+        dict({
+          'attributes': list([
+            dict({
+              'name': 'core:ManufacturerReference',
+              'type': 3,
+              'value': 'OGP Intesis Bridge',
+            }),
+            dict({
+              'name': 'ogp:Features',
+              'type': 10,
+              'value': list([
+                dict({
+                  'name': 'discovery',
+                }),
+                dict({
+                  'name': 'identification',
+                }),
+              ]),
+            }),
+            dict({
+              'name': 'core:Manufacturer',
+              'type': 3,
+              'value': 'Overkiz',
+            }),
+            dict({
+              'name': 'core:Technology',
+              'type': 3,
+              'value': 'Intesis',
+            }),
+          ]),
+          'available': True,
+          'controllableName': 'ogp:Bridge',
+          'creationTime': 1665238637000,
+          'definition': dict({
+            'commands': list([
+              dict({
+                'commandName': 'discover',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'identify',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'setName',
+                'nparams': 1,
+              }),
+            ]),
+            'dataProperties': list([
+            ]),
+            'qualifiedName': 'ogp:Bridge',
+            'states': list([
+              dict({
+                'qualifiedName': 'core:AvailabilityState',
+                'type': 'DiscreteState',
+                'values': list([
+                  'available',
+                  'unavailable',
+                ]),
+              }),
+              dict({
+                'qualifiedName': 'core:NameState',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:RemovableState',
+                'type': 'DataState',
+              }),
+            ]),
+            'type': 'ACTUATOR',
+            'uiClass': 'ProtocolGateway',
+            'uiProfiles': list([
+              'Specific',
+            ]),
+            'widgetName': 'DynamicBridge',
+          }),
+          'deviceURL': 'ogp://****-****-6867/09E45393',
+          'enabled': True,
+          'label': '** ** **',
+          'lastUpdateTime': 1665238637000,
+          'oid': 'b1f5dc24-058e-4cb2-a052-7b2d5a7de7a5',
+          'placeOID': '41d63e43-bfa8-4e24-8c16-4faae0448cab',
+          'shortcut': False,
+          'states': list([
+            dict({
+              'name': 'core:NameState',
+              'type': 3,
+              'value': '** ** **',
+            }),
+          ]),
+          'type': 1,
+          'uiClass': 'ProtocolGateway',
+          'widget': 'DynamicBridge',
+        }),
+        dict({
+          'attributes': list([
+            dict({
+              'name': 'rts:diy',
+              'type': 6,
+              'value': True,
+            }),
+          ]),
+          'available': True,
+          'controllableName': 'rts:RollerShutterRTSComponent',
+          'creationTime': 1667840384000,
+          'definition': dict({
+            'commands': list([
+              dict({
+                'commandName': 'close',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'down',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'identify',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'my',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'open',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'rest',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'stop',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'test',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'up',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'openConfiguration',
+                'nparams': 1,
+              }),
+            ]),
+            'dataProperties': list([
+              dict({
+                'qualifiedName': 'core:identifyInterval',
+                'value': '0',
+              }),
+            ]),
+            'qualifiedName': 'rts:RollerShutterRTSComponent',
+            'states': list([
+            ]),
+            'type': 'ACTUATOR',
+            'uiClass': 'RollerShutter',
+            'uiProfiles': list([
+              'OpenCloseShutter',
+              'OpenClose',
+            ]),
+            'widgetName': 'UpDownRollerShutter',
+          }),
+          'deviceURL': 'rts://****-****-6867/16756006',
+          'enabled': True,
+          'label': '** ** **',
+          'lastUpdateTime': 1667840384000,
+          'oid': '1a10d6f6-9bc3-40f3-a33c-e383fd41d3e8',
+          'placeOID': '9e3d6899-50bb-4869-9c5e-46c2b57f7c9e',
+          'shortcut': False,
+          'type': 1,
+          'uiClass': 'RollerShutter',
+          'widget': 'UpDownRollerShutter',
+        }),
+        dict({
+          'available': True,
+          'controllableName': 'zigbee:TransceiverV3_0Component',
+          'creationTime': 1665238630000,
+          'definition': dict({
+            'commands': list([
+            ]),
+            'dataProperties': list([
+            ]),
+            'qualifiedName': 'zigbee:TransceiverV3_0Component',
+            'states': list([
+            ]),
+            'type': 'PROTOCOL_GATEWAY',
+            'uiClass': 'ProtocolGateway',
+            'uiProfiles': list([
+              'Specific',
+            ]),
+            'widgetName': 'ZigbeeStack',
+          }),
+          'deviceURL': 'zigbee://****-****-6867/65535',
+          'enabled': True,
+          'label': '** *(**)*',
+          'lastUpdateTime': 1665238630000,
+          'oid': '1629c223-d115-4aad-808a-373f428d9c27',
+          'placeOID': '41d63e43-bfa8-4e24-8c16-4faae0448cab',
+          'shortcut': False,
+          'type': 5,
+          'uiClass': 'ProtocolGateway',
+          'widget': 'ZigbeeStack',
+        }),
+      ]),
+      'disconnectionConfiguration': dict({
+        'notificationText': 'Your Somfy box is disconnected',
+        'notificationTitle': '[User] : Your Somfy box is disconnected',
+        'notificationType': 'PUSH',
+        'targetPushSubscriptions': list([
+          '8849df9a-b61a-498f-ab81-67a767adba31',
+        ]),
+      }),
+      'features': list([
+      ]),
+      'gateways': list([
+        dict({
+          'alive': True,
+          'autoUpdateEnabled': True,
+          'connectivity': dict({
+            'protocolVersion': '2023.4.4',
+            'status': 'OK',
+          }),
+          'functions': 'INTERNET_AUTHORIZATION,SCENARIO_DOWNLOAD,SCENARIO_AUTO_LAUNCHING,SCENARIO_TELECO_LAUNCHING,INTERNET_UPLOAD,INTERNET_UPDATE,TRIGGERS_SENSORS',
+          'gatewayId': '****-****-6867',
+          'mode': 'ACTIVE',
+          'placeOID': '41d63e43-bfa8-4e24-8c16-4faae0448cab',
+          'subType': 1,
+          'syncInProgress': False,
+          'timeReliable': True,
+          'type': 98,
+          'upToDate': True,
+          'updateStatus': 'UP_TO_DATE',
+        }),
+      ]),
+      'id': 'SETUP-****-****-6867',
+      'lastUpdateTime': 1665238624000,
+      'location': dict({
+        'addressLine1': '** **',
+        'addressLine2': '*',
+        'city': '** **',
+        'country': '**',
+        'countryCode': 'NL',
+        'creationTime': 1665238624000,
+        'dawnOffset': 0,
+        'duskOffset': 0,
+        'lastUpdateTime': 1667054735000,
+        'latitude': '**',
+        'longitude': '**',
+        'postalCode': '** **',
+        'summerSolsticeDuskMinutes': 1290,
+        'timezone': 'Europe/Amsterdam',
+        'twilightAngle': 'SOLAR',
+        'twilightCity': 'amsterdam',
+        'twilightMode': 2,
+        'twilightOffsetEnabled': False,
+        'winterSolsticeDuskMinutes': 990,
+      }),
+      'oid': '15eaf55a-8af9-483b-ae4a-ffd4254fd762',
+      'resellerDelegationType': 'NEVER',
+      'rootPlace': dict({
+        'creationTime': 1665238624000,
+        'label': '** **',
+        'lastUpdateTime': 1665238630000,
+        'oid': '41d63e43-bfa8-4e24-8c16-4faae0448cab',
+        'subPlaces': list([
+          dict({
+            'creationTime': 1667840432000,
+            'label': '**',
+            'lastUpdateTime': 1667840432000,
+            'metadata': '{"color":"#08C27F"}',
+            'oid': '9e3d6899-50bb-4869-9c5e-46c2b57f7c9e',
+            'subPlaces': list([
+            ]),
+            'type': 108,
+          }),
+        ]),
+        'type': 200,
+      }),
+      'zones': list([
+      ]),
+    }),
+  })
+# ---
+# name: test_diagnostics
+  dict({
+    'api_type': 'cloud',
+    'execution_history': list([
+    ]),
+    'server': 'somfy_europe',
+    'setup': dict({
+      'creationTime': 1665238624000,
+      'devices': list([
+        dict({
+          'attributes': list([
+            dict({
+              'name': 'homekit:SetupPayload',
+              'type': 3,
+              'value': '**:*/*/**',
+            }),
+            dict({
+              'name': 'homekit:SetupCode',
+              'type': 3,
+              'value': '**',
+            }),
+          ]),
+          'available': True,
+          'controllableName': 'homekit:StackComponent',
+          'creationTime': 1665238630000,
+          'definition': dict({
+            'commands': list([
+              dict({
+                'commandName': 'deleteControllers',
+                'nparams': 0,
+              }),
+            ]),
+            'dataProperties': list([
+            ]),
+            'qualifiedName': 'homekit:StackComponent',
+            'states': list([
+            ]),
+            'type': 'PROTOCOL_GATEWAY',
+            'uiClass': 'ProtocolGateway',
+            'uiProfiles': list([
+              'Specific',
+            ]),
+            'widgetName': 'HomekitStack',
+          }),
+          'deviceURL': 'homekit://****-****-6867/stack',
+          'enabled': True,
+          'label': '** *(**)*',
+          'lastUpdateTime': 1665238630000,
+          'oid': 'ab964849-56ca-4e9c-a58c-33ce5e341b68',
+          'placeOID': '41d63e43-bfa8-4e24-8c16-4faae0448cab',
+          'shortcut': False,
+          'type': 5,
+          'uiClass': 'ProtocolGateway',
+          'widget': 'HomekitStack',
+        }),
+        dict({
+          'available': True,
+          'controllableName': 'internal:PodV3Component',
+          'creationTime': 1665238630000,
+          'definition': dict({
+            'commands': list([
+              dict({
+                'commandName': 'getName',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'update',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'setCountryCode',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'activateCalendar',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'deactivateCalendar',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'refreshPodMode',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'refreshUpdateStatus',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'setCalendar',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'setLightingLedPodMode',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'setPodLedOff',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'setPodLedOn',
+                'nparams': 0,
+              }),
+            ]),
+            'dataProperties': list([
+            ]),
+            'qualifiedName': 'internal:PodV3Component',
+            'states': list([
+              dict({
+                'qualifiedName': 'core:ConnectivityState',
+                'type': 'DiscreteState',
+                'values': list([
+                  'offline',
+                  'online',
+                ]),
+              }),
+              dict({
+                'qualifiedName': 'core:CountryCodeState',
+                'type': 'DataState',
+              }),
+              dict({
+                'eventBased': True,
+                'qualifiedName': 'core:LocalAccessProofState',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:LocalIPv4AddressState',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:NameState',
+                'type': 'DataState',
+              }),
+              dict({
+                'eventBased': True,
+                'qualifiedName': 'internal:Button1State',
+                'type': 'DiscreteState',
+                'values': list([
+                  'pressed',
+                  'stop',
+                ]),
+              }),
+              dict({
+                'eventBased': True,
+                'qualifiedName': 'internal:Button2State',
+                'type': 'DiscreteState',
+                'values': list([
+                  'pressed',
+                  'stop',
+                ]),
+              }),
+              dict({
+                'eventBased': True,
+                'qualifiedName': 'internal:Button3State',
+                'type': 'DiscreteState',
+                'values': list([
+                  'pressed',
+                  'stop',
+                ]),
+              }),
+              dict({
+                'qualifiedName': 'internal:LightingLedPodModeState',
+                'type': 'ContinuousState',
+              }),
+            ]),
+            'type': 'ACTUATOR',
+            'uiClass': 'Pod',
+            'uiProfiles': list([
+              'UpdatableComponent',
+            ]),
+            'widgetName': 'Pod',
+          }),
+          'deviceURL': 'internal://****-****-6867/pod/0',
+          'enabled': True,
+          'label': '**',
+          'lastUpdateTime': 1665238630000,
+          'oid': 'c79a8bf6-59d6-434e-8cfd-97193541fa17',
+          'placeOID': '41d63e43-bfa8-4e24-8c16-4faae0448cab',
+          'shortcut': False,
+          'states': list([
+            dict({
+              'name': 'internal:LightingLedPodModeState',
+              'type': 2,
+              'value': 1,
+            }),
+            dict({
+              'name': 'core:CountryCodeState',
+              'type': 3,
+              'value': 'NL',
+            }),
+            dict({
+              'name': 'internal:Button1State',
+              'type': 3,
+              'value': 'pressed',
+            }),
+            dict({
+              'name': 'internal:Button3State',
+              'type': 3,
+              'value': 'stop',
+            }),
+            dict({
+              'name': 'core:LocalAccessProofState',
+              'type': 3,
+              'value': 'localAccessProof',
+            }),
+            dict({
+              'name': 'core:LocalIPv4AddressState',
+              'type': 3,
+              'value': '192.168.1.42',
+            }),
+            dict({
+              'name': 'core:NameState',
+              'type': 3,
+              'value': '**',
+            }),
+          ]),
+          'type': 1,
+          'uiClass': 'Pod',
+          'widget': 'Pod',
+        }),
+        dict({
+          'available': True,
+          'controllableName': 'internal:WifiComponent',
+          'creationTime': 1665238630000,
+          'definition': dict({
+            'commands': list([
+              dict({
+                'commandName': 'clearCredentials',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'setTargetInfraConfig',
+                'nparams': 2,
+              }),
+              dict({
+                'commandName': 'setWifiMode',
+                'nparams': 1,
+              }),
+            ]),
+            'dataProperties': list([
+            ]),
+            'qualifiedName': 'internal:WifiComponent',
+            'states': list([
+              dict({
+                'qualifiedName': 'internal:CurrentInfraConfigState',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'internal:SignalStrengthState',
+                'type': 'ContinuousState',
+              }),
+              dict({
+                'qualifiedName': 'internal:WifiModeState',
+                'type': 'DataState',
+              }),
+            ]),
+            'type': 'ACTUATOR',
+            'uiClass': 'Wifi',
+            'uiProfiles': list([
+              'Specific',
+            ]),
+            'widgetName': 'Wifi',
+          }),
+          'deviceURL': 'internal://****-****-6867/wifi/0',
+          'enabled': True,
+          'label': '** *(**/**)*',
+          'lastUpdateTime': 1665238630000,
+          'oid': '4272c61b-5493-453c-8d87-a58e45ef60f8',
+          'placeOID': '41d63e43-bfa8-4e24-8c16-4faae0448cab',
+          'shortcut': False,
+          'states': list([
+            dict({
+              'name': 'internal:WifiModeState',
+              'type': 3,
+              'value': 'infrastructure',
+            }),
+            dict({
+              'name': 'internal:CurrentInfraConfigState',
+              'type': 3,
+              'value': 'AM',
+            }),
+            dict({
+              'name': 'internal:SignalStrengthState',
+              'type': 1,
+              'value': 69,
+            }),
+          ]),
+          'type': 1,
+          'uiClass': 'Wifi',
+          'widget': 'Wifi',
+        }),
+        dict({
+          'available': True,
+          'controllableName': 'io:StackComponent',
+          'creationTime': 1665238924000,
+          'definition': dict({
+            'commands': list([
+              dict({
+                'commandName': 'advancedSomfyDiscover',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'discover1WayController',
+                'nparams': 2,
+              }),
+              dict({
+                'commandName': 'discoverActuators',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'discoverSensors',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'discoverSomfyUnsetActuators',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'joinNetwork',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'resetNetworkSecurity',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'shareNetwork',
+                'nparams': 0,
+              }),
+            ]),
+            'dataProperties': list([
+            ]),
+            'qualifiedName': 'io:StackComponent',
+            'states': list([
+            ]),
+            'type': 'PROTOCOL_GATEWAY',
+            'uiClass': 'ProtocolGateway',
+            'uiProfiles': list([
+              'Specific',
+            ]),
+            'widgetName': 'IOStack',
+          }),
+          'deviceURL': 'io://****-****-6867/4167385',
+          'enabled': True,
+          'label': '** *(**)*',
+          'lastUpdateTime': 1665238924000,
+          'oid': 'bb301e56-0957-417f-ba37-26efc11659aa',
+          'placeOID': '41d63e43-bfa8-4e24-8c16-4faae0448cab',
+          'shortcut': False,
+          'type': 5,
+          'uiClass': 'ProtocolGateway',
+          'widget': 'IOStack',
+        }),
+        dict({
+          'attributes': list([
+            dict({
+              'name': 'core:Technology',
+              'type': 3,
+              'value': 'KNX',
+            }),
+            dict({
+              'name': 'core:ManufacturerReference',
+              'type': 3,
+              'value': 'OGP KNX Bridge',
+            }),
+            dict({
+              'name': 'ogp:Features',
+              'type': 10,
+              'value': list([
+                dict({
+                  'name': 'private',
+                }),
+                dict({
+                  'name': 'identification',
+                }),
+              ]),
+            }),
+            dict({
+              'name': 'core:Manufacturer',
+              'type': 3,
+              'value': 'Overkiz',
+            }),
+          ]),
+          'available': True,
+          'controllableName': 'ogp:Bridge',
+          'creationTime': 1665238637000,
+          'definition': dict({
+            'commands': list([
+              dict({
+                'commandName': 'identify',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'sendPrivate',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'setName',
+                'nparams': 1,
+              }),
+            ]),
+            'dataProperties': list([
+            ]),
+            'qualifiedName': 'ogp:Bridge',
+            'states': list([
+              dict({
+                'qualifiedName': 'core:AvailabilityState',
+                'type': 'DiscreteState',
+                'values': list([
+                  'available',
+                  'unavailable',
+                ]),
+              }),
+              dict({
+                'qualifiedName': 'core:NameState',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:Private10State',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:Private1State',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:Private2State',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:Private3State',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:Private4State',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:Private5State',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:Private6State',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:Private7State',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:Private8State',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:Private9State',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:RemovableState',
+                'type': 'DataState',
+              }),
+            ]),
+            'type': 'ACTUATOR',
+            'uiClass': 'ProtocolGateway',
+            'uiProfiles': list([
+              'Specific',
+            ]),
+            'widgetName': 'DynamicBridge',
+          }),
+          'deviceURL': 'ogp://****-****-6867/00000BE8',
+          'enabled': True,
+          'label': '** ** **',
+          'lastUpdateTime': 1665238637000,
+          'oid': 'e88717c3-02a9-49b6-a5a5-5adca558afe9',
+          'placeOID': '41d63e43-bfa8-4e24-8c16-4faae0448cab',
+          'shortcut': False,
+          'states': list([
+            dict({
+              'name': 'core:NameState',
+              'type': 3,
+              'value': '** ** **',
+            }),
+          ]),
+          'type': 1,
+          'uiClass': 'ProtocolGateway',
+          'widget': 'DynamicBridge',
+        }),
+        dict({
+          'attributes': list([
+            dict({
+              'name': 'core:ManufacturerReference',
+              'type': 3,
+              'value': 'OGP Sonos Bridge',
+            }),
+            dict({
+              'name': 'core:Manufacturer',
+              'type': 3,
+              'value': 'Overkiz',
+            }),
+            dict({
+              'name': 'ogp:Features',
+              'type': 10,
+              'value': list([
+                dict({
+                  'commandLess': True,
+                  'name': 'identification',
+                }),
+                dict({
+                  'name': 'discovery',
+                }),
+                dict({
+                  'name': 'reset',
+                }),
+              ]),
+            }),
+            dict({
+              'name': 'core:Technology',
+              'type': 3,
+              'value': 'Sonos',
+            }),
+          ]),
+          'available': True,
+          'controllableName': 'ogp:Bridge',
+          'creationTime': 1665238799000,
+          'definition': dict({
+            'commands': list([
+              dict({
+                'commandName': 'discover',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'reset',
+                'nparams': 0,
+              }),
+            ]),
+            'dataProperties': list([
+            ]),
+            'qualifiedName': 'ogp:Bridge',
+            'states': list([
+              dict({
+                'qualifiedName': 'core:AvailabilityState',
+                'type': 'DiscreteState',
+                'values': list([
+                  'available',
+                  'unavailable',
+                ]),
+              }),
+              dict({
+                'qualifiedName': 'core:NameState',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:RemovableState',
+                'type': 'DataState',
+              }),
+            ]),
+            'type': 'ACTUATOR',
+            'uiClass': 'ProtocolGateway',
+            'uiProfiles': list([
+              'Specific',
+            ]),
+            'widgetName': 'DynamicBridge',
+          }),
+          'deviceURL': 'ogp://****-****-6867/0003FEF3',
+          'enabled': True,
+          'label': '** ** **',
+          'lastUpdateTime': 1665238799000,
+          'oid': '4031915f-df40-4a70-a97f-64031182a507',
+          'placeOID': '41d63e43-bfa8-4e24-8c16-4faae0448cab',
+          'shortcut': False,
+          'states': list([
+            dict({
+              'name': 'core:NameState',
+              'type': 3,
+              'value': '** ** **',
+            }),
+          ]),
+          'type': 1,
+          'uiClass': 'ProtocolGateway',
+          'widget': 'DynamicBridge',
+        }),
+        dict({
+          'attributes': list([
+            dict({
+              'name': 'core:Manufacturer',
+              'type': 3,
+              'value': 'Overkiz',
+            }),
+            dict({
+              'name': 'ogp:Features',
+              'type': 10,
+              'value': list([
+                dict({
+                  'name': 'discovery',
+                }),
+                dict({
+                  'name': 'identification',
+                }),
+              ]),
+            }),
+            dict({
+              'name': 'core:ManufacturerReference',
+              'type': 3,
+              'value': 'OGP Siegenia Bridge',
+            }),
+            dict({
+              'name': 'core:Technology',
+              'type': 3,
+              'value': 'Siegenia',
+            }),
+          ]),
+          'available': True,
+          'controllableName': 'ogp:Bridge',
+          'creationTime': 1665238637000,
+          'definition': dict({
+            'commands': list([
+              dict({
+                'commandName': 'discover',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'identify',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'setName',
+                'nparams': 1,
+              }),
+            ]),
+            'dataProperties': list([
+            ]),
+            'qualifiedName': 'ogp:Bridge',
+            'states': list([
+              dict({
+                'qualifiedName': 'core:AvailabilityState',
+                'type': 'DiscreteState',
+                'values': list([
+                  'available',
+                  'unavailable',
+                ]),
+              }),
+              dict({
+                'qualifiedName': 'core:NameState',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:RemovableState',
+                'type': 'DataState',
+              }),
+            ]),
+            'type': 'ACTUATOR',
+            'uiClass': 'ProtocolGateway',
+            'uiProfiles': list([
+              'Specific',
+            ]),
+            'widgetName': 'DynamicBridge',
+          }),
+          'deviceURL': 'ogp://****-****-6867/039575E9',
+          'enabled': True,
+          'label': '** ** **',
+          'lastUpdateTime': 1665238637000,
+          'oid': '5cdf0023-2d7e-4e8e-bfb0-74ebb6ebe0eb',
+          'placeOID': '41d63e43-bfa8-4e24-8c16-4faae0448cab',
+          'shortcut': False,
+          'states': list([
+            dict({
+              'name': 'core:NameState',
+              'type': 3,
+              'value': '** ** **',
+            }),
+          ]),
+          'type': 1,
+          'uiClass': 'ProtocolGateway',
+          'widget': 'DynamicBridge',
+        }),
+        dict({
+          'attributes': list([
+            dict({
+              'name': 'core:ManufacturerReference',
+              'type': 3,
+              'value': 'OGP Intesis Bridge',
+            }),
+            dict({
+              'name': 'ogp:Features',
+              'type': 10,
+              'value': list([
+                dict({
+                  'name': 'discovery',
+                }),
+                dict({
+                  'name': 'identification',
+                }),
+              ]),
+            }),
+            dict({
+              'name': 'core:Manufacturer',
+              'type': 3,
+              'value': 'Overkiz',
+            }),
+            dict({
+              'name': 'core:Technology',
+              'type': 3,
+              'value': 'Intesis',
+            }),
+          ]),
+          'available': True,
+          'controllableName': 'ogp:Bridge',
+          'creationTime': 1665238637000,
+          'definition': dict({
+            'commands': list([
+              dict({
+                'commandName': 'discover',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'identify',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'setName',
+                'nparams': 1,
+              }),
+            ]),
+            'dataProperties': list([
+            ]),
+            'qualifiedName': 'ogp:Bridge',
+            'states': list([
+              dict({
+                'qualifiedName': 'core:AvailabilityState',
+                'type': 'DiscreteState',
+                'values': list([
+                  'available',
+                  'unavailable',
+                ]),
+              }),
+              dict({
+                'qualifiedName': 'core:NameState',
+                'type': 'DataState',
+              }),
+              dict({
+                'qualifiedName': 'core:RemovableState',
+                'type': 'DataState',
+              }),
+            ]),
+            'type': 'ACTUATOR',
+            'uiClass': 'ProtocolGateway',
+            'uiProfiles': list([
+              'Specific',
+            ]),
+            'widgetName': 'DynamicBridge',
+          }),
+          'deviceURL': 'ogp://****-****-6867/09E45393',
+          'enabled': True,
+          'label': '** ** **',
+          'lastUpdateTime': 1665238637000,
+          'oid': 'b1f5dc24-058e-4cb2-a052-7b2d5a7de7a5',
+          'placeOID': '41d63e43-bfa8-4e24-8c16-4faae0448cab',
+          'shortcut': False,
+          'states': list([
+            dict({
+              'name': 'core:NameState',
+              'type': 3,
+              'value': '** ** **',
+            }),
+          ]),
+          'type': 1,
+          'uiClass': 'ProtocolGateway',
+          'widget': 'DynamicBridge',
+        }),
+        dict({
+          'attributes': list([
+            dict({
+              'name': 'rts:diy',
+              'type': 6,
+              'value': True,
+            }),
+          ]),
+          'available': True,
+          'controllableName': 'rts:RollerShutterRTSComponent',
+          'creationTime': 1667840384000,
+          'definition': dict({
+            'commands': list([
+              dict({
+                'commandName': 'close',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'down',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'identify',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'my',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'open',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'rest',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'stop',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'test',
+                'nparams': 0,
+              }),
+              dict({
+                'commandName': 'up',
+                'nparams': 1,
+              }),
+              dict({
+                'commandName': 'openConfiguration',
+                'nparams': 1,
+              }),
+            ]),
+            'dataProperties': list([
+              dict({
+                'qualifiedName': 'core:identifyInterval',
+                'value': '0',
+              }),
+            ]),
+            'qualifiedName': 'rts:RollerShutterRTSComponent',
+            'states': list([
+            ]),
+            'type': 'ACTUATOR',
+            'uiClass': 'RollerShutter',
+            'uiProfiles': list([
+              'OpenCloseShutter',
+              'OpenClose',
+            ]),
+            'widgetName': 'UpDownRollerShutter',
+          }),
+          'deviceURL': 'rts://****-****-6867/16756006',
+          'enabled': True,
+          'label': '** ** **',
+          'lastUpdateTime': 1667840384000,
+          'oid': '1a10d6f6-9bc3-40f3-a33c-e383fd41d3e8',
+          'placeOID': '9e3d6899-50bb-4869-9c5e-46c2b57f7c9e',
+          'shortcut': False,
+          'type': 1,
+          'uiClass': 'RollerShutter',
+          'widget': 'UpDownRollerShutter',
+        }),
+        dict({
+          'available': True,
+          'controllableName': 'zigbee:TransceiverV3_0Component',
+          'creationTime': 1665238630000,
+          'definition': dict({
+            'commands': list([
+            ]),
+            'dataProperties': list([
+            ]),
+            'qualifiedName': 'zigbee:TransceiverV3_0Component',
+            'states': list([
+            ]),
+            'type': 'PROTOCOL_GATEWAY',
+            'uiClass': 'ProtocolGateway',
+            'uiProfiles': list([
+              'Specific',
+            ]),
+            'widgetName': 'ZigbeeStack',
+          }),
+          'deviceURL': 'zigbee://****-****-6867/65535',
+          'enabled': True,
+          'label': '** *(**)*',
+          'lastUpdateTime': 1665238630000,
+          'oid': '1629c223-d115-4aad-808a-373f428d9c27',
+          'placeOID': '41d63e43-bfa8-4e24-8c16-4faae0448cab',
+          'shortcut': False,
+          'type': 5,
+          'uiClass': 'ProtocolGateway',
+          'widget': 'ZigbeeStack',
+        }),
+      ]),
+      'disconnectionConfiguration': dict({
+        'notificationText': 'Your Somfy box is disconnected',
+        'notificationTitle': '[User] : Your Somfy box is disconnected',
+        'notificationType': 'PUSH',
+        'targetPushSubscriptions': list([
+          '8849df9a-b61a-498f-ab81-67a767adba31',
+        ]),
+      }),
+      'features': list([
+      ]),
+      'gateways': list([
+        dict({
+          'alive': True,
+          'autoUpdateEnabled': True,
+          'connectivity': dict({
+            'protocolVersion': '2023.4.4',
+            'status': 'OK',
+          }),
+          'functions': 'INTERNET_AUTHORIZATION,SCENARIO_DOWNLOAD,SCENARIO_AUTO_LAUNCHING,SCENARIO_TELECO_LAUNCHING,INTERNET_UPLOAD,INTERNET_UPDATE,TRIGGERS_SENSORS',
+          'gatewayId': '****-****-6867',
+          'mode': 'ACTIVE',
+          'placeOID': '41d63e43-bfa8-4e24-8c16-4faae0448cab',
+          'subType': 1,
+          'syncInProgress': False,
+          'timeReliable': True,
+          'type': 98,
+          'upToDate': True,
+          'updateStatus': 'UP_TO_DATE',
+        }),
+      ]),
+      'id': 'SETUP-****-****-6867',
+      'lastUpdateTime': 1665238624000,
+      'location': dict({
+        'addressLine1': '** **',
+        'addressLine2': '*',
+        'city': '** **',
+        'country': '**',
+        'countryCode': 'NL',
+        'creationTime': 1665238624000,
+        'dawnOffset': 0,
+        'duskOffset': 0,
+        'lastUpdateTime': 1667054735000,
+        'latitude': '**',
+        'longitude': '**',
+        'postalCode': '** **',
+        'summerSolsticeDuskMinutes': 1290,
+        'timezone': 'Europe/Amsterdam',
+        'twilightAngle': 'SOLAR',
+        'twilightCity': 'amsterdam',
+        'twilightMode': 2,
+        'twilightOffsetEnabled': False,
+        'winterSolsticeDuskMinutes': 990,
+      }),
+      'oid': '15eaf55a-8af9-483b-ae4a-ffd4254fd762',
+      'resellerDelegationType': 'NEVER',
+      'rootPlace': dict({
+        'creationTime': 1665238624000,
+        'label': '** **',
+        'lastUpdateTime': 1665238630000,
+        'oid': '41d63e43-bfa8-4e24-8c16-4faae0448cab',
+        'subPlaces': list([
+          dict({
+            'creationTime': 1667840432000,
+            'label': '**',
+            'lastUpdateTime': 1667840432000,
+            'metadata': '{"color":"#08C27F"}',
+            'oid': '9e3d6899-50bb-4869-9c5e-46c2b57f7c9e',
+            'subPlaces': list([
+            ]),
+            'type': 108,
+          }),
+        ]),
+        'type': 200,
+      }),
+      'zones': list([
+      ]),
+    }),
+  })
+# ---

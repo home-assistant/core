@@ -1,8 +1,8 @@
 """Support for Apache Kafka."""
 from datetime import datetime
 import json
+import sys
 
-from aiokafka import AIOKafkaProducer
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -15,9 +15,16 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import ssl as ssl_util
+
+if sys.version_info < (3, 12):
+    from aiokafka import AIOKafkaProducer
+
 
 DOMAIN = "apache_kafka"
 
@@ -45,8 +52,12 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate the Apache Kafka integration."""
+    if sys.version_info >= (3, 12):
+        raise HomeAssistantError(
+            "Apache Kafka is not supported on Python 3.12. Please use Python 3.11."
+        )
     conf = config[DOMAIN]
 
     kafka = hass.data[DOMAIN] = KafkaManager(
@@ -100,7 +111,6 @@ class KafkaManager:
         self._hass = hass
         ssl_context = ssl_util.client_context()
         self._producer = AIOKafkaProducer(
-            loop=hass.loop,
             bootstrap_servers=f"{ip_address}:{port}",
             compression_type="gzip",
             security_protocol=security_protocol,

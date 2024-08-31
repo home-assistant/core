@@ -4,21 +4,16 @@ from __future__ import annotations
 from velbusaio.channels import ButtonCounter, LightSensor, SensorNumber, Temperature
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import VelbusEntity
 from .const import DOMAIN
+from .entity import VelbusEntity
 
 
 async def async_setup_entry(
@@ -50,27 +45,20 @@ class VelbusSensor(VelbusEntity, SensorEntity):
         """Initialize a sensor Velbus entity."""
         super().__init__(channel)
         self._is_counter: bool = counter
-        # define the unique id
         if self._is_counter:
-            self._attr_unique_id = f"{self._attr_unique_id}-counter"
-        # define the name
-        if self._is_counter:
-            self._attr_name = f"{self._attr_name}-counter"
-        # define the device class
-        if self._is_counter:
-            self._attr_device_class = DEVICE_CLASS_ENERGY
-        elif channel.is_counter_channel():
-            self._attr_device_class = DEVICE_CLASS_POWER
-        elif channel.is_temperature():
-            self._attr_device_class = DEVICE_CLASS_TEMPERATURE
-        # define the icon
-        if self._is_counter:
+            self._attr_device_class = SensorDeviceClass.ENERGY
             self._attr_icon = "mdi:counter"
-        # the state class
-        if self._is_counter:
-            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+            self._attr_name = f"{self._attr_name}-counter"
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+            self._attr_unique_id = f"{self._attr_unique_id}-counter"
+        elif channel.is_counter_channel():
+            self._attr_device_class = SensorDeviceClass.POWER
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+        elif channel.is_temperature():
+            self._attr_device_class = SensorDeviceClass.TEMPERATURE
+            self._attr_state_class = SensorStateClass.MEASUREMENT
         else:
-            self._attr_state_class = STATE_CLASS_MEASUREMENT
+            self._attr_state_class = SensorStateClass.MEASUREMENT
         # unit
         if self._is_counter:
             self._attr_native_unit_of_measurement = channel.get_counter_unit()

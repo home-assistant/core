@@ -6,6 +6,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.spider.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -25,14 +26,14 @@ def spider_fixture() -> Mock:
         yield spider
 
 
-async def test_user(hass, spider):
+async def test_user(hass: HomeAssistant, spider) -> None:
     """Test user config."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch(
@@ -45,7 +46,7 @@ async def test_user(hass, spider):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == DOMAIN
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
@@ -55,7 +56,7 @@ async def test_user(hass, spider):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_import(hass, spider):
+async def test_import(hass: HomeAssistant, spider) -> None:
     """Test import step."""
 
     with patch(
@@ -72,7 +73,7 @@ async def test_import(hass, spider):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == DOMAIN
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
@@ -82,7 +83,7 @@ async def test_import(hass, spider):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_abort_if_already_setup(hass, spider):
+async def test_abort_if_already_setup(hass: HomeAssistant, spider) -> None:
     """Test we abort if Spider is already setup."""
     MockConfigEntry(domain=DOMAIN, data=SPIDER_USER_DATA).add_to_hass(hass)
 
@@ -91,7 +92,7 @@ async def test_abort_if_already_setup(hass, spider):
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=SPIDER_USER_DATA
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
     # Should fail, config exist (flow)
@@ -99,5 +100,5 @@ async def test_abort_if_already_setup(hass, spider):
         DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=SPIDER_USER_DATA
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"

@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 from aiohttp.client_exceptions import ClientResponseError
+from bond_async import DeviceType
 
 from homeassistant import core
 from homeassistant.components.bond.const import DOMAIN as BOND_DOMAIN
@@ -16,6 +17,29 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+async def remove_device(ws_client, device_id, config_entry_id):
+    """Remove config entry from a device."""
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": config_entry_id,
+            "device_id": device_id,
+        }
+    )
+    response = await ws_client.receive_json()
+    return response["success"]
+
+
+def ceiling_fan_with_breeze(name: str):
+    """Create a ceiling fan with given name with breeze support."""
+    return {
+        "name": name,
+        "type": DeviceType.CEILING_FAN,
+        "actions": ["SetSpeed", "SetDirection", "BreezeOn"],
+    }
 
 
 def patch_setup_entry(domain: str, *, enabled: bool = True):
@@ -43,13 +67,9 @@ async def setup_bond_entity(
         enabled=patch_token
     ), patch_bond_version(enabled=patch_version), patch_bond_device_ids(
         enabled=patch_device_ids
-    ), patch_setup_entry(
-        "cover", enabled=patch_platforms
-    ), patch_setup_entry(
+    ), patch_setup_entry("cover", enabled=patch_platforms), patch_setup_entry(
         "fan", enabled=patch_platforms
-    ), patch_setup_entry(
-        "light", enabled=patch_platforms
-    ), patch_setup_entry(
+    ), patch_setup_entry("light", enabled=patch_platforms), patch_setup_entry(
         "switch", enabled=patch_platforms
     ):
         return await hass.config_entries.async_setup(config_entry.entry_id)
@@ -78,15 +98,11 @@ async def setup_platform(
         "homeassistant.components.bond.PLATFORMS", [platform]
     ), patch_bond_version(return_value=bond_version), patch_bond_bridge(
         return_value=bridge
-    ), patch_bond_token(
-        return_value=token
-    ), patch_bond_device_ids(
+    ), patch_bond_token(return_value=token), patch_bond_device_ids(
         return_value=[bond_device_id]
     ), patch_start_bpup(), patch_bond_device(
         return_value=discovered_device
-    ), patch_bond_device_properties(
-        return_value=props
-    ), patch_bond_device_state(
+    ), patch_bond_device_properties(return_value=props), patch_bond_device_state(
         return_value=state
     ):
         assert await async_setup_component(hass, BOND_DOMAIN, {})
@@ -103,7 +119,12 @@ def patch_bond_version(
         return nullcontext()
 
     if return_value is None:
-        return_value = {"bondid": "test-bond-id"}
+        return_value = {
+            "bondid": "ZXXX12345",
+            "target": "test-model",
+            "fw_ver": "test-version",
+            "mcu_ver": "test-hw-version",
+        }
 
     return patch(
         "homeassistant.components.bond.Bond.version",
@@ -191,7 +212,7 @@ def patch_bond_action_returns_clientresponseerror():
     return patch(
         "homeassistant.components.bond.Bond.action",
         side_effect=ClientResponseError(
-            request_info=None, history=None, code=405, message="Method Not Allowed"
+            request_info=None, history=None, status=405, message="Method Not Allowed"
         ),
     )
 
@@ -236,3 +257,12 @@ async def help_test_entity_available(
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
     assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+
+def ceiling_fan(name: str):
+    """Create a ceiling fan with given name."""
+    return {
+        "name": name,
+        "type": DeviceType.CEILING_FAN,
+        "actions": ["SetSpeed", "SetDirection"],
+    }

@@ -2,39 +2,34 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TypeVar
+from typing import Any, TypeVar
 
-CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
+_TypeT = TypeVar("_TypeT", bound=type[Any])
 
 
-class DictRegistry(dict):
+class DictRegistry(dict[int | str, _TypeT]):
     """Dict Registry of items."""
 
-    def register(
-        self, name: int | str, item: str | CALLABLE_T = None
-    ) -> Callable[[CALLABLE_T], CALLABLE_T]:
+    def register(self, name: int | str) -> Callable[[_TypeT], _TypeT]:
         """Return decorator to register item with a specific name."""
 
-        def decorator(channel: CALLABLE_T) -> CALLABLE_T:
-            """Register decorated channel or item."""
-            if item is None:
-                self[name] = channel
-            else:
-                self[name] = item
-            return channel
+        def decorator(cluster_handler: _TypeT) -> _TypeT:
+            """Register decorated cluster handler or item."""
+            self[name] = cluster_handler
+            return cluster_handler
 
         return decorator
 
 
-class SetRegistry(set):
+class SetRegistry(set[int | str]):
     """Set Registry of items."""
 
-    def register(self, name: int | str) -> Callable[[CALLABLE_T], CALLABLE_T]:
+    def register(self, name: int | str) -> Callable[[_TypeT], _TypeT]:
         """Return decorator to register item with a specific name."""
 
-        def decorator(channel: CALLABLE_T) -> CALLABLE_T:
-            """Register decorated channel or item."""
+        def decorator(cluster_handler: _TypeT) -> _TypeT:
+            """Register decorated cluster handler or item."""
             self.add(name)
-            return channel
+            return cluster_handler
 
         return decorator

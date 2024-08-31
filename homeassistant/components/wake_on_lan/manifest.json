@@ -1,8 +1,8 @@
 {
   "domain": "wake_on_lan",
   "name": "Wake on LAN",
-  "documentation": "https://www.home-assistant.io/integrations/wake_on_lan",
-  "requirements": ["wakeonlan==2.0.1"],
   "codeowners": ["@ntilley905"],
-  "iot_class": "local_push"
+  "documentation": "https://www.home-assistant.io/integrations/wake_on_lan",
+  "iot_class": "local_push",
+  "requirements": ["wakeonlan==2.1.0"]
 }

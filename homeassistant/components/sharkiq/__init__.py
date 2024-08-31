@@ -1,10 +1,8 @@
 """Shark IQ Integration."""
-
 import asyncio
 from contextlib import suppress
 
-import async_timeout
-from sharkiqpy import (
+from sharkiq import (
     AylaApi,
     SharkIqAuthError,
     SharkIqAuthExpiringError,
@@ -13,9 +11,19 @@ from sharkiqpy import (
 )
 
 from homeassistant import exceptions
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import _LOGGER, API_TIMEOUT, DOMAIN, PLATFORMS
+from .const import (
+    API_TIMEOUT,
+    DOMAIN,
+    LOGGER,
+    PLATFORMS,
+    SHARKIQ_REGION_DEFAULT,
+    SHARKIQ_REGION_EUROPE,
+)
 from .update_coordinator import SharkIqUpdateCoordinator
 
 
@@ -26,25 +34,32 @@ class CannotConnect(exceptions.HomeAssistantError):
 async def async_connect_or_timeout(ayla_api: AylaApi) -> bool:
     """Connect to vacuum."""
     try:
-        async with async_timeout.timeout(API_TIMEOUT):
-            _LOGGER.debug("Initialize connection to Ayla networks API")
+        async with asyncio.timeout(API_TIMEOUT):
+            LOGGER.debug("Initialize connection to Ayla networks API")
             await ayla_api.async_sign_in()
     except SharkIqAuthError:
-        _LOGGER.error("Authentication error connecting to Shark IQ api")
+        LOGGER.error("Authentication error connecting to Shark IQ api")
         return False
     except asyncio.TimeoutError as exc:
-        _LOGGER.error("Timeout expired")
+        LOGGER.error("Timeout expired")
         raise CannotConnect from exc
 
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Initialize the sharkiq platform via config entry."""
+    if CONF_REGION not in config_entry.data:
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data={**config_entry.data, CONF_REGION: SHARKIQ_REGION_DEFAULT},
+        )
+
     ayla_api = get_ayla_api(
         username=config_entry.data[CONF_USERNAME],
         password=config_entry.data[CONF_PASSWORD],
-        websession=hass.helpers.aiohttp_client.async_get_clientsession(),
+        websession=async_get_clientsession(hass),
+        europe=(config_entry.data[CONF_REGION] == SHARKIQ_REGION_EUROPE),
     )
 
     try:
@@ -55,7 +70,7 @@ async def async_setup_entry(hass, config_entry):
 
     shark_vacs = await ayla_api.async_get_devices(False)
     device_names = ", ".join(d.name for d in shark_vacs)
-    _LOGGER.debug("Found %d Shark IQ device(s): %s", len(shark_vacs), device_names)
+    LOGGER.debug("Found %d Shark IQ device(s): %s", len(shark_vacs), device_names)
     coordinator = SharkIqUpdateCoordinator(hass, config_entry, ayla_api, shark_vacs)
 
     await coordinator.async_config_entry_first_refresh()
@@ -63,15 +78,15 @@ async def async_setup_entry(hass, config_entry):
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
 
 async def async_disconnect_or_timeout(coordinator: SharkIqUpdateCoordinator):
     """Disconnect to vacuum."""
-    _LOGGER.debug("Disconnecting from Ayla Api")
-    async with async_timeout.timeout(5):
+    LOGGER.debug("Disconnecting from Ayla Api")
+    async with asyncio.timeout(5):
         with suppress(
             SharkIqAuthError, SharkIqAuthExpiringError, SharkIqNotAuthedError
         ):
@@ -83,7 +98,7 @@ async def async_update_options(hass, config_entry):
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS

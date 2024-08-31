@@ -3,12 +3,9 @@ from __future__ import annotations
 
 import pyvera as veraApi
 
-from homeassistant.components.binary_sensor import (
-    DOMAIN as PLATFORM_DOMAIN,
-    ENTITY_ID_FORMAT,
-    BinarySensorEntity,
-)
+from homeassistant.components.binary_sensor import ENTITY_ID_FORMAT, BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -26,7 +23,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             VeraBinarySensor(device, controller_data)
-            for device in controller_data.devices.get(PLATFORM_DOMAIN)
+            for device in controller_data.devices[Platform.BINARY_SENSOR]
         ],
         True,
     )
@@ -35,20 +32,16 @@ async def async_setup_entry(
 class VeraBinarySensor(VeraDevice[veraApi.VeraBinarySensor], BinarySensorEntity):
     """Representation of a Vera Binary Sensor."""
 
+    _attr_is_on = False
+
     def __init__(
         self, vera_device: veraApi.VeraBinarySensor, controller_data: ControllerData
     ) -> None:
         """Initialize the binary_sensor."""
-        self._state = False
         VeraDevice.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if sensor is on."""
-        return self._state
 
     def update(self) -> None:
         """Get the latest data and update the state."""
         super().update()
-        self._state = self.vera_device.is_tripped
+        self._attr_is_on = self.vera_device.is_tripped

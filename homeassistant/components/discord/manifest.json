@@ -1,8 +1,11 @@
 {
   "domain": "discord",
   "name": "Discord",
+  "codeowners": ["@tkdrob"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/discord",
-  "requirements": ["discord.py==1.7.3"],
-  "codeowners": [],
-  "iot_class": "cloud_push"
+  "integration_type": "service",
+  "iot_class": "cloud_push",
+  "loggers": ["discord"],
+  "requirements": ["nextcord==2.0.0a8"]
 }

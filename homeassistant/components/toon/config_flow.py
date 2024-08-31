@@ -20,8 +20,8 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     DOMAIN = DOMAIN
     VERSION = 2
 
-    agreements: list[Agreement] | None = None
-    data: dict[str, Any] | None = None
+    agreements: list[Agreement]
+    data: dict[str, Any]
 
     @property
     def logger(self) -> logging.Logger:
@@ -64,7 +64,7 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         return await self.async_step_user()
 
     async def async_step_agreement(
-        self, user_input: dict[str, Any] = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Select Toon agreement to add."""
         if len(self.agreements) == 1:

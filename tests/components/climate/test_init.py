@@ -1,23 +1,31 @@
 """The tests for the climate component."""
 from __future__ import annotations
 
+from enum import Enum
+from types import ModuleType
 from unittest.mock import MagicMock
 
 import pytest
 import voluptuous as vol
 
+from homeassistant.components import climate
 from homeassistant.components.climate import (
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     SET_TEMPERATURE_SCHEMA,
-    ClimateDevice,
     ClimateEntity,
+    HVACMode,
+)
+from homeassistant.core import HomeAssistant
+
+from tests.common import (
+    async_mock_service,
+    import_and_test_deprecated_constant,
+    import_and_test_deprecated_constant_enum,
 )
 
-from tests.common import async_mock_service
 
-
-async def test_set_temp_schema_no_req(hass, caplog):
+async def test_set_temp_schema_no_req(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the set temperature schema with missing required data."""
     domain = "climate"
     service = "test_set_temperature"
@@ -32,7 +40,9 @@ async def test_set_temp_schema_no_req(hass, caplog):
     assert len(calls) == 0
 
 
-async def test_set_temp_schema(hass, caplog):
+async def test_set_temp_schema(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the set temperature schema with ok required data."""
     domain = "climate"
     service = "test_set_temperature"
@@ -51,20 +61,20 @@ class MockClimateEntity(ClimateEntity):
     """Mock Climate device to use in tests."""
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode.
 
-        Need to be one of HVAC_MODE_*.
+        Need to be one of HVACMode.*.
         """
-        return HVAC_MODE_HEAT
+        return HVACMode.HEAT
 
     @property
-    def hvac_modes(self) -> list[str]:
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes.
 
         Need to be a subset of HVAC_MODES.
         """
-        return [HVAC_MODE_OFF, HVAC_MODE_HEAT]
+        return [HVACMode.OFF, HVACMode.HEAT]
 
     def turn_on(self) -> None:
         """Turn on."""
@@ -73,7 +83,7 @@ class MockClimateEntity(ClimateEntity):
         """Turn off."""
 
 
-async def test_sync_turn_on(hass):
+async def test_sync_turn_on(hass: HomeAssistant) -> None:
     """Test if async turn_on calls sync turn_on."""
     climate = MockClimateEntity()
     climate.hass = hass
@@ -84,7 +94,7 @@ async def test_sync_turn_on(hass):
     assert climate.turn_on.called
 
 
-async def test_sync_turn_off(hass):
+async def test_sync_turn_off(hass: HomeAssistant) -> None:
     """Test if async turn_off calls sync turn_off."""
     climate = MockClimateEntity()
     climate.hass = hass
@@ -95,19 +105,56 @@ async def test_sync_turn_off(hass):
     assert climate.turn_off.called
 
 
-def test_deprecated_base_class(caplog):
-    """Test deprecated base class."""
+def _create_tuples(enum: Enum, constant_prefix: str) -> list[tuple[Enum, str]]:
+    result = []
+    for enum in enum:
+        result.append((enum, constant_prefix))
+    return result
 
-    class CustomClimate(ClimateDevice):
-        """Custom climate entity class."""
 
-        @property
-        def hvac_mode(self):
-            pass
+@pytest.mark.parametrize(
+    ("enum", "constant_prefix"),
+    _create_tuples(climate.ClimateEntityFeature, "SUPPORT_")
+    + _create_tuples(climate.HVACMode, "HVAC_MODE_"),
+)
+@pytest.mark.parametrize(
+    "module",
+    [climate, climate.const],
+)
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: Enum,
+    constant_prefix: str,
+    module: ModuleType,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, module, enum, constant_prefix, "2025.1"
+    )
 
-        @property
-        def hvac_modes(self):
-            pass
 
-    CustomClimate()
-    assert "ClimateDevice is deprecated, modify CustomClimate" in caplog.text
+@pytest.mark.parametrize(
+    ("enum", "constant_postfix"),
+    [
+        (climate.HVACAction.OFF, "OFF"),
+        (climate.HVACAction.HEATING, "HEAT"),
+        (climate.HVACAction.COOLING, "COOL"),
+        (climate.HVACAction.DRYING, "DRY"),
+        (climate.HVACAction.IDLE, "IDLE"),
+        (climate.HVACAction.FAN, "FAN"),
+    ],
+)
+def test_deprecated_current_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: climate.HVACAction,
+    constant_postfix: str,
+) -> None:
+    """Test deprecated current constants."""
+    import_and_test_deprecated_constant(
+        caplog,
+        climate.const,
+        "CURRENT_HVAC_" + constant_postfix,
+        f"{enum.__class__.__name__}.{enum.name}",
+        enum,
+        "2025.1",
+    )

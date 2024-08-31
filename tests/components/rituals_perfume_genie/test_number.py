@@ -4,21 +4,16 @@ from __future__ import annotations
 import pytest
 
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.components.number.const import (
+from homeassistant.components.number import (
     ATTR_MAX,
     ATTR_MIN,
     ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
-)
-from homeassistant.components.rituals_perfume_genie.number import (
-    MAX_PERFUME_AMOUNT,
-    MIN_PERFUME_AMOUNT,
-    PERFUME_AMOUNT_SUFFIX,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -29,24 +24,24 @@ from .common import (
 )
 
 
-async def test_number_entity(hass: HomeAssistant) -> None:
+async def test_number_entity(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test the creation and values of the diffuser number entity."""
     config_entry = mock_config_entry(unique_id="number_test")
     diffuser = mock_diffuser(hublot="lot123", perfume_amount=2)
     await init_integration(hass, config_entry, [diffuser])
 
-    registry = entity_registry.async_get(hass)
-
     state = hass.states.get("number.genie_perfume_amount")
     assert state
     assert state.state == str(diffuser.perfume_amount)
     assert state.attributes[ATTR_ICON] == "mdi:gauge"
-    assert state.attributes[ATTR_MIN] == MIN_PERFUME_AMOUNT
-    assert state.attributes[ATTR_MAX] == MAX_PERFUME_AMOUNT
+    assert state.attributes[ATTR_MIN] == 1
+    assert state.attributes[ATTR_MAX] == 3
 
-    entry = registry.async_get("number.genie_perfume_amount")
+    entry = entity_registry.async_get("number.genie_perfume_amount")
     assert entry
-    assert entry.unique_id == f"{diffuser.hublot}{PERFUME_AMOUNT_SUFFIX}"
+    assert entry.unique_id == f"{diffuser.hublot}-perfume_amount"
 
 
 async def test_set_number_value(hass: HomeAssistant) -> None:
@@ -80,7 +75,7 @@ async def test_set_number_value(hass: HomeAssistant) -> None:
     assert state.state == "1"
 
 
-async def test_set_number_value_out_of_range(hass: HomeAssistant):
+async def test_set_number_value_out_of_range(hass: HomeAssistant) -> None:
     """Test setting the diffuser number entity value out of range."""
     config_entry = mock_config_entry(unique_id="number_set_value_out_of_range_test")
     diffuser = mock_diffuser(hublot="lot123", perfume_amount=2)
@@ -130,7 +125,7 @@ async def test_set_number_value_out_of_range(hass: HomeAssistant):
     assert state.state == "2"
 
 
-async def test_set_number_value_to_float(hass: HomeAssistant):
+async def test_set_number_value_to_float(hass: HomeAssistant) -> None:
     """Test setting the diffuser number entity value to a float."""
     config_entry = mock_config_entry(unique_id="number_set_value_to_float_test")
     diffuser = mock_diffuser(hublot="lot123", perfume_amount=3)

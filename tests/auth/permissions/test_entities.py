@@ -7,20 +7,21 @@ from homeassistant.auth.permissions.entities import (
     compile_entities,
 )
 from homeassistant.auth.permissions.models import PermissionLookup
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_registry import RegistryEntry
 
 from tests.common import mock_device_registry, mock_registry
 
 
-def test_entities_none():
+def test_entities_none() -> None:
     """Test entity ID policy."""
     policy = None
     compiled = compile_entities(policy, None)
     assert compiled("light.kitchen", "read") is False
 
 
-def test_entities_empty():
+def test_entities_empty() -> None:
     """Test entity ID policy."""
     policy = {}
     ENTITY_POLICY_SCHEMA(policy)
@@ -28,14 +29,14 @@ def test_entities_empty():
     assert compiled("light.kitchen", "read") is False
 
 
-def test_entities_false():
+def test_entities_false() -> None:
     """Test entity ID policy."""
     policy = False
     with pytest.raises(vol.Invalid):
         ENTITY_POLICY_SCHEMA(policy)
 
 
-def test_entities_true():
+def test_entities_true() -> None:
     """Test entity ID policy."""
     policy = True
     ENTITY_POLICY_SCHEMA(policy)
@@ -43,7 +44,7 @@ def test_entities_true():
     assert compiled("light.kitchen", "read") is True
 
 
-def test_entities_domains_true():
+def test_entities_domains_true() -> None:
     """Test entity ID policy."""
     policy = {"domains": True}
     ENTITY_POLICY_SCHEMA(policy)
@@ -51,7 +52,7 @@ def test_entities_domains_true():
     assert compiled("light.kitchen", "read") is True
 
 
-def test_entities_domains_domain_true():
+def test_entities_domains_domain_true() -> None:
     """Test entity ID policy."""
     policy = {"domains": {"light": True}}
     ENTITY_POLICY_SCHEMA(policy)
@@ -60,14 +61,14 @@ def test_entities_domains_domain_true():
     assert compiled("switch.kitchen", "read") is False
 
 
-def test_entities_domains_domain_false():
+def test_entities_domains_domain_false() -> None:
     """Test entity ID policy."""
     policy = {"domains": {"light": False}}
     with pytest.raises(vol.Invalid):
         ENTITY_POLICY_SCHEMA(policy)
 
 
-def test_entities_entity_ids_true():
+def test_entities_entity_ids_true() -> None:
     """Test entity ID policy."""
     policy = {"entity_ids": True}
     ENTITY_POLICY_SCHEMA(policy)
@@ -75,14 +76,14 @@ def test_entities_entity_ids_true():
     assert compiled("light.kitchen", "read") is True
 
 
-def test_entities_entity_ids_false():
+def test_entities_entity_ids_false() -> None:
     """Test entity ID policy."""
     policy = {"entity_ids": False}
     with pytest.raises(vol.Invalid):
         ENTITY_POLICY_SCHEMA(policy)
 
 
-def test_entities_entity_ids_entity_id_true():
+def test_entities_entity_ids_entity_id_true() -> None:
     """Test entity ID policy."""
     policy = {"entity_ids": {"light.kitchen": True}}
     ENTITY_POLICY_SCHEMA(policy)
@@ -91,14 +92,14 @@ def test_entities_entity_ids_entity_id_true():
     assert compiled("switch.kitchen", "read") is False
 
 
-def test_entities_entity_ids_entity_id_false():
+def test_entities_entity_ids_entity_id_false() -> None:
     """Test entity ID policy."""
     policy = {"entity_ids": {"light.kitchen": False}}
     with pytest.raises(vol.Invalid):
         ENTITY_POLICY_SCHEMA(policy)
 
 
-def test_entities_control_only():
+def test_entities_control_only() -> None:
     """Test policy granting control only."""
     policy = {"entity_ids": {"light.kitchen": {"read": True}}}
     ENTITY_POLICY_SCHEMA(policy)
@@ -108,7 +109,7 @@ def test_entities_control_only():
     assert compiled("light.kitchen", "edit") is False
 
 
-def test_entities_read_control():
+def test_entities_read_control() -> None:
     """Test policy granting control only."""
     policy = {"domains": {"light": {"read": True, "control": True}}}
     ENTITY_POLICY_SCHEMA(policy)
@@ -118,7 +119,7 @@ def test_entities_read_control():
     assert compiled("light.kitchen", "edit") is False
 
 
-def test_entities_all_allow():
+def test_entities_all_allow() -> None:
     """Test policy allowing all entities."""
     policy = {"all": True}
     ENTITY_POLICY_SCHEMA(policy)
@@ -128,7 +129,7 @@ def test_entities_all_allow():
     assert compiled("switch.kitchen", "read") is True
 
 
-def test_entities_all_read():
+def test_entities_all_read() -> None:
     """Test policy applying read to all entities."""
     policy = {"all": {"read": True}}
     ENTITY_POLICY_SCHEMA(policy)
@@ -138,7 +139,7 @@ def test_entities_all_read():
     assert compiled("switch.kitchen", "read") is True
 
 
-def test_entities_all_control():
+def test_entities_all_control() -> None:
     """Test entity ID policy applying control to all."""
     policy = {"all": {"control": True}}
     ENTITY_POLICY_SCHEMA(policy)
@@ -149,7 +150,7 @@ def test_entities_all_control():
     assert compiled("switch.kitchen", "control") is True
 
 
-def test_entities_device_id_boolean(hass):
+def test_entities_device_id_boolean(hass: HomeAssistant) -> None:
     """Test entity ID policy applying control on device id."""
     entity_registry = mock_registry(
         hass,
@@ -181,7 +182,7 @@ def test_entities_device_id_boolean(hass):
     assert compiled("test_domain.not_allowed", "control") is False
 
 
-def test_entities_areas_true():
+def test_entities_areas_true() -> None:
     """Test entity ID policy for areas."""
     policy = {"area_ids": True}
     ENTITY_POLICY_SCHEMA(policy)
@@ -189,7 +190,7 @@ def test_entities_areas_true():
     assert compiled("light.kitchen", "read") is True
 
 
-def test_entities_areas_area_true(hass):
+def test_entities_areas_area_true(hass: HomeAssistant) -> None:
     """Test entity ID policy for areas with specific area."""
     entity_registry = mock_registry(
         hass,

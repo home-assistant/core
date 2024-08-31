@@ -1,0 +1,65 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_route": "Could not find route with provided information",
+      "incorrect_api_key": "Invalid API key for selected account"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "to": "To Harbour",
+          "from": "From Harbour",
+          "time": "Time",
+          "weekday": "Weekdays"
+        }
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      }
+    }
+  },
+  "selector": {
+    "weekday": {
+      "options": {
+        "mon": "[%key:common::time::monday%]",
+        "tue": "[%key:common::time::tuesday%]",
+        "wed": "[%key:common::time::wednesday%]",
+        "thu": "[%key:common::time::thursday%]",
+        "fri": "[%key:common::time::friday%]",
+        "sat": "[%key:common::time::saturday%]",
+        "sun": "[%key:common::time::sunday%]"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "departure_time": {
+        "name": "Departure time"
+      },
+      "departure_from": {
+        "name": "Departure from"
+      },
+      "departure_to": {
+        "name": "Departure to"
+      },
+      "departure_modified": {
+        "name": "Departure modified"
+      },
+      "departure_time_next": {
+        "name": "Departure time next"
+      },
+      "departure_time_next_next": {
+        "name": "Departure time next after"
+      }
+    }
+  }
+}

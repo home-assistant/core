@@ -1,8 +1,8 @@
 """Component to interface with an alarm control panel."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
+from functools import partial
 import logging
 from typing import Any, Final, final
 
@@ -23,28 +23,39 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
+from homeassistant.helpers.deprecation import (
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-    SUPPORT_ALARM_ARM_VACATION,
-    SUPPORT_ALARM_TRIGGER,
+from .const import (  # noqa: F401
+    _DEPRECATED_FORMAT_NUMBER,
+    _DEPRECATED_FORMAT_TEXT,
+    _DEPRECATED_SUPPORT_ALARM_ARM_AWAY,
+    _DEPRECATED_SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
+    _DEPRECATED_SUPPORT_ALARM_ARM_HOME,
+    _DEPRECATED_SUPPORT_ALARM_ARM_NIGHT,
+    _DEPRECATED_SUPPORT_ALARM_ARM_VACATION,
+    _DEPRECATED_SUPPORT_ALARM_TRIGGER,
+    ATTR_CHANGED_BY,
+    ATTR_CODE_ARM_REQUIRED,
+    DOMAIN,
+    AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
+
+# As we import constants of the cost module here, we need to add the following
+# functions to check for deprecated constants again
+# Both can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-DOMAIN: Final = "alarm_control_panel"
 SCAN_INTERVAL: Final = timedelta(seconds=30)
-ATTR_CHANGED_BY: Final = "changed_by"
-FORMAT_TEXT: Final = "text"
-FORMAT_NUMBER: Final = "number"
-ATTR_CODE_ARM_REQUIRED: Final = "code_arm_required"
-
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 
 ALARM_SERVICE_SCHEMA: Final = make_entity_service_schema(
@@ -54,11 +65,13 @@ ALARM_SERVICE_SCHEMA: Final = make_entity_service_schema(
 PLATFORM_SCHEMA: Final = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE: Final = cv.PLATFORM_SCHEMA_BASE
 
+# mypy: disallow-any-generics
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for sensors."""
-    component = hass.data[DOMAIN] = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL
+    component = hass.data[DOMAIN] = EntityComponent[AlarmControlPanelEntity](
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
     await component.async_setup(config)
@@ -70,37 +83,37 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_ALARM_ARM_HOME,
         ALARM_SERVICE_SCHEMA,
         "async_alarm_arm_home",
-        [SUPPORT_ALARM_ARM_HOME],
+        [AlarmControlPanelEntityFeature.ARM_HOME],
     )
     component.async_register_entity_service(
         SERVICE_ALARM_ARM_AWAY,
         ALARM_SERVICE_SCHEMA,
         "async_alarm_arm_away",
-        [SUPPORT_ALARM_ARM_AWAY],
+        [AlarmControlPanelEntityFeature.ARM_AWAY],
     )
     component.async_register_entity_service(
         SERVICE_ALARM_ARM_NIGHT,
         ALARM_SERVICE_SCHEMA,
         "async_alarm_arm_night",
-        [SUPPORT_ALARM_ARM_NIGHT],
+        [AlarmControlPanelEntityFeature.ARM_NIGHT],
     )
     component.async_register_entity_service(
         SERVICE_ALARM_ARM_VACATION,
         ALARM_SERVICE_SCHEMA,
         "async_alarm_arm_vacation",
-        [SUPPORT_ALARM_ARM_VACATION],
+        [AlarmControlPanelEntityFeature.ARM_VACATION],
     )
     component.async_register_entity_service(
         SERVICE_ALARM_ARM_CUSTOM_BYPASS,
         ALARM_SERVICE_SCHEMA,
         "async_alarm_arm_custom_bypass",
-        [SUPPORT_ALARM_ARM_CUSTOM_BYPASS],
+        [AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS],
     )
     component.async_register_entity_service(
         SERVICE_ALARM_TRIGGER,
         ALARM_SERVICE_SCHEMA,
         "async_alarm_trigger",
-        [SUPPORT_ALARM_TRIGGER],
+        [AlarmControlPanelEntityFeature.TRIGGER],
     )
 
     return True
@@ -108,18 +121,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[AlarmControlPanelEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[AlarmControlPanelEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class AlarmControlPanelEntityDescription(EntityDescription):
+class AlarmControlPanelEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes alarm control panel entities."""
 
 
@@ -129,12 +141,14 @@ class AlarmControlPanelEntity(Entity):
     entity_description: AlarmControlPanelEntityDescription
     _attr_changed_by: str | None = None
     _attr_code_arm_required: bool = True
-    _attr_code_format: str | None = None
-    _attr_supported_features: int
+    _attr_code_format: CodeFormat | None = None
+    _attr_supported_features: AlarmControlPanelEntityFeature = (
+        AlarmControlPanelEntityFeature(0)
+    )
 
     @property
-    def code_format(self) -> str | None:
-        """Regex for code format or None if no code is required."""
+    def code_format(self) -> CodeFormat | None:
+        """Code format or None if no code is required."""
         return self._attr_code_format
 
     @property
@@ -204,7 +218,7 @@ class AlarmControlPanelEntity(Entity):
         await self.hass.async_add_executor_job(self.alarm_arm_custom_bypass, code)
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> AlarmControlPanelEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
 
@@ -217,15 +231,3 @@ class AlarmControlPanelEntity(Entity):
             ATTR_CHANGED_BY: self.changed_by,
             ATTR_CODE_ARM_REQUIRED: self.code_arm_required,
         }
-
-
-class AlarmControlPanel(AlarmControlPanelEntity):
-    """An abstract class for alarm control entities (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs: Any) -> None:
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)  # type: ignore[call-arg]
-        _LOGGER.warning(
-            "AlarmControlPanel is deprecated, modify %s to extend AlarmControlPanelEntity",
-            cls.__name__,
-        )

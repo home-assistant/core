@@ -1,0 +1,46 @@
+# serializer version: 1
+# name: test_update_attached_to_router
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'plug',
+      'friendly_name': 'Mock Title Connected to router',
+      'icon': 'mdi:router-network',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.mock_title_connected_to_router',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_update_attached_to_router.1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mock_title_connected_to_router',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
+    'original_icon': 'mdi:router-network',
+    'original_name': 'Connected to router',
+    'platform': 'devolo_home_network',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'connected_to_router',
+    'unique_id': '1234567890_connected_to_router',
+    'unit_of_measurement': None,
+  })
+# ---

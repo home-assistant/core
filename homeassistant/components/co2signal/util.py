@@ -3,9 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
-
-from .const import CONF_COUNTRY_CODE
+from homeassistant.const import CONF_COUNTRY_CODE, CONF_LATITUDE, CONF_LONGITUDE
 
 
 def get_extra_name(config: Mapping) -> str | None:

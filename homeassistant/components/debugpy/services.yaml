@@ -1,4 +1,2 @@
 # Describes the format for available Remote Python Debugger services
 start:
-  name: Start
-  description: Start the Remote Python Debugger

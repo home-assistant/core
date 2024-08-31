@@ -31,7 +31,7 @@ def setup_cors(app: Application, origins: list[str]) -> None:
     """Set up CORS."""
     # This import should remain here. That way the HTTP integration can always
     # be imported by other integrations without it's requirements being installed.
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     import aiohttp_cors
 
     cors = aiohttp_cors.setup(

@@ -2,15 +2,16 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
 from functools import partial
-from typing import Any, Dict, cast
+from typing import Any
 
 from pyiqvia import Client
 from pyiqvia.errors import IQVIAError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
@@ -37,7 +38,7 @@ from .const import (
 DEFAULT_ATTRIBUTION = "Data provided by IQVIA™"
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -56,15 +57,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client.disable_request_retries()
 
     async def async_get_data_from_api(
-        api_coro: Callable[..., Awaitable]
+        api_coro: Callable[..., Coroutine[Any, Any, dict[str, Any]]],
     ) -> dict[str, Any]:
         """Get data from a particular API coroutine."""
         try:
-            data = await api_coro()
+            return await api_coro()
         except IQVIAError as err:
             raise UpdateFailed from err
-
-        return cast(Dict[str, Any], data)
 
     coordinators = {}
     init_data_update_tasks = []
@@ -100,7 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinators
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -114,12 +113,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class IQVIAEntity(CoordinatorEntity):
+class IQVIAEntity(CoordinatorEntity[DataUpdateCoordinator[dict[str, Any]]]):
     """Define a base IQVIA entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[dict[str, Any]],
         entry: ConfigEntry,
         description: EntityDescription,
     ) -> None:

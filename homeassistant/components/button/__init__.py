@@ -1,10 +1,12 @@
 """Component to pressing a button as platforms."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import datetime, timedelta
+from enum import StrEnum
 import logging
 from typing import final
+
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -29,9 +31,22 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 _LOGGER = logging.getLogger(__name__)
 
 
+class ButtonDeviceClass(StrEnum):
+    """Device class for buttons."""
+
+    IDENTIFY = "identify"
+    RESTART = "restart"
+    UPDATE = "update"
+
+
+DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(ButtonDeviceClass))
+
+# mypy: disallow-any-generics
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Button entities."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[ButtonEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -47,19 +62,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[ButtonEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[ButtonEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class ButtonEntityDescription(EntityDescription):
+class ButtonEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes button entities."""
+
+    device_class: ButtonDeviceClass | None = None
 
 
 class ButtonEntity(RestoreEntity):
@@ -67,9 +83,25 @@ class ButtonEntity(RestoreEntity):
 
     entity_description: ButtonEntityDescription
     _attr_should_poll = False
-    _attr_device_class: None = None
+    _attr_device_class: ButtonDeviceClass | None
     _attr_state: None = None
     __last_pressed: datetime | None = None
+
+    def _default_to_device_class_name(self) -> bool:
+        """Return True if an unnamed entity should be named by its device class.
+
+        For buttons this is True if the entity has a device class.
+        """
+        return self.device_class is not None
+
+    @property
+    def device_class(self) -> ButtonDeviceClass | None:
+        """Return the class of this entity."""
+        if hasattr(self, "_attr_device_class"):
+            return self._attr_device_class
+        if hasattr(self, "entity_description"):
+            return self.entity_description.device_class
+        return None
 
     @property
     @final
@@ -89,8 +121,9 @@ class ButtonEntity(RestoreEntity):
         self.async_write_ha_state()
         await self.async_press()
 
-    async def async_added_to_hass(self) -> None:
+    async def async_internal_added_to_hass(self) -> None:
         """Call when the button is added to hass."""
+        await super().async_internal_added_to_hass()
         state = await self.async_get_last_state()
         if state is not None and state.state is not None:
             self.__last_pressed = dt_util.parse_datetime(state.state)

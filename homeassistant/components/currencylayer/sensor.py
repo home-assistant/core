@@ -1,4 +1,6 @@
 """Support for currencylayer.com exchange rates service."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -6,24 +8,18 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_API_KEY,
-    CONF_BASE,
-    CONF_NAME,
-    CONF_QUOTE,
-)
+from homeassistant.const import CONF_API_KEY, CONF_BASE, CONF_NAME, CONF_QUOTE
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "http://apilayer.net/api/live"
 
-ATTRIBUTION = "Data provided by currencylayer.com"
-
 DEFAULT_BASE = "USD"
 DEFAULT_NAME = "CurrencyLayer Sensor"
 
-ICON = "mdi:currency"
 
 SCAN_INTERVAL = timedelta(hours=4)
 
@@ -37,7 +33,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Currencylayer sensor."""
     base = config[CONF_BASE]
     api_key = config[CONF_API_KEY]
@@ -50,12 +51,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for variable in config[CONF_QUOTE]:
         sensors.append(CurrencylayerSensor(rest, base, variable))
     if "error" in response.json():
-        return False
+        return
     add_entities(sensors, True)
 
 
 class CurrencylayerSensor(SensorEntity):
     """Implementing the Currencylayer sensor."""
+
+    _attr_attribution = "Data provided by currencylayer.com"
+    _attr_icon = "mdi:currency"
 
     def __init__(self, rest, base, quote):
         """Initialize the sensor."""
@@ -75,21 +79,11 @@ class CurrencylayerSensor(SensorEntity):
         return self._base
 
     @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
-
-    @property
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the sensor."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    def update(self):
+    def update(self) -> None:
         """Update current date."""
         self.rest.update()
         if (value := self.rest.data) is not None:

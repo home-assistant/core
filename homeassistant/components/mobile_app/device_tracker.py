@@ -1,19 +1,22 @@
-"""Device tracker platform that adds support for OwnTracks over MQTT."""
+"""Device tracker for Mobile app."""
 from homeassistant.components.device_tracker import (
     ATTR_BATTERY,
     ATTR_GPS,
     ATTR_GPS_ACCURACY,
     ATTR_LOCATION_NAME,
+    SourceType,
+    TrackerEntity,
 )
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.components.device_tracker.const import SOURCE_TYPE_GPS
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -29,18 +32,19 @@ from .helpers import device_info
 ATTR_KEYS = (ATTR_ALTITUDE, ATTR_COURSE, ATTR_SPEED, ATTR_VERTICAL_ACCURACY)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up OwnTracks based off an entry."""
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up Mobile app based off an entry."""
     entity = MobileAppEntity(entry)
     async_add_entities([entity])
-    return True
 
 
 class MobileAppEntity(TrackerEntity, RestoreEntity):
     """Represent a tracked device."""
 
     def __init__(self, entry, data=None):
-        """Set up OwnTracks entity."""
+        """Set up Mobile app entity."""
         self._entry = entry
         self._data = data
         self._dispatch_unsub = None
@@ -99,20 +103,22 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         return self._entry.data[ATTR_DEVICE_NAME]
 
     @property
-    def source_type(self):
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
-        return SOURCE_TYPE_GPS
+        return SourceType.GPS
 
     @property
     def device_info(self):
         """Return the device info."""
         return device_info(self._entry.data)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to Home Assistant."""
         await super().async_added_to_hass()
-        self._dispatch_unsub = self.hass.helpers.dispatcher.async_dispatcher_connect(
-            SIGNAL_LOCATION_UPDATE.format(self._entry.entry_id), self.update_data
+        self._dispatch_unsub = async_dispatcher_connect(
+            self.hass,
+            SIGNAL_LOCATION_UPDATE.format(self._entry.entry_id),
+            self.update_data,
         )
 
         # Don't restore if we got set up with data.
@@ -132,7 +138,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         data.update({key: attr[key] for key in attr if key in ATTR_KEYS})
         self._data = data
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Call when entity is being removed from hass."""
         await super().async_will_remove_from_hass()
 

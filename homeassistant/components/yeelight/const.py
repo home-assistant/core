@@ -2,6 +2,8 @@
 
 from datetime import timedelta
 
+from homeassistant.const import Platform
+
 DOMAIN = "yeelight"
 
 
@@ -31,7 +33,6 @@ DEFAULT_MODE_MUSIC = False
 DEFAULT_SAVE_ON_CHANGE = False
 DEFAULT_NIGHTLIGHT_SWITCH = False
 
-CONF_MODEL = "model"
 CONF_DETECTED_MODEL = "detected_model"
 CONF_TRANSITION = "transition"
 
@@ -100,4 +101,4 @@ UPDATE_REQUEST_PROPERTIES = [
 ]
 
 
-PLATFORMS = ["binary_sensor", "light"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.LIGHT]

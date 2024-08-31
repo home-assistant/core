@@ -24,13 +24,13 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Read configuration and create Modbus fans."""
-    if discovery_info is None:  # pragma: no cover
+    if discovery_info is None:
         return
     fans = []
 
     for entry in discovery_info[CONF_FANS]:
         hub: ModbusHub = get_hub(hass, discovery_info[CONF_NAME])
-        fans.append(ModbusFan(hub, entry))
+        fans.append(ModbusFan(hass, hub, entry))
     async_add_entities(fans)
 
 
@@ -39,7 +39,6 @@ class ModbusFan(BaseSwitch, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str | None = None,
         percentage: int | None = None,
         preset_mode: str | None = None,
         **kwargs: Any,
@@ -48,7 +47,7 @@ class ModbusFan(BaseSwitch, FanEntity):
         await self.async_turn(self.command_on)
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if fan is on.
 
         This is needed due to the ongoing conversion of fan.

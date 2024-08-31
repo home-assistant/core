@@ -3,13 +3,10 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.device_automation import toggle_entity
-from homeassistant.components.light import (
-    ATTR_FLASH,
-    FLASH_SHORT,
-    SUPPORT_FLASH,
-    VALID_BRIGHTNESS_PCT,
-    VALID_FLASH,
+from homeassistant.components.device_automation import (
+    async_get_entity_registry_entry_or_raise,
+    async_validate_entity_schema,
+    toggle_entity,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -19,7 +16,8 @@ from homeassistant.const import (
     CONF_TYPE,
     SERVICE_TURN_ON,
 )
-from homeassistant.core import Context, HomeAssistant, HomeAssistantError
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
@@ -27,7 +25,12 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from . import (
     ATTR_BRIGHTNESS_PCT,
     ATTR_BRIGHTNESS_STEP_PCT,
+    ATTR_FLASH,
     DOMAIN,
+    FLASH_SHORT,
+    VALID_BRIGHTNESS_PCT,
+    VALID_FLASH,
+    LightEntityFeature,
     brightness_supported,
     get_supported_color_modes,
 )
@@ -38,9 +41,9 @@ TYPE_BRIGHTNESS_INCREASE = "brightness_increase"
 TYPE_BRIGHTNESS_DECREASE = "brightness_decrease"
 TYPE_FLASH = "flash"
 
-ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
+_ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Required(CONF_DOMAIN): DOMAIN,
         vol.Required(CONF_TYPE): vol.In(
             toggle_entity.DEVICE_ACTION_TYPES
@@ -52,11 +55,18 @@ ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 )
 
 
+async def async_validate_action_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate config."""
+    return async_validate_entity_schema(hass, config, _ACTION_SCHEMA)
+
+
 async def async_call_action_from_config(
     hass: HomeAssistant,
     config: ConfigType,
     variables: TemplateVarsType,
-    context: Context,
+    context: Context | None,
 ) -> None:
     """Change state based on configuration."""
     if (
@@ -78,10 +88,7 @@ async def async_call_action_from_config(
         data[ATTR_BRIGHTNESS_PCT] = config[ATTR_BRIGHTNESS_PCT]
 
     if config[CONF_TYPE] == TYPE_FLASH:
-        if ATTR_FLASH in config:
-            data[ATTR_FLASH] = config[ATTR_FLASH]
-        else:
-            data[ATTR_FLASH] = FLASH_SHORT
+        data[ATTR_FLASH] = config.get(ATTR_FLASH, FLASH_SHORT)
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, data, blocking=True, context=context
@@ -106,7 +113,7 @@ async def async_get_actions(
         base_action = {
             CONF_DEVICE_ID: device_id,
             CONF_DOMAIN: DOMAIN,
-            CONF_ENTITY_ID: entry.entity_id,
+            CONF_ENTITY_ID: entry.id,
         }
 
         if brightness_supported(supported_color_modes):
@@ -117,7 +124,7 @@ async def async_get_actions(
                 )
             )
 
-        if supported_features & SUPPORT_FLASH:
+        if supported_features & LightEntityFeature.FLASH:
             actions.append({**base_action, CONF_TYPE: TYPE_FLASH})
 
     return actions
@@ -131,13 +138,11 @@ async def async_get_action_capabilities(
         return {}
 
     try:
-        supported_color_modes = get_supported_color_modes(hass, config[ATTR_ENTITY_ID])
+        entry = async_get_entity_registry_entry_or_raise(hass, config[CONF_ENTITY_ID])
+        supported_color_modes = get_supported_color_modes(hass, entry.entity_id)
+        supported_features = get_supported_features(hass, entry.entity_id)
     except HomeAssistantError:
         supported_color_modes = None
-
-    try:
-        supported_features = get_supported_features(hass, config[ATTR_ENTITY_ID])
-    except HomeAssistantError:
         supported_features = 0
 
     extra_fields = {}
@@ -145,7 +150,7 @@ async def async_get_action_capabilities(
     if brightness_supported(supported_color_modes):
         extra_fields[vol.Optional(ATTR_BRIGHTNESS_PCT)] = VALID_BRIGHTNESS_PCT
 
-    if supported_features & SUPPORT_FLASH:
+    if supported_features & LightEntityFeature.FLASH:
         extra_fields[vol.Optional(ATTR_FLASH)] = VALID_FLASH
 
     return {"extra_fields": vol.Schema(extra_fields)} if extra_fields else {}

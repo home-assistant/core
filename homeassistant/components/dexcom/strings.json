@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Setup Dexcom integration",
+        "title": "Set up Dexcom integration",
         "description": "Enter Dexcom Share credentials",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
@@ -26,6 +26,16 @@
         "data": {
           "unit_of_measurement": "Unit of measurement"
         }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "glucose_value": {
+        "name": "Glucose value"
+      },
+      "glucose_trend": {
+        "name": "Glucose trend"
       }
     }
   }

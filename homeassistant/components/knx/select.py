@@ -9,8 +9,10 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.const import (
     CONF_ENTITY_CATEGORY,
     CONF_NAME,
+    CONF_PAYLOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -18,7 +20,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_PAYLOAD,
     CONF_PAYLOAD_LENGTH,
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
@@ -26,7 +27,6 @@ from .const import (
     DATA_KNX_CONFIG,
     DOMAIN,
     KNX_ADDRESS,
-    SupportedPlatforms,
 )
 from .knx_entity import KnxEntity
 from .schema import SelectSchema
@@ -39,9 +39,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up select(s) for KNX platform."""
     xknx: XKNX = hass.data[DOMAIN].xknx
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][
-        SupportedPlatforms.SELECT.value
-    ]
+    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.SELECT]
 
     async_add_entities(KNXSelect(xknx, entity_config) for entity_config in config)
 

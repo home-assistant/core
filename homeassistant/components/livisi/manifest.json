@@ -1,0 +1,9 @@
+{
+  "domain": "livisi",
+  "name": "LIVISI Smart Home",
+  "codeowners": ["@StefanIacobLivisi", "@planbnet"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/livisi",
+  "iot_class": "local_polling",
+  "requirements": ["aiolivisi==0.0.19"]
+}

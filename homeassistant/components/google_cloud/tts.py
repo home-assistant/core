@@ -3,7 +3,6 @@ import asyncio
 import logging
 import os
 
-import async_timeout
 from google.cloud import texttospeech
 import voluptuous as vol
 
@@ -40,11 +39,14 @@ SUPPORTED_LANGUAGES = [
     "en-US",
     "es-ES",
     "es-US",
+    "eu-ES",
     "fi-FI",
     "fil-PH",
     "fr-CA",
     "fr-FR",
+    "gl-ES",
     "gu-IN",
+    "he-IL",
     "hi-IN",
     "hu-HU",
     "id-ID",
@@ -54,7 +56,9 @@ SUPPORTED_LANGUAGES = [
     "kn-IN",
     "ko-KR",
     "lv-LV",
+    "lt-LT",
     "ml-IN",
+    "mr-IN",
     "ms-MY",
     "nb-NO",
     "nl-BE",
@@ -122,13 +126,9 @@ SUPPORTED_OPTIONS = [
     CONF_TEXT_TYPE,
 ]
 
-GENDER_SCHEMA = vol.All(
-    vol.Upper, vol.In(texttospeech.enums.SsmlVoiceGender.__members__)
-)
+GENDER_SCHEMA = vol.All(vol.Upper, vol.In(texttospeech.SsmlVoiceGender.__members__))
 VOICE_SCHEMA = cv.matches_regex(VOICE_REGEX)
-SCHEMA_ENCODING = vol.All(
-    vol.Upper, vol.In(texttospeech.enums.AudioEncoding.__members__)
-)
+SCHEMA_ENCODING = vol.All(vol.Upper, vol.In(texttospeech.AudioEncoding.__members__))
 SPEED_SCHEMA = vol.All(vol.Coerce(float), vol.Clamp(min=MIN_SPEED, max=MAX_SPEED))
 PITCH_SCHEMA = vol.All(vol.Coerce(float), vol.Clamp(min=MIN_PITCH, max=MAX_PITCH))
 GAIN_SCHEMA = vol.All(vol.Coerce(float), vol.Clamp(min=MIN_GAIN, max=MAX_GAIN))
@@ -240,7 +240,7 @@ class GoogleCloudTTSProvider(Provider):
             CONF_TEXT_TYPE: self._text_type,
         }
 
-    async def async_get_tts_audio(self, message, language, options=None):
+    async def async_get_tts_audio(self, message, language, options):
         """Load TTS from google."""
         options_schema = vol.Schema(
             {
@@ -263,27 +263,32 @@ class GoogleCloudTTSProvider(Provider):
 
         try:
             params = {options[CONF_TEXT_TYPE]: message}
-            # pylint: disable=no-member
-            synthesis_input = texttospeech.types.SynthesisInput(**params)
+            synthesis_input = texttospeech.SynthesisInput(**params)
 
-            voice = texttospeech.types.VoiceSelectionParams(
+            voice = texttospeech.VoiceSelectionParams(
                 language_code=language,
-                ssml_gender=texttospeech.enums.SsmlVoiceGender[options[CONF_GENDER]],
+                ssml_gender=texttospeech.SsmlVoiceGender[options[CONF_GENDER]],
                 name=_voice,
             )
 
-            audio_config = texttospeech.types.AudioConfig(
-                audio_encoding=texttospeech.enums.AudioEncoding[_encoding],
+            audio_config = texttospeech.AudioConfig(
+                audio_encoding=texttospeech.AudioEncoding[_encoding],
                 speaking_rate=options[CONF_SPEED],
                 pitch=options[CONF_PITCH],
                 volume_gain_db=options[CONF_GAIN],
                 effects_profile_id=options[CONF_PROFILES],
             )
-            # pylint: enable=no-member
 
-            async with async_timeout.timeout(10):
+            request = {
+                "voice": voice,
+                "audio_config": audio_config,
+                "input": synthesis_input,
+            }
+
+            async with asyncio.timeout(10):
+                assert self.hass
                 response = await self.hass.async_add_executor_job(
-                    self._client.synthesize_speech, synthesis_input, voice, audio_config
+                    self._client.synthesize_speech, request
                 )
                 return _encoding, response.audio_content
 

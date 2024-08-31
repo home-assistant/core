@@ -8,12 +8,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import network
-from homeassistant.components.device_tracker.const import (
+from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     CONF_SCAN_INTERVAL,
     DEFAULT_CONSIDER_HOME,
 )
-from homeassistant.components.network.const import MDNS_TARGET_IP
+from homeassistant.components.network import MDNS_TARGET_IP
 from homeassistant.config_entries import ConfigEntry, OptionsFlow
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
 from homeassistant.core import HomeAssistant, callback
@@ -205,17 +205,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if _normalize_ips_and_network(entry.options[CONF_HOSTS]) == hosts:
                 return False
         return True
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
-        """Handle import from yaml."""
-        if not self._async_is_unique_host_list(user_input):
-            return self.async_abort(reason="already_configured")
-
-        normalize_input(user_input)
-
-        return self.async_create_entry(
-            title=f"Nmap Tracker {user_input[CONF_HOSTS]}", data={}, options=user_input
-        )
 
     @staticmethod
     @callback

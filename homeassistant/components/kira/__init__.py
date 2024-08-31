@@ -19,8 +19,10 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "kira"
 
@@ -92,7 +94,7 @@ def load_codes(path):
     return codes
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the KIRA component."""
     sensors = config.get(DOMAIN, {}).get(CONF_SENSORS, [])
     remotes = config.get(DOMAIN, {}).get(CONF_REMOTES, [])

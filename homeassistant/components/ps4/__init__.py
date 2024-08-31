@@ -6,23 +6,29 @@ from pyps4_2ndscreen.ddp import async_create_ddp_endpoint
 from pyps4_2ndscreen.media_art import COUNTRIES
 import voluptuous as vol
 
-from homeassistant.components.media_player.const import (
+from homeassistant.components import persistent_notification
+from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_TITLE,
-    MEDIA_TYPE_GAME,
+    MediaType,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,
     ATTR_ENTITY_ID,
     ATTR_LOCKED,
     CONF_REGION,
     CONF_TOKEN,
+    Platform,
 )
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import HomeAssistant, ServiceCall, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_registry
+from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.json import save_json
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import location
-from homeassistant.util.json import load_json, save_json
+from homeassistant.util.json import JsonObjectType, load_json_object
 
 from .config_flow import PlayStation4FlowHandler  # noqa: F401
 from .const import (
@@ -45,7 +51,9 @@ PS4_COMMAND_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORMS = ["media_player"]
+PLATFORMS = [Platform.MEDIA_PLAYER]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 class PS4Data:
@@ -57,7 +65,7 @@ class PS4Data:
         self.protocol = None
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the PS4 Component."""
     hass.data[PS4_DATA] = PS4Data()
 
@@ -68,18 +76,18 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up PS4 from a config entry."""
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a PS4 config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass, entry):
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     config_entries = hass.config_entries
     data = entry.data
@@ -94,9 +102,7 @@ async def async_migrate_entry(hass, entry):
 
     # Migrate Version 1 -> Version 2: New region codes.
     if version == 1:
-        loc = await location.async_detect_location_info(
-            hass.helpers.aiohttp_client.async_get_clientsession()
-        )
+        loc = await location.async_detect_location_info(async_get_clientsession(hass))
         if loc:
             country = COUNTRYCODE_NAMES.get(loc.country_code)
             if country in COUNTRIES:
@@ -105,15 +111,14 @@ async def async_migrate_entry(hass, entry):
                 version = entry.version = 2
                 config_entries.async_update_entry(entry, data=data)
                 _LOGGER.info(
-                    "PlayStation 4 Config Updated: \
-                    Region changed to: %s",
+                    "PlayStation 4 Config Updated: Region changed to: %s",
                     country,
                 )
 
     # Migrate Version 2 -> Version 3: Update identifier format.
     if version == 2:
         # Prevent changing entity_id. Updates entity registry.
-        registry = await entity_registry.async_get_registry(hass)
+        registry = er.async_get(hass)
 
         for entity_id, e_entry in registry.entities.items():
             if e_entry.config_entry_id == entry.entry_id:
@@ -137,8 +142,7 @@ async def async_migrate_entry(hass, entry):
                 )
                 entry.version = 3
                 _LOGGER.info(
-                    "PlayStation 4 identifier for entity: %s \
-                    has changed",
+                    "PlayStation 4 identifier for entity: %s has changed",
                     entity_id,
                 )
                 config_entries.async_update_entry(entry)
@@ -148,7 +152,8 @@ async def async_migrate_entry(hass, entry):
             Please remove the PS4 Integration and re-configure
             [here](/config/integrations)."""
 
-    hass.components.persistent_notification.async_create(
+    persistent_notification.async_create(
+        hass,
         title="PlayStation 4 Integration Configuration Requires Update",
         message=msg,
         notification_id="config_entry_migration",
@@ -162,18 +167,14 @@ def format_unique_id(creds, mac_address):
     return f"{mac_address}_{suffix}"
 
 
-def load_games(hass: HomeAssistant, unique_id: str) -> dict:
+def load_games(hass: HomeAssistant, unique_id: str) -> JsonObjectType:
     """Load games for sources."""
     g_file = hass.config.path(GAMES_FILE.format(unique_id))
     try:
-        games = load_json(g_file)
+        games = load_json_object(g_file)
     except HomeAssistantError as error:
         games = {}
         _LOGGER.error("Failed to load games file: %s", error)
-
-    if not isinstance(games, dict):
-        _LOGGER.error("Games file was not parsed correctly")
-        games = {}
 
     # If file exists
     if os.path.isfile(g_file):
@@ -202,7 +203,7 @@ def _reformat_data(hass: HomeAssistant, games: dict, unique_id: str) -> dict:
                 ATTR_LOCKED: False,
                 ATTR_MEDIA_TITLE: data,
                 ATTR_MEDIA_IMAGE_URL: None,
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_GAME,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.GAME,
             }
             data_reformatted = True
 
@@ -216,7 +217,7 @@ def _reformat_data(hass: HomeAssistant, games: dict, unique_id: str) -> dict:
 def service_handle(hass: HomeAssistant):
     """Handle for services."""
 
-    async def async_service_command(call):
+    async def async_service_command(call: ServiceCall) -> None:
         """Service for sending commands."""
         entity_ids = call.data[ATTR_ENTITY_ID]
         command = call.data[ATTR_COMMAND]

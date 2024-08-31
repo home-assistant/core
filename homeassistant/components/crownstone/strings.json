@@ -23,7 +23,7 @@
           "usb_path": "[%key:common::config_flow::data::usb_path%]"
         },
         "title": "Crownstone USB dongle configuration",
-        "description": "Select the serial port of the Crownstone USB dongle, or select 'Don't use USB' if you don't want to setup a USB dongle.\n\nLook for a device with VID 10C4 and PID EA60."
+        "description": "Select the serial port of the Crownstone USB dongle, or select 'Don't use USB' if you don't want to set up a USB dongle.\n\nLook for a device with VID 10C4 and PID EA60."
       },
       "usb_manual_config": {
         "data": {
@@ -53,22 +53,22 @@
         "data": {
           "usb_path": "[%key:common::config_flow::data::usb_path%]"
         },
-        "title": "Crownstone USB dongle configuration",
+        "title": "[%key:component::crownstone::config::step::usb_config::title%]",
         "description": "Select the serial port of the Crownstone USB dongle.\n\nLook for a device with VID 10C4 and PID EA60."
       },
       "usb_manual_config": {
         "data": {
           "usb_manual_path": "[%key:common::config_flow::data::usb_path%]"
         },
-        "title": "Crownstone USB dongle manual path",
-        "description": "Manually enter the path of a Crownstone USB dongle."
+        "title": "[%key:component::crownstone::config::step::usb_manual_config::title%]",
+        "description": "[%key:component::crownstone::config::step::usb_manual_config::description%]"
       },
       "usb_sphere_config": {
         "data": {
-          "usb_sphere": "Crownstone Sphere"
+          "usb_sphere": "[%key:component::crownstone::config::step::usb_sphere_config::data::usb_sphere%]"
         },
-        "title": "Crownstone USB Sphere",
-        "description": "Select a Crownstone Sphere where the USB is located."
+        "title": "[%key:component::crownstone::config::step::usb_sphere_config::title%]",
+        "description": "[%key:component::crownstone::config::step::usb_sphere_config::description%]"
       }
     }
   }

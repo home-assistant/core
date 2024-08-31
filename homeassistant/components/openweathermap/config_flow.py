@@ -1,4 +1,6 @@
 """Config flow for OpenWeatherMap."""
+from __future__ import annotations
+
 from pyowm import OWM
 from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
 import voluptuous as vol
@@ -6,6 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_LANGUAGE,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MODE,
@@ -15,7 +18,6 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
-    CONF_LANGUAGE,
     CONFIG_FLOW_VERSION,
     DEFAULT_FORECAST_MODE,
     DEFAULT_LANGUAGE,
@@ -33,7 +35,9 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OpenWeatherMapOptionsFlow:
         """Get the options flow for this handler."""
         return OpenWeatherMapOptionsFlow(config_entry)
 
@@ -89,7 +93,7 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
     """Handle options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
@@ -126,4 +130,4 @@ class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
 
 async def _is_owm_api_online(hass, api_key, lat, lon):
     owm = OWM(api_key).weather_manager()
-    return await hass.async_add_executor_job(owm.one_call, lat, lon)
+    return await hass.async_add_executor_job(owm.weather_at_coords, lat, lon)

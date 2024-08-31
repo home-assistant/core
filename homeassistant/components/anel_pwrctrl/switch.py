@@ -1,13 +1,19 @@
 """Support for ANEL PwrCtrl switches."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
+from typing import Any
 
 from anel_pwrctrl import DeviceMaster
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +34,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up PwrCtrl devices/switches."""
     host = config.get(CONF_HOST)
     username = config[CONF_USERNAME]
@@ -46,9 +57,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         master.query(ip_addr=host)
     except OSError as ex:
         _LOGGER.error("Unable to discover PwrCtrl device: %s", str(ex))
-        return False
+        return
 
-    devices = []
+    devices: list[SwitchEntity] = []
     for device in master.devices.values():
         parent_device = PwrCtrlDevice(device)
         devices.extend(
@@ -68,16 +79,16 @@ class PwrCtrlSwitch(SwitchEntity):
         self._attr_unique_id = f"{port.device.host}-{port.get_index()}"
         self._attr_name = port.label
 
-    def update(self):
+    def update(self) -> None:
         """Trigger update for all switches on the parent device."""
         self._parent_device.update()
         self._attr_is_on = self._port.get_state()
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._port.on()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self._port.off()
 

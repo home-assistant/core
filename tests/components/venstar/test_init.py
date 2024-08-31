@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry
 TEST_HOST = "venstartest.localdomain"
 
 
-async def test_setup_entry(hass: HomeAssistant):
+async def test_setup_entry(hass: HomeAssistant) -> None:
     """Validate that setup entry also configure the client."""
     config_entry = MockConfigEntry(
         domain=VENSTAR_DOMAIN,
@@ -37,7 +37,11 @@ async def test_setup_entry(hass: HomeAssistant):
         "homeassistant.components.venstar.VenstarColorTouch.update_alerts",
         new=VenstarColorTouchMock.update_alerts,
     ), patch(
-        "homeassistant.components.onewire.sensor.asyncio.sleep"
+        "homeassistant.components.venstar.VenstarColorTouch.get_runtimes",
+        new=VenstarColorTouchMock.get_runtimes,
+    ), patch(
+        "homeassistant.components.venstar.VENSTAR_SLEEP",
+        new=0,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -49,7 +53,7 @@ async def test_setup_entry(hass: HomeAssistant):
     assert config_entry.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_setup_entry_exception(hass: HomeAssistant):
+async def test_setup_entry_exception(hass: HomeAssistant) -> None:
     """Validate that setup entry also configure the client."""
     config_entry = MockConfigEntry(
         domain=VENSTAR_DOMAIN,
@@ -72,6 +76,9 @@ async def test_setup_entry_exception(hass: HomeAssistant):
     ), patch(
         "homeassistant.components.venstar.VenstarColorTouch.update_alerts",
         new=VenstarColorTouchMock.update_alerts,
+    ), patch(
+        "homeassistant.components.venstar.VenstarColorTouch.get_runtimes",
+        new=VenstarColorTouchMock.get_runtimes,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

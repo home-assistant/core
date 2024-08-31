@@ -1,7 +1,7 @@
 """Test the Amber Electric Sensors."""
 from __future__ import annotations
 
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 from unittest.mock import Mock, patch
 
 from amberelectric.model.channel import ChannelType
@@ -11,20 +11,17 @@ from dateutil import parser
 import pytest
 
 from homeassistant.components.amberelectric.const import (
-    CONF_API_TOKEN,
     CONF_SITE_ID,
     CONF_SITE_NAME,
     DOMAIN,
 )
+from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from .helpers import GENERAL_CHANNEL, GENERAL_ONLY_SITE_ID, generate_current_interval
+
 from tests.common import MockConfigEntry
-from tests.components.amberelectric.helpers import (
-    GENERAL_CHANNEL,
-    GENERAL_ONLY_SITE_ID,
-    generate_current_interval,
-)
 
 MOCK_API_TOKEN = "psk_0000000000000000"
 
@@ -112,7 +109,7 @@ async def setup_spike(hass) -> AsyncGenerator:
 
 def test_no_spike_sensor(hass: HomeAssistant, setup_no_spike) -> None:
     """Testing the creation of the Amber renewables sensor."""
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 5
     sensor = hass.states.get("binary_sensor.mock_title_price_spike")
     assert sensor
     assert sensor.state == "off"
@@ -122,7 +119,7 @@ def test_no_spike_sensor(hass: HomeAssistant, setup_no_spike) -> None:
 
 def test_potential_spike_sensor(hass: HomeAssistant, setup_potential_spike) -> None:
     """Testing the creation of the Amber renewables sensor."""
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 5
     sensor = hass.states.get("binary_sensor.mock_title_price_spike")
     assert sensor
     assert sensor.state == "off"
@@ -132,7 +129,7 @@ def test_potential_spike_sensor(hass: HomeAssistant, setup_potential_spike) -> N
 
 def test_spike_sensor(hass: HomeAssistant, setup_spike) -> None:
     """Testing the creation of the Amber renewables sensor."""
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 5
     sensor = hass.states.get("binary_sensor.mock_title_price_spike")
     assert sensor
     assert sensor.state == "on"

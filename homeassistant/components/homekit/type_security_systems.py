@@ -1,15 +1,12 @@
 """Class to hold all alarm control panel accessories."""
 import logging
+from typing import Any
 
 from pyhap.const import CATEGORY_ALARM_SYSTEM
 
-from homeassistant.components.alarm_control_panel import DOMAIN
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-    SUPPORT_ALARM_ARM_VACATION,
-    SUPPORT_ALARM_TRIGGER,
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.const import (
     ATTR_CODE,
@@ -27,7 +24,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import callback
+from homeassistant.core import State, callback
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -82,20 +79,21 @@ HK_TO_SERVICE = {
 class SecuritySystem(HomeAccessory):
     """Generate an SecuritySystem accessory for an alarm control panel."""
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         """Initialize a SecuritySystem accessory object."""
         super().__init__(*args, category=CATEGORY_ALARM_SYSTEM)
         state = self.hass.states.get(self.entity_id)
+        assert state
         self._alarm_code = self.config.get(ATTR_CODE)
 
         supported_states = state.attributes.get(
             ATTR_SUPPORTED_FEATURES,
             (
-                SUPPORT_ALARM_ARM_HOME
-                | SUPPORT_ALARM_ARM_VACATION
-                | SUPPORT_ALARM_ARM_AWAY
-                | SUPPORT_ALARM_ARM_NIGHT
-                | SUPPORT_ALARM_TRIGGER
+                AlarmControlPanelEntityFeature.ARM_HOME
+                | AlarmControlPanelEntityFeature.ARM_VACATION
+                | AlarmControlPanelEntityFeature.ARM_AWAY
+                | AlarmControlPanelEntityFeature.ARM_NIGHT
+                | AlarmControlPanelEntityFeature.TRIGGER
             ),
         )
 
@@ -108,15 +106,18 @@ class SecuritySystem(HomeAccessory):
         current_supported_states = [HK_ALARM_DISARMED, HK_ALARM_TRIGGERED]
         target_supported_services = [HK_ALARM_DISARMED]
 
-        if supported_states & SUPPORT_ALARM_ARM_HOME:
+        if supported_states & AlarmControlPanelEntityFeature.ARM_HOME:
             current_supported_states.append(HK_ALARM_STAY_ARMED)
             target_supported_services.append(HK_ALARM_STAY_ARMED)
 
-        if supported_states & (SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_VACATION):
+        if supported_states & (
+            AlarmControlPanelEntityFeature.ARM_AWAY
+            | AlarmControlPanelEntityFeature.ARM_VACATION
+        ):
             current_supported_states.append(HK_ALARM_AWAY_ARMED)
             target_supported_services.append(HK_ALARM_AWAY_ARMED)
 
-        if supported_states & SUPPORT_ALARM_ARM_NIGHT:
+        if supported_states & AlarmControlPanelEntityFeature.ARM_NIGHT:
             current_supported_states.append(HK_ALARM_NIGHT_ARMED)
             target_supported_services.append(HK_ALARM_NIGHT_ARMED)
 
@@ -144,7 +145,7 @@ class SecuritySystem(HomeAccessory):
         # GET to avoid an event storm after homekit startup
         self.async_update_state(state)
 
-    def set_security_state(self, value):
+    def set_security_state(self, value: int) -> None:
         """Move security state to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set security state to %d", self.entity_id, value)
         service = HK_TO_SERVICE[value]
@@ -154,7 +155,7 @@ class SecuritySystem(HomeAccessory):
         self.async_call_service(DOMAIN, service, params)
 
     @callback
-    def async_update_state(self, new_state):
+    def async_update_state(self, new_state: State) -> None:
         """Update security state after state changed."""
         hass_state = new_state.state
         if (current_state := HASS_TO_HOMEKIT_CURRENT.get(hass_state)) is not None:

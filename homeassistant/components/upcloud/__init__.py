@@ -4,13 +4,11 @@ from __future__ import annotations
 import dataclasses
 from datetime import timedelta
 import logging
-from typing import Any, Dict
+from typing import Any
 
 import requests.exceptions
 import upcloud_api
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -19,9 +17,11 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_PROBLEM,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -31,7 +31,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import CONFIG_ENTRY_UPDATE_SIGNAL_TEMPLATE, DEFAULT_SCAN_INTERVAL
+from .const import CONFIG_ENTRY_UPDATE_SIGNAL_TEMPLATE, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,9 +47,8 @@ CONF_SERVERS = "servers"
 DATA_UPCLOUD = "data_upcloud"
 
 DEFAULT_COMPONENT_NAME = "UpCloud {}"
-DEFAULT_COMPONENT_DEVICE_CLASS = "power"
 
-CONFIG_ENTRY_DOMAINS = {BINARY_SENSOR_DOMAIN, SWITCH_DOMAIN}
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SWITCH]
 
 SIGNAL_UPDATE_UPCLOUD = "upcloud_update"
 
@@ -57,7 +56,7 @@ STATE_MAP = {"error": STATE_PROBLEM, "started": STATE_ON, "stopped": STATE_OFF}
 
 
 class UpCloudDataUpdateCoordinator(
-    DataUpdateCoordinator[Dict[str, upcloud_api.Server]]
+    DataUpdateCoordinator[dict[str, upcloud_api.Server]]
 ):
     """UpCloud data update coordinator."""
 
@@ -123,10 +122,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await hass.async_add_executor_job(manager.authenticate)
     except upcloud_api.UpCloudAPIError:
-        _LOGGER.error("Authentication failed", exc_info=True)
+        _LOGGER.exception("Authentication failed")
         return False
     except requests.exceptions.RequestException as err:
-        _LOGGER.error("Failed to connect", exc_info=True)
+        _LOGGER.exception("Failed to connect")
         raise ConfigEntryNotReady from err
 
     if entry.options.get(CONF_SCAN_INTERVAL):
@@ -158,7 +157,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DATA_UPCLOUD].coordinators[entry.data[CONF_USERNAME]] = coordinator
 
     # Forward entry setup
-    hass.config_entries.async_setup_platforms(entry, CONFIG_ENTRY_DOMAINS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -166,7 +165,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload the config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, CONFIG_ENTRY_DOMAINS
+        config_entry, PLATFORMS
     )
 
     hass.data[DATA_UPCLOUD].coordinators.pop(config_entry.data[CONF_USERNAME])
@@ -174,14 +173,12 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
-class UpCloudServerEntity(CoordinatorEntity):
+class UpCloudServerEntity(CoordinatorEntity[UpCloudDataUpdateCoordinator]):
     """Entity class for UpCloud servers."""
-
-    _attr_device_class = DEFAULT_COMPONENT_DEVICE_CLASS
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[dict[str, upcloud_api.Server]],
+        coordinator: UpCloudDataUpdateCoordinator,
         uuid: str,
     ) -> None:
         """Initialize the UpCloud server entity."""
@@ -214,7 +211,7 @@ class UpCloudServerEntity(CoordinatorEntity):
     def is_on(self) -> bool:
         """Return true if the server is on."""
         try:
-            return STATE_MAP.get(self._server.state, self._server.state) == STATE_ON
+            return STATE_MAP.get(self._server.state, self._server.state) == STATE_ON  # type: ignore[no-any-return]
         except AttributeError:
             return False
 
@@ -239,3 +236,17 @@ class UpCloudServerEntity(CoordinatorEntity):
                 ATTR_MEMORY_AMOUNT,
             )
         }
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return info for device registry."""
+        assert self.coordinator.config_entry is not None
+        return DeviceInfo(
+            configuration_url="https://hub.upcloud.com",
+            model="Control Panel",
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={
+                (DOMAIN, f"{self.coordinator.config_entry.data[CONF_USERNAME]}@hub")
+            },
+            manufacturer="UpCloud Ltd",
+        )

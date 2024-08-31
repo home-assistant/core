@@ -4,17 +4,17 @@ import logging
 from uuid import uuid4
 
 from aiohttp import ClientError, web_exceptions
-from async_timeout import timeout
 from pydaikin.daikin_base import Appliance, DaikinException
 from pydaikin.discovery import Discovery
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_UUID
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_UUID, DOMAIN, KEY_MAC, TIMEOUT
+from .const import DOMAIN, KEY_MAC, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,10 +69,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             password = None
 
         try:
-            async with timeout(TIMEOUT):
+            async with asyncio.timeout(TIMEOUT):
                 device = await Appliance.factory(
                     host,
-                    self.hass.helpers.aiohttp_client.async_get_clientsession(),
+                    async_get_clientsession(self.hass),
                     key=key,
                     uuid=uuid,
                     password=password,
@@ -130,15 +130,17 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Prepare configuration for a discovered Daikin device."""
         _LOGGER.debug("Zeroconf user_input: %s", discovery_info)
-        devices = Discovery().poll(ip=discovery_info[zeroconf.ATTR_HOST])
+        devices = Discovery().poll(ip=discovery_info.host)
         if not devices:
             _LOGGER.debug(
-                "Could not find MAC-address for %s,"
-                " make sure the required UDP ports are open (see integration documentation)",
-                discovery_info[zeroconf.ATTR_HOST],
+                (
+                    "Could not find MAC-address for %s, make sure the required UDP"
+                    " ports are open (see integration documentation)"
+                ),
+                discovery_info.host,
             )
             return self.async_abort(reason="cannot_connect")
         await self.async_set_unique_id(next(iter(devices))[KEY_MAC])
         self._abort_if_unique_id_configured()
-        self.host = discovery_info[zeroconf.ATTR_HOST]
+        self.host = discovery_info.host
         return await self.async_step_user()

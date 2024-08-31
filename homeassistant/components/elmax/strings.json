@@ -1,0 +1,41 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Please login to the Elmax cloud using your credentials",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        }
+      },
+      "panels": {
+        "description": "Select which panel you would like to control with this integration. Please note that the panel must be ON in order to be configured.",
+        "data": {
+          "panel_name": "Panel Name",
+          "panel_id": "Panel ID",
+          "panel_pin": "[%key:common::config_flow::data::pin%]"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Please re-authenticate with the panel.",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "panel_pin": "Panel Pin"
+        }
+      }
+    },
+    "error": {
+      "no_panel_online": "No online Elmax control panel was found.",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "network_error": "A network error occurred",
+      "invalid_pin": "The provided pin is invalid",
+      "reauth_panel_disappeared": "The given panel is no longer associated to this user. Please log in using an account associated to this panel.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  }
+}

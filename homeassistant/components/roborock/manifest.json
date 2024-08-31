@@ -1,0 +1,13 @@
+{
+  "domain": "roborock",
+  "name": "Roborock",
+  "codeowners": ["@humbertogontijo", "@Lash-L"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/roborock",
+  "iot_class": "local_polling",
+  "loggers": ["roborock"],
+  "requirements": [
+    "python-roborock==0.38.0",
+    "vacuum-map-parser-roborock==0.1.1"
+  ]
+}

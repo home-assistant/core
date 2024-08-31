@@ -3,11 +3,9 @@
     "flow_title": "{name} ({host})",
     "step": {
       "user": {
-        "title": "Plex Media Server",
         "description": "Continue to [plex.tv](https://plex.tv) to link a Plex server."
       },
       "user_advanced": {
-        "title": "Plex Media Server",
         "data": {
           "setup_method": "Setup method"
         }
@@ -57,6 +55,33 @@
           "ignore_plex_web_clients": "Ignore Plex Web clients"
         }
       }
+    }
+  },
+  "entity": {
+    "button": {
+      "scan_clients": {
+        "name": "Scan clients"
+      }
+    }
+  },
+  "services": {
+    "refresh_library": {
+      "name": "Refresh library",
+      "description": "Refreshes a Plex library to scan for new and updated media.",
+      "fields": {
+        "server_name": {
+          "name": "Server name",
+          "description": "Name of a Plex server if multiple Plex servers configured."
+        },
+        "library_name": {
+          "name": "Library name",
+          "description": "Name of the Plex library to refresh."
+        }
+      }
+    },
+    "scan_for_clients": {
+      "name": "Scan for clients",
+      "description": "Scans for available clients from the Plex server(s), local network, and plex.tv."
     }
   }
 }

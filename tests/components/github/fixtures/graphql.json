@@ -1,0 +1,69 @@
+{
+  "data": {
+    "rateLimit": {
+      "cost": 1,
+      "remaining": 4999
+    },
+    "repository": {
+      "default_branch_ref": {
+        "commit": {
+          "message": "Fix all the bugs",
+          "url": "https://github.com/octocat/Hello-World/commit/6dcb09b5b57875f334f61aebed695e2e4193db5e",
+          "sha": "6dcb09b5b57875f334f61aebed695e2e4193db5e"
+        }
+      },
+      "stargazers_count": 9,
+      "forks_count": 9,
+      "full_name": "octocat/Hello-World",
+      "id": 1296269,
+      "watchers": {
+        "total": 9
+      },
+      "discussion": {
+        "total": 1,
+        "discussions": [
+          {
+            "title": "First discussion",
+            "url": "https://github.com/octocat/Hello-World/discussions/1347",
+            "number": 1347
+          }
+        ]
+      },
+      "issue": {
+        "total": 1,
+        "issues": [
+          {
+            "title": "Found a bug",
+            "url": "https://github.com/octocat/Hello-World/issues/1347",
+            "number": 1347
+          }
+        ]
+      },
+      "pull_request": {
+        "total": 1,
+        "pull_requests": [
+          {
+            "title": "Amazing new feature",
+            "url": "https://github.com/octocat/Hello-World/pull/1347",
+            "number": 1347
+          }
+        ]
+      },
+      "release": {
+        "name": "v1.0.0",
+        "url": "https://github.com/octocat/Hello-World/releases/v1.0.0",
+        "tag": "v1.0.0"
+      },
+      "refs": {
+        "tags": [
+          {
+            "name": "v1.0.0",
+            "target": {
+              "url": "https://github.com/octocat/Hello-World/commit/6dcb09b5b57875f334f61aebed695e2e4193db5e"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "domain": "homematic",
+  "name": "Homematic",
+  "integrations": ["homematic", "homematicip_cloud"]
+}

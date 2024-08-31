@@ -1,0 +1,57 @@
+# serializer version: 1
+# name: test_config_entry_diagnostics[bedrock_mock_config_entry-BedrockServer-status_response1]
+  dict({
+    'config_entry': dict({
+      'entry_id': '01234567890123456789012345678901',
+      'unique_id': None,
+      'version': 3,
+    }),
+    'config_entry_data': dict({
+      'address': '**REDACTED**',
+      'name': '**REDACTED**',
+      'type': 'Bedrock Edition',
+    }),
+    'config_entry_options': dict({
+    }),
+    'server_data': dict({
+      'edition': 'MCPE',
+      'game_mode': 'Dummy Game Mode',
+      'latency': 5,
+      'map_name': 'Dummy Map Name',
+      'motd': 'Dummy MOTD',
+      'players_list': None,
+      'players_max': 10,
+      'players_online': 3,
+      'protocol_version': 123,
+      'version': 'Dummy Version',
+    }),
+  })
+# ---
+# name: test_config_entry_diagnostics[java_mock_config_entry-JavaServer-status_response0]
+  dict({
+    'config_entry': dict({
+      'entry_id': '01234567890123456789012345678901',
+      'unique_id': None,
+      'version': 3,
+    }),
+    'config_entry_data': dict({
+      'address': '**REDACTED**',
+      'name': '**REDACTED**',
+      'type': 'Java Edition',
+    }),
+    'config_entry_options': dict({
+    }),
+    'server_data': dict({
+      'edition': None,
+      'game_mode': None,
+      'latency': 5,
+      'map_name': None,
+      'motd': 'Dummy MOTD',
+      'players_list': '**REDACTED**',
+      'players_max': 10,
+      'players_online': 3,
+      'protocol_version': 123,
+      'version': 'Dummy Version',
+    }),
+  })
+# ---

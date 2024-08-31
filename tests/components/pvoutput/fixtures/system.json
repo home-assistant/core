@@ -1,0 +1,18 @@
+{
+  "array_tilt": 30,
+  "install_date": "20210101",
+  "inverter_brand": "Super Inverters Inc.",
+  "inverter_power": 5000,
+  "inverters": 1,
+  "latitude": 52.0,
+  "longitude": 4.0,
+  "orientation": "N",
+  "panel_brand": "Super Panels Inc.",
+  "panel_power": 250,
+  "panels": 20,
+  "shade": 0.1,
+  "status_interval": 5,
+  "system_name": "Frenck's Solar Farm",
+  "system_size": 5,
+  "zipcode": 1234
+}

@@ -1,0 +1,27 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'config': dict({
+      'data': dict({
+        'device_name': 'test',
+        'host': '192.168.1.2',
+        'noise_psk': '**REDACTED**',
+        'password': '**REDACTED**',
+        'port': 6053,
+      }),
+      'disabled_by': None,
+      'domain': 'esphome',
+      'entry_id': '08d821dc059cf4f645cb024d32c8e708',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'ESPHome Device',
+      'unique_id': '11:22:33:44:55:aa',
+      'version': 1,
+    }),
+    'dashboard': 'mock-slug',
+  })
+# ---

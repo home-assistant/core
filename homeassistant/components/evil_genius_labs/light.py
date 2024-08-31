@@ -1,11 +1,11 @@
 """Light platform for Evil Genius Light."""
 from __future__ import annotations
 
+import asyncio
 from typing import Any, cast
 
-from async_timeout import timeout
-
 from homeassistant.components import light
+from homeassistant.components.light import ColorMode, LightEntity, LightEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -28,14 +28,13 @@ async def async_setup_entry(
     async_add_entities([EvilGeniusLight(coordinator)])
 
 
-class EvilGeniusLight(EvilGeniusEntity, light.LightEntity):
+class EvilGeniusLight(EvilGeniusEntity, LightEntity):
     """Evil Genius Labs light."""
 
-    _attr_supported_features = (
-        light.SUPPORT_BRIGHTNESS | light.SUPPORT_EFFECT | light.SUPPORT_COLOR
-    )
-    _attr_supported_color_modes = {light.COLOR_MODE_RGB}
-    _attr_color_mode = light.COLOR_MODE_RGB
+    _attr_name = None
+    _attr_supported_features = LightEntityFeature.EFFECT
+    _attr_supported_color_modes = {ColorMode.RGB}
+    _attr_color_mode = ColorMode.RGB
 
     def __init__(self, coordinator: EvilGeniusUpdateCoordinator) -> None:
         """Initialize the Evil Genius light."""
@@ -47,11 +46,6 @@ class EvilGeniusLight(EvilGeniusEntity, light.LightEntity):
             if pattern != FIB_NO_EFFECT
         ]
         self._attr_effect_list.insert(0, HA_NO_EFFECT)
-
-    @property
-    def name(self) -> str:
-        """Return name."""
-        return cast(str, self.coordinator.data["name"]["value"])
 
     @property
     def is_on(self) -> bool:
@@ -94,27 +88,27 @@ class EvilGeniusLight(EvilGeniusEntity, light.LightEntity):
     ) -> None:
         """Turn light on."""
         if (brightness := kwargs.get(light.ATTR_BRIGHTNESS)) is not None:
-            async with timeout(5):
+            async with asyncio.timeout(5):
                 await self.coordinator.client.set_path_value("brightness", brightness)
 
         # Setting a color will change the effect to "Solid Color" so skip setting effect
         if (rgb_color := kwargs.get(light.ATTR_RGB_COLOR)) is not None:
-            async with timeout(5):
+            async with asyncio.timeout(5):
                 await self.coordinator.client.set_rgb_color(*rgb_color)
 
         elif (effect := kwargs.get(light.ATTR_EFFECT)) is not None:
             if effect == HA_NO_EFFECT:
                 effect = FIB_NO_EFFECT
-            async with timeout(5):
+            async with asyncio.timeout(5):
                 await self.coordinator.client.set_path_value(
                     "pattern", self.coordinator.data["pattern"]["options"].index(effect)
                 )
 
-        async with timeout(5):
+        async with asyncio.timeout(5):
             await self.coordinator.client.set_path_value("power", 1)
 
     @update_when_done
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
-        async with timeout(5):
+        async with asyncio.timeout(5):
             await self.coordinator.client.set_path_value("power", 0)

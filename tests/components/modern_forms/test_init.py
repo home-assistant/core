@@ -8,10 +8,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.modern_forms import (
-    init_integration,
-    modern_forms_no_light_call_mock,
-)
+from . import init_integration, modern_forms_no_light_call_mock
+
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -39,12 +37,15 @@ async def test_unload_config_entry(
     assert not hass.data.get(DOMAIN)
 
 
-async def test_fan_only_device(hass, aioclient_mock):
+async def test_fan_only_device(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
     """Test we set unique ID if not set yet."""
     await init_integration(
         hass, aioclient_mock, mock_type=modern_forms_no_light_call_mock
     )
-    entity_registry = er.async_get(hass)
 
     fan_entry = entity_registry.async_get("fan.modernformsfan_fan")
     assert fan_entry

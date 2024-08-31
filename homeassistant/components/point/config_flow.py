@@ -3,7 +3,6 @@ import asyncio
 from collections import OrderedDict
 import logging
 
-import async_timeout
 from pypoint import PointSession
 import voluptuous as vol
 
@@ -11,6 +10,7 @@ from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
@@ -45,7 +45,7 @@ class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize flow."""
         self.flow_impl = None
 
@@ -93,7 +93,7 @@ class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "follow_link"
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 url = await self._get_authorization_url()
         except asyncio.TimeoutError:
             return self.async_abort(reason="authorize_url_timeout")
@@ -112,7 +112,7 @@ class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         client_id = flow[CONF_CLIENT_ID]
         client_secret = flow[CONF_CLIENT_SECRET]
         point_session = PointSession(
-            self.hass.helpers.aiohttp_client.async_get_clientsession(),
+            async_get_clientsession(self.hass),
             client_id,
             client_secret,
         )
@@ -144,7 +144,7 @@ class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         client_id = flow[CONF_CLIENT_ID]
         client_secret = flow[CONF_CLIENT_SECRET]
         point_session = PointSession(
-            self.hass.helpers.aiohttp_client.async_get_clientsession(),
+            async_get_clientsession(self.hass),
             client_id,
             client_secret,
         )

@@ -1,0 +1,10 @@
+{
+  "domain": "aseko_pool_live",
+  "name": "Aseko Pool Live",
+  "codeowners": ["@milanmeu"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/aseko_pool_live",
+  "iot_class": "cloud_polling",
+  "loggers": ["aioaseko"],
+  "requirements": ["aioaseko==0.0.2"]
+}

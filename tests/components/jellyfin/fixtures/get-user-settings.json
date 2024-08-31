@@ -1,0 +1,19 @@
+{
+  "Id": "string",
+  "ViewType": "string",
+  "SortBy": "string",
+  "IndexBy": "string",
+  "RememberIndexing": true,
+  "PrimaryImageHeight": 0,
+  "PrimaryImageWidth": 0,
+  "CustomPrefs": {
+    "property1": "string",
+    "property2": "string"
+  },
+  "ScrollDirection": "Horizontal",
+  "ShowBackdrop": true,
+  "RememberSorting": true,
+  "SortOrder": "Ascending",
+  "ShowSidebar": true,
+  "Client": "emby"
+}

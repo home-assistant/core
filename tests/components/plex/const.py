@@ -1,5 +1,4 @@
 """Constants used by Plex tests."""
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.plex import const
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -8,6 +7,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_URL,
     CONF_VERIFY_SSL,
+    Platform,
 )
 
 MOCK_SERVERS = [
@@ -55,7 +55,7 @@ SECONDARY_DATA = {
 }
 
 DEFAULT_OPTIONS = {
-    MP_DOMAIN: {
+    Platform.MEDIA_PLAYER: {
         const.CONF_IGNORE_NEW_SHARED_USERS: False,
         const.CONF_MONITORED_USERS: MOCK_USERS,
         const.CONF_USE_EPISODE_ART: False,

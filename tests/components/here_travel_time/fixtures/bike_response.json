@@ -1,274 +1,214 @@
 {
-    "response": {
-        "metaInfo": {
-            "timestamp": "2019-07-24T10:17:40Z",
-            "mapVersion": "8.30.98.154",
-            "moduleVersion": "7.2.201929-4522",
-            "interfaceVersion": "2.6.64",
-            "availableMapVersion": [
-                "8.30.98.154"
-            ]
-        },
-        "route": [
-            {
-                "waypoint": [
-                    {
-                        "linkId": "-1230414527",
-                        "mappedPosition": {
-                            "latitude": 41.9797859,
-                            "longitude": -87.8790879
-                        },
-                        "originalPosition": {
-                            "latitude": 41.9798,
-                            "longitude": -87.8801
-                        },
-                        "type": "stopOver",
-                        "spot": 0.5079365,
-                        "sideOfStreet": "right",
-                        "mappedRoadName": "Mannheim Rd",
-                        "label": "Mannheim Rd - US-12",
-                        "shapeIndex": 0,
-                        "source": "user"
-                    },
-                    {
-                        "linkId": "+924115108",
-                        "mappedPosition": {
-                            "latitude": 41.90413,
-                            "longitude": -87.9223502
-                        },
-                        "originalPosition": {
-                            "latitude": 41.9043,
-                            "longitude": -87.9216001
-                        },
-                        "type": "stopOver",
-                        "spot": 0.1925926,
-                        "sideOfStreet": "right",
-                        "mappedRoadName": "",
-                        "label": "",
-                        "shapeIndex": 87,
-                        "source": "user"
-                    }
-                ],
-                "mode": {
-                    "type": "fastest",
-                    "transportModes": [
-                        "bicycle"
-                    ],
-                    "trafficMode": "enabled",
-                    "feature": []
-                },
-                "leg": [
-                    {
-                        "start": {
-                            "linkId": "-1230414527",
-                            "mappedPosition": {
-                                "latitude": 41.9797859,
-                                "longitude": -87.8790879
-                            },
-                            "originalPosition": {
-                                "latitude": 41.9798,
-                                "longitude": -87.8801
-                            },
-                            "type": "stopOver",
-                            "spot": 0.5079365,
-                            "sideOfStreet": "right",
-                            "mappedRoadName": "Mannheim Rd",
-                            "label": "Mannheim Rd - US-12",
-                            "shapeIndex": 0,
-                            "source": "user"
-                        },
-                        "end": {
-                            "linkId": "+924115108",
-                            "mappedPosition": {
-                                "latitude": 41.90413,
-                                "longitude": -87.9223502
-                            },
-                            "originalPosition": {
-                                "latitude": 41.9043,
-                                "longitude": -87.9216001
-                            },
-                            "type": "stopOver",
-                            "spot": 0.1925926,
-                            "sideOfStreet": "right",
-                            "mappedRoadName": "",
-                            "label": "",
-                            "shapeIndex": 87,
-                            "source": "user"
-                        },
-                        "length": 12613,
-                        "travelTime": 3292,
-                        "maneuver": [
-                            {
-                                "position": {
-                                    "latitude": 41.9797859,
-                                    "longitude": -87.8790879
-                                },
-                                "instruction": "Head <span class=\"heading\">south</span> on <span class=\"street\">Mannheim Rd</span> <span class=\"number\">(US-12/US-45)</span>. <span class=\"distance-description\">Go for <span class=\"length\">2.6 km</span>.</span>",
-                                "travelTime": 646,
-                                "length": 2648,
-                                "id": "M1",
-                                "_type": "PrivateTransportManeuverType"
-                            },
-                            {
-                                "position": {
-                                    "latitude": 41.9579244,
-                                    "longitude": -87.8838551
-                                },
-                                "instruction": "Keep <span class=\"direction\">left</span> onto <span class=\"next-street\">Mannheim Rd</span> <span class=\"number\">(US-12/US-45)</span>. <span class=\"distance-description\">Go for <span class=\"length\">2.4 km</span>.</span>",
-                                "travelTime": 621,
-                                "length": 2427,
-                                "id": "M2",
-                                "_type": "PrivateTransportManeuverType"
-                            },
-                            {
-                                "position": {
-                                    "latitude": 41.9364238,
-                                    "longitude": -87.8849387
-                                },
-                                "instruction": "Turn <span class=\"direction\">right</span> onto <span class=\"next-street\">W Belmont Ave</span>. <span class=\"distance-description\">Go for <span class=\"length\">595 m</span>.</span>",
-                                "travelTime": 158,
-                                "length": 595,
-                                "id": "M3",
-                                "_type": "PrivateTransportManeuverType"
-                            },
-                            {
-                                "position": {
-                                    "latitude": 41.9362521,
-                                    "longitude": -87.8921163
-                                },
-                                "instruction": "Turn <span class=\"direction\">left</span> onto <span class=\"next-street\">Cullerton St</span>. <span class=\"distance-description\">Go for <span class=\"length\">669 m</span>.</span>",
-                                "travelTime": 180,
-                                "length": 669,
-                                "id": "M4",
-                                "_type": "PrivateTransportManeuverType"
-                            },
-                            {
-                                "position": {
-                                    "latitude": 41.9305658,
-                                    "longitude": -87.8932428
-                                },
-                                "instruction": "Continue on <span class=\"next-street\">N Landen Dr</span>. <span class=\"distance-description\">Go for <span class=\"length\">976 m</span>.</span>",
-                                "travelTime": 246,
-                                "length": 976,
-                                "id": "M5",
-                                "_type": "PrivateTransportManeuverType"
-                            },
-                            {
-                                "position": {
-                                    "latitude": 41.9217896,
-                                    "longitude": -87.8928781
-                                },
-                                "instruction": "Turn <span class=\"direction\">right</span> onto <span class=\"next-street\">E Fullerton Ave</span>. <span class=\"distance-description\">Go for <span class=\"length\">904 m</span>.</span>",
-                                "travelTime": 238,
-                                "length": 904,
-                                "id": "M6",
-                                "_type": "PrivateTransportManeuverType"
-                            },
-                            {
-                                "position": {
-                                    "latitude": 41.921618,
-                                    "longitude": -87.9038107
-                                },
-                                "instruction": "Turn <span class=\"direction\">left</span> onto <span class=\"next-street\">N Wolf Rd</span>. <span class=\"distance-description\">Go for <span class=\"length\">1.6 km</span>.</span>",
-                                "travelTime": 417,
-                                "length": 1604,
-                                "id": "M7",
-                                "_type": "PrivateTransportManeuverType"
-                            },
-                            {
-                                "position": {
-                                    "latitude": 41.907177,
-                                    "longitude": -87.9032314
-                                },
-                                "instruction": "Turn <span class=\"direction\">right</span> onto <span class=\"next-street\">W North Ave</span> <span class=\"number\">(IL-64)</span>. <span class=\"distance-description\">Go for <span class=\"length\">2.0 km</span>.</span>",
-                                "travelTime": 574,
-                                "length": 2031,
-                                "id": "M8",
-                                "_type": "PrivateTransportManeuverType"
-                            },
-                            {
-                                "position": {
-                                    "latitude": 41.9065225,
-                                    "longitude": -87.9277039
-                                },
-                                "instruction": "Turn <span class=\"direction\">left</span> onto <span class=\"next-street\">N Clinton Ave</span>. <span class=\"distance-description\">Go for <span class=\"length\">275 m</span>.</span>",
-                                "travelTime": 78,
-                                "length": 275,
-                                "id": "M9",
-                                "_type": "PrivateTransportManeuverType"
-                            },
-                            {
-                                "position": {
-                                    "latitude": 41.9040549,
-                                    "longitude": -87.9277253
-                                },
-                                "instruction": "Turn <span class=\"direction\">left</span> onto <span class=\"next-street\">E Third St</span>. <span class=\"distance-description\">Go for <span class=\"length\">249 m</span>.</span>",
-                                "travelTime": 63,
-                                "length": 249,
-                                "id": "M10",
-                                "_type": "PrivateTransportManeuverType"
-                            },
-                            {
-                                "position": {
-                                    "latitude": 41.9040334,
-                                    "longitude": -87.9247105
-                                },
-                                "instruction": "Continue on <span class=\"next-street\">N Caroline Ave</span>. <span class=\"distance-description\">Go for <span class=\"length\">96 m</span>.</span>",
-                                "travelTime": 37,
-                                "length": 96,
-                                "id": "M11",
-                                "_type": "PrivateTransportManeuverType"
-                            },
-                            {
-                                "position": {
-                                    "latitude": 41.9038832,
-                                    "longitude": -87.9236054
-                                },
-                                "instruction": "Turn <span class=\"direction\">slightly left</span>. <span class=\"distance-description\">Go for <span class=\"length\">113 m</span>.</span>",
-                                "travelTime": 28,
-                                "length": 113,
-                                "id": "M12",
-                                "_type": "PrivateTransportManeuverType"
-                            },
-                            {
-                                "position": {
-                                    "latitude": 41.9039047,
-                                    "longitude": -87.9222536
-                                },
-                                "instruction": "Turn <span class=\"direction\">left</span>. <span class=\"distance-description\">Go for <span class=\"length\">26 m</span>.</span>",
-                                "travelTime": 6,
-                                "length": 26,
-                                "id": "M13",
-                                "_type": "PrivateTransportManeuverType"
-                            },
-                            {
-                                "position": {
-                                    "latitude": 41.90413,
-                                    "longitude": -87.9223502
-                                },
-                                "instruction": "Arrive at your destination on the right.",
-                                "travelTime": 0,
-                                "length": 0,
-                                "id": "M14",
-                                "_type": "PrivateTransportManeuverType"
-                            }
-                        ]
-                    }
-                ],
-                "summary": {
-                    "distance": 12613,
-                    "baseTime": 3292,
-                    "flags": [
-                        "noThroughRoad",
-                        "builtUpArea",
-                        "park"
-                    ],
-                    "text": "The trip takes <span class=\"length\">12.6 km</span> and <span class=\"time\">55 mins</span>.",
-                    "travelTime": 3292,
-                    "_type": "RouteSummaryType"
-                }
+  "routes": [
+    {
+      "id": "6d8ae729-3b30-4d81-adaf-6a485b15b70a",
+      "sections": [
+        {
+          "id": "c8d12b37-05e1-47f0-a5c2-43f5fb589768",
+          "type": "pedestrian",
+          "departure": {
+            "time": "2023-01-23T18:26:12+01:00",
+            "place": {
+              "type": "place",
+              "location": {
+                "lat": 49.1260894,
+                "lng": 6.1843356
+              },
+              "originalLocation": {
+                "lat": 49.1264093,
+                "lng": 6.1841419
+              }
             }
-        ],
-        "language": "en-us"
+          },
+          "arrival": {
+            "time": "2023-01-23T18:29:09+01:00",
+            "place": {
+              "type": "place",
+              "location": {
+                "lat": 49.12547,
+                "lng": 6.18242
+              }
+            }
+          },
+          "summary": {
+            "duration": 177,
+            "length": 157,
+            "baseDuration": 177
+          },
+          "polyline": "BGyst29Cg5u5LpOj2BjIzZnQ_nB",
+          "spans": [
+            {
+              "offset": 0,
+              "names": [
+                {
+                  "value": "Chemin de Halage",
+                  "language": "fr"
+                }
+              ]
+            }
+          ],
+          "transport": {
+            "mode": "pedestrian"
+          }
+        },
+        {
+          "id": "d37123f4-034a-4c46-8678-596f999e8eae",
+          "type": "vehicle",
+          "departure": {
+            "time": "2023-01-23T18:29:09+01:00",
+            "place": {
+              "type": "place",
+              "location": {
+                "lat": 49.12547,
+                "lng": 6.18242
+              }
+            }
+          },
+          "arrival": {
+            "time": "2023-01-23T18:44:41+01:00",
+            "place": {
+              "type": "place",
+              "location": {
+                "lat": 49.1025668,
+                "lng": 6.1768518
+              },
+              "originalLocation": {
+                "lat": 49.1025784,
+                "lng": 6.1770297
+              }
+            }
+          },
+          "summary": {
+            "duration": 932,
+            "length": 3426,
+            "baseDuration": 932
+          },
+          "polyline": "BG8ls29Cohr5L0UjXgFvH4DnGgFrJ7G3IvHrJrJvMnB7B_JjN_JzPvH_JjDsJjD8G7B4DrEkIvHwMzF4I7GgKjDgF7BwC7G0KjN0U3I4D7GsEvHkDzK4D7a4I3IwCzesJvH8B7GoBjDU7LsEjIwC_JkDrJkD_JsEvH4DvH4DvHsE3IgFrEkD_E4DvH0F7G0FrJ4IzFsErE4DjDgFnGsE_EwCrEoB3DUzFUnGAvHT7GTjDTvHT7GU7BArJUjD4DvCwCzFgF_EsE_EgF_JoLzF0F_EsEzFsErEkD3DwC3D8B3D8BrE8B3DoBvH8BjI8BzFoBzFUjIUnGAjSAzFTnLvC_E7BzF7B_E7B_EjD7G3D7G7B_ETnpBvCnQTzUnB3DAvMT7B7BnGvCzFrErEvCzFjDzF3DnGzF_EzF3I7LnV3cnG3IzF0K7LsTrE8G3I4NvC4DvC4D7BwC7BwCvCwCjD4DvCkDjD4D3D4DjDkDzFsEvCA3DUjDUrEUrEUrEU_ETrEvCnGrErd_nB3DnGnLnQ_JzP7Q_Y7G_JvR7ajI7Lrd3rBvH7LzZrnBnL3SnLjSjI7Lna7pBjN_T_EjIvCrE7GnL7GjNrE3IjDrEjDrEvCjDzF3IvCrE_JzU3Nrd_J_TvCrEvC3DT7BnBvC7B3D3XvvB7kBjuCoB7BoB7BUnBU7BU7BU3DAvCTjDT7BnBjDnBvC7BvCnBnB7BT7BTnBA7BU7BoBnBoBnB8BnB8BnBkDTwC_vC0PzoBwMvb8GnB0jB7B4cUgP4D0oB7foGZE",
+          "spans": [
+            {
+              "offset": 0
+            },
+            {
+              "offset": 4,
+              "names": [
+                {
+                  "value": "Avenue de Blida",
+                  "language": "fr"
+                }
+              ]
+            },
+            {
+              "offset": 11,
+              "names": [
+                {
+                  "value": "Pont des Grilles",
+                  "language": "fr"
+                }
+              ]
+            },
+            {
+              "offset": 22,
+              "names": [
+                {
+                  "value": "Boulevard Paixhans",
+                  "language": "fr"
+                }
+              ]
+            },
+            {
+              "offset": 49,
+              "names": [
+                {
+                  "value": "Boulevard André Maginot",
+                  "language": "fr"
+                }
+              ]
+            },
+            {
+              "offset": 97,
+              "names": [
+                {
+                  "value": "Boulevard André Maginot",
+                  "language": "fr"
+                },
+                {
+                  "value": "Place Jean Cocteau",
+                  "language": "fr"
+                }
+              ]
+            },
+            {
+              "offset": 98,
+              "names": [
+                {
+                  "value": "Place Mazelle",
+                  "language": "fr"
+                }
+              ]
+            },
+            {
+              "offset": 110,
+              "names": [
+                {
+                  "value": "Passage de Plantières",
+                  "language": "fr"
+                }
+              ]
+            },
+            {
+              "offset": 119
+            },
+            {
+              "offset": 127,
+              "names": [
+                {
+                  "value": "Avenue de lAmphithéâtre",
+                  "language": "fr"
+                }
+              ]
+            },
+            {
+              "offset": 146,
+              "names": [
+                {
+                  "value": "Rue aux Arènes",
+                  "language": "fr"
+                }
+              ]
+            },
+            {
+              "offset": 192,
+              "names": [
+                {
+                  "value": "Rue Saint-Pierre",
+                  "language": "fr"
+                }
+              ]
+            },
+            {
+              "offset": 195,
+              "names": [
+                {
+                  "value": "Rue Émile Boilvin",
+                  "language": "fr"
+                }
+              ]
+            },
+            {
+              "offset": 199,
+              "names": [
+                {
+                  "value": "Rue Charles Sadoul",
+                  "language": "fr"
+                }
+              ]
+            }
+          ],
+          "transport": {
+            "mode": "bicycle"
+          }
+        }
+      ]
     }
+  ]
 }

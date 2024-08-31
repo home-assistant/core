@@ -1,8 +1,9 @@
-"""Component to embed TP-Link smart home devices."""
+"""Component to embed nexia devices."""
 from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from nexia.home import NexiaHome
 
@@ -14,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_UPDATE_RATE = 120
 
 
-class NexiaDataUpdateCoordinator(DataUpdateCoordinator):
+class NexiaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """DataUpdateCoordinator for nexia homes."""
 
     def __init__(
@@ -29,8 +30,9 @@ class NexiaDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name="Nexia update",
             update_interval=timedelta(seconds=DEFAULT_UPDATE_RATE),
+            always_update=False,
         )
 
-    async def _async_update_data(self) -> None:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint."""
-        return await self.hass.async_add_executor_job(self.nexia_home.update)
+        return await self.nexia_home.update()

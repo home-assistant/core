@@ -1,65 +1,47 @@
 # Describes the format for available camera services
 
 turn_off:
-  name: Turn off
-  description: Turn off camera.
   target:
     entity:
       domain: camera
 
 turn_on:
-  name: Turn on
-  description: Turn on camera.
   target:
     entity:
       domain: camera
 
 enable_motion_detection:
-  name: Enable motion detection
-  description: Enable the motion detection in a camera.
   target:
     entity:
       domain: camera
 
 disable_motion_detection:
-  name: Disable motion detection
-  description: Disable the motion detection in a camera.
   target:
     entity:
       domain: camera
 
 snapshot:
-  name: Take snapshot
-  description: Take a snapshot from a camera.
   target:
     entity:
       domain: camera
   fields:
     filename:
-      name: Filename
-      description: Template of a Filename. Variable is entity_id.
       required: true
       example: "/tmp/snapshot_{{ entity_id.name }}.jpg"
       selector:
         text:
 
 play_stream:
-  name: Play stream
-  description: Play camera stream on supported media player.
   target:
     entity:
       domain: camera
   fields:
     media_player:
-      name: Media Player
-      description: Name(s) of media player to stream to.
       required: true
       selector:
         entity:
           domain: media_player
     format:
-      name: Format
-      description: Stream format supported by media player.
       default: "hls"
       selector:
         select:
@@ -67,22 +49,16 @@ play_stream:
             - "hls"
 
 record:
-  name: Record
-  description: Record live camera feed.
   target:
     entity:
       domain: camera
   fields:
     filename:
-      name: Filename
-      description: Template of a Filename. Variable is entity_id. Must be mp4.
       required: true
       example: "/tmp/snapshot_{{ entity_id.name }}.mp4"
       selector:
         text:
     duration:
-      name: Duration
-      description: Target recording length.
       default: 30
       selector:
         number:
@@ -90,10 +66,6 @@ record:
           max: 3600
           unit_of_measurement: seconds
     lookback:
-      name: Lookback
-      description:
-        Target lookback period to include in addition to duration. Only
-        available if there is currently an active HLS stream.
       default: 0
       selector:
         number:

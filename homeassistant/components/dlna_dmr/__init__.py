@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 from homeassistant import config_entries
-from homeassistant.components.media_player.const import DOMAIN as MEDIA_PLAYER_DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import LOGGER
 
-PLATFORMS = [MEDIA_PLAYER_DOMAIN]
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
 async def async_setup_entry(
@@ -17,7 +17,7 @@ async def async_setup_entry(
     LOGGER.debug("Setting up config entry: %s", entry.unique_id)
 
     # Forward setup to the appropriate platform
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

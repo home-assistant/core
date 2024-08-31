@@ -1,12 +1,20 @@
 """KMtronic Switch integration."""
+from typing import Any
+import urllib.parse
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_REVERSE, DATA_COORDINATOR, DATA_HUB, DOMAIN
+from .const import CONF_REVERSE, DATA_COORDINATOR, DATA_HUB, DOMAIN, MANUFACTURER
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Config entry example."""
     coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
     hub = hass.data[DOMAIN][entry.entry_id][DATA_HUB]
@@ -15,7 +23,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async_add_entities(
         [
-            KMtronicSwitch(coordinator, relay, reverse, entry.entry_id)
+            KMtronicSwitch(hub, coordinator, relay, reverse, entry.entry_id)
             for relay in hub.relays
         ]
     )
@@ -24,22 +32,22 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
     """KMtronic Switch Entity."""
 
-    def __init__(self, coordinator, relay, reverse, config_entry_id):
+    def __init__(self, hub, coordinator, relay, reverse, config_entry_id):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self._relay = relay
-        self._config_entry_id = config_entry_id
         self._reverse = reverse
 
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return f"Relay{self._relay.id}"
+        hostname = urllib.parse.urlsplit(hub.host).hostname
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, config_entry_id)},
+            name=f"Controller {hostname}",
+            manufacturer=MANUFACTURER,
+            configuration_url=hub.host,
+        )
 
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the entity."""
-        return f"{self._config_entry_id}_relay{self._relay.id}"
+        self._attr_name = f"Relay{relay.id}"
+        self._attr_unique_id = f"{config_entry_id}_relay{relay.id}"
 
     @property
     def is_on(self):
@@ -48,7 +56,7 @@ class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
             return not self._relay.is_energised
         return self._relay.is_energised
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         if self._reverse:
             await self._relay.de_energise()
@@ -56,7 +64,7 @@ class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
             await self._relay.energise()
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         if self._reverse:
             await self._relay.energise()
@@ -64,7 +72,7 @@ class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
             await self._relay.de_energise()
         self.async_write_ha_state()
 
-    async def async_toggle(self, **kwargs) -> None:
+    async def async_toggle(self, **kwargs: Any) -> None:
         """Toggle the switch."""
         await self._relay.toggle()
         self.async_write_ha_state()

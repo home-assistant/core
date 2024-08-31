@@ -5,12 +5,16 @@ import logging
 from pystiebeleltron import pystiebeleltron
 import voluptuous as vol
 
-from homeassistant.components.modbus.const import CONF_HUB, DEFAULT_HUB, MODBUS_DOMAIN
-from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
+from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
+CONF_HUB = "hub"
+DEFAULT_HUB = "modbus_hub"
+MODBUS_DOMAIN = "modbus"
 DOMAIN = "stiebel_eltron"
 
 CONFIG_SCHEMA = vol.Schema(
@@ -30,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the STIEBEL ELTRON unit.
 
     Will automatically load climate platform.
@@ -43,7 +47,7 @@ def setup(hass, config):
         "ste_data": StiebelEltronData(name, modbus_client),
     }
 
-    discovery.load_platform(hass, "climate", DOMAIN, {}, config)
+    discovery.load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)
     return True
 
 

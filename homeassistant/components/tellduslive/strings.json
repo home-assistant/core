@@ -18,7 +18,28 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
-        "title": "Pick endpoint."
+        "data_description": {
+          "host": "Hostname or IP address to Tellstick Net or Tellstick ZNet for Local API."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "wind_direction": {
+        "name": "Wind direction"
+      },
+      "wind_average": {
+        "name": "Wind average"
+      },
+      "wind_gust": {
+        "name": "Wind gust"
+      },
+      "uv": {
+        "name": "UV"
+      },
+      "dew_point": {
+        "name": "Dew point"
       }
     }
   }

@@ -1,8 +1,0 @@
-{
-    "config": {
-        "abort": {
-            "already_configured": "\u8d26\u53f7\u5df2\u7ecf\u8bbe\u7f6e\u5b8c\u6210",
-            "missing_configuration": "\u7ec4\u4ef6\u5c1a\u672a\u914d\u7f6e\u3002\u8bf7\u53c2\u89c2\u6587\u4ef6\u8bf4\u660e\u3002"
-        }
-    }
-}

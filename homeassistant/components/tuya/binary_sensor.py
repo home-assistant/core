@@ -6,19 +6,12 @@ from dataclasses import dataclass
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_SAFETY,
-    DEVICE_CLASS_SMOKE,
-    DEVICE_CLASS_TAMPER,
-    DEVICE_CLASS_VIBRATION,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -28,23 +21,23 @@ from .base import TuyaEntity
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 
 
-@dataclass
+@dataclass(frozen=True)
 class TuyaBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes a Tuya binary sensor."""
 
     # DPCode, to use. If None, the key will be used as DPCode
     dpcode: DPCode | None = None
 
-    # Value to consider binary sensor to be "on"
-    on_value: bool | float | int | str = True
+    # Value or values to consider binary sensor to be "on"
+    on_value: bool | float | int | str | set[bool | float | int | str] = True
 
 
 # Commonly used sensors
 TAMPER_BINARY_SENSOR = TuyaBinarySensorEntityDescription(
     key=DPCode.TEMPER_ALARM,
     name="Tamper",
-    device_class=DEVICE_CLASS_TAMPER,
-    entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    device_class=BinarySensorDeviceClass.TAMPER,
+    entity_category=EntityCategory.DIAGNOSTIC,
 )
 
 
@@ -53,12 +46,81 @@ TAMPER_BINARY_SENSOR = TuyaBinarySensorEntityDescription(
 # end up being a binary sensor.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
+    # Multi-functional Sensor
+    # https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
+    "dgnbj": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.GAS_SENSOR_STATE,
+            icon="mdi:gas-cylinder",
+            device_class=BinarySensorDeviceClass.GAS,
+            on_value="alarm",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CH4_SENSOR_STATE,
+            translation_key="methane",
+            device_class=BinarySensorDeviceClass.GAS,
+            on_value="alarm",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.VOC_STATE,
+            translation_key="voc",
+            device_class=BinarySensorDeviceClass.SAFETY,
+            on_value="alarm",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.PM25_STATE,
+            translation_key="pm25",
+            device_class=BinarySensorDeviceClass.SAFETY,
+            on_value="alarm",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CO_STATE,
+            translation_key="carbon_monoxide",
+            icon="mdi:molecule-co",
+            device_class=BinarySensorDeviceClass.SAFETY,
+            on_value="alarm",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CO2_STATE,
+            translation_key="carbon_dioxide",
+            icon="mdi:molecule-co2",
+            device_class=BinarySensorDeviceClass.SAFETY,
+            on_value="alarm",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CH2O_STATE,
+            translation_key="formaldehyde",
+            device_class=BinarySensorDeviceClass.SAFETY,
+            on_value="alarm",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.DOORCONTACT_STATE,
+            device_class=BinarySensorDeviceClass.DOOR,
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.WATERSENSOR_STATE,
+            device_class=BinarySensorDeviceClass.MOISTURE,
+            on_value="alarm",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.PRESSURE_STATE,
+            translation_key="pressure",
+            on_value="alarm",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.SMOKE_SENSOR_STATE,
+            icon="mdi:smoke-detector",
+            device_class=BinarySensorDeviceClass.SMOKE,
+            on_value="alarm",
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
     # CO2 Detector
     # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
     "co2bj": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.CO2_STATE,
-            device_class=DEVICE_CLASS_SAFETY,
+            device_class=BinarySensorDeviceClass.SAFETY,
             on_value="alarm",
         ),
         TAMPER_BINARY_SENSOR,
@@ -68,22 +130,32 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     "cobj": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.CO_STATE,
-            device_class=DEVICE_CLASS_SAFETY,
+            device_class=BinarySensorDeviceClass.SAFETY,
             on_value="1",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.CO_STATUS,
-            device_class=DEVICE_CLASS_SAFETY,
+            device_class=BinarySensorDeviceClass.SAFETY,
             on_value="alarm",
         ),
         TAMPER_BINARY_SENSOR,
+    ),
+    # Smart Pet Feeder
+    # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
+    "cwwsq": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.FEED_STATE,
+            translation_key="feeding",
+            icon="mdi:information",
+            on_value="feeding",
+        ),
     ),
     # Human Presence Sensor
     # https://developer.tuya.com/en/docs/iot/categoryhps?id=Kaiuz42yhn1hs
     "hps": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.PRESENCE_STATE,
-            device_class=DEVICE_CLASS_MOTION,
+            device_class=BinarySensorDeviceClass.MOTION,
             on_value="presence",
         ),
     ),
@@ -92,7 +164,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     "jqbj": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.CH2O_STATE,
-            device_class=DEVICE_CLASS_SAFETY,
+            device_class=BinarySensorDeviceClass.SAFETY,
             on_value="alarm",
         ),
         TAMPER_BINARY_SENSOR,
@@ -102,28 +174,45 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     "jwbj": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.CH4_SENSOR_STATE,
-            device_class=DEVICE_CLASS_GAS,
+            device_class=BinarySensorDeviceClass.GAS,
             on_value="alarm",
         ),
         TAMPER_BINARY_SENSOR,
+    ),
+    # Door and Window Controller
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r5zjsy9
+    "mc": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.STATUS,
+            device_class=BinarySensorDeviceClass.DOOR,
+            on_value={"open", "opened"},
+        ),
     ),
     # Door Window Sensor
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48hm02l8m
     "mcs": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.DOORCONTACT_STATE,
-            device_class=DEVICE_CLASS_DOOR,
+            device_class=BinarySensorDeviceClass.DOOR,
         ),
         TAMPER_BINARY_SENSOR,
+    ),
+    # Access Control
+    # https://developer.tuya.com/en/docs/iot/s?id=Kb0o2xhlkxbet
+    "mk": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CLOSED_OPENED_KIT,
+            device_class=BinarySensorDeviceClass.LOCK,
+            on_value={"AQAB"},
+        ),
     ),
     # Luminance Sensor
     # https://developer.tuya.com/en/docs/iot/categoryldcg?id=Kaiuz3n7u69l8
     "ldcg": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.TEMPER_ALARM,
-            name="Tamper",
-            device_class=DEVICE_CLASS_TAMPER,
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            device_class=BinarySensorDeviceClass.TAMPER,
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         TAMPER_BINARY_SENSOR,
     ),
@@ -132,7 +221,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     "pir": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.PIR,
-            device_class=DEVICE_CLASS_MOTION,
+            device_class=BinarySensorDeviceClass.MOTION,
             on_value="pir",
         ),
         TAMPER_BINARY_SENSOR,
@@ -142,7 +231,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     "pm2.5": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.PM25_STATE,
-            device_class=DEVICE_CLASS_SAFETY,
+            device_class=BinarySensorDeviceClass.SAFETY,
             on_value="alarm",
         ),
         TAMPER_BINARY_SENSOR,
@@ -152,12 +241,12 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     "rqbj": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.GAS_SENSOR_STATUS,
-            device_class=DEVICE_CLASS_GAS,
+            device_class=BinarySensorDeviceClass.GAS,
             on_value="alarm",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.GAS_SENSOR_STATE,
-            device_class=DEVICE_CLASS_GAS,
+            device_class=BinarySensorDeviceClass.GAS,
             on_value="1",
         ),
         TAMPER_BINARY_SENSOR,
@@ -167,7 +256,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     "sj": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.WATERSENSOR_STATE,
-            device_class=DEVICE_CLASS_MOISTURE,
+            device_class=BinarySensorDeviceClass.MOISTURE,
             on_value="alarm",
         ),
         TAMPER_BINARY_SENSOR,
@@ -177,7 +266,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     "sos": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.SOS_STATE,
-            device_class=DEVICE_CLASS_SAFETY,
+            device_class=BinarySensorDeviceClass.SAFETY,
         ),
         TAMPER_BINARY_SENSOR,
     ),
@@ -186,10 +275,19 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     "voc": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.VOC_STATE,
-            device_class=DEVICE_CLASS_SAFETY,
+            device_class=BinarySensorDeviceClass.SAFETY,
             on_value="alarm",
         ),
         TAMPER_BINARY_SENSOR,
+    ),
+    # Thermostatic Radiator Valve
+    # Not documented
+    "wkf": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.WINDOW_STATE,
+            device_class=BinarySensorDeviceClass.WINDOW,
+            on_value="opened",
+        ),
     ),
     # Temperature and Humidity Sensor
     # https://developer.tuya.com/en/docs/iot/categorywsdcg?id=Kaiuz3hinij34
@@ -208,13 +306,13 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     "ywbj": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.SMOKE_SENSOR_STATUS,
-            device_class=DEVICE_CLASS_SMOKE,
+            device_class=BinarySensorDeviceClass.SMOKE,
             on_value="alarm",
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.SMOKE_SENSOR_STATE,
-            device_class=DEVICE_CLASS_SMOKE,
-            on_value="1",
+            device_class=BinarySensorDeviceClass.SMOKE,
+            on_value={"1", "alarm"},
         ),
         TAMPER_BINARY_SENSOR,
     ),
@@ -224,21 +322,20 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         TuyaBinarySensorEntityDescription(
             key=f"{DPCode.SHOCK_STATE}_vibration",
             dpcode=DPCode.SHOCK_STATE,
-            name="Vibration",
-            device_class=DEVICE_CLASS_VIBRATION,
+            device_class=BinarySensorDeviceClass.VIBRATION,
             on_value="vibration",
         ),
         TuyaBinarySensorEntityDescription(
             key=f"{DPCode.SHOCK_STATE}_drop",
             dpcode=DPCode.SHOCK_STATE,
-            name="Drop",
+            translation_key="drop",
             icon="mdi:icon=package-down",
             on_value="drop",
         ),
         TuyaBinarySensorEntityDescription(
             key=f"{DPCode.SHOCK_STATE}_tilt",
             dpcode=DPCode.SHOCK_STATE,
-            name="Tilt",
+            translation_key="tilt",
             icon="mdi:spirit-level",
             on_value="tilt",
         ),
@@ -299,4 +396,8 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         dpcode = self.entity_description.dpcode or self.entity_description.key
         if dpcode not in self.device.status:
             return False
+
+        if isinstance(self.entity_description.on_value, set):
+            return self.device.status[dpcode] in self.entity_description.on_value
+
         return self.device.status[dpcode] == self.entity_description.on_value

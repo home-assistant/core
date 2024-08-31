@@ -8,7 +8,7 @@
           "url": "Website"
         }
       },
-      "reauth": {
+      "reauth_confirm": {
         "description": "Authentication tokens became invalid, login to recreate them.",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
@@ -24,6 +24,23 @@
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "duty": {
+        "name": "Duty"
+      }
+    },
+    "sensor": {
+      "incidents": {
+        "name": "Incidents"
+      }
+    },
+    "switch": {
+      "incident_response": {
+        "name": "Incident response"
+      }
     }
   }
 }

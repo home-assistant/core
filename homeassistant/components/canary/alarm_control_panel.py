@@ -3,18 +3,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from canary.api import (
-    LOCATION_MODE_AWAY,
-    LOCATION_MODE_HOME,
-    LOCATION_MODE_NIGHT,
-    Location,
-)
+from canary.const import LOCATION_MODE_AWAY, LOCATION_MODE_HOME, LOCATION_MODE_NIGHT
+from canary.model import Location
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -48,12 +42,15 @@ async def async_setup_entry(
     async_add_entities(alarms, True)
 
 
-class CanaryAlarm(CoordinatorEntity, AlarmControlPanelEntity):
+class CanaryAlarm(
+    CoordinatorEntity[CanaryDataUpdateCoordinator], AlarmControlPanelEntity
+):
     """Representation of a Canary alarm control panel."""
 
-    coordinator: CanaryDataUpdateCoordinator
     _attr_supported_features = (
-        SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_NIGHT
     )
 
     def __init__(

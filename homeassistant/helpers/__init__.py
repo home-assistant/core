@@ -2,35 +2,37 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
-import re
-from typing import TYPE_CHECKING, Any
-
-from homeassistant.const import CONF_PLATFORM
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .typing import ConfigType
 
 
-def config_per_platform(config: ConfigType, domain: str) -> Iterable[tuple[Any, Any]]:
+def config_per_platform(
+    config: ConfigType, domain: str
+) -> Iterable[tuple[str | None, ConfigType]]:
     """Break a component config into different platforms.
 
     For example, will find 'switch', 'switch 2', 'switch 3', .. etc
     Async friendly.
     """
-    for config_key in extract_domain_configs(config, domain):
-        if not (platform_config := config[config_key]):
-            continue
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant import config as ha_config
 
-        if not isinstance(platform_config, list):
-            platform_config = [platform_config]
+    # pylint: disable-next=import-outside-toplevel
+    from .deprecation import _print_deprecation_warning
 
-        for item in platform_config:
-            try:
-                platform = item.get(CONF_PLATFORM)
-            except AttributeError:
-                platform = None
+    _print_deprecation_warning(
+        config_per_platform,
+        "config.config_per_platform",
+        "function",
+        "called",
+        "2024.6",
+    )
+    return ha_config.config_per_platform(config, domain)
 
-            yield platform, item
+
+config_per_platform.__name__ = "helpers.config_per_platform"
 
 
 def extract_domain_configs(config: ConfigType, domain: str) -> Sequence[str]:
@@ -38,5 +40,20 @@ def extract_domain_configs(config: ConfigType, domain: str) -> Sequence[str]:
 
     Async friendly.
     """
-    pattern = re.compile(fr"^{domain}(| .+)$")
-    return [key for key in config.keys() if pattern.match(key)]
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant import config as ha_config
+
+    # pylint: disable-next=import-outside-toplevel
+    from .deprecation import _print_deprecation_warning
+
+    _print_deprecation_warning(
+        extract_domain_configs,
+        "config.extract_domain_configs",
+        "function",
+        "called",
+        "2024.6",
+    )
+    return ha_config.extract_domain_configs(config, domain)
+
+
+extract_domain_configs.__name__ = "helpers.extract_domain_configs"

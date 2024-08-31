@@ -1,31 +1,28 @@
-"""Enum related utilities."""
-from __future__ import annotations
-
+"""Helpers for working with enums."""
+from collections.abc import Callable
+import contextlib
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any, TypeVar
+
+# https://github.com/python/mypy/issues/5107
+if TYPE_CHECKING:
+    _LruCacheT = TypeVar("_LruCacheT", bound=Callable)
+
+    def lru_cache(func: _LruCacheT) -> _LruCacheT:
+        """Stub for lru_cache."""
+
+else:
+    from functools import lru_cache
+
+_EnumT = TypeVar("_EnumT", bound=Enum)
 
 
-class StrEnum(str, Enum):
-    """Partial backport of Python 3.11's StrEnum for our basic use cases."""
+@lru_cache
+def try_parse_enum(cls: type[_EnumT], value: Any) -> _EnumT | None:
+    """Try to parse the value into an Enum.
 
-    def __new__(cls, value: str, *args: Any, **kwargs: Any) -> StrEnum:
-        """Create a new StrEnum instance."""
-        if not isinstance(value, str):
-            raise TypeError(f"{value!r} is not a string")
-        return super().__new__(cls, value, *args, **kwargs)  # type: ignore[call-overload,no-any-return]
-
-    def __str__(self) -> str:
-        """Return self.value."""
-        return str(self.value)
-
-    @staticmethod
-    def _generate_next_value_(  # pylint: disable=arguments-differ # https://github.com/PyCQA/pylint/issues/5371
-        name: str, start: int, count: int, last_values: list[Any]
-    ) -> Any:
-        """
-        Make `auto()` explicitly unsupported.
-
-        We may revisit this when it's very clear that Python 3.11's
-        `StrEnum.auto()` behavior will no longer change.
-        """
-        raise TypeError("auto() is not supported by this implementation")
+    Return None if parsing fails.
+    """
+    with contextlib.suppress(ValueError):
+        return cls(value)
+    return None

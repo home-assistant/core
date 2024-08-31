@@ -42,15 +42,11 @@ class SmappeeFlowHandler(
     ) -> FlowResult:
         """Handle zeroconf discovery."""
 
-        if not discovery_info[zeroconf.ATTR_HOSTNAME].startswith(
-            SUPPORTED_LOCAL_DEVICES
-        ):
+        if not discovery_info.hostname.startswith(SUPPORTED_LOCAL_DEVICES):
             return self.async_abort(reason="invalid_mdns")
 
-        serial_number = (
-            discovery_info[zeroconf.ATTR_HOSTNAME]
-            .replace(".local.", "")
-            .replace("Smappee", "")
+        serial_number = discovery_info.hostname.replace(".local.", "").replace(
+            "Smappee", ""
         )
 
         # Check if already configured (local)
@@ -63,7 +59,7 @@ class SmappeeFlowHandler(
 
         self.context.update(
             {
-                CONF_IP_ADDRESS: discovery_info[zeroconf.ATTR_HOST],
+                CONF_IP_ADDRESS: discovery_info.host,
                 CONF_SERIALNUMBER: serial_number,
                 "title_placeholders": {"name": serial_number},
             }

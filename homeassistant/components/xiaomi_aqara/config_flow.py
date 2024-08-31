@@ -105,8 +105,8 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             return await self.async_step_settings()
 
-        # Discover Xiaomi Aqara Gateways in the netwerk to get required SIDs.
-        xiaomi = XiaomiGatewayDiscovery(self.hass.add_job, [], self.interface)
+        # Discover Xiaomi Aqara Gateways in the network to get required SIDs.
+        xiaomi = XiaomiGatewayDiscovery(self.interface)
         try:
             await self.hass.async_add_executor_job(xiaomi.discover_gateways)
         except gaierror:
@@ -150,9 +150,9 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        name = discovery_info[zeroconf.ATTR_NAME]
-        self.host = discovery_info[zeroconf.ATTR_HOST]
-        mac_address = discovery_info[zeroconf.ATTR_PROPERTIES].get("mac")
+        name = discovery_info.name
+        self.host = discovery_info.host
+        mac_address = discovery_info.properties.get("mac")
 
         if not name or not self.host or not mac_address:
             return self.async_abort(reason="not_xiaomi_aqara")
@@ -162,7 +162,10 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             name.startswith(ZEROCONF_GATEWAY) or name.startswith(ZEROCONF_ACPARTNER)
         ):
             _LOGGER.debug(
-                "Xiaomi device '%s' discovered with host %s, not identified as xiaomi aqara gateway",
+                (
+                    "Xiaomi device '%s' discovered with host %s, not identified as"
+                    " xiaomi aqara gateway"
+                ),
                 name,
                 self.host,
             )

@@ -1,10 +1,14 @@
 """Test config entries API."""
+from typing import Any
+
 import pytest
 
 from homeassistant.auth.providers import homeassistant as prov_ha
 from homeassistant.components.config import auth_provider_homeassistant as auth_ha
+from homeassistant.core import HomeAssistant
 
 from tests.common import CLIENT_ID, MockUser
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -40,7 +44,9 @@ async def hass_admin_credential(hass, auth_provider):
     )
 
 
-async def test_create_auth_system_generated_user(hass, hass_ws_client):
+async def test_create_auth_system_generated_user(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test we can't add auth to system generated users."""
     system_user = MockUser(system_generated=True).add_to_hass(hass)
     client = await hass_ws_client(hass)
@@ -61,12 +67,14 @@ async def test_create_auth_system_generated_user(hass, hass_ws_client):
     assert result["error"]["code"] == "system_generated"
 
 
-async def test_create_auth_user_already_credentials():
+async def test_create_auth_user_already_credentials() -> None:
     """Test we can't create auth for user with pre-existing credentials."""
     # assert False
 
 
-async def test_create_auth_unknown_user(hass_ws_client, hass):
+async def test_create_auth_unknown_user(
+    hass_ws_client: WebSocketGenerator, hass: HomeAssistant
+) -> None:
     """Test create pointing at unknown user."""
     client = await hass_ws_client(hass)
 
@@ -87,8 +95,10 @@ async def test_create_auth_unknown_user(hass_ws_client, hass):
 
 
 async def test_create_auth_requires_admin(
-    hass, hass_ws_client, hass_read_only_access_token
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+) -> None:
     """Test create requires admin to call API."""
     client = await hass_ws_client(hass, hass_read_only_access_token)
 
@@ -107,7 +117,11 @@ async def test_create_auth_requires_admin(
     assert result["error"]["code"] == "unauthorized"
 
 
-async def test_create_auth(hass, hass_ws_client, hass_storage):
+async def test_create_auth(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+) -> None:
     """Test create auth command works."""
     client = await hass_ws_client(hass)
     user = MockUser().add_to_hass(hass)
@@ -136,7 +150,11 @@ async def test_create_auth(hass, hass_ws_client, hass_storage):
     assert entry["username"] == "test-user2"
 
 
-async def test_create_auth_duplicate_username(hass, hass_ws_client, hass_storage):
+async def test_create_auth_duplicate_username(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+) -> None:
     """Test we can't create auth with a duplicate username."""
     client = await hass_ws_client(hass)
     user = MockUser().add_to_hass(hass)
@@ -161,7 +179,11 @@ async def test_create_auth_duplicate_username(hass, hass_ws_client, hass_storage
     assert result["error"]["code"] == "username_exists"
 
 
-async def test_delete_removes_just_auth(hass_ws_client, hass, hass_storage):
+async def test_delete_removes_just_auth(
+    hass_ws_client: WebSocketGenerator,
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
     """Test deleting an auth without being connected to a user."""
     client = await hass_ws_client(hass)
 
@@ -183,7 +205,11 @@ async def test_delete_removes_just_auth(hass_ws_client, hass, hass_storage):
     assert len(hass_storage[prov_ha.STORAGE_KEY]["data"]["users"]) == 0
 
 
-async def test_delete_removes_credential(hass, hass_ws_client, hass_storage):
+async def test_delete_removes_credential(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+) -> None:
     """Test deleting auth that is connected to a user."""
     client = await hass_ws_client(hass)
 
@@ -212,7 +238,11 @@ async def test_delete_removes_credential(hass, hass_ws_client, hass_storage):
     assert len(hass_storage[prov_ha.STORAGE_KEY]["data"]["users"]) == 0
 
 
-async def test_delete_requires_admin(hass, hass_ws_client, hass_read_only_access_token):
+async def test_delete_requires_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+) -> None:
     """Test delete requires admin."""
     client = await hass_ws_client(hass, hass_read_only_access_token)
 
@@ -229,7 +259,9 @@ async def test_delete_requires_admin(hass, hass_ws_client, hass_read_only_access
     assert result["error"]["code"] == "unauthorized"
 
 
-async def test_delete_unknown_auth(hass, hass_ws_client):
+async def test_delete_unknown_auth(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
     """Test trying to delete an unknown auth username."""
     client = await hass_ws_client(hass)
 
@@ -246,7 +278,9 @@ async def test_delete_unknown_auth(hass, hass_ws_client):
     assert result["error"]["code"] == "auth_not_found"
 
 
-async def test_change_password(hass, hass_ws_client, auth_provider):
+async def test_change_password(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, auth_provider
+) -> None:
     """Test that change password succeeds with valid password."""
     client = await hass_ws_client(hass)
     await client.send_json(
@@ -264,8 +298,11 @@ async def test_change_password(hass, hass_ws_client, auth_provider):
 
 
 async def test_change_password_wrong_pw(
-    hass, hass_ws_client, hass_admin_user, auth_provider
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+    auth_provider,
+) -> None:
     """Test that change password fails with invalid password."""
 
     client = await hass_ws_client(hass)
@@ -285,7 +322,9 @@ async def test_change_password_wrong_pw(
         await auth_provider.async_validate_login("test-user", "new-pass")
 
 
-async def test_change_password_no_creds(hass, hass_ws_client, hass_admin_user):
+async def test_change_password_no_creds(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_admin_user: MockUser
+) -> None:
     """Test that change password fails with no credentials."""
     hass_admin_user.credentials.clear()
     client = await hass_ws_client(hass)
@@ -304,7 +343,9 @@ async def test_change_password_no_creds(hass, hass_ws_client, hass_admin_user):
     assert result["error"]["code"] == "credentials_not_found"
 
 
-async def test_admin_change_password_not_owner(hass, hass_ws_client, auth_provider):
+async def test_admin_change_password_not_owner(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, auth_provider
+) -> None:
     """Test that change password fails when not owner."""
     client = await hass_ws_client(hass)
 
@@ -325,7 +366,9 @@ async def test_admin_change_password_not_owner(hass, hass_ws_client, auth_provid
     await auth_provider.async_validate_login("test-user", "test-pass")
 
 
-async def test_admin_change_password_no_user(hass, hass_ws_client, owner_access_token):
+async def test_admin_change_password_no_user(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, owner_access_token
+) -> None:
     """Test that change password fails with unknown user."""
     client = await hass_ws_client(hass, owner_access_token)
 
@@ -344,8 +387,11 @@ async def test_admin_change_password_no_user(hass, hass_ws_client, owner_access_
 
 
 async def test_admin_change_password_no_cred(
-    hass, hass_ws_client, owner_access_token, hass_admin_user
-):
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    owner_access_token,
+    hass_admin_user: MockUser,
+) -> None:
     """Test that change password fails with unknown credential."""
 
     hass_admin_user.credentials.clear()
@@ -366,12 +412,12 @@ async def test_admin_change_password_no_cred(
 
 
 async def test_admin_change_password(
-    hass,
-    hass_ws_client,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     owner_access_token,
     auth_provider,
-    hass_admin_user,
-):
+    hass_admin_user: MockUser,
+) -> None:
     """Test that owners can change any password."""
     client = await hass_ws_client(hass, owner_access_token)
 

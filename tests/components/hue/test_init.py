@@ -1,32 +1,39 @@
 """Test Hue setup process."""
 from unittest.mock import AsyncMock, Mock, patch
 
+import aiohue.v2 as aiohue_v2
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import hue
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_get_persistent_notifications
 
 
-@pytest.fixture(name="mock_bridge_setup")
-def get_mock_bridge_setup():
+@pytest.fixture
+def mock_bridge_setup():
     """Mock bridge setup."""
     with patch.object(hue, "HueBridge") as mock_bridge:
+        mock_bridge.return_value.api_version = 2
         mock_bridge.return_value.async_initialize_bridge = AsyncMock(return_value=True)
-        mock_bridge.return_value.api_version = 1
         mock_bridge.return_value.api.config = Mock(
             bridge_id="mock-id",
             mac_address="00:00:00:00:00:00",
-            software_version="1.0.0",
             model_id="BSB002",
+            software_version="1.0.0",
+            bridge_device=Mock(
+                id="4a507550-8742-4087-8bf5-c2334f29891c",
+                product_data=Mock(manufacturer_name="Mock"),
+            ),
+            spec=aiohue_v2.ConfigController,
         )
         mock_bridge.return_value.api.config.name = "Mock Hue bridge"
         yield mock_bridge.return_value
 
 
-async def test_setup_with_no_config(hass):
+async def test_setup_with_no_config(hass: HomeAssistant) -> None:
     """Test that we do not discover anything or try to set up a bridge."""
     assert await async_setup_component(hass, hue.DOMAIN, {}) is True
 
@@ -37,9 +44,11 @@ async def test_setup_with_no_config(hass):
     assert hue.DOMAIN not in hass.data
 
 
-async def test_unload_entry(hass, mock_bridge_setup):
+async def test_unload_entry(hass: HomeAssistant, mock_bridge_setup) -> None:
     """Test being able to unload an entry."""
-    entry = MockConfigEntry(domain=hue.DOMAIN, data={"host": "0.0.0.0"})
+    entry = MockConfigEntry(
+        domain=hue.DOMAIN, data={"host": "0.0.0.0", "api_version": 2}
+    )
     entry.add_to_hass(hass)
 
     assert await async_setup_component(hass, hue.DOMAIN, {}) is True
@@ -56,35 +65,43 @@ async def test_unload_entry(hass, mock_bridge_setup):
     assert hue.DOMAIN not in hass.data
 
 
-async def test_setting_unique_id(hass, mock_bridge_setup):
-    """Test we set unique ID if not set yet."""
-    entry = MockConfigEntry(domain=hue.DOMAIN, data={"host": "0.0.0.0"})
-    entry.add_to_hass(hass)
-    assert await async_setup_component(hass, hue.DOMAIN, {}) is True
-    assert entry.unique_id == "mock-id"
-
-
-async def test_fixing_unique_id_no_other(hass, mock_bridge_setup):
+async def test_setting_unique_id(hass: HomeAssistant, mock_bridge_setup) -> None:
     """Test we set unique ID if not set yet."""
     entry = MockConfigEntry(
-        domain=hue.DOMAIN, data={"host": "0.0.0.0"}, unique_id="invalid-id"
+        domain=hue.DOMAIN, data={"host": "0.0.0.0", "api_version": 2}
     )
     entry.add_to_hass(hass)
     assert await async_setup_component(hass, hue.DOMAIN, {}) is True
     assert entry.unique_id == "mock-id"
 
 
-async def test_fixing_unique_id_other_ignored(hass, mock_bridge_setup):
+async def test_fixing_unique_id_no_other(
+    hass: HomeAssistant, mock_bridge_setup
+) -> None:
+    """Test we set unique ID if not set yet."""
+    entry = MockConfigEntry(
+        domain=hue.DOMAIN,
+        data={"host": "0.0.0.0", "api_version": 2},
+        unique_id="invalid-id",
+    )
+    entry.add_to_hass(hass)
+    assert await async_setup_component(hass, hue.DOMAIN, {}) is True
+    assert entry.unique_id == "mock-id"
+
+
+async def test_fixing_unique_id_other_ignored(
+    hass: HomeAssistant, mock_bridge_setup
+) -> None:
     """Test we set unique ID if not set yet."""
     MockConfigEntry(
         domain=hue.DOMAIN,
-        data={"host": "0.0.0.0"},
+        data={"host": "0.0.0.0", "api_version": 2},
         unique_id="mock-id",
         source=config_entries.SOURCE_IGNORE,
     ).add_to_hass(hass)
     entry = MockConfigEntry(
         domain=hue.DOMAIN,
-        data={"host": "0.0.0.0"},
+        data={"host": "0.0.0.0", "api_version": 2},
         unique_id="invalid-id",
     )
     entry.add_to_hass(hass)
@@ -94,17 +111,19 @@ async def test_fixing_unique_id_other_ignored(hass, mock_bridge_setup):
     assert hass.config_entries.async_entries() == [entry]
 
 
-async def test_fixing_unique_id_other_correct(hass, mock_bridge_setup):
+async def test_fixing_unique_id_other_correct(
+    hass: HomeAssistant, mock_bridge_setup
+) -> None:
     """Test we remove config entry if another one has correct ID."""
     correct_entry = MockConfigEntry(
         domain=hue.DOMAIN,
-        data={"host": "0.0.0.0"},
+        data={"host": "0.0.0.0", "api_version": 2},
         unique_id="mock-id",
     )
     correct_entry.add_to_hass(hass)
     entry = MockConfigEntry(
         domain=hue.DOMAIN,
-        data={"host": "0.0.0.0"},
+        data={"host": "0.0.0.0", "api_version": 2},
         unique_id="invalid-id",
     )
     entry.add_to_hass(hass)
@@ -113,7 +132,7 @@ async def test_fixing_unique_id_other_correct(hass, mock_bridge_setup):
     assert hass.config_entries.async_entries() == [correct_entry]
 
 
-async def test_security_vuln_check(hass):
+async def test_security_vuln_check(hass: HomeAssistant) -> None:
     """Test that we report security vulnerabilities."""
     entry = MockConfigEntry(
         domain=hue.DOMAIN, data={"host": "0.0.0.0", "api_version": 1}
@@ -121,11 +140,14 @@ async def test_security_vuln_check(hass):
     entry.add_to_hass(hass)
 
     config = Mock(
-        bridge_id="", mac_address="", model_id="BSB002", software_version="1935144020"
+        bridge_id="",
+        mac_address="",
+        model_id="BSB002",
+        software_version="1935144020",
     )
     config.name = "Hue"
 
-    with patch.object(
+    with patch.object(hue.migration, "is_v2_bridge", return_value=False), patch.object(
         hue,
         "HueBridge",
         Mock(
@@ -136,11 +158,10 @@ async def test_security_vuln_check(hass):
             )
         ),
     ):
-
         assert await async_setup_component(hass, "hue", {})
 
     await hass.async_block_till_done()
 
-    state = hass.states.get("persistent_notification.hue_hub_firmware")
-    assert state is not None
-    assert "CVE-2020-6007" in state.attributes["message"]
+    notifications = async_get_persistent_notifications(hass)
+    assert "hue_hub_firmware" in notifications
+    assert "CVE-2020-6007" in notifications["hue_hub_firmware"]["message"]

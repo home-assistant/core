@@ -6,6 +6,7 @@ from pyfireservicerota import InvalidAuthError
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.fireservicerota.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -37,16 +38,16 @@ MOCK_TOKEN_INFO = {
 }
 
 
-async def test_show_form(hass):
+async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
-async def test_abort_if_already_setup(hass):
+async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     """Test abort if already setup."""
     entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_CONF, unique_id=MOCK_CONF[CONF_USERNAME]
@@ -55,11 +56,11 @@ async def test_abort_if_already_setup(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_CONF
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_invalid_credentials(hass):
+async def test_invalid_credentials(hass: HomeAssistant) -> None:
     """Test that invalid credentials throws an error."""
 
     with patch(
@@ -72,7 +73,7 @@ async def test_invalid_credentials(hass):
         assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_step_user(hass):
+async def test_step_user(hass: HomeAssistant) -> None:
     """Test the start of the config flow."""
 
     with patch(
@@ -81,7 +82,6 @@ async def test_step_user(hass):
         "homeassistant.components.fireservicerota.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-
         mock_fireservicerota = mock_fsr.return_value
         mock_fireservicerota.request_tokens.return_value = MOCK_TOKEN_INFO
 
@@ -91,7 +91,7 @@ async def test_step_user(hass):
 
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == MOCK_CONF[CONF_USERNAME]
         assert result["data"] == {
             "auth_implementation": "fireservicerota",
@@ -109,7 +109,7 @@ async def test_step_user(hass):
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_reauth(hass):
+async def test_reauth(hass: HomeAssistant) -> None:
     """Test the start of the config flow."""
     entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_CONF, unique_id=MOCK_CONF[CONF_USERNAME]
@@ -131,7 +131,7 @@ async def test_reauth(hass):
         )
 
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     with patch(
         "homeassistant.components.fireservicerota.config_flow.FireServiceRota"
@@ -147,5 +147,5 @@ async def test_reauth(hass):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"

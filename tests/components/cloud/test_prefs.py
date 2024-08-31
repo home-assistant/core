@@ -1,11 +1,13 @@
 """Test Cloud preferences."""
+from typing import Any
 from unittest.mock import patch
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components.cloud.prefs import STORAGE_KEY, CloudPreferences
+from homeassistant.core import HomeAssistant
 
 
-async def test_set_username(hass):
+async def test_set_username(hass: HomeAssistant) -> None:
     """Test we clear config if we set different username."""
     prefs = CloudPreferences(hass)
     await prefs.async_initialize()
@@ -21,7 +23,7 @@ async def test_set_username(hass):
     assert prefs.google_enabled
 
 
-async def test_set_username_migration(hass):
+async def test_set_username_migration(hass: HomeAssistant) -> None:
     """Test we not clear config if we had no username."""
     prefs = CloudPreferences(hass)
 
@@ -39,7 +41,9 @@ async def test_set_username_migration(hass):
     assert not prefs.google_enabled
 
 
-async def test_set_new_username(hass, hass_storage):
+async def test_set_new_username(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test if setting new username returns true."""
     hass_storage[STORAGE_KEY] = {"version": 1, "data": {"username": "old-user"}}
 
@@ -51,7 +55,9 @@ async def test_set_new_username(hass, hass_storage):
     assert await prefs.async_set_username("new-user")
 
 
-async def test_load_invalid_cloud_user(hass, hass_storage):
+async def test_load_invalid_cloud_user(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test loading cloud user with invalid storage."""
     hass_storage[STORAGE_KEY] = {"version": 1, "data": {"cloud_user": "non-existing"}}
 
@@ -70,7 +76,9 @@ async def test_load_invalid_cloud_user(hass, hass_storage):
     assert cloud_user.groups[0].id == GROUP_ID_ADMIN
 
 
-async def test_setup_remove_cloud_user(hass, hass_storage):
+async def test_setup_remove_cloud_user(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test creating and removing cloud user."""
     hass_storage[STORAGE_KEY] = {"version": 1, "data": {"cloud_user": None}}
 

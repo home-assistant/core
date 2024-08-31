@@ -7,7 +7,7 @@ from homeassistant.components.rituals_perfume_genie.const import ACCOUNT_HASH, D
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 def mock_config_entry(unique_id: str, entry_id: str = "an_entry_id") -> MockConfigEntry:
@@ -58,6 +58,7 @@ def mock_diffuser(
     diffuser_mock.update_data = AsyncMock()
     diffuser_mock.version = version
     diffuser_mock.wifi_percentage = wifi_percentage
+    diffuser_mock.data = load_json_object_fixture("data.json", DOMAIN)
     return diffuser_mock
 
 

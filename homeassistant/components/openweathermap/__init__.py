@@ -10,6 +10,7 @@ from pyowm.utils.config import get_default_config
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_LANGUAGE,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MODE,
@@ -18,7 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .const import (
-    CONF_LANGUAGE,
     CONFIG_FLOW_VERSION,
     DOMAIN,
     ENTRY_NAME,
@@ -57,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ENTRY_WEATHER_COORDINATOR: weather_coordinator,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     update_listener = entry.add_update_listener(async_update_options)
     hass.data[DOMAIN][entry.entry_id][UPDATE_LISTENER] = update_listener

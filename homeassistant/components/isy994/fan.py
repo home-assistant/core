@@ -1,48 +1,51 @@
-"""Support for ISY994 fans."""
+"""Support for ISY fans."""
 from __future__ import annotations
 
 import math
+from typing import Any
 
 from pyisy.constants import ISY_VALUE_UNKNOWN, PROTO_INSTEON
 
-from homeassistant.components.fan import DOMAIN as FAN, SUPPORT_SET_SPEED, FanEntity
+from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
-    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
+from homeassistant.util.scaling import int_states_in_range
 
-from .const import _LOGGER, DOMAIN as ISY994_DOMAIN, ISY994_NODES, ISY994_PROGRAMS
+from .const import _LOGGER, DOMAIN
 from .entity import ISYNodeEntity, ISYProgramEntity
-from .helpers import migrate_old_unique_ids
+from .models import IsyData
 
 SPEED_RANGE = (1, 255)  # off is not included
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> bool:
-    """Set up the ISY994 fan platform."""
-    hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
-    devices = []
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the ISY fan platform."""
+    isy_data: IsyData = hass.data[DOMAIN][entry.entry_id]
+    devices: dict[str, DeviceInfo] = isy_data.devices
+    entities: list[ISYFanEntity | ISYFanProgramEntity] = []
 
-    for node in hass_isy_data[ISY994_NODES][FAN]:
-        devices.append(ISYFanEntity(node))
+    for node in isy_data.nodes[Platform.FAN]:
+        entities.append(ISYFanEntity(node, devices.get(node.primary_node)))
 
-    for name, status, actions in hass_isy_data[ISY994_PROGRAMS][FAN]:
-        devices.append(ISYFanProgramEntity(name, status, actions))
+    for name, status, actions in isy_data.programs[Platform.FAN]:
+        entities.append(ISYFanProgramEntity(name, status, actions))
 
-    await migrate_old_unique_ids(hass, FAN, devices)
-    async_add_entities(devices)
+    async_add_entities(entities)
 
 
 class ISYFanEntity(ISYNodeEntity, FanEntity):
-    """Representation of an ISY994 fan device."""
+    """Representation of an ISY fan device."""
+
+    _attr_supported_features = FanEntityFeature.SET_SPEED
 
     @property
     def percentage(self) -> int | None:
@@ -59,14 +62,14 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
         return int_states_in_range(SPEED_RANGE)
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Get if the fan is on."""
         if self._node.status == ISY_VALUE_UNKNOWN:
             return None
-        return self._node.status != 0
+        return bool(self._node.status != 0)
 
     async def async_set_percentage(self, percentage: int) -> None:
-        """Set node to speed percentage for the ISY994 fan device."""
+        """Set node to speed percentage for the ISY fan device."""
         if percentage == 0:
             await self._node.turn_off()
             return
@@ -77,26 +80,20 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str = None,
-        percentage: int = None,
-        preset_mode: str = None,
-        **kwargs,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
     ) -> None:
-        """Send the turn on command to the ISY994 fan device."""
+        """Send the turn on command to the ISY fan device."""
         await self.async_set_percentage(percentage or 67)
 
-    async def async_turn_off(self, **kwargs) -> None:
-        """Send the turn off command to the ISY994 fan device."""
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Send the turn off command to the ISY fan device."""
         await self._node.turn_off()
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_SET_SPEED
 
 
 class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
-    """Representation of an ISY994 fan program."""
+    """Representation of an ISY fan program."""
 
     @property
     def percentage(self) -> int | None:
@@ -113,20 +110,19 @@ class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
     @property
     def is_on(self) -> bool:
         """Get if the fan is on."""
-        return self._node.status != 0
+        return bool(self._node.status != 0)
 
-    async def async_turn_off(self, **kwargs) -> None:
-        """Send the turn on command to ISY994 fan program."""
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Send the turn on command to ISY fan program."""
         if not await self._actions.run_then():
             _LOGGER.error("Unable to turn off the fan")
 
     async def async_turn_on(
         self,
-        speed: str = None,
-        percentage: int = None,
-        preset_mode: str = None,
-        **kwargs,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
     ) -> None:
-        """Send the turn off command to ISY994 fan program."""
+        """Send the turn off command to ISY fan program."""
         if not await self._actions.run_else():
             _LOGGER.error("Unable to turn on the fan")

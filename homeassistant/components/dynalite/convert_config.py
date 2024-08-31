@@ -138,7 +138,7 @@ def convert_template(config: dict[str, Any]) -> dict[str, Any]:
 
 
 def convert_config(
-    config: dict[str, Any] | MappingProxyType[str, Any]
+    config: dict[str, Any] | MappingProxyType[str, Any],
 ) -> dict[str, Any]:
     """Convert a config dict by replacing component consts with library consts."""
     my_map = {

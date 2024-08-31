@@ -1,24 +1,22 @@
 """Config flow for Tuya."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from tuya_iot import AuthType, TuyaOpenAPI
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_COUNTRY_CODE, CONF_PASSWORD, CONF_USERNAME
 
 from .const import (
     CONF_ACCESS_ID,
     CONF_ACCESS_SECRET,
     CONF_APP_TYPE,
     CONF_AUTH_TYPE,
-    CONF_COUNTRY_CODE,
     CONF_ENDPOINT,
-    CONF_PASSWORD,
-    CONF_USERNAME,
     DOMAIN,
+    LOGGER,
     SMARTLIFE_APP,
     TUYA_COUNTRIES,
     TUYA_RESPONSE_CODE,
@@ -28,8 +26,6 @@ from .const import (
     TUYA_RESPONSE_SUCCESS,
     TUYA_SMART_APP,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -78,7 +74,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 schema=data[CONF_APP_TYPE],
             )
 
-            _LOGGER.debug("Response %s", response)
+            LOGGER.debug("Response %s", response)
 
             if response.get(TUYA_RESPONSE_SUCCESS, False):
                 break

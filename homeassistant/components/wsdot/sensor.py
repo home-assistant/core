@@ -1,4 +1,6 @@
 """Support for Washington State Department of Transportation (WSDOT) data."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 import logging
@@ -8,15 +10,11 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_NAME,
-    CONF_API_KEY,
-    CONF_ID,
-    CONF_NAME,
-    TIME_MINUTES,
-)
+from homeassistant.const import ATTR_NAME, CONF_API_KEY, CONF_ID, CONF_NAME, UnitOfTime
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,17 +41,22 @@ SCAN_INTERVAL = timedelta(minutes=3)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_TRAVEL_TIMES): [
+        vol.Required(CONF_TRAVEL_TIMES): [
             {vol.Required(CONF_ID): cv.string, vol.Optional(CONF_NAME): cv.string}
         ],
     }
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the WSDOT sensor."""
     sensors = []
-    for travel_time in config.get(CONF_TRAVEL_TIMES):
+    for travel_time in config[CONF_TRAVEL_TIMES]:
         name = travel_time.get(CONF_NAME) or travel_time.get(CONF_ID)
         sensors.append(
             WashingtonStateTravelTimeSensor(
@@ -65,8 +68,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class WashingtonStateTransportSensor(SensorEntity):
-    """
-    Sensor that reads the WSDOT web API.
+    """Sensor that reads the WSDOT web API.
 
     WSDOT provides ferry schedules, toll rates, weather conditions,
     mountain pass conditions, and more. Subclasses of this
@@ -96,14 +98,15 @@ class WashingtonStateTransportSensor(SensorEntity):
 class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     """Travel time sensor from WSDOT."""
 
-    _attr_native_unit_of_measurement = TIME_MINUTES
+    _attr_attribution = ATTRIBUTION
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
     def __init__(self, name, access_code, travel_time_id):
         """Construct a travel time sensor."""
         self._travel_time_id = travel_time_id
         WashingtonStateTransportSensor.__init__(self, name, access_code)
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from WSDOT."""
         params = {
             ATTR_ACCESS_CODE: self._access_code,
@@ -121,7 +124,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     def extra_state_attributes(self):
         """Return other details about the sensor state."""
         if self._data is not None:
-            attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
+            attrs = {}
             for key in (
                 ATTR_AVG_TIME,
                 ATTR_NAME,

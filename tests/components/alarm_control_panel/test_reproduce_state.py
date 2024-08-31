@@ -1,4 +1,6 @@
 """Test reproduce state for Alarm control panel."""
+import pytest
+
 from homeassistant.const import (
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
@@ -15,12 +17,15 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
 
 
-async def test_reproducing_states(hass, caplog):
+async def test_reproducing_states(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test reproducing Alarm control panel states."""
     hass.states.async_set(
         "alarm_control_panel.entity_armed_away", STATE_ALARM_ARMED_AWAY, {}
@@ -67,7 +72,8 @@ async def test_reproducing_states(hass, caplog):
     )
 
     # These calls should do nothing as entities already in desired state
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             State("alarm_control_panel.entity_armed_away", STATE_ALARM_ARMED_AWAY),
             State(
@@ -81,7 +87,7 @@ async def test_reproducing_states(hass, caplog):
             ),
             State("alarm_control_panel.entity_disarmed", STATE_ALARM_DISARMED),
             State("alarm_control_panel.entity_triggered", STATE_ALARM_TRIGGERED),
-        ]
+        ],
     )
 
     assert len(arm_away_calls) == 0
@@ -93,8 +99,8 @@ async def test_reproducing_states(hass, caplog):
     assert len(trigger_calls) == 0
 
     # Test invalid state is handled
-    await hass.helpers.state.async_reproduce_state(
-        [State("alarm_control_panel.entity_triggered", "not_supported")]
+    await async_reproduce_state(
+        hass, [State("alarm_control_panel.entity_triggered", "not_supported")]
     )
 
     assert "not_supported" in caplog.text
@@ -107,7 +113,8 @@ async def test_reproducing_states(hass, caplog):
     assert len(trigger_calls) == 0
 
     # Make sure correct services are called
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             State("alarm_control_panel.entity_armed_away", STATE_ALARM_TRIGGERED),
             State(
@@ -122,7 +129,7 @@ async def test_reproducing_states(hass, caplog):
             State("alarm_control_panel.entity_triggered", STATE_ALARM_DISARMED),
             # Should not raise
             State("alarm_control_panel.non_existing", "on"),
-        ]
+        ],
     )
 
     assert len(arm_away_calls) == 1

@@ -1,6 +1,6 @@
 """Switch tests for the Goalzero integration."""
 from homeassistant.components.goalzero.const import DEFAULT_NAME
-from homeassistant.components.switch import DOMAIN as DOMAIN
+from homeassistant.components.switch import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -10,7 +10,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import async_setup_platform
+from . import async_init_integration
 
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -18,9 +18,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 async def test_switches_states(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-):
+) -> None:
     """Test we get sensor data."""
-    await async_setup_platform(hass, aioclient_mock, DOMAIN)
+    await async_init_integration(hass, aioclient_mock)
 
     assert hass.states.get(f"switch.{DEFAULT_NAME}_usb_port_status").state == STATE_OFF
     assert hass.states.get(f"switch.{DEFAULT_NAME}_ac_port_status").state == STATE_ON

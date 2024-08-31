@@ -33,7 +33,6 @@ CONF_IGNORE_ATTRIBUTES = "ignore_attributes"
 CONF_PRECISION = "precision"
 CONF_SSL_CA_CERT = "ssl_ca_cert"
 
-CONF_LANGUAGE = "language"
 CONF_QUERIES = "queries"
 CONF_QUERIES_FLUX = "queries_flux"
 CONF_GROUP_FUNCTION = "group_function"
@@ -72,7 +71,7 @@ INFLUX_CONF_ORG = "org"
 EVENT_NEW_STATE = "new_state"
 DOMAIN = "influxdb"
 API_VERSION_2 = "2"
-TIMEOUT = 5
+TIMEOUT = 10  # seconds
 RETRY_DELAY = 20
 QUEUE_BACKLOG_SECONDS = 30
 RETRY_INTERVAL = 60  # seconds

@@ -39,6 +39,7 @@ class User:
     is_owner: bool = attr.ib(default=False)
     is_active: bool = attr.ib(default=False)
     system_generated: bool = attr.ib(default=False)
+    local_only: bool = attr.ib(default=False)
 
     groups: list[Group] = attr.ib(factory=list, eq=False, order=False)
 
@@ -133,3 +134,5 @@ class UserMeta(NamedTuple):
 
     name: str | None
     is_active: bool
+    group: str | None = None
+    local_only: bool | None = None

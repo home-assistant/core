@@ -14,6 +14,7 @@ from homeassistant.components.habitica.const import (
 )
 from homeassistant.components.habitica.sensor import TASKS_TYPES
 from homeassistant.const import ATTR_NAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, async_capture_events
 
@@ -91,7 +92,9 @@ def common_requests(aioclient_mock):
     return aioclient_mock
 
 
-async def test_entry_setup_unload(hass, habitica_entry, common_requests):
+async def test_entry_setup_unload(
+    hass: HomeAssistant, habitica_entry, common_requests
+) -> None:
     """Test integration setup and unload."""
     assert await hass.config_entries.async_setup(habitica_entry.entry_id)
     await hass.async_block_till_done()
@@ -104,8 +107,8 @@ async def test_entry_setup_unload(hass, habitica_entry, common_requests):
 
 
 async def test_service_call(
-    hass, habitica_entry, common_requests, capture_api_call_success
-):
+    hass: HomeAssistant, habitica_entry, common_requests, capture_api_call_success
+) -> None:
     """Test integration setup, service call and unload."""
 
     assert await hass.config_entries.async_setup(habitica_entry.entry_id)
@@ -120,7 +123,7 @@ async def test_service_call(
         ATTR_PATH: ["tasks", "user", "post"],
         ATTR_ARGS: TEST_API_CALL_ARGS,
     }
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN, SERVICE_API_CALL, TEST_SERVICE_DATA, blocking=True
     )
 

@@ -1,15 +1,11 @@
 # Describes the format for available Netatmo services
 set_camera_light:
-  name: Set camera light mode
-  description: Sets the light mode for a Netatmo Outdoor camera light.
   target:
     entity:
       integration: netatmo
       domain: light
   fields:
     camera_light_mode:
-      name: Camera light mode
-      description: Outdoor camera light mode.
       required: true
       selector:
         select:
@@ -19,60 +15,109 @@ set_camera_light:
             - "auto"
 
 set_schedule:
-  name: Set heating schedule
-  description:
-    Set the heating schedule for Netatmo climate device. The schedule name must
-    match a schedule configured at Netatmo.
   target:
     entity:
       integration: netatmo
       domain: climate
   fields:
     schedule_name:
-      description: Schedule name
       example: Standard
       required: true
       selector:
         text:
 
+set_preset_mode_with_end_datetime:
+  target:
+    entity:
+      integration: netatmo
+      domain: climate
+  fields:
+    preset_mode:
+      required: true
+      example: "away"
+      selector:
+        select:
+          options:
+            - "away"
+            - "Frost Guard"
+    end_datetime:
+      required: true
+      example: '"2019-04-20 05:04:20"'
+      selector:
+        datetime:
+
+set_temperature_with_end_datetime:
+  target:
+    entity:
+      integration: netatmo
+      domain: climate
+  fields:
+    target_temperature:
+      required: true
+      example: "19.5"
+      selector:
+        number:
+          min: 7
+          max: 30
+          step: 0.5
+    end_datetime:
+      required: true
+      example: '"2019-04-20 05:04:20"'
+      selector:
+        datetime:
+
+set_temperature_with_time_period:
+  target:
+    entity:
+      integration: netatmo
+      domain: climate
+  fields:
+    target_temperature:
+      required: true
+      example: "19.5"
+      selector:
+        number:
+          min: 7
+          max: 30
+          step: 0.5
+    time_period:
+      required: true
+      default:
+        hours: 3
+        minutes: 0
+        seconds: 0
+        days: 0
+      selector:
+        duration:
+
+clear_temperature_setting:
+  target:
+    entity:
+      integration: netatmo
+      domain: climate
+
 set_persons_home:
-  name: Set persons at home
-  description:
-    Set a list of persons as at home. Person's name must match a name known by
-    the Netatmo Indoor (Welcome) Camera.
   target:
     entity:
       integration: netatmo
       domain: camera
   fields:
     persons:
-      description: List of names
       example: "[Alice, Bob]"
       required: true
       selector:
         object:
 
 set_person_away:
-  name: Set person away
-  description:
-    Set a person as away. If no person is set the home will be marked as empty.
-    Person's name must match a name known by the Netatmo Indoor (Welcome)
-    Camera.
   target:
     entity:
       integration: netatmo
       domain: camera
   fields:
     person:
-      description: Person's name.
       example: Bob
       selector:
         text:
 
 register_webhook:
-  name: Register webhook
-  description: Register the webhook to the Netatmo backend.
-
 unregister_webhook:
-  name: Unregister webhook
-  description: Unregister the webhook from the Netatmo backend.

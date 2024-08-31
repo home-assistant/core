@@ -2,9 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Setup Glances",
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
@@ -12,25 +10,25 @@
           "version": "Glances API Version (2 or 3)",
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the system running your Glances system monitor."
+        }
+      },
+      "reauth_confirm": {
+        "description": "The password for {username} is invalid.",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "wrong_version": "Version not supported (2 or 3 only)"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "description": "Configure options for Glances",
-        "data": {
-          "scan_interval": "Update frequency"
-        }
-      }
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   }
 }

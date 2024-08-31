@@ -8,8 +8,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import VelbusEntity
 from .const import DOMAIN
+from .entity import VelbusEntity, api_call
 
 
 async def async_setup_entry(
@@ -36,10 +36,12 @@ class VelbusSwitch(VelbusEntity, SwitchEntity):
         """Return true if the switch is on."""
         return self._channel.is_on()
 
+    @api_call
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the switch to turn on."""
         await self._channel.turn_on()
 
+    @api_call
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the switch to turn off."""
         await self._channel.turn_off()

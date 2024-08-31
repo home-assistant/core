@@ -16,5 +16,15 @@
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "power_consumption": {
+        "name": "Power consumption"
+      },
+      "total_energy_today": {
+        "name": "Total energy today"
+      }
+    }
   }
 }

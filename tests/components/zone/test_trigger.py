@@ -3,11 +3,16 @@ import pytest
 
 from homeassistant.components import automation, zone
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
-from homeassistant.core import Context
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service, mock_component
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+
+
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
 
 
 @pytest.fixture
@@ -36,7 +41,7 @@ def setup_comp(hass):
     )
 
 
-async def test_if_fires_on_zone_enter(hass, calls):
+async def test_if_fires_on_zone_enter(hass: HomeAssistant, calls) -> None:
     """Test for firing on zone enter."""
     context = Context()
     hass.states.async_set(
@@ -108,7 +113,86 @@ async def test_if_fires_on_zone_enter(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_not_fires_for_enter_on_zone_leave(hass, calls):
+async def test_if_fires_on_zone_enter_uuid(hass: HomeAssistant, calls) -> None:
+    """Test for firing on zone enter when device is specified by entity registry id."""
+    context = Context()
+
+    registry = er.async_get(hass)
+    entry = registry.async_get_or_create(
+        "test", "hue", "1234", suggested_object_id="entity"
+    )
+    assert entry.entity_id == "test.entity"
+
+    hass.states.async_set(
+        "test.entity", "hello", {"latitude": 32.881011, "longitude": -117.234758}
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "zone",
+                    "entity_id": entry.id,
+                    "zone": "zone.test",
+                    "event": "enter",
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {
+                        "some": "{{ trigger.%s }}"
+                        % "}} - {{ trigger.".join(
+                            (
+                                "platform",
+                                "entity_id",
+                                "from_state.state",
+                                "to_state.state",
+                                "zone.name",
+                                "id",
+                            )
+                        )
+                    },
+                },
+            }
+        },
+    )
+
+    hass.states.async_set(
+        "test.entity",
+        "hello",
+        {"latitude": 32.880586, "longitude": -117.237564},
+        context=context,
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].context.parent_id == context.id
+    assert calls[0].data["some"] == "zone - test.entity - hello - hello - test - 0"
+
+    # Set out of zone again so we can trigger call
+    hass.states.async_set(
+        "test.entity", "hello", {"latitude": 32.881011, "longitude": -117.234758}
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_MATCH_ALL},
+        blocking=True,
+    )
+
+    hass.states.async_set(
+        "test.entity", "hello", {"latitude": 32.880586, "longitude": -117.237564}
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+
+
+async def test_if_not_fires_for_enter_on_zone_leave(hass: HomeAssistant, calls) -> None:
     """Test for not firing on zone leave."""
     hass.states.async_set(
         "test.entity", "hello", {"latitude": 32.880586, "longitude": -117.237564}
@@ -139,7 +223,7 @@ async def test_if_not_fires_for_enter_on_zone_leave(hass, calls):
     assert len(calls) == 0
 
 
-async def test_if_fires_on_zone_leave(hass, calls):
+async def test_if_fires_on_zone_leave(hass: HomeAssistant, calls) -> None:
     """Test for firing on zone leave."""
     hass.states.async_set(
         "test.entity", "hello", {"latitude": 32.880586, "longitude": -117.237564}
@@ -170,7 +254,7 @@ async def test_if_fires_on_zone_leave(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_not_fires_for_leave_on_zone_enter(hass, calls):
+async def test_if_not_fires_for_leave_on_zone_enter(hass: HomeAssistant, calls) -> None:
     """Test for not firing on zone enter."""
     hass.states.async_set(
         "test.entity", "hello", {"latitude": 32.881011, "longitude": -117.234758}
@@ -201,7 +285,7 @@ async def test_if_not_fires_for_leave_on_zone_enter(hass, calls):
     assert len(calls) == 0
 
 
-async def test_zone_condition(hass, calls):
+async def test_zone_condition(hass: HomeAssistant, calls) -> None:
     """Test for zone condition."""
     hass.states.async_set(
         "test.entity", "hello", {"latitude": 32.880586, "longitude": -117.237564}
@@ -227,3 +311,51 @@ async def test_zone_condition(hass, calls):
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert len(calls) == 1
+
+
+async def test_unknown_zone(
+    hass: HomeAssistant, calls, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test for firing on zone enter."""
+    context = Context()
+    hass.states.async_set(
+        "test.entity", "hello", {"latitude": 32.881011, "longitude": -117.234758}
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "My Automation",
+                "trigger": {
+                    "platform": "zone",
+                    "entity_id": "test.entity",
+                    "zone": "zone.no_such_zone",
+                    "event": "enter",
+                },
+                "action": {
+                    "service": "test.automation",
+                },
+            }
+        },
+    )
+
+    assert (
+        "Automation 'My Automation' is referencing non-existing zone"
+        " 'zone.no_such_zone' in a zone trigger" not in caplog.text
+    )
+
+    hass.states.async_set(
+        "test.entity",
+        "hello",
+        {"latitude": 32.880586, "longitude": -117.237564},
+        context=context,
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        "Automation 'My Automation' is referencing non-existing zone"
+        " 'zone.no_such_zone' in a zone trigger" in caplog.text
+    )

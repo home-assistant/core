@@ -1,12 +1,13 @@
 """The tests for the opnsense device tracker platform."""
-
 from unittest import mock
 
 import pytest
 
 from homeassistant.components import opnsense
+from homeassistant.components.device_tracker import legacy
 from homeassistant.components.opnsense import CONF_API_SECRET, DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
@@ -17,7 +18,9 @@ def mocked_opnsense():
         yield mocked_opn
 
 
-async def test_get_scanner(hass, mocked_opnsense, mock_device_tracker_conf):
+async def test_get_scanner(
+    hass: HomeAssistant, mocked_opnsense, mock_device_tracker_conf: list[legacy.Device]
+) -> None:
     """Test creating an opnsense scanner."""
     interface_client = mock.MagicMock()
     mocked_opnsense.InterfaceClient.return_value = interface_client

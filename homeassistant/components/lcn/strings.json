@@ -1,0 +1,267 @@
+{
+  "device_automation": {
+    "trigger_type": {
+      "transmitter": "Transmitter code received",
+      "transponder": "Transponder code received",
+      "fingerprint": "Fingerprint code received",
+      "codelock": "Code lock code received",
+      "send_keys": "Send keys received"
+    }
+  },
+  "services": {
+    "output_abs": {
+      "name": "Output absolute brightness",
+      "description": "Sets absolute brightness of output port in percent.",
+      "fields": {
+        "address": {
+          "name": "Address",
+          "description": "Module address."
+        },
+        "output": {
+          "name": "Output",
+          "description": "Output port."
+        },
+        "brightness": {
+          "name": "Brightness",
+          "description": "Absolute brightness."
+        },
+        "transition": {
+          "name": "Transition",
+          "description": "Transition time."
+        }
+      }
+    },
+    "output_rel": {
+      "name": "Output relative brightness",
+      "description": "Sets relative brightness of output port in percent.",
+      "fields": {
+        "address": {
+          "name": "Address",
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
+        },
+        "output": {
+          "name": "[%key:component::lcn::services::output_abs::fields::output::name%]",
+          "description": "[%key:component::lcn::services::output_abs::fields::output::description%]"
+        },
+        "brightness": {
+          "name": "Brightness",
+          "description": "Relative brightness."
+        }
+      }
+    },
+    "output_toggle": {
+      "name": "Toggle output",
+      "description": "Toggles output port.",
+      "fields": {
+        "address": {
+          "name": "Address",
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
+        },
+        "output": {
+          "name": "[%key:component::lcn::services::output_abs::fields::output::name%]",
+          "description": "[%key:component::lcn::services::output_abs::fields::output::description%]"
+        },
+        "transition": {
+          "name": "Transition",
+          "description": "[%key:component::lcn::services::output_abs::fields::transition::description%]"
+        }
+      }
+    },
+    "relays": {
+      "name": "Relays",
+      "description": "Sets the relays status.",
+      "fields": {
+        "address": {
+          "name": "Address",
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
+        },
+        "state": {
+          "name": "State",
+          "description": "Relays states as string (1=on, 2=off, t=toggle, -=no change)."
+        }
+      }
+    },
+    "led": {
+      "name": "LED",
+      "description": "Sets the led state.",
+      "fields": {
+        "address": {
+          "name": "Address",
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
+        },
+        "led": {
+          "name": "[%key:component::lcn::services::led::name%]",
+          "description": "Led."
+        },
+        "state": {
+          "name": "State",
+          "description": "Led state."
+        }
+      }
+    },
+    "var_abs": {
+      "name": "Set absolute variable",
+      "description": "Sets absolute value of a variable or setpoint.",
+      "fields": {
+        "address": {
+          "name": "Address",
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
+        },
+        "variable": {
+          "name": "Variable",
+          "description": "Variable or setpoint name."
+        },
+        "value": {
+          "name": "Value",
+          "description": "Value to set."
+        },
+        "unit_of_measurement": {
+          "name": "Unit of measurement",
+          "description": "Unit of value."
+        }
+      }
+    },
+    "var_reset": {
+      "name": "Reset variable",
+      "description": "Resets value of variable or setpoint.",
+      "fields": {
+        "address": {
+          "name": "Address",
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
+        },
+        "variable": {
+          "name": "[%key:component::lcn::services::var_abs::fields::variable::name%]",
+          "description": "[%key:component::lcn::services::var_abs::fields::variable::description%]"
+        }
+      }
+    },
+    "var_rel": {
+      "name": "Shift variable",
+      "description": "Shift value of a variable, setpoint or threshold.",
+      "fields": {
+        "address": {
+          "name": "Address",
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
+        },
+        "variable": {
+          "name": "[%key:component::lcn::services::var_abs::fields::variable::name%]",
+          "description": "[%key:component::lcn::services::var_abs::fields::variable::description%]"
+        },
+        "value": {
+          "name": "Value",
+          "description": "Shift value."
+        },
+        "unit_of_measurement": {
+          "name": "Unit of measurement",
+          "description": "[%key:component::lcn::services::var_abs::fields::unit_of_measurement::description%]"
+        },
+        "value_reference": {
+          "name": "Reference value",
+          "description": "Reference value for setpoint and threshold."
+        }
+      }
+    },
+    "lock_regulator": {
+      "name": "Lock regulator",
+      "description": "Locks a regulator setpoint.",
+      "fields": {
+        "address": {
+          "name": "Address",
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
+        },
+        "setpoint": {
+          "name": "Setpoint",
+          "description": "Setpoint name."
+        },
+        "state": {
+          "name": "State",
+          "description": "New setpoint state."
+        }
+      }
+    },
+    "send_keys": {
+      "name": "Send keys",
+      "description": "Sends keys (which executes bound commands).",
+      "fields": {
+        "address": {
+          "name": "Address",
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
+        },
+        "keys": {
+          "name": "Keys",
+          "description": "Keys to send."
+        },
+        "state": {
+          "name": "State",
+          "description": "Key state upon sending (must be hit for deferred)."
+        },
+        "time": {
+          "name": "Time",
+          "description": "Send delay."
+        },
+        "time_unit": {
+          "name": "Time unit",
+          "description": "Time unit of send delay."
+        }
+      }
+    },
+    "lock_keys": {
+      "name": "Lock keys",
+      "description": "Locks keys.",
+      "fields": {
+        "address": {
+          "name": "Address",
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
+        },
+        "table": {
+          "name": "Table",
+          "description": "Table with keys to lock (must be A for interval)."
+        },
+        "state": {
+          "name": "State",
+          "description": "Key lock states as string (1=on, 2=off, T=toggle, -=nochange)."
+        },
+        "time": {
+          "name": "Time",
+          "description": "Lock interval."
+        },
+        "time_unit": {
+          "name": "[%key:component::lcn::services::send_keys::fields::time_unit::name%]",
+          "description": "Time unit of lock interval."
+        }
+      }
+    },
+    "dyn_text": {
+      "name": "Dynamic text",
+      "description": "Sends dynamic text to LCN-GTxD displays.",
+      "fields": {
+        "address": {
+          "name": "Address",
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
+        },
+        "row": {
+          "name": "Row",
+          "description": "Text row."
+        },
+        "text": {
+          "name": "Text",
+          "description": "Text to send (up to 60 characters encoded as UTF-8)."
+        }
+      }
+    },
+    "pck": {
+      "name": "PCK",
+      "description": "Sends arbitrary PCK command.",
+      "fields": {
+        "address": {
+          "name": "Address",
+          "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
+        },
+        "pck": {
+          "name": "[%key:component::lcn::services::pck::name%]",
+          "description": "PCK command (without address header)."
+        }
+      }
+    }
+  }
+}

@@ -1,26 +1,32 @@
 """Config flow for BSB-Lan integration."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
-from bsblan import BSBLan, BSBLanError, Info
+from bsblan import BSBLAN, BSBLANError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 
-from .const import CONF_DEVICE_IDENT, CONF_PASSKEY, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_PASSKEY, DEFAULT_PORT, DOMAIN
 
 
-class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
-    """Handle a BSBLan config flow."""
+class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
+    """Handle a BSBLAN config flow."""
 
     VERSION = 1
+
+    host: str
+    port: int
+    mac: str
+    passkey: str | None = None
+    username: str | None = None
+    password: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -29,33 +35,20 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self._show_setup_form()
 
+        self.host = user_input[CONF_HOST]
+        self.port = user_input[CONF_PORT]
+        self.passkey = user_input.get(CONF_PASSKEY)
+        self.username = user_input.get(CONF_USERNAME)
+        self.password = user_input.get(CONF_PASSWORD)
+
         try:
-            info = await self._get_bsblan_info(
-                host=user_input[CONF_HOST],
-                port=user_input[CONF_PORT],
-                passkey=user_input.get(CONF_PASSKEY),
-                username=user_input.get(CONF_USERNAME),
-                password=user_input.get(CONF_PASSWORD),
-            )
-        except BSBLanError:
+            await self._get_bsblan_info()
+        except BSBLANError:
             return self._show_setup_form({"base": "cannot_connect"})
 
-        # Check if already configured
-        await self.async_set_unique_id(info.device_identification)
-        self._abort_if_unique_id_configured()
+        return self._async_create_entry()
 
-        return self.async_create_entry(
-            title=info.device_identification,
-            data={
-                CONF_HOST: user_input[CONF_HOST],
-                CONF_PORT: user_input[CONF_PORT],
-                CONF_PASSKEY: user_input.get(CONF_PASSKEY),
-                CONF_DEVICE_IDENT: info.device_identification,
-                CONF_USERNAME: user_input.get(CONF_USERNAME),
-                CONF_PASSWORD: user_input.get(CONF_PASSWORD),
-            },
-        )
-
+    @callback
     def _show_setup_form(self, errors: dict | None = None) -> FlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(
@@ -63,7 +56,7 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST): str,
-                    vol.Optional(CONF_PORT, default=80): int,
+                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
                     vol.Optional(CONF_PASSKEY): str,
                     vol.Optional(CONF_USERNAME): str,
                     vol.Optional(CONF_PASSWORD): str,
@@ -72,23 +65,39 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def _get_bsblan_info(
-        self,
-        host: str,
-        username: str | None,
-        password: str | None,
-        passkey: str | None,
-        port: int,
-    ) -> Info:
-        """Get device information from an BSBLan device."""
+    @callback
+    def _async_create_entry(self) -> FlowResult:
+        return self.async_create_entry(
+            title=format_mac(self.mac),
+            data={
+                CONF_HOST: self.host,
+                CONF_PORT: self.port,
+                CONF_PASSKEY: self.passkey,
+                CONF_USERNAME: self.username,
+                CONF_PASSWORD: self.password,
+            },
+        )
+
+    async def _get_bsblan_info(self, raise_on_progress: bool = True) -> None:
+        """Get device information from an BSBLAN device."""
         session = async_get_clientsession(self.hass)
-        _LOGGER.debug("request bsblan.info:")
-        bsblan = BSBLan(
-            host,
-            username=username,
-            password=password,
-            passkey=passkey,
-            port=port,
+        bsblan = BSBLAN(
+            host=self.host,
+            username=self.username,
+            password=self.password,
+            passkey=self.passkey,
+            port=self.port,
             session=session,
         )
-        return await bsblan.info()
+        device = await bsblan.device()
+        self.mac = device.MAC
+
+        await self.async_set_unique_id(
+            format_mac(self.mac), raise_on_progress=raise_on_progress
+        )
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_HOST: self.host,
+                CONF_PORT: self.port,
+            }
+        )

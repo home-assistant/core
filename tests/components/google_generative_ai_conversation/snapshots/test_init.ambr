@@ -1,0 +1,33 @@
+# serializer version: 1
+# name: test_default_prompt
+  dict({
+    'context': '''
+      This smart home is controlled by Home Assistant.
+      
+      An overview of the areas and the devices in this smart home:
+      
+      Test Area:
+      - Test Device (Test Model)
+      
+      Test Area 2:
+      - Test Device 2
+      - Test Device 3 (Test Model 3A)
+      - Test Device 4
+      - 1 (3)
+      
+      Answer the user's questions about the world truthfully.
+      
+      If the user wants to control a device, reject the request and suggest using the Home Assistant app.
+    ''',
+    'messages': list([
+      dict({
+        'author': '0',
+        'content': 'hello',
+      }),
+    ]),
+    'model': 'models/chat-bison-001',
+    'temperature': 0.25,
+    'top_k': 40,
+    'top_p': 0.95,
+  })
+# ---

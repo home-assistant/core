@@ -2,10 +2,10 @@
 
 from homeassistant.components.device_tracker import DeviceScanner
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
-from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
+from homeassistant.components.device_tracker.const import SourceType
 
 
-def get_scanner(hass, config):
+async def async_get_scanner(hass, config):
     """Return a mock scanner."""
     return SCANNER
 
@@ -18,12 +18,12 @@ class MockScannerEntity(ScannerEntity):
         self.connected = False
         self._hostname = "test.hostname.org"
         self._ip_address = "0.0.0.0"
-        self._mac_address = "ad:de:ef:be:ed:fe:"
+        self._mac_address = "ad:de:ef:be:ed:fe"
 
     @property
     def source_type(self):
         """Return the source type, eg gps or router, of the device."""
-        return SOURCE_TYPE_ROUTER
+        return SourceType.ROUTER
 
     @property
     def battery_level(self):

@@ -1,8 +1,11 @@
 """Config flow for ScreenLogic."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from screenlogicpy import ScreenLogicError, discovery
-from screenlogicpy.const import SL_GATEWAY_IP, SL_GATEWAY_NAME, SL_GATEWAY_PORT
+from screenlogicpy.const.common import SL_GATEWAY_IP, SL_GATEWAY_NAME, SL_GATEWAY_PORT
 from screenlogicpy.requests import login
 import voluptuous as vol
 
@@ -35,8 +38,9 @@ async def async_discover_gateways_by_unique_id(hass):
         return discovered_gateways
 
     for host in hosts:
-        mac = _extract_mac_from_name(host[SL_GATEWAY_NAME])
-        discovered_gateways[mac] = host
+        if (name := host[SL_GATEWAY_NAME]).startswith("Pentair:"):
+            mac = _extract_mac_from_name(name)
+            discovered_gateways[mac] = host
 
     _LOGGER.debug("Discovered gateways: %s", discovered_gateways)
     return discovered_gateways
@@ -56,51 +60,41 @@ def name_for_mac(mac):
     return f"Pentair: {short_mac(mac)}"
 
 
-async def async_get_mac_address(hass, ip_address, port):
-    """Connect to a screenlogic gateway and return the mac address."""
-    connected_socket = await hass.async_add_executor_job(
-        login.create_socket,
-        ip_address,
-        port,
-    )
-    if not connected_socket:
-        raise ScreenLogicError("Unknown socket error")
-    return await hass.async_add_executor_job(login.gateway_connect, connected_socket)
-
-
 class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow to setup screen logic devices."""
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize ScreenLogic ConfigFlow."""
-        self.discovered_gateways = {}
-        self.discovered_ip = None
+        self.discovered_gateways: dict[str, dict[str, Any]] = {}
+        self.discovered_ip: str | None = None
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> ScreenLogicOptionsFlowHandler:
         """Get the options flow for ScreenLogic."""
         return ScreenLogicOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle the start of the config flow."""
         self.discovered_gateways = await async_discover_gateways_by_unique_id(self.hass)
         return await self.async_step_gateway_select()
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle dhcp discovery."""
-        mac = _extract_mac_from_name(discovery_info[dhcp.HOSTNAME])
+        mac = format_mac(discovery_info.macaddress)
         await self.async_set_unique_id(mac)
         self._abort_if_unique_id_configured(
-            updates={CONF_IP_ADDRESS: discovery_info[dhcp.IP_ADDRESS]}
+            updates={CONF_IP_ADDRESS: discovery_info.ip}
         )
-        self.discovered_ip = discovery_info[dhcp.IP_ADDRESS]
-        self.context["title_placeholders"] = {"name": discovery_info[dhcp.HOSTNAME]}
+        self.discovered_ip = discovery_info.ip
+        self.context["title_placeholders"] = {"name": discovery_info.hostname}
         return await self.async_step_gateway_entry()
 
-    async def async_step_gateway_select(self, user_input=None):
+    async def async_step_gateway_select(self, user_input=None) -> FlowResult:
         """Handle the selection of a discovered ScreenLogic gateway."""
         existing = self._async_current_ids()
         unconfigured_gateways = {
@@ -112,7 +106,7 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not unconfigured_gateways:
             return await self.async_step_gateway_entry()
 
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             if user_input[GATEWAY_SELECT_KEY] == GATEWAY_MANUAL_ENTRY:
                 return await self.async_step_gateway_entry()
@@ -136,7 +130,9 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(GATEWAY_SELECT_KEY): vol.In(
                         {
                             **unconfigured_gateways,
-                            GATEWAY_MANUAL_ENTRY: "Manually configure a ScreenLogic gateway",
+                            GATEWAY_MANUAL_ENTRY: (
+                                "Manually configure a ScreenLogic gateway"
+                            ),
                         }
                     )
                 }
@@ -145,9 +141,9 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={},
         )
 
-    async def async_step_gateway_entry(self, user_input=None):
+    async def async_step_gateway_entry(self, user_input=None) -> FlowResult:
         """Handle the manual entry of a ScreenLogic gateway."""
-        errors = {}
+        errors: dict[str, str] = {}
         ip_address = self.discovered_ip
         port = 80
 
@@ -155,9 +151,7 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ip_address = user_input[CONF_IP_ADDRESS]
             port = user_input[CONF_PORT]
             try:
-                mac = format_mac(
-                    await async_get_mac_address(self.hass, ip_address, port)
-                )
+                mac = format_mac(await login.async_get_mac_address(ip_address, port))
             except ScreenLogicError as ex:
                 _LOGGER.debug(ex)
                 errors[CONF_IP_ADDRESS] = "cannot_connect"
@@ -193,7 +187,7 @@ class ScreenLogicOptionsFlowHandler(config_entries.OptionsFlow):
         """Init the screen logic options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input=None) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(

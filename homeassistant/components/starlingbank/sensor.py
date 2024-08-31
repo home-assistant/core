@@ -1,4 +1,7 @@
 """Support for balance data via the Starling Bank API."""
+from __future__ import annotations
+
+from datetime import timedelta
 import logging
 
 import requests
@@ -7,7 +10,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +26,8 @@ CONF_SANDBOX = "sandbox"
 DEFAULT_SANDBOX = False
 DEFAULT_ACCOUNT_NAME = "Starling"
 
-ICON = "mdi:currency-gbp"
+
+SCAN_INTERVAL = timedelta(seconds=180)
 
 ACCOUNT_SCHEMA = vol.Schema(
     {
@@ -38,7 +45,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_devices: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Sterling Bank sensor platform."""
 
     sensors = []
@@ -64,6 +76,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class StarlingBalanceSensor(SensorEntity):
     """Representation of a Starling balance sensor."""
 
+    _attr_icon = "mdi:currency-gbp"
+
     def __init__(self, starling_account, account_name, balance_data_type):
         """Initialize the sensor."""
         self._starling_account = starling_account
@@ -88,12 +102,7 @@ class StarlingBalanceSensor(SensorEntity):
         """Return the unit of measurement."""
         return self._starling_account.currency
 
-    @property
-    def icon(self):
-        """Return the entity icon."""
-        return ICON
-
-    def update(self):
+    def update(self) -> None:
         """Fetch new state data for the sensor."""
         self._starling_account.update_balance_data()
         if self._balance_data_type == "cleared_balance":

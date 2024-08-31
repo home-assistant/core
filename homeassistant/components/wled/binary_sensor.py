@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_UPDATE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -32,13 +32,16 @@ async def async_setup_entry(
 class WLEDUpdateBinarySensor(WLEDEntity, BinarySensorEntity):
     """Defines a WLED firmware binary sensor."""
 
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
-    _attr_device_class = DEVICE_CLASS_UPDATE
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_device_class = BinarySensorDeviceClass.UPDATE
+    _attr_name = "Firmware"
+
+    # Disabled by default, as this entity is deprecated.
+    _attr_entity_registry_enabled_default = False
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize the button entity."""
         super().__init__(coordinator=coordinator)
-        self._attr_name = f"{coordinator.data.info.name} Firmware"
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_update"
 
     @property

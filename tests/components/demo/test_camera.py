@@ -14,15 +14,26 @@ from homeassistant.components.camera import (
     async_get_image,
 )
 from homeassistant.components.demo import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 ENTITY_CAMERA = "camera.demo_camera"
 
 
+@pytest.fixture
+async def camera_only() -> None:
+    """Enable only the button platform."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.CAMERA],
+    ):
+        yield
+
+
 @pytest.fixture(autouse=True)
-async def demo_camera(hass):
+async def demo_camera(hass, camera_only):
     """Initialize a demo camera platform."""
     assert await async_setup_component(
         hass, CAMERA_DOMAIN, {CAMERA_DOMAIN: {"platform": DOMAIN}}
@@ -30,7 +41,7 @@ async def demo_camera(hass):
     await hass.async_block_till_done()
 
 
-async def test_init_state_is_streaming(hass):
+async def test_init_state_is_streaming(hass: HomeAssistant) -> None:
     """Demo camera initialize as streaming."""
     state = hass.states.get(ENTITY_CAMERA)
     assert state.state == STATE_STREAMING
@@ -43,7 +54,7 @@ async def test_init_state_is_streaming(hass):
         assert image.content == b"ON"
 
 
-async def test_turn_on_state_back_to_streaming(hass):
+async def test_turn_on_state_back_to_streaming(hass: HomeAssistant) -> None:
     """After turn on state back to streaming."""
     state = hass.states.get(ENTITY_CAMERA)
     assert state.state == STATE_STREAMING
@@ -63,7 +74,7 @@ async def test_turn_on_state_back_to_streaming(hass):
     assert state.state == STATE_STREAMING
 
 
-async def test_turn_off_image(hass):
+async def test_turn_off_image(hass: HomeAssistant) -> None:
     """After turn off, Demo camera raise error."""
     await hass.services.async_call(
         CAMERA_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_CAMERA}, blocking=True
@@ -74,7 +85,7 @@ async def test_turn_off_image(hass):
         assert error.args[0] == "Camera is off"
 
 
-async def test_turn_off_invalid_camera(hass):
+async def test_turn_off_invalid_camera(hass: HomeAssistant) -> None:
     """Turn off non-exist camera should quietly fail."""
     state = hass.states.get(ENTITY_CAMERA)
     assert state.state == STATE_STREAMING
@@ -90,7 +101,7 @@ async def test_turn_off_invalid_camera(hass):
     assert state.state == STATE_STREAMING
 
 
-async def test_motion_detection(hass):
+async def test_motion_detection(hass: HomeAssistant) -> None:
     """Test motion detection services."""
 
     # Fetch state and check motion detection attribute

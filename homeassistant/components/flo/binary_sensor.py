@@ -2,21 +2,28 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_PROBLEM,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as FLO_DOMAIN
 from .device import FloDeviceDataUpdateCoordinator
 from .entity import FloEntity
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Flo sensors from config entry."""
     devices: list[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN][
         config_entry.entry_id
     ]["devices"]
-    entities = []
+    entities: list[BinarySensorEntity] = []
     for device in devices:
         if device.device_type == "puck_oem":
             # Flo "pucks" (leak detectors) *do* support pending alerts.
@@ -37,11 +44,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class FloPendingAlertsBinarySensor(FloEntity, BinarySensorEntity):
     """Binary sensor that reports on if there are any pending system alerts."""
 
-    _attr_device_class = DEVICE_CLASS_PROBLEM
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_translation_key = "pending_system_alerts"
 
     def __init__(self, device):
         """Initialize the pending alerts binary sensor."""
-        super().__init__("pending_system_alerts", "Pending System Alerts", device)
+        super().__init__("pending_system_alerts", device)
 
     @property
     def is_on(self):
@@ -63,11 +71,12 @@ class FloPendingAlertsBinarySensor(FloEntity, BinarySensorEntity):
 class FloWaterDetectedBinarySensor(FloEntity, BinarySensorEntity):
     """Binary sensor that reports if water is detected (for leak detectors)."""
 
-    _attr_device_class = DEVICE_CLASS_PROBLEM
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_translation_key = "water_detected"
 
     def __init__(self, device):
         """Initialize the pending alerts binary sensor."""
-        super().__init__("water_detected", "Water Detected", device)
+        super().__init__("water_detected", device)
 
     @property
     def is_on(self):

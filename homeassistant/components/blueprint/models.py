@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable
 import logging
 import pathlib
 import shutil
@@ -35,6 +36,7 @@ from .const import (
 )
 from .errors import (
     BlueprintException,
+    BlueprintInUse,
     FailedToLoad,
     FileAlreadyExists,
     InvalidBlueprint,
@@ -49,7 +51,7 @@ class Blueprint:
 
     def __init__(
         self,
-        data: dict,
+        data: dict[str, Any],
         *,
         path: str | None = None,
         expected_domain: str | None = None,
@@ -67,7 +69,10 @@ class Blueprint:
                 expected_domain,
                 path or self.name,
                 data,
-                f"Found incorrect blueprint type {data_domain}, expected {expected_domain}",
+                (
+                    f"Found incorrect blueprint type {data_domain}, expected"
+                    f" {expected_domain}"
+                ),
             )
 
         self.domain = data_domain
@@ -183,12 +188,16 @@ class DomainBlueprints:
         hass: HomeAssistant,
         domain: str,
         logger: logging.Logger,
+        blueprint_in_use: Callable[[HomeAssistant, str], bool],
+        reload_blueprint_consumers: Callable[[HomeAssistant, str], Awaitable[None]],
     ) -> None:
         """Initialize a domain blueprints instance."""
         self.hass = hass
         self.domain = domain
         self.logger = logger
-        self._blueprints = {}
+        self._blueprint_in_use = blueprint_in_use
+        self._reload_blueprint_consumers = reload_blueprint_consumers
+        self._blueprints: dict[str, Blueprint | None] = {}
         self._load_lock = asyncio.Lock()
 
         hass.data.setdefault(DOMAIN, {})[domain] = self
@@ -198,15 +207,15 @@ class DomainBlueprints:
         """Return the blueprint folder."""
         return pathlib.Path(self.hass.config.path(BLUEPRINT_FOLDER, self.domain))
 
-    @callback
-    def async_reset_cache(self) -> None:
+    async def async_reset_cache(self) -> None:
         """Reset the blueprint cache."""
-        self._blueprints = {}
+        async with self._load_lock:
+            self._blueprints = {}
 
     def _load_blueprint(self, blueprint_path) -> Blueprint:
         """Load a blueprint."""
         try:
-            blueprint_data = yaml.load_yaml(self.blueprint_folder / blueprint_path)
+            blueprint_data = yaml.load_yaml_dict(self.blueprint_folder / blueprint_path)
         except FileNotFoundError as err:
             raise FailedToLoad(
                 self.domain,
@@ -220,15 +229,15 @@ class DomainBlueprints:
             blueprint_data, expected_domain=self.domain, path=blueprint_path
         )
 
-    def _load_blueprints(self) -> dict[str, Blueprint | BlueprintException]:
+    def _load_blueprints(self) -> dict[str, Blueprint | BlueprintException | None]:
         """Load all the blueprints."""
         blueprint_folder = pathlib.Path(
             self.hass.config.path(BLUEPRINT_FOLDER, self.domain)
         )
-        results = {}
+        results: dict[str, Blueprint | BlueprintException | None] = {}
 
-        for blueprint_path in blueprint_folder.glob("**/*.yaml"):
-            blueprint_path = str(blueprint_path.relative_to(blueprint_folder))
+        for path in blueprint_folder.glob("**/*.yaml"):
+            blueprint_path = str(path.relative_to(blueprint_folder))
             if self._blueprints.get(blueprint_path) is None:
                 try:
                     self._blueprints[blueprint_path] = self._load_blueprint(
@@ -245,7 +254,7 @@ class DomainBlueprints:
 
     async def async_get_blueprints(
         self,
-    ) -> dict[str, Blueprint | BlueprintException]:
+    ) -> dict[str, Blueprint | BlueprintException | None]:
         """Get all the blueprints."""
         async with self._load_lock:
             return await self.hass.async_add_executor_job(self._load_blueprints)
@@ -275,7 +284,7 @@ class DomainBlueprints:
                 blueprint = await self.hass.async_add_executor_job(
                     self._load_blueprint, blueprint_path
                 )
-            except Exception:
+            except FailedToLoad:
                 self._blueprints[blueprint_path] = None
                 raise
 
@@ -301,37 +310,53 @@ class DomainBlueprints:
 
     async def async_remove_blueprint(self, blueprint_path: str) -> None:
         """Remove a blueprint file."""
+        if self._blueprint_in_use(self.hass, blueprint_path):
+            raise BlueprintInUse(self.domain, blueprint_path)
         path = self.blueprint_folder / blueprint_path
         await self.hass.async_add_executor_job(path.unlink)
         self._blueprints[blueprint_path] = None
 
-    def _create_file(self, blueprint: Blueprint, blueprint_path: str) -> None:
-        """Create blueprint file."""
+    def _create_file(
+        self, blueprint: Blueprint, blueprint_path: str, allow_override: bool
+    ) -> bool:
+        """Create blueprint file.
+
+        Returns true if the action overrides an existing blueprint.
+        """
 
         path = pathlib.Path(
             self.hass.config.path(BLUEPRINT_FOLDER, self.domain, blueprint_path)
         )
-        if path.exists():
+        exists = path.exists()
+
+        if not allow_override and exists:
             raise FileAlreadyExists(self.domain, blueprint_path)
 
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(blueprint.yaml(), encoding="utf-8")
+        return exists
 
     async def async_add_blueprint(
-        self, blueprint: Blueprint, blueprint_path: str
-    ) -> None:
+        self, blueprint: Blueprint, blueprint_path: str, allow_override=False
+    ) -> bool:
         """Add a blueprint."""
-        if not blueprint_path.endswith(".yaml"):
-            blueprint_path = f"{blueprint_path}.yaml"
-
-        await self.hass.async_add_executor_job(
-            self._create_file, blueprint, blueprint_path
+        overrides_existing = await self.hass.async_add_executor_job(
+            self._create_file, blueprint, blueprint_path, allow_override
         )
 
         self._blueprints[blueprint_path] = blueprint
 
+        if overrides_existing:
+            await self._reload_blueprint_consumers(self.hass, blueprint_path)
+
+        return overrides_existing
+
     async def async_populate(self) -> None:
         """Create folder if it doesn't exist and populate with examples."""
+        if self._blueprints:
+            # If we have already loaded some blueprint the blueprint folder must exist
+            return
+
         integration = await loader.async_get_integration(self.hass, self.domain)
 
         def populate():

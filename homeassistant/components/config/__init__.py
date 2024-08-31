@@ -6,10 +6,13 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components import frontend
+from homeassistant.components.http import HomeAssistantView, require_admin
 from homeassistant.const import CONF_ID, EVENT_COMPONENT_LOADED
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import ATTR_COMPONENT
 from homeassistant.util.file import write_utf8_file_atomic
 from homeassistant.util.yaml import dump, load_yaml
@@ -24,19 +27,19 @@ SECTIONS = (
     "core",
     "device_registry",
     "entity_registry",
-    "group",
     "script",
     "scene",
 )
-ON_DEMAND = ("zwave",)
 ACTION_CREATE_UPDATE = "create_update"
 ACTION_DELETE = "delete"
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
-async def async_setup(hass, config):
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the config component."""
-    hass.components.frontend.async_register_built_in_panel(
-        "config", "config", "hass:cog", require_admin=True
+    frontend.async_register_built_in_panel(
+        hass, "config", "config", "hass:cog", require_admin=True
     )
 
     async def setup_panel(panel_name):
@@ -52,20 +55,7 @@ async def async_setup(hass, config):
             key = f"{DOMAIN}.{panel_name}"
             hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: key})
 
-    @callback
-    def component_loaded(event):
-        """Respond to components being loaded."""
-        panel_name = event.data.get(ATTR_COMPONENT)
-        if panel_name in ON_DEMAND:
-            hass.async_create_task(setup_panel(panel_name))
-
-    hass.bus.async_listen(EVENT_COMPONENT_LOADED, component_loaded)
-
     tasks = [asyncio.create_task(setup_panel(panel_name)) for panel_name in SECTIONS]
-
-    for panel_name in ON_DEMAND:
-        if panel_name in hass.config.components:
-            tasks.append(asyncio.create_task(setup_panel(panel_name)))
 
     if tasks:
         await asyncio.wait(tasks)
@@ -113,6 +103,7 @@ class BaseEditConfigView(HomeAssistantView):
         """Delete value."""
         raise NotImplementedError
 
+    @require_admin
     async def get(self, request, config_key):
         """Fetch device specific config."""
         hass = request.app["hass"]
@@ -125,6 +116,7 @@ class BaseEditConfigView(HomeAssistantView):
 
         return self.json(value)
 
+    @require_admin
     async def post(self, request, config_key):
         """Validate config and return results."""
         try:
@@ -143,7 +135,7 @@ class BaseEditConfigView(HomeAssistantView):
             # We just validate, we don't store that data because
             # we don't want to store the defaults.
             if self.data_validator:
-                await self.data_validator(hass, data)
+                await self.data_validator(hass, config_key, data)
             else:
                 self.data_schema(data)
         except (vol.Invalid, HomeAssistantError) as err:
@@ -166,6 +158,7 @@ class BaseEditConfigView(HomeAssistantView):
 
         return self.json({"result": "ok"})
 
+    @require_admin
     async def delete(self, request, config_key):
         """Remove an entry."""
         hass = request.app["hass"]

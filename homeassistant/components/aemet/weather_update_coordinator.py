@@ -1,22 +1,21 @@
 """Weather data coordinator for the AEMET OpenData service."""
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from asyncio import timeout
 from datetime import timedelta
 import logging
+from typing import Any, Final, cast
 
 from aemet_opendata.const import (
     AEMET_ATTR_DATE,
     AEMET_ATTR_DAY,
     AEMET_ATTR_DIRECTION,
     AEMET_ATTR_ELABORATED,
+    AEMET_ATTR_FEEL_TEMPERATURE,
     AEMET_ATTR_FORECAST,
     AEMET_ATTR_HUMIDITY,
-    AEMET_ATTR_ID,
-    AEMET_ATTR_IDEMA,
     AEMET_ATTR_MAX,
     AEMET_ATTR_MIN,
-    AEMET_ATTR_NAME,
     AEMET_ATTR_PRECIPITATION,
     AEMET_ATTR_PRECIPITATION_PROBABILITY,
     AEMET_ATTR_SKY_STATE,
@@ -25,40 +24,48 @@ from aemet_opendata.const import (
     AEMET_ATTR_SPEED,
     AEMET_ATTR_STATION_DATE,
     AEMET_ATTR_STATION_HUMIDITY,
-    AEMET_ATTR_STATION_LOCATION,
+    AEMET_ATTR_STATION_PRESSURE,
     AEMET_ATTR_STATION_PRESSURE_SEA,
     AEMET_ATTR_STATION_TEMPERATURE,
     AEMET_ATTR_STORM_PROBABILITY,
     AEMET_ATTR_TEMPERATURE,
-    AEMET_ATTR_TEMPERATURE_FEELING,
     AEMET_ATTR_WIND,
     AEMET_ATTR_WIND_GUST,
+    AOD_CONDITION,
+    AOD_FORECAST,
+    AOD_FORECAST_DAILY,
+    AOD_FORECAST_HOURLY,
+    AOD_TOWN,
     ATTR_DATA,
 )
+from aemet_opendata.exceptions import AemetError
+from aemet_opendata.forecast import ForecastValue
 from aemet_opendata.helpers import (
+    dict_nested_value,
     get_forecast_day_value,
     get_forecast_hour_value,
     get_forecast_interval_value,
 )
-import async_timeout
+from aemet_opendata.interface import AEMET
 
-from homeassistant.components.weather import (
-    ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
-    ATTR_FORECAST_TIME,
-    ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
-)
+from homeassistant.components.weather import Forecast
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_API_CONDITION,
+    ATTR_API_FORECAST_CONDITION,
     ATTR_API_FORECAST_DAILY,
     ATTR_API_FORECAST_HOURLY,
+    ATTR_API_FORECAST_PRECIPITATION,
+    ATTR_API_FORECAST_PRECIPITATION_PROBABILITY,
+    ATTR_API_FORECAST_TEMP,
+    ATTR_API_FORECAST_TEMP_LOW,
+    ATTR_API_FORECAST_TIME,
+    ATTR_API_FORECAST_WIND_BEARING,
+    ATTR_API_FORECAST_WIND_MAX_SPEED,
+    ATTR_API_FORECAST_WIND_SPEED,
     ATTR_API_HUMIDITY,
     ATTR_API_PRESSURE,
     ATTR_API_RAIN,
@@ -79,22 +86,20 @@ from .const import (
     ATTR_API_WIND_SPEED,
     CONDITIONS_MAP,
     DOMAIN,
-    WIND_BEARING_MAP,
+    FORECAST_MAP,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
+API_TIMEOUT: Final[int] = 120
 STATION_MAX_DELTA = timedelta(hours=2)
 WEATHER_UPDATE_INTERVAL = timedelta(minutes=10)
 
 
 def format_condition(condition: str) -> str:
     """Return condition from dict CONDITIONS_MAP."""
-    for key, value in CONDITIONS_MAP.items():
-        if condition in value:
-            return key
-    _LOGGER.error('Condition "%s" not found in CONDITIONS_MAP', condition)
-    return condition
+    val = ForecastValue.parse_condition(condition)
+    return CONDITIONS_MAP.get(val, val)
 
 
 def format_float(value) -> float | None:
@@ -113,128 +118,33 @@ def format_int(value) -> int | None:
         return None
 
 
-class TownNotFound(UpdateFailed):
-    """Raised when town is not found."""
-
-
 class WeatherUpdateCoordinator(DataUpdateCoordinator):
     """Weather data update coordinator."""
 
-    def __init__(self, hass, aemet, latitude, longitude, station_updates):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        aemet: AEMET,
+    ) -> None:
         """Initialize coordinator."""
+        self.aemet = aemet
+
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=WEATHER_UPDATE_INTERVAL
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=WEATHER_UPDATE_INTERVAL,
         )
 
-        self._aemet = aemet
-        self._station = None
-        self._town = None
-        self._latitude = latitude
-        self._longitude = longitude
-        self._station_updates = station_updates
-        self._data = {
-            "daily": None,
-            "hourly": None,
-            "station": None,
-        }
-
-    async def _async_update_data(self):
-        data = {}
-        async with async_timeout.timeout(120):
-            weather_response = await self._get_aemet_weather()
-        data = self._convert_weather_response(weather_response)
-        return data
-
-    async def _get_aemet_weather(self):
-        """Poll weather data from AEMET OpenData."""
-        weather = await self.hass.async_add_executor_job(self._get_weather_and_forecast)
-        return weather
-
-    def _get_weather_station(self):
-        if not self._station:
-            self._station = (
-                self._aemet.get_conventional_observation_station_by_coordinates(
-                    self._latitude, self._longitude
-                )
-            )
-            if self._station:
-                _LOGGER.debug(
-                    "station found for coordinates [%s, %s]: %s",
-                    self._latitude,
-                    self._longitude,
-                    self._station,
-                )
-        if not self._station:
-            _LOGGER.debug(
-                "station not found for coordinates [%s, %s]",
-                self._latitude,
-                self._longitude,
-            )
-        return self._station
-
-    def _get_weather_town(self):
-        if not self._town:
-            self._town = self._aemet.get_town_by_coordinates(
-                self._latitude, self._longitude
-            )
-            if self._town:
-                _LOGGER.debug(
-                    "Town found for coordinates [%s, %s]: %s",
-                    self._latitude,
-                    self._longitude,
-                    self._town,
-                )
-        if not self._town:
-            _LOGGER.error(
-                "Town not found for coordinates [%s, %s]",
-                self._latitude,
-                self._longitude,
-            )
-            raise TownNotFound
-        return self._town
-
-    def _get_weather_and_forecast(self):
-        """Get weather and forecast data from AEMET OpenData."""
-
-        self._get_weather_town()
-
-        daily = self._aemet.get_specific_forecast_town_daily(self._town[AEMET_ATTR_ID])
-        if not daily:
-            _LOGGER.error(
-                'Error fetching daily data for town "%s"', self._town[AEMET_ATTR_ID]
-            )
-
-        hourly = self._aemet.get_specific_forecast_town_hourly(
-            self._town[AEMET_ATTR_ID]
-        )
-        if not hourly:
-            _LOGGER.error(
-                'Error fetching hourly data for town "%s"', self._town[AEMET_ATTR_ID]
-            )
-
-        station = None
-        if self._station_updates and self._get_weather_station():
-            station = self._aemet.get_conventional_observation_station_data(
-                self._station[AEMET_ATTR_IDEMA]
-            )
-            if not station:
-                _LOGGER.error(
-                    'Error fetching data for station "%s"',
-                    self._station[AEMET_ATTR_IDEMA],
-                )
-
-        if daily:
-            self._data["daily"] = daily
-        if hourly:
-            self._data["hourly"] = hourly
-        if station:
-            self._data["station"] = station
-
-        return AemetWeather(
-            self._data["daily"],
-            self._data["hourly"],
-            self._data["station"],
-        )
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Update coordinator data."""
+        async with timeout(API_TIMEOUT):
+            try:
+                await self.aemet.update()
+            except AemetError as error:
+                raise UpdateFailed(error) from error
+        weather_response = self.aemet.legacy_weather()
+        return self._convert_weather_response(weather_response)
 
     def _convert_weather_response(self, weather_response):
         """Format the weather response correctly."""
@@ -286,7 +196,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         temperature_feeling = None
         town_id = None
         town_name = None
-        town_timestamp = dt_util.as_utc(elaborated).isoformat()
+        town_timestamp = dt_util.as_utc(elaborated)
         wind_bearing = None
         wind_max_speed = None
         wind_speed = None
@@ -312,7 +222,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
         # Overwrite weather values with closest station data (if present)
         if station_data:
-            station_timestamp = dt_util.as_utc(station_dt).isoformat()
+            station_timestamp = dt_util.as_utc(station_dt)
             if (now_utc - station_dt) <= STATION_MAX_DELTA:
                 if AEMET_ATTR_STATION_HUMIDITY in station_data:
                     humidity = format_float(station_data[AEMET_ATTR_STATION_HUMIDITY])
@@ -320,6 +230,8 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                     pressure = format_float(
                         station_data[AEMET_ATTR_STATION_PRESSURE_SEA]
                     )
+                elif AEMET_ATTR_STATION_PRESSURE in station_data:
+                    pressure = format_float(station_data[AEMET_ATTR_STATION_PRESSURE])
                 if AEMET_ATTR_STATION_TEMPERATURE in station_data:
                     temperature = format_float(
                         station_data[AEMET_ATTR_STATION_TEMPERATURE]
@@ -334,6 +246,12 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         forecast_hourly = self._get_hourly_forecast_from_weather_response(
             weather_response, now
         )
+
+        data = self.aemet.data()
+        forecasts: list[dict[str, Forecast]] = {
+            AOD_FORECAST_DAILY: self.aemet_forecast(data, AOD_FORECAST_DAILY),
+            AOD_FORECAST_HOURLY: self.aemet_forecast(data, AOD_FORECAST_HOURLY),
+        }
 
         return {
             ATTR_API_CONDITION: condition,
@@ -357,7 +275,28 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_API_WIND_BEARING: wind_bearing,
             ATTR_API_WIND_MAX_SPEED: wind_max_speed,
             ATTR_API_WIND_SPEED: wind_speed,
+            "forecast": forecasts,
+            "lib": data,
         }
+
+    def aemet_forecast(
+        self,
+        data: dict[str, Any],
+        forecast_mode: str,
+    ) -> list[Forecast]:
+        """Return the forecast array."""
+        forecasts = dict_nested_value(data, [AOD_TOWN, forecast_mode, AOD_FORECAST])
+        forecast_map = FORECAST_MAP[forecast_mode]
+        forecast_list: list[dict[str, Any]] = []
+        for forecast in forecasts:
+            cur_forecast: dict[str, Any] = {}
+            for api_key, ha_key in forecast_map.items():
+                value = forecast[api_key]
+                if api_key == AOD_CONDITION:
+                    value = CONDITIONS_MAP.get(value)
+                cur_forecast[ha_key] = value
+            forecast_list += [cur_forecast]
+        return cast(list[Forecast], forecast_list)
 
     def _get_daily_forecast_from_weather_response(self, weather_response, now):
         if weather_response.daily:
@@ -402,15 +341,15 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             return None
 
         return {
-            ATTR_FORECAST_CONDITION: condition,
-            ATTR_FORECAST_PRECIPITATION_PROBABILITY: self._get_precipitation_prob_day(
+            ATTR_API_FORECAST_CONDITION: condition,
+            ATTR_API_FORECAST_PRECIPITATION_PROBABILITY: self._get_precipitation_prob_day(
                 day
             ),
-            ATTR_FORECAST_TEMP: self._get_temperature_day(day),
-            ATTR_FORECAST_TEMP_LOW: self._get_temperature_low_day(day),
-            ATTR_FORECAST_TIME: dt_util.as_utc(date).isoformat(),
-            ATTR_FORECAST_WIND_SPEED: self._get_wind_speed_day(day),
-            ATTR_FORECAST_WIND_BEARING: self._get_wind_bearing_day(day),
+            ATTR_API_FORECAST_TEMP: self._get_temperature_day(day),
+            ATTR_API_FORECAST_TEMP_LOW: self._get_temperature_low_day(day),
+            ATTR_API_FORECAST_TIME: dt_util.as_utc(date).isoformat(),
+            ATTR_API_FORECAST_WIND_SPEED: self._get_wind_speed_day(day),
+            ATTR_API_FORECAST_WIND_BEARING: self._get_wind_bearing_day(day),
         }
 
     def _convert_forecast_hour(self, date, day, hour):
@@ -420,15 +359,16 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         forecast_dt = date.replace(hour=hour, minute=0, second=0)
 
         return {
-            ATTR_FORECAST_CONDITION: condition,
-            ATTR_FORECAST_PRECIPITATION: self._calc_precipitation(day, hour),
-            ATTR_FORECAST_PRECIPITATION_PROBABILITY: self._calc_precipitation_prob(
+            ATTR_API_FORECAST_CONDITION: condition,
+            ATTR_API_FORECAST_PRECIPITATION: self._calc_precipitation(day, hour),
+            ATTR_API_FORECAST_PRECIPITATION_PROBABILITY: self._calc_precipitation_prob(
                 day, hour
             ),
-            ATTR_FORECAST_TEMP: self._get_temperature(day, hour),
-            ATTR_FORECAST_TIME: dt_util.as_utc(forecast_dt).isoformat(),
-            ATTR_FORECAST_WIND_SPEED: self._get_wind_speed(day, hour),
-            ATTR_FORECAST_WIND_BEARING: self._get_wind_bearing(day, hour),
+            ATTR_API_FORECAST_TEMP: self._get_temperature(day, hour),
+            ATTR_API_FORECAST_TIME: dt_util.as_utc(forecast_dt).isoformat(),
+            ATTR_API_FORECAST_WIND_MAX_SPEED: self._get_wind_max_speed(day, hour),
+            ATTR_API_FORECAST_WIND_SPEED: self._get_wind_speed(day, hour),
+            ATTR_API_FORECAST_WIND_BEARING: self._get_wind_bearing(day, hour),
         }
 
     def _calc_precipitation(self, day, hour):
@@ -517,14 +457,14 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     def _get_station_id(self):
         """Get station ID from weather data."""
-        if self._station:
-            return self._station[AEMET_ATTR_IDEMA]
+        if self.aemet.station:
+            return self.aemet.station.get_id()
         return None
 
     def _get_station_name(self):
         """Get station name from weather data."""
-        if self._station:
-            return self._station[AEMET_ATTR_STATION_LOCATION]
+        if self.aemet.station:
+            return self.aemet.station.get_name()
         return None
 
     @staticmethod
@@ -560,19 +500,19 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     @staticmethod
     def _get_temperature_feeling(day_data, hour):
         """Get temperature from weather data."""
-        val = get_forecast_hour_value(day_data[AEMET_ATTR_TEMPERATURE_FEELING], hour)
+        val = get_forecast_hour_value(day_data[AEMET_ATTR_FEEL_TEMPERATURE], hour)
         return format_int(val)
 
     def _get_town_id(self):
         """Get town ID from weather data."""
-        if self._town:
-            return self._town[AEMET_ATTR_ID]
+        if self.aemet.town:
+            return self.aemet.town.get_id()
         return None
 
     def _get_town_name(self):
         """Get town name from weather data."""
-        if self._town:
-            return self._town[AEMET_ATTR_NAME]
+        if self.aemet.town:
+            return self.aemet.town.get_name()
         return None
 
     @staticmethod
@@ -581,10 +521,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         val = get_forecast_hour_value(
             day_data[AEMET_ATTR_WIND_GUST], hour, key=AEMET_ATTR_DIRECTION
         )[0]
-        if val in WIND_BEARING_MAP:
-            return WIND_BEARING_MAP[val]
-        _LOGGER.error("%s not found in Wind Bearing map", val)
-        return None
+        return ForecastValue.parse_wind_direction(val)
 
     @staticmethod
     def _get_wind_bearing_day(day_data):
@@ -592,10 +529,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         val = get_forecast_day_value(
             day_data[AEMET_ATTR_WIND], key=AEMET_ATTR_DIRECTION
         )
-        if val in WIND_BEARING_MAP:
-            return WIND_BEARING_MAP[val]
-        _LOGGER.error("%s not found in Wind Bearing map", val)
-        return None
+        return ForecastValue.parse_wind_direction(val)
 
     @staticmethod
     def _get_wind_max_speed(day_data, hour):
@@ -622,12 +556,3 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         if val:
             return format_int(val)
         return None
-
-
-@dataclass
-class AemetWeather:
-    """Class to harmonize weather data model."""
-
-    daily: dict = field(default_factory=dict)
-    hourly: dict = field(default_factory=dict)
-    station: dict = field(default_factory=dict)

@@ -11,4 +11,4 @@ def async_describe_on_off_states(
     hass: HomeAssistant, registry: GroupIntegrationRegistry
 ) -> None:
     """Describe group on off states."""
-    registry.on_off_states({STATE_LOCKED}, STATE_UNLOCKED)
+    registry.on_off_states({STATE_UNLOCKED}, STATE_LOCKED)

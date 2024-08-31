@@ -1,0 +1,8 @@
+{
+  "services": {
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads RESTful commands from the YAML-configuration."
+    }
+  }
+}

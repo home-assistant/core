@@ -6,16 +6,18 @@ from dataclasses import dataclass
 from homeassistant.components.sensor import SensorEntityDescription
 
 
-@dataclass
+@dataclass(frozen=True)
 class GrowattRequiredKeysMixin:
     """Mixin for required keys."""
 
     api_key: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class GrowattSensorEntityDescription(SensorEntityDescription, GrowattRequiredKeysMixin):
     """Describes Growatt sensor entity."""
 
     precision: int | None = None
     currency: bool = False
+    previous_value_drop_threshold: float | None = None
+    never_resets: bool = False

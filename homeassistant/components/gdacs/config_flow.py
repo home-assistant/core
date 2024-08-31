@@ -10,7 +10,10 @@ from homeassistant.const import (
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
 )
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
+from homeassistant.data_entry_flow import AbortFlow, FlowResultType
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import CONF_CATEGORIES, DEFAULT_RADIUS, DEFAULT_SCAN_INTERVAL, DOMAIN
 
@@ -32,7 +35,23 @@ class GdacsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
+        result = await self.async_step_user(import_config)
+        if result["type"] == FlowResultType.CREATE_ENTRY:
+            async_create_issue(
+                self.hass,
+                HOMEASSISTANT_DOMAIN,
+                f"deprecated_yaml_{DOMAIN}",
+                breaks_in_ha_version="2024.2.0",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_yaml",
+                translation_placeholders={
+                    "domain": DOMAIN,
+                    "integration_title": "Global Disaster Alert and Coordination System",
+                },
+            )
+        return result
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
@@ -48,7 +67,25 @@ class GdacsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         identifier = f"{user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}"
 
         await self.async_set_unique_id(identifier)
-        self._abort_if_unique_id_configured()
+        try:
+            self._abort_if_unique_id_configured()
+        except AbortFlow:
+            if self.context["source"] == config_entries.SOURCE_IMPORT:
+                async_create_issue(
+                    self.hass,
+                    HOMEASSISTANT_DOMAIN,
+                    f"deprecated_yaml_{DOMAIN}",
+                    breaks_in_ha_version="2024.2.0",
+                    is_fixable=False,
+                    issue_domain=DOMAIN,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="deprecated_yaml",
+                    translation_placeholders={
+                        "domain": DOMAIN,
+                        "integration_title": "Global Disaster Alert and Coordination System",
+                    },
+                )
+            raise
 
         scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         user_input[CONF_SCAN_INTERVAL] = scan_interval.total_seconds()

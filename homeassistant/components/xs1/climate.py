@@ -1,22 +1,32 @@
 """Support for XS1 climate devices."""
+from __future__ import annotations
+
+from typing import Any
+
 from xs1_api_client.api_constants import ActuatorType
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT,
-    SUPPORT_TARGET_TEMPERATURE,
+from homeassistant.components.climate import (
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import ACTUATORS, DOMAIN as COMPONENT_DOMAIN, SENSORS, XS1DeviceEntity
 
 MIN_TEMP = 8
 MAX_TEMP = 25
 
-SUPPORT_HVAC = [HVAC_MODE_HEAT]
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the XS1 thermostat platform."""
     actuators = hass.data[COMPONENT_DOMAIN][ACTUATORS]
     sensors = hass.data[COMPONENT_DOMAIN][SENSORS]
@@ -41,6 +51,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class XS1ThermostatEntity(XS1DeviceEntity, ClimateEntity):
     """Representation of a XS1 thermostat."""
 
+    _attr_hvac_mode = HVACMode.HEAT
+    _attr_hvac_modes = [HVACMode.HEAT]
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+
     def __init__(self, device, sensor):
         """Initialize the actuator."""
         super().__init__(device)
@@ -52,27 +66,6 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateEntity):
         return self.device.name()
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_TARGET_TEMPERATURE
-
-    @property
-    def hvac_mode(self):
-        """Return hvac operation ie. heat, cool mode.
-
-        Need to be one of HVAC_MODE_*.
-        """
-        return HVAC_MODE_HEAT
-
-    @property
-    def hvac_modes(self):
-        """Return the list of available hvac operation modes.
-
-        Need to be a subset of HVAC_MODES.
-        """
-        return SUPPORT_HVAC
-
-    @property
     def current_temperature(self):
         """Return the current temperature."""
         if self.sensor is None:
@@ -81,7 +74,7 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateEntity):
         return self.sensor.value()
 
     @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
         return self.device.unit()
 
@@ -100,7 +93,7 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateEntity):
         """Return the maximum temperature."""
         return MAX_TEMP
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
 
@@ -109,10 +102,10 @@ class XS1ThermostatEntity(XS1DeviceEntity, ClimateEntity):
         if self.sensor is not None:
             self.schedule_update_ha_state()
 
-    def set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Also update the sensor when available."""
         await super().async_update()
         if self.sensor is not None:
