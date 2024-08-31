@@ -46,7 +46,10 @@ async def test_upload_service(
             "homeassistant.components.google_photos.services.Path.read_bytes",
             return_value=b"image bytes",
         ),
-        patch("homeassistant.components.google_photos.services.Path.exists", return_value=True),
+        patch(
+            "homeassistant.components.google_photos.services.Path.exists",
+            return_value=True,
+        ),
         patch.object(hass.config, "is_allowed_path", return_value=True),
     ):
         response = await hass.services.async_call(
@@ -166,7 +169,10 @@ async def test_upload_service_upload_content_failure(
             "homeassistant.components.google_photos.services.Path.read_bytes",
             return_value=b"image bytes",
         ),
-        patch("homeassistant.components.google_photos.services.Path.exists", return_value=True),
+        patch(
+            "homeassistant.components.google_photos.services.Path.exists",
+            return_value=True,
+        ),
         patch.object(hass.config, "is_allowed_path", return_value=True),
         pytest.raises(HomeAssistantError, match="Failed to upload content"),
     ):
@@ -201,7 +207,10 @@ async def test_upload_service_fails_create(
             "homeassistant.components.google_photos.services.Path.read_bytes",
             return_value=b"image bytes",
         ),
-        patch("homeassistant.components.google_photos.services.Path.exists", return_value=True),
+        patch(
+            "homeassistant.components.google_photos.services.Path.exists",
+            return_value=True,
+        ),
         patch.object(hass.config, "is_allowed_path", return_value=True),
         pytest.raises(
             HomeAssistantError, match="Google Photos API responded with error"
