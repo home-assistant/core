@@ -183,10 +183,18 @@ COP_MODES = {
     "FanOnly": HVACMode.FAN_ONLY,
 }
 
+# String to celsius
 COP_LEVELS = {
     "Low": 30,
     "Medium": 35,
     "High": 40,
+}
+
+# Celsius to IntEnum
+TEMP_LEVELS = {
+    30: CabinOverheatProtectionTemp.LOW,
+    35: CabinOverheatProtectionTemp.MEDIUM,
+    40: CabinOverheatProtectionTemp.HIGH,
 }
 
 
@@ -195,8 +203,8 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryVehicleEntity, ClimateEn
 
     _attr_precision = PRECISION_WHOLE
     _attr_target_temperature_step = 5
-    _attr_min_temp = 30
-    _attr_max_temp = 40
+    _attr_min_temp = COP_LEVELS["Low"]
+    _attr_max_temp = COP_LEVELS["High"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = list(COP_MODES.values())
     _enable_turn_on_off_backwards_compatibility = False
@@ -256,13 +264,7 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryVehicleEntity, ClimateEn
         if not (temp := kwargs.get(ATTR_TEMPERATURE)):
             return
 
-        if temp == 30:
-            cop_mode = CabinOverheatProtectionTemp.LOW
-        elif temp == 35:
-            cop_mode = CabinOverheatProtectionTemp.MEDIUM
-        elif temp == 40:
-            cop_mode = CabinOverheatProtectionTemp.HIGH
-        else:
+        if (cop_mode := TEMP_LEVELS.get(temp)) is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_cop_temp",
