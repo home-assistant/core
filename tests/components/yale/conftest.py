@@ -57,3 +57,16 @@ def load_reauth_jwt_wrong_account_fixture() -> str:
 async def mock_client_credentials_fixture(hass: HomeAssistant) -> None:
     """Mock client credentials."""
     await mock_client_credentials(hass)
+
+
+@pytest.fixture(name="skip_cloud", autouse=True)
+def skip_cloud_fixture():
+    """Skip setting up cloud.
+
+    Cloud already has its own tests for account link.
+
+    We do not need to test it here as we only need to test our
+    usage of the oauth2 helpers.
+    """
+    with patch("homeassistant.components.cloud.async_setup", return_value=True):
+        yield

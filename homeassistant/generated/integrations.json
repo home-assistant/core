@@ -2280,6 +2280,12 @@
           "iot_class": "cloud_polling",
           "name": "Google Maps"
         },
+        "google_photos": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Google Photos"
+        },
         "google_pubsub": {
           "integration_type": "hub",
           "config_flow": false,
@@ -2627,8 +2633,9 @@
     "html5": {
       "name": "HTML5 Push Notifications",
       "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_push"
+      "config_flow": true,
+      "iot_class": "cloud_push",
+      "single_config_entry": true
     },
     "huawei_lte": {
       "name": "Huawei LTE",
@@ -3211,6 +3218,12 @@
       "integration_type": "virtual",
       "supported_by": "netatmo"
     },
+    "lektrico": {
+      "name": "Lektrico Charging Station",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "leviton": {
       "name": "Leviton",
       "iot_standards": [
@@ -3225,6 +3238,12 @@
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "LG Netcast"
+        },
+        "lg_thinq": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "LG ThinQ"
         },
         "lg_soundbar": {
           "integration_type": "hub",
