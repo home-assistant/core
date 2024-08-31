@@ -282,7 +282,7 @@ class SolarLogInverterSensor(SolarLogInverterEntity, SensorEntity):
     entity_description: SolarLogInverterSensorEntityDescription
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> StateType:
         """Return the state for this sensor."""
 
         return self.entity_description.value_fn(
