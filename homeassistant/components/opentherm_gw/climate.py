@@ -34,6 +34,7 @@ from .const import (
     DATA_GATEWAYS,
     DATA_OPENTHERM_GW,
     THERMOSTAT_DEVICE_DESCRIPTION,
+    OpenThermDataSource,
 )
 from .entity import OpenThermEntity, OpenThermEntityDescription
 
@@ -127,7 +128,7 @@ class OpenThermClimate(OpenThermEntity, ClimateEntity):
         )
 
     @callback
-    def receive_report(self, status):
+    def receive_report(self, status: dict[OpenThermDataSource, dict]):
         """Receive and handle a new report from the Gateway."""
         ch_active = status[gw_vars.BOILER].get(gw_vars.DATA_SLAVE_CH_ACTIVE)
         flame_on = status[gw_vars.BOILER].get(gw_vars.DATA_SLAVE_FLAME_ON)
@@ -159,12 +160,12 @@ class OpenThermClimate(OpenThermEntity, ClimateEntity):
         self._away_state_a = (
             (status[gw_vars.OTGW].get(gw_vars.OTGW_GPIO_A_STATE) == self._away_mode_a)
             if self._away_mode_a is not None
-            else None
+            else False
         )
         self._away_state_b = (
             (status[gw_vars.OTGW].get(gw_vars.OTGW_GPIO_B_STATE) == self._away_mode_b)
             if self._away_mode_b is not None
-            else None
+            else False
         )
         self.async_write_ha_state()
 

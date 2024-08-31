@@ -20,6 +20,7 @@ from .const import (
     DATA_OPENTHERM_GW,
     GATEWAY_DEVICE_DESCRIPTION,
     THERMOSTAT_DEVICE_DESCRIPTION,
+    OpenThermDataSource,
 )
 from .entity import OpenThermEntity, OpenThermEntityDescription
 
@@ -245,7 +246,7 @@ class OpenThermBinarySensor(OpenThermEntity, BinarySensorEntity):
     entity_description: OpenThermBinarySensorEntityDescription
 
     @callback
-    def receive_report(self, status: dict[str, dict]) -> None:
+    def receive_report(self, status: dict[OpenThermDataSource, dict]) -> None:
         """Handle status updates from the component."""
         state = status[self.entity_description.device_description.data_source].get(
             self.entity_description.key

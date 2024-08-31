@@ -10,7 +10,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 
 from . import OpenThermGatewayHub
-from .const import DOMAIN, OpenThermDeviceDescription
+from .const import DOMAIN, OpenThermDataSource, OpenThermDeviceDescription
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ class OpenThermEntity(Entity):
         return self._gateway.connected
 
     @callback
-    def receive_report(self, status: dict[str, dict]) -> None:
+    def receive_report(self, status: dict[OpenThermDataSource, dict]) -> None:
         """Handle status updates from the component."""
         # Must be implemented at the platform level.
         raise NotImplementedError
