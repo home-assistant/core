@@ -270,7 +270,7 @@ class SolarLogCoordinatorSensor(SolarLogCoordinatorEntity, SensorEntity):
     entity_description: SolarLogCoordinatorSensorEntityDescription
 
     @property
-    def native_value(self) -> StateType | datetime | None:
+    def native_value(self) -> StateType | datetime:
         """Return the state for this sensor."""
 
         return self.entity_description.value_fn(self.coordinator.data)
