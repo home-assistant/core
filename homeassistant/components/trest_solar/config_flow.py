@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Optional
 
 from trest_identity import TrestIdentityService
 import voluptuous as vol
@@ -28,24 +28,23 @@ class TrestSolarControllerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for TrestSolarController."""
 
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
+        self,
+        user_input: Optional[dict[str, Any]] = None,  # noqa: UP007
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
+
         if user_input is not None:
+            identity = TrestIdentityService(
+                user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+            )
+
+            info = {"title": "Trest Solar Controller"}
             try:
-                identity = TrestIdentityService(
-                    user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-                )
                 await identity.authenticate_async()
 
                 if not identity.check_token_is_expired():
                     raise InvalidAuth
-
-                await self.async_set_unique_id(user_input[CONF_USERNAME])
-                self._abort_if_unique_id_configured()
-
-                info = {"title": "Trest Solar Controller"}
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
@@ -54,13 +53,13 @@ class TrestSolarControllerConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(title=info["title"], data=user_input)
 
+            # Ensure this only happens if user_input is not None
+            await self.async_set_unique_id(user_input[CONF_USERNAME])
+            self._abort_if_unique_id_configured()
+
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
 
 
 class InvalidAuth(HomeAssistantError):

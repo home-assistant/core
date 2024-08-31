@@ -7,9 +7,11 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import TrestConfigEntry
@@ -21,49 +23,43 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="battery_discharge",
         name="Battery Discharge",
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement="kW",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         icon="mdi:battery-arrow-down",
     ),
     SensorEntityDescription(
         key="battery_charge",
         name="Battery Charge",
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement="kW",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         icon="mdi:battery-arrow-up",
     ),
     SensorEntityDescription(
         key="battery_capacity",
         name="Battery Capacity",
         device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement="%",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         icon="mdi:battery",
     ),
     SensorEntityDescription(
         key="battery_stored_power",
         name="Battery Stored Power",
         device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement="kW",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         icon="mdi:power",
     ),
     SensorEntityDescription(
         key="total_load_active_power",
         name="Total Load Active Power",
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement="kW",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         icon="mdi:flash",
     ),
     SensorEntityDescription(
         key="realtime_solar",
         name="Realtime Solar",
         device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement="kW",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         icon="mdi:white-balance-sunny",
-    ),
-    SensorEntityDescription(
-        key="timestamp",
-        name="Timestamp",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        icon="mdi:clock",
     ),
     SensorEntityDescription(
         key="solar_profile",
@@ -87,14 +83,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add a Trest Solar Controller entry."""
-    coordinator: TrestDataCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
 
-    entities = [
-        TrestSolarControllerSensor(coordinator, entry.entry_id, description)
-        for description in SENSOR_TYPES
-    ]
-
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            TrestSolarControllerSensor(coordinator, entry.entry_id, description)
+            for description in SENSOR_TYPES
+        ]
+    )
 
 
 class TrestSolarControllerSensor(CoordinatorEntity[TrestDataCoordinator], SensorEntity):
@@ -111,6 +107,7 @@ class TrestSolarControllerSensor(CoordinatorEntity[TrestDataCoordinator], Sensor
     ) -> None:
         """TrestSolarControllerSensor constructor."""
         super().__init__(coordinator)
+
         self.entity_description = description
         self._attr_unique_id = f"{entry_id}.{description.key}"
         self._attr_device_info = DeviceInfo(
@@ -120,7 +117,7 @@ class TrestSolarControllerSensor(CoordinatorEntity[TrestDataCoordinator], Sensor
         )
 
     @property
-    def native_value(self) -> str | int | float | datetime | None:
+    def native_value(self) -> StateType | datetime | None:
         """Return the state of the sensor."""
 
         key = self.entity_description.key
