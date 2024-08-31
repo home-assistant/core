@@ -115,7 +115,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         del migrate_options[CONF_PRECISION]
         hass.config_entries.async_update_entry(config_entry, options=migrate_options)
 
-    # Migration can be removed in 2025.1.0
+    # Migration can be removed in 2025.4.0
     dev_reg = dr.async_get(hass)
     if (
         migrate_device := dev_reg.async_get_device(

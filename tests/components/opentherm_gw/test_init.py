@@ -94,6 +94,7 @@ async def test_device_registry_update(
     assert gw_dev.sw_version == VERSION_NEW
 
 
+# Device migration test can be removed in 2025.4.0
 async def test_device_migration(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
