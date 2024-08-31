@@ -135,3 +135,58 @@ async def test_intercept_wake_word_require_admin(
         "code": "unauthorized",
         "message": "Unauthorized",
     }
+
+
+async def test_intercept_wake_word_invalid_satellite(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test intercepting a wake word requires admin access."""
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "assist_satellite/intercept_wake_word",
+            "entity_id": "assist_satellite.invalid",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "not_found",
+        "message": "Entity not found",
+    }
+
+
+async def test_intercept_wake_word_twice(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test intercepting a wake word requires admin access."""
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "assist_satellite/intercept_wake_word",
+            "entity_id": ENTITY_ID,
+        }
+    )
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "assist_satellite/intercept_wake_word",
+            "entity_id": ENTITY_ID,
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "home_assistant_error",
+        "message": "Wake word interception already in progress",
+    }

@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 
 from .const import DOMAIN
@@ -22,7 +23,7 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "assist_satellite/intercept_wake_word",
-        vol.Required("entity_id"): str,
+        vol.Required("entity_id"): cv.entity_domain(DOMAIN),
     }
 )
 @websocket_api.require_admin

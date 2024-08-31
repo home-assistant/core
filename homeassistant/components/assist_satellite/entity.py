@@ -72,7 +72,7 @@ class AssistSatelliteEntity(entity.Entity):
         Returns the detected wake word phrase or None.
         """
         if self._wake_word_intercept_future is not None:
-            raise SatelliteBusyError
+            raise SatelliteBusyError("Wake word interception already in progress")
 
         # Will cause next wake word to be intercepted in
         # async_accept_pipeline_from_satellite
