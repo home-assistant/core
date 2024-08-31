@@ -11,6 +11,6 @@
     "aiopulse"
   ],
   "requirements": [
-    "aiopulse==0.4.4"
+    "aiopulse==0.4.6"
   ]
 }
