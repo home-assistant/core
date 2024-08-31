@@ -39,6 +39,36 @@ UPLOAD_SERVICE_SCHEMA = vol.Schema(
 )
 
 
+def _read_file_contents(
+    hass: HomeAssistant, filenames: list[str]
+) -> list[tuple[str, bytes]]:
+    """Read the mime type and contents from each filen."""
+    results = []
+    for filename in filenames:
+        if not hass.config.is_allowed_path(filename):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="no_access_to_path",
+                translation_placeholders={"filename": filename},
+            )
+        filename_path = Path(filename)
+        if not filename_path.exists():
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="filename_does_not_exist",
+                translation_placeholders={"filename": filename},
+            )
+        mime_type, _ = mimetypes.guess_type(filename)
+        if mime_type is None or not (mime_type.startswith(("image", "video"))):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="filename_is_not_image",
+                translation_placeholders={"filename": filename},
+            )
+        results.append((mime_type, filename_path.read_bytes()))
+    return results
+
+
 def async_register_services(hass: HomeAssistant) -> None:
     """Register Google Photos services."""
 
@@ -63,28 +93,10 @@ def async_register_services(hass: HomeAssistant) -> None:
 
         client_api = config_entry.runtime_data
         upload_tasks = []
-        for filename in call.data[CONF_FILENAME]:
-            if not hass.config.is_allowed_path(filename):
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="no_access_to_path",
-                    translation_placeholders={"filename": filename},
-                )
-            if not Path(filename).exists():
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="filename_does_not_exist",
-                    translation_placeholders={"filename": filename},
-                )
-            mime_type, _ = mimetypes.guess_type(filename)
-            if mime_type is None or not (mime_type.startswith(("image", "video"))):
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="filename_is_not_image",
-                    translation_placeholders={"filename": filename},
-                )
-            filename_path = Path(filename)
-            content = await hass.async_add_executor_job(filename_path.read_bytes)
+        file_results = await hass.async_add_executor_job(
+            _read_file_contents, hass, call.data[CONF_FILENAME]
+        )
+        for mime_type, content in file_results:
             upload_tasks.append(client_api.upload_content(content, mime_type))
         upload_tokens = await asyncio.gather(*upload_tasks)
         media_ids = await client_api.create_media_items(upload_tokens)
