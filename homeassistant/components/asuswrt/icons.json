@@ -28,28 +28,7 @@
       "cpu_usage": {
         "default": "mdi:cpu-32-bit"
       },
-      "cpu_core1_usage": {
-        "default": "mdi:cpu-32-bit"
-      },
-      "cpu_core2_usage": {
-        "default": "mdi:cpu-32-bit"
-      },
-      "cpu_core3_usage": {
-        "default": "mdi:cpu-32-bit"
-      },
-      "cpu_core4_usage": {
-        "default": "mdi:cpu-32-bit"
-      },
-      "cpu_core5_usage": {
-        "default": "mdi:cpu-32-bit"
-      },
-      "cpu_core6_usage": {
-        "default": "mdi:cpu-32-bit"
-      },
-      "cpu_core7_usage": {
-        "default": "mdi:cpu-32-bit"
-      },
-      "cpu_core8_usage": {
+      "cpu_core_usage": {
         "default": "mdi:cpu-32-bit"
       },
       "memory_usage": {

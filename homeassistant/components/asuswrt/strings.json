@@ -92,29 +92,8 @@
       "cpu_usage": {
         "name": "CPU usage"
       },
-      "cpu_core1_usage": {
-        "name": "CPU core1 usage"
-      },
-      "cpu_core2_usage": {
-        "name": "CPU core2 usage"
-      },
-      "cpu_core3_usage": {
-        "name": "CPU core3 usage"
-      },
-      "cpu_core4_usage": {
-        "name": "CPU core4 usage"
-      },
-      "cpu_core5_usage": {
-        "name": "CPU core5 usage"
-      },
-      "cpu_core6_usage": {
-        "name": "CPU core6 usage"
-      },
-      "cpu_core7_usage": {
-        "name": "CPU core7 usage"
-      },
-      "cpu_core8_usage": {
-        "name": "CPU core8 usage"
+      "cpu_core_usage": {
+        "name": "CPU core {core_id} usage"
       },
       "memory_usage": {
         "name": "Memory usage"
