@@ -21,6 +21,7 @@ from nextdns.model import NextDnsData
 from tenacity import RetryError
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -62,10 +63,11 @@ class NextDnsUpdateCoordinator(DataUpdateCoordinator[CoordinatorDataT]):
         except (
             ApiError,
             ClientConnectorError,
-            InvalidApiKeyError,
             RetryError,
         ) as err:
             raise UpdateFailed(err) from err
+        except InvalidApiKeyError as err:
+            raise ConfigEntryAuthFailed from err
 
     async def _async_update_data_internal(self) -> CoordinatorDataT:
         """Update data via library."""
