@@ -31,8 +31,6 @@ class OpenThermBinarySensorEntityDescription(
 ):
     """Describes opentherm_gw binary sensor entity."""
 
-    entity_category = EntityCategory.DIAGNOSTIC
-
 
 BINARY_SENSOR_DESCRIPTIONS: tuple[OpenThermBinarySensorEntityDescription, ...] = (
     OpenThermBinarySensorEntityDescription(
@@ -243,6 +241,7 @@ async def async_setup_entry(
 class OpenThermBinarySensor(OpenThermEntity, BinarySensorEntity):
     """Represent an OpenTherm Gateway binary sensor."""
 
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     entity_description: OpenThermBinarySensorEntityDescription
 
     @callback

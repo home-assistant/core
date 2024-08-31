@@ -44,7 +44,6 @@ class OpenThermSensorEntityDescription(
     """Describes an opentherm_gw sensor entity."""
 
     make_state_lowercase: bool = True
-    entity_category = EntityCategory.DIAGNOSTIC
 
 
 SENSOR_DESCRIPTIONS: tuple[OpenThermSensorEntityDescription, ...] = (
@@ -538,6 +537,7 @@ async def async_setup_entry(
 class OpenThermSensor(OpenThermEntity, SensorEntity):
     """Representation of an OpenTherm sensor."""
 
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     entity_description: OpenThermSensorEntityDescription
 
     @callback
