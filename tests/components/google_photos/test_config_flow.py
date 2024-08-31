@@ -84,6 +84,8 @@ async def test_full_flow(
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}"
         "&scope=https://www.googleapis.com/auth/photoslibrary.readonly"
+        "+https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
+        "+https://www.googleapis.com/auth/photoslibrary.appendonly"
         "+https://www.googleapis.com/auth/userinfo.profile"
         "&access_type=offline&prompt=consent"
     )
@@ -111,6 +113,8 @@ async def test_full_flow(
             "type": "Bearer",
             "scope": (
                 "https://www.googleapis.com/auth/photoslibrary.readonly"
+                " https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
+                " https://www.googleapis.com/auth/photoslibrary.appendonly"
                 " https://www.googleapis.com/auth/userinfo.profile"
             ),
         },
@@ -145,6 +149,8 @@ async def test_api_not_enabled(
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}"
         "&scope=https://www.googleapis.com/auth/photoslibrary.readonly"
+        "+https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
+        "+https://www.googleapis.com/auth/photoslibrary.appendonly"
         "+https://www.googleapis.com/auth/userinfo.profile"
         "&access_type=offline&prompt=consent"
     )
@@ -189,6 +195,8 @@ async def test_general_exception(
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}"
         "&scope=https://www.googleapis.com/auth/photoslibrary.readonly"
+        "+https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
+        "+https://www.googleapis.com/auth/photoslibrary.appendonly"
         "+https://www.googleapis.com/auth/userinfo.profile"
         "&access_type=offline&prompt=consent"
     )
@@ -274,6 +282,8 @@ async def test_reauth(
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}"
         "&scope=https://www.googleapis.com/auth/photoslibrary.readonly"
+        "+https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
+        "+https://www.googleapis.com/auth/photoslibrary.appendonly"
         "+https://www.googleapis.com/auth/userinfo.profile"
         "&access_type=offline&prompt=consent"
     )
@@ -305,6 +315,8 @@ async def test_reauth(
             "type": "Bearer",
             "scope": (
                 "https://www.googleapis.com/auth/photoslibrary.readonly"
+                " https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
+                " https://www.googleapis.com/auth/photoslibrary.appendonly"
                 " https://www.googleapis.com/auth/userinfo.profile"
             ),
         },

@@ -16,7 +16,7 @@ from homeassistant.components.media_source import (
 from homeassistant.core import HomeAssistant
 
 from . import GooglePhotosConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, READ_SCOPES
 from .exceptions import GooglePhotosApiError
 
 _LOGGER = logging.getLogger(__name__)
@@ -168,7 +168,7 @@ class GooglePhotosMediaSource(MediaSource):
                 children_media_class=MediaClass.DIRECTORY,
                 children=[
                     _build_account(entry, PhotosIdentifier(cast(str, entry.unique_id)))
-                    for entry in self.hass.config_entries.async_loaded_entries(DOMAIN)
+                    for entry in self._async_config_entries()
                 ],
             )
 
@@ -217,6 +217,15 @@ class GooglePhotosMediaSource(MediaSource):
             for media_item in media_items
         ]
         return source
+
+    def _async_config_entries(self) -> list[GooglePhotosConfigEntry]:
+        """Return all config entries that support photo library reads."""
+        entries = []
+        for entry in self.hass.config_entries.async_loaded_entries(DOMAIN):
+            scopes = entry.data["token"]["scope"].split(" ")
+            if any(scope in scopes for scope in READ_SCOPES):
+                entries.append(entry)
+        return entries
 
     def _async_config_entry(self, config_entry_id: str) -> GooglePhotosConfigEntry:
         """Return a config entry with the specified id."""

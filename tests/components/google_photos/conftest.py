@@ -32,13 +32,19 @@ def mock_expires_at() -> int:
     return time.time() + EXPIRES_IN
 
 
+@pytest.fixture(name="scopes")
+def mock_scopes() -> list[str]:
+    """Fixture to set scopes used during the config entry."""
+    return OAUTH2_SCOPES
+
+
 @pytest.fixture(name="token_entry")
-def mock_token_entry(expires_at: int) -> dict[str, Any]:
+def mock_token_entry(expires_at: int, scopes: list[str]) -> dict[str, Any]:
     """Fixture for OAuth 'token' data for a ConfigEntry."""
     return {
         "access_token": FAKE_ACCESS_TOKEN,
         "refresh_token": FAKE_REFRESH_TOKEN,
-        "scope": " ".join(OAUTH2_SCOPES),
+        "scope": " ".join(scopes),
         "type": "Bearer",
         "expires_at": expires_at,
         "expires_in": EXPIRES_IN,
