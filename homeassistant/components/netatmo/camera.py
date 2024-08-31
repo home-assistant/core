@@ -8,6 +8,7 @@ from typing import Any, cast
 import aiohttp
 from pyatmo import ApiError as NetatmoApiError, modules as NaModules
 from pyatmo.event import Event as NaEvent
+from pyatmo.person import Person as NaPerson
 import voluptuous as vol
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
@@ -101,13 +102,14 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
 
         self._attr_unique_id = f"{netatmo_device.device.entity_id}-{self.device_type}"
         self._light_state = None
+        self._signal_name_home = f"{HOME}-{self.home.entity_id}"
 
         self._publishers.extend(
             [
                 {
                     "name": HOME,
                     "home_id": self.home.entity_id,
-                    SIGNAL_NAME: f"{HOME}-{self.home.entity_id}",
+                    SIGNAL_NAME: self._signal_name_home,
                 },
                 {
                     "name": EVENT,
@@ -252,49 +254,58 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             return f"{self.device.local_url}/vod/{video_id}/files/{self._quality}/index.m3u8"
         return f"{self.device.vpn_url}/vod/{video_id}/files/{self._quality}/index.m3u8"
 
-    def fetch_person_ids(self, persons: list[str | None]) -> list[str]:
+    def fetch_persons(self, person_names: list[str | None]) -> list[NaPerson]:
         """Fetch matching person ids for given list of persons."""
-        person_ids = []
+        persons: list[NaPerson] = []
         person_id_errors = []
 
-        for person in persons:
+        for person_name in person_names:
             person_id = None
-            for pid, data in self.home.persons.items():
-                if data.pseudo == person:
-                    person_ids.append(pid)
+            for pid, person in self.home.persons.items():
+                if person.pseudo == person_name:
+                    persons.append(person)
                     person_id = pid
                     break
 
             if person_id is None:
-                person_id_errors.append(person)
+                person_id_errors.append(person_name)
 
         if person_id_errors:
             raise HomeAssistantError(f"Person(s) not registered {person_id_errors}")
 
-        return person_ids
+        return persons
 
     async def _service_set_persons_home(self, **kwargs: Any) -> None:
         """Service to change current home schedule."""
-        persons = kwargs.get(ATTR_PERSONS, [])
-        person_ids = self.fetch_person_ids(persons)
+        person_names = kwargs.get(ATTR_PERSONS, [])
+        persons = self.fetch_persons(person_names)
+        person_ids = [person.entity_id for person in persons]
 
         await self.home.async_set_persons_home(person_ids=person_ids)
-        _LOGGER.debug("Set %s as at home", persons)
+        for person in persons:
+            person.out_of_sight = False
+        _LOGGER.debug("Set %s as at home", person_names)
+        self.data_handler.notify(self._signal_name_home)
 
     async def _service_set_person_away(self, **kwargs: Any) -> None:
         """Service to mark a person as away or set the home as empty."""
-        person = kwargs.get(ATTR_PERSON)
-        person_ids = self.fetch_person_ids([person] if person else [])
-        person_id = next(iter(person_ids), None)
+        person_name = kwargs.get(ATTR_PERSON)
+        persons = self.fetch_persons([person_name] if person_name else [])
+        person = next(iter(persons), None)
 
-        await self.home.async_set_persons_away(
-            person_id=person_id,
-        )
-
-        if person_id:
-            _LOGGER.debug("Set %s as away %s", person, person_id)
+        if person is not None:
+            await self.home.async_set_persons_away(
+                person_id=person.entity_id,
+            )
+            person.out_of_sight = True
+            _LOGGER.debug("Set %s as away %s", person.pseudo, person.entity_id)
         else:
+            await self.home.async_set_persons_away(person_id=None)
+            for person in self.home.persons.values():
+                person.out_of_sight = True
             _LOGGER.debug("Set home as empty")
+
+        self.data_handler.notify(self._signal_name_home)
 
     async def _service_set_camera_light(self, **kwargs: Any) -> None:
         """Service to set light mode."""

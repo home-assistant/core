@@ -165,9 +165,11 @@ class NetatmoPersonHomeSwitch(NetatmoDeviceEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Set person home."""
         await self.home.async_set_persons_home([self.person.entity_id])
-        self._attr_is_on = True
+        self.person.out_of_sight = False
+        self.data_handler.notify(self._signal_name)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Set person away."""
         await self.home.async_set_persons_away(self.person.entity_id)
-        self._attr_is_on = False
+        self.person.out_of_sight = True
+        self.data_handler.notify(self._signal_name)
