@@ -300,7 +300,7 @@ aiooui==0.1.6
 aiopegelonline==0.0.10
 
 # homeassistant.components.acmeda
-aiopulse==0.4.4
+aiopulse==0.4.6
 
 # homeassistant.components.purpleair
 aiopurpleair==2022.12.1
@@ -1987,7 +1987,7 @@ refoss-ha==1.2.4
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.2.5
+renault-api==0.2.7
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.1
