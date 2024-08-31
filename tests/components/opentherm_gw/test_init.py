@@ -90,4 +90,61 @@ async def test_device_registry_update(
     gw_dev = device_registry.async_get_device(
         identifiers={(DOMAIN, f"{MOCK_GATEWAY_ID}-{OpenThermDeviceIdentifier.GATEWAY}")}
     )
+    assert gw_dev is not None
     assert gw_dev.sw_version == VERSION_NEW
+
+
+async def test_device_migration(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test that the device registry is updated correctly."""
+    MOCK_CONFIG_ENTRY.add_to_hass(hass)
+
+    device_registry.async_get_or_create(
+        config_entry_id=MOCK_CONFIG_ENTRY.entry_id,
+        identifiers={
+            (DOMAIN, MOCK_GATEWAY_ID),
+        },
+        name="Mock Gateway",
+        manufacturer="Schelte Bron",
+        model="OpenTherm Gateway",
+        sw_version=VERSION_OLD,
+    )
+
+    with (
+        patch("pyotgw.OpenThermGateway.set_control_setpoint"),
+        patch("pyotgw.OpenThermGateway.set_max_relative_mod"),
+        patch("pyotgw.OpenThermGateway.disconnect"),
+        patch("pyotgw.OpenThermGateway.connect", return_value=MINIMAL_STATUS_UPD),
+    ):
+        await setup.async_setup_component(hass, DOMAIN, {})
+
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, MOCK_GATEWAY_ID)})
+        is None
+    )
+
+    gw_dev = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{MOCK_GATEWAY_ID}-{OpenThermDeviceIdentifier.GATEWAY}")}
+    )
+    assert gw_dev is not None
+
+    assert (
+        device_registry.async_get_device(
+            identifiers={
+                (DOMAIN, f"{MOCK_GATEWAY_ID}-{OpenThermDeviceIdentifier.BOILER}")
+            }
+        )
+        is not None
+    )
+
+    assert (
+        device_registry.async_get_device(
+            identifiers={
+                (DOMAIN, f"{MOCK_GATEWAY_ID}-{OpenThermDeviceIdentifier.THERMOSTAT}")
+            }
+        )
+        is not None
+    )
