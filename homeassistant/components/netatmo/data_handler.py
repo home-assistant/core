@@ -256,11 +256,15 @@ class NetatmoDataHandler:
             _LOGGER.debug(err)
             return True
 
+        self.notify(signal_name)
+
+        return has_error
+
+    def notify(self, signal_name: str) -> None:
+        """Notify signal subscribers."""
         for update_callback in self.publisher[signal_name].subscriptions:
             if update_callback:
                 update_callback()
-
-        return has_error
 
     async def subscribe(
         self,
