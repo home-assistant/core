@@ -20,9 +20,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import Context, HomeAssistant
 
+from . import ENTITY_ID
 from .conftest import MockAssistSatellite
-
-ENTITY_ID = "assist_satellite.test_entity"
 
 
 async def test_entity_state(

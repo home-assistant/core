@@ -1,7 +1,9 @@
 """Assist satellite entity."""
 
 from abc import abstractmethod
+import asyncio
 from collections.abc import AsyncIterable
+import logging
 import time
 from typing import Any, Final
 
@@ -26,10 +28,12 @@ from homeassistant.helpers import entity
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.util import ulid
 
-from .errors import SatelliteBusyError
+from .errors import AssistSatelliteError, SatelliteBusyError
 from .models import AssistSatelliteState
 
 _CONVERSATION_TIMEOUT_SEC: Final = 5 * 60  # 5 minutes
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class AssistSatelliteEntityDescription(EntityDescription, frozen_or_thawed=True):
@@ -50,6 +54,7 @@ class AssistSatelliteEntity(entity.Entity):
 
     _run_has_tts: bool = False
     _is_announcing = False
+    _wake_word_intercept_future: asyncio.Future[str | None] | None = None
 
     @property
     def pipeline_entity_id(self) -> str | None:
@@ -60,6 +65,25 @@ class AssistSatelliteEntity(entity.Entity):
     def vad_sensitivity_entity_id(self) -> str | None:
         """Entity ID of the VAD sensitivity to use for the next conversation."""
         return self._attr_vad_sensitivity_entity_id
+
+    async def async_intercept_wake_word(self) -> str | None:
+        """Intercept the next wake word from the satellite.
+
+        Returns the detected wake word phrase or None.
+        """
+        if self._wake_word_intercept_future is not None:
+            raise SatelliteBusyError("Wake word interception already in progress")
+
+        # Will cause next wake word to be intercepted in
+        # async_accept_pipeline_from_satellite
+        self._wake_word_intercept_future = asyncio.Future()
+
+        _LOGGER.debug("Next wake word will be intercepted: %s", self.entity_id)
+
+        try:
+            return await self._wake_word_intercept_future
+        finally:
+            self._wake_word_intercept_future = None
 
     async def async_internal_announce(
         self,
@@ -130,6 +154,34 @@ class AssistSatelliteEntity(entity.Entity):
         wake_word_phrase: str | None = None,
     ) -> None:
         """Triggers an Assist pipeline in Home Assistant from a satellite."""
+        if self._wake_word_intercept_future and start_stage in (
+            PipelineStage.WAKE_WORD,
+            PipelineStage.STT,
+        ):
+            if start_stage == PipelineStage.WAKE_WORD:
+                self._wake_word_intercept_future.set_exception(
+                    AssistSatelliteError(
+                        "Only on-device wake words currently supported"
+                    )
+                )
+                return
+
+            # Intercepting wake word and immediately end pipeline
+            _LOGGER.debug(
+                "Intercepted wake word: %s (entity_id=%s)",
+                wake_word_phrase,
+                self.entity_id,
+            )
+
+            if wake_word_phrase is None:
+                self._wake_word_intercept_future.set_exception(
+                    AssistSatelliteError("No wake word phrase provided")
+                )
+            else:
+                self._wake_word_intercept_future.set_result(wake_word_phrase)
+            self._internal_on_pipeline_event(PipelineEvent(PipelineEventType.RUN_END))
+            return
+
         device_id = self.registry_entry.device_id if self.registry_entry else None
 
         # Refresh context if necessary
