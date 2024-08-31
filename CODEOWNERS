@@ -294,6 +294,8 @@ build.json @home-assistant/supervisor
 /tests/components/date/ @home-assistant/core
 /homeassistant/components/datetime/ @home-assistant/core
 /tests/components/datetime/ @home-assistant/core
+/homeassistant/components/deako/ @sebirdman @balake @deakolights
+/tests/components/deako/ @sebirdman @balake @deakolights
 /homeassistant/components/debugpy/ @frenck
 /tests/components/debugpy/ @frenck
 /homeassistant/components/deconz/ @Kane610
@@ -552,6 +554,8 @@ build.json @home-assistant/supervisor
 /tests/components/google_generative_ai_conversation/ @tronikos
 /homeassistant/components/google_mail/ @tkdrob
 /tests/components/google_mail/ @tkdrob
+/homeassistant/components/google_photos/ @allenporter
+/tests/components/google_photos/ @allenporter
 /homeassistant/components/google_sheets/ @tkdrob
 /tests/components/google_sheets/ @tkdrob
 /homeassistant/components/google_tasks/ @allenporter
@@ -629,6 +633,8 @@ build.json @home-assistant/supervisor
 /tests/components/homewizard/ @DCSBL
 /homeassistant/components/honeywell/ @rdfurman @mkmer
 /tests/components/honeywell/ @rdfurman @mkmer
+/homeassistant/components/html5/ @alexyao2015
+/tests/components/html5/ @alexyao2015
 /homeassistant/components/http/ @home-assistant/core
 /tests/components/http/ @home-assistant/core
 /homeassistant/components/huawei_lte/ @scop @fphammerle
@@ -707,8 +713,8 @@ build.json @home-assistant/supervisor
 /tests/components/ios/ @robbiet480
 /homeassistant/components/iotawatt/ @gtdiehl @jyavenard
 /tests/components/iotawatt/ @gtdiehl @jyavenard
-/homeassistant/components/iotty/ @pburgio
-/tests/components/iotty/ @pburgio
+/homeassistant/components/iotty/ @pburgio @shapournemati-iotty
+/tests/components/iotty/ @pburgio @shapournemati-iotty
 /homeassistant/components/iperf3/ @rohankapoorcom
 /homeassistant/components/ipma/ @dgomes
 /tests/components/ipma/ @dgomes
@@ -797,8 +803,12 @@ build.json @home-assistant/supervisor
 /tests/components/leaone/ @bdraco
 /homeassistant/components/led_ble/ @bdraco
 /tests/components/led_ble/ @bdraco
+/homeassistant/components/lektrico/ @lektrico
+/tests/components/lektrico/ @lektrico
 /homeassistant/components/lg_netcast/ @Drafteed @splinter98
 /tests/components/lg_netcast/ @Drafteed @splinter98
+/homeassistant/components/lg_thinq/ @LG-ThinQ-Integration
+/tests/components/lg_thinq/ @LG-ThinQ-Integration
 /homeassistant/components/lidarr/ @tkdrob
 /tests/components/lidarr/ @tkdrob
 /homeassistant/components/lifx/ @Djelibeybi
@@ -1493,6 +1503,8 @@ build.json @home-assistant/supervisor
 /tests/components/tomorrowio/ @raman325 @lymanepp
 /homeassistant/components/totalconnect/ @austinmroczek
 /tests/components/totalconnect/ @austinmroczek
+/homeassistant/components/touchline_sl/ @jnsgruk
+/tests/components/touchline_sl/ @jnsgruk
 /homeassistant/components/tplink/ @rytilahti @bdraco @sdb9696
 /tests/components/tplink/ @rytilahti @bdraco @sdb9696
 /homeassistant/components/tplink_omada/ @MarkGodwin
@@ -1658,6 +1670,8 @@ build.json @home-assistant/supervisor
 /tests/components/xiaomi_miio/ @rytilahti @syssi @starkillerOG
 /homeassistant/components/xiaomi_tv/ @simse
 /homeassistant/components/xmpp/ @fabaff @flowolf
+/homeassistant/components/yale/ @bdraco
+/tests/components/yale/ @bdraco
 /homeassistant/components/yale_smart_alarm/ @gjohansson-ST
 /tests/components/yale_smart_alarm/ @gjohansson-ST
 /homeassistant/components/yalexs_ble/ @bdraco

@@ -6,7 +6,7 @@ from pydiscovergy.error import DiscovergyClientError, HTTPError, InvalidLogin
 import pytest
 
 from homeassistant.components.discovergy.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -49,15 +49,9 @@ async def test_reauth(
 ) -> None:
     """Test reauth flow."""
     config_entry.add_to_hass(hass)
-
-    init_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH, "unique_id": config_entry.unique_id},
-        data=None,
-    )
-
+    init_result = await config_entry.start_reauth_flow(hass)
     assert init_result["type"] is FlowResultType.FORM
-    assert init_result["step_id"] == "reauth"
+    assert init_result["step_id"] == "reauth_confirm"
 
     with patch(
         "homeassistant.components.discovergy.async_setup_entry",

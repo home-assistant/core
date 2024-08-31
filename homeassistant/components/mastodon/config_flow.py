@@ -19,7 +19,6 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
 from .const import CONF_BASE_URL, DEFAULT_URL, DOMAIN, LOGGER
@@ -126,17 +125,17 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.show_user_form(user_input, errors)
 
-    async def async_step_import(self, import_config: ConfigType) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry from configuration.yaml."""
         errors: dict[str, str] | None = None
 
         LOGGER.debug("Importing Mastodon from configuration.yaml")
 
-        base_url = str(import_config.get(CONF_BASE_URL, DEFAULT_URL))
-        client_id = str(import_config.get(CONF_CLIENT_ID))
-        client_secret = str(import_config.get(CONF_CLIENT_SECRET))
-        access_token = str(import_config.get(CONF_ACCESS_TOKEN))
-        name = import_config.get(CONF_NAME, None)
+        base_url = str(import_data.get(CONF_BASE_URL, DEFAULT_URL))
+        client_id = str(import_data.get(CONF_CLIENT_ID))
+        client_secret = str(import_data.get(CONF_CLIENT_SECRET))
+        access_token = str(import_data.get(CONF_ACCESS_TOKEN))
+        name = import_data.get(CONF_NAME)
 
         instance, account, errors = await self.hass.async_add_executor_job(
             self.check_connection,

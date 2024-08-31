@@ -117,12 +117,6 @@ class ProximityConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self._user_form_schema(user_input),
         )
 
-    async def async_step_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Import a yaml config entry."""
-        return await self.async_step_user(user_input)
-
 
 class ProximityOptionsFlow(OptionsFlow):
     """Handle a option flow."""

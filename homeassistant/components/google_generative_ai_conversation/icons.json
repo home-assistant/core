@@ -1,5 +1,7 @@
 {
   "services": {
-    "generate_content": "mdi:receipt-text"
+    "generate_content": {
+      "service": "mdi:receipt-text"
+    }
   }
 }

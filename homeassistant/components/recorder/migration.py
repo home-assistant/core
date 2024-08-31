@@ -128,6 +128,11 @@ MIGRATION_NOTE_OFFLINE = (
     "Home Assistant will not start until the upgrade is completed. Please be patient "
     "and do not turn off or restart Home Assistant while the upgrade is in progress!"
 )
+MIGRATION_NOTE_MINUTES = (
+    "Note: this may take several minutes on large databases and slow machines. "
+    "Please be patient!"
+)
+MIGRATION_NOTE_WHILE = "This will take a while; please be patient!"
 
 _EMPTY_ENTITY_ID = "missing.entity_id"
 _EMPTY_EVENT_TYPE = "missing_event_type"
@@ -373,11 +378,10 @@ def _create_index(
     index = index_list[0]
     _LOGGER.debug("Creating %s index", index_name)
     _LOGGER.warning(
-        "Adding index `%s` to table `%s`. Note: this can take several "
-        "minutes on large databases and slow machines. Please "
-        "be patient!",
+        "Adding index `%s` to table `%s`. %s",
         index_name,
         table_name,
+        MIGRATION_NOTE_MINUTES,
     )
     with session_scope(session=session_maker()) as session:
         try:
@@ -422,11 +426,10 @@ def _drop_index(
     DO NOT USE THIS FUNCTION IN ANY OPERATION THAT TAKES USER INPUT.
     """
     _LOGGER.warning(
-        "Dropping index `%s` from table `%s`. Note: this can take several "
-        "minutes on large databases and slow machines. Please "
-        "be patient!",
+        "Dropping index `%s` from table `%s`. %s",
         index_name,
         table_name,
+        MIGRATION_NOTE_MINUTES,
     )
     index_to_drop: str | None = None
     with session_scope(session=session_maker()) as session:
@@ -472,13 +475,10 @@ def _add_columns(
 ) -> None:
     """Add columns to a table."""
     _LOGGER.warning(
-        (
-            "Adding columns %s to table %s. Note: this can take several "
-            "minutes on large databases and slow machines. Please "
-            "be patient!"
-        ),
+        "Adding columns %s to table %s. %s",
         ", ".join(column.split(" ")[0] for column in columns_def),
         table_name,
+        MIGRATION_NOTE_MINUTES,
     )
 
     columns_def = [f"ADD {col_def}" for col_def in columns_def]
@@ -534,13 +534,10 @@ def _modify_columns(
         return
 
     _LOGGER.warning(
-        (
-            "Modifying columns %s in table %s. Note: this can take several "
-            "minutes on large databases and slow machines. Please "
-            "be patient!"
-        ),
+        "Modifying columns %s in table %s. %s",
         ", ".join(column.split(" ")[0] for column in columns_def),
         table_name,
+        MIGRATION_NOTE_MINUTES,
     )
 
     if engine.dialect.name == SupportedDialect.POSTGRESQL:
@@ -693,6 +690,18 @@ def _restore_foreign_key_constraints(
                 break
         else:
             _LOGGER.info("Did not find a matching constraint for %s.%s", table, column)
+            continue
+
+        inspector = sqlalchemy.inspect(engine)
+        if any(
+            foreign_key["name"] and foreign_key["constrained_columns"] == [column]
+            for foreign_key in inspector.get_foreign_keys(table)
+        ):
+            _LOGGER.info(
+                "The database already has a matching constraint for %s.%s",
+                table,
+                column,
+            )
             continue
 
         if TYPE_CHECKING:
@@ -1769,10 +1778,9 @@ def _migrate_statistics_columns_to_timestamp_removing_duplicates(
     except IntegrityError as ex:
         _LOGGER.error(
             "Statistics table contains duplicate entries: %s; "
-            "Cleaning up duplicates and trying again; "
-            "This will take a while; "
-            "Please be patient!",
+            "Cleaning up duplicates and trying again; %s",
             ex,
+            MIGRATION_NOTE_WHILE,
         )
         # There may be duplicated statistics entries, delete duplicates
         # and try again
@@ -1800,10 +1808,9 @@ def _correct_table_character_set_and_collation(
     """Correct issues detected by validate_db_schema."""
     # Attempt to convert the table to utf8mb4
     _LOGGER.warning(
-        "Updating character set and collation of table %s to utf8mb4. "
-        "Note: this can take several minutes on large databases and slow "
-        "machines. Please be patient!",
+        "Updating character set and collation of table %s to utf8mb4. %s",
         table,
+        MIGRATION_NOTE_MINUTES,
     )
     with (
         contextlib.suppress(SQLAlchemyError),
@@ -2724,10 +2731,7 @@ def rebuild_sqlite_table(
     orig_name = table_table.name
     temp_name = f"{table_table.name}_temp_{int(time())}"
 
-    _LOGGER.warning(
-        "Rebuilding SQLite table %s; This will take a while; Please be patient!",
-        orig_name,
-    )
+    _LOGGER.warning("Rebuilding SQLite table %s; %s", orig_name, MIGRATION_NOTE_WHILE)
 
     try:
         # 12 step SQLite table rebuild

@@ -133,13 +133,7 @@ async def test_async_step_reauth_success(hass: HomeAssistant) -> None:
     )
     mock_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_entry.entry_id,
-        },
-    )
+    result = await mock_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -179,13 +173,7 @@ async def test_async_step_reauth_exception(
     )
     mock_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_entry.entry_id,
-        },
-    )
+    result = await mock_entry.start_reauth_flow(hass)
 
     with patch(
         "homeassistant.components.aseko_pool_live.config_flow.WebAccount.login",
