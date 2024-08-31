@@ -61,8 +61,6 @@ async def async_setup_entry(
             hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]],
             OpenThermClimateEntityDescription(
                 key="thermostat_entity",
-                has_entity_name=True,
-                name=None,
             ),
             config_entry.options,
         )
@@ -79,6 +77,7 @@ class OpenThermClimate(OpenThermThermostatDeviceEntity, ClimateEntity):
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = []
+    _attr_name = None
     _attr_preset_modes = []
     _attr_min_temp = 1
     _attr_max_temp = 30
@@ -171,12 +170,12 @@ class OpenThermClimate(OpenThermThermostatDeviceEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._new_target_temperature or self._target_temperature
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str:
         """Return current preset mode."""
         if self._away_state_a or self._away_state_b:
             return PRESET_AWAY
