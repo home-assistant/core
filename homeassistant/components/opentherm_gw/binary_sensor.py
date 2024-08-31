@@ -221,11 +221,6 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[OpenThermBinarySensorEntityDescription, ...] =
         translation_key="override_program_change_prio",
         device_description=THERMOSTAT_DEVICE_DESCRIPTION,
     ),
-)
-
-OBSOLETE_BINARY_SENSOR_DESCRIPTIONS: tuple[
-    OpenThermBinarySensorEntityDescription, ...
-] = (
     OpenThermBinarySensorEntityDescription(
         key=gw_vars.DATA_SLAVE_FAULT_IND,
         translation_key="fault_indication",
@@ -406,11 +401,6 @@ async def async_setup_entry(
     async_add_entities(
         OpenThermBinarySensor(gw_hub, description)
         for description in BINARY_SENSOR_DESCRIPTIONS
-    )
-
-    async_add_entities(
-        OpenThermBinarySensor(gw_hub, description)
-        for description in OBSOLETE_BINARY_SENSOR_DESCRIPTIONS
     )
 
 

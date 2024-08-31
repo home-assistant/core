@@ -514,9 +514,6 @@ SENSOR_DESCRIPTIONS: tuple[OpenThermSensorEntityDescription, ...] = (
         translation_key="product_version",
         device_description=THERMOSTAT_DEVICE_DESCRIPTION,
     ),
-)
-
-OBSOLETE_SENSOR_DESCRIPTIONS: tuple[OpenThermSensorEntityDescription, ...] = (
     OpenThermSensorEntityDescription(
         key=gw_vars.DATA_CONTROL_SETPOINT,
         translation_key="control_setpoint_n",
@@ -895,13 +892,6 @@ async def async_setup_entry(
             description,
         )
         for description in SENSOR_DESCRIPTIONS
-    )
-    async_add_entities(
-        OpenThermSensor(
-            gw_hub,
-            description,
-        )
-        for description in OBSOLETE_SENSOR_DESCRIPTIONS
     )
 
 
