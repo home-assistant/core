@@ -67,7 +67,7 @@ class AcmedaBase(entity.Entity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID of this roller."""
-        return self.roller.id  # type: ignore[no-any-return]
+        return str(self.roller.id)
 
     @property
     def device_id(self) -> str:
