@@ -5,6 +5,7 @@ from functools import partial
 import logging
 from typing import Any, cast
 
+from aiohttp.client_exceptions import ClientError
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import Resource, build
 from googleapiclient.errors import HttpError
@@ -12,7 +13,7 @@ from googleapiclient.http import BatchHttpRequest, HttpRequest
 
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from .exceptions import GooglePhotosApiError
 
@@ -25,6 +26,7 @@ GET_MEDIA_ITEM_FIELDS = (
     "id,baseUrl,mimeType,filename,mediaMetadata(width,height,photo,video)"
 )
 LIST_MEDIA_ITEM_FIELDS = f"nextPageToken,mediaItems({GET_MEDIA_ITEM_FIELDS})"
+UPLOAD_API = "https://photoslibrary.googleapis.com/v1/uploads"
 
 
 class AuthBase(ABC):
@@ -69,6 +71,40 @@ class AuthBase(ABC):
             fields=LIST_MEDIA_ITEM_FIELDS,
         )
         return await self._execute(cmd)
+
+    async def upload_content(self, content: bytes, mime_type: str) -> str:
+        """Upload media content to the API and return an upload token."""
+        token = await self.async_get_access_token()
+        session = aiohttp_client.async_get_clientsession(self._hass)
+        try:
+            result = await session.post(
+                UPLOAD_API, headers=_upload_headers(token, mime_type), data=content
+            )
+            result.raise_for_status()
+            return await result.text()
+        except ClientError as err:
+            raise GooglePhotosApiError(f"Failed to upload content: {err}") from err
+
+    async def create_media_items(self, upload_tokens: list[str]) -> list[str]:
+        """Create a batch of media items and return the ids."""
+        service = await self._get_photos_service()
+        cmd: HttpRequest = service.mediaItems().batchCreate(
+            body={
+                "newMediaItems": [
+                    {
+                        "simpleMediaItem": {
+                            "uploadToken": upload_token,
+                        }
+                        for upload_token in upload_tokens
+                    }
+                ]
+            }
+        )
+        result = await self._execute(cmd)
+        return [
+            media_item["mediaItem"]["id"]
+            for media_item in result["newMediaItemResults"]
+        ]
 
     async def _get_photos_service(self) -> Resource:
         """Get current photos library API resource."""
@@ -141,3 +177,13 @@ class AsyncConfigFlowAuth(AuthBase):
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
         return self._token
+
+
+def _upload_headers(token: str, mime_type: str) -> dict[str, Any]:
+    """Create the upload headers."""
+    return {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/octet-stream",
+        "X-Goog-Upload-Content-Type": mime_type,
+        "X-Goog-Upload-Protocol": "raw",
+    }
