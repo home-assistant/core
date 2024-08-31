@@ -9,7 +9,7 @@ from nacl.secret import SecretBox
 from homeassistant.components import zone as zone_comp
 from homeassistant.components.device_tracker import SourceType
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, STATE_HOME
-from homeassistant.util import decorator, slugify
+from homeassistant.util import decorator, dt as dt_util, slugify
 
 from .helper import supports_encryption
 
@@ -53,6 +53,45 @@ def _parse_topic(topic, subscribe_topic):
     return user, device
 
 
+def _parse_message_attributes(message, kwargs):
+    """Parse extra OwnTracks parameters, into entity attributes.
+
+    Async friendly.
+    """
+    if "alt" in message:
+        kwargs["attributes"]["altitude"] = message["alt"]
+    if "rad" in message:
+        kwargs["attributes"]["radius"] = message["rad"]
+    if "tst" in message:
+        kwargs["attributes"]["time_stamp"] = dt_util.utc_from_timestamp(
+            int(message["tst"])
+        )
+    if "vac" in message:
+        kwargs["attributes"]["vertical_accuracy"] = message["vac"]
+    if "p" in message:
+        kwargs["attributes"]["pressure"] = message["p"]
+    if "poi" in message:
+        kwargs["attributes"]["poi"] = message["poi"]
+    if "conn" in message:
+        kwargs["attributes"]["connection_type"] = message["conn"]
+    if "tag" in message:
+        kwargs["attributes"]["tag"] = message["tag"]
+    if "inregions" in message:
+        kwargs["attributes"]["in_regions"] = message["inregions"]
+    if "inrids" in message:
+        kwargs["attributes"]["in_regions_ids"] = message["inrids"]
+    if "SSID" in message:
+        kwargs["attributes"]["SSID"] = message["SSID"]
+    if "BSSID" in message:
+        kwargs["attributes"]["BSSID"] = message["BSSID"]
+    if "created_at" in message:
+        kwargs["attributes"]["created_at"] = dt_util.utc_from_timestamp(
+            int(message["created_at"])
+        )
+    if "m" in message:
+        kwargs["attributes"]["monitoring_mode"] = message["m"]
+
+
 def _parse_see_args(message, subscribe_topic):
     """Parse the OwnTracks location parameters, into the format see expects.
 
@@ -85,6 +124,9 @@ def _parse_see_args(message, subscribe_topic):
             kwargs["source_type"] = SourceType.GPS
         if message["t"] == "b":
             kwargs["source_type"] = SourceType.BLUETOOTH_LE
+        kwargs["attributes"]["type"] = message["t"]
+
+    _parse_message_attributes(message, kwargs)
 
     return dev_id, kwargs
 
