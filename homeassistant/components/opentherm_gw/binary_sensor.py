@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from pyotgw import vars as gw_vars
 
 from homeassistant.components.binary_sensor import (
-    ENTITY_ID_FORMAT,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -13,10 +12,8 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import OpenThermGatewayHub
 from .const import DATA_GATEWAYS, DATA_OPENTHERM_GW
 from .entity import (
     OpenThermBaseEntity,
@@ -226,19 +223,6 @@ class OpenThermBinarySensor(OpenThermBaseEntity, BinarySensorEntity):
     """Represent an OpenTherm Gateway binary sensor."""
 
     entity_description: OpenThermBinarySensorEntityDescription
-
-    def __init__(
-        self,
-        gw_hub: OpenThermGatewayHub,
-        description: OpenThermBinarySensorEntityDescription,
-    ) -> None:
-        """Initialize the binary sensor."""
-        super().__init__(gw_hub, description)
-        self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT,
-            f"{description.key}_{self._data_source}_{gw_hub.hub_id}",
-            hass=gw_hub.hass,
-        )
 
     @callback
     def receive_report(self, status: dict[str, dict]) -> None:

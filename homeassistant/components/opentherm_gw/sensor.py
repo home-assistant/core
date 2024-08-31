@@ -5,7 +5,6 @@ from dataclasses import dataclass
 import pyotgw.vars as gw_vars
 
 from homeassistant.components.sensor import (
-    ENTITY_ID_FORMAT,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -23,10 +22,8 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import OpenThermGatewayHub
 from .const import DATA_GATEWAYS, DATA_OPENTHERM_GW
 from .entity import (
     OpenThermBaseEntity,
@@ -488,19 +485,6 @@ class OpenThermSensor(OpenThermBaseEntity, SensorEntity):
     """Representation of an OpenTherm sensor."""
 
     entity_description: OpenThermSensorEntityDescription
-
-    def __init__(
-        self,
-        gw_hub: OpenThermGatewayHub,
-        description: OpenThermSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(gw_hub, description)
-        self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT,
-            f"{description.key}_{self._data_source}_{gw_hub.hub_id}",
-            hass=gw_hub.hass,
-        )
 
     @callback
     def receive_report(self, status: dict[str, dict]) -> None:
