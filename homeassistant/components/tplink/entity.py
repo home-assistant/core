@@ -68,6 +68,8 @@ EXCLUDED_FEATURES = {
     # update
     "current_firmware_version",
     "available_firmware_version",
+    "update_available",
+    "check_latest_firmware",
 }
 
 
