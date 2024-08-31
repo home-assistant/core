@@ -47,6 +47,13 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[OpenThermBinarySensorEntityDescription, ...] =
         device_description=BOILER_DEVICE_DESCRIPTION,
     ),
     OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_CH2_ACTIVE,
+        translation_key="central_heating_n",
+        translation_placeholders={"circuit_number": "2"},
+        device_class=BinarySensorDeviceClass.RUNNING,
+        device_description=BOILER_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
         key=gw_vars.DATA_SLAVE_DHW_ACTIVE,
         translation_key="hot_water",
         device_class=BinarySensorDeviceClass.RUNNING,
@@ -61,13 +68,6 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[OpenThermBinarySensorEntityDescription, ...] =
     OpenThermBinarySensorEntityDescription(
         key=gw_vars.DATA_SLAVE_COOLING_ACTIVE,
         translation_key="cooling",
-        device_class=BinarySensorDeviceClass.RUNNING,
-        device_description=BOILER_DEVICE_DESCRIPTION,
-    ),
-    OpenThermBinarySensorEntityDescription(
-        key=gw_vars.DATA_SLAVE_CH2_ACTIVE,
-        translation_key="central_heating_n",
-        translation_placeholders={"circuit_number": "2"},
         device_class=BinarySensorDeviceClass.RUNNING,
         device_description=BOILER_DEVICE_DESCRIPTION,
     ),
@@ -191,6 +191,12 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[OpenThermBinarySensorEntityDescription, ...] =
         device_description=THERMOSTAT_DEVICE_DESCRIPTION,
     ),
     OpenThermBinarySensorEntityDescription(
+        key=gw_vars.DATA_MASTER_CH2_ENABLED,
+        translation_key="central_heating_n",
+        translation_placeholders={"circuit_number": "2"},
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermBinarySensorEntityDescription(
         key=gw_vars.DATA_MASTER_DHW_ENABLED,
         translation_key="hot_water",
         device_description=THERMOSTAT_DEVICE_DESCRIPTION,
@@ -203,12 +209,6 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[OpenThermBinarySensorEntityDescription, ...] =
     OpenThermBinarySensorEntityDescription(
         key=gw_vars.DATA_MASTER_OTC_ENABLED,
         translation_key="outside_temp_correction",
-        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
-    ),
-    OpenThermBinarySensorEntityDescription(
-        key=gw_vars.DATA_MASTER_CH2_ENABLED,
-        translation_key="central_heating_n",
-        translation_placeholders={"circuit_number": "2"},
         device_description=THERMOSTAT_DEVICE_DESCRIPTION,
     ),
     OpenThermBinarySensorEntityDescription(
