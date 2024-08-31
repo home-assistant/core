@@ -4713,7 +4713,8 @@
       'source': 'user',
       'title': 'Mock Title',
       'unique_id': 'ViCare',
-      'version': 2,
+      'version': 1,
+      'minorVersion': 2,
     }),
   })
 # ---

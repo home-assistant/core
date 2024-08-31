@@ -37,13 +37,20 @@ _LOGGER = logging.getLogger(__name__)
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     if entry.version == 1:
-        _LOGGER.debug("Migrating from version %s", entry.version)
-        with suppress(FileNotFoundError):
-            await hass.async_add_executor_job(
-                os.remove, hass.config.path(STORAGE_DIR, "vicare_token.save")
+        if entry.minor_version == 1:
+            _LOGGER.debug(
+                "Migrating from version %s.%s", entry.version, entry.minor_version
             )
-        entry.version = 2
-        _LOGGER.debug("Migration to version %s successful", entry.version)
+            with suppress(FileNotFoundError):
+                await hass.async_add_executor_job(
+                    os.remove, hass.config.path(STORAGE_DIR, "vicare_token.save")
+                )
+            entry.minor_version = 2
+            _LOGGER.debug(
+                "Migration to version %s.%s successful",
+                entry.version,
+                entry.minor_version,
+            )
     return True
 
 
