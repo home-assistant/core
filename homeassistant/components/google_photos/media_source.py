@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from enum import StrEnum
 import logging
-from typing import Any, cast
+from typing import Any, Self, cast
 
 from homeassistant.components.media_player import MediaClass, MediaType
 from homeassistant.components.media_source import (
@@ -77,37 +77,31 @@ class PhotosIdentifier:
     """Identifies the album or photo contents to show."""
 
     def as_string(self) -> str:
-        """Serialize the identiifer as a string.
-
-        This is the opposite if of().
-        """
+        """Serialize the identifier as a string."""
         if self.id_type is None:
             return self.config_entry_id
         return f"{self.config_entry_id}/{self.id_type}/{self.media_id}"
 
-    @staticmethod
-    def of(identifier: str) -> "PhotosIdentifier":
-        """Parse a PhotosIdentifier form a string.
-
-        This is the opposite of as_string().
-        """
+    @classmethod
+    def of(cls, identifier: str) -> Self:
+        """Parse a PhotosIdentifier form a string."""
         parts = identifier.split("/")
         _LOGGER.debug("parts=%s", parts)
         if len(parts) == 1:
-            return PhotosIdentifier(parts[0])
+            return cls(parts[0])
         if len(parts) != 3:
             raise BrowseError(f"Invalid identifier: {identifier}")
-        return PhotosIdentifier(parts[0], PhotosIdentifierType.of(parts[1]), parts[2])
+        return cls(parts[0], PhotosIdentifierType.of(parts[1]), parts[2])
 
-    @staticmethod
-    def album(config_entry_id: str, media_id: str) -> "PhotosIdentifier":
+    @classmethod
+    def album(cls, config_entry_id: str, media_id: str) -> Self:
         """Create an album PhotosIdentifier."""
-        return PhotosIdentifier(config_entry_id, PhotosIdentifierType.ALBUM, media_id)
+        return cls(config_entry_id, PhotosIdentifierType.ALBUM, media_id)
 
-    @staticmethod
-    def photo(config_entry_id: str, media_id: str) -> "PhotosIdentifier":
+    @classmethod
+    def photo(cls, config_entry_id: str, media_id: str) -> Self:
         """Create an album PhotosIdentifier."""
-        return PhotosIdentifier(config_entry_id, PhotosIdentifierType.PHOTO, media_id)
+        return cls(config_entry_id, PhotosIdentifierType.PHOTO, media_id)
 
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
