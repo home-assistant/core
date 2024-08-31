@@ -5,13 +5,16 @@ from unittest.mock import patch
 
 import pytest
 from soco.data_structures import SearchResult
+from sonos_websocket.exception import SonosWebsocketError
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_ENQUEUE,
+    ATTR_MEDIA_EXTRA,
     ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_VOLUME_LEVEL,
@@ -29,6 +32,7 @@ from homeassistant.components.sonos.const import (
 )
 from homeassistant.components.sonos.media_player import (
     LONG_SERVICE_TIMEOUT,
+    SERVICE_GET_QUEUE,
     SERVICE_RESTORE,
     SERVICE_SNAPSHOT,
     VOLUME_INCREMENT,
@@ -47,7 +51,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
@@ -1050,3 +1054,93 @@ async def test_media_transport(
         blocking=True,
     )
     assert getattr(soco, client_call).call_count == 1
+
+
+async def test_play_media_announce(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    sonos_websocket,
+) -> None:
+    """Test playing media with the announce."""
+    content_id: str = "http://10.0.0.1:8123/local/sounds/doorbell.mp3"
+    volume: float = 0.30
+
+    # Test the success path
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "music",
+            ATTR_MEDIA_CONTENT_ID: content_id,
+            ATTR_MEDIA_ANNOUNCE: True,
+            ATTR_MEDIA_EXTRA: {"volume": volume},
+        },
+        blocking=True,
+    )
+    assert sonos_websocket.play_clip.call_count == 1
+    sonos_websocket.play_clip.assert_called_with(content_id, volume=volume)
+
+    # Test receiving a websocket exception
+    sonos_websocket.play_clip.reset_mock()
+    sonos_websocket.play_clip.side_effect = SonosWebsocketError("Error Message")
+    with pytest.raises(
+        HomeAssistantError, match="Error when calling Sonos websocket: Error Message"
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: "music",
+                ATTR_MEDIA_CONTENT_ID: content_id,
+                ATTR_MEDIA_ANNOUNCE: True,
+            },
+            blocking=True,
+        )
+    assert sonos_websocket.play_clip.call_count == 1
+    sonos_websocket.play_clip.assert_called_with(content_id, volume=None)
+
+    # Test receiving a non success result
+    sonos_websocket.play_clip.reset_mock()
+    sonos_websocket.play_clip.side_effect = None
+    retval = {"success": 0}
+    sonos_websocket.play_clip.return_value = [retval, {}]
+    with pytest.raises(
+        HomeAssistantError, match=f"Announcing clip {content_id} failed {retval}"
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: "music",
+                ATTR_MEDIA_CONTENT_ID: content_id,
+                ATTR_MEDIA_ANNOUNCE: True,
+            },
+            blocking=True,
+        )
+    assert sonos_websocket.play_clip.call_count == 1
+
+
+async def test_media_get_queue(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    soco_factory,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test getting the media queue."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+    result = await hass.services.async_call(
+        SONOS_DOMAIN,
+        SERVICE_GET_QUEUE,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    soco_mock.get_queue.assert_called_with(max_items=0)
+    assert result == snapshot

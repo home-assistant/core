@@ -10,6 +10,7 @@ APPLICATION_CREDENTIALS = [
     "google",
     "google_assistant_sdk",
     "google_mail",
+    "google_photos",
     "google_sheets",
     "google_tasks",
     "home_connect",
@@ -29,6 +30,7 @@ APPLICATION_CREDENTIALS = [
     "twitch",
     "withings",
     "xbox",
+    "yale",
     "yolink",
     "youtube",
 ]

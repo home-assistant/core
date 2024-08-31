@@ -18,21 +18,21 @@ bleak-retry-connector==3.5.0
 bleak==0.22.2
 bluetooth-adapters==0.19.4
 bluetooth-auto-recovery==1.4.2
-bluetooth-data-tools==1.19.4
-cached_ipaddress==0.3.0
+bluetooth-data-tools==1.20.0
+cached-ipaddress==0.5.0
 certifi>=2021.5.30
 ciso8601==2.3.1
 cryptography==43.0.0
-dbus-fast==2.23.0
-fnv-hash-fast==0.5.0
+dbus-fast==2.24.0
+fnv-hash-fast==1.0.2
 ha-av==10.1.1
 ha-ffmpeg==3.2.0
 habluetooth==3.3.2
 hass-nabucasa==0.81.1
 hassil==1.7.4
 home-assistant-bluetooth==1.12.2
-home-assistant-frontend==20240809.0
-home-assistant-intents==2024.8.7
+home-assistant-frontend==20240829.0
+home-assistant-intents==2024.8.29
 httpx==0.27.0
 ifaddr==0.2.0
 Jinja2==3.1.4
@@ -49,20 +49,21 @@ pymicro-vad==1.0.1
 PyNaCl==1.5.0
 pyOpenSSL==24.2.1
 pyserial==3.5
+pyspeex-noise==1.0.2
 python-slugify==8.0.4
-PyTurboJPEG==1.7.1
+PyTurboJPEG==1.7.5
 pyudev==0.24.1
 PyYAML==6.0.2
 requests==2.32.3
 SQLAlchemy==2.0.31
 typing-extensions>=4.12.2,<5.0
-ulid-transform==0.13.1
+ulid-transform==1.0.2
 urllib3>=1.26.5,<2
 voluptuous-openapi==0.0.5
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
-yarl==1.9.4
-zeroconf==0.132.2
+yarl==1.9.6
+zeroconf==0.133.0
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
@@ -107,12 +108,6 @@ hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
 numpy==1.26.0
-
-# Prevent dependency conflicts between sisyphus-control and aioambient
-# until upper bounds for sisyphus-control have been updated
-# https://github.com/jkeljo/sisyphus-control/issues/6
-python-engineio>=3.13.1,<4.0
-python-socketio>=4.6.0,<5.0
 
 # Constrain multidict to avoid typing issues
 # https://github.com/home-assistant/core/pull/67046

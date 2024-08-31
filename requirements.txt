@@ -16,7 +16,7 @@ awesomeversion==24.6.0
 bcrypt==4.1.3
 certifi>=2021.5.30
 ciso8601==2.3.1
-fnv-hash-fast==0.5.0
+fnv-hash-fast==1.0.2
 hass-nabucasa==0.81.1
 httpx==0.27.0
 home-assistant-bluetooth==1.12.2
@@ -36,9 +36,9 @@ PyYAML==6.0.2
 requests==2.32.3
 SQLAlchemy==2.0.31
 typing-extensions>=4.12.2,<5.0
-ulid-transform==0.13.1
+ulid-transform==1.0.2
 urllib3>=1.26.5,<2
 voluptuous==0.15.2
 voluptuous-serialize==2.6.0
 voluptuous-openapi==0.0.5
-yarl==1.9.4
+yarl==1.9.6

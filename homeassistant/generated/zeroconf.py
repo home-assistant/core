@@ -68,6 +68,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX B10": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX BR30": {
         "always_discover": True,
         "domain": "lifx",
@@ -157,6 +161,10 @@ HOMEKIT = {
         "domain": "lifx",
     },
     "LIFX String": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX T10": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -415,6 +423,11 @@ ZEROCONF = {
             "domain": "forked_daapd",
         },
     ],
+    "_deako._tcp.local.": [
+        {
+            "domain": "deako",
+        },
+    ],
     "_devialet-http._tcp.local.": [
         {
             "domain": "devialet",
@@ -513,6 +526,10 @@ ZEROCONF = {
         {
             "domain": "bosch_shc",
             "name": "bosch shc*",
+        },
+        {
+            "domain": "lektrico",
+            "name": "lektrico*",
         },
         {
             "domain": "loqed",

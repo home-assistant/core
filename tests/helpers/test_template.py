@@ -6281,3 +6281,10 @@ def test_unzip(hass: HomeAssistant, col, expected) -> None:
         ).async_render({"col": col})
         == expected
     )
+
+
+def test_template_output_exceeds_maximum_size(hass: HomeAssistant) -> None:
+    """Test template output exceeds maximum size."""
+    tpl = template.Template("{{ 'a' * 1024 * 257 }}", hass)
+    with pytest.raises(TemplateError):
+        tpl.async_render()
