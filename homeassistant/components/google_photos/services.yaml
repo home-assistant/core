@@ -8,4 +8,4 @@ upload:
     filename:
       required: false
       selector:
-        text:
+        object:

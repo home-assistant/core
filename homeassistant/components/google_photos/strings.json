@@ -41,6 +41,9 @@
     },
     "filename_is_not_image": {
       "message": "`{filename}` is not an image"
+    },
+    "missing_upload_permission": {
+      "message": "Home Assistnt was not granted permission to upload to Google Photos"
     }
   },
   "services": {

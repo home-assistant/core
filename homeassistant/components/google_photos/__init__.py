@@ -3,16 +3,14 @@
 from __future__ import annotations
 
 from aiohttp import ClientError, ClientResponseError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_FILENAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import api
-from .const import DOMAIN, UPLOAD_SCOPE
+from .const import DOMAIN
 from .services import async_register_services
 
 type GooglePhotosConfigEntry = ConfigEntry[api.AsyncConfigEntryAuth]
@@ -20,16 +18,6 @@ type GooglePhotosConfigEntry = ConfigEntry[api.AsyncConfigEntryAuth]
 __all__ = [
     "DOMAIN",
 ]
-
-CONF_CONFIG_ENTRY_ID = "config_entry_id"
-
-UPLOAD_SERVICE = "upload"
-UPLOAD_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_CONFIG_ENTRY_ID): cv.string,
-        vol.Required(CONF_FILENAME): vol.All(cv.ensure_list, [cv.string]),
-    }
-)
 
 
 async def async_setup_entry(
@@ -55,9 +43,7 @@ async def async_setup_entry(
         raise ConfigEntryNotReady from err
     entry.runtime_data = auth
 
-    scopes = entry.data["token"]["scope"].split(" ")
-    if any(scope == UPLOAD_SCOPE for scope in scopes):
-        async_register_services(hass)
+    async_register_services(hass)
 
     return True
 

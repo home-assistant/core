@@ -20,7 +20,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
 from . import api
-from .const import DOMAIN
+from .const import DOMAIN, UPLOAD_SCOPE
 
 type GooglePhotosConfigEntry = ConfigEntry[api.AsyncConfigEntryAuth]
 
@@ -53,6 +53,14 @@ def async_register_services(hass: HomeAssistant) -> None:
                 translation_key="integration_not_found",
                 translation_placeholders={"target": DOMAIN},
             )
+        scopes = config_entry.data["token"]["scope"].split(" ")
+        if UPLOAD_SCOPE not in scopes:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="missing_upload_permission",
+                translation_placeholders={"target": DOMAIN},
+            )
+
         client_api = config_entry.runtime_data
         upload_tasks = []
         for filename in call.data[CONF_FILENAME]:

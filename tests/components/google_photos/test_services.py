@@ -241,5 +241,16 @@ async def test_upload_service_no_scope(
     aioclient_mock: AiohttpClientMocker,
     setup_api: Mock,
 ) -> None:
-    """Test service call to upload content."""
-    assert not hass.services.has_service(DOMAIN, "upload")
+    """Test service call to upload content but the config entry is read-only."""
+
+    with pytest.raises(HomeAssistantError, match="not granted permission"):
+        await hass.services.async_call(
+            DOMAIN,
+            "upload",
+            {
+                "config_entry_id": config_entry.entry_id,
+                "filename": "doorbell_snapshot.jpg",
+            },
+            blocking=True,
+            return_response=True,
+        )

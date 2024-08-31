@@ -88,7 +88,6 @@ class AuthBase(ABC):
     async def create_media_items(self, upload_tokens: list[str]) -> list[str]:
         """Create a batch of media items and return the ids."""
         service = await self._get_photos_service()
-        _LOGGER.debug("create_media_items=%s", upload_tokens)
         cmd: HttpRequest = service.mediaItems().batchCreate(
             body={
                 "newMediaItems": [
