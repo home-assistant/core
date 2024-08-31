@@ -33,9 +33,9 @@ from .const import (
     CONF_TEMPORARY_OVRD_MODE,
     DATA_GATEWAYS,
     DATA_OPENTHERM_GW,
-    DEVICE_IDENT_THERMOSTAT,
+    THERMOSTAT_DEVICE_DESCRIPTION,
 )
-from .entity import OpenThermEntityDescription, OpenThermThermostatDeviceEntity
+from .entity import OpenThermEntity, OpenThermEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,6 +61,7 @@ async def async_setup_entry(
             hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]],
             OpenThermClimateEntityDescription(
                 key="thermostat_entity",
+                device_description=THERMOSTAT_DEVICE_DESCRIPTION,
             ),
             config_entry.options,
         )
@@ -69,7 +70,7 @@ async def async_setup_entry(
     async_add_entities(ents)
 
 
-class OpenThermClimate(OpenThermThermostatDeviceEntity, ClimateEntity):
+class OpenThermClimate(OpenThermEntity, ClimateEntity):
     """Representation of a climate device."""
 
     _attr_supported_features = (
@@ -106,9 +107,7 @@ class OpenThermClimate(OpenThermThermostatDeviceEntity, ClimateEntity):
             self._attr_precision = options[CONF_READ_PRECISION]
         self._attr_target_temperature_step = options.get(CONF_SET_PRECISION)
         self.temporary_ovrd_mode = options.get(CONF_TEMPORARY_OVRD_MODE, True)
-        self._attr_unique_id = (
-            f"{gw_hub.hub_id}-{DEVICE_IDENT_THERMOSTAT}-{description.key}"
-        )
+        self._attr_unique_id = f"{gw_hub.hub_id}-{description.device_description.device_identifier}-{description.key}"
 
     @callback
     def update_options(self, entry):

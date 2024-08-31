@@ -50,9 +50,6 @@ from .const import (
     CONNECTION_TIMEOUT,
     DATA_GATEWAYS,
     DATA_OPENTHERM_GW,
-    DEVICE_IDENT_BOILER,
-    DEVICE_IDENT_GATEWAY,
-    DEVICE_IDENT_THERMOSTAT,
     DOMAIN,
     SERVICE_RESET_GATEWAY,
     SERVICE_SEND_TRANSP_CMD,
@@ -66,6 +63,8 @@ from .const import (
     SERVICE_SET_MAX_MOD,
     SERVICE_SET_OAT,
     SERVICE_SET_SB_TEMP,
+    OpenThermDataSource,
+    OpenThermDeviceIdentifier,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -131,7 +130,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         dev_reg.async_update_device(
             migrate_device.id,
             new_identifiers={
-                (DOMAIN, f"{config_entry.data[CONF_ID]}-{DEVICE_IDENT_GATEWAY}")
+                (
+                    DOMAIN,
+                    f"{config_entry.data[CONF_ID]}-{OpenThermDeviceIdentifier.GATEWAY}",
+                )
             },
         )
 
@@ -466,7 +468,7 @@ class OpenThermGatewayHub:
         if not status:
             await self.cleanup()
             raise ConnectionError
-        version_string = status[gw_vars.OTGW].get(gw_vars.OTGW_ABOUT)
+        version_string = status[OpenThermDataSource.GATEWAY].get(gw_vars.OTGW_ABOUT)
         self.gw_version = version_string[18:] if version_string else None
         _LOGGER.debug(
             "Connected to OpenTherm Gateway %s at %s", self.gw_version, self.device_path
@@ -474,7 +476,9 @@ class OpenThermGatewayHub:
         dev_reg = dr.async_get(self.hass)
         gw_dev = dev_reg.async_get_or_create(
             config_entry_id=self.config_entry_id,
-            identifiers={(DOMAIN, f"{self.hub_id}-{DEVICE_IDENT_GATEWAY}")},
+            identifiers={
+                (DOMAIN, f"{self.hub_id}-{OpenThermDeviceIdentifier.GATEWAY}")
+            },
             manufacturer="Schelte Bron",
             model="OpenTherm Gateway",
             translation_key="gateway_device",
@@ -485,12 +489,14 @@ class OpenThermGatewayHub:
 
         boiler_device = dev_reg.async_get_or_create(
             config_entry_id=self.config_entry_id,
-            identifiers={(DOMAIN, f"{self.hub_id}-{DEVICE_IDENT_BOILER}")},
+            identifiers={(DOMAIN, f"{self.hub_id}-{OpenThermDeviceIdentifier.BOILER}")},
             translation_key="boiler_device",
         )
         thermostat_device = dev_reg.async_get_or_create(
             config_entry_id=self.config_entry_id,
-            identifiers={(DOMAIN, f"{self.hub_id}-{DEVICE_IDENT_THERMOSTAT}")},
+            identifiers={
+                (DOMAIN, f"{self.hub_id}-{OpenThermDeviceIdentifier.THERMOSTAT}")
+            },
             translation_key="thermostat_device",
         )
 
@@ -503,26 +509,32 @@ class OpenThermGatewayHub:
 
             dev_reg.async_update_device(
                 boiler_device.id,
-                manufacturer=status[gw_vars.BOILER].get(gw_vars.DATA_SLAVE_MEMBERID),
-                model_id=status[gw_vars.BOILER].get(gw_vars.DATA_SLAVE_PRODUCT_TYPE),
-                hw_version=status[gw_vars.BOILER].get(
+                manufacturer=status[OpenThermDataSource.BOILER].get(
+                    gw_vars.DATA_SLAVE_MEMBERID
+                ),
+                model_id=status[OpenThermDataSource.BOILER].get(
+                    gw_vars.DATA_SLAVE_PRODUCT_TYPE
+                ),
+                hw_version=status[OpenThermDataSource.BOILER].get(
                     gw_vars.DATA_SLAVE_PRODUCT_VERSION
                 ),
-                sw_version=status[gw_vars.BOILER].get(gw_vars.DATA_SLAVE_OT_VERSION),
+                sw_version=status[OpenThermDataSource.BOILER].get(
+                    gw_vars.DATA_SLAVE_OT_VERSION
+                ),
             )
 
             dev_reg.async_update_device(
                 thermostat_device.id,
-                manufacturer=status[gw_vars.THERMOSTAT].get(
+                manufacturer=status[OpenThermDataSource.THERMOSTAT].get(
                     gw_vars.DATA_MASTER_MEMBERID
                 ),
-                model_id=status[gw_vars.THERMOSTAT].get(
+                model_id=status[OpenThermDataSource.THERMOSTAT].get(
                     gw_vars.DATA_MASTER_PRODUCT_TYPE
                 ),
-                hw_version=status[gw_vars.THERMOSTAT].get(
+                hw_version=status[OpenThermDataSource.THERMOSTAT].get(
                     gw_vars.DATA_MASTER_PRODUCT_VERSION
                 ),
-                sw_version=status[gw_vars.THERMOSTAT].get(
+                sw_version=status[OpenThermDataSource.THERMOSTAT].get(
                     gw_vars.DATA_MASTER_OT_VERSION
                 ),
             )
