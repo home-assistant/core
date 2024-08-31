@@ -9,6 +9,8 @@ from buienradar.constants import (
     MAX_TEMP,
     MIN_TEMP,
     RAIN,
+    RAIN_CHANCE,
+    SUN_CHANCE,
     WINDAZIMUTH,
     WINDSPEED,
 )
@@ -28,11 +30,13 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_CONDITION_WINDY,
     ATTR_CONDITION_WINDY_VARIANT,
+    ATTR_FORECAST_CLOUD_COVERAGE,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_NATIVE_PRECIPITATION,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_TEMP_LOW,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     Forecast,
@@ -151,8 +155,10 @@ class BrWeather(WeatherEntity):
             self._stationname or f"BR {data.stationname or '(unknown station)'}"
         )
         self._attr_native_pressure = data.pressure
+        self._attr_native_apparent_temperature = data.feeltemperature
         self._attr_native_temperature = data.temperature
         self._attr_native_visibility = data.visibility
+        self._attr_native_wind_gust_speed = data.wind_gust
         self._attr_native_wind_speed = data.wind_speed
         self._attr_wind_bearing = data.wind_bearing
 
@@ -187,6 +193,8 @@ class BrWeather(WeatherEntity):
                 ATTR_FORECAST_NATIVE_TEMP_LOW: data_in.get(MIN_TEMP),
                 ATTR_FORECAST_NATIVE_TEMP: data_in.get(MAX_TEMP),
                 ATTR_FORECAST_NATIVE_PRECIPITATION: data_in.get(RAIN),
+                ATTR_FORECAST_PRECIPITATION_PROBABILITY: data_in.get(RAIN_CHANCE),
+                ATTR_FORECAST_CLOUD_COVERAGE: 100 - data_in.get(SUN_CHANCE),
                 ATTR_FORECAST_WIND_BEARING: data_in.get(WINDAZIMUTH),
                 ATTR_FORECAST_NATIVE_WIND_SPEED: data_in.get(WINDSPEED),
             }
